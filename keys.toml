@@ -1,0 +1,40 @@
+# BLANK CONFIG
+[discord]
+token = ''
+
+[osu]
+token = ''
+
+[youtube]
+api_key = ''
+app_name = ''
+
+[postgres]
+connection_string = 'jdbc:postgresql://127.0.0.1/database?user=username&password=password'
+
+[mongoDB]
+address = '127.0.0.1'
+port = 27017
+username = ''
+password = ''
+auth_db = 'kizunaai'
+bot_db = 'kizunaai'
+
+[twitch]
+client_id = ''
+client_secret = ''
+chat_oauth_token = 'oauth:'
+callback = ''
+
+[censor]
+ip_services = [
+    'http://checkip.amazonaws.com'
+]
+
+[admin]
+admin_user = [
+    83452231084412928
+]
+admin_channels = [
+    582802415057633281
+]
