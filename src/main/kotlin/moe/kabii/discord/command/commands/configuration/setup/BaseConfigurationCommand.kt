@@ -52,13 +52,12 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         fun updatedEmbed(element: ConfigurationElement<T>, new: Any) = origin.embed {
             setTitle("Configuration Updated")
-            val type = when(element) {
-                is StringElement -> "custom string"
-                is BooleanElement -> "toggle"
-                is DoubleElement -> "custom decimal value"
-                is LongElement -> "custom integer value"
+            val property = element.aliases.first()
+            val newState = when(element) {
+                is BooleanElement -> if(new as Boolean) "**enabled**" else "**disabled**"
+                else -> "set to **$new**"
             }
-            setDescription("The value for the $type ${element.aliases.first()} has been set to **$new**.")
+            setDescription("The option **$property** has been $newState.")
         }
 
         // <command> (no args) -> full menu embed

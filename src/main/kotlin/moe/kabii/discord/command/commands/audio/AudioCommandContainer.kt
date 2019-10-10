@@ -48,7 +48,7 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun validateChannel(origin: DiscordParameters) {
         val config = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong())
-        if(config.options.featureChannels[origin.chan.id.asLong()] == null) throw FeatureDisabledException("music")
+        if(config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel != true) throw FeatureDisabledException("music")
     }
 
     fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {

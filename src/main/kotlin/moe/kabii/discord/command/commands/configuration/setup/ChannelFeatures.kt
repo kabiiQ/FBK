@@ -30,7 +30,7 @@ object ChannelFeatures : CommandContainer {
                 chan as TextChannel
                 member.verify(Permission.MANAGE_CHANNELS)
                 val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
-                val features = config.getOrCreateFeatures(target.id.asLong())
+                val features = config.getOrCreateFeatures(chan.id.asLong())
 
                 val wasLog = features.logChannel
                 val configurator = Configurator(
