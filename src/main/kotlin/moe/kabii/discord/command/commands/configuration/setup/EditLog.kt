@@ -66,29 +66,14 @@ object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlo
     init {
         discord {
             // editlog #channel
-            val targetChan = when {
-                args.isNotEmpty() -> {
-                    val channel = Search.channelByID<TextChannel>(this, args[0])
-                    if(channel == null) {
-                        error("Unable to configure channel **${args[0]}**. Verify this is a server text channel ID.").block()
-                        return@discord
-                    } else channel
-                }
-                chan is TextChannel -> chan
-                else -> {
-                    usage("Execute this command in the target channel or specify the channel.", "editlog #channel").block()
-                    return@discord
-                }
-            }
-
-            val targetGuild = targetChan.guild.block()
-            val member = targetGuild.getMemberById(author.id).block()
+            if(isPM) return@discord
+            chan as TextChannel
             member.verify(Permission.MANAGE_GUILD)
-            val config = GuildConfigurations.getOrCreateGuild(targetGuild.id.asLong())
-            val features = config.getOrCreateFeatures(targetChan.id.asLong())
+            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
+            val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(
-                "Log configuration for #${targetChan.name}",
+                "Log configuration for #${chan.name}",
                 ChannelLogModule,
                 features.logSettings
             )
@@ -96,10 +81,10 @@ object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlo
                 val any = features.logSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    embed("${targetChan.mention} is no longer a mod log channel.").subscribe()
+                    embed("${chan.mention} is no longer a mod log channel.").subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    embed("${targetChan.mention} is now a mod log channel.").subscribe()
+                    embed("${chan.mention} is now a mod log channel.").subscribe()
                 }
                 config.save()
             }
