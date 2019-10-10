@@ -1,0 +1,237 @@
+package moe.kabii.discord.command.commands.configuration.setup
+
+import moe.kabii.discord.command.DiscordParameters
+import moe.kabii.discord.command.kizunaColor
+import moe.kabii.structure.EmbedReceiver
+import kotlin.reflect.KMutableProperty1
+
+sealed class ConfigurationElement<T>(val fullName: String, val aliases: List<String>)
+class StringElement<T>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, String>,
+    val prompt: String,
+    val default: String
+) : ConfigurationElement<T>(fullName, aliases)
+
+class BooleanElement<T>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, Boolean>
+) : ConfigurationElement<T>(fullName, aliases)
+
+class DoubleElement<T>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, Double>,
+    val range: ClosedRange<Double>,
+    val prompt: String,
+    val default: Double
+) : ConfigurationElement<T>(fullName, aliases)
+
+class LongElement<T>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, Long>,
+    val range: LongRange,
+    val prompt: String,
+    val default: Long
+) : ConfigurationElement<T>(fullName, aliases)
+
+open class ConfigurationModule<T>(val name: String, vararg val elements: ConfigurationElement<T>)
+
+class Configurator<T>(private val name: String, private val module: ConfigurationModule<T>, private val instance: T) {
+    fun getValue(element: ConfigurationElement<T>) = when(element) {
+        is StringElement -> element.prop.get(instance)
+        is BooleanElement -> if(element.prop.get(instance)) "enabled" else "disabled"
+        is DoubleElement -> element.prop.get(instance).toString()
+        is LongElement -> element.prop.get(instance).toString()
+    }
+    private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.aliases.first()})**"
+
+    suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
+        fun updatedEmbed(element: ConfigurationElement<T>, new: Any) = origin.embed {
+            setTitle("Configuration Updated")
+            val type = when(element) {
+                is StringElement -> "custom string"
+                is BooleanElement -> "toggle"
+                is DoubleElement -> "custom decimal value"
+                is LongElement -> "custom integer value"
+            }
+            setDescription("The value for the $type ${element.aliases.first()} has been set to **$new**.")
+        }
+
+        // <command> (no args) -> full menu embed
+        if(origin.args.isEmpty()) {
+            val configEmbed: EmbedReceiver = {
+                kizunaColor(this)
+                setAuthor(name, null, null)
+                // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
+                if(module.elements.any { element -> element is BooleanElement }) {
+                    setTitle("Select the feature to be toggled/edited using its ID.")
+                    // feature toggles - these can be made into FeatureElements if we have other toggles later on
+                    val enabled = module.elements.mapIndexedNotNull { id, element ->
+                        if(element is BooleanElement && element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
+                    }.joinToString("\n").ifEmpty { "No ${module.name} features are enabled." }
+                    val available = module.elements.mapIndexedNotNull { id, element ->
+                        if(element is BooleanElement && !element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
+                    }.joinToString("\n").ifEmpty { "All ${module.name} features are enabled." }
+                    addField("Enabled Features", enabled, true)
+                    addField("Available (Disabled) Features", available, true)
+                }
+                module.elements.mapIndexedNotNull { id, element ->
+                    if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${getValue(element)}" else null
+                }.run {
+                    if(isNotEmpty()) addField("Custom Settings:", joinToString("\n"), false)
+                }
+                setFooter("\"exit\" to save and exit immediately.", null)
+            }
+
+            val menu = origin.embed(configEmbed).block()
+            while(true) {
+                val inputStr = origin.getString(timeout = 120000L) ?: break
+                val input = inputStr.toIntOrNull() ?: continue
+                if(input !in 1..module.elements.size) break
+                when(val element = module.elements[input-1]) {
+                    is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
+                    is StringElement -> {
+                        // prompt user for new value
+                        val prompt = origin.embed(element.prompt).block()
+                        val response = origin.getString(timeout = null)
+                        if(response != null) {
+                            if(response.toLowerCase() == "reset") {
+                                element.prop.set(instance, element.default)
+                            } else {
+                                element.prop.set(instance, response)
+                            }
+                        }
+                        prompt.delete().subscribe()
+                    }
+                    is DoubleElement -> {
+                        val prompt = origin.embed(element.prompt).block()
+                        val response = origin.getDouble(element.range, timeout = 120000L)
+                        if(response != null) element.prop.set(instance, response)
+                        prompt.delete().subscribe()
+                    }
+                    is LongElement -> {
+                        val prompt = origin.embed(element.prompt).block()
+                        val response = origin.getLong(element.range, timeout = 120000L)
+                        if(response != null) element.prop.set(instance, response)
+                        prompt.delete().subscribe()
+                    }
+                }
+                menu.edit { message ->
+                    message.setEmbed(configEmbed)
+                }.block()
+            }
+            menu.delete().subscribe()
+            return true
+        }
+
+        val targetElement = origin.args[0].toLowerCase()
+        // <command> list/all -> list current config
+        if(targetElement == "list" || targetElement == "all") {
+            origin.embed {
+                setTitle("Current ${module.name} configuration:")
+                module.elements.forEach { element ->
+                    addField(getName(element), getValue(element), true)
+                }
+            }.block()
+            return false
+        }
+
+        val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.toLowerCase() == targetElement.toLowerCase() } }
+        if(element == null) {
+            origin.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.").block()
+            return false
+        }
+        val tag = element.aliases.first()
+        // <command> prop -> manual get
+        if(origin.args.size == 1) {
+            origin.embed {
+                setTitle("From ${module.name} configuration:")
+                addField(getName(element), getValue(element), false)
+            }.block()
+            return false
+        }
+
+        // <command> prop <toggle/reset> -> specific actions
+        if(origin.args.size == 2) {
+            when(origin.args[1].toLowerCase()) {
+                "toggle" -> {
+                    if(element !is BooleanElement) {
+                        origin.error("The setting **$tag** is not a toggle.").block()
+                        return false
+                    }
+                    val new = !element.prop.get(instance)
+                    element.prop.set(instance, new)
+                    updatedEmbed(element, new).subscribe()
+                    return true
+                }
+                "reset" -> {
+                    if(element !is StringElement)  {
+                        origin.error("The setting **$tag** is not a resettable custom string.").block()
+                        return false
+                    }
+                    val new = element.default
+                    element.prop.set(instance, new)
+                    updatedEmbed(element, new).subscribe()
+                    return true
+                }
+            }
+        }
+
+        // <command> prop <new value> -> manual set, check input types
+        when(element) {
+            is BooleanElement -> {
+                val input = origin.args[1].toLowerCase()
+                val bool = when {
+                    input.startsWith("y")
+                            || input.startsWith("en")
+                            || input.startsWith("t")
+                            || input == "1"
+                    -> true
+                    input.startsWith("n")
+                            || input.startsWith("dis")
+                            || input.startsWith("f")
+                            || input == "0"
+                    -> false
+                    else -> null
+                }
+                if(bool == null) {
+                    origin.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**").block()
+                    return false
+                }
+                element.prop.set(instance, bool)
+                updatedEmbed(element, bool).subscribe()
+                return true
+            }
+            is StringElement -> {
+                val input = origin.args.drop(1).joinToString(" ")
+                element.prop.set(instance, input)
+                updatedEmbed(element, input).subscribe()
+                return true
+            }
+            is DoubleElement -> {
+                val input = origin.args[1].toDoubleOrNull()
+                if(input == null) {
+                    origin.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**").block()
+                    return false
+                }
+                element.prop.set(instance, input)
+                updatedEmbed(element, input).subscribe()
+                return true
+            }
+            is LongElement -> {
+                val input = origin.args[1].toLongOrNull()
+                if(input == null) {
+                    origin.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**").block()
+                    return false
+                }
+                element.prop.set(instance, input)
+                updatedEmbed(element, input).subscribe()
+                return true
+            }
+        }
+    }
+}

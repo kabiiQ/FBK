@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+    <logger name="io.netty" level="INFO"/>
+    <logger name="reactor" level="INFO"/>
+    <logger name="org.mongodb" level="INFO"/>
+
+    <!-- https://logback.qos.ch/manual/layouts.html#ClassicPatternLayout -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Base logger level: ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
