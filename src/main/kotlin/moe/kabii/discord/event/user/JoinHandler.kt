@@ -2,15 +2,13 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Snowflake
 import discord4j.rest.http.client.ClientException
 import moe.kabii.data.mongodb.*
-import moe.kabii.discord.command.logColor
 import moe.kabii.discord.invite.InviteWatcher
-import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
+import moe.kabii.structure.tryBlock
 import reactor.core.publisher.toFlux
 import java.awt.Color
 

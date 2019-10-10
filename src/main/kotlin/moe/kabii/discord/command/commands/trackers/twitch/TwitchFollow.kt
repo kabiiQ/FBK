@@ -10,11 +10,10 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.helix.TwitchHelix
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
 
 object TwitchFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {

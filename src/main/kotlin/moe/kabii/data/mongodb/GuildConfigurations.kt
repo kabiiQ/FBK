@@ -10,7 +10,6 @@ import moe.kabii.structure.TwitchID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
-import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
@@ -84,7 +83,6 @@ data class FeatureChannel(
     var musicChannel: Boolean = false,
     val logSettings: LogSettings = LogSettings(channelID),
     val featureSettings: FeatureSettings = FeatureSettings()
-    //var cleverBotChannel: CleverBotFeature = CleverBotFeature()
 ) {
     fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
 }
@@ -96,11 +94,6 @@ data class FeatureSettings(
     var mediaStatusChange: Boolean = true,
     var mediaUpdatedStatus: Boolean = false
 )
-
-/*data class CleverBotFeature(
-    var enabled: Boolean = false,
-    var session: String? = null
-)*/
 
 data class TwitchConfig(
         var twitchid: Long,

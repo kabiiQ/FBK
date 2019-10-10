@@ -12,9 +12,10 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
 import moe.kabii.util.EmojiCharacters
 
 object RoleReactions : CommandContainer {

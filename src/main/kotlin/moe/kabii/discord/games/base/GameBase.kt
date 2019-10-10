@@ -1,6 +1,5 @@
 package moe.kabii.discord.games.base
 
-import discord4j.core.DiscordClient
 import discord4j.core.`object`.util.Snowflake
 
 interface GameBase<P: GamePlayer> {

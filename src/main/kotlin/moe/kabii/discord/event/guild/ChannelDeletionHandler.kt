@@ -3,7 +3,6 @@ package moe.kabii.discord.event.guild
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
-import moe.kabii.data.relational.MessageHistory
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ChannelDeletionHandler {

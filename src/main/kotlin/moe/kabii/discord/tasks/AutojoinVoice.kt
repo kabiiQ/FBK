@@ -6,7 +6,8 @@ import discord4j.rest.http.client.ClientException
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.lock

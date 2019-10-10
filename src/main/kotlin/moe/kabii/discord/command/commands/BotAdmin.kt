@@ -1,6 +1,5 @@
 package moe.kabii.discord.command.commands
 
-import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil.*
 import discord4j.core.`object`.presence.Activity
 import discord4j.core.`object`.presence.Presence
 import discord4j.core.`object`.util.Image

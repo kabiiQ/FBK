@@ -3,19 +3,15 @@ package moe.kabii.discord.command.commands.users
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.Reminder
-import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.reminderColor
 import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.jodaDateTime
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
-import org.jetbrains.exposed.sql.dateTimeLiteral
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import java.time.Instant
 
 object ReminderCommands : CommandContainer {
     object RemindMe : Command("remindme", "reminder", "setreminder", "remind") {

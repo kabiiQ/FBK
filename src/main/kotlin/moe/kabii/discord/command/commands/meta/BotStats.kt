@@ -1,18 +1,14 @@
 package moe.kabii.discord.command.commands.meta
 
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.User
-import discord4j.core.spec.EmbedCreateSpec
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.tryBlock
 import org.apache.commons.lang3.time.DurationFormatUtils
-import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit

@@ -7,8 +7,6 @@ import moe.kabii.discord.command.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
-import java.util.function.Predicate
-import kotlin.reflect.KClass
 
 object Search {
     private fun clean(str: String) = str.trim().toLowerCase().replace(" ", "").replace(",", "") // comma to help assist matching, most commands accept comma separation so we'll remove them in the actual role names too

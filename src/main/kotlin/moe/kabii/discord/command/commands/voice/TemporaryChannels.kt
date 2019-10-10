@@ -9,10 +9,10 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
 import moe.kabii.structure.success
+import moe.kabii.structure.tryBlock
 
 object TemporaryChannels : CommandContainer {
     object SetTempChannelCategory : Command("setcategory", "settempcategory") {

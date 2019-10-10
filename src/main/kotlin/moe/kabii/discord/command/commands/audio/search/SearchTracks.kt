@@ -3,7 +3,6 @@ package moe.kabii.discord.command.commands.audio.search
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
-import java.lang.StringBuilder
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {

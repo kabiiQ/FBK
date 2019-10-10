@@ -5,11 +5,7 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.util.DateValidation
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.snowflake
 import java.io.File
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object SnowflakeUtil : CommandContainer {

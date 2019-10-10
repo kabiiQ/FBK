@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.twitch
 
-import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.helix.TwitchHelix
 import moe.kabii.helix.TwitchStream

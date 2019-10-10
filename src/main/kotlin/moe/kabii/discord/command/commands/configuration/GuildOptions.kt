@@ -3,7 +3,9 @@ package moe.kabii.discord.command.commands.configuration
 import discord4j.core.`object`.util.Permission
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.*
+import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.CommandContainer
+import moe.kabii.discord.command.verify
 import moe.kabii.helix.TwitchHelix
 import moe.kabii.helix.TwitchUser
 import moe.kabii.rusty.Ok

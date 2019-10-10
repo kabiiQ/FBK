@@ -1,14 +1,8 @@
 package moe.kabii.discord.command.commands.utility
 
-import discord4j.core.`object`.entity.User
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.util.Search
-import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
 
 object UserUtil : CommandContainer {
     object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {

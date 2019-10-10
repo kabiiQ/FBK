@@ -6,8 +6,6 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClientBuilder
-import discord4j.core.`object`.audit.ActionType
-import discord4j.core.`object`.audit.ChangeKey
 import discord4j.core.event.domain.UserUpdateEvent
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
@@ -17,8 +15,8 @@ import discord4j.core.event.domain.lifecycle.ReconnectEvent
 import discord4j.core.event.domain.message.*
 import discord4j.core.event.domain.role.RoleDeleteEvent
 import moe.kabii.data.Keys
-import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
@@ -38,7 +36,6 @@ import moe.kabii.discord.command.commands.search.Urban
 import moe.kabii.discord.command.commands.trackers.TrackerCommandBase
 import moe.kabii.discord.command.commands.trackers.twitch.TwitchFollow
 import moe.kabii.discord.command.commands.users.ReminderCommands
-import moe.kabii.discord.command.commands.utility.UserUtil
 import moe.kabii.discord.command.commands.utility.*
 import moe.kabii.discord.command.commands.voice.TemporaryChannels
 import moe.kabii.discord.event.guild.*
@@ -55,7 +52,9 @@ import moe.kabii.joint.commands.RandomCommands
 import moe.kabii.joint.commands.TwitchInfo
 import moe.kabii.joint.commands.Vinglish
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.*
+import moe.kabii.structure.Metadata
+import moe.kabii.structure.Uptime
+import moe.kabii.structure.orNull
 import reactor.core.publisher.Mono
 
 fun main() {

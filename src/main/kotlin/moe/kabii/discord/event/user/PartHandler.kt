@@ -7,7 +7,6 @@ import discord4j.core.`object`.util.Snowflake
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.command.logColor
 import moe.kabii.structure.snowflake
 import reactor.core.publisher.toFlux
 import java.awt.Color

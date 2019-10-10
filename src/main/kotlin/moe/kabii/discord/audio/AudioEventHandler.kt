@@ -10,7 +10,6 @@ import discord4j.core.`object`.entity.TextChannel
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.errorColor
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.structure.tryBlock
 import moe.kabii.util.YoutubeUtil
 
 object AudioEventHandler : AudioEventAdapter() {

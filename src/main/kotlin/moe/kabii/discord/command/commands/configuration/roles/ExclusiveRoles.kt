@@ -2,7 +2,6 @@ package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.Snowflake
 import moe.kabii.data.mongodb.ExclusiveRoleSet
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command

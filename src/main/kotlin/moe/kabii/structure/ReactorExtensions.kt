@@ -5,7 +5,6 @@ import moe.kabii.rusty.Try
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
-import java.util.function.Consumer
 
 // Reactor flux mapNotNull
 fun <T, R> Flux<T>.mapNotNull(mapper: (T) -> R?): Flux<R> {

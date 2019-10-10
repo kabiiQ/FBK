@@ -7,17 +7,16 @@ import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.TwitchConfig
-import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.conversation.Conversation
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
-import moe.kabii.rusty.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
 import kotlin.reflect.KClass
@@ -183,28 +182,6 @@ class MessageHandler(private val twitch: TwitchClient) {
                 }
             }
             return
-        } else {
-            // cleverbot channel hooks
-            /*if(config != null) {
-                val cleverbot = config.options.featureChannels[event.message.channelId.asLong()]?.cleverBotChannel
-                if(cleverbot?.enabled == true) {
-                    // create session if not yet used in this channel
-                    if(cleverbot.session == null) {
-                        val newSession = CleverbotIO.newSession()
-                        if(newSession is Ok) {
-                            cleverbot.session = newSession.value
-                            commandContext.launch { config.save() }
-                        } else {
-                            event.message.channel.flatMap { channel -> channel.createMessage("Unfortunately, there was an error initialing Cleverbot.") }.subscribe()
-                        }
-                    }
-                    if(cleverbot.session != null) {
-                        val ask = CleverbotIO.query(cleverbot.session!!, content)
-                        val response = ask.orNull() ?: "I can't respond at this time."
-                        event.message.channel.flatMap { channel -> channel.createMessage(response) }.subscribe()
-                    }
-                }
-            }*/
         }
         // DISCORD CONVERSATION CALLBACKS
         Conversation.conversations.find { conversation ->

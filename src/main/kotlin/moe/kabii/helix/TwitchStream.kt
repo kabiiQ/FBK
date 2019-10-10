@@ -1,9 +1,7 @@
 package moe.kabii.helix
 
 import com.beust.klaxon.Json
-import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 data class TwitchStreamRequest(
         val data: List<TwitchStream>

@@ -4,7 +4,10 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.*
+import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.CommandContainer
+import moe.kabii.discord.command.DiscordParameters
+import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import reactor.core.publisher.Mono
 

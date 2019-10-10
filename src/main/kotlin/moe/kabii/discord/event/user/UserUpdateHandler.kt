@@ -1,17 +1,13 @@
 package moe.kabii.discord.event.user
 
-import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.UserUpdateEvent
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.command.logColor
-import moe.kabii.discord.util.RoleUtil
-import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
 import moe.kabii.structure.orNull
+import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import reactor.core.publisher.toFlux
 

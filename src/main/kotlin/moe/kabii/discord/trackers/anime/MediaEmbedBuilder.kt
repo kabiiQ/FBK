@@ -2,7 +2,6 @@ package moe.kabii.discord.trackers.anime
 
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
-import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.mongodb.ListInfo
 import moe.kabii.data.mongodb.MediaSite
 

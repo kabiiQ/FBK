@@ -1,7 +1,8 @@
 package moe.kabii.discord.invite
 
 import discord4j.core.`object`.entity.Guild
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.tryBlock
 
 object InviteWatcher {

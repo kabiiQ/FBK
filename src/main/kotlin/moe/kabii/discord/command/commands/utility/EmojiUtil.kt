@@ -1,11 +1,8 @@
 package moe.kabii.discord.command.commands.utility
 
-import discord4j.core.`object`.reaction.ReactionEmoji
-import io.ktor.util.toCharArray
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.util.EmojiCharacters
-import java.lang.StringBuilder
 
 object EmojiUtil : CommandContainer {
     object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojiletters", "emojiletter", "regionalindicator", "emojitext", "textemoji", "textemojis", "textmoji", "textmojis") {

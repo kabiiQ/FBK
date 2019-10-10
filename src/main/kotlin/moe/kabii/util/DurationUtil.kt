@@ -3,7 +3,6 @@ package moe.kabii.util
 import moe.kabii.rusty.Try
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
 
 object DurationParser {
     private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS)

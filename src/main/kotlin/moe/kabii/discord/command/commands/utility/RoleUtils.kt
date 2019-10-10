@@ -1,6 +1,5 @@
 package moe.kabii.discord.command.commands.utility
 
-import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
@@ -9,7 +8,6 @@ import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
-import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 
 object RoleUtils : CommandContainer {

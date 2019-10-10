@@ -9,7 +9,8 @@ import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.FeatureDisabledException
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.discord.trackers.anime.MediaListEmpty
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 

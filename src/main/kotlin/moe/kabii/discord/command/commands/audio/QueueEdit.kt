@@ -6,7 +6,6 @@ import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.discord.command.hasPermissions
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.withEach

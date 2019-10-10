@@ -5,26 +5,22 @@ import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.entity.*
 import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.util.RoleUtil
-import moe.kabii.rusty.*
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toMono
 import java.awt.Color
 import kotlin.coroutines.resume
 

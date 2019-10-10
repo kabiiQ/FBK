@@ -4,14 +4,15 @@ import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.runBlocking
-import moe.kabii.data.mongodb.*
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.helix.*
-import moe.kabii.rusty.*
+import moe.kabii.helix.HelixIOErr
+import moe.kabii.helix.TwitchHelix
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Try
 import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
@@ -31,7 +32,6 @@ class TwitchStreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") 
                 val streams = TwitchHelix.getStreams(streamIDs)
                 tracked.forEach { stream ->
                     val id = stream.stream
-                    println(id)
                     Try { updateStream(stream, streams.getValue(id), users.getValue(id)) }.result.ifErr { err -> err.printStackTrace() } // don't let this thread die
                 }
 
@@ -61,9 +61,6 @@ class TwitchStreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") 
 
         //val notifications = config.targets.flatMap(TrackedStreams.Target::notifications) // get active stream notification messages
         val targets = config.targets
-        targets.forEach {
-            println(it)
-        }
         if(stream == null) { // stream is not live, if there are any existing notifications, edit/remove them, otherwise ignore
             targets.flatMap(TrackedStreams.Target::notifications).forEach { activeNotification -> // though there will only be one notification per target this list still needs to be flattened
                 val embed = TwitchEmbedBuilder(user).statistics(activeNotification)

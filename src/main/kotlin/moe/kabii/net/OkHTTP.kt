@@ -1,6 +1,7 @@
 package moe.kabii.net
 
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Result
+import moe.kabii.rusty.Try
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response

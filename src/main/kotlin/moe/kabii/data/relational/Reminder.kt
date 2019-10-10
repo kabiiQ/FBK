@@ -1,16 +1,11 @@
 package moe.kabii.data.relational
 
-import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.util.Snowflake
-import kotlinx.coroutines.selects.select
-import moe.kabii.discord.tasks.ReminderWatcher
-import moe.kabii.structure.snowflake
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.LongIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.joda.time.DateTime
-import org.joda.time.Duration
-import java.time.Instant
 
 object Reminders : LongIdTable("reminders") {
     val user = reference("user", DiscordObjects.Users, ReferenceOption.RESTRICT)

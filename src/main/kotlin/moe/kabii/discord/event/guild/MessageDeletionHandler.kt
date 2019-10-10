@@ -7,8 +7,8 @@ import discord4j.core.event.domain.message.MessageDeleteEvent
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.structure.snowflake
 import moe.kabii.structure.orNull
+import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.toFlux

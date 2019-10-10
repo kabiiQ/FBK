@@ -2,10 +2,10 @@ package moe.kabii.discord.trackers.anime
 
 import com.beust.klaxon.Klaxon
 import kotlinx.coroutines.delay
+import moe.kabii.net.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.net.OkHTTP
 import okhttp3.Request
 import okhttp3.Response
 import java.awt.Color

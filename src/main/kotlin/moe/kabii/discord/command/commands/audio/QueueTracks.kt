@@ -3,7 +3,8 @@ package moe.kabii.discord.command.commands.audio
 import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.*
-import moe.kabii.discord.command.*
+import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.verify
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {

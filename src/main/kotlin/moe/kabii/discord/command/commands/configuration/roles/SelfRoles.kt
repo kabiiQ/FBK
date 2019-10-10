@@ -3,10 +3,13 @@ package moe.kabii.discord.command.commands.configuration.roles
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.*
+import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.CommandContainer
+import moe.kabii.discord.command.PermissionUtil
+import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.*
-import moe.kabii.rusty.*
+import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryBlock
 
 object SelfRoles : CommandContainer {
     object UnlockRole : Command("unlock", "unlockrole", "enablerole", "roleunlock") {

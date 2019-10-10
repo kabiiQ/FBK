@@ -2,8 +2,8 @@ package moe.kabii.discord.event.guild
 
 import discord4j.core.event.domain.message.ReactionAddEvent
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.structure.snowflake
 import moe.kabii.structure.orNull
+import moe.kabii.structure.snowflake
 import moe.kabii.util.EmojiCharacters
 
 object ReactionRoleHandler {

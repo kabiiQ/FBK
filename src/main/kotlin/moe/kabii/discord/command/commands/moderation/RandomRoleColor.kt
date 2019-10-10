@@ -5,14 +5,12 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.errorColor
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.util.RoleUtil
-import moe.kabii.util.ColorUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedReceiver
-import moe.kabii.util.RGB
 import moe.kabii.structure.tryBlock
-import reactor.core.publisher.Flux
+import moe.kabii.util.ColorUtil
+import moe.kabii.util.RGB
 import java.awt.Color
 
 object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {

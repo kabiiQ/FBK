@@ -8,7 +8,6 @@ import moe.kabii.discord.command.verify
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
 
 object UserModeration : CommandContainer {
     object SetSlowmode : Command("slowmode", "setslowmode", "set-slowmode") {

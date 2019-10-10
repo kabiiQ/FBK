@@ -4,12 +4,12 @@ import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.PrivateChannel
 import discord4j.core.`object`.entity.TextChannel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
-import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
-import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.command.reminderColor
 import moe.kabii.rusty.Try
 import moe.kabii.structure.*
@@ -17,7 +17,6 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import java.awt.Color
 import java.time.Duration
 import java.time.Instant
 

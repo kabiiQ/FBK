@@ -4,17 +4,10 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.util.Snowflake
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import moe.kabii.rusty.*
 import org.joda.time.DateTime
-import org.reactivestreams.Publisher
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
-import reactor.core.publisher.SynchronousSink
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ExecutorService
-import java.util.function.Predicate
 
 // Java Optional -> toNull = Kotlin nullable
 fun <T> Optional<T>.orNull(): T? = orElse(null)

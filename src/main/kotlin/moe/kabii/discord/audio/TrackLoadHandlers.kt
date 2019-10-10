@@ -8,10 +8,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.commands.audio.QueueTracks
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Try
 import moe.kabii.util.YoutubeUtil
 import java.net.URL
-import java.util.concurrent.Future
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?) : AudioLoadResultHandler {
     val audio = AudioManager.getGuildAudio(origin.target.id.asLong())

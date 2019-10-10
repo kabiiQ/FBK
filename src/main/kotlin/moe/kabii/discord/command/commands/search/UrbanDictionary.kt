@@ -5,7 +5,7 @@ import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.conversation.Page
 import moe.kabii.net.NettyFileServer
 import moe.kabii.net.OkHTTP
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Ok
 import okhttp3.Request
 
 object Urban : Command("tionary", "urban", "ud") {

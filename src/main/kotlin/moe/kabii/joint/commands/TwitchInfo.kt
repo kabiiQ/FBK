@@ -4,7 +4,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.helix.TwitchHelix
-import moe.kabii.helix.TwitchStream
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.reply
 import moe.kabii.util.DurationFormatter

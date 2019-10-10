@@ -10,7 +10,6 @@ import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.channelVerify
 import moe.kabii.structure.filterNot
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
 import reactor.core.publisher.Flux
 import reactor.core.publisher.toFlux
 

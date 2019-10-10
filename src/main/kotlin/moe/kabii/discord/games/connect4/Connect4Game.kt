@@ -1,7 +1,6 @@
 package moe.kabii.discord.games.connect4
 
 import moe.kabii.discord.games.base.GameBase
-import moe.kabii.discord.games.base.GamePlayer
 
 class Connect4Game(
     override val gameChannel: Long?

@@ -1,16 +1,10 @@
 package moe.kabii.data.relational
 
-import discord4j.core.`object`.entity.Message
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
-import moe.kabii.rusty.*
-import moe.kabii.structure.orNull
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import kotlin.concurrent.thread
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.LongIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 
 object MessageHistory {
     internal object Messages : LongIdTable() {

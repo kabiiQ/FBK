@@ -9,16 +9,17 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
-import moe.kabii.rusty.*
 
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
         BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeChannel),
         BooleanElement("Twitch stream tracking", listOf("twitch", "streams", "stream"), FeatureChannel::twitchChannel),
-        BooleanElement("Log channel", listOf("modlog", "mod", "logs", "userlog", "botlog", "log"), FeatureChannel::logChannel),
+        BooleanElement("Log channel", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot command channel", listOf("music", "musicbot"), FeatureChannel::musicChannel)
     )
 
