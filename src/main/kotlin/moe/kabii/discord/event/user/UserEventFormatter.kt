@@ -12,13 +12,14 @@ import java.time.Instant
 enum class UserEvent { JOIN, PART }
 
 class UserEventFormatter(val user: User) {
-    fun paramMatcher(origin: String, param: String) = """&$param(?:="([^"]*)")?""".toRegex().find(origin)
+    private fun paramMatcher(origin: String, param: String) = """&$param(?:="([^"]*)")?""".toRegex().find(origin)
 
-    fun commonFields(unformatted: String, member: Member?): String {
+    private fun commonFields(unformatted: String, member: Member?): String {
         var formatted = unformatted.replace("&name", user.username)
             .replace("&mention", user.mention)
             .replace("&id", user.id.asString())
-            .replace("&discrim", user.discriminator)
+            .replace("&discrim", "#${user.discriminator}")
+            .replace("&avatar", "")
 
         val guild = member?.run { guild.tryBlock().orNull() }
         val membersMatcher = paramMatcher(formatted, "members")
@@ -27,6 +28,7 @@ class UserEventFormatter(val user: User) {
                 formatted = formatted.replace(membersMatcher.value, members.toString())
             }
         }
+
         return formatted
     }
 

@@ -73,8 +73,10 @@ object JoinHandler {
                             .formatJoin(joinLog.joinFormat, invite)
                         channel.createEmbed { embed ->
                             embed.setDescription("$formatted$error")
-                            embed.setImage(member.avatarUrl)
                             embed.setColor(Color(6750056))
+                            if(joinLog.joinFormat.contains("&avatar")) {
+                                embed.setImage(member.avatarUrl)
+                            }
                         }
                     }
             }.subscribe()

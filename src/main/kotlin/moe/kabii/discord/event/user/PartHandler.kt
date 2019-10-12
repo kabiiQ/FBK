@@ -37,8 +37,10 @@ object PartHandler {
                         .formatPart(partLog.partFormat, member)
                     channel.createEmbed { embed ->
                         embed.setDescription(formatted)
-                        embed.setImage(user.avatarUrl)
                         embed.setColor(Color(16739688))
+                        if(partLog.partFormat.contains("&avatar")) {
+                            embed.setImage(user.avatarUrl)
+                        }
                     }
                 }
         }.subscribe()
