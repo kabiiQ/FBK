@@ -31,7 +31,7 @@ object QueueSkip : AudioCommandContainer {
                 } else {
                     embed {
                         setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("Voted to skip ${track.info.title}. ($votes/$votesNeeded votes)")
+                        setDescription("Voted to skip **${track.info.title}**. ($votes/$votesNeeded votes)")
                     }
                 }.block()
             }
