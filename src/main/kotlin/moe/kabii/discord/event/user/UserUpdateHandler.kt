@@ -21,7 +21,7 @@ object UserUpdateHandler {
             event.client.guilds
                 .filterWhen { guild ->
                     guild.members
-                        .filter { member -> member.id == new.id}.hasElements()
+                        .filter { member -> member.id == new.id }.hasElements()
                 }
                 .map { guild -> guild.id.asLong() }
                 .map(GuildConfigurations::getOrCreateGuild)

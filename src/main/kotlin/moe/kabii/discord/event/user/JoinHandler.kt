@@ -51,12 +51,8 @@ object JoinHandler {
                     if(addedRole is Err) {
                         val error = addedRole.value as? ClientException
                         when(error?.status?.code()) {
-                            403 -> {
-                                return@filter true
-                            }
-                            404 -> { // role deleted
-                                config.autoRoles.joinConfigurations.remove(joinConfig)
-                            }
+                            403 -> return@filter true
+                            404 -> config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted,
                         }
                     }
                     false

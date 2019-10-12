@@ -55,7 +55,7 @@ object MusicConfig : CommandContainer {
                 MusicSettings::skipUsers,
                 range = 1..20L,
                 default = MusicSettings.defaultUsers,
-                prompt = "Enter the new value for the minimum users to vote skip a song. If either the user ratio or the user count votes, the current song will be skipped."
+                prompt = "Enter the new value for the minimum users to vote skip a song. If either the user ratio or the user count is reached, the current song will be skipped."
             ),
             LongElement(
                 "Max tracks in queue for one user (0 = unlimited)",
