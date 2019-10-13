@@ -19,15 +19,13 @@ import java.io.File
 import javax.imageio.ImageIO
 
 object NettyFileServer {
-    val domain = "http://content.kabii.moe"
-    val thumbnailRoot = File("files/thumbnails/")
+    val domain = "http://content.kabii.moe:8080"
     val staticRoot = File("files/images/")
     val idRoot = File("files/ids/")
 
     val defaultThumbnail = File(staticRoot, "default_twitch_thumbnail.png")
 
     val server = embeddedServer(Netty, port = 8080) {
-        thumbnailRoot.mkdirs()
         staticRoot.mkdirs()
         idRoot.mkdirs()
         val udLogo = File(staticRoot, "ud_logo.jpg")
