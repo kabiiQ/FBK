@@ -8,11 +8,11 @@ import moe.kabii.net.OkHTTP
 import moe.kabii.rusty.Ok
 import okhttp3.Request
 
-object Urban : Command("tionary", "urban", "ud") {
+object Urban : Command("urbandictionary", "urban", "ud") {
     init {
         discord {
             val lookup = if (args.isEmpty()) author.username else noCmd
-            val message = embed("Searching for **$lookup**").block()
+            val message = embed("Searching for **$lookup**...").block()
             val request = Request.Builder().get().url("https://api.urbandictionary.com/v0/define?term=$lookup")
             val response = OkHTTP.make(request) { response ->
                 val body = response.body!!.string()

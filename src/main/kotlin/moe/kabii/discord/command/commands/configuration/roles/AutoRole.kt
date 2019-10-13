@@ -11,7 +11,7 @@ object AutoRole : Command("autorole", "auto-role")  {
                 return@discord
             }
             val target = when(args[1].toLowerCase()) {
-                "create", "assign", "add", "+", "insert" -> when(args[0].toLowerCase()) {
+                "create", "assign", "add", "+", "insert", "new" -> when(args[0].toLowerCase()) {
                     "join", "join-role" -> JoinRole.AssignAutoRole
                     "voice", "voice-role" -> VoiceRole.AssignVoiceRole
                     "reaction", "reactionrole" -> RoleReactions.AddReactionRole

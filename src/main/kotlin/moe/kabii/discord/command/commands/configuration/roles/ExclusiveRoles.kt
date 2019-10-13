@@ -13,7 +13,7 @@ import moe.kabii.structure.tryBlock
 import reactor.core.publisher.toMono
 
 object ExclusiveRoles : CommandContainer {
-    object CreateExclusiveSet : Command("createset", "addset", "exclusiveset", "createtrack") {
+    object CreateExclusiveSet : Command("createset", "addset", "exclusiveset", "createtrack", "exclusive", "exclusiveroles") {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

@@ -189,11 +189,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                             || input.startsWith("en")
                             || input.startsWith("t")
                             || input == "1"
+                            || input == "on"
                     -> true
                     input.startsWith("n")
                             || input.startsWith("dis")
                             || input.startsWith("f")
                             || input == "0"
+                            || input == "off"
                     -> false
                     else -> null
                 }
