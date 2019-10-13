@@ -40,28 +40,14 @@ object FeatureConfig : Command("settings", "featureconfig", "featureconfiguratio
 
     init {
         discord {
-            val targetChan = when {
-                args.isNotEmpty() -> {
-                    val channel = Search.channelByID<TextChannel>(this, args[0])
-                    if(channel == null) {
-                        error("Unable to configure channel **${args[0]}**. Verify this is a server text channel ID.").block()
-                        return@discord
-                    } else channel
-                }
-                chan is TextChannel -> chan
-                else -> {
-                    usage("Execute this command in the target channel or specify the channel.", "featureconfig #channel").block()
-                    return@discord
-                }
-            }
-            val targetGuild = targetChan.guild.block()
-            val member = targetGuild.getMemberById(author.id).block()
+            if(isPM) return@discord
+            chan as TextChannel
             member.verify(Permission.MANAGE_CHANNELS)
-            val config = GuildConfigurations.getOrCreateGuild(targetGuild.id.asLong())
-            val features = config.getOrCreateFeatures(targetChan.id.asLong())
+            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
+            val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(
-                "Channel feature settings for #${targetChan.name}",
+                "Channel feature settings for #${chan.name}",
                 FeatureSettingsModule,
                 features.featureSettings
             )
