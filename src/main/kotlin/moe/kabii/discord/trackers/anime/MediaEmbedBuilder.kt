@@ -47,13 +47,12 @@ class MediaEmbedBuilder {
         footer.append(media.progressStr())
                 .append(" Score: ")
         if (oldScore != null) {
-            footer.append(oldScore)
-                    .append(" -> ")
+            footer.append(oldScore).append(" -> ")
         }
         footer.append(media.scoreStr())
         spec.setFooter(footer.toString(), null)
 
-        val title = "[${media.title}]($"
+        val title = "[${media.title}](${media.url})"
         spec.setDescription(descriptionFmt.format(title))
     }
 }

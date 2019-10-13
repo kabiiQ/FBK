@@ -47,5 +47,6 @@ object PartHandler {
 
         checkNotNull(log) { "User missing in DB: $userID" }
         log.current = false
+        config.save()
     }
 }

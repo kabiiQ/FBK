@@ -71,7 +71,7 @@ data class Media(
         }
     }
 
-    fun scoreStr() = "${score?.toShort() ?: "-"}/$scoreMax"
+    fun scoreStr() = "${score?.toShort() ?: "-"}/${scoreMax.toInt()}"
 }
 
 enum class ConsumptionStatus(val color: Color) {

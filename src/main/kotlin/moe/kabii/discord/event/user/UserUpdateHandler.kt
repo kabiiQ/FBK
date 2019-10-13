@@ -13,6 +13,7 @@ import reactor.core.publisher.toFlux
 
 object UserUpdateHandler {
     fun handle(event: UserUpdateEvent) {
+        println("Member update: $event")
         val new = event.current
         val old = event.old.orNull() ?: return
 
