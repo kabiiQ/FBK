@@ -3,6 +3,7 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
+import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import moe.kabii.data.TempStates
@@ -103,38 +104,41 @@ object VoiceMoveHandler {
 
         // autorole
         // find applicable autoroles for new channel
-        val autoRoles = config.autoRoles.voiceConfigurations
-        val rolesNeeded = if(new) { // has a current channel, may need auto roles
-            autoRoles.filter { cfg ->
-                if(cfg.targetChannel == null) true else { // if targetChannel is null then this autorole applies to any voice channel
-                    cfg.targetChannel == newChannel!!.id.asLong()
-                }
-            }
-        } else emptyList() // no current channel, no roles needed
 
-        val guild = newState.guild.block()
-        val eventMember = member ?: return // kicked
-        rolesNeeded.toFlux()
-            .filter { cfg -> !eventMember.roleIds.contains(cfg.role.snowflake) } // add missing roles
-            .map { missingRole -> missingRole.role.snowflake }
-            .collectList().block()
-            .forEach { targetRole ->
-                // check if roles still exist first
-                val cfgRole = guild.getRoleById(targetRole).tryBlock()
-                if (cfgRole is Ok) {
-                    eventMember.addRole(cfgRole.value.id).subscribe()
-                } else {
-                    if(autoRoles.removeIf { cfg -> cfg.role == targetRole.asLong() }) {
-                        config.save()
+        if(!user.isBot) {
+            val autoRoles = config.autoRoles.voiceConfigurations
+            val rolesNeeded = if (new) { // has a current channel, may need auto roles
+                autoRoles.filter { cfg ->
+                    if (cfg.targetChannel == null) true else { // if targetChannel is null then this autorole applies to any voice channel
+                        cfg.targetChannel == newChannel!!.id.asLong()
                     }
                 }
-            }
+            } else emptyList() // no current channel, no roles needed
 
-        eventMember.roleIds.toFlux() // remove extra autoroles
-            .filter { roleID -> autoRoles.find { cfg -> cfg.role.snowflake == roleID } != null } // any autorole the user has
-            .filter { roleID -> rolesNeeded.find { cfg -> cfg.role.snowflake == roleID } == null } // which is not currently needed
-            .flatMap(eventMember::removeRole)
-            .onErrorContinue { _, _ ->  } // don't care about race conditions against other users/events. if the role is gone we don't worry about it.
-            .blockLast()
+            val guild = newState.guild.block()
+            val eventMember = member ?: return // kicked
+            rolesNeeded.toFlux()
+                .filter { cfg -> !eventMember.roleIds.contains(cfg.role.snowflake) } // add missing roles
+                .map { missingRole -> missingRole.role.snowflake }
+                .collectList().block()
+                .forEach { targetRole ->
+                    // check if roles still exist first
+                    val cfgRole = guild.getRoleById(targetRole).tryBlock()
+                    if (cfgRole is Ok) {
+                        eventMember.addRole(cfgRole.value.id).subscribe()
+                    } else {
+                        if (autoRoles.removeIf { cfg -> cfg.role == targetRole.asLong() }) {
+                            config.save()
+                        }
+                    }
+                }
+
+            eventMember.roleIds.toFlux() // remove extra autoroles
+                .filter { roleID -> autoRoles.find { cfg -> cfg.role.snowflake == roleID } != null } // any autorole the user has
+                .filter { roleID -> rolesNeeded.find { cfg -> cfg.role.snowflake == roleID } == null } // which is not currently needed
+                .flatMap(eventMember::removeRole)
+                .onErrorContinue { _, _ -> } // don't care about race conditions against other users/events. if the role is gone we don't worry about it.
+                .blockLast()
+        }
     }
 }
