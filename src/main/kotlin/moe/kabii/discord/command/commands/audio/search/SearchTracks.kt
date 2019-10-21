@@ -22,7 +22,7 @@ object SearchTracks : AudioCommandContainer {
                 val (source, args) =
                     if(parse == null) AudioSource.YOUTUBE to args
                     else parse to args.drop(1) // if the first arg is a target, use it as the target instead of part of query
-                val query = args.joinToString("")
+                val query = args.joinToString(" ")
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
                     error("No results found searching **${source.fullName}** for **$query**.").block()
