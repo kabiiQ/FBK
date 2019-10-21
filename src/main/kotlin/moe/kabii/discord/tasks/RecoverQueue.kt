@@ -18,7 +18,7 @@ import java.util.concurrent.Executors
 
 class RecoverQueue {
     // can be a very intensive, slow process. start immediately on reboot but let it run in the background
-    private val pool = Executors.newFixedThreadPool(4).asCoroutineScope()
+    private val pool = Executors.newSingleThreadExecutor().asCoroutineScope()
 
     fun recover(guild: Guild) = pool.launch {
         // restore audio queue
