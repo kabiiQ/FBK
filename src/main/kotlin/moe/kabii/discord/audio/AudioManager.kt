@@ -10,6 +10,8 @@ import discord4j.voice.AudioProvider
 import moe.kabii.data.mongodb.GuildConfigurations
 import java.nio.ByteBuffer
 
+internal data class AudioComponents(val player: AudioPlayer, val provider: AudioProvider)
+
 object AudioManager {
     val manager = DefaultAudioPlayerManager()
     internal val guilds = mutableMapOf<Long, GuildAudio>()
@@ -21,12 +23,7 @@ object AudioManager {
         }
     }
 
-    private fun createGuildAudio(guild: Long): GuildAudio {
-        val (player, provider) = createAudioComponents(guild)
-        return GuildAudio(guild, player, provider)
-    }
-
-    internal fun createAudioComponents(guild: Long): Pair<AudioPlayer, AudioProvider> {
+    internal fun createAudioComponents(guild: Long): AudioComponents {
         val savedVolume = GuildConfigurations.getOrCreateGuild(guild).musicBot.volume
         val player = manager.createPlayer().apply {
             volume = savedVolume
@@ -37,8 +34,11 @@ object AudioManager {
                 private val frame = MutableAudioFrame().also { frame -> frame.setBuffer(buffer) }
                 override fun provide() = player.provide(frame).also { provided -> if (provided) buffer.flip() }
             }
-        return player to provider
+        return AudioComponents(player, provider)
     }
 
-    @Synchronized fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) { createGuildAudio(guild) }
+    @Synchronized fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
+        val (player, provider) = createAudioComponents(guild)
+        GuildAudio(guild, player, provider)
+    }
 }

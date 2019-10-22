@@ -74,7 +74,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                 if (oldMedia == null) {
                     // anime is new to list
                     newEntry = true
-                    builder = MediaEmbedBuilder()
+                    builder = MediaEmbedBuilder(newMedia)
                     builder.descriptionFmt = when (newMedia.status) {
                         ConsumptionStatus.COMPLETED -> "Added %s to their list as Completed."
                         ConsumptionStatus.DROPPED -> "Added %s to their list as Dropped."
@@ -86,7 +86,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                     // media was already on list, check for changes
                     if (newMedia.status != oldMedia.status) {
                         statusChange = true
-                        builder = MediaEmbedBuilder()
+                        builder = MediaEmbedBuilder(newMedia)
                         builder.descriptionFmt = when (newMedia.status) {
                             ConsumptionStatus.WATCHING -> "Started watching %s!"
                             ConsumptionStatus.PTW -> "Put %s back on their Plan to Watch."
@@ -99,7 +99,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                     val scoreUpdated = newMedia.score != oldMedia.score
                     if (newMedia.watched != oldMedia.watched || scoreUpdated) {
                         statusUpdate = true
-                        builder = builder ?: MediaEmbedBuilder()
+                        builder = builder ?: MediaEmbedBuilder(newMedia)
                         builder.descriptionFmt = when (newMedia.status) {
                             ConsumptionStatus.COMPLETED -> "Updated their completed status for %s."
                             ConsumptionStatus.DROPPED -> "Updated their dropped status for %s."
@@ -122,7 +122,6 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                     }
                 }
                 if (builder != null) {
-                    builder.media = newMedia
                     for (target in savedList.targets) {
                         // send embed to all channels this user's mal is tracked in
                         val user = discord.getUserById(target.discordUserID.snowflake).tryBlock().orNull() ?: continue //
