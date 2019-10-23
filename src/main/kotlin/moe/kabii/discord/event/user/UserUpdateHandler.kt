@@ -2,6 +2,7 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.UserUpdateEvent
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
@@ -13,7 +14,7 @@ import reactor.core.publisher.toFlux
 
 object UserUpdateHandler {
     fun handle(event: UserUpdateEvent) {
-        println("Member update: $event")
+        LOG.debug("Member update: $event") // todo debug avatar log missing events
         val new = event.current
         val old = event.old.orNull() ?: return
 

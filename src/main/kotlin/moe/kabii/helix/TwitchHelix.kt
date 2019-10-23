@@ -1,6 +1,7 @@
 package moe.kabii.helix
 
 import com.beust.klaxon.Klaxon
+import moe.kabii.LOG
 import moe.kabii.data.Keys
 import moe.kabii.net.NettyFileServer
 import moe.kabii.net.OkHTTP
@@ -32,7 +33,7 @@ object TwitchHelix {
                         Thread.sleep(timeout) // rate limit retry later
                         null
                     } else {
-                        println("Error getting Twitch call: $response")
+                        LOG.error("Error getting Twitch call: $response")
                         null
                     }
                 } else {

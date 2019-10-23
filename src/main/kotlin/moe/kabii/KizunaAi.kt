@@ -55,7 +55,10 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.orNull
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
+
+val LOG = LoggerFactory.getLogger("moe.kabii")
 
 fun main() {
     // init
@@ -150,7 +153,6 @@ fun main() {
     val audio = AudioManager
 
     // task threads
-    var init = false
     val listWatcher = MediaListWatcher(discord)
     val streamWatcher = TwitchStreamWatcher(discord)
     val reminderWatcher = ReminderWatcher(discord)
@@ -164,7 +166,7 @@ fun main() {
     val onGuildReady = events.on(ReadyEvent::class.java)
         .map { event -> event.guilds.size }
         .doOnNext { count ->
-            println("Connecting to $count guilds.")
+            LOG.info("Connecting to $count guilds.")
         }
         .flatMap { count ->
             val recoverQueue = RecoverQueue()
@@ -176,7 +178,7 @@ fun main() {
                 .doOnNext { guild ->
                     InviteWatcher.updateGuild(guild)
                     recoverQueue.recover(guild)
-                    println("Connected to guild ${guild.name}")
+                    LOG.info("Connected to guild ${guild.name}")
                 }
         }
 
@@ -244,7 +246,7 @@ fun main() {
         onReactionAdd, onReactionRemove, onReactionAdd2, onGuildReady,
         onInitialReady)
         .onErrorResume { t ->
-            println("Uncaught exception: ${t.message}") // todo log
+            LOG.info("Uncaught exception: ${t.message}")
             t.printStackTrace()
             Mono.empty()
         }

@@ -4,6 +4,7 @@ import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.rest.http.client.ClientException
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.helix.HelixIOErr
@@ -55,7 +56,7 @@ class TwitchStreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") 
         val user = apiUser.orNull()
         if(user == null) {
             // todo untrack system
-            println("Invalid Twitch user: ${config.stream}")
+            LOG.error("Invalid Twitch user: ${config.stream}")
             return
         }
 

@@ -3,6 +3,7 @@
     <logger name="io.netty" level="INFO"/>
     <logger name="reactor" level="INFO"/>
     <logger name="org.mongodb" level="INFO"/>
+    <logger name="moe.kabii" level="DEBUG"/>"
 
     <!-- https://logback.qos.ch/manual/layouts.html#ClassicPatternLayout -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

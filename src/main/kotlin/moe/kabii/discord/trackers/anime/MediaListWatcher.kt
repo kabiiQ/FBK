@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.PrivateChannel
 import discord4j.core.`object`.entity.TextChannel
 import kotlinx.coroutines.*
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MediaSite
 import moe.kabii.data.mongodb.TrackedMediaList
@@ -14,6 +15,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
+import reactor.core.publisher.Mono
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -51,7 +53,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                         } catch(limit: RateLimitException) {
                             sleep(limit.retryMillis)
                         } catch(e: Exception) {
-                            println("Error parsing media item: $it :: ${e.message}")
+                            LOG.warn("Error parsing media item: $it :: ${e.message}")
                             return@associateBy Err(MediaListIOErr)  // media item may fail to parse with API inconsistencies etc. we will skip item rather than entire list. todo log to be corrected
                         }
                     }
@@ -156,9 +158,10 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                         builder.createEmbedConsumer(savedList.list)(spec)
                                     }
                                 }
-                                .onErrorContinue { e, _ ->
+                                .onErrorResume { e ->
                                     // todo channel should be removed if it's no longer valid
-                                    println("${e.message} while sending anime list update to ${target.channelID}")
+                                    LOG.info("${e.message} while sending anime list update to ${target.channelID}")
+                                    Mono.empty()
                                 }
                                 .subscribe()
                     }

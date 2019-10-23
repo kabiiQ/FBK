@@ -8,6 +8,7 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.launch
+import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -36,7 +37,7 @@ class MessageHandler(private val twitch: TwitchClient) {
             .filterIsInstance<Command>()
             .forEach { cmd ->
                 register(cmd)
-                "Registered command \"${cmd.baseName}\". Aliases: ${cmd.aliases.joinToString("/")}. Object: ${cmd::class.simpleName}".println()
+                LOG.info("Registered command \"${cmd.baseName}\". Aliases: ${cmd.aliases.joinToString("/")}. Object: ${cmd::class.simpleName}")
             }
     }
 
@@ -134,8 +135,8 @@ class MessageHandler(private val twitch: TwitchClient) {
                     val username = author.username
                     val guildName = if(isPM) username else guild.name
                     val context = if (isPM) "Private" else "Guild"
-                    "${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content".println()
-                    "Executing command ${command.baseName} on ${Thread.currentThread().name}".println()
+                    LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
+                    LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
                     val noCmd = content.substring(msgArgs[0].length).trim()
                     val args = noCmd.split(" ").filter(String::isNotBlank)
                     val chan = event.message.channel.block()
@@ -170,13 +171,12 @@ class MessageHandler(private val twitch: TwitchClient) {
                                         }.subscribe()
                             }
                             else -> {
-                                println("Uncaught client error in command ${command.baseName} on guild $targetID: ${ce.message}")
+                                LOG.error("Uncaught client error in command ${command.baseName} on guild $targetID: ${ce.message}")
                                 ce.printStackTrace()
                             }
                         }
                     } catch (e: Exception) {
-                        println("Uncaught exception in command ${command.baseName} on guild $targetID: ${e.message}")
-                        println("Erroring command: $content")
+                        LOG.error("\nUncaught exception in command ${command.baseName} on guild $targetID: ${e.message}\nErroring command: $content")
                         e.printStackTrace()
                     }
                 }
@@ -195,7 +195,7 @@ class MessageHandler(private val twitch: TwitchClient) {
         val msgArgs = event.message.split(" ").filterNot { it.isBlank() }
         val isMod = event.permissions.contains(CommandPermission.MODERATOR)
 
-        println("TwitchMessage#${event.channel.name}:\t${event.user.name}:\t${event.message}")
+        LOG.debug("TwitchMessage#${event.channel.name}:\t${event.user.name}:\t${event.message}")
 
         // discord-twitch verification- check all messages even if not linked guild
         val verification = TempStates.twitchVerify.entries.find { (id, config) ->
@@ -241,8 +241,7 @@ class MessageHandler(private val twitch: TwitchClient) {
                             command.executeTwitch!!(param)
                         }
                     } catch (e: Exception) {
-                        println("Uncaught exception in Twitch command ${command.baseName}")
-                        println("Erroring command: ${event.message}")
+                        LOG.error("Uncaught exception in Twitch command ${command.baseName}\n\"Erroring command: ${event.message}\"")
                         e.printStackTrace()
                     }
                 }

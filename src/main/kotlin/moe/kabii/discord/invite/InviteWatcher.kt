@@ -1,6 +1,7 @@
 package moe.kabii.discord.invite
 
 import discord4j.core.`object`.entity.Guild
+import moe.kabii.LOG
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.tryBlock
@@ -12,7 +13,7 @@ object InviteWatcher {
         val newInvites = when(val invites = guild.invites.collectList().tryBlock()) {
             is Ok -> invites.value.map { invite -> invite.code to invite.uses }.toMap().toMutableMap()
             is Err -> {
-                println("Missing permissions to view invites for ${guild.id.asString()}")
+                LOG.info("Missing permissions to view invites for ${guild.id.asString()}")
                 return emptySet()
             }
         }

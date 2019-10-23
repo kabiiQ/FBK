@@ -8,6 +8,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
+import moe.kabii.LOG
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.command.reminderColor
@@ -56,7 +57,7 @@ class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
         val user = discord.getUserById(reminder.user.userID.snowflake)
             .tryBlock().orNull()
         if(user == null) {
-            println("Skipping reminder: user ${reminder.user} not found") // this should not happen
+            LOG.warn("Skipping reminder: user ${reminder.user} not found") // this should not happen
             return
         }
         // get guild channel/pm channel
@@ -73,8 +74,7 @@ class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
             else -> null // guild channel can be deleted entirely
         }
         if(remindChannel == null) {
-            // todo error logging
-            println("Skipping reminder: channel ${reminder.channel} is no longer valid")
+            LOG.info("Skipping reminder: channel ${reminder.channel} is no longer valid")
             return
         }
         val age = Duration.between(reminder.created.javaInstant, Instant.now())
