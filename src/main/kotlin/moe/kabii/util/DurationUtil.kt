@@ -40,6 +40,10 @@ object DurationParser {
             .run { Try { Duration.parse(this) }}
             .result.orNull()
     }
+
+    data class UnknownLengthParse(val parsedDuration: Duration, val remainder: Collection<String>)
+
+    fun tryUnknownLengthParse(args: Collection<String>): UnknownLengthParse? = TODO()
 }
 
 class DurationFormatter(val duration: Duration) {
