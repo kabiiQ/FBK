@@ -37,7 +37,7 @@ object MemberUpdateHandler {
                                 .filterNot(roleID::equals)
                                 .filter { userRole -> exclusiveSet!!.roles.contains(userRole.asLong()) } // from the current user roles, get roles which are part of the exclusive role set and thus should be removed from the user
                                 .flatMap { removeID -> old.removeRole(removeID, "Role is exclusive with the added role ${roleID.asString()}")}
-                        }.onErrorContinue { _, _ -> }
+                        }.onErrorResume { _ -> Mono.empty() }
                 }.subscribe()
         }
     }

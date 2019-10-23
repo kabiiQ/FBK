@@ -9,6 +9,7 @@ import moe.kabii.discord.command.verify
 import moe.kabii.discord.conversation.ReactionInfo
 import moe.kabii.discord.conversation.ReactionListener
 import moe.kabii.util.EmojiCharacters
+import reactor.core.publisher.Mono
 
 object Drag : Command("drag", "move", "pull") {
     init {
@@ -27,7 +28,7 @@ object Drag : Command("drag", "move", "pull") {
                                     member.edit { spec ->
                                         spec.setNewVoiceChannel(targetChannel.id)
                                     }
-                                }.onErrorContinue { _, _ -> }
+                                }.onErrorResume { _ -> Mono.empty() }
                                 .blockLast()
                     } else {
                         error("**drag all** moves ALL users in this server's voice channels to your current voice channel. You must be in a voice channel that I can move users into, to use the command.").block()

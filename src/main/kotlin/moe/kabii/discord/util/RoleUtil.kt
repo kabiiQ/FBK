@@ -21,7 +21,7 @@ object RoleUtil {
             .filter { role -> subset?.contains(role.asLong()) ?: true } // roles that we want to delete if empty
             .filter { role -> !assignedRoles.contains(role) }
             .flatMap { role -> target.getRoleById(role) }
-            .onErrorContinue { _, _ ->  }
+            .onErrorResume { Mono.empty() }
     }
 
     fun removeTwitchIfEmpty(target: Guild, mentionRole: Long): Flux<Void> {

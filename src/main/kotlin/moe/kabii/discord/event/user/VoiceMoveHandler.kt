@@ -137,7 +137,7 @@ object VoiceMoveHandler {
                 .filter { roleID -> autoRoles.find { cfg -> cfg.role.snowflake == roleID } != null } // any autorole the user has
                 .filter { roleID -> rolesNeeded.find { cfg -> cfg.role.snowflake == roleID } == null } // which is not currently needed
                 .flatMap(eventMember::removeRole)
-                .onErrorContinue { _, _ -> } // don't care about race conditions against other users/events. if the role is gone we don't worry about it.
+                .onErrorResume { _ -> Mono.empty() } // don't care about race conditions against other users/events. if the role is gone we don't worry about it.
                 .blockLast()
         }
     }
