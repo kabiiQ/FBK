@@ -8,6 +8,7 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.reminderColor
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.tryBlock
+import moe.kabii.util.ColorUtil
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -17,6 +18,7 @@ object ReminderCommands : CommandContainer {
     object RemindMe : Command("remindme", "reminder", "setreminder", "remind") {
         init {
             discord {
+                val g = ColorUtil::hexString
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
                 if(args.size < 2) {
@@ -32,7 +34,7 @@ object ReminderCommands : CommandContainer {
                 val length = DurationFormatter(time).fullTime
                 if(time.seconds < 60 || time.toDays() > 732) {
                     // currently this is technically a limitation because we only pull from the database once per minute and shorter reminders will be lost as a result.
-                    // there are easy changes for the design here BUT I felt reminders < 1 minute are probably in error anyways if someone tries to write "20"
+                    // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways, if someone tries to write "20"
                     // and this would be taken as 20 seconds rather than if they expected minutes or hours
                     // also 2 years limit just for some arbitrary practicality
                     error("**${args[0]}** was taken to mean **$length**. Please specify a reminder time of at least 1 minute.").block()
@@ -50,7 +52,7 @@ object ReminderCommands : CommandContainer {
                         else -> true
                     }
                 }
-                    .joinToString("")
+                    .joinToString(" ")
                     .replace("@everyone", "")
                     .run {
                         if(guild != null) replace(guild.id.asString(), "") else this
