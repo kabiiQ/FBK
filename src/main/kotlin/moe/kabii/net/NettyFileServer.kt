@@ -16,6 +16,7 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.time.Instant
 import javax.imageio.ImageIO
 
 object NettyFileServer {
@@ -93,7 +94,7 @@ object NettyFileServer {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"
     }
-    fun thumbnail(id: Long) = "$domain/thumbnails/$id"
+    fun thumbnail(id: Long) = "$domain/thumbnails/$id/${Instant.now().epochSecond}}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
     fun idsAll(id: String) = "$domain/ids/$id-all.txt"
