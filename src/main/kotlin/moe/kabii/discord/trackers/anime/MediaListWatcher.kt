@@ -13,6 +13,7 @@ import moe.kabii.data.mongodb.TrackedMediaLists
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.asCoroutineScope
+import moe.kabii.structure.plural
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import reactor.core.publisher.Mono
@@ -108,13 +109,10 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                             ConsumptionStatus.HOLD -> "Updated their on-hold status for %s."
                             ConsumptionStatus.PTW -> "Updated their Plan to Watch for %s."
                             ConsumptionStatus.WATCHING -> {
-                                val watched = newMedia.watched - oldMedia.watched
-                                val read = newMedia.readVolumes - oldMedia.readVolumes
-                                if (watched > 0 || read > 0) {
-                                    builder.oldProgress = oldMedia.progressStr()
-                                    "Watched $watched episodes of %s."
-                                } else {
-                                    "Updated their watching status for %s."
+                                builder.oldProgress = oldMedia.progressStr(withTotal = false)
+                                when(newMedia.type) {
+                                    MediaType.ANIME -> "Watched $progress ${"episode".plural(progress)} of %s."
+                                    MediaType.MANGA -> "Read $progress ${"chapter".plural(progress)} of %s."
                                 }
                             }
                         }
@@ -137,9 +135,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                     when(chan) {
                                         is TextChannel -> {
                                             val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
-                                            val featureChannel = config.options.featureChannels[chan.id.asLong()]
                                             val featureSettings = config.options.featureChannels[chan.id.asLong()]?.featureSettings
-
                                             // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
                                             when {
                                                 featureSettings == null -> false
@@ -147,7 +143,6 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                                 featureSettings.mediaStatusChange && statusChange -> true
                                                 featureSettings.mediaUpdatedStatus && statusUpdate -> true
                                                 else -> false
-
                                             }
                                         }
                                         is PrivateChannel -> true
