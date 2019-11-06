@@ -7,6 +7,7 @@ import moe.kabii.discord.command.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
+import java.util.*
 
 object Search {
     private fun clean(str: String) = str.trim().toLowerCase().replace(" ", "").replace(",", "") // comma to help assist matching, most commands accept comma separation so we'll remove them in the actual role names too
@@ -125,7 +126,6 @@ object Search {
 
         suspend fun prompt(options: List<Member>): Member? {
             val members = options
-                .distinct()
                 .mapIndexed { id, member -> "${id + 1}: ${member.username}#${member.discriminator} (${member.id.asString()})" }
                 .joinToString("\n")
             val prompt = param.embed {
@@ -152,7 +152,9 @@ object Search {
         fun match(str: String) = clean(str).contains(matchTo)
 
         val partial = target.members
+            .distinct(Objects::hashCode)
             .filter { member ->
+                // checking nickname + username. 'display name' is not what we want here as I often type a username rather than current nickname
                 if(member.nickname.map { nick -> match(nick) }.orElse(false))
                     return@filter true
                 match(member.username)
