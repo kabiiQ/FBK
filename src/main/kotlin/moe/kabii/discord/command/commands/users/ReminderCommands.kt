@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 
 object ReminderCommands : CommandContainer {
-    object RemindMe : Command("remindme", "reminder", "setreminder", "remind") {
+    object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
         init {
             discord {
                 val g = ColorUtil::hexString

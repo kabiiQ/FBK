@@ -6,7 +6,6 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.util.Search
 
 object FeatureConfig : Command("settings", "featureconfig", "featureconfiguration", "configfeatures", "configfeature", "configurefeatures", "featuresettings") {
     object FeatureSettingsModule : ConfigurationModule<FeatureSettings>(

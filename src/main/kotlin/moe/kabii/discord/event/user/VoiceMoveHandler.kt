@@ -3,7 +3,6 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import moe.kabii.data.TempStates
