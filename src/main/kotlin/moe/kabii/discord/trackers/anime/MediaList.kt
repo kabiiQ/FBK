@@ -64,14 +64,27 @@ data class Media(
         val readVolumes: Short,
         val totalVolumes: Short
 ) {
-    fun progressStr(): String {
-        return when(type) {
-            MediaType.MANGA -> "$readVolumes.$watched/$totalVolumes.$total".replace(" 0.", "")
-            MediaType.ANIME -> "$watched/$total"
+    fun progressStr(withTotal: Boolean) = sequence {
+        val includeVolume = readVolumes != 0.toShort()
+        val watched = when(type) {
+            MediaType.MANGA -> if(includeVolume) "$readVolumes.$watched" else "$watched"
+            MediaType.ANIME -> "$watched"
         }
-    }
+        yield(watched)
+        if(withTotal) {
+            yield("/")
+            val total = if(total == 0.toShort()) "?" else when (type) {
+                MediaType.MANGA -> if (includeVolume) "$totalVolumes.$total" else "$total"
+                MediaType.ANIME -> "$total"
+            }
+            yield(total)
+        }
+    }.joinToString("")
 
-    fun scoreStr() = "${score?.toShort() ?: "-"}/${scoreMax.toInt()}"
+    fun scoreStr(withMax: Boolean) = if(score == null || score == 0.0f) "unrated" else {
+        val max = if(withMax) "/$scoreMax" else ""
+        "$score$max"
+    }
 }
 
 enum class ConsumptionStatus(val color: Color) {

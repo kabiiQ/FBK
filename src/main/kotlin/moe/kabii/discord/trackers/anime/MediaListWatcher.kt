@@ -64,12 +64,12 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                 savedList.removeSelf()
                 continue
             }
-            val new = if(newList is Ok) newList.value.media else continue
+            val new = if(newList is Ok) newList.value.media else return@launch
             var newEntry = false // these could perhaps be heirarchical for a typical use case. but for customization they are seperate configurations and any one must be met to post the message
             var statusChange = false
             var statusUpdate = false
 
-            for(newMedia in new) {
+            for(newMedia: Media in new) { // IDE parser bug? has error return type without specifying Media, but it compiles and runs either way
                 val oldMedia = savedList.savedMediaList.media.find { saved -> saved.mediaID == newMedia.mediaID }
                 // don't create embed builder yet because the vast majority of media checked will not need one
                 var builder: MediaEmbedBuilder? = null
@@ -98,8 +98,8 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                         }
                     }
                     // if episode changed, or score changed
-                    val scoreUpdated = newMedia.score != oldMedia.score
-                    if (newMedia.watched != oldMedia.watched || scoreUpdated) {
+                    val progress = newMedia.watched - oldMedia.watched
+                    if (progress != 0) {
                         statusUpdate = true
                         builder = builder ?: MediaEmbedBuilder(newMedia)
                         builder.descriptionFmt = when (newMedia.status) {
@@ -118,8 +118,9 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                 }
                             }
                         }
-                        if (scoreUpdated) {
-                            builder.oldScore = oldMedia.scoreStr()
+                        if (newMedia.score != oldMedia.score) {
+                            statusUpdate = true
+                            builder.oldScore = oldMedia.scoreStr(withMax = false)
                         }
                     }
                 }

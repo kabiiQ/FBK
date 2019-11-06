@@ -40,12 +40,12 @@ class MediaEmbedBuilder(val media: Media) {
             footer.append(oldProgress)
                     .append(" -> ")
         }
-        footer.append(media.progressStr())
+        footer.append(media.progressStr(withTotal = true))
                 .append(" Score: ")
         if (oldScore != null) {
             footer.append(oldScore).append(" -> ")
         }
-        footer.append(media.scoreStr())
+        footer.append(media.scoreStr(withMax = true))
         spec.setFooter(footer.toString(), null)
 
         val title = "[${media.title}](${media.url})"
