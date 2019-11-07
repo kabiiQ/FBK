@@ -31,19 +31,16 @@ class MessageHandler(private val twitch: TwitchClient) {
 
     private val commandContext = Executors.newFixedThreadPool(10).asCoroutineScope()
 
-    infix fun register(container: CommandContainer) {
-        container::class.nestedClasses
-            .map(KClass<*>::objectInstance)
-            .filterIsInstance<Command>()
-            .forEach { cmd ->
-                register(cmd)
-                LOG.info("Registered command \"${cmd.baseName}\". Aliases: ${cmd.aliases.joinToString("/")}. Object: ${cmd::class.simpleName}")
-            }
-    }
-
     fun register(command: Command) {
         if(command.executeDiscord != null) commandsDiscord.add(command)
         if(command.executeTwitch != null) commandsTwitch.add(command)
+        LOG.info("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
+    }
+
+    fun register(clazz: KClass<out Command>) {
+        clazz.objectInstance
+        val instance = requireNotNull(clazz.objectInstance) { "KClass provided with no static instance" }
+        register(instance)
     }
 
     fun handleDiscord(event: MessageCreateEvent) {

@@ -6,7 +6,7 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClientBuilder
-import discord4j.core.event.domain.UserUpdateEvent
+import discord4j.core.event.domain.PresenceUpdateEvent
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
 import discord4j.core.event.domain.guild.*
@@ -21,23 +21,6 @@ import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.MessageHandler
-import moe.kabii.discord.command.commands.BotAdminCommands
-import moe.kabii.discord.command.commands.StaticCommands
-import moe.kabii.discord.command.commands.audio.*
-import moe.kabii.discord.command.commands.audio.search.SearchTracks
-import moe.kabii.discord.command.commands.configuration.*
-import moe.kabii.discord.command.commands.configuration.roles.*
-import moe.kabii.discord.command.commands.configuration.setup.*
-import moe.kabii.discord.command.commands.meta.BotStats
-import moe.kabii.discord.command.commands.meta.CommandInfo
-import moe.kabii.discord.command.commands.moderation.*
-import moe.kabii.discord.command.commands.search.TwitchStreamLookup
-import moe.kabii.discord.command.commands.search.Urban
-import moe.kabii.discord.command.commands.trackers.TrackerCommandBase
-import moe.kabii.discord.command.commands.trackers.twitch.TwitchFollow
-import moe.kabii.discord.command.commands.users.ReminderCommands
-import moe.kabii.discord.command.commands.utility.*
-import moe.kabii.discord.command.commands.voice.TemporaryChannels
 import moe.kabii.discord.event.guild.*
 import moe.kabii.discord.event.user.*
 import moe.kabii.discord.invite.InviteWatcher
@@ -48,17 +31,16 @@ import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.MediaListWatcher
 import moe.kabii.discord.trackers.twitch.TwitchStreamWatcher
 import moe.kabii.helix.TwitchHelix
-import moe.kabii.joint.commands.RandomCommands
-import moe.kabii.joint.commands.TwitchInfo
-import moe.kabii.joint.commands.Vinglish
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.orNull
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
+import org.reflections.Reflections
 import reactor.core.publisher.Mono
 
-val LOG = LoggerFactory.getLogger("moe.kabii")
+val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
 
 fun main() {
     // init
@@ -83,68 +65,18 @@ fun main() {
 
     val messageHandler = MessageHandler(twitch)
 
-    // uhh this can probably be done reflectively eventually but as-is is a quick method for maintainable... like disabling a module
-    messageHandler.apply {
-        // containers
-        register(StaticCommands)
-        register(ChannelFeatures)
-        register(BotAdminCommands)
-        register(RandomCommands)
-        register(DummyCommands)
-        register(GuildOptions)
-        register(Preferences)
-        register(Purge)
-        register(TwitchInfo)
-        register(TrackerCommandBase)
-        register(JoinRole)
-        register(VoiceRole)
-        register(SelfRoles)
-        register(SnowflakeUtil)
-        register(EmojiUtil)
-        register(TemporaryChannels)
-        register(BotStats)
-        register(UserModeration)
-        register(CommandFilters)
-        register(SelfRoleCommands)
-        register(TwitchFollow)
-        register(RoleUtils)
-        register(MusicConfig)
-        register(QueueTracks)
-        register(QueueInfo)
-        register(PlaybackState)
-        register(QueueSkip)
-        register(PlaybackSeek)
-        register(BotState)
-        register(QueueEdit)
-        register(SearchTracks)
-        register(SetFollow)
-        register(RoleReactions)
-        register(BotUtil)
-        register(ExclusiveRoles)
-        register(UserUtil)
-        register(ReminderCommands)
+    Reflections("moe.kabii")
+        .getSubTypesOf(Command::class.java)
+        .map { clazz -> clazz.kotlin }
+        .forEach(messageHandler::register)
 
-        // single commands
-        register(Vinglish)
-        register(AutoRole)
-        register(MentionRole)
-        register(EditLog)
-        register(FeatureConfig)
-        register(Drag)
-        register(Urban)
-        register(RandomRoleColor)
-        register(TwitchStreamLookup)
-        register(CommandInfo)
-        register(GuildFeatures)
-
-        register(object : Command("test") {
-            init {
-                discord {
-                    embed("Hello World!").subscribe()
-                }
+    messageHandler.register(object : Command("test") {
+        init {
+            discord {
+                embed("Hello World!").subscribe()
             }
-        })
-    }
+        }
+    })
 
     // discord connection
     val discord = DiscordClientBuilder(Keys.config[Keys.Discord.token]).build()
