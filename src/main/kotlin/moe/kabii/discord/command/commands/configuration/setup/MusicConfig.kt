@@ -13,7 +13,7 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 
 object MusicConfig : CommandContainer {
-    object MusicBot : Command("musicbot", "musicconfig", "musicsetup") {
+    object MusicBot : Command("musicbot", "musicconfig", "musicsetup", "music", "musicsettings") {
         object MusicSettingsModule : ConfigurationModule<MusicSettings>(
             "music bot",
             BooleanElement(

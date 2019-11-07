@@ -28,7 +28,9 @@ object BotAdmin {
 
 fun Member.hasPermissions(vararg permissions: Permission): Boolean {
     if(BotAdmin.check(userID = id.asLong())) return true
-    return basePermissions.block().containsAll(permissions.toList())
+    val basePermissions = basePermissions.block()
+    if(basePermissions.contains(Permission.ADMINISTRATOR)) return true
+    return basePermissions.containsAll(permissions.toList())
 }
 
 @Throws(MemberPermissionsException::class)
