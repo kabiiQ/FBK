@@ -16,7 +16,7 @@ fun <T, R> Flux<T>.mapNotNull(mapper: (T) -> R?): Flux<R> {
 fun <T: Any> Mono<T>.tryBlock(): Result<T, Throwable> = Try {
     block() ?: throw NullPointerException() // this wasn't necessary until running into certain objects that only return null! and I don't want to make Result take nullable values... this is easier for finding any errors, for now.
 }.result.apply { ifErr { e ->
-    LOG.warn("Exception suppressed in tryBlock: ${e.message}.")
+    LOG.debug("Exception suppressed in tryBlock: ${e.message}.")
     e.printStackTrace()
 }}
 
