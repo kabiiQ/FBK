@@ -213,8 +213,8 @@ fun main() {
             }
     val onVoiceUpdate = events.on(VoiceStateUpdateEvent::class.java)
             .doOnNext(VoiceMoveHandler::handle)
-    val onUserUpdate = events.on(UserUpdateEvent::class.java)
-        .doOnNext(UserUpdateHandler::handle)
+    val onPresenceUpdate = events.on(PresenceUpdateEvent::class.java)
+        .doOnNext(PresenceUpdateHandler::handle)
     val onMessageUpdate = events.on(MessageUpdateEvent::class.java)
         .doOnNext(MessageEditHandler::handle)
     val onMessageDelete = events.on(MessageDeleteEvent::class.java)
@@ -240,7 +240,7 @@ fun main() {
     // subscribe to bot lifetime events
     Mono.`when`(
         onMessage, onJoin, onPart, onVoiceUpdate,
-        onUserUpdate, onMessageUpdate, onMessageDelete, onMessageBulkDelete,
+        onPresenceUpdate, onMessageUpdate, onMessageDelete, onMessageBulkDelete,
         onTextChannelDelete, onGatewayReconnection, onMemberUpdate,
         onTwitchMessage, onRoleDeletion, onGuildUpdate,
         onReactionAdd, onReactionRemove, onReactionAdd2, onGuildReady,
