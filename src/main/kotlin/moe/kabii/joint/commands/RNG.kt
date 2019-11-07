@@ -7,7 +7,7 @@ import moe.kabii.structure.orNull
 import moe.kabii.structure.reply
 
 object RandomCommands : CommandContainer {
-    @ExperimentalUnsignedTypes object Roll : Command("  roll", "random") {
+    @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
         private fun roll(args: List<String>): Pair<String, ULong> {
             fun arg(index: Int) = args.getOrNull(index)?.toULongOrNull()
             val (left, right) = when {
