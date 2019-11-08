@@ -18,7 +18,6 @@ object VoiceRole : CommandContainer {
             botReqs(Permission.MANAGE_ROLES)
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 // voicerole(-)add channelid/all
                 if (args.isEmpty()) {
                     // todo wiki link
@@ -68,7 +67,6 @@ object VoiceRole : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 if(args.isEmpty()) {
                     error("This command is used to remove an automatic voice role setup. **autorole voice remove <voice channel ID or \"all\"> **You can view the currently active voicerole channels in the **autorole voice list** command.").block()
                     return@discord
@@ -111,16 +109,15 @@ object VoiceRole : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val guildConfig = GuildConfigurations.getOrCreateGuild(target.id.asLong())
 
-                if(guildConfig.autoRoles.voiceConfigurations.isEmpty()) {
+                if(config.autoRoles.voiceConfigurations.isEmpty()) {
                     embed("There are no voice role rules set for **${target.name}**.").block()
                     return@discord
                 }
                 embed {
                     setTitle("Voice role configuration for **${target.name}**")
                     setDescription("Users joining the following voice channels will receive the corresponding role.")
-                    guildConfig.autoRoles.voiceConfigurations.forEach { cfg ->
+                    config.autoRoles.voiceConfigurations.forEach { cfg ->
                         val channel = if(cfg.targetChannel != null) {
                             target.getChannelById(cfg.targetChannel.snowflake).tryBlock().orNull()
                         } else null

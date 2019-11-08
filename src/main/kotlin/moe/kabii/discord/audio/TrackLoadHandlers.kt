@@ -33,7 +33,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         if(!audio.player.startTrack(track, true)) {
             val add = audio.tryAdd(track, origin.member, position)
             if(!add) {
-                val maxTracksUser = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong()).musicBot.maxTracksUser
+                val maxTracksUser = origin.config.musicBot.maxTracksUser
                 origin.error {
                     setAuthor("${origin.author.username}#${origin.author.discriminator}", null, origin.author.avatarUrl)
                     setDescription("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.")
@@ -55,7 +55,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         val tracks = playlist.tracks.drop(1)
         if(tracks.isEmpty()) return
         var skipped = 0
-        val maxTracksUser = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong()).musicBot.maxTracksUser
+        val maxTracksUser = origin.config.musicBot.maxTracksUser
         for(index in tracks.indices) {
             val track = tracks[index]
             track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)

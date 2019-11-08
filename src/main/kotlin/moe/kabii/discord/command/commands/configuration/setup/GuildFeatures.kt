@@ -18,7 +18,6 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
     init {
         discord {
             member.verify(Permission.MANAGE_GUILD)
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
             val configurator = Configurator(
                 "Feature configuration for ${target.name}",
                 GuildFeatureModule,

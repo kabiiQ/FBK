@@ -69,7 +69,6 @@ object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlo
             if(isPM) return@discord
             chan as TextChannel
             member.verify(Permission.MANAGE_GUILD)
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
             val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(

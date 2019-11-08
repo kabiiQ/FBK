@@ -32,11 +32,10 @@ object SelfRoles : CommandContainer {
                     return@discord
                 }
                 val roleID = role.id.asLong()
-                val guildConfig = GuildConfigurations.getOrCreateGuild(target.id.asLong())
-                val config = guildConfig.selfRoles.enabledRoles
-                if(!config.contains(roleID)) {
-                    config.add(roleID)
-                    guildConfig.save()
+                val roleConfig = config.selfRoles.enabledRoles
+                if(!roleConfig.contains(roleID)) {
+                    roleConfig.add(roleID)
+                    config.save()
                     embed("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.").block()
                 } else {
                     error("**${role.name}** is already a self-assignable role.").block()
@@ -61,11 +60,10 @@ object SelfRoles : CommandContainer {
                     return@discord
                 }
                 val roleID = role.id.asLong()
-                val guildConfig = GuildConfigurations.getOrCreateGuild(target.id.asLong())
-                val config = guildConfig.selfRoles.enabledRoles
-                if(config.contains(roleID)) {
-                    config.remove(roleID)
-                    guildConfig.save()
+                val roleConfig = config.selfRoles.enabledRoles
+                if(roleConfig.contains(roleID)) {
+                    roleConfig.remove(roleID)
+                    config.save()
                     embed("**${role.name}** has been locked and is no longer self-assignable.").block()
                 } else {
                     error("${role.name} is not an unlocked role.").block()
@@ -77,7 +75,6 @@ object SelfRoles : CommandContainer {
     object ListUnlockedRoles : Command("roles", "selfroles", "listselfroles", "unlockedroles", "listunlockedroles", "availableroles", "gimmeroles", "iamroles", "openroles") {
         init {
             discord {
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val enabled = config.selfRoles.enabledRoles.toList()
                     .mapNotNull { id ->
                         val role = target.getRoleById(id.snowflake).tryBlock()

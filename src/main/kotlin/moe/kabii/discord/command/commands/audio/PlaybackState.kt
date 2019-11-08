@@ -44,7 +44,6 @@ object PlaybackState : AudioCommandContainer {
                 }
                 // if this is a stream, this may take a minute
                 val targetVolume = args[0].removeSuffix("%").toIntOrNull()
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val maximum = config.musicBot.adminVolumeLimit
                 when {
                     targetVolume == null || targetVolume < 0 -> {

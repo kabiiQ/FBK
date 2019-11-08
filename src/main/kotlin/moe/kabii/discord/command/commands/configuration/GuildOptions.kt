@@ -16,7 +16,6 @@ object GuildOptions : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
                 if (args.isNotEmpty()) {
-                    val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                     config.prefix = args[0]
                     config.save()
                     embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").subscribe()
@@ -33,7 +32,6 @@ object GuildOptions : CommandContainer {
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val twitch = config.options.linkedTwitchChannel
                 if (twitch?.twitchid != null) {
                     val existingTwitch = TwitchHelix.getUser(twitch.twitchid)
@@ -63,7 +61,6 @@ object GuildOptions : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val twitch = config.options.linkedTwitchChannel
                 if (twitch?.twitchid != null) {
                     TwitchHelix.getUser(twitch.twitchid).mapOk(TwitchUser::login).ifSuccess(twitchClient.chat::leaveChannel)

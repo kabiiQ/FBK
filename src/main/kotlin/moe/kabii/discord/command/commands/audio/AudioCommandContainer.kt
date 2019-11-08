@@ -47,12 +47,11 @@ internal interface AudioCommandContainer : CommandContainer {
     }
 
     fun validateChannel(origin: DiscordParameters) {
-        val config = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong())
-        if(config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel != true) throw FeatureDisabledException("music")
+        val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
+        if(musicChan != true) throw FeatureDisabledException("music")
     }
 
     fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {
-        val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
         val audio = AudioManager.getGuildAudio(target.id.asLong())
         val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryBlock().orNull() ?: return false
         val botChannel =
@@ -78,7 +77,7 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun getSkipsNeeded(origin: DiscordParameters): Int {
         // return lesser of ratio or raw user count - check min user votes first as it is easier than polling v
-        val config = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong()).musicBot
+        val config = origin.config.musicBot
         val vcUsers = BotUtil.getBotVoiceChannel(origin.target)
             .flatMapMany(VoiceChannel::getVoiceStates)
             .flatMap(VoiceState::getUser)
@@ -89,15 +88,13 @@ internal interface AudioCommandContainer : CommandContainer {
     }
 
     fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
-        val config = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong())
         val data = track.userData as QueueData
-        return if(config.musicBot.queuerFSkip && data.author == origin.author.id) true
+        return if(origin.config.musicBot.queuerFSkip && data.author == origin.author.id) true
         else origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
     }
 
     fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
-        val config = GuildConfigurations.getOrCreateGuild(origin.target.id.asLong())
-        if(config.musicBot.alwaysFSkip && canFSkip(origin, track)) return true
+        if(origin.config.musicBot.alwaysFSkip && canFSkip(origin, track)) return true
         val userChannel = origin.member.voiceState.flatMap(VoiceState::getChannel).tryBlock().orNull() ?: return false
         val botChannel = BotUtil.getBotVoiceChannel(origin.target).tryBlock().orNull() ?: return false
         return botChannel.id == userChannel.id

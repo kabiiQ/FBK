@@ -34,7 +34,6 @@ object TemporaryChannels : CommandContainer {
                         }
                     }
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 config.tempVoiceChannels.tempChannelCategory = category?.id?.asLong()
                 embed("Temporary voice channels will be created in the **${category?.name ?: "default"}** category.").block()
             }
@@ -45,7 +44,7 @@ object TemporaryChannels : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
-                val categoryID = GuildConfigurations.getOrCreateGuild(target.id.asLong()).tempVoiceChannels.tempChannelCategory
+                val categoryID = config.tempVoiceChannels.tempChannelCategory
                 val categoryName = categoryID?.let { id ->
                     target.getChannelById(id.snowflake)
                         .ofType(Category::class.java)
@@ -68,7 +67,6 @@ object TemporaryChannels : CommandContainer {
                     error("You must be in a voice channel in order to be moved into your temporary channel.").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
 
                 val channelName = if(args.isEmpty()) "${member.displayName}'s channel" else noCmd
                 val categoryID = config.tempVoiceChannels.tempChannelCategory?.snowflake?.let { id ->

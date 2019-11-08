@@ -29,7 +29,7 @@ object DummyCommands : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
-                    val add = addCommand(GuildConfigurations.getOrCreateGuild(target.id.asLong()), args, noCmd)
+                    val add = addCommand(config, args, noCmd)
                     embed(add).block()
                 } else {
                     usage("Add or edit a dummy text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").block()
@@ -49,7 +49,7 @@ object DummyCommands : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
-                    val add = addCommand(GuildConfigurations.getOrCreateGuild(target.id.asLong()), args, noCmd, restrict = true)
+                    val add = addCommand(config, args, noCmd, restrict = true)
                     embed(add).block()
                 } else {
                     usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").block()
@@ -78,7 +78,7 @@ object DummyCommands : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.isNotEmpty()) {
-                    val remove = removeCommand(GuildConfigurations.getOrCreateGuild(target.id.asLong()), args[0])
+                    val remove = removeCommand(config, args[0])
                     embed(remove).block()
                 } else {
                     usage("Remove a dummy text command. Example:", "removecommand yt").block()

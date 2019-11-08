@@ -79,7 +79,6 @@ object MusicConfig : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
 
                 val configurator = Configurator(
                     "Music bot settings for ${target.name}",
@@ -98,7 +97,6 @@ object MusicConfig : CommandContainer {
             discord {
                 // ;autojoin chan
                 member.verify(Permission.MANAGE_CHANNELS)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val music = config.musicBot
                 // get channel
                 if(args.isEmpty()) {

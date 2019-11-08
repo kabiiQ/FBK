@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.data.mongodb.GuildConfiguration
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.conversation.*
@@ -100,6 +101,9 @@ data class DiscordParameters (
 
     val member: Member
     get() = target.getMemberById(author.id).tryBlock().orNull() ?: throw GuildTargetInvalidException("**${author.username}** is not a member of **${target.name}**.")
+
+    val config: GuildConfiguration
+    get() = GuildConfigurations.getOrCreateGuild(target.id.asLong()) 
 
     fun error(block: EmbedReceiver) = chan.createEmbed { embed ->
         errorColor(embed)

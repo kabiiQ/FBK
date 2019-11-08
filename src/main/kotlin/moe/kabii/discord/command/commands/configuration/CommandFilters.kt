@@ -34,7 +34,6 @@ object CommandFilters : CommandContainer {
                     usage("**whitelist** is used to set up the bot command whitelist.", "whitelist <add/remove/view/reset/toggle>").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
                 when(args[0].toLowerCase()) {
@@ -94,7 +93,6 @@ object CommandFilters : CommandContainer {
                     usage("**blacklist** is used to set up the bot command blacklist.", "blacklist <add/remove/view/reset/toggle>").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
                 when(args[0].toLowerCase()) {

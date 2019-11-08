@@ -29,7 +29,6 @@ object ChannelFeatures : CommandContainer {
                 if(isPM) return@discord
                 chan as TextChannel
                 member.verify(Permission.MANAGE_CHANNELS)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val features = config.getOrCreateFeatures(chan.id.asLong())
 
                 val wasLog = features.logChannel
@@ -53,7 +52,7 @@ object ChannelFeatures : CommandContainer {
             discord {
                 // list active feature channels in this guild
                 member.verify(Permission.MANAGE_CHANNELS)
-                val features = GuildConfigurations.getOrCreateGuild(target.id.asLong()).options.featureChannels
+                val features = config.options.featureChannels
                 val channels = features.toMap()
                     .filter { (_, features) -> features.anyEnabled() }
                     .mapNotNull { (id, channel) ->

@@ -18,8 +18,8 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
                 error("Can't find the command named **${args[0]}**.").block()
                 return@discord
             }
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong()).commandFilter
-            val list = if(config.blacklisted) "blacklist" else "whitelist"
+            val filter = config.commandFilter
+            val list = if(filter.blacklisted) "blacklist" else "whitelist"
 
             val pack = match::class.java.`package`.name
             val source = pack.replace(".", "/")
@@ -31,7 +31,7 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
                     setDescription("[Command Page](${match.helpURL})")
                 }
                 addField("All Command Aliases:", match.aliases.joinToString(", "), false)
-                addField("Command Enabled (using $list):", config.isCommandEnabled(match).toString(), false)
+                addField("Command Enabled (using $list):", filter.isCommandEnabled(match).toString(), false)
                 addField("Discord Command:", (match.executeDiscord != null).toString(), true)
                 addField("Twitch Command:", (match.executeTwitch != null).toString(), true)
                 addField("Location in Source Code:", "[$pack]($sourcePath)", false)

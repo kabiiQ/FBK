@@ -20,7 +20,7 @@ import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.MessageHandler
+import moe.kabii.discord.command.DiscordMessageHandler
 import moe.kabii.discord.event.guild.*
 import moe.kabii.discord.event.user.*
 import moe.kabii.discord.invite.InviteWatcher
@@ -31,10 +31,12 @@ import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.MediaListWatcher
 import moe.kabii.discord.trackers.twitch.TwitchStreamWatcher
 import moe.kabii.helix.TwitchHelix
+import moe.kabii.joint.CommandManager
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.orNull
+import moe.kabii.twitch.TwitchMessageHandler
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import org.reflections.Reflections
@@ -63,14 +65,16 @@ fun main() {
         .withChatAccount(oAuth)
         .build()
 
-    val messageHandler = MessageHandler(twitch)
+    val manager = CommandManager()
+    val discordHandler = DiscordMessageHandler(manager, twitch)
+    val twitchHandler = TwitchMessageHandler(manager)
 
     Reflections("moe.kabii")
         .getSubTypesOf(Command::class.java)
         .map { clazz -> clazz.kotlin }
-        .forEach(messageHandler::register)
+        .forEach(manager::register)
 
-    messageHandler.register(object : Command("test") {
+    manager.register(object : Command("test") {
         init {
             discord {
                 embed("Hello World!").subscribe()
@@ -93,7 +97,7 @@ fun main() {
     val events = discord.eventDispatcher
     val onMessage = events.on(MessageCreateEvent::class.java)
         .filter { event -> event.message.author.orNull()?.isBot?.not() ?: false }
-        .doOnNext(messageHandler::handleDiscord)
+        .doOnNext(discordHandler::handle)
 
     val onGuildReady = events.on(ReadyEvent::class.java)
         .map { event -> event.guilds.size }
@@ -167,7 +171,7 @@ fun main() {
     // twitch4j event listeners
     val onTwitchMessage = twitch.eventManager.onEvent(ChannelMessageEvent::class.java)
             .filter { it.user.name.toLowerCase() != "ai_kizuna" }
-            .doOnNext(messageHandler::handleTwitch)
+            .doOnNext(twitchHandler::handle)
 
     // subscribe to bot lifetime events
     Mono.`when`(

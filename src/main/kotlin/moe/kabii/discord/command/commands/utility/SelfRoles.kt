@@ -24,7 +24,6 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
                 error("Can not find role **$noCmd**.").block()
                 return@discord
             }
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
             val selfAssignable =
                 config.selfRoles.enabledRoles.contains(role.id.asLong())
                         || PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)

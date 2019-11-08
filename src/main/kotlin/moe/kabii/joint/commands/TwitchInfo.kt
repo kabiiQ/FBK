@@ -23,7 +23,7 @@ object TwitchInfo : CommandContainer {
             }
             discord {
                 if(isPM) return@discord
-                val linkedTwitch = GuildConfigurations.getOrCreateGuild(target.id.asLong()).options.linkedTwitchChannel
+                val linkedTwitch = config.options.linkedTwitchChannel
                 if(linkedTwitch != null) {
                     val stream = TwitchHelix.getStream(linkedTwitch.twitchid)
                     if(stream is Ok) {
@@ -47,7 +47,7 @@ object TwitchInfo : CommandContainer {
             }
             discord {
                 if(isPM) return@discord
-                val linkedTwitch = GuildConfigurations.getOrCreateGuild(target.id.asLong()).options.linkedTwitchChannel
+                val linkedTwitch = config.options.linkedTwitchChannel
                 if(linkedTwitch != null) {
                     val stream = TwitchHelix.getStream(linkedTwitch.twitchid)
                     if(stream is Ok) {

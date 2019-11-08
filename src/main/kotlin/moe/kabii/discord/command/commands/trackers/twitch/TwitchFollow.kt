@@ -21,7 +21,6 @@ object TwitchFollow : CommandContainer {
             botReqs(Permission.MANAGE_ROLES)
             discord {
                 // self-assigned role to be pinged when stream goes live
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val settings = config.guildSettings
                 if(!settings.followRoles) {
                     error("Twitch stream roles are disabled in **${target.name}**.").block()
@@ -108,7 +107,6 @@ object TwitchFollow : CommandContainer {
         init {
             botReqs(Permission.MANAGE_ROLES)
             discord {
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val settings = config.guildSettings
                 if(!settings.followRoles) {
                     error("Twitch stream roles are disabled in **${target.name}**.").block()

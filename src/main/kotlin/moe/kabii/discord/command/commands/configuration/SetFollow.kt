@@ -14,7 +14,6 @@ object SetFollow : Command("setfollow", "followset", "defaultfollow") {
                 usage("**setfollow** sets the Twitch channel that will be used when the **follow** command is used without stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch username or \"none\" to remove>").block()
                 return@discord
             }
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
             val settings = config.guildSettings
             when(args[0].toLowerCase()) {
                 "none", "reset", "clear", "empty" -> {

@@ -22,7 +22,6 @@ object ExclusiveRoles : CommandContainer {
                     return@discord
                 }
                 val newSet = args[0]
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val sets = config.autoRoles.exclusiveRoleSets
                 if(sets.find { existing -> existing.name.equals(newSet, ignoreCase = true) } != null) {
                     error("An exclusive role set named **$newSet** already exists.").block()
@@ -44,7 +43,6 @@ object ExclusiveRoles : CommandContainer {
                     return@discord
                 }
                 val setName = args[0]
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val sets = config.autoRoles.exclusiveRoleSets
                 val targetSet = sets.removeIf { existing -> existing.name.equals(setName, ignoreCase = true) }
                 if(!targetSet) {
@@ -67,7 +65,6 @@ object ExclusiveRoles : CommandContainer {
                     return@discord
                 }
                 val setName = args[0]
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val sets = config.autoRoles.exclusiveRoleSets
                 val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
                 if(targetSet == null) {
@@ -113,7 +110,6 @@ object ExclusiveRoles : CommandContainer {
             discord {
                 // list the exclusive role configurations in this guild
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val sets = config.autoRoles.exclusiveRoleSets
                 if(sets.isEmpty()) {
                     embed("There are no exclusive role configuration sets in **${target.name}**.").block()

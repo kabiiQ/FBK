@@ -27,7 +27,6 @@ object TwitchTrackerConfig : Command("twitchconfig", "streamconfig", "streamtrac
             if(isPM) return@discord
             chan as TextChannel
             member.verify(Permission.MANAGE_CHANNELS)
-            val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
             val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(

@@ -66,7 +66,6 @@ object RoleReactions : CommandContainer {
                     usage("I could not find a message with the ID **${args[0]}** in **${(chan as TextChannel).name}**.", "reactionrole add <message id> <role>").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.selfRoles.roleMentionMessages
                 // due to the nature of reactions (they may be manually removed) adding a config will just overwrite an existing config rather than erroring
                 // reset reactions and add
@@ -93,7 +92,6 @@ object RoleReactions : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.selfRoles.roleMentionMessages
                 // reactionrole remove <messageid>
                 val messageID = args.getOrNull(0)?.removePrefix("#")?.toLongOrNull()
@@ -116,7 +114,6 @@ object RoleReactions : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.selfRoles.roleMentionMessages
                 val messages = configs.toList()
                     // list reaction role messages that still have valid roles

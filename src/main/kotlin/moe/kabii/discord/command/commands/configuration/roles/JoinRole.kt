@@ -59,7 +59,6 @@ object JoinRole : CommandContainer {
                     }
                 }
                 val roleID = role.id.asLong()
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.autoRoles.joinConfigurations
                 // if there is an existing configuration with this role
                 val find = configs.find { joinConfig ->
@@ -97,7 +96,6 @@ object JoinRole : CommandContainer {
                     return@discord
                 }
                 val roleID = role.id.asLong()
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.autoRoles.joinConfigurations
                 val find = configs.removeIf { joinConfig ->
                     if(joinConfig.role == roleID) {
@@ -118,7 +116,6 @@ object JoinRole : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
                 // list autoroles by name, remove if deleted role/invite
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val configs = config.autoRoles.joinConfigurations
                 // validate autorole configs still exist and generate list
                 configs.associateWith { joinConfig ->

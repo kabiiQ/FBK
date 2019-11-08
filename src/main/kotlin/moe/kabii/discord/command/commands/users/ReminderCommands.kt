@@ -18,7 +18,6 @@ object ReminderCommands : CommandContainer {
     object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
         init {
             discord {
-                val g = ColorUtil::hexString
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
                 if(args.size < 2) {

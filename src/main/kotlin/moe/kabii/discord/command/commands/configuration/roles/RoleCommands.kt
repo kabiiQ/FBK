@@ -40,7 +40,6 @@ object SelfRoleCommands : CommandContainer {
                     usage("**rolecommands add** adds a command that will attempt assign a role to anyone who uses it.", "rolecommands add <commandName> <role name/ID>").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val commands = config.selfRoles.roleCommands
                 val commandName = if(args[0].startsWith(config.prefix)) args[0].drop(config.prefix.length) else args[0]
                 val rolePart = args.drop(1).joinToString(" ")
@@ -69,7 +68,6 @@ object SelfRoleCommands : CommandContainer {
                     usage("**rolecommands remove** removes a custom role assignment command.", "rolecommands remove <commandName>").block()
                     return@discord
                 }
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val commands = config.selfRoles.roleCommands
                 val commandName = if(args[0].startsWith(config.prefix)) args[0].drop(config.prefix.length) else args[0]
                 val existing = commands[commandName.toLowerCase()]
@@ -88,7 +86,6 @@ object SelfRoleCommands : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
                 val commands = config.selfRoles.roleCommands
                 embed {
                     if(commands.isEmpty()) {
