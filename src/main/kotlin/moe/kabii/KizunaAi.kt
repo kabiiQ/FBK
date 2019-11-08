@@ -71,7 +71,6 @@ fun main() {
 
     Reflections("moe.kabii")
         .getSubTypesOf(Command::class.java)
-        .map { clazz -> clazz.kotlin }
         .forEach(manager::register)
 
     manager.register(object : Command("test") {

@@ -15,8 +15,6 @@ object MentionRole : Command("mention", "mention-role", "role-mention", "rolemen
     init {
         botReqs(Permission.MANAGE_ROLES)
         discord {
-        if(isPM) return@discord
-            val member = author.asMember(guild!!.id).block()
             member.verify(Permission.MANAGE_ROLES)
             // mention role 1, role2: message
             if(args.isEmpty()) {
@@ -39,7 +37,7 @@ object MentionRole : Command("mention", "mention-role", "role-mention", "rolemen
                 return@discord
             }
             val cleanRoles = roles.map { (_, role) -> role!!}.toFlux()
-                .transform { roles -> PermissionUtil.filterSafeRoles(roles, member, guild, managed = false, everyone = true) }
+                .transform { roles -> PermissionUtil.filterSafeRoles(roles, member, target, managed = false, everyone = true) }
                 .collectList().block()
 
             if(cleanRoles.isEmpty()) {

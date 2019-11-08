@@ -20,7 +20,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
         if(config != null) {
             val features = config.options.featureChannels[origin.chan.id.asLong()]
-            if(features == null || !features.animeChannel) throw FeatureDisabledException("anime")
+            if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
         }
 
         val targetName = target.list.id

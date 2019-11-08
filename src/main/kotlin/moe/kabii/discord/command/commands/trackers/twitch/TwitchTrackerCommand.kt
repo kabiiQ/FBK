@@ -23,7 +23,7 @@ object TwitchTrackerCommand {
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
         if(config != null) {
             val features = config.options.featureChannels[origin.chan.id.asLong()]
-            if (features == null || !features.twitchChannel) throw FeatureDisabledException("twitch")
+            if (features == null || !features.twitchChannel) throw FeatureDisabledException("twitch", origin)
         }
 
         // validate twitch stream is real

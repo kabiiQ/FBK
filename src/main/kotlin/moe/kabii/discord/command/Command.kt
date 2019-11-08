@@ -71,17 +71,17 @@ fun logColor(member: Member?, spec: EmbedCreateSpec) =
         .defaultIfEmpty(kizunaColor(spec))
 
 data class DiscordParameters (
-        val handler: MessageHandler,
-        val event: MessageCreateEvent,
-        val chan: MessageChannel,
-        val guild: Guild?,
-        val author: User,
-        val isPM: Boolean,
-        val noCmd: String,
-        val args: List<String>,
-        val command: Command,
-        val alias: String,
-        val twitchClient: TwitchClient) {
+    val handler: DiscordMessageHandler,
+    val event: MessageCreateEvent,
+    val chan: MessageChannel,
+    val guild: Guild?,
+    val author: User,
+    val isPM: Boolean,
+    val noCmd: String,
+    val args: List<String>,
+    val command: Command,
+    val alias: String,
+    val twitchClient: TwitchClient) {
 
     val target: Guild
     get() {
@@ -103,7 +103,7 @@ data class DiscordParameters (
     get() = target.getMemberById(author.id).tryBlock().orNull() ?: throw GuildTargetInvalidException("**${author.username}** is not a member of **${target.name}**.")
 
     val config: GuildConfiguration
-    get() = GuildConfigurations.getOrCreateGuild(target.id.asLong()) 
+    get() = GuildConfigurations.getOrCreateGuild(target.id.asLong())
 
     fun error(block: EmbedReceiver) = chan.createEmbed { embed ->
         errorColor(embed)
@@ -236,7 +236,7 @@ data class DiscordParameters (
 }
 
 class GuildTargetInvalidException(val string: String) : RuntimeException()
-class FeatureDisabledException(val feature: String) : RuntimeException()
+class FeatureDisabledException(val feature: String, val origin: DiscordParameters) : RuntimeException()
 
 class TwitchParameters (
     val event: ChannelMessageEvent,

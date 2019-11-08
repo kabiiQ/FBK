@@ -125,7 +125,9 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                         val reqs = perms.perms.joinToString(", ")
                         param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
                     } catch (feat: FeatureDisabledException) {
-                        param.error("The **${feat.feature}** feature is not enabled in this channel").subscribe()
+                        val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryBlock().orNull() == true
+                        val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
+                        param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
                     } catch (ce: ClientException) {
                         // bot is missing permissions
                         when (ce.status.code()) {

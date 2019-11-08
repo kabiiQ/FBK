@@ -22,8 +22,8 @@ class CommandManager {
         LOG.info("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
     }
 
-    fun register(clazz: KClass<out Command>) {
-        val instance = requireNotNull(clazz.objectInstance) { "KClass provided with no static instance" }
+    fun register(clazz: Class<out Command>) {
+        val instance = requireNotNull(clazz.kotlin.objectInstance) { "KClass provided with no static instance" }
         register(instance)
     }
 }

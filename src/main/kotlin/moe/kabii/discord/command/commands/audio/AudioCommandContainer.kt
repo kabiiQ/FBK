@@ -48,7 +48,7 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun validateChannel(origin: DiscordParameters) {
         val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
-        if(musicChan != true) throw FeatureDisabledException("music")
+        if(musicChan != true) throw FeatureDisabledException("music", origin)
     }
 
     fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {
