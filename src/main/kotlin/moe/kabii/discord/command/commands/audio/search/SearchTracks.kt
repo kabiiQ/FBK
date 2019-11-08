@@ -3,6 +3,7 @@ package moe.kabii.discord.command.commands.audio.search
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
+import moe.kabii.structure.tryBlock
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {
@@ -47,7 +48,8 @@ object SearchTracks : AudioCommandContainer {
                 val input = getLong(1..search.size.toLong(), embed, timeout = 150_000L)?.toInt()
                 if(input != null) {
                     FallbackHandler(this).trackLoaded(search[input - 1])
-                } else embed.delete().subscribe()
+                }
+                embed.delete().tryBlock()
             }
         }
     }
