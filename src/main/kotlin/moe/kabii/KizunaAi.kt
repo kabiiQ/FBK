@@ -40,6 +40,10 @@ import moe.kabii.twitch.TwitchMessageHandler
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import org.reflections.Reflections
+import org.reflections.scanners.TypeAnnotationsScanner
+import org.reflections.util.ClasspathHelper
+import org.reflections.util.ConfigurationBuilder
+import org.reflections.util.FilterBuilder
 import reactor.core.publisher.Mono
 
 val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
@@ -54,11 +58,11 @@ fun main() {
     // twitch connection
     val credential = CredentialManagerBuilder.builder().build()
     credential.registerIdentityProvider(TwitchIdentityProvider(
-        Keys.config[Keys.Twitch.client],
-        Keys.config[Keys.Twitch.secret],
-        Keys.config[Keys.Twitch.callback]
+        keys[Keys.Twitch.client],
+        keys[Keys.Twitch.secret],
+        keys[Keys.Twitch.callback]
     ))
-    val oAuth = OAuth2Credential("twitch", Keys.config[Keys.Twitch.oauth])
+    val oAuth = OAuth2Credential("twitch", keys[Keys.Twitch.oauth])
     val twitch = TwitchClientBuilder.builder()
         .withEnableChat(true)
         .withCredentialManager(credential)
@@ -82,7 +86,7 @@ fun main() {
     })
 
     // discord connection
-    val discord = DiscordClientBuilder(Keys.config[Keys.Discord.token]).build()
+    val discord = DiscordClientBuilder(keys[Keys.Discord.token]).build()
 
     // discord audio setup
     val audio = AudioManager

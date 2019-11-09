@@ -23,7 +23,8 @@ class CommandManager {
     }
 
     fun register(clazz: Class<out Command>) {
-        val instance = requireNotNull(clazz.kotlin.objectInstance) { "KClass provided with no static instance" }
-        register(instance)
+        val instance = clazz.kotlin.objectInstance
+        if(instance == null) LOG.warn("KClass provided with no static instance: $clazz")
+        else register(instance)
     }
 }
