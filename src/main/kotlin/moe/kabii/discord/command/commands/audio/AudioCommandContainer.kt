@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.audio
 
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Member
@@ -34,7 +35,9 @@ internal interface AudioCommandContainer : CommandContainer {
                         "$position/$duration"
                     } else duration
                 } else "stream"
-                "[${meta.title.trim()}](${meta.uri})$author ($length)"
+                val trackSeconds = track.position / 1000L
+                val uri = if(track is YoutubeAudioTrack) "${meta.uri}&t=$trackSeconds" else meta.uri
+                "[${meta.title.trim()}]($uri)$author ($length)"
             } ?: "no details available"
         }
     }
