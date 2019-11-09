@@ -36,6 +36,7 @@ data class GuildConfiguration(
     val guildid: Long,
         // populate all fields
     var prefix: String = ";",
+    var suffix: String? = "desu",
     val options: OptionalFeatures = OptionalFeatures(),
     val commands: DummyCommands = DummyCommands(),
     val autoRoles: AutoRoles = AutoRoles(),

@@ -45,9 +45,10 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
         // DISCORD COMMAND HANDLER
         // this sets the prefix for PMs, as long as the guild is legitimate the default prefix is set in GuildConfiguration
         val prefix = config?.prefix ?: ";"
+        val suffix = config?.suffix ?: "desu"
         val global = manager.globalPrefix
-        val cmdStr = if (msgArgs[msgArgs.size - 1].equals("desu", true)) {
-            content = content.substring(0, content.length - 4)
+        val cmdStr = if (msgArgs[msgArgs.size - 1].equals(suffix, true)) {
+            content = content.substring(0, content.length - suffix.length)
             msgArgs[0]
         } else if (msgArgs[0].startsWith(prefix)) {
             msgArgs[0].substring(prefix.length)

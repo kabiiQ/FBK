@@ -15,11 +15,32 @@ object GuildOptions : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
-                if (args.isNotEmpty()) {
-                    config.prefix = args[0]
-                    config.save()
-                    embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").subscribe()
-                } else error("Please specify the desired command prefix for **${target.name}**.\nUsage example: **prefix !**").block()
+                if(args.isEmpty()) {
+                    usage("Sets the command prefix for **${target.name}**.", "prefix !").block()
+                    return@discord
+                }
+                config.prefix = args[0]
+                config.save()
+                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").block()
+            }
+        }
+    }
+
+    object Suffix : Command("suffix", "setsuffix", "set-suffix", "changesuffix") {
+        init {
+            discord {
+                member.verify(Permission.MANAGE_GUILD)
+                if(args.isEmpty()) {
+                    usage("Sets the command suffix for **${target.name}**. The suffix can be removed with **suffix none**.", "suffix desu").block()
+                    return@discord
+                }
+                val suffix = when(args[0]) {
+                    "none", "remove", "reset" -> null
+                    else -> args[0]
+                }
+                config.suffix = suffix
+                config.save()
+                embed("The command suffix for **${target.name}** has been set to **$suffix**.").block()
             }
         }
     }
