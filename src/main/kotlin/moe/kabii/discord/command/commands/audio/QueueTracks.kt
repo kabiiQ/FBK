@@ -5,8 +5,23 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
+import moe.kabii.util.DurationParser
 
 object QueueTracks : AudioCommandContainer {
+
+    data class QueryTimestamp(val url: String, val timestamp: Long)
+
+    private val timestampRegex = Regex("[&\\?#]t=([0-9smh]+)")
+    fun extractTimestamp(url: String): QueryTimestamp {
+        val match = timestampRegex.find(url)
+        val timestamp = match?.groups?.get(1)
+        val time = if(timestamp != null) {
+            DurationParser.tryParse(timestamp.value)
+        } else null
+        val url = if(timestamp != null) url.replace(match.value, "") else url
+        return if(time == null) QueryTimestamp(url, 0) else QueryTimestamp(url, time.toMillis())
+    }
+
     object PlaySong : Command("play", "addsong", "queuesong") {
         init {
             discord {
@@ -20,7 +35,8 @@ object QueueTracks : AudioCommandContainer {
                     usage("**play** is used to play an audio track on the bot. You can provide a direct link or let the bot search and play the top Youtube result.", "play <track URL, youtube ID, or youtube search query>").block()
                     return@discord
                 }
-                AudioManager.manager.loadItem(noCmd, SingleTrackLoader(this))
+                val query = extractTimestamp(noCmd)
+                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, startingTime = query.timestamp))
             }
         }
     }
@@ -47,7 +63,8 @@ object QueueTracks : AudioCommandContainer {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
                 // immediately start playing track
-                AudioManager.manager.loadItem(noCmd, ForcePlayTrackLoader(this))
+                val query = extractTimestamp(noCmd)
+                AudioManager.manager.loadItem(query.url, ForcePlayTrackLoader(this, query.timestamp))
             }
         }
     }
@@ -90,7 +107,8 @@ object QueueTracks : AudioCommandContainer {
                 validateChannel(this)
                 member.verify(Permission.MANAGE_MESSAGES)
                 // add a song to the front of the queue
-                AudioManager.manager.loadItem(noCmd, SingleTrackLoader(this, position = 0))
+                val query = extractTimestamp(noCmd)
+                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, 0, query.timestamp))
             }
         }
     }
