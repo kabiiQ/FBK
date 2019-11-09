@@ -39,18 +39,13 @@ object Search {
             }.block()
             val range = 0L..options.size // adding/subtracting here to give the user a 1-indexed interface
             val input = param.getLong(range, prompt, timeout = 240000L)
+            prompt.delete().subscribe()
             return if (input != null) {
-                if(input == 0L) {
-                    prompt.delete().subscribe()
-                    null
-                } else {
+                if(input == 0L) null else {
                     val index = input - 1
                     options[index.toInt()]
                 }
-            } else {
-                prompt.delete().subscribe()
-                null
-            }
+            } else null
         }
         val matchTo = clean(query)
 
