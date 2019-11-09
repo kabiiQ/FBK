@@ -88,14 +88,17 @@ class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
                 "[$created](${reminder.originMessage!!.jumpLink})"
             } else created
             setDescription(desc)
-            addField("Reminder:", reminder.content, false)
+            val content = reminder.content
+            if(content.isNotBlank()) {
+                addField("Reminder:", content, false)
+            }
             setFooter("Reminder created", null)
             setTimestamp(reminder.created.javaInstant)
         }
         remindChannel.createMessage { spec ->
             spec.setContent(user.mention)
             spec.setEmbed(embed)
-        }.block()
+            }.block()
         reminder.delete()
     }
 }

@@ -13,6 +13,7 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import java.time.Duration
 
 object ReminderCommands : CommandContainer {
     object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
@@ -20,12 +21,24 @@ object ReminderCommands : CommandContainer {
             discord {
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
-                if(args.size < 2) {
-                    usage("**remindme** schedules the bot to send you a reminder in the future. If ran in DM or the reminder contains the flag !dm, the reminder will be sent via DM. Otherwise, you will be pinged in the current channel.",
-                        "remindme <time until reminder, ex: 1:30 / 1m30s, 1:0:0:0 / 1d, or 1:20:0 / 1h20m> <reminder message>").block()
+                if(args.isEmpty()) {
+                    usage("**remind** schedules the bot to send you a reminder in the future. If ran in DM or the reminder contains the flag !dm, the reminder will be sent via DM. Otherwise, you will be pinged in the current channel.",
+                        "remind <time until reminder, examples: 1m, 1:00, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").block()
                     return@discord
                 }
-                val time = DurationParser.tryParse(args[0])
+                var time: Duration? = null
+                var argIndex = 0
+                val timeArg = StringBuilder()
+                for((index, arg) in args.withIndex()) {
+                    timeArg.append(arg)
+                    val parse = DurationParser.tryParse(timeArg.toString())
+                    if(parse == null) break
+                    else {
+                        time = parse
+                        argIndex = index
+                    }
+                }
+
                 if(time == null) {
                     usage("**${args[0]}** is an invalid reminder delay.", "remindme <time until reminder> <reminder message>").block()
                     return@discord
@@ -42,7 +55,7 @@ object ReminderCommands : CommandContainer {
 
                 var replyPrivate = this.isPM
                 // remove flags from message
-                val reminderContent = args.drop(1).filter { arg ->
+                val reminderContent = args.drop(argIndex + 1).filter { arg ->
                     when(arg.toLowerCase()) {
                         "!dm", "!pm" -> {
                             replyPrivate = true
