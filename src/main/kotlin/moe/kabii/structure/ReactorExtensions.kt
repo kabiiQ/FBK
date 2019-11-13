@@ -13,11 +13,11 @@ fun <T, R> Flux<T>.mapNotNull(mapper: (T) -> R?): Flux<R> {
     }
 }
 
-fun <T: Any> Mono<T>.tryBlock(): Result<T, Throwable> = Try {
+fun <T: Any> Mono<T>.tryBlock(trace: Boolean = true): Result<T, Throwable> = Try {
     block() ?: throw NullPointerException() // this wasn't necessary until running into certain objects that only return null! and I don't want to make Result take nullable values... this is easier for finding any errors, for now.
 }.result.apply { ifErr { e ->
     LOG.debug("Exception suppressed in tryBlock: ${e.message}.")
-    e.printStackTrace()
+    if(trace) e.printStackTrace()
 }}
 
 fun <T> Mono<T>.filterNot(predicate: (T) -> Boolean): Mono<T> = filter { !predicate(it) }

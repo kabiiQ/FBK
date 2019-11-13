@@ -49,7 +49,7 @@ object SearchTracks : AudioCommandContainer {
                 if(input != null) {
                     FallbackHandler(this).trackLoaded(search[input - 1])
                 }
-                embed.delete().tryBlock()
+                embed.delete().tryBlock(false)
             }
         }
     }
