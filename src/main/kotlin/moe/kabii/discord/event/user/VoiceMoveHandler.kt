@@ -28,16 +28,14 @@ object VoiceMoveHandler {
             return
         }
 
-        val (old, oldChannel) = if(oldState != null) {
-            when(val get = oldState.channel.tryBlock()) {
-                is Ok -> true to get.value
-                is Err -> false to null
-            }
-        } else false to null
-        val (new, newChannel) = when(val get = newState.channel.tryBlock()) {
-            is Ok -> true to get.value
-            is Err -> false to null
+        val newChannel = newState.channel.tryBlock(false).orNull()
+
+        val oldChannel = oldState?.run {
+            channel.tryBlock(false).orNull()
         }
+        val old = oldChannel != null
+        val new = newChannel != null
+
 
         val config = GuildConfigurations.getOrCreateGuild(newState.guildId.asLong())
         val user = newState.user.block()
