@@ -91,7 +91,10 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                         statusChange = true
                         builder = MediaEmbedBuilder(newMedia)
                         builder.descriptionFmt = when (newMedia.status) {
-                            ConsumptionStatus.WATCHING -> "Started watching %s!"
+                            ConsumptionStatus.WATCHING -> when(newMedia.type) {
+                                MediaType.ANIME -> "Started watching %s!"
+                                MediaType.MANGA -> "Started reading %s!"
+                            }
                             ConsumptionStatus.PTW -> "Put %s back on their Plan to Watch."
                             ConsumptionStatus.HOLD -> "Placed %s on hold."
                             ConsumptionStatus.DROPPED -> "Dropped %s."
