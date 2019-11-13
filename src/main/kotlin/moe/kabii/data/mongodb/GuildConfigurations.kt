@@ -10,6 +10,8 @@ import moe.kabii.structure.TwitchID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
+import reactor.core.publisher.DirectProcessor
+import reactor.core.scheduler.Schedulers
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
@@ -51,22 +53,25 @@ data class GuildConfiguration(
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
 
-    fun save() = runBlocking { queue.send(this@GuildConfiguration) }
+    fun save() {
+        queue.next(this)
+    }
 
     fun getOrCreateFeatures(channel: Long): FeatureChannel = options.featureChannels.getOrPut(channel) {
         FeatureChannel(channel).also { save() }
     }
 
     companion object {
-        @Transient private val queue = Channel<GuildConfiguration>(Channel.UNLIMITED)
-        // start async configuration update task
+        private val configProcessor = DirectProcessor.create<GuildConfiguration>()
+        private val queue = configProcessor.sink()
+
         init {
-            thread(start = true, name = "GuildConfigurations") {
-                runBlocking {
-                    for (config in queue) {
+            configProcessor
+                .subscribeOn(Schedulers.newSingle("ConfigProcessor"))
+                .subscribe { config ->
+                    runBlocking {
                         GuildConfigurations.mongoConfigurations.updateOne(config, upsert)
                     }
-                }
             }
         }
     }
