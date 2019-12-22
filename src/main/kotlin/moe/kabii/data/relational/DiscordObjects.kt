@@ -1,5 +1,6 @@
 package moe.kabii.data.relational
 
+import moe.kabii.data.relational.DiscordObjects.Guild.Companion.getOrInsert
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -43,19 +44,19 @@ object DiscordObjects {
 
     internal object Channels : IntIdTable() {
         val channelID = long("channel_id").uniqueIndex()
-        val guild = reference("guild", Guilds, ReferenceOption.CASCADE)
+        val guild = reference("guild", Guilds, ReferenceOption.CASCADE).nullable()
     }
 
     class Channel(id: EntityID<Int>) : IntEntity(id) {
         var channelID by Channels.channelID
-        var guild by Guild referencedOn Channels.guild
+        var guild by Guild optionalReferencedOn Channels.guild
 
         companion object : IntEntityClass<Channel>(Channels) {
-            fun getOrInsert(newChannelID: Long, newGuildID: Long): Channel = find { Channels.channelID eq newChannelID }
+            fun getOrInsert(newChannelID: Long, newGuildID: Long?): Channel = find { Channels.channelID eq newChannelID }
                 .elementAtOrElse(0) { _ ->
                     new {
                         channelID = newChannelID
-                        guild = Guild.getOrInsert(newGuildID)
+                        guild = newGuildID?.let { id -> Guild.getOrInsert(id) }
                     }
                 }
         }

@@ -21,10 +21,11 @@ object MessageHistory {
         var content by Messages.content
 
         val jumpLink: String
-        get() = "https://discordapp.com/channels/${channel.guild.guildID}/${channel.channelID}/${messageID}"
+        get() = if(channel.guild != null) "https://discordapp.com/channels/${channel.guild!!.guildID}/${channel.channelID}/$messageID"
+        else "https://discordapp.com/channels/${channel.channelID}/$messageID"
 
         companion object : LongEntityClass<Message>(Messages) {
-            fun new(guildID: Long, message: discord4j.core.`object`.entity.Message): Message {
+            fun new(guildID: Long?, message: discord4j.core.`object`.entity.Message): Message {
                 return new {
                     messageID = message.id.asLong()
                     channel = DiscordObjects.Channel.getOrInsert(message.channelId.asLong(), guildID)
