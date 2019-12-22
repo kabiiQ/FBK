@@ -88,13 +88,10 @@ object ReminderCommands : CommandContainer {
                         created = DateTime.now()
                         remind = DateTime.now().plusSeconds(time.seconds.toInt())
                         content = reminderContent
-                        originMessage = if(guild != null) {
-                            // if guild does not have message history enabled. we are obviously storing the content for the reminder anyways so this is an exception
-                            MessageHistory.Message.find { MessageHistory.Messages.messageID eq event.message.id.asLong() }
-                                .elementAtOrElse(0) { _ ->
-                                    MessageHistory.Message.new(guild.id.asLong(), event.message)
-                                }
-                        } else null
+                        originMessage = MessageHistory.Message.find { MessageHistory.Messages.messageID eq event.message.id.asLong() }
+                            .elementAtOrElse(0) { _ ->
+                                MessageHistory.Message.new(guild?.id?.asLong(), event.message)
+                            }
                     }
                 }
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
