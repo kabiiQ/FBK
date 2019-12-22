@@ -28,7 +28,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
 
     override fun trackLoaded(track: AudioTrack) {
         track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
-        track.position = startingTime
+        if(startingTime in 0..track.duration) track.position = startingTime
         // set track
         val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
         if(!audio.player.startTrack(track, true)) {
@@ -120,7 +120,7 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, private val startingT
         }
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
         track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
-        track.position = startingTime
+        if(startingTime in 0..track.duration) track.position = startingTime
         audio.player.playTrack(track)
         with(audio.player) {
             if(isPaused) isPaused = false

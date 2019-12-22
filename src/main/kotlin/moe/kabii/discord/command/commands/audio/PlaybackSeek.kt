@@ -58,11 +58,10 @@ object PlaybackSeek : AudioCommandContainer {
         }
     }
 
-    private fun timeSkipMessage(author: User, timeForwards: Duration, newPosition: Duration, track: AudioTrack): EmbedReceiver = {
+    private fun timeSkipMessage(author: User, time: Duration, backwards: Boolean, newPosition: Duration, track: AudioTrack): EmbedReceiver = {
         setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-        val direction = if(timeForwards.isNegative) "backwards" else "forwards"
-        val timeForwards = if(timeForwards.isNegative) timeForwards.negated() else timeForwards
-        val positiveTime = DurationFormatter(timeForwards).colonTime
+        val direction = if(backwards) "backwards" else "forwards"
+        val positiveTime = DurationFormatter(time).colonTime
         val new = DurationFormatter(newPosition).colonTime
         setDescription("Moving $direction $positiveTime. in the current track ${trackString(track)} **-> $new**.")
     }
@@ -89,7 +88,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val position = Duration.ofMillis(track.position)
                 val seekTo = position.plus(seekForwards)
                 if(trySeekCurrentTrack(this, track, seekTo)) {
-                    embed(timeSkipMessage(author, seekForwards, seekTo, track)).block()
+                    embed(timeSkipMessage(author, seekForwards, false, seekTo, track)).block()
                 }
             }
         }
@@ -117,7 +116,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val position = Duration.ofMillis(track.position)
                 val seekTo = position.minus(seekBackwards)
                 if(trySeekCurrentTrack(this, track, seekTo)) {
-                    embed(timeSkipMessage(author, seekBackwards, seekTo, track)).block()
+                    embed(timeSkipMessage(author, seekBackwards, true, seekTo, track)).block()
                 }
             }
         }

@@ -29,8 +29,8 @@ import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.MediaListWatcher
-import moe.kabii.discord.trackers.twitch.TwitchStreamWatcher
-import moe.kabii.helix.TwitchHelix
+import moe.kabii.discord.trackers.streams.StreamWatcher
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.joint.CommandManager
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
@@ -40,10 +40,6 @@ import moe.kabii.twitch.TwitchMessageHandler
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import org.reflections.Reflections
-import org.reflections.scanners.TypeAnnotationsScanner
-import org.reflections.util.ClasspathHelper
-import org.reflections.util.ConfigurationBuilder
-import org.reflections.util.FilterBuilder
 import reactor.core.publisher.Mono
 
 val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
@@ -93,7 +89,7 @@ fun main() {
 
     // task threads
     val listWatcher = MediaListWatcher(discord)
-    val streamWatcher = TwitchStreamWatcher(discord)
+    val streamWatcher = StreamWatcher(discord)
     val reminderWatcher = ReminderWatcher(discord)
 
     // discord4j event listeners
@@ -197,8 +193,8 @@ fun main() {
     // join any linked channels on twitch IRC
     GuildConfigurations.guildConfigurations.values
         .mapNotNull { it.options.linkedTwitchChannel?.twitchid }
-        .let(TwitchHelix::getUsers).values
-        .mapNotNull { user -> user.orNull()?.login }
+        .let(TwitchParser::getUsers).values
+        .mapNotNull { user -> user.orNull()?.username }
         .forEach(twitch.chat::joinChannel)
 
     // login
