@@ -36,6 +36,11 @@ object QueueEdit : AudioCommandContainer {
             args.map { arg ->
                 val parts = arg.split("-")
                 if (parts.size == 1) { // just a number to be skipped
+                    if(parts[0].toLowerCase() == "all") {
+                        yield(1..queue.size)
+                        outputMessage.append("Removing all songs from queue.")
+                        return@sequence
+                    }
                     val parse = parts[0].toIntOrNull()
                     if (parse != null && parse in 1..queue.size) yield(parse..parse)
                     else outputMessage.append("Invalid track: $arg\n")
