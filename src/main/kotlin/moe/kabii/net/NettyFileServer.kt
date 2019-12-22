@@ -8,8 +8,8 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import moe.kabii.helix.TwitchHelix
-import moe.kabii.rusty.Ok
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.rusty.*
 import moe.kabii.util.RGB
 import okhttp3.Request
 import java.awt.Color
@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.Instant
+import java.util.function.Predicate
 import javax.imageio.ImageIO
 
 object NettyFileServer {
@@ -34,13 +35,14 @@ object NettyFileServer {
         val glitch = File(staticRoot, "Twitch_Glitch_Purple.png")
 
         routing {
-            get("/thumbnails/{twitchid}/{...}") {
+            get("/thumbnails/twitch/{twitchid}/{...}") {
                 val twitchID = call.parameters["twitchid"]?.toLongOrNull()
                 if (twitchID != null) {
-                    val api = TwitchHelix.getStream(twitchID)
+                    val api = TwitchParser.getStream(twitchID)
                     if (api is Ok) {
                         val stream = api.value
-                        val thumbnailURL = stream.thumbnail_url.replace("{width}x{height}", "1280x720")
+
+                        val thumbnailURL = stream.rawThumbnail.replace("{width}x{height}", "1280x720")
                         val request = Request.Builder().get().url(thumbnailURL)
                         val image = OkHTTP.make(request) { response ->
                             response.body!!.bytes()
@@ -58,10 +60,11 @@ object NettyFileServer {
                 val r = call.parameters["r"]?.toIntOrNull()
                 val g = call.parameters["g"]?.toIntOrNull()
                 val b = call.parameters["b"]?.toIntOrNull()
-                if (r != null && g != null && b != null) {
+                fun valid(int: Int?) = int in 0..255
+                if (valid(r) && valid (g) && valid(b)) {
                     val image = BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
                     val graphic = image.createGraphics()
-                    graphic.color = Color(r, g, b)
+                    graphic.color = Color(r!!, g!!, b!!)
                     graphic.fillRect(0, 0, 256, 256)
                     val output = ByteArrayOutputStream()
                     ImageIO.write(image, "png", output)
@@ -69,7 +72,7 @@ object NettyFileServer {
                 }
             }
 
-            get("/ids/{file}.txt") {
+            get("/ids/{file}.{...}") {
                 val file = call.parameters["file"]
                 call.respondFile(File(idRoot, "$file.txt"))
             }
@@ -94,7 +97,7 @@ object NettyFileServer {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"
     }
-    fun thumbnail(id: Long) = "$domain/thumbnails/$id/${Instant.now().epochSecond}}"
+    fun twitchThumbnail(id: Long) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
     fun idsAll(id: String) = "$domain/ids/$id-all.txt"

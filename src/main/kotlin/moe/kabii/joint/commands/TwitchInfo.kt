@@ -3,7 +3,7 @@ package moe.kabii.joint.commands
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.helix.TwitchHelix
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.reply
 import moe.kabii.util.DurationFormatter
@@ -14,18 +14,16 @@ object TwitchInfo : CommandContainer {
     object Title : Command("title", "streamtitle", "streamname") {
         init {
             twitch {
-                val api = TwitchHelix.getStream(event.channel.id)
+                val api = TwitchParser.getStream(event.channel.id)
                 if (api is Ok) {
                     val stream = api.value
-                    val game = TwitchHelix.getGame(stream.gameID)
-                    event.reply("${game.name} - ${stream.title}")
+                    event.reply("${stream.game.name} - ${stream.title}")
                 } else event.reply("Stream is not live!")
             }
             discord {
-                if(isPM) return@discord
                 val linkedTwitch = config.options.linkedTwitchChannel
                 if(linkedTwitch != null) {
-                    val stream = TwitchHelix.getStream(linkedTwitch.twitchid)
+                    val stream = TwitchParser.getStream(linkedTwitch.twitchid)
                     if(stream is Ok) {
                         embed("Current Twitch stream title: **${stream.value.title}**").block()
                     }
@@ -38,7 +36,7 @@ object TwitchInfo : CommandContainer {
     object Uptime : Command("uptime", "up-time") {
         init {
             twitch {
-                val stream = TwitchHelix.getStream(event.channel.id)
+                val stream = TwitchParser.getStream(event.channel.id)
                 if (stream is Ok) {
                     val uptime = Duration.between(stream.value.startedAt, Instant.now())
                     val uptimeStr = DurationFormatter(uptime).colonTime
@@ -46,18 +44,17 @@ object TwitchInfo : CommandContainer {
                 } else event.reply("Stream is not live!")
             }
             discord {
-                if(isPM) return@discord
                 val linkedTwitch = config.options.linkedTwitchChannel
                 if(linkedTwitch != null) {
-                    val stream = TwitchHelix.getStream(linkedTwitch.twitchid)
+                    val stream = TwitchParser.getStream(linkedTwitch.twitchid)
                     if(stream is Ok) {
                         val uptime = Duration.between(stream.value.startedAt, Instant.now())
                         val uptimeStr = DurationFormatter(uptime).colonTime
-                        embed("${stream.value.user_name} has been live for $uptimeStr").block()
+                        embed("${stream.value.username} has been live for $uptimeStr").block()
                     } else {
-                        val user = TwitchHelix.getUser(linkedTwitch.twitchid)
+                        val user = TwitchParser.getUser(linkedTwitch.twitchid)
                         if(user is Ok) {
-                            embed("${user.value.login} is not live.").block()
+                            embed("${user.value.username} is not live.").block()
                         }
                     }
                 }

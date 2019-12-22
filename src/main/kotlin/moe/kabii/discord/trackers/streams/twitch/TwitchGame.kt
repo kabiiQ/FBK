@@ -1,4 +1,4 @@
-package moe.kabii.helix
+package moe.kabii.discord.trackers.streams.twitch
 
 import com.beust.klaxon.Json
 

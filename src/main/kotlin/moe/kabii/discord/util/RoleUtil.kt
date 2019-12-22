@@ -3,7 +3,7 @@ package moe.kabii.discord.util
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
-import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.relational.TrackedStreams
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
@@ -24,15 +24,14 @@ object RoleUtil {
             .onErrorResume { Mono.empty() }
     }
 
-    fun removeTwitchIfEmpty(target: Guild, mentionRole: Long): Flux<Void> {
-        val config = GuildConfigurations.getOrCreateGuild(target.id.asLong())
-        return RoleUtil.emptyRoles(target, listOf(mentionRole))
-            .doOnNext { role ->
-                config.twitchMentionRoles.keys.removeIf { roleID -> role.id.asLong() == roleID }
-                config.save()
-            }
-            .flatMap { role -> role.delete("Empty Twitch mention role")}
-    }
+    fun removeIfEmptyStreamRole(target: Guild, mention: Long): Flux<Void> =
+        RoleUtil.emptyRoles(target, listOf(mention))
+            .filter { role ->
+                // remove role if it is a twitch mention role
+                val find = TrackedStreams.Target.find { TrackedStreams.Targets.mention eq mention }.firstOrNull()
+                find?.delete()
+                find != null
+            }.flatMap { role -> role.delete("Empty stream mention role") }
 
     fun getColorRole(member: Member): Mono<Role> {
         return member.roles

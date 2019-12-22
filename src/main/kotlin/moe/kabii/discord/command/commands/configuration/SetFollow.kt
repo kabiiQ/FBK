@@ -4,7 +4,7 @@ import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
-import moe.kabii.helix.TwitchHelix
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 
 object SetFollow : Command("setfollow", "followset", "defaultfollow") {
     init {
@@ -23,15 +23,15 @@ object SetFollow : Command("setfollow", "followset", "defaultfollow") {
                     return@discord
                 }
             }
-            val twitchStream = TwitchHelix.getUser(args[0]).orNull()
+            val twitchStream = TwitchParser.getUser(args[0]).orNull()
             if(twitchStream == null) {
                 error("Invalid Twitch stream **${args[0]}**.").block()
                 return@discord
             }
-            val twitchID = twitchStream.id.toLong()
-            settings.defaultFollowChannel = twitchID
+            val twitchID = twitchStream.userID
+            settings.defaultFollowChannel = TODO()
             config.save()
-            embed("The default follow channel for **${target.name}** has been set to **${twitchStream.display_name}**.").block()
+            embed("The default follow channel for **${target.name}** has been set to **${twitchStream.displayName}**.").block()
         }
     }
 }

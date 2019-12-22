@@ -23,8 +23,7 @@ object MemberUpdateHandler {
             // empty Twitch roles
             removedRoles.toFlux()
                 .map(Snowflake::asLong)
-                .filter(config.twitchMentionRoles.values::contains)
-                .flatMap { roleID -> RoleUtil.removeTwitchIfEmpty(guild, roleID) }
+                .flatMap { roleID -> RoleUtil.removeIfEmptyStreamRole(guild, roleID) }
                 .subscribe()
 
             // exclusive role sets

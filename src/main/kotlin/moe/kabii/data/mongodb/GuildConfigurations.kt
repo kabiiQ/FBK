@@ -1,19 +1,16 @@
 package moe.kabii.data.mongodb
 
 import discord4j.core.`object`.entity.User
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.Transient
+import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.GuildID
-import moe.kabii.structure.TwitchID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
 import reactor.core.publisher.DirectProcessor
 import reactor.core.scheduler.Schedulers
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.concurrent.thread
 
 object GuildConfigurations {
     val mongoConfigurations = MongoDBConnection.mongoDB.getCollection<GuildConfiguration>()
@@ -46,7 +43,6 @@ data class GuildConfiguration(
     val guildSettings: GuildSettings = GuildSettings(),
     val tempVoiceChannels: TempChannels = TempChannels(),
     val commandFilter: CommandFilter = CommandFilter(),
-    val twitchMentionRoles: MutableMap<TwitchID, Long> = mutableMapOf(),
     val musicBot: MusicSettings = MusicSettings(),
     val userLog: UserLog = UserLog()) {
 
@@ -234,7 +230,7 @@ data class GuildSettings(
     var embedMessages: Boolean = true,
     var followRoles: Boolean = true,
     var reassignRoles: Boolean = false,
-    var defaultFollowChannel: Long? = null,
+    var defaultFollowChannel: TrackedStreams.StreamInfo? = null,
     var twitchURLInfo: Boolean = false
 )
 

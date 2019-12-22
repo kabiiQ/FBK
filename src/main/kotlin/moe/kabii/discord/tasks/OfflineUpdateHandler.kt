@@ -38,7 +38,7 @@ object OfflineUpdateHandler {
 
          // check for empty twitch follower roles
         val guildRoles = guild.roleIds
-        config.twitchMentionRoles.values.toList().forEach { roleID -> RoleUtil.removeTwitchIfEmpty(guild, roleID) }
+        guildRoles.forEach { roleID -> RoleUtil.removeIfEmptyStreamRole(guild, roleID.asLong()) }
 
         // check for removed roles and remove any commands
         config.selfRoles.roleCommands.values
