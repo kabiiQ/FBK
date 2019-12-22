@@ -11,7 +11,7 @@ object QueueTracks : AudioCommandContainer {
 
     data class QueryTimestamp(val url: String, val timestamp: Long)
 
-    private val timestampRegex = Regex("[&\\?#]t=([0-9smh]+)")
+    private val timestampRegex = Regex("[&?#]t=([0-9smh]+)")
     fun extractTimestamp(url: String): QueryTimestamp {
         val match = timestampRegex.find(url)
         val timestamp = match?.groups?.get(1)

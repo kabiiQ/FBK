@@ -19,6 +19,19 @@ object TwitchTrackerConfig : Command("twitchconfig", "streamconfig", "streamtrac
             "Include the current stream thumbnail in the stream notification",
             listOf("thumbnail", "thumbnails", "image", "picture"),
             FeatureSettings::streamThumbnails
+        ),
+        BooleanElement(
+            "Include stream viewer statistics in summary",
+            listOf("viewers", "viewers", "stats"),
+            FeatureSettings::streamViewersSummary
+        ),
+        BooleanElement("Include stream ending title in summary",
+            listOf("title", "endtitle"),
+            FeatureSettings::streamEndTitle
+        ),
+        BooleanElement("Include stream ending game in summary",
+            listOf("game", "endgame"),
+            FeatureSettings::streamEndGame
         )
     )
 

@@ -40,10 +40,6 @@ object DurationParser {
             .run { Try { Duration.parse(this) }}
             .result.orNull()
     }
-
-    data class UnknownLengthParse(val parsedDuration: Duration, val remainder: Collection<String>)
-
-    fun tryUnknownLengthParse(args: Collection<String>): UnknownLengthParse? = TODO()
 }
 
 class DurationFormatter(val duration: Duration) {
@@ -56,19 +52,23 @@ class DurationFormatter(val duration: Duration) {
     private val minutesPart = minutes - (hours * 60)
     private val secondsPart = duration.seconds - (minutes * 60)
 
+    private fun leading(value: Long) = String.format("%02d", value)
+
     val colonTime: String
-        get() {
-            fun leading(value: Long) = String.format("%02d", value)
-            val output = StringBuilder()
-            if(hours > 0L) { // always have at least min:sec
-                output.append(hours)
-                    .append(":")
-                    .append(leading(minutesPart))
-            } else output.append(minutesPart)
-            output.append(":")
-                .append(leading(secondsPart))
-            return output.toString()
-        }
+    get() {
+        val output = StringBuilder()
+        if(hours > 0L) { // always have at least min:sec
+            output.append(hours)
+                .append(":")
+                .append(leading(minutesPart))
+        } else output.append(minutesPart)
+        output.append(":")
+            .append(leading(secondsPart))
+        return output.toString()
+    }
+
+    val asUptime: String // just hours:minutes
+    get() = "$hours:${leading(minutesPart)}"
 
     val fullTime: String
         get() {

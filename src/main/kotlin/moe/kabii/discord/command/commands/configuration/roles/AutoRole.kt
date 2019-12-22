@@ -7,7 +7,7 @@ object AutoRole : Command("autorole", "auto-role")  {
         discord {
             // autorole <category> <action> (stuff)
             if(args.size <  2) {
-                usage("General autorole configuration command. Available categories: join, voice. Available actions: add, remove, list.", "autorole <category> <action> (parameters)").block()
+                usage("General autorole configuration command. Available categories: join, voice, reaction, command. Available actions: add, remove, list.", "autorole <category> <action> (parameters)").block()
                 return@discord
             }
             val target = when(args[1].toLowerCase()) {

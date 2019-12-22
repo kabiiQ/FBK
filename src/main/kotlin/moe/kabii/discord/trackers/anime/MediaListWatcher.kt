@@ -23,7 +23,7 @@ import java.util.concurrent.Executors
 
 class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists") {
     var active = true
-    private val mediaListProcess = Executors.newFixedThreadPool(MediaSite.values().size).asCoroutineScope()
+    private val listWatcherThreads = Executors.newFixedThreadPool(MediaSite.values().size).asCoroutineScope()
 
     override fun run() {
         while (active) {
@@ -45,7 +45,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
         }
     }
 
-    private fun spawn(site: MediaSite, trackedlists: List<TrackedMediaList>): Job = mediaListProcess.launch {
+    private fun spawn(site: MediaSite, trackedlists: List<TrackedMediaList>): Job = listWatcherThreads.launch {
         val lists = trackedlists
                 .associateBy {
                     for(attempt in 1..3) {
