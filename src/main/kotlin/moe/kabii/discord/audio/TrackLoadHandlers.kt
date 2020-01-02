@@ -5,10 +5,10 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.commands.audio.QueueTracks
 import moe.kabii.rusty.Try
+import moe.kabii.util.DurationFormatter
 import moe.kabii.util.YoutubeUtil
 import java.net.URL
 
@@ -30,8 +30,8 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
         if(startingTime in 0..track.duration) track.position = startingTime
         // set track
-        val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
         if(!audio.player.startTrack(track, true)) {
+            val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
             val add = audio.tryAdd(track, origin.member, position)
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
@@ -41,12 +41,16 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 }.block()
                 return
             }
-            val position = audio.queue.size
-            val duration = audio.duration
-            val eta = if(duration != null) "Estimated time until playing: $duration." else "Unknown queue length with a stream in queue."
+            val addedDuration = track.duration - track.position
+            val trackPosition = audio.queue.size
+            val untilPlaying = audio.duration?.minus(addedDuration)
+            val eta = if(untilPlaying != null) {
+                val formatted = DurationFormatter(untilPlaying).colonTime
+                "Estimated time until playing: $formatted."
+            } else "Unknown queue length with a stream in queue."
             origin.embed {
                 if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
-                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$position**. $paused. $eta")
+                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**. $paused. $eta")
             }.block()
         }
     }
