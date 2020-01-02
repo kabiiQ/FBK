@@ -5,7 +5,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
-import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer
 import discord4j.voice.AudioProvider
 import moe.kabii.data.mongodb.GuildConfigurations
 import java.nio.ByteBuffer
@@ -17,14 +16,11 @@ object AudioManager {
     internal val guilds = mutableMapOf<Long, GuildAudio>()
 
     init {
-        manager.apply {
-            configuration.setFrameBufferFactory(::NonAllocatingAudioFrameBuffer)
-            run(AudioSourceManagers::registerRemoteSources)
-        }
+        AudioSourceManagers.registerRemoteSources(manager)
     }
 
     internal fun createAudioComponents(guild: Long): AudioComponents {
-        val savedVolume = GuildConfigurations.getOrCreateGuild(guild).musicBot.volume
+        val savedVolume = GuildConfigurations.getOrCreateGuild(guild).musicBot. volume
         val player = manager.createPlayer().apply {
             volume = savedVolume
             addListener(AudioEventHandler)
