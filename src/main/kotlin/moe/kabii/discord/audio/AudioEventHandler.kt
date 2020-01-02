@@ -35,7 +35,7 @@ object AudioEventHandler : AudioEventAdapter() {
         when(endReason) {
             AudioTrackEndReason.FINISHED, AudioTrackEndReason.LOAD_FAILED, AudioTrackEndReason.STOPPED -> {
                 if (data.audio.ending) return
-                data.audio.editQueue { // need to save queue even if there is no next track
+                data.audio.editQueueSync { // need to save queue even if there is no next track
                     if (data.audio.queue.isNotEmpty()) {
                         val next = removeAt(0)
                         player.playTrack(next)

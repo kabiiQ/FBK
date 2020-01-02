@@ -39,13 +39,14 @@ data class GuildAudio(
     val playlist: List<AudioTrack>
         get() = if (player.playingTrack != null) listOf(player.playingTrack) + queue else queue.toList()
 
-    val duration: String?
-        get() = if (playlist.none { track -> track.info.isStream })
-            playlist.map { track -> track.duration - track.position }
-                .sum()
-                .let(::DurationFormatter)
-                .let(DurationFormatter::colonTime)
+    val duration: Long?
+        get() = if(playlist.none { track -> track.info.isStream })
+            playlist.map { track -> track.duration - track.position }.sum()
         else null
+
+    val formatDuration: String?
+        get() = duration?.let(::DurationFormatter)
+            ?.let(DurationFormatter::colonTime)
 
     // queue song for a user, returns false if user is over quota
     fun tryAdd(track: AudioTrack, member: Member, position: Int? = null, checkLimits: Boolean = true): Boolean {

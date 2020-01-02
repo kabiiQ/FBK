@@ -48,11 +48,10 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                     for(attempt in 1..3) {
                         try {
                             return@associateBy site.parser.parse(it.list.id)
-                        } catch(limit: RateLimitException) {
-                            sleep(limit.retryMillis)
                         } catch(e: Exception) {
-                            LOG.warn("Error parsing media item: $it :: ${e.message}")
-                            return@associateBy Err(MediaListIOErr)  // media item may fail to parse with API inconsistencies etc. we will skip item rather than entire list. todo log to be corrected
+                            LOG.warn("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
+                            LOG.debug(e.stackTraceString)
+                            return@associateBy Err(MediaListIOErr)
                         }
                     }
                     Err(MediaListIOErr)

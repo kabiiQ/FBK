@@ -1,9 +1,17 @@
 package moe.kabii.structure
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
 import discord4j.core.`object`.util.Snowflake
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.io.IOException
+import kotlinx.io.PrintWriter
+import kotlinx.io.StringWriter
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
 import org.joda.time.DateTime
 import java.time.Instant
 import java.util.*
@@ -39,3 +47,23 @@ val Instant.jodaDateTime: DateTime
 get() = DateTime(this.toEpochMilli())
 
 annotation class WithinExposedContext
+
+// get stack trace as string
+val Throwable.stackTraceString: String
+get() {
+    val strOut = StringWriter()
+    return PrintWriter(strOut).use { out ->
+        printStackTrace(out)
+        strOut.toString()
+    }
+}
+
+// exceptionless json parse
+fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try {
+    val parse = this.fromJson(input)
+    if(parse != null) Ok(parse) else Err(IOException("Invalid JSON"))
+} catch(malformed: IOException) {
+    Err(malformed)
+} catch(formatting: JsonDataException) {
+    Err(IOException(formatting))
+}

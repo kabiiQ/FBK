@@ -92,6 +92,9 @@ data class FeatureChannel(
 data class FeatureSettings(
     var streamSummaries: Boolean = true,
     var streamThumbnails: Boolean = true,
+    var streamViewersSummary: Boolean = true,
+    var streamEndTitle: Boolean = true,
+    var streamEndGame: Boolean = true,
     var mediaNewItem: Boolean = true,
     var mediaStatusChange: Boolean = true,
     var mediaUpdatedStatus: Boolean = false
