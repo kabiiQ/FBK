@@ -4,7 +4,7 @@ import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.`object`.util.Permission
 import discord4j.rest.http.client.ClientException
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.ReactionRoleMessage
 import moe.kabii.discord.command.Command
@@ -15,6 +15,7 @@ import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryAwait
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 
@@ -23,7 +24,7 @@ object RoleReactions : CommandContainer {
         init {
             discord {
                 if(args.isEmpty()) {
-                    usage("**reactionrole** is used to configure messages with attached reactions to self-assign roles.", "reaction role <add/remove/list>").block()
+                    usage("**reactionrole** is used to configure messages with attached reactions to self-assign roles.", "reaction role <add/remove/list>").awaitSingle()
                     return@discord
                 }
                 when(args[0].toLowerCase()) {
@@ -31,7 +32,7 @@ object RoleReactions : CommandContainer {
                     "remove", "delete", "-" -> RemoveReactionRole
                     "list", "get", "all" -> ListReactionRoles
                     else -> {
-                        usage("Unknown task **${args[0]}**.", "reactionrole <add/remove/list>").block()
+                        usage("Unknown task **${args[0]}**.", "reactionrole <add/remove/list>").awaitSingle()
                         return@discord
                     }
                 }.executeDiscord!!(copy(args = args.drop(1)))
@@ -47,35 +48,35 @@ object RoleReactions : CommandContainer {
                 if(args.size < 2) {
                     usage(
                         "This command is used to create reactions which assign a user a specific role. You can format a message in any way to indicate what the reactions will do, then run this command with that message's ID to add reactions that will assign the desired role.",
-                        "reactionrole add <message id> <role>").block()
+                        "reactionrole add <message id> <role>").awaitSingle()
                     return@discord
                 }
                 val roleArg = args.drop(1).joinToString("")
                 val role = Search.roleByNameOrID(this, roleArg)
                 if(role == null) {
-                    error("Unknown role **$roleArg**.").block()
+                    error("Unknown role **$roleArg**.").awaitSingle()
                     return@discord
                 }
                 val safe = PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    error("You can not assign the role **${role.name}**.").block()
+                    error("You can not assign the role **${role.name}**.").awaitSingle()
                     return@discord
                 }
-                val message = args[0].toLongOrNull()?.snowflake?.run(chan::getMessageById)?.tryBlock()?.orNull()
+                val message = args[0].toLongOrNull()?.snowflake?.run(chan::getMessageById)?.tryAwait()?.orNull()
                 if(message == null) {
-                    usage("I could not find a message with the ID **${args[0]}** in **${(chan as TextChannel).name}**.", "reactionrole add <message id> <role>").block()
+                    usage("I could not find a message with the ID **${args[0]}** in **${(chan as TextChannel).name}**.", "reactionrole add <message id> <role>").awaitSingle()
                     return@discord
                 }
                 val configs = config.selfRoles.roleMentionMessages
                 // due to the nature of reactions (they may be manually removed) adding a config will just overwrite an existing config rather than erroring
                 // reset reactions and add
-                message.removeAllReactions().tryBlock()
-                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).tryBlock()
-                val reactX = message.addReaction(ReactionEmoji.unicode(EmojiCharacters.redX)).thenReturn(Unit).tryBlock()
+                message.removeAllReactions().tryAwait()
+                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).tryAwait()
+                val reactX = message.addReaction(ReactionEmoji.unicode(EmojiCharacters.redX)).thenReturn(Unit).tryAwait()
                 if(reactX is Err) {
                     val error = reactX.value as? ClientException
                     val message = if(error?.status?.code() == 403) "I am missing permissions to add reactions to that message." else "I could not add reactions to that message."
-                    error(message).block()
+                    error(message).awaitSingle()
                     return@discord
                 }
                 configs.removeIf { reactRole -> reactRole.message.messageID == message.id.asLong() }
@@ -83,7 +84,7 @@ object RoleReactions : CommandContainer {
                 configs.add(new)
                 config.save()
                 val link = "https://discordapp.com/channels/${target.id.asLong()}/${message.channelId.asLong()}/${message.id.asLong()}"
-                embed("The message [${message.id.asString()}]($link) has been added as a reaction role message for **${role.name}**.").block()
+                embed("The message [${message.id.asString()}]($link) has been added as a reaction role message for **${role.name}**.").awaitSingle()
             }
         }
     }
@@ -96,7 +97,7 @@ object RoleReactions : CommandContainer {
                 // reactionrole remove <messageid>
                 val messageID = args.getOrNull(0)?.removePrefix("#")?.toLongOrNull()
                 if(messageID == null) {
-                    usage("This command is used to unregister an existing reaction role message.", "reactionrole remove <message id>").block()
+                    usage("This command is used to unregister an existing reaction role message.", "reactionrole remove <message id>").awaitSingle()
                     return@discord
                 }
                 val removed = configs.removeIf { reactRole -> reactRole.message.messageID == messageID }
@@ -105,7 +106,7 @@ object RoleReactions : CommandContainer {
                     embed("The reaction role configuration on the message **$messageID** has been removed.")
                 } else {
                     error("There is no existing reaction role for the message ID **${messageID}**.")
-                }.block()
+                }.awaitSingle()
             }
         }
     }
@@ -119,7 +120,7 @@ object RoleReactions : CommandContainer {
                     // list reaction role messages that still have valid roles
                     .mapNotNull { reactRole ->
                         val (messageInfo, roleID) = reactRole
-                        when(val role = target.getRoleById(roleID.snowflake).tryBlock()) {
+                        when(val role = target.getRoleById(roleID.snowflake).tryAwait()) {
                             is Err -> {
                                 val error = role.value
                                 if((error as? ClientException)?.status?.code() == 404) {
@@ -143,7 +144,7 @@ object RoleReactions : CommandContainer {
                     } else {
                         setDescription("There are no reaction role messages in ${target.name}.")
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

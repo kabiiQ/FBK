@@ -2,6 +2,7 @@ package moe.kabii.discord.command.commands.moderation
 
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.discord.command.Command
@@ -18,7 +19,7 @@ object Drag : Command("drag", "move", "pull") {
                 // drag all pulls all users into user channel
                 "all" -> {
                     member.verify(Permission.MANAGE_CHANNELS)
-                    val targetChannel = member.voiceState.flatMap(VoiceState::getChannel).block()
+                    val targetChannel = member.voiceState.flatMap(VoiceState::getChannel).awaitSingle()
                     if (targetChannel != null) {
                         embed("Moving all users to **${targetChannel.name}**.").subscribe()
                         target.voiceStates
@@ -31,7 +32,7 @@ object Drag : Command("drag", "move", "pull") {
                                 }.onErrorResume { _ -> Mono.empty() }
                                 .blockLast()
                     } else {
-                        error("**drag all** moves ALL users in this server's voice channels to your current voice channel. You must be in a voice channel that I can move users into, to use the command.").block()
+                        error("**drag all** moves ALL users in this server's voice channels to your current voice channel. You must be in a voice channel that I can move users into, to use the command.").awaitSingle()
                     }
                 }
                 // normal drag command pulls users along with the bot when it moves
@@ -43,7 +44,7 @@ object Drag : Command("drag", "move", "pull") {
                             embed("Drag operation cancelled.").subscribe()
                         } else {
                             add(target.id)
-                            val message = embed("Ready! Move me to drag any users in my voice channel along with me.").block()
+                            val message = embed("Ready! Move me to drag any users in my voice channel along with me.").awaitSingle()
                             ReactionListener(
                                     MessageInfo.of(message),
                                     listOf(

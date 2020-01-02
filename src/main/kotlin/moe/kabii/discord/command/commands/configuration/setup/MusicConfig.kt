@@ -3,14 +3,14 @@ package moe.kabii.discord.command.commands.configuration.setup
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object MusicConfig : CommandContainer {
     object MusicBot : Command("musicbot", "musicconfig", "musicsetup", "music", "musicsettings") {
@@ -101,13 +101,13 @@ object MusicConfig : CommandContainer {
                 // get channel
                 if(args.isEmpty()) {
                     val channel = music.autoJoinChannel?.let { id ->
-                        event.client.getChannelById(id.snowflake).ofType(VoiceChannel::class.java).tryBlock().orNull()
+                        event.client.getChannelById(id.snowflake).ofType(VoiceChannel::class.java).tryAwait().orNull()
                     }
                     if(channel == null) {
-                        usage("The bot is not currently set to automatically join a voice channel.", "autojoin <channel id or \"set\" for current channel>").block()
+                        usage("The bot is not currently set to automatically join a voice channel.", "autojoin <channel id or \"set\" for current channel>").awaitSingle()
                         return@discord
                     }
-                    embed("The bot is currently set to auto join **${channel.name}**.").block()
+                    embed("The bot is currently set to auto join **${channel.name}**.").awaitSingle()
                     return@discord
                 }
                 // set channel
@@ -115,22 +115,22 @@ object MusicConfig : CommandContainer {
                     "none", "reset", "clear", "null", "remove" -> {
                         music.autoJoinChannel = null
                         config.save()
-                        embed("The bot has been set to not automatically join any voice channel.").block()
+                        embed("The bot has been set to not automatically join any voice channel.").awaitSingle()
                         return@discord
                     }
                     "set", "current", "me", "mine" -> member.voiceState
                         .flatMap(VoiceState::getChannel)
                         .ofType(VoiceChannel::class.java)
-                        .tryBlock().orNull()
+                        .tryAwait().orNull()
                     else -> Search.channelByID(this, args[0])
                 }
                 if(joinTarget == null) {
-                    usage("**${args[0]}** does not seem to be a voice channel ID.", "autojoin <channel id or \"set\" for current channel>").block()
+                    usage("**${args[0]}** does not seem to be a voice channel ID.", "autojoin <channel id or \"set\" for current channel>").awaitSingle()
                     return@discord
                 }
                 music.autoJoinChannel = joinTarget.id.asLong()
                 config.save()
-                embed("The bot has been set to automatically join **${joinTarget.name}**.").block()
+                embed("The bot has been set to automatically join **${joinTarget.name}**.").awaitSingle()
             }
         }
     }

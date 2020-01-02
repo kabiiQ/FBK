@@ -3,6 +3,7 @@ package moe.kabii.discord.command.commands
 import discord4j.core.`object`.presence.Activity
 import discord4j.core.`object`.presence.Presence
 import discord4j.core.`object`.util.Image
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verifyBotAdmin
@@ -52,7 +53,7 @@ object BotAdminCommands : CommandContainer {
                     embed("Bot avatar changed.")
                 }.onErrorResume { e ->
                     error("Unable to change bot avatar: **${e.message}**.")
-                }.block()
+                }.awaitSingle()
             }
         }
     }

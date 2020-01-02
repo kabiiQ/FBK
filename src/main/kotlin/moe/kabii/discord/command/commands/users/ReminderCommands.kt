@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.users
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.Reminder
@@ -7,8 +8,7 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.reminderColor
 import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.tryBlock
-import moe.kabii.util.ColorUtil
+import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -23,7 +23,7 @@ object ReminderCommands : CommandContainer {
                 // remindme time message !dm
                 if(args.isEmpty()) {
                     usage("**remind** schedules the bot to send you a reminder in the future. If ran in DM or the reminder contains the flag !dm, the reminder will be sent via DM. Otherwise, you will be pinged in the current channel.",
-                        "remind <time until reminder, examples: 1m, 1:00, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").block()
+                        "remind <time until reminder, examples: 1m, 1:00, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").awaitSingle()
                     return@discord
                 }
                 var time: Duration? = null
@@ -40,7 +40,7 @@ object ReminderCommands : CommandContainer {
                 }
 
                 if(time == null) {
-                    usage("**${args[0]}** is an invalid reminder delay.", "remindme <time until reminder> <reminder message>").block()
+                    usage("**${args[0]}** is an invalid reminder delay.", "remindme <time until reminder> <reminder message>").awaitSingle()
                     return@discord
                 }
                 val length = DurationFormatter(time).fullTime
@@ -49,7 +49,7 @@ object ReminderCommands : CommandContainer {
                     // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways, if someone tries to write "20"
                     // and this would be taken as 20 seconds rather than if they expected minutes or hours
                     // also 2 years limit just for some arbitrary practicality
-                    error("**${args[0]}** was taken to mean **$length**. Please specify a reminder time of at least 1 minute.").block()
+                    error("**${args[0]}** was taken to mean **$length**. Please specify a reminder time of at least 1 minute.").awaitSingle()
                     return@discord
                 }
 
@@ -70,10 +70,10 @@ object ReminderCommands : CommandContainer {
                         if(guild != null) replace(guild.id.asString(), "") else this
                     }
                 val replyChannel = if(replyPrivate) {
-                    val dmChan = author.privateChannel.tryBlock().orNull()
+                    val dmChan = author.privateChannel.tryAwait().orNull()
                     if(dmChan == null) {
                         if(!isPM) { // small optimization since we can't reply anyways :)
-                            error("I am unable to DM you at this time. Please check your privacy settings.").block()
+                            error("I am unable to DM you at this time. Please check your privacy settings.").awaitSingle()
                             return@discord
                         }
                         return@discord
@@ -102,7 +102,7 @@ object ReminderCommands : CommandContainer {
                     setDescription("Reminder created! You will be sent a $location in **$length**.")
                     setFooter("Reminder ID: $reminderID", null)
                 }
-                chan.createEmbed(embed).block()
+                chan.createEmbed(embed).awaitSingle()
             }
         }
     }

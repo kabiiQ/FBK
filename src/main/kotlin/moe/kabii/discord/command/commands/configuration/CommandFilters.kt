@@ -2,8 +2,8 @@ package moe.kabii.discord.command.commands.configuration
 
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfiguration
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.DiscordParameters
@@ -31,7 +31,7 @@ object CommandFilters : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
                 if(args.isEmpty()) {
-                    usage("**whitelist** is used to set up the bot command whitelist.", "whitelist <add/remove/view/reset/toggle>").block()
+                    usage("**whitelist** is used to set up the bot command whitelist.", "whitelist <add/remove/view/reset/toggle>").awaitSingle()
                     return@discord
                 }
                 val filter = config.commandFilter
@@ -79,7 +79,7 @@ object CommandFilters : CommandContainer {
                         embed("The whitelist for **${target.name}** has been reset.")
                     }
                     else -> usage("Unknown task **${args[0]}**.", "whitelist <add/remove/view/reset/toggle>")
-                }.block()
+                }.awaitSingle()
             }
         }
     }
@@ -90,7 +90,7 @@ object CommandFilters : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
                 if(args.isEmpty()) {
-                    usage("**blacklist** is used to set up the bot command blacklist.", "blacklist <add/remove/view/reset/toggle>").block()
+                    usage("**blacklist** is used to set up the bot command blacklist.", "blacklist <add/remove/view/reset/toggle>").awaitSingle()
                     return@discord
                 }
                 val filter = config.commandFilter
@@ -138,7 +138,7 @@ object CommandFilters : CommandContainer {
                         embed("The blacklist for **${target.name}** has been reset.")
                     }
                     else -> usage("Unknown task **${args[0]}**.", "blacklist <add/remove/view/reset/toggle>")
-                }.block()
+                }.awaitSingle()
             }
         }
     }

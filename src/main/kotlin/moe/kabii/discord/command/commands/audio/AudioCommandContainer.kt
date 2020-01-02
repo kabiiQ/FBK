@@ -7,7 +7,8 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.CommandContainer
@@ -16,9 +17,8 @@ import moe.kabii.discord.command.FeatureDisabledException
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.filterNot
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
-import moe.kabii.util.lock
 
 internal interface AudioCommandContainer : CommandContainer {
     companion object {
@@ -44,9 +44,9 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun trackString(track: AudioTrack, includeAuthor: Boolean = true): String = Companion.trackString(track, includeAuthor)
 
-    fun permOverride(origin: DiscordParameters, botChan: VoiceChannel?): Boolean {
+    suspend fun permOverride(origin: DiscordParameters, botChan: VoiceChannel?): Boolean {
         botChan ?: return false // if the bot is not in any voice channel there is no way to let them override the requirements
-        return botChan.getEffectivePermissions(origin.author.id).map { it.contains(Permission.MANAGE_CHANNELS) }.block()
+        return botChan.getEffectivePermissions(origin.author.id).map { it.contains(Permission.MANAGE_CHANNELS) }.awaitSingle()
     }
 
     fun validateChannel(origin: DiscordParameters) {
@@ -54,12 +54,12 @@ internal interface AudioCommandContainer : CommandContainer {
         if(musicChan != true) throw FeatureDisabledException("music", origin)
     }
 
-    fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {
+    suspend fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {
         val audio = AudioManager.getGuildAudio(target.id.asLong())
-        val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryBlock().orNull() ?: return false
+        val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull() ?: return false
         val botChannel =
             event.client.self.flatMap { user -> user.asMember(target.id) }.flatMap(Member::getVoiceState)
-                .flatMap(VoiceState::getChannel).tryBlock().orNull()
+                .flatMap(VoiceState::getChannel).tryAwait().orNull()
 
         val override = permOverride(this, botChannel)
 
@@ -72,20 +72,20 @@ internal interface AudioCommandContainer : CommandContainer {
         config.musicBot.lastChannel = userChannel.id.asLong()
         config.save()
 
-        lock(audio.discord.lock) {
+        audio.discord.mutex.withLock {
             audio.resetAudio(userChannel)
         }
         return true // we join the user's channel and they can now queue songs
     }
 
-    fun getSkipsNeeded(origin: DiscordParameters): Int {
+    suspend fun getSkipsNeeded(origin: DiscordParameters): Int {
         // return lesser of ratio or raw user count - check min user votes first as it is easier than polling v
         val config = origin.config.musicBot
         val vcUsers = BotUtil.getBotVoiceChannel(origin.target)
             .flatMapMany(VoiceChannel::getVoiceStates)
             .flatMap(VoiceState::getUser)
             .filterNot(User::isBot)
-            .count().tryBlock().orNull() ?: 0
+            .count().tryAwait().orNull() ?: 0
         val minUsersRatio = ((config.skipRatio / 100.0) * vcUsers).toInt()
         return intArrayOf(minUsersRatio, config.skipUsers.toInt()).min()!!
     }
@@ -96,10 +96,10 @@ internal interface AudioCommandContainer : CommandContainer {
         else origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
     }
 
-    fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
+    suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
         if(origin.config.musicBot.alwaysFSkip && canFSkip(origin, track)) return true
-        val userChannel = origin.member.voiceState.flatMap(VoiceState::getChannel).tryBlock().orNull() ?: return false
-        val botChannel = BotUtil.getBotVoiceChannel(origin.target).tryBlock().orNull() ?: return false
+        val userChannel = origin.member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull() ?: return false
+        val botChannel = BotUtil.getBotVoiceChannel(origin.target).tryAwait().orNull() ?: return false
         return botChannel.id == userChannel.id
     }
 }

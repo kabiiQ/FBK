@@ -10,7 +10,7 @@ object InviteWatcher {
     private val invites: MutableMap<Long, MutableMap<String, Int>> = mutableMapOf()
 
     fun updateGuild(guild: Guild): Set<String> {
-        val newInvites = when(val invites = guild.invites.collectList().tryBlock(false)) {
+        val newInvites = when(val invites = guild.invites.collectList().tryBlock()) {
             is Ok -> invites.value.map { invite -> invite.code to invite.uses }.toMap().toMutableMap()
             is Err -> {
                 LOG.info("Missing permissions to view invites for ${guild.id.asString()}")

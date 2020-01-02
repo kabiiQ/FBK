@@ -3,6 +3,7 @@ package moe.kabii.discord.command.commands.search
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.discord.command.Command
@@ -19,14 +20,14 @@ object Urban : Command("urbandictionary", "urban", "ud") {
     init {
         discord {
             val lookup = if (args.isEmpty()) author.username else noCmd
-            val message = embed("Searching for **$lookup**...").block()
+            val message = embed("Searching for **$lookup**...").awaitSingle()
             val request = Request.Builder().get().url("https://api.urbandictionary.com/v0/define?term=$lookup")
             val response = OkHTTP.make(request) { response ->
                 val body = response.body!!.string()
                 udAdapter.fromJsonSafe(body)
             }
             if(response !is Ok) {
-                error("Unable to reach UrbanDictionary.").block()
+                error("Unable to reach UrbanDictionary.").awaitSingle()
                 return@discord
             }
             val define = response.value.orNull()
@@ -34,7 +35,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                 embed {
                     setAuthor("UrbanDictionary", "https://urbandictionary.com", null)
                     setDescription("No definitions found for **$lookup**.")
-                }.block()
+                }.awaitSingle()
                 return@discord
             }
             var page: Page? = Page(define.list.size, 0)
@@ -56,7 +57,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                             addField("Downvotes", def.down.toString(), true)
                         }
                     }
-                }.block()
+                }.awaitSingle()
                 page = getPage(page, message, add = first)
                 first = false
             }

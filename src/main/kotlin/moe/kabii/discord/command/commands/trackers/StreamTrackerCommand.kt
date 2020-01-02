@@ -1,8 +1,8 @@
 package moe.kabii.discord.command.commands.trackers
 
-import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
 import discord4j.core.`object`.util.Snowflake
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.TrackedStreams
@@ -10,11 +10,10 @@ import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.FeatureDisabledException
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.discord.trackers.streams.StreamErr
-import moe.kabii.discord.util.RoleUtil
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.success
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -40,28 +39,28 @@ object StreamTrackerCommand : Tracker<TargetStream> {
                     is StreamErr.NotFound -> "Unable to find **${target.site.full}** stream **${target.id}**."
                     is StreamErr.IO -> "Error tracking stream. Possible **${target.site.full}** API issue."
                 }
-                origin.error(error).block()
+                origin.error(error).awaitSingle()
                 return
             }
         }
         val streamID = stream.userID
 
         // get db 'target' object if it exists
-        val dbTarget = getDBTarget(origin.chan.id, TrackedStreams.StreamInfo(stream.parser.site, stream.userID))
+        val dbTarget = getDBTarget(origin.chan.id, TrackedStreams.StreamInfo(parser.site, stream.userID))
 
         // already tracked. otherwise we'll create the target
         if(dbTarget != null) {
-            origin.error("**${stream.displayName}** is already tracked.").block()
+            origin.error("**${stream.displayName}** is already tracked.").awaitSingle()
             return
         }
 
         val guildID = origin.target.id.asLong()
         val dbChannel = transaction { // get the db 'channel' object or create if this is a new stream channel
-            TrackedStreams.Channel.find { TrackedStreams.Channels.channelID eq streamID }
+            TrackedStreams.StreamChannel.find { TrackedStreams.StreamChannels.siteChannelID eq streamID }
                 .elementAtOrElse(0) { _ ->
-                    TrackedStreams.Channel.new {
+                    TrackedStreams.StreamChannel.new {
                         this.site = target.site
-                        this.channelID = streamID
+                        this.siteChannelID = streamID
                     }
                 }
         }
@@ -74,7 +73,7 @@ object StreamTrackerCommand : Tracker<TargetStream> {
                 this.mention = null
             }
         }
-        origin.embed("Now tracking **${stream.displayName}**!").block()
+        origin.embed("Now tracking **${stream.displayName}**!").awaitSingle()
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetStream) {
@@ -83,49 +82,49 @@ object StreamTrackerCommand : Tracker<TargetStream> {
         val stream = target.site.parser.getUser(target.id).orNull()
 
         if(stream == null) {
-            origin.error("Unable to find **${target.site.full}** stream **${target.id}**.").block()
+            origin.error("Unable to find **${target.site.full}** stream **${target.id}**.").awaitSingle()
             return
         }
 
         // check db if stream is tracked in this location
         val dbTarget = getDBTarget(origin.chan.id, TrackedStreams.StreamInfo(stream.parser.site, stream.userID))
         if(dbTarget == null) {
-            origin.error("**${stream.displayName}** is not currently tracked in this channel.").block()
+            origin.error("**${stream.displayName}** is not currently tracked in this channel.").awaitSingle()
             return
         }
         // user can untrack stream if they tracked it or are channel moderator
-        transaction {
-            if (
-                origin.isPM
-                || origin.author.id.asLong() == dbTarget.tracker.userID
-                || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
-            ) {
-                val mentionRole = dbTarget.mention
+        if (
+            origin.isPM
+            || origin.author.id.asLong() == dbTarget.tracker.userID
+            || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+        ) {
+            val mentionRole = dbTarget.mention
+            transaction {
                 dbTarget.delete()
-                origin.embed("No longer tracking **${stream.displayName}**.").block()
-
-                // can delete associated mention role
-                if(mentionRole != null) {
-                    origin.guild!!.getRoleById(mentionRole.snowflake)
-                        .flatMap { role -> role.delete("Stream untracked.") }
-                        .tryBlock(false).orNull()
-                }
-                Unit
-            } else {
-                val tracker = origin.chan.client
-                    .getUserById(dbTarget.tracker.userID.snowflake).tryBlock(false).orNull()
-                    ?.username ?: "invalid-user"
-                origin.error("You may not untrack **${stream.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).").block()
             }
+            origin.embed("No longer tracking **${stream.displayName}**.").awaitSingle()
+
+            // can delete associated mention role
+            if(mentionRole != null) {
+                origin.guild!!.getRoleById(mentionRole.snowflake)
+                    .flatMap { role -> role.delete("Stream untracked.") }
+                    .tryAwait().orNull()
+            }
+            Unit
+        } else {
+            val tracker = origin.chan.client
+                .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
+                ?.username ?: "invalid-user"
+            origin.error("You may not untrack **${stream.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).").awaitSingle()
         }
     }
 
     // get target with same discord channel and streaming channel id
     fun getDBTarget(discordChan: Snowflake, stream: TrackedStreams.StreamInfo): TrackedStreams.Target? = transaction {
         TrackedStreams.Target.wrapRows(
-            TrackedStreams.Targets.innerJoin(TrackedStreams.Channels).select {
-                TrackedStreams.Channels.site eq stream.site and
-                        (TrackedStreams.Channels.channelID eq stream.id)
+            TrackedStreams.Targets.innerJoin(TrackedStreams.StreamChannels).select {
+                TrackedStreams.StreamChannels.site eq stream.site and
+                        (TrackedStreams.StreamChannels.siteChannelID eq stream.id)
                         (TrackedStreams.Targets.discordChannel eq discordChan.asLong())
             }
         ).firstOrNull()

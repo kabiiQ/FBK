@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.audio
 
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
@@ -16,7 +16,7 @@ object PlaybackState : AudioCommandContainer {
                 validateChannel(this)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.isPaused = true
-                embed("Audio playback is now paused. You can resume playback with the **resume** command.").block()
+                embed("Audio playback is now paused. You can resume playback with the **resume** command.").awaitSingle()
             }
         }
     }
@@ -28,7 +28,7 @@ object PlaybackState : AudioCommandContainer {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.volume
                 audio.player.isPaused = false
-                embed("Audio playback resumed.").block()
+                embed("Audio playback resumed.").awaitSingle()
             }
         }
     }
@@ -39,22 +39,21 @@ object PlaybackState : AudioCommandContainer {
                 validateChannel(this)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(args.isEmpty()) {
-                    usage("The current playback volume is **${audio.player.volume}%**.", "volume <integer>").block()
+                    usage("The current playback volume is **${audio.player.volume}%**.", "volume <new volume>").awaitSingle()
                     return@discord
                 }
-                // if this is a stream, this may take a minute
                 val targetVolume = args[0].removeSuffix("%").toIntOrNull()
                 val maximum = config.musicBot.adminVolumeLimit
                 when {
                     targetVolume == null || targetVolume < 0 -> {
-                        error("**${args[0]}** is not a valid volume value.").block()
+                        error("**${args[0]}** is not a valid volume value.").awaitSingle()
                         return@discord
                     }
                     (targetVolume - MusicSettings.defaultVolume).absoluteValue <= 10 -> {} // +-10: unlocked
                     targetVolume in 0..100 -> member.verify(Permission.MANAGE_MESSAGES) // 0-100: moderator
                     targetVolume > maximum -> {
                         if(!member.hasPermissions(Permission.MANAGE_GUILD))
-                        error("The absolute volume limit is set at $maximum. This can be overriden with the **musicbot** configuration command, however this is not recommended.").block()
+                        error("The absolute volume limit is set at $maximum. This can be overriden with the **musicbot** configuration command, however this is not recommended.").awaitSingle()
                         return@discord
                     }
                     else -> member.verify(Permission.MANAGE_GUILD) // > 100: admin
@@ -64,7 +63,7 @@ object PlaybackState : AudioCommandContainer {
                 audio.player.volume = targetVolume
                 config.musicBot.volume = targetVolume
                 config.save()
-                embed("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort").block()
+                embed("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort").awaitSingle()
             }
         }
     }

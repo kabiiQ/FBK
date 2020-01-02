@@ -1,9 +1,10 @@
 package moe.kabii.discord.command.commands.audio.search
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {
@@ -12,11 +13,11 @@ object SearchTracks : AudioCommandContainer {
                 // search source query
                 validateChannel(this)
                 if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").block()
+                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
-                    usage("**search** is used to search a source for audio to play. You can provide the source (currently the only options are YouTube [yt] or SoundCloud [sc]) as the first argument, or YouTube will automatically be used.", "search (source) <query>").block()
+                    usage("**search** is used to search a source for audio to play. You can provide the source (currently the only options are YouTube [yt] or SoundCloud [sc]) as the first argument, or YouTube will automatically be used.", "search (source) <query>").awaitSingle()
                     return@discord
                 }
                 val parse = AudioSource.parse(args[0])
@@ -26,7 +27,7 @@ object SearchTracks : AudioCommandContainer {
                 val query = args.joinToString(" ")
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
-                    error("No results found searching **${source.fullName}** for **$query**.").block()
+                    error("No results found searching **${source.fullName}** for **$query**.").awaitSingle()
                     return@discord
                 }
                 // build search selection menu until 10 songs or 2000 chars
@@ -44,12 +45,12 @@ object SearchTracks : AudioCommandContainer {
                     setAuthor("Results from ${source.fullName} for \"$query\"", null, null)
                     setTitle("Select track to be played or \"exit\"")
                     setDescription(menu.toString())
-                }.block()
+                }.awaitSingle()
                 val input = getLong(1..search.size.toLong(), embed, timeout = 150_000L)?.toInt()
                 if(input != null) {
                     FallbackHandler(this).trackLoaded(search[input - 1])
                 }
-                embed.delete().tryBlock(false)
+                embed.delete().tryAwait()
             }
         }
     }
@@ -59,22 +60,22 @@ object SearchTracks : AudioCommandContainer {
             discord {
                 validateChannel(this)
                 if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").block()
+                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
                     return@discord
                 }
                 if(args.size < 2) {
-                    usage("**playfrom** is used to search and play the first result from a specific source. (Currently YouTube [yt] or SoundCloud [sc])", "playfrom <yt/sc> <query>").block()
+                    usage("**playfrom** is used to search and play the first result from a specific source. (Currently YouTube [yt] or SoundCloud [sc])", "playfrom <yt/sc> <query>").awaitSingle()
                     return@discord
                 }
                 val source = AudioSource.parse(args[0])
                 if(source == null) {
-                    error("Unknown source **${args[0]}**. Currently valid sources are YouTube (yt) or SoundCloud (sc).").block()
+                    error("Unknown source **${args[0]}**. Currently valid sources are YouTube (yt) or SoundCloud (sc).").awaitSingle()
                     return@discord
                 }
                 val query = args.drop(1).joinToString("")
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
-                    error("No results found searching **${source.fullName}** for **$query**.").block()
+                    error("No results found searching **${source.fullName}** for **$query**.").awaitSingle()
                     return@discord
                 }
                 FallbackHandler(this).trackLoaded(search[0])

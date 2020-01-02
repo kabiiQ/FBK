@@ -14,7 +14,9 @@ import moe.kabii.discord.conversation.Conversation
 import moe.kabii.joint.CommandManager
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.*
+import moe.kabii.structure.orNull
+import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class DiscordMessageHandler(val manager: CommandManager, private val twitch: TwitchClient) {

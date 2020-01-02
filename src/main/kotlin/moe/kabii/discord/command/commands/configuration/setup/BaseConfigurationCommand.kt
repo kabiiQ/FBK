@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.setup
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.structure.EmbedReceiver
@@ -86,7 +87,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 setFooter("\"exit\" to save and exit immediately.", null)
             }
 
-            val menu = origin.embed(configEmbed).block()
+            val menu = origin.embed(configEmbed).awaitSingle()
             while(true) {
                 val inputStr = origin.getString(timeout = 120000L) ?: break
                 val input = inputStr.toIntOrNull() ?: continue
@@ -95,7 +96,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
                     is StringElement -> {
                         // prompt user for new value
-                        val prompt = origin.embed(element.prompt).block()
+                        val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getString(timeout = null)
                         if(response != null) {
                             if(response.toLowerCase() == "reset") {
@@ -107,13 +108,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         prompt.delete().subscribe()
                     }
                     is DoubleElement -> {
-                        val prompt = origin.embed(element.prompt).block()
+                        val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getDouble(element.range, timeout = 120000L)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is LongElement -> {
-                        val prompt = origin.embed(element.prompt).block()
+                        val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getLong(element.range, timeout = 120000L)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
@@ -121,7 +122,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 }
                 menu.edit { message ->
                     message.setEmbed(configEmbed)
-                }.block()
+                }.awaitSingle()
             }
             menu.delete().subscribe()
             return true
@@ -135,13 +136,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 module.elements.forEach { element ->
                     addField(getName(element), getValue(element), true)
                 }
-            }.block()
+            }.awaitSingle()
             return false
         }
 
         val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.toLowerCase() == targetElement.toLowerCase() } }
         if(element == null) {
-            origin.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.").block()
+            origin.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.").awaitSingle()
             return false
         }
         val tag = element.aliases.first()
@@ -150,7 +151,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             origin.embed {
                 setTitle("From ${module.name} configuration:")
                 addField(getName(element), getValue(element), false)
-            }.block()
+            }.awaitSingle()
             return false
         }
 
@@ -159,7 +160,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             when(origin.args[1].toLowerCase()) {
                 "toggle" -> {
                     if(element !is BooleanElement) {
-                        origin.error("The setting **$tag** is not a toggle.").block()
+                        origin.error("The setting **$tag** is not a toggle.").awaitSingle()
                         return false
                     }
                     val new = !element.prop.get(instance)
@@ -169,7 +170,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 }
                 "reset" -> {
                     if(element !is StringElement)  {
-                        origin.error("The setting **$tag** is not a resettable custom string.").block()
+                        origin.error("The setting **$tag** is not a resettable custom string.").awaitSingle()
                         return false
                     }
                     val new = element.default
@@ -200,7 +201,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     else -> null
                 }
                 if(bool == null) {
-                    origin.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**").block()
+                    origin.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**").awaitSingle()
                     return false
                 }
                 element.prop.set(instance, bool)
@@ -216,7 +217,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is DoubleElement -> {
                 val input = origin.args[1].toDoubleOrNull()
                 if(input == null) {
-                    origin.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**").block()
+                    origin.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**").awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)
@@ -226,7 +227,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is LongElement -> {
                 val input = origin.args[1].toLongOrNull()
                 if(input == null) {
-                    origin.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**").block()
+                    origin.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**").awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)

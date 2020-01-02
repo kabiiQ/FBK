@@ -3,8 +3,9 @@ package moe.kabii.discord.event.guild
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.guild.GuildUpdateEvent
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.util.lock
 
 object GuildUpdateHandler {
     fun handle(event: GuildUpdateEvent) {
@@ -20,8 +21,10 @@ object GuildUpdateHandler {
                     .flatMap(VoiceState::getChannel)
                     .ofType(VoiceChannel::class.java)
                     .map { voice ->
-                        lock(audio.discord.lock) {
-                            audio.resetAudio(voice)
+                        runBlocking {
+                            audio.discord.mutex.withLock {
+                                audio.resetAudio(voice)
+                            }
                         }
                     }
                     .subscribe()

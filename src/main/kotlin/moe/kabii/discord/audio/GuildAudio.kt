@@ -9,6 +9,9 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.`object`.util.Snowflake
 import discord4j.voice.AudioProvider
 import discord4j.voice.VoiceConnection
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.command.hasPermissions
@@ -17,8 +20,6 @@ import moe.kabii.rusty.Try
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(
@@ -29,7 +30,7 @@ data class GuildAudio(
     val discord: AudioConnection = AudioConnection()
 ) {
     var ending: Boolean = false
-    private val lock = object {}
+    private val mutex = Mutex()
 
     val playing: Boolean
         get() = player.playingTrack != null || queue.isNotEmpty()
@@ -66,7 +67,7 @@ data class GuildAudio(
         tryAdd(track, member, position, checkLimits = false)
 
     fun resetAudio(voice: VoiceChannel?): GuildAudio {
-        check(discord.lock.isHeldByCurrentThread) { "Audio connection protected" }
+        check(!discord.mutex.isLocked) { "Audio connection protected" }
         // save current playback state if track is playing
         val playing = player.playingTrack
         val resumeTrack = playing?.makeClone()?.apply {
@@ -115,17 +116,19 @@ data class GuildAudio(
         config.save()
     }
 
-    fun <R> editQueue(block: MutableList<AudioTrack>.() -> R): R {
-        val edit = synchronized(lock) {
+    suspend fun <R> editQueue(block: suspend MutableList<AudioTrack>.() -> R): R {
+        val edit = mutex.withLock {
             block(queue)
         }
         saveQueue()
         return edit
     }
 
+    fun <R> editQueueSync(block: suspend MutableList<AudioTrack>.() -> R): R = runBlocking { editQueue(block) }
+
     data class AudioConnection(
         var connection: VoiceConnection? = null,
-        val lock: ReentrantLock = ReentrantLock()
+        val mutex: Mutex = Mutex()
     )
 }
 
@@ -135,5 +138,6 @@ data class QueueData(
     val author_name: String, // just caching the author's username as it is unlikely to change and is only used in output
     val author: Snowflake,
     val originChannel: Snowflake,
-    val votes: AtomicInteger = AtomicInteger(0)
+    val votes: MutableSet<Snowflake> = mutableSetOf(),
+    val voting: Mutex = Mutex()
 )

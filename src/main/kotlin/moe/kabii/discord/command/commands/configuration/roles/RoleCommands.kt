@@ -2,12 +2,12 @@ package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
-    import moe.kabii.discord.util.Search
+import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 
@@ -16,7 +16,7 @@ object SelfRoleCommands : CommandContainer {
         init {
             discord {
                 if(args.isEmpty()) {
-                    usage("**rolecommands** is used to configure commands that self-assign roles.", "rolecommands <add/remove/list>").block()
+                    usage("**rolecommands** is used to configure commands that self-assign roles.", "rolecommands <add/remove/list>").awaitSingle()
                     return@discord
                 }
                 when(args[0].toLowerCase()) {
@@ -24,7 +24,7 @@ object SelfRoleCommands : CommandContainer {
                     "remove", "delete" -> RemoveRoleCommand
                     "list", "view" -> ListRoleCommands
                     else -> {
-                        usage("Unknown task **${args[0]}**.", "rolecommands <add/remove/list>").block()
+                        usage("Unknown task **${args[0]}**.", "rolecommands <add/remove/list>").awaitSingle()
                         return@discord
                     }
                 }.executeDiscord!!(copy(args = args.drop(1)))
@@ -37,7 +37,7 @@ object SelfRoleCommands : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
                 if(args.size < 2) {
-                    usage("**rolecommands add** adds a command that will attempt assign a role to anyone who uses it.", "rolecommands add <commandName> <role name/ID>").block()
+                    usage("**rolecommands add** adds a command that will attempt assign a role to anyone who uses it.", "rolecommands add <commandName> <role name/ID>").awaitSingle()
                     return@discord
                 }
                 val commands = config.selfRoles.roleCommands
@@ -45,17 +45,17 @@ object SelfRoleCommands : CommandContainer {
                 val rolePart = args.drop(1).joinToString(" ")
                 val targetRole = Search.roleByNameOrID(this, rolePart)
                 if(targetRole == null) {
-                    usage("Unable to find role **$rolePart**.", "rolecommands add <commandName> <role name/ID>").block()
+                    usage("Unable to find role **$rolePart**.", "rolecommands add <commandName> <role name/ID>").awaitSingle()
                     return@discord
                 }
                 val safe = PermissionUtil.isSafeRole(targetRole, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    error("You can not assign the role **${targetRole.name}**.").block()
+                    error("You can not assign the role **${targetRole.name}**.").awaitSingle()
                     return@discord
                 }
                 commands[commandName.toLowerCase()] = targetRole.id.asLong()
                 config.save()
-                embed("Added command **$commandName** assigning role **${targetRole.name}**.").block()
+                embed("Added command **$commandName** assigning role **${targetRole.name}**.").awaitSingle()
             }
         }
     }
@@ -65,19 +65,19 @@ object SelfRoleCommands : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
                 if(args.isEmpty()) {
-                    usage("**rolecommands remove** removes a custom role assignment command.", "rolecommands remove <commandName>").block()
+                    usage("**rolecommands remove** removes a custom role assignment command.", "rolecommands remove <commandName>").awaitSingle()
                     return@discord
                 }
                 val commands = config.selfRoles.roleCommands
                 val commandName = if(args[0].startsWith(config.prefix)) args[0].drop(config.prefix.length) else args[0]
                 val existing = commands[commandName.toLowerCase()]
                 if(existing == null) {
-                    error("**${commandName}** is not currently a custom role command.").block()
+                    error("**${commandName}** is not currently a custom role command.").awaitSingle()
                     return@discord
                 }
                 commands.remove(commandName.toLowerCase())
                 config.save()
-                embed("Removed role assignment command **$commandName**.").block()
+                embed("Removed role assignment command **$commandName**.").awaitSingle()
             }
         }
     }
@@ -96,7 +96,7 @@ object SelfRoleCommands : CommandContainer {
                             addField("Command: **$command**", "Role: $guildRole", false)
                         }
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

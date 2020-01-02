@@ -1,13 +1,14 @@
 package moe.kabii.discord.command.commands.meta
 
 import discord4j.core.`object`.entity.User
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.time.Duration
 import java.time.Instant
@@ -17,8 +18,8 @@ object BotStats : CommandContainer {
     object Ping : Command("ping", "pong") {
         init {
             discord {
-                val avatar = event.client.self.map(User::getAvatarUrl).tryBlock().orNull()
-                val ping = embed("Pong!").block()
+                val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
+                val ping = embed("Pong!").awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
                 val networkPing = event.client.responseTime
                 val pingEmbed: EmbedReceiver = {
@@ -27,7 +28,7 @@ object BotStats : CommandContainer {
                     addField("Ping Command Response Time", "${commandPing}ms", false)
                     addField("Heartbeat Response Time", "${networkPing}ms", false)
                 }
-                ping.edit { spec -> spec.setEmbed(pingEmbed) }.block()
+                ping.edit { spec -> spec.setEmbed(pingEmbed) }.awaitSingle()
             }
         }
     }
@@ -36,10 +37,10 @@ object BotStats : CommandContainer {
     object BotInfo : Command("bot", "botinfo", "botstats", "uptime") {
         init {
             discord {
-                val botUser = event.client.self.block()
+                val botUser = event.client.self.awaitSingle()
                 val guilds = event.client.guilds
-                    .collectMap({guild -> guild}, { guild -> guild.memberCount.asInt })
-                    .block()
+                    .collectMap({ guild -> guild }, { guild -> guild.memberCount.asInt })
+                    .awaitSingle()
                 val guildCount = guilds.count().toString()
                 val users = guilds.values.sum().toString()
                 val build = Metadata.current

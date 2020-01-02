@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.trackers
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.ListInfo
 import moe.kabii.data.mongodb.MediaSite
@@ -101,7 +102,7 @@ object TrackerCommandBase : CommandContainer {
             param.args.size < 2 && channelFeature != null -> {
                 // tra1ck <username>
                 if(param.args.isEmpty()) {
-                    param.usage("No username provided.", "track/untrack (site name, defaulting to ${channelFeature!!.name}) <site username>").block()
+                    param.usage("No username provided.", "track/untrack (site name, defaulting to ${channelFeature!!.name}) <site username>").awaitSingle()
                     return
                 }
                 channelFeature to param.args[0]
@@ -109,7 +110,7 @@ object TrackerCommandBase : CommandContainer {
             // else, user must provide target name
             else -> {
                 if(param.args.size < 2) {
-                    param.usage("The **track** command is used to follow a supported source in this channel. If there is a single source enabled in this channel I will automatically use that one, otherwise you will need to specify the site.", "track/untrack <site name> <username>").block()
+                    param.usage("The **track** command is used to follow a supported source in this channel. If there is a single source enabled in this channel I will automatically use that one, otherwise you will need to specify the site.", "track/untrack <site name> <username>").awaitSingle()
                     return
                 }
                 val siteArg = param.args[0].toLowerCase()
@@ -118,7 +119,7 @@ object TrackerCommandBase : CommandContainer {
                 }
                 if(match != null) match to param.args[1]
                 else {
-                    param.usage("Unknown track target **${param.args[0]}.**", "track/untrack <site name> <username>").block()
+                    param.usage("Unknown track target **${param.args[0]}.**", "track/untrack <site name> <username>").awaitSingle()
                     return
                 }
             }

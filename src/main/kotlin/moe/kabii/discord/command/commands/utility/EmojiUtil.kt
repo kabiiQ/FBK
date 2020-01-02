@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.utility
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.util.EmojiCharacters
@@ -14,7 +15,7 @@ object EmojiUtil : CommandContainer {
             discord {
                 // convert all possible chars into regional indicator emoji
                 if(noCmd.isEmpty()) {
-                    usage("No text provided to convert.", "emojify <text>").block()
+                    usage("No text provided to convert.", "emojify <text>").awaitSingle()
                     return@discord
                 }
                 var previous = false
@@ -35,7 +36,7 @@ object EmojiUtil : CommandContainer {
                         else -> char.toString()
                     }
                 }.joinToString("")
-                chan.createMessage(converted).block()
+                chan.createMessage(converted).awaitSingle()
             }
         }
     }

@@ -2,6 +2,7 @@ package moe.kabii.discord.command.commands.audio
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import discord4j.core.`object`.entity.User
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.s
@@ -14,7 +15,7 @@ object QueueInfo : AudioCommandContainer {
                 validateChannel(this)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    embed("There are no tracks currently queued.").block()
+                    embed("There are no tracks currently queued.").awaitSingle()
                     return@discord
                 }
                 // list 10 tracks - take optional starting position for queue track #
@@ -38,15 +39,16 @@ object QueueInfo : AudioCommandContainer {
                     "In queue:\n$list"
                 }
                 val playlist = audio.playlist
-                val duration = audio.duration ?: "Unknown queue length with a stream in queue"
+                val duration = audio.formatDuration ?: "Unknown queue length with a stream in queue"
                 val size = playlist.size
                 val paused = if(audio.player.isPaused) "The bot is currently paused." else ""
+                val avatarUrl = event.client.self.map(User::getAvatarUrl).awaitSingle()
                 embed {
                     if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
-                    setAuthor("Current queue for ${target.name}", null, event.client.self.map(User::getAvatarUrl).block())
+                    setAuthor("Current queue for ${target.name}", null, avatarUrl)
                     setDescription("$np\n\n$queueList")
                     setFooter("$size track${size.s()} ($duration remaining) $paused", null)
-                }.block()
+                }.awaitSingle()
             }
         }
     }
@@ -57,7 +59,7 @@ object QueueInfo : AudioCommandContainer {
                 validateChannel(this)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    error("There is no track currently playing.").block()
+                    error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
                 val track = audio.player.playingTrack
@@ -69,7 +71,7 @@ object QueueInfo : AudioCommandContainer {
                         if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
                         setDescription("Currently playing track **${trackString(track)}**. $paused")
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

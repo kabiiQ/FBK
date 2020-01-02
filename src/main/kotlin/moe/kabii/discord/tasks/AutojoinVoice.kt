@@ -3,6 +3,8 @@ package moe.kabii.discord.tasks
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.util.BotUtil
@@ -10,7 +12,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
-import moe.kabii.util.lock
 import reactor.core.publisher.Mono
 
 object AutojoinVoice {
@@ -28,10 +29,12 @@ object AutojoinVoice {
             is Ok -> {
                 config.musicBot.lastChannel = vc.value.id.asLong()
                 config.save()
-                lock(audio.discord.lock) {
-                    audio.discord.connection = vc.value.join { spec ->
-                        spec.setProvider(audio.provider)
-                    }.block()
+                runBlocking {
+                    audio.discord.mutex.withLock {
+                        audio.discord.connection = vc.value.join { spec ->
+                            spec.setProvider(audio.provider)
+                        }.block()
+                    }
                 }
             }
             is Err -> {

@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import discord4j.core.`object`.util.Snowflake
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.DiscordParameters
@@ -16,7 +17,7 @@ import reactor.core.publisher.toFlux
 object Purge : CommandContainer {
     const val SMALL_MESSAGEID = 100_000_000_000_000_000L
 
-    private fun purgeAndNotify(origin: DiscordParameters, userArgs: List<String>, messages: Flux<Message>) {
+    private suspend fun purgeAndNotify(origin: DiscordParameters, userArgs: List<String>, messages: Flux<Message>) {
         origin.chan as TextChannel
         val limitUsers = userArgs
             .mapNotNull(String::toLongOrNull)
@@ -38,11 +39,11 @@ object Purge : CommandContainer {
             .flatMap(origin.chan::getMessageById)
             .flatMap(Message::delete)
             .collectList()
-            .block()
+            .awaitSingle()
         val userCount = users.toFlux()
             .distinct(Snowflake::hashCode)
-            .count().block()
-        origin.embed("Deleted $messageCount messages from $userCount users.").block()
+            .count().awaitSingle()
+        origin.embed("Deleted $messageCount messages from $userCount users.").awaitSingle()
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
@@ -58,7 +59,7 @@ object Purge : CommandContainer {
                 }
                 val messageCount = args[0].toShortOrNull()
                 if(messageCount == null) {
-                    error("Invalid message count **${args[0]}**.").block()
+                    error("Invalid message count **${args[0]}**.").awaitSingle()
                     return@discord
                 }
 
@@ -74,12 +75,12 @@ object Purge : CommandContainer {
             discord {
                 member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
                 if(args.isEmpty()) {
-                    usage("**purgefrom** will delete messages after the provided message ID.", "purgefrom <start message ID> (optional user IDs)").block()
+                    usage("**purgefrom** will delete messages after the provided message ID.", "purgefrom <start message ID> (optional user IDs)").awaitSingle()
                     return@discord
                 }
                 val startMessage = args[0].toLongOrNull()?.minus(1)?.snowflake
                 if(startMessage == null || startMessage.asLong() < SMALL_MESSAGEID) {
-                    error("Invalid beginning message ID **${args[0]}**.").block()
+                    error("Invalid beginning message ID **${args[0]}**.").awaitSingle()
                     return@discord
                 }
 
@@ -97,7 +98,7 @@ object Purge : CommandContainer {
                 member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
                 if(args.size < 2) {
                     usage("**purgebetween** will delete messages between two provided message IDs. For simple purging of recent messages see **purge** or **purgefrom**.",
-                        "purgebetween <beginning message ID> <ending message ID> (optional user IDs)").block()
+                        "purgebetween <beginning message ID> <ending message ID> (optional user IDs)").awaitSingle()
                     return@discord
                 }
                 val startMessage = args[0].toLongOrNull()?.minus(1)?.snowflake
@@ -105,14 +106,14 @@ object Purge : CommandContainer {
                 if(startMessage == null || endMessage == null
                     || startMessage.asLong() < SMALL_MESSAGEID || endMessage.asLong() < SMALL_MESSAGEID
                     || startMessage > endMessage) {
-                    error("Invalid purge range between **${args[0]}** and **${args[1]}**.").block()
+                    error("Invalid purge range between **${args[0]}** and **${args[1]}**.").awaitSingle()
                     return@discord
                 }
 
                 val delete = chan.getMessagesAfter(startMessage)
                     .takeUntil { message -> message.id >= endMessage }
                 purgeAndNotify(this, args.drop(2), delete)
-                event.message.delete().block()
+                event.message.delete().awaitSingle()
             }
         }
     }

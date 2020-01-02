@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.JoinConfiguration
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
@@ -9,7 +9,7 @@ import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object JoinRole : CommandContainer {
     private val inviteCode = Regex("(?:i:)([a-zA-Z0-9]{4,8})")
@@ -31,7 +31,7 @@ object JoinRole : CommandContainer {
                 // autorole join create <role> (opt invite code)
                 member.verify(Permission.MANAGE_ROLES)
                 if(args.isEmpty()) {
-                    usage("This command is used to set up automatic role assignment when users join the server.", "autorole join add <role name or ID>").block()
+                    usage("This command is used to set up automatic role assignment when users join the server.", "autorole join add <role name or ID>").awaitSingle()
                     return@discord
                 }
 
@@ -41,20 +41,20 @@ object JoinRole : CommandContainer {
 
                 // verify targets
                 if(role == null) {
-                    error("Unable to find the role **$roleArg**.").block()
+                    error("Unable to find the role **$roleArg**.").awaitSingle()
                     return@discord
                 }
 
                 val safe = PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    error("You can not manage the role **${role.name}**.").block()
+                    error("You can not manage the role **${role.name}**.").awaitSingle()
                     return@discord
                 }
 
                 if(inviteArg != null) {
-                    val invite = target.invites.filter { invite -> invite.code ==  inviteArg }.hasElements().block()
+                    val invite = target.invites.filter { invite -> invite.code ==  inviteArg }.hasElements().awaitSingle()
                     if(!invite) {
-                        error("Invalid invite: **$inviteArg**.").block()
+                        error("Invalid invite: **$inviteArg**.").awaitSingle()
                         return@discord
                     }
                 }
@@ -67,14 +67,14 @@ object JoinRole : CommandContainer {
                     } else false
                 }
                 if(find != null) {
-                    error("An existing autorole already exists matching this configuration.").block()
+                    error("An existing autorole already exists matching this configuration.").awaitSingle()
                     return@discord
                 }
                 val new = JoinConfiguration(inviteArg, role.id.asLong())
                 configs.add(new)
                 config.save()
                 val describe = if(inviteArg == null) "all users joining **${target.name}**" else "users joining **${target.name}** with invite code **$inviteArg**"
-                embed("Autorole added for $describe: **${role.name}**.").block()
+                embed("Autorole added for $describe: **${role.name}**.").awaitSingle()
             }
         }
     }
@@ -86,13 +86,13 @@ object JoinRole : CommandContainer {
                 // take role name w/ optional invite code. if no invite code provided, remove all configurations for this role
                 // autorole join remove <role> i:invitecode
                 if(args.isEmpty()) {
-                    usage("This command is used to remove an automatic role assignment.", "autorole join remove <role name or ID>").block()
+                    usage("This command is used to remove an automatic role assignment.", "autorole join remove <role name or ID>").awaitSingle()
                     return@discord
                 }
                 val (roleArg, inviteArg) = getArgs(args)
                 val role = Search.roleByNameOrID(this, roleArg)
                 if(role == null) {
-                    error("Unable to find the role **$roleArg**.").block()
+                    error("Unable to find the role **$roleArg**.").awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -104,9 +104,9 @@ object JoinRole : CommandContainer {
                 }
                 if(find) {
                     val describe = if(inviteArg == null) "role **${role.name}**, for all invites" else "role **${role.name}**, for invite code $inviteArg"
-                    embed("The autorole for $describe has been removed.").block()
+                    embed("The autorole for $describe has been removed.").awaitSingle()
                     config.save()
-                } else error("No autorole found matching this configuration.").block()
+                } else error("No autorole found matching this configuration.").awaitSingle()
             }
         }
     }
@@ -119,10 +119,10 @@ object JoinRole : CommandContainer {
                 val configs = config.autoRoles.joinConfigurations
                 // validate autorole configs still exist and generate list
                 configs.associateWith { joinConfig ->
-                    target.getRoleById(joinConfig.role.snowflake).tryBlock().orNull()
+                    target.getRoleById(joinConfig.role.snowflake).tryAwait().orNull()
                 }
                 val validConfig = configs.toList().mapIndexedNotNull { index, joinConfig ->
-                    val role = target.getRoleById(joinConfig.role.snowflake).tryBlock().orNull()
+                    val role = target.getRoleById(joinConfig.role.snowflake).tryAwait().orNull()
                     if (role != null) {
                         val invite =
                             if (joinConfig.inviteTarget != null) " - when joining with invite ${joinConfig.inviteTarget}" else ""
@@ -133,13 +133,13 @@ object JoinRole : CommandContainer {
                     }
                 }
                 if (validConfig.isEmpty()) {
-                    embed("There are no join autoroles set for **${target.name}**.").block()
+                    embed("There are no join autoroles set for **${target.name}**.").awaitSingle()
                     return@discord
                 }
                 embed {
                     setTitle("Join autoroles in ${target.name}")
                     setDescription(validConfig.joinToString("\n"))
-                }.block()
+                }.awaitSingle()
             }
         }
     }

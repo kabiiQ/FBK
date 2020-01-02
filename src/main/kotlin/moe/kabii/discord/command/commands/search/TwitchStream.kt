@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.search
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
@@ -11,17 +12,17 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
         discord {
             // manually post a Twitch stream
             if(args.isEmpty()) {
-                usage("**twitch** posts information on a live Twitch stream.", "twitch <twitch username>").block()
+                usage("**twitch** posts information on a live Twitch stream.", "twitch <twitch username>").awaitSingle()
                 return@discord
             }
             val twitchUser = TwitchParser.getUser(args[0]).orNull()
             if(twitchUser == null) {
-                error("Invalid Twitch username **${args[0]}**").block()
+                error("Invalid Twitch username **${args[0]}**").awaitSingle()
                 return@discord
             }
             val twitchStream = TwitchParser.getStream(twitchUser.userID).orNull()
             if(twitchStream == null) {
-                embed("**${twitchUser.displayName}** is not currently live.").block()
+                embed("**${twitchUser.displayName}** is not currently live.").awaitSingle()
                 return@discord
             }
             val settings = guild?.run {
@@ -30,7 +31,7 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
             val stream = StreamEmbedBuilder(twitchUser, settings)
                 .stream(twitchStream)
                 .manual
-            embed(stream).block()
+            embed(stream).awaitSingle()
         }
     }
 }

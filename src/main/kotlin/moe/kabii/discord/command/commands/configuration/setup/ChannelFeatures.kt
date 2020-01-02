@@ -3,16 +3,15 @@ package moe.kabii.discord.command.commands.configuration.setup
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureChannel
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
@@ -56,7 +55,7 @@ object ChannelFeatures : CommandContainer {
                 val channels = features.toMap()
                     .filter { (_, features) -> features.anyEnabled() }
                     .mapNotNull { (id, channel) ->
-                        when(val result = target.getChannelById(id.snowflake).tryBlock()) {
+                        when(val result = target.getChannelById(id.snowflake).tryAwait()) {
                             is Ok -> {
                                 result.value to channel
                             }
@@ -72,7 +71,7 @@ object ChannelFeatures : CommandContainer {
                     }
 
                 if(channels.isEmpty()) {
-                    embed("There are no channel-specific features enabled in **${target.name}**.").block()
+                    embed("There are no channel-specific features enabled in **${target.name}**.").awaitSingle()
                     return@discord
                 }
                 embed {
@@ -86,7 +85,7 @@ object ChannelFeatures : CommandContainer {
                         }
                         addField("#${channel.name}", codes.toString().trim(), true)
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

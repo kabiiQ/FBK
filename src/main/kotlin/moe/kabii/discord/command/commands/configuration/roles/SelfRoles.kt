@@ -2,14 +2,14 @@ package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object SelfRoles : CommandContainer {
     object UnlockRole : Command("unlock", "unlockrole", "enablerole", "roleunlock") {
@@ -18,17 +18,17 @@ object SelfRoles : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
                 // ;unlock roleid
                 if(args.isEmpty()) {
-                    usage("Please provide a role name or ID to make self-assignable.", "unlock <role>").block()
+                    usage("Please provide a role name or ID to make self-assignable.", "unlock <role>").awaitSingle()
                     return@discord
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    error("Could not find role matching **$noCmd**.").block()
+                    error("Could not find role matching **$noCmd**.").awaitSingle()
                     return@discord
                 }
                 // perm checks
                 if(!PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)) {
-                    error("You can only unlock roles which you can normally assign.").block()
+                    error("You can only unlock roles which you can normally assign.").awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -36,9 +36,9 @@ object SelfRoles : CommandContainer {
                 if(!roleConfig.contains(roleID)) {
                     roleConfig.add(roleID)
                     config.save()
-                    embed("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.").block()
+                    embed("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.").awaitSingle()
                 } else {
-                    error("**${role.name}** is already a self-assignable role.").block()
+                    error("**${role.name}** is already a self-assignable role.").awaitSingle()
                     return@discord
                 }
             }
@@ -51,12 +51,12 @@ object SelfRoles : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
                 // ;unlock roleid
                 if(args.isEmpty()) {
-                    usage("Please provide a role name or ID to remove from the self-assignable roles.", "lock <role>").block()
+                    usage("Please provide a role name or ID to remove from the self-assignable roles.", "lock <role>").awaitSingle()
                     return@discord
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    error("Could not find role matching **$noCmd**").block()
+                    error("Could not find role matching **$noCmd**").awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -64,9 +64,9 @@ object SelfRoles : CommandContainer {
                 if(roleConfig.contains(roleID)) {
                     roleConfig.remove(roleID)
                     config.save()
-                    embed("**${role.name}** has been locked and is no longer self-assignable.").block()
+                    embed("**${role.name}** has been locked and is no longer self-assignable.").awaitSingle()
                 } else {
-                    error("${role.name} is not an unlocked role.").block()
+                    error("${role.name} is not an unlocked role.").awaitSingle()
                 }
             }
         }
@@ -77,7 +77,7 @@ object SelfRoles : CommandContainer {
             discord {
                 val enabled = config.selfRoles.enabledRoles.toList()
                     .mapNotNull { id ->
-                        val role = target.getRoleById(id.snowflake).tryBlock()
+                        val role = target.getRoleById(id.snowflake).tryAwait()
                         role.ifErr { _ ->  // remove deleted roles from listing and db
                             config.selfRoles.enabledRoles.remove(id)
                             config.save()
@@ -92,7 +92,7 @@ object SelfRoles : CommandContainer {
                     } else {
                         setDescription("There are no self-assignable roles in **${target.name}**.")
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.roles
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 
 object AutoRole : Command("autorole", "auto-role")  {
@@ -7,7 +8,7 @@ object AutoRole : Command("autorole", "auto-role")  {
         discord {
             // autorole <category> <action> (stuff)
             if(args.size <  2) {
-                usage("General autorole configuration command. Available categories: join, voice, reaction, command. Available actions: add, remove, list.", "autorole <category> <action> (parameters)").block()
+                usage("General autorole configuration command. Available categories: join, voice, reaction, command. Available actions: add, remove, list.", "autorole <category> <action> (parameters)").awaitSingle()
                 return@discord
             }
             val target = when(args[1].toLowerCase()) {
@@ -35,7 +36,7 @@ object AutoRole : Command("autorole", "auto-role")  {
                 else -> null
             }
             if(target == null) {
-                usage("Unknown autorole task **${args[1]}**", "autorole <category> <action> (parameters)").block()
+                usage("Unknown autorole task **${args[1]}**", "autorole <category> <action> (parameters)").awaitSingle()
                 return@discord
             }
             // redirect to full commands, drop direction args

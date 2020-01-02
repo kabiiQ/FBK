@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.utility
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.util.DateValidation
@@ -16,13 +17,13 @@ object SnowflakeUtil : CommandContainer {
                 val all = if(includeAll) "-all" else ""
                 val targetFile = File(NettyFileServer.idRoot, "${target.id.asString()}$all.txt")
                 val warning = if (includeAll) {
-                    chan.createMessage("Getting ALL IDs may take a minute for a large guild. Working...").block()
+                    chan.createMessage("Getting ALL IDs may take a minute for a large guild. Working...").awaitSingle()
                 } else null
                 val output = StringBuilder()
                 output.append("IDs for guild ${target.name}\n\nRoles:\n")
                 target.roles
                     .collectList()
-                    .block()
+                    .awaitSingle()
                     .reversed()
                     .forEach { role ->
                         output.append(role.name)
@@ -36,7 +37,7 @@ object SnowflakeUtil : CommandContainer {
                     output.append("\n\nChannels: \n")
                     target.channels
                         .collectList()
-                        .block()
+                        .awaitSingle()
                         .forEach { channel ->
                             output.append("#${channel.name}")
                                 .append(": ")
@@ -46,7 +47,7 @@ object SnowflakeUtil : CommandContainer {
                     output.append("\n\nUsers: \n")
                     target.members
                         .collectList()
-                        .block()
+                        .awaitSingle()
                         .forEach { user ->
                             output.append(user.username)
                             user.nickname.ifPresent {
@@ -63,23 +64,23 @@ object SnowflakeUtil : CommandContainer {
                 targetFile.writeText(output.toString())
                 val url = if(includeAll) NettyFileServer.idsAll(target.id.asString()) else NettyFileServer.ids(target.id.asString())
                 warning?.delete()?.subscribe()
-                embed("[IDs for all roles]($url)").block()
+                embed("[IDs for all roles]($url)").awaitSingle()
             }
         }
     }
 
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
-    object Timestamp : Command("snowflake", "timestamp", "snowflakedate", "checktimestamp") {
+    object Timestamp : Command("timestamp", "snowflake", "snowflakedate", "checktimestamp", "gettimestamp", "timeof", "timestampof", "snowflaketime") {
         init {
             discord {
                 // get the timestamp for a snowflake
                 if(args.isEmpty()) {
-                    usage("This command gets the timestamp inside any Discord snowflake.", "snowflake <snowflake>").block()
+                    usage("This command gets the timestamp inside any Discord snowflake.", "timestamp <snowflake>").awaitSingle()
                     return@discord
                 }
                 val id = args[0].toLongOrNull()
                 if(id == null) {
-                    error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.").block()
+                    error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.").awaitSingle()
                     return@discord
                 }
                 val snowflake = SnowflakeParser.of(id)
@@ -94,32 +95,7 @@ object SnowflakeUtil : CommandContainer {
                     setDescription("${validation}The snowflake **$id** would represent a Discord object created:\n**$formatted**")
                     setFooter("Localized timestamp", null)
                     setTimestamp(snowflake.instant)
-                }.block()
-            }
-        }
-    }
-
-    // just a 1:1 of discord snowflake, not intended to be useful info
-    object SnowflakeDetail : Command("snowflakedetail", "snowflakedetails", "analyzesnowflake", "snowflakeinfo", "snowflakebreakdown", "explainsnowflake", "snowflakeexplain") {
-        init {
-            discord {
-                if (args.isEmpty()) {
-                    usage("This command breaks the components of a Discord snowflake.", "snowflakedetail <snowflake>").block()
-                    return@discord
-                }
-                val id = args[0].toLongOrNull()
-                if (id == null) {
-                    error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.").block()
-                    return@discord
-                }
-                val snowflake = SnowflakeParser.of(id)
-                embed {
-                    setDescription("Technical breakdown of the snowflake **$id**:")
-                    addField("Timestamp", "${snowflake.timestamp}: the milliseconds since the Discord epoch (the first second of 2015)", false)
-                    addField("Internal Worker ID", snowflake.workerID.toString(), false)
-                    addField("Internal process ID", snowflake.processID.toString(), false)
-                    addField("Increment", "${snowflake.increment}: the number of snowflakes previously generated on process #${snowflake.processID}", false)
-                }.block()
+                }.awaitSingle()
             }
         }
     }

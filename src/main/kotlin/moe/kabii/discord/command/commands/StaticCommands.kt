@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands
 
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import java.io.FileInputStream
@@ -14,7 +15,7 @@ object StaticCommands : CommandContainer {
                     chan.createMessage { spec ->
                         spec.addFile("smug.png", smugStream)
                     }
-                }.block()
+                }.awaitSingle()
             }
         }
     }

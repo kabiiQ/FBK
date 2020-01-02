@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands.configuration
 
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
@@ -15,12 +16,12 @@ object GuildOptions : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
                 if(args.isEmpty()) {
-                    usage("Sets the command prefix for **${target.name}**.", "prefix !").block()
+                    usage("Sets the command prefix for **${target.name}**.", "prefix !").awaitSingle()
                     return@discord
                 }
                 config.prefix = args[0]
                 config.save()
-                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").block()
+                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").awaitSingle()
             }
         }
     }
@@ -30,7 +31,7 @@ object GuildOptions : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_GUILD)
                 if(args.isEmpty()) {
-                    usage("Sets the command suffix for **${target.name}**. The suffix can be removed with **suffix none**.", "suffix desu").block()
+                    usage("Sets the command suffix for **${target.name}**. The suffix can be removed with **suffix none**.", "suffix desu").awaitSingle()
                     return@discord
                 }
                 val suffix = when(args[0]) {
@@ -39,7 +40,7 @@ object GuildOptions : CommandContainer {
                 }
                 config.suffix = suffix
                 config.save()
-                embed("The command suffix for **${target.name}** has been set to **$suffix**.").block()
+                embed("The command suffix for **${target.name}** has been set to **$suffix**.").awaitSingle()
             }
         }
     }
@@ -48,7 +49,7 @@ object GuildOptions : CommandContainer {
         init {
             discord {
                 if (args.isEmpty()) {
-                    usage("**linktwitch** is used to link a Twitch channel to this Discord server.", "linktwitch <twitch channel name>").block()
+                    usage("**linktwitch** is used to link a Twitch channel to this Discord server.", "linktwitch <twitch channel name>").awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
@@ -57,7 +58,7 @@ object GuildOptions : CommandContainer {
                     val existingTwitch = TwitchParser.getUser(twitch.twitchid)
                     if (existingTwitch is Ok) {
                         // if there is a tracked stream which still resolves, verify with the user first.
-                        val prompt = error("**${target.name}** is already linked to the Twitch stream **${existingTwitch.value.displayName}**. Would you like to remove this integration?").block()
+                        val prompt = error("**${target.name}** is already linked to the Twitch stream **${existingTwitch.value.displayName}**. Would you like to remove this integration?").awaitSingle()
                         val response = getBool(prompt)
                         if (response != true) {
                             return@discord
@@ -66,13 +67,13 @@ object GuildOptions : CommandContainer {
                 }
                 val twitchUserReq = TwitchParser.getUser(args[0])
                 if (twitchUserReq !is Ok) {
-                    error("**${args[0]} does not seem to be a valid Twitch stream.").block()
+                    error("**${args[0]} does not seem to be a valid Twitch stream.").awaitSingle()
                     return@discord
                 }
                 val twitchUser = twitchUserReq.value
                 TempStates.twitchVerify.put(twitchUser.userID, config)
                 twitchClient.chat.joinChannel(twitchUser.username)
-                embed("Ready to join Twitch chat **${twitchUser.displayName}**. Please send the message **;verify** in ${twitchUser.displayName}'s chat. (Twitch Moderator permission required)").block()
+                embed("Ready to join Twitch chat **${twitchUser.displayName}**. Please send the message **;verify** in ${twitchUser.displayName}'s chat. (Twitch Moderator permission required)").awaitSingle()
             }
         }
     }
@@ -86,9 +87,9 @@ object GuildOptions : CommandContainer {
                     TwitchParser.getUser(twitch.twitchid).mapOk(StreamUser::username).ifSuccess(twitchClient.chat::leaveChannel)
                     config.options.linkedTwitchChannel = null
                     config.save()
-                    embed("Removed Twitch channel linked to **${target.name}**.").block()
+                    embed("Removed Twitch channel linked to **${target.name}**.").awaitSingle()
                 } else {
-                    error("Twitch channel is not linked.").block()
+                    error("Twitch channel is not linked.").awaitSingle()
                 }
             }
         }

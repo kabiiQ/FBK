@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands.audio
 
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
@@ -19,13 +20,13 @@ object QueueEdit : AudioCommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(audio.queue.isEmpty()) {
-                    error("There are no tracks currently in queue to shuffle.").block()
+                    error("There are no tracks currently in queue to shuffle.").awaitSingle()
                     return@discord
                 }
                 audio.editQueue {
                     shuffle()
                 }
-                embed("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}").block()
+                embed("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}").awaitSingle()
             }
         }
     }
@@ -89,14 +90,14 @@ object QueueEdit : AudioCommandContainer {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val queue = audio.queue
                 if (queue.isEmpty()) {
-                    embed("The queue is currently empty.").block() // technically not necessary
+                    embed("The queue is currently empty.").awaitSingle() // technically not necessary
                     return@discord
                 }
                 if (args.isEmpty()) {
                     usage(
                         "**remove** is used to remove tracks from the queue.",
                         "remove <track numbers in queue or a username/id to remove all tracks from>"
-                    ).block()
+                    ).awaitSingle()
                     return@discord
                 }
                 val outputMessage = StringBuilder()
@@ -108,7 +109,7 @@ object QueueEdit : AudioCommandContainer {
                         usage(
                             "${outputMessage.toString()}\nNo track numbers provided to remove.",
                             "remove <track numbers in queue or a username/id to remove all tracks from>"
-                        ).block()
+                        ).awaitSingle()
                         return@discord
                     }
                 }
@@ -142,7 +143,7 @@ object QueueEdit : AudioCommandContainer {
                     embed {
                         setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
                         setDescription(outputMessage.toString())
-                    }.block()
+                    }.awaitSingle()
                 }
             }
         }

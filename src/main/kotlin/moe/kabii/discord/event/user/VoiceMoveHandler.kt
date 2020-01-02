@@ -3,7 +3,6 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import moe.kabii.data.TempStates
@@ -11,7 +10,6 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
-import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
@@ -28,10 +26,10 @@ object VoiceMoveHandler {
             return
         }
 
-        val newChannel = newState.channel.tryBlock(false).orNull()
+        val newChannel = newState.channel.tryBlock().orNull()
 
         val oldChannel = oldState?.run {
-            channel.tryBlock(false).orNull()
+            channel.tryBlock().orNull()
         }
         val old = oldChannel != null
         val new = newChannel != null

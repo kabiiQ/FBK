@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands.utility
 
 import discord4j.core.`object`.VoiceState
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 
@@ -15,7 +16,7 @@ object BotUtil : CommandContainer {
                         embed("[Screenshare channel for **${channel.name}**]($link)")
                     }
                     .switchIfEmpty(embed("You need to be in a voice channel in this guild to use screenshare."))
-                    .block()
+                    .awaitSingle()
             }
         }
     }
@@ -24,7 +25,7 @@ object BotUtil : CommandContainer {
         init {
             discord {
                 val link = "https://discordapp.com/channels/${target.id.asString()}/${chan.id.asString()}/1"
-                embed("[;)]($link)").block()
+                embed("[;)]($link)").awaitSingle()
             }
         }
     }

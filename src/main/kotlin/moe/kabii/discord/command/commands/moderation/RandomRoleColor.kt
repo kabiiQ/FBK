@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands.moderation
 
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.errorColor
@@ -8,7 +9,7 @@ import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import moe.kabii.util.ColorUtil
 import moe.kabii.util.RGB
 import java.awt.Color
@@ -21,18 +22,18 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
         discord {
             member.verify(Permission.MANAGE_ROLES)
             if (args.isEmpty()) {
-                usage("**randomcolor** will pick a random color for a role.", "randomcolor <role name or ID>").block()
+                usage("**randomcolor** will pick a random color for a role.", "randomcolor <role name or ID>").awaitSingle()
                 return@discord
             }
 
             val role = Search.roleByNameOrID(this, noCmd)
             if (role == null) {
-                usage("Unable to find the role **$noCmd**.", "randomcolor <role name or ID>").block()
+                usage("Unable to find the role **$noCmd**.", "randomcolor <role name or ID>").awaitSingle()
                 return@discord
             }
             val safe = PermissionUtil.isSafeRole(role, member, target, managed = true, everyone = false)
             if(!safe) {
-                error("You can not manage the role **${role.name}**.").block()
+                error("You can not manage the role **${role.name}**.").awaitSingle()
                 return@discord
             }
             fun colorPicker(color: Color): EmbedReceiver = {
@@ -46,7 +47,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
 
             var currColor = randomColor()
             var hex = ColorUtil.hexString(currColor)
-            val prompt = embed(colorPicker(currColor)).block()
+            val prompt = embed(colorPicker(currColor)).awaitSingle()
             var first = true
             loop@while(true) {
                 // y/n /exit
@@ -57,22 +58,22 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                         val oldColor = ColorUtil.hexString(role.color)
                         val edit = role.edit { role ->
                             role.setColor(currColor)
-                        }.tryBlock().orNull()
+                        }.tryAwait().orNull()
                         if (edit != null) {
                             prompt.edit { message ->
                                 message.setEmbed { embed ->
                                     embed.setDescription("**${role.name}**'s color has been changed to $hex. (Previously $oldColor)")
                                     embed.setColor(currColor)
                                 }
-                            }.tryBlock()
+                            }.tryAwait()
                         } else {
-                            error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.").tryBlock()
+                            error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.").tryAwait()
                             prompt.edit { message ->
                                 message.setEmbed { embed ->
                                     embed.setDescription("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.")
                                     errorColor(embed)
                                 }
-                            }.tryBlock()
+                            }.tryAwait()
                         }
                         break@loop
                     }
@@ -81,7 +82,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                         hex = ColorUtil.hexString(currColor)
                         prompt.edit { message ->
                             message.setEmbed(colorPicker(currColor))
-                        }.block()
+                        }.awaitSingle()
                     }
                     null -> break@loop // exit
                 }

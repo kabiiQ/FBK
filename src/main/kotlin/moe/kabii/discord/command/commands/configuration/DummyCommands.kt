@@ -1,9 +1,9 @@
 package moe.kabii.discord.command.commands.configuration
 
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.DummyCommand
 import moe.kabii.data.mongodb.GuildConfiguration
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
@@ -30,9 +30,9 @@ object DummyCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd)
-                    embed(add).block()
+                    embed(add).awaitSingle()
                 } else {
-                    usage("Add or edit a dummy text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").block()
+                    usage("Add or edit a dummy text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
             }
             twitch {
@@ -50,9 +50,9 @@ object DummyCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd, restrict = true)
-                    embed(add).block()
+                    embed(add).awaitSingle()
                 } else {
-                    usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").block()
+                    usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
             }
             twitch {
@@ -79,9 +79,9 @@ object DummyCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.isNotEmpty()) {
                     val remove = removeCommand(config, args[0])
-                    embed(remove).block()
+                    embed(remove).awaitSingle()
                 } else {
-                    usage("Remove a dummy text command. Example:", "removecommand yt").block()
+                    usage("Remove a dummy text command. Example:", "removecommand yt").awaitSingle()
                 }
             }
             twitch {
