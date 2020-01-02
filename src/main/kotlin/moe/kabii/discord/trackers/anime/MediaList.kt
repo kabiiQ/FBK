@@ -12,7 +12,6 @@ import java.awt.Color
 import java.io.IOException
 
 abstract class MediaListParser {
-    val klaxon = Klaxon()
     abstract val attempts: Int
     abstract suspend fun parse(id: String): Result<MediaList, MediaListErr>
     abstract fun getListID(input: String): String?

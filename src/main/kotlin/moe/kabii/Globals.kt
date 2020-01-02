@@ -1,10 +1,16 @@
-package moe.kabii.net
+package moe.kabii
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import moe.kabii.rusty.Result
 import moe.kabii.rusty.Try
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
 
 // global okhttp instance
 object OkHTTP : OkHttpClient() {
@@ -14,3 +20,8 @@ object OkHTTP : OkHttpClient() {
             newCall(request.header("User-Agent", userAgent).build()).execute()
         }.result.mapOk { response -> response.use(handler) }
 }
+
+// json parser instance
+val MOSHI: Moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .build()
