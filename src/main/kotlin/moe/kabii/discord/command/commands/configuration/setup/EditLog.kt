@@ -2,11 +2,9 @@ package moe.kabii.discord.command.commands.configuration.setup
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.util.Search
 
 object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
     object ChannelLogModule : ConfigurationModule<LogSettings>(

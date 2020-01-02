@@ -37,12 +37,8 @@ import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.orNull
 import moe.kabii.twitch.TwitchMessageHandler
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
-
-val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
 
 fun main() {
     // init

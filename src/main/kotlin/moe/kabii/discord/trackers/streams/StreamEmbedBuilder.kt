@@ -2,7 +2,6 @@ package moe.kabii.discord.trackers.streams
 
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.javaInstant
 import moe.kabii.util.DurationFormatter

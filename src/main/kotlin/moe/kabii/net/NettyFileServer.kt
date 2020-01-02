@@ -8,8 +8,9 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Ok
 import moe.kabii.util.RGB
 import okhttp3.Request
 import java.awt.Color
@@ -17,7 +18,6 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.Instant
-import java.util.function.Predicate
 import javax.imageio.ImageIO
 
 object NettyFileServer {

@@ -21,7 +21,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
 
         // discord-twitch verification- check all messages even if not linked guild
         val verification = TempStates.twitchVerify.entries.find { (id, config) ->
-            id == event.channel.id
+            id == event.channel.id.toLong()
         }
         if (verification != null) {
             if (event.message.trim().toLowerCase().startsWith(";verify") && event.permissions.contains(CommandPermission.MODERATOR)) {
@@ -35,7 +35,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
             return
         }
 
-        val guild = GuildConfigurations.getGuildForTwitch(event.channel.id)
+        val guild = GuildConfigurations.getGuildForTwitch(event.channel.id.toLong())
         if (guild == null) return // shouldn't happen but if we are in non-verified channel, ignore the message
 
         // dummy command handling

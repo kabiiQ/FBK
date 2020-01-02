@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.streams
 
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Result
 import java.awt.Color
 
 sealed class StreamErr {

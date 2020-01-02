@@ -1,11 +1,9 @@
 package moe.kabii.joint
 
-import com.github.twitch4j.TwitchClient
 import moe.kabii.LOG
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.asCoroutineScope
 import java.util.concurrent.Executors
-import kotlin.reflect.KClass
 
 class CommandManager {
     internal val globalPrefix = ";;"

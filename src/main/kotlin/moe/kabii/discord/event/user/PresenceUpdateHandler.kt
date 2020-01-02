@@ -2,20 +2,16 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
-import discord4j.core.event.domain.UserUpdateEvent
-import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
 import reactor.core.publisher.toFlux
 
 object PresenceUpdateHandler {
     fun handle(event: PresenceUpdateEvent) {
-        LOG.trace("Presence update: $event")
         val user = event.user.block()
         val oldUser = event.oldUser.orNull() ?: return
 

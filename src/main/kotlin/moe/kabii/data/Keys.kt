@@ -2,6 +2,7 @@ package moe.kabii.data
 
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
+import com.uchuhimo.konf.source.toml
 
 object Keys : ConfigSpec("") {
     val config = Config { addSpec(Keys) }

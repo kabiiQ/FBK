@@ -1,6 +1,5 @@
 package moe.kabii.joint.commands
 
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
@@ -14,7 +13,7 @@ object TwitchInfo : CommandContainer {
     object Title : Command("title", "streamtitle", "streamname") {
         init {
             twitch {
-                val api = TwitchParser.getStream(event.channel.id)
+                val api = TwitchParser.getStream(event.channel.id.toLong())
                 if (api is Ok) {
                     val stream = api.value
                     event.reply("${stream.game.name} - ${stream.title}")
@@ -36,7 +35,7 @@ object TwitchInfo : CommandContainer {
     object Uptime : Command("uptime", "up-time") {
         init {
             twitch {
-                val stream = TwitchParser.getStream(event.channel.id)
+                val stream = TwitchParser.getStream(event.channel.id.toLong())
                 if (stream is Ok) {
                     val uptime = Duration.between(stream.value.startedAt, Instant.now())
                     val uptimeStr = DurationFormatter(uptime).colonTime
