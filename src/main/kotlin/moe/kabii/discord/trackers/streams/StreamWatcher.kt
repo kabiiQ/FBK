@@ -4,7 +4,6 @@ import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.GuildChannel
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.entity.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -12,10 +11,12 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
+import moe.kabii.rusty.Try
 import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.toMono
@@ -31,17 +32,17 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
         while(active) {
             val start = Instant.now()
             transaction {
-                val tracked = TrackedStreams.Channel.all() // capture the currently tracked streams
+                val tracked = TrackedStreams.StreamChannel.all() // capture the currently tracked streams
                 runBlocking {
                     tracked.groupBy { it.site } // group by site and later re-assemble only because of the importance of bulk api calls
                         .map { (site, channels) ->
                             streamThreads.launch {
                                 Try {
                                     // use 1 thread per site to call the appropriate api to get streams for that site in bulk
-                                    val ids = channels.map(TrackedStreams.Channel::channelID)
+                                    val ids = channels.map(TrackedStreams.StreamChannel::siteChannelID)
                                     val streams = site.parser.getStreams(ids)
                                     streams.forEach { (id, stream) ->
-                                        val channel = channels.find { it.channelID == id }!!
+                                        val channel = channels.find { it.siteChannelID == id }!!
                                         updateChannel(channel, stream)
                                     }
                                 }.result.ifErr(Throwable::printStackTrace) // don't end this thread
@@ -58,7 +59,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
     }
 
     @WithinExposedContext
-    private fun updateChannel(channel: TrackedStreams.Channel, stream: Result<StreamDescriptor, StreamErr>) {
+    private fun updateChannel(channel: TrackedStreams.StreamChannel, stream: Result<StreamDescriptor, StreamErr>) {
         val stream = when(stream) {
             is Ok -> stream.value
             is Err -> when(stream.value) {
@@ -70,15 +71,15 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
         // get streaming site user object when needed
         val parser = channel.site.parser
         val user by lazy {
-            when (val user = parser.getUser(channel.channelID)) {
+            when (val user = parser.getUser(channel.siteChannelID)) {
                 is Ok -> user.value
                 is Err -> {
                     val err = user.value
                     if (err is StreamErr.NotFound) {
                         // call succeeded and the user ID does not exist.
-                        LOG.info("Invalid ${channel.site.full} user: ${channel.channelID}. Untracking user...")
+                        LOG.info("Invalid ${channel.site.full} user: ${channel.siteChannelID}. Untracking user...")
                         channel.delete()
-                    } else LOG.error("Error getting ${channel.site.full} user: ${channel.channelID}: $err")
+                    } else LOG.error("Error getting ${channel.site.full} user: ${channel.siteChannelID}: $err")
                     null
                 }
             }
@@ -93,12 +94,12 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val messageID = notif.messageID
-                        val message = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock(false).orNull()
+                        val message = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(parser.color)
-                            embed.setFooter("Channel ID was ${channel.channelID} on ${channel.site.full}.", null)
-                        }}?.tryBlock(false)
+                            embed.setFooter("Channel ID was ${channel.siteChannelID} on ${channel.site.full}.", null)
+                        }}?.tryBlock()
                         notif.delete()
                     }
                     return
@@ -108,18 +109,18 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 if(user == null) return
                 notifications.forEach { notif ->
                     val messageID = notif.messageID
-                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock(false).orNull()
+                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
                     if(discordMessage != null) {
                         val features = discordMessage.guild.map { guild ->
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
                             config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        }.tryBlock(false).orNull() ?: FeatureSettings() // use default settings for PM
+                        }.tryBlock().orNull() ?: FeatureSettings() // use default settings for PM
                         if(features.streamSummaries) {
                             val specEmbed = StreamEmbedBuilder(user!!, features).statistics(dbStream)
                             discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                         } else {
                             discordMessage.delete()
-                        }.tryBlock(false)
+                        }.tryBlock()
                     }
                     notif.delete()
                 }
@@ -151,15 +152,15 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
 
             // get channel twitch settings
             val guildConfig = target.guild?.guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { getOrCreateFeatures(target.channelID.channelID).featureSettings }
+            val features = guildConfig?.run { getOrCreateFeatures(target.channelID.siteChannelID).featureSettings }
                 ?: FeatureSettings() // use default settings for pm notifications
 
             val embed = StreamEmbedBuilder(user!!, features).stream(stream)
             if (existing == null) { // post a new stream notification
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
-                    discord.getChannelById(target.channelID.channelID.snowflake).ofType(MessageChannel::class.java)
-                        .tryBlock(false)) {
+                    discord.getChannelById(target.channelID.siteChannelID.snowflake).ofType(MessageChannel::class.java)
+                        .tryBlock()) {
                     is Ok -> disChan.value
                     is Err -> {
                         val err = disChan.value
@@ -176,7 +177,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                         .ofType(GuildChannel::class.java)
                         .flatMap(GuildChannel::getGuild)
                         .flatMap { guild -> guild.getRoleById(roleID.snowflake) }
-                        .tryBlock(false)
+                        .tryBlock()
                     when (role) {
                         is Ok -> role.value
                         is Err -> {
@@ -192,7 +193,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 val mention = mentionRole?.run {
                     edit { role -> role.setMentionable(true) }
                         .map(Role::getMention)
-                        .tryBlock(false).orNull()
+                        .tryBlock().orNull()
                 }
                 val newNotification = chan.createMessage { spec ->
                     if (mention != null) spec.setContent(mention)
@@ -200,7 +201,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 }.tryBlock().orNull()
 
                 mentionRole?.run {
-                    edit { role -> role.setMentionable(false) }.tryBlock(false)
+                    edit { role -> role.setMentionable(false) }.tryBlock()
                 }
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
                 transaction {
@@ -215,7 +216,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                     }
                 }
             } else {
-                val existingNotif = discord.getMessageById(existing.channelID.channelID.snowflake, existing.messageID.messageID.snowflake).tryBlock(false).orNull()
+                val existingNotif = discord.getMessageById(existing.channelID.siteChannelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
                 if(existingNotif != null) {
                     existingNotif.edit { msg -> msg.setEmbed(embed.automatic)  }.tryBlock().orNull()
                 } else existing.delete()

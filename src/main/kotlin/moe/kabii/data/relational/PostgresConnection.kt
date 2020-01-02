@@ -18,8 +18,9 @@ internal object PostgresConnection {
                 DiscordObjects.Channels,
                 MessageHistory.Messages,
                 Reminders,
-                TrackedStreams.Streams,
+                TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
+                TrackedStreams.Streams,
                 TrackedStreams.Notifications
             )
         }

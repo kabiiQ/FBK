@@ -1,6 +1,5 @@
 package moe.kabii.data.relational
 
-import moe.kabii.data.relational.DiscordObjects.Guild.Companion.getOrInsert
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -9,7 +8,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object DiscordObjects {
     internal object Users : IntIdTable() {
-        val userID = long("user_id").uniqueIndex()
+        val userID = long("discord_user_id").uniqueIndex()
         val target = long("guild_target").nullable()
     }
 
@@ -28,7 +27,7 @@ object DiscordObjects {
     }
 
     internal object Guilds : IntIdTable() {
-        val guildID = long("guild_id").uniqueIndex()
+        val guildID = long("discord_guild_id").uniqueIndex()
     }
 
     class Guild(id: EntityID<Int>) : IntEntity(id) {
@@ -43,7 +42,7 @@ object DiscordObjects {
     }
 
     internal object Channels : IntIdTable() {
-        val channelID = long("channel_id").uniqueIndex()
+        val channelID = long("discord_channel_id").uniqueIndex()
         val guild = reference("guild", Guilds, ReferenceOption.CASCADE).nullable()
     }
 

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object MessageHistory {
     internal object Messages : LongIdTable() {
-        val messageID = long("message_id").uniqueIndex()
+        val messageID = long("discord_message_id").uniqueIndex()
         val channel = reference("channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val author = reference("author", DiscordObjects.Users, ReferenceOption.CASCADE)
         val content = varchar("content", 2000)

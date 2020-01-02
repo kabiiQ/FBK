@@ -24,24 +24,24 @@ object TrackedStreams {
         //MIXER("Mixer", MixerParser)
     }
 
-    object Channels : IntIdTable() {
+    object StreamChannels : IntIdTable() {
         val site = enumeration("site_id", Site::class)
-        val channelID = long("channel_id").uniqueIndex()
+        val siteChannelID = long("site_channel_id").uniqueIndex()
     }
 
-    class Channel(id: EntityID<Int>) : IntEntity(id) {
-        var site by Channels.site
-        var channelID by Channels.channelID
+    class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
+        var site by StreamChannels.site
+        var siteChannelID by StreamChannels.siteChannelID
 
         val targets by Target referrersOn Targets.channelID
         val notifications by Notification referrersOn Notifications.channelID
         val streams by Stream referrersOn Streams.channelID
 
-        companion object : IntEntityClass<Channel>(Channels)
+        companion object : IntEntityClass<StreamChannel>(StreamChannels)
     }
 
     object Targets : IntIdTable() {
-        val channelID = reference("channel_id", Channels, ReferenceOption.CASCADE)
+        val channelID = reference("channel_id", StreamChannels, ReferenceOption.CASCADE)
         val discordChannel = long("discord_channel")
         val tracker = reference("user", DiscordObjects.Users, ReferenceOption.CASCADE)
         val guild = reference("guild", DiscordObjects.Guilds, ReferenceOption.CASCADE).nullable()
@@ -49,7 +49,7 @@ object TrackedStreams {
     }
 
     class Target(id: EntityID<Int>) : IntEntity(id) {
-        var channelID by Channel referencedOn Targets.channelID
+        var channelID by StreamChannel referencedOn Targets.channelID
         var discordChannel by Targets.discordChannel
         var tracker by DiscordObjects.User referencedOn Targets.tracker
         var guild by DiscordObjects.Guild optionalReferencedOn Targets.guild
@@ -61,7 +61,7 @@ object TrackedStreams {
     }
 
     object Streams : IntIdTable() {
-        val channelID = reference("channel_id", Channels, ReferenceOption.CASCADE).uniqueIndex()
+        val channelID = reference("assoc_stream_channel_id", StreamChannels, ReferenceOption.CASCADE).uniqueIndex()
         val startTime = datetime("started_at")
         val peakViewers = integer("peak_viewers")
         val uptimeTicks = integer("uptime_ticks")
@@ -71,7 +71,7 @@ object TrackedStreams {
     }
 
     class Stream(id: EntityID<Int>) : IntEntity(id) {
-        var channelID by Channel referencedOn Streams.channelID
+        var channelID by StreamChannel referencedOn Streams.channelID
         var startTime by Streams.startTime
         var peakViewers by Streams.peakViewers
         var uptimeTicks by Streams.uptimeTicks
@@ -88,15 +88,15 @@ object TrackedStreams {
     }
 
     object Notifications : IntIdTable() {
-        val targetID = reference("target_id", Targets, ReferenceOption.CASCADE).uniqueIndex()
-        val channelID = reference("channel_id", Channels, ReferenceOption.CASCADE)
+        val targetID = reference("assoc_target_id", Targets, ReferenceOption.CASCADE).uniqueIndex()
+        val channelID = reference("channel_id", StreamChannels, ReferenceOption.CASCADE)
         val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
         val stream = reference("stream_id", Streams, ReferenceOption.SET_NULL).nullable()
     }
 
     class Notification(id: EntityID<Int>) : IntEntity(id) {
         var targetID by Target referencedOn Notifications.targetID
-        var channelID by Channel referencedOn Notifications.channelID
+        var channelID by StreamChannel referencedOn Notifications.channelID
         var messageID by MessageHistory.Message referencedOn Notifications.message
         var stream by Stream optionalReferencedOn Notifications.stream
 
