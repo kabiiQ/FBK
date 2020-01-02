@@ -1,8 +1,7 @@
 package moe.kabii.discord.trackers.anime
 
-import com.beust.klaxon.Klaxon
 import kotlinx.coroutines.delay
-import moe.kabii.net.OkHTTP
+import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -20,7 +19,7 @@ abstract class MediaListParser {
         val request = Request.Builder()
             .get()
             .url(request)
-        for(attempt in 1..attempts) {
+        retry@for(attempt in 1..attempts) {
             val call = OkHTTP.make(request, block).orNull()
             // error handling and un-nesting
             if(call != null) {
@@ -28,7 +27,11 @@ abstract class MediaListParser {
                     is Ok -> return call
                     is Err -> {
                         val error = call.value
-                        if(error is MediaListRateLimit) delay(error.timeout)
+                        when(error) {
+                            is MediaListRateLimit -> delay(error.timeout)
+                            is MediaListEmpty -> return call
+                            is MediaListIOErr -> break@retry
+                        }
                     }
                 }
             } else {
