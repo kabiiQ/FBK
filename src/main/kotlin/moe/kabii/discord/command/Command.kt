@@ -1,6 +1,5 @@
 package moe.kabii.discord.command
 
-import com.beust.klaxon.Klaxon
 import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.entity.*
@@ -28,7 +27,6 @@ import kotlin.coroutines.resume
 interface CommandContainer
 
 abstract class Command(val baseName: String, vararg alias: String) {
-    val klaxon = Klaxon()
     val aliases = listOf(baseName, *alias)
 
     open val helpURL: String? = null // TODO make this abstract once docs are available

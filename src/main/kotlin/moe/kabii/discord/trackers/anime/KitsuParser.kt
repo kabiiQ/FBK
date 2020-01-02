@@ -1,13 +1,19 @@
 package moe.kabii.discord.trackers.anime
 
-import moe.kabii.net.OkHTTP
+import com.squareup.moshi.JsonClass
+import moe.kabii.MOSHI
+import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.structure.fromJsonSafe
 import okhttp3.Request
 
 object KitsuParser : MediaListParser() {
     override val attempts = 3
+
+    val kitsuUserAdapter = MOSHI.adapter(KitsuUserResponse::class.java)
+    val kitsuResponseAdapter = MOSHI.adapter(KitsuResponse::class.java)
 
     override fun getListID(input: String): String? {
         // url copied from site might provide id or slug, and a user will likely enter the slug. we always need the save an ID, however.
@@ -19,7 +25,7 @@ object KitsuParser : MediaListParser() {
             val call = OkHTTP.make(userRequest) { response ->
                 if(!response.isSuccessful) return@make null
                 val body = response.body!!.string()
-                val json = klaxon.parse<KitsuUserResponse>(body)
+                val json = kitsuUserAdapter.fromJsonSafe(body).orNull()
                 json?.run { data.singleOrNull() } // get user id from call if possible
                     ?.id
                     ?.let(String::toIntOrNull)
@@ -43,8 +49,7 @@ object KitsuParser : MediaListParser() {
                         Err(MediaListIOErr)
                 }
                 val body = response.body!!.string()
-                val json = klaxon.parse<KitsuResponse>(body)
-                if(json != null) Ok(json) else Err(MediaListIOErr)
+                Ok(kitsuResponseAdapter.fromJson(body)!!)
             }
             val mediaResponse = if(rawResponse is Ok) rawResponse.value else break
             if(mediaResponse.data.isEmpty()) {
@@ -105,17 +110,20 @@ object KitsuParser : MediaListParser() {
     }
 
     // Kitsu JSON response
+    @JsonClass(generateAdapter = true)
     data class KitsuResponse(
             val data: List<LibraryEntry> = emptyList(),
             val included: List<MediaInfo> = emptyList(),
             val meta: RequestMetadata
     ) {
 
+        @JsonClass(generateAdapter = true)
         data class LibraryEntry(
                 val attributes: LibraryEntryAttributes,
                 val relationships: LibraryEntryRelationships
         ) {
 
+            @JsonClass(generateAdapter = true)
             data class LibraryEntryAttributes(
                     val status: String,
                     val progress: Int,
@@ -123,24 +131,29 @@ object KitsuParser : MediaListParser() {
                     val rating: String
             )
 
+            @JsonClass(generateAdapter = true)
             data class LibraryEntryRelationships(
                     val media: MediaRelationships
             )
 
+            @JsonClass(generateAdapter = true)
             data class MediaRelationships(
                     val data: RelationshipData
             )
 
+            @JsonClass(generateAdapter = true)
             data class RelationshipData(
                     val id: String
             )
         }
 
+        @JsonClass(generateAdapter = true)
         data class MediaInfo(
                 val id: String,
                 val type: String,
                 val attributes: MediaAttributes
         ) {
+            @JsonClass(generateAdapter = true)
             data class MediaAttributes(
                     val slug: String,
                     val titles: MediaTitles,
@@ -149,23 +162,28 @@ object KitsuParser : MediaListParser() {
                     val chapterCount: Int? = 0,
                     val volumeCount: Int? = 0
             ) {
+                @JsonClass(generateAdapter = true)
                 data class MediaTitles(
                         val en_jp: String = "An Anime"
                 )
+                @JsonClass(generateAdapter = true)
                 data class MediaImages(
                         val original: String
                 )
             }
         }
 
+        @JsonClass(generateAdapter = true)
         data class RequestMetadata(
                 val count: Int
         )
     }
 
+    @JsonClass(generateAdapter = true)
     data class KitsuUserResponse(
         val data: List<KitsuUser> = emptyList()
     ) {
+        @JsonClass(generateAdapter = true)
         data class KitsuUser(
             val id: String
         )

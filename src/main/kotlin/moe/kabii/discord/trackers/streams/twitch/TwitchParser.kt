@@ -1,21 +1,22 @@
 package moe.kabii.discord.trackers.streams.twitch
 
-import com.beust.klaxon.Klaxon
 import moe.kabii.LOG
+import moe.kabii.MOSHI
+import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.streams.*
 import moe.kabii.net.NettyFileServer
-import moe.kabii.net.OkHTTP
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
+import moe.kabii.structure.fromJsonSafe
 import okhttp3.Request
-import okhttp3.internal.toLongOrDefault
 import java.awt.Color
 import java.time.Duration
 import java.time.Instant
 
 object TwitchParser : StreamParser {
-    private val klaxon = Klaxon()
     override val site = TrackedStreams.Site.TWITCH
     override val color = Color(6570405)
     override val icon: String = NettyFileServer.glitch
@@ -48,7 +49,13 @@ object TwitchParser : StreamParser {
                     }
                 } else {
                     val body = response.body!!.string()
-                    klaxon.parse<R>(body)
+                    when(val json = MOSHI.adapter(R::class.java).fromJsonSafe(body)) {
+                        is Ok -> json.value
+                        is Err -> {
+                            LOG.error("Invalid JSON provided from Twitch: ${json.value} :: $body}")
+                            null
+                        }
+                    }
                 }
             }
             if(response is Ok) {
@@ -107,7 +114,7 @@ object TwitchParser : StreamParser {
                     // find the stream for each user in the request
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
-                        Ok(object : StreamDescriptor(this, match.userID.toString(), match.user_name, match.title, match.viewer_count, match.startedAt, match.thumbnail_url) {
+                        Ok(object : StreamDescriptor(this, match.userID.toString(), match.username, match.title, match.viewers, match.startedAt, match.thumbnail) {
                             // Twitch does not return this information when getting a stream unlike mixer,
                             // so we make a request when this information is needed for Twitch streams.
                             override val game by lazy {

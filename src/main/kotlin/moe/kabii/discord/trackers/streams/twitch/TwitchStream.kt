@@ -1,32 +1,25 @@
 package moe.kabii.discord.trackers.streams.twitch
 
-import com.beust.klaxon.Json
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.time.Instant
 
+@JsonClass(generateAdapter = true)
 data class TwitchStreamRequest(
         val data: List<TwitchStream>
 )
 
+@JsonClass(generateAdapter = true)
 data class TwitchStream(
-        @Json(ignored = false)
-        private val user_id: String,
-        @Json(ignored = false)
-        private val game_id: String,
+    @Json(name = "user_id") val _userID: String,
+    @Json(name = "game_id") val _gameID: String,
+    @Json(name = "user_name") val username: String,
+    val title: String,
+    @Json(name = "viewer_count") val viewers: Int,
+    @Json(name = "thumbnail_url") val thumbnail: String,
+    @Json(name = "started_at") val _startedAt: String) {
 
-        val user_name: String,
-        val title: String,
-        val viewer_count: Int,
-        val thumbnail_url: String,
-
-        @Json(ignored = false)
-        private val started_at: String) {
-
-    @Json(ignored = true)
-    val startedAt = Instant.parse(started_at)
-
-    @Json(ignored = true)
-    val userID = user_id.toLong()
-
-    @Json(ignored = true)
-    val gameID = game_id.toLong()
+    @Transient val startedAt = Instant.parse(_startedAt)
+    @Transient val userID = _userID.toLong()
+    @Transient val gameID = _gameID.toLong()
 }
