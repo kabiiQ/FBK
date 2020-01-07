@@ -59,7 +59,7 @@ dependencies {
     api("com.uchuhimo:konf:0.22.1") // .toml token configuration
 
     // logging
-    implementation("ch.qos.logback:logback-classic:1.3.0-alpha5")
+    implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
 
     // other
     implementation("commons-validator:commons-validator:1.6")
