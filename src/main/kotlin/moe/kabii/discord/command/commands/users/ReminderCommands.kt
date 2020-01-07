@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.Reminder
+import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.reminderColor
@@ -103,6 +104,30 @@ object ReminderCommands : CommandContainer {
                     setFooter("Reminder ID: $reminderID", null)
                 }
                 chan.createEmbed(embed).awaitSingle()
+            }
+        }
+    }
+
+    object CancelReminder : Command("cancelreminder", "remindercancel","cancel") {
+        init {
+            discord {
+                // cancel <reminder id>
+                val targetReminder = args.getOrNull(0)?.toLongOrNull()
+                if(targetReminder == null) {
+                    usage("**cancel** is used to cancel an active reminder early.", "cancel <reminder ID>").awaitSingle()
+                    return@discord
+                }
+                val reminder = transaction {
+                    Reminder
+                        .find { Reminders.id eq targetReminder }
+                        .firstOrNull { rem -> rem.user.userID == this@discord.author.id.asLong() }
+                        ?.also(Reminder::delete)
+                }
+                if(reminder == null) {
+                    error("You did not create the reminder with ID #**$targetReminder**.").awaitSingle()
+                    return@discord
+                }
+                embed("Your reminder with ID #**$targetReminder** has been cancelled.").awaitSingle()
             }
         }
     }
