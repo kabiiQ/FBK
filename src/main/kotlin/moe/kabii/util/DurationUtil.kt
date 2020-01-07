@@ -5,10 +5,10 @@ import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 object DurationParser {
-    private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS)
+    private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS)
 
     fun tryParse(input: String): Duration? {
-        // try to parse as days:minutes:hours:seconds, "20" will work take as 20 seconds
+        // try to parse as weeks:days:minutes:hours:seconds, rtl so "20" will work take as 20 seconds
         val args = input.split(":")
         val components = sequence {
             categories.mapIndexed { index, chronoUnit ->
@@ -21,7 +21,27 @@ object DurationParser {
         // if no components specified in first format, try to parse as "20 seconds", "20s"
         return input.trim()
             .toUpperCase()
-            .replace(Regex("DAYS?"), "D")
+            .replace(" ", "") // remove spaces
+            .let { str -> // parse weeks and days
+                var str = str
+                // get days and weeks component from input - weeks is not part of Duration, so we need to add weeks to the days component
+                val patternWeeks = Regex("([0-9]+)W(?:EEKS?)?") // match 2W, 2WEEK, 2WEEKS
+                val matchWeeks = patternWeeks.find(str)
+                val inputWeeks = matchWeeks?.run {
+                    str = str.replace(this.value, "")
+                    groups[1]?.value?.toLong()
+                } ?: 0
+                val patternDays = Regex("([0-9]+)D(?:AYS?)?")
+                val matchDays = patternDays.find(str)
+                val inputDays = matchDays?.run {
+                    str = str.replace(this.value, "")
+                    groups[1]?.value?.toLong()
+                } ?: 0
+                val days = inputDays + (inputWeeks * 7)
+                if(days > 0) {
+                    "${days}D$str"
+                } else str
+            }
             .replace(Regex("H(OU)?RS?"), "H")
             .replace(Regex("MIN(UTE)?S?"), "M")
             .replace(Regex("SEC(OND?)?S?"), "S")
