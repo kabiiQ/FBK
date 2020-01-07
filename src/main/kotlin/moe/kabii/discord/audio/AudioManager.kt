@@ -20,16 +20,31 @@ object AudioManager {
     }
 
     internal fun createAudioComponents(guild: Long): AudioComponents {
-        val savedVolume = GuildConfigurations.getOrCreateGuild(guild).musicBot. volume
+        val config = GuildConfigurations.getOrCreateGuild(guild)
         val player = manager.createPlayer().apply {
-            volume = savedVolume
+            volume = config.musicBot.volume
             addListener(AudioEventHandler)
         }
-        val provider =
-            object : AudioProvider(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize())) {
-                private val frame = MutableAudioFrame().also { frame -> frame.setBuffer(buffer) }
-                override fun provide() = player.provide(frame).also { provided -> if (provided) buffer.flip() }
+        val provider = object : AudioProvider(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize())) {
+            private val frame = MutableAudioFrame().also { frame -> frame.setBuffer(buffer) }
+            override fun provide() = player.provide(frame).also { provided ->
+                if(provided) {
+                    buffer.flip()
+                    // track marker hooks for "sample" command
+                    if(player.playingTrack != null) {
+                        val data = player.playingTrack.userData as? QueueData ?: return@also
+                        val endMarker = data.endMarkerMillis
+                        if(endMarker != null) {
+                            val diff = frame.timecode - endMarker
+                            if(diff in 0..100) {
+                                data.endMarkerMillis = null
+                                player.stopTrack()
+                            }
+                        }
+                    }
+                }
             }
+        }
         return AudioComponents(player, provider)
     }
 

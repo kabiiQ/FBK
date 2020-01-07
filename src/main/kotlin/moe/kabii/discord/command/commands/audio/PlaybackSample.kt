@@ -3,13 +3,14 @@ package moe.kabii.discord.command.commands.audio
 import com.sedmelluq.discord.lavaplayer.track.TrackMarker
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 
 object PlaybackSample : AudioCommandContainer {
-    object SampleTrack : Command(   "sample", "preview", "limit") {
+    object SampleTrack : Command("sample", "preview", "limit") {
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
@@ -19,7 +20,7 @@ object PlaybackSample : AudioCommandContainer {
                     return@discord
                 }
                 if(!canFSkip(this, track)) {
-                    error("You must have permission to skip this track to limit its playback.").awaitSingle()
+                    error("You must have permission to skip this track before you may limit its playback.").awaitSingle()
                     return@discord
                 }
                 val sampleTime = DurationParser.tryParse(noCmd)?.run { Try(::toMillis) }?.result?.orNull()
@@ -34,11 +35,11 @@ object PlaybackSample : AudioCommandContainer {
                     return@discord
                 }
                 val endTarget = sampleTime + track.position
-                track.setMarker(TrackMarker(endTarget) {
-                    audio.player.stopTrack()
-                })
+                val data = track.userData as QueueData
+                data.endMarkerMillis = endTarget
                 val formattedTime = DurationFormatter(sampleTime).colonTime
-                embed("Sampling $formattedTime of ${trackString(track, includeAuthor = false)}.").awaitSingle()
+                val skipTime = DurationFormatter(endTarget).colonTime
+                embed("Sampling $formattedTime of ${trackString(track, includeAuthor = false)} -> skipping track at $skipTime").awaitSingle()
             }
         }
     }

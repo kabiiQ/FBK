@@ -142,4 +142,5 @@ data class QueueData(
     val originChannel: Snowflake,
     val votes: MutableSet<Snowflake> = mutableSetOf(),
     val voting: Mutex = Mutex(),
+    var endMarkerMillis: Long? = null
 )
