@@ -15,6 +15,7 @@ import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
@@ -64,14 +65,14 @@ object RoleReactions : CommandContainer {
                 }
                 val message = args[0].toLongOrNull()?.snowflake?.run(chan::getMessageById)?.tryAwait()?.orNull()
                 if(message == null) {
-                    usage("I could not find a message with the ID **${args[0]}** in **${(chan as TextChannel).name}**.", "reactionrole add <message id> <role>").awaitSingle()
+                    usage("I could not find a message with the ID **${args[0]}** in **${chan.mention}**.", "reactionrole add <message id> <role>").awaitSingle()
                     return@discord
                 }
                 val configs = config.selfRoles.roleMentionMessages
                 // due to the nature of reactions (they may be manually removed) adding a config will just overwrite an existing config rather than erroring
                 // reset reactions and add
-                message.removeAllReactions().tryAwait()
-                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).tryAwait()
+                message.removeAllReactions().success().tryAwait()
+                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).success().tryAwait()
                 val reactX = message.addReaction(ReactionEmoji.unicode(EmojiCharacters.redX)).thenReturn(Unit).tryAwait()
                 if(reactX is Err) {
                     val error = reactX.value as? ClientException

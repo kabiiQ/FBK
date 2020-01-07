@@ -97,11 +97,19 @@ object TwitchFollow : CommandContainer {
                     error("**${targetChannel.displayName}** does not have any associated mention role in **${target.name}**.").awaitSingle()
                     return@discord
                 }
-                if(!member.roles.filter { role -> role.id.asLong() == mentionRole }.hasElements().awaitSingle()) {
+                val role = member.roles.filter { role -> role.id.asLong() == mentionRole.mentionRole }.single().tryAwait().orNull()
+                if(role == null) {
                     embed("You do not have the stream mention role for **${targetChannel.displayName}**.").awaitSingle()
                     return@discord
                 }
-                RoleUtil.removeIfEmptyStreamRole(target, mentionRole)
+                val removed = member.removeRole(mentionRole.mentionRole.snowflake).success().awaitSingle()
+                if(removed) {
+                    embed("You have been removed from the stream mention role **${role.name}** in **${target.name}**.")
+                } else {
+                    error("I was unable to remove your stream mention role **${role.name}**. I may not have permission to manage this role.")
+                }.awaitSingle()
+
+                RoleUtil.removeIfEmptyStreamRole(target, mentionRole.mentionRole) // delete role if now empty
             }
         }
     }
@@ -137,7 +145,7 @@ object TwitchFollow : CommandContainer {
                 // track twitch <name>
                 val site = TargetMatch.parseStreamSite(args[0])
                 if(site == null) {
-                    error("Unknown streaming site **${args[0]}**.").awaitSingle()
+                    error("Unknown/unsupported streaming site **${args[0]}**. Supported sites are Twitch and Mixer.").awaitSingle()
                     error(Unit)
                 }
                 val stream = site.parser.getUser(args[1]).orNull()

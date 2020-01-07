@@ -122,10 +122,12 @@ object StreamTrackerCommand : Tracker<TargetStream> {
     // get target with same discord channel and streaming channel id
     fun getDBTarget(discordChan: Snowflake, stream: TrackedStreams.StreamInfo): TrackedStreams.Target? = transaction {
         TrackedStreams.Target.wrapRows(
-            TrackedStreams.Targets.innerJoin(TrackedStreams.StreamChannels).select {
-                TrackedStreams.StreamChannels.site eq stream.site and
-                        (TrackedStreams.StreamChannels.siteChannelID eq stream.id)
-                        (TrackedStreams.Targets.discordChannel eq discordChan.asLong())
+            TrackedStreams.Targets
+                .innerJoin(TrackedStreams.StreamChannels)
+                .innerJoin(DiscordObjects.Channels).select {
+                    TrackedStreams.StreamChannels.site eq stream.site and
+                            (TrackedStreams.StreamChannels.siteChannelID eq stream.id) and
+                            (DiscordObjects.Channels.channelID eq discordChan.asLong())
             }
         ).firstOrNull()
     }

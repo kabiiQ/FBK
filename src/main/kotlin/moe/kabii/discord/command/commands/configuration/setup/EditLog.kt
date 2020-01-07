@@ -6,7 +6,7 @@ import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
+object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog", "log") {
     object ChannelLogModule : ConfigurationModule<LogSettings>(
         "channel log",
         BooleanElement(

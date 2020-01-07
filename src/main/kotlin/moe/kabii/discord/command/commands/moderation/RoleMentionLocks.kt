@@ -12,7 +12,7 @@ import moe.kabii.structure.tryAwait
 import reactor.core.publisher.toFlux
 import java.util.*
 
-object MentionRole : Command("mention", "mention-role", "role-mention", "rolemention", "mentionrole", "announce", "announcement") {
+object MentionRole : Command("mention", "mention-role", "role-mention", "rolemention", "announce", "announcement") {
     init {
         botReqs(Permission.MANAGE_ROLES)
         discord {

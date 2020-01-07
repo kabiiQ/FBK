@@ -6,7 +6,7 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object TwitchTrackerConfig : Command("twitchconfig", "streamconfig", "streamtracker", "twitchtracker") {
+object TwitchTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams") {
     object TwitchTrackerModule : ConfigurationModule<FeatureSettings>(
         "twitch stream tracker",
         BooleanElement(
@@ -46,6 +46,10 @@ object TwitchTrackerConfig : Command("twitchconfig", "streamconfig", "streamtrac
                 TwitchTrackerModule,
                 features.featureSettings
             )
+
+            if(configurator.run(this)) {
+                config.save()
+            }
         }
     }
 }

@@ -44,7 +44,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 return
             }
             val addedDuration = track.duration - track.position
-            val trackPosition = audio.queue.size
+            val trackPosition = position ?: audio.queue.size
             val untilPlaying = audio.duration?.minus(addedDuration)
             val eta = if(untilPlaying != null) {
                 val formatted = DurationFormatter(untilPlaying).colonTime

@@ -9,6 +9,7 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.`object`.util.Snowflake
 import discord4j.voice.AudioProvider
 import discord4j.voice.VoiceConnection
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,7 +18,7 @@ import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Try
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 
@@ -67,8 +68,8 @@ data class GuildAudio(
     fun forceAdd(track: AudioTrack, member: Member, position: Int? = null) =
         tryAdd(track, member, position, checkLimits = false)
 
-    fun resetAudio(voice: VoiceChannel?): GuildAudio {
-        check(!discord.mutex.isLocked) { "Audio connection protected" }
+    suspend fun resetAudio(voice: VoiceChannel?): GuildAudio {
+        check(discord.mutex.isLocked) { "Audio connection protected" }
         // save current playback state if track is playing
         val playing = player.playingTrack
         val resumeTrack = playing?.makeClone()?.apply {
@@ -85,13 +86,13 @@ data class GuildAudio(
         if (voice != null) {
             discord.connection?.run {
                 Try(::disconnect).result // the actual disconnect runs async and is not in our code controls
-                Thread.sleep(1500L)
+                delay(1500L)
             }
             val join = voice.join { spec ->
                 spec.setProvider(newAudio.provider)
             }.doOnNext { conn ->
                 newAudio.discord.connection = conn
-            }.timeout(Duration.ofSeconds(2)).tryBlock()
+            }.timeout(Duration.ofSeconds(2)).tryAwait()
             if (join is Err) {
                 throw IllegalStateException("Voice connection lost: ${join.value.message}") // todo currently seeing if this ever occurs
             }
