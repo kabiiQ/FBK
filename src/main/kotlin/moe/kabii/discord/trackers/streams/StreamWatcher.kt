@@ -98,8 +98,8 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 val streams = channel.streams
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
-                        val messageID = notif.messageID
-                        val message = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
+                        val dbMessage = notif.messageID
+                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryBlock().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(parser.color)
@@ -128,6 +128,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                         }.tryBlock()
                     }
                     notif.delete()
+                    dbStream.delete()
                 }
             }
             return
@@ -140,7 +141,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
             lastGame = stream.game.name
         } ?: transaction {
             TrackedStreams.Stream.new {
-                this.channelID = channelID
+                this.channelID = channel
                 this.startTime = stream.startedAt.jodaDateTime
                 this.peakViewers = stream.viewers
                 this.averageViewers = stream.viewers
@@ -156,15 +157,16 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
             val existing = target.notifications.firstOrNull()
 
             // get channel twitch settings
-            val guildConfig = target.guild?.guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { getOrCreateFeatures(target.channelID.siteChannelID).featureSettings }
+            val guildID = target.discordChannel.guild?.guildID
+            val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
+            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).featureSettings }
                 ?: FeatureSettings() // use default settings for pm notifications
 
             val embed = StreamEmbedBuilder(user!!, features).stream(stream)
             if (existing == null) { // post a new stream notification
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
-                    discord.getChannelById(target.channelID.siteChannelID.snowflake).ofType(MessageChannel::class.java)
+                    discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java)
                         .tryBlock()) {
                     is Ok -> disChan.value
                     is Err -> {
@@ -213,21 +215,19 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                     edit { role -> role.setMentionable(false) }.tryBlock()
                 }
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
-                transaction {
-                    TrackedStreams.Notification.new {
-                        this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
-                            .elementAtOrElse(0) { _ ->
-                                MessageHistory.Message.new(target.guild?.guildID, newNotification)
-                            }
-                        this.targetID = target
-                        this.channelID = channel
-                        this.stream = dbStream
-                    }
+                TrackedStreams.Notification.new {
+                    this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
+                        .elementAtOrElse(0) { _ ->
+                            MessageHistory.Message.new(target.discordChannel.guild?.guildID, newNotification)
+                        }
+                    this.targetID = target
+                    this.channelID = channel
+                    this.stream = dbStream
                 }
             } else {
-                val existingNotif = discord.getMessageById(existing.channelID.siteChannelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
+                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
                 if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic)  }.tryBlock().orNull()
+                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryBlock().orNull()
                 } else existing.delete()
             }
         }

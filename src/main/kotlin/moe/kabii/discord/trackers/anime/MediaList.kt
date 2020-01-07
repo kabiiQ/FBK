@@ -84,8 +84,8 @@ data class Media(
     }.joinToString("")
 
     fun scoreStr(withMax: Boolean) = if(score == null || score == 0.0f) "unrated" else {
-        val max = if(withMax) "/$scoreMax" else ""
-        "$score$max"
+        val max = if(withMax) "/${scoreMax.toInt()}" else ""
+        "${score.toInt()}$max"
     }
 }
 

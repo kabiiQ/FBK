@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import moe.kabii.data.relational.TrackedStreams
+import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
@@ -28,9 +29,9 @@ object RoleUtil {
         RoleUtil.emptyRoles(target, listOf(mention))
             .filter { role ->
                 // remove role if it is a twitch mention role
-                val find = TrackedStreams.Target.find { TrackedStreams.Targets.mention eq mention }.firstOrNull()
-                find?.delete()
-                find != null
+                transaction {
+                    TrackedStreams.Mention.find { TrackedStreams.Mentions.mentionRole eq mention }.empty().not()
+                }
             }.flatMap { role -> role.delete("Empty stream mention role") }
 
     fun getColorRole(member: Member): Mono<Role> {

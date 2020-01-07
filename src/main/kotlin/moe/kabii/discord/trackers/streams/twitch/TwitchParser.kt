@@ -17,7 +17,7 @@ import java.time.Duration
 import java.time.Instant
 
 object TwitchParser : StreamParser {
-    override val site = TrackedStreams.Site.TWITCH
+    override val site by lazy { TrackedStreams.Site.TWITCH }
     override val color = Color(6570405)
     override val icon: String = NettyFileServer.glitch
 

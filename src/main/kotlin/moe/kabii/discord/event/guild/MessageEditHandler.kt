@@ -24,16 +24,17 @@ object MessageEditHandler {
             .map(FeatureChannel::logSettings)
             .filter { channel -> channel.editLog || channel.deleteLog }
 
-        val history = transaction {
-            MessageHistory.Message
+        val oldMessage = transaction {
+            val history = MessageHistory.Message
                 .find { MessageHistory.Messages.messageID eq event.messageId.asLong() }
                 .singleOrNull()
-        }
 
-        // try to get old message content before saving - update saved history if there is a deletelog too
-        val oldMessage = history?.content
-        if(oldMessage != null) {
-            history.content = new
+            // try to get old message content before saving - update saved history if there is a deletelog too
+            val oldMessage = history?.content
+            if(history != null) {
+                history.content = new
+            }
+            oldMessage
         }
         val message = event.message.tryBlock().orNull() ?: return
         val author = message.author.orNull()
