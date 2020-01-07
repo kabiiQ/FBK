@@ -26,14 +26,13 @@ object GuildConfigurations {
     }
 
     @Synchronized fun getOrCreateGuild(id: Long) = guildConfigurations.getOrPut(id) { GuildConfiguration(guildid = id) }
-    @Synchronized fun getGuildForTwitch(twitchID: Long) = guildConfigurations.asSequence().find { it.value.options.linkedTwitchChannel?.twitchid ?: 0 == twitchID }?.value
+    @Synchronized fun getGuildForTwitch(twitchID: Long) = guildConfigurations.asSequence().find { it.value.options.linkedTwitchChannel?.twitchid == twitchID }?.value
 }
 
 // per guild - guildconfiguration collection
 data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
     val guildid: Long,
-        // populate all fields
     var prefix: String = ";",
     var suffix: String? = "desu",
     val options: OptionalFeatures = OptionalFeatures(),
@@ -150,23 +149,7 @@ data class AutoRoles(
     val voiceConfigurations: MutableList<VoiceConfiguration> = mutableListOf(),
     val rejoinRoles: MutableMap<Long, LongArray> = mutableMapOf(),
     val exclusiveRoleSets: MutableList<ExclusiveRoleSet> = mutableListOf()
-) /*{
-    fun insertJoinConfig(config: JoinConfiguration): Long {
-        val existing = joinConfigurations.entries.find { (_, v) -> v == config }
-        return if(existing != null) existing.key else {
-            // insert into this map as the lowest available id for ease of use
-            val usedKeys = joinConfigurations.keys.iterator() // this iterates the keys in ascending order of the sortedmap
-            var newID = 0L
-            for(id in 0..Integer.MAX_VALUE) {
-                if(!usedKeys.hasNext() || usedKeys.next() != id.toLong()) { // I think this is fairly efficient? works since both 'sets' are sorted to find the first integer that is not currently in use in the ma
-                    newID = id.toLong()
-                    break
-                }
-            }
-            joinConfigurations[newID] = config; newID
-        }
-    }
-}*/
+)
 
 data class JoinConfiguration(
     val inviteTarget: String?,
@@ -226,9 +209,6 @@ data class MusicSettings(
     )
 }
 
-data class UserLog(
-    val users: MutableList<GuildMember> = mutableListOf())
-
 data class GuildSettings(
     var embedMessages: Boolean = true,
     var followRoles: Boolean = true,
@@ -271,10 +251,13 @@ data class CommandFilter(
             blacklisted -> command.aliases.find { alias -> blacklist.contains(alias) } == null
             // optional behavior, some commands might be enabled
             whitelisted -> command.aliases.find { alias -> whitelist.contains(alias) } != null
-            else -> throw IllegalStateException("Illegal blacklist/whitelist flag configuration")
+            else -> error("Illegal blacklist/whitelist flag configuration")
         }
     }
 }
+
+data class UserLog(
+    val users: MutableList<GuildMember> = mutableListOf())
 
 // separate data type for GuildMember because it will probably be expanded in the future to log more user info
 data class GuildMember(

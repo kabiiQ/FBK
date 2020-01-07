@@ -52,7 +52,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
             val uptime = DurationFormatter(recordedUptime).fullTime
             val description = StringBuilder()
             if(builder.settings.streamEndTitle && dbStream.lastTitle.isNotBlank()) {
-                description.append("Stream title: ")
+                description.append("Last stream title: ")
                     .append(dbStream.lastTitle)
                     .append('\n')
             }

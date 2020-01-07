@@ -184,7 +184,9 @@ fun main() {
         .subscribe()
 
     // start file server
-    NettyFileServer.server.start()
+    if(keys[Keys.Netty.host]) {
+        NettyFileServer.server.start()
+    }
 
     // join any linked channels on twitch IRC
     GuildConfigurations.guildConfigurations.values
