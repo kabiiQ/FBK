@@ -140,5 +140,5 @@ data class QueueData(
     val author: Snowflake,
     val originChannel: Snowflake,
     val votes: MutableSet<Snowflake> = mutableSetOf(),
-    val voting: Mutex = Mutex()
+    val voting: Mutex = Mutex(),
 )
