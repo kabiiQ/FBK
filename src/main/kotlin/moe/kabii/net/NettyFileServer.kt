@@ -8,7 +8,9 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import moe.kabii.LOG
 import moe.kabii.OkHTTP
+import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok
 import moe.kabii.util.RGB
@@ -21,13 +23,19 @@ import java.time.Instant
 import javax.imageio.ImageIO
 
 object NettyFileServer {
-    val domain = "http://content.kabii.moe:8080"
+    private val port = Keys.config[Keys.Netty.port]
+
+    val domain = "http://content.kabii.moe:$port"
     val staticRoot = File("files/images/")
     val idRoot = File("files/ids/")
 
     val defaultThumbnail = File(staticRoot, "default_twitch_thumbnail.png")
 
-    val server = embeddedServer(Netty, port = 8080) {
+    init {
+        LOG.info("Netty file server binding to port $port")
+    }
+
+    val server = embeddedServer(Netty, port = port) {
         staticRoot.mkdirs()
         idRoot.mkdirs()
         val udLogo = File(staticRoot, "ud_logo.jpg")

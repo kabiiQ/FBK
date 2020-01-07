@@ -35,6 +35,10 @@ object Keys : ConfigSpec("") {
         val oauth by required<String>("chat_oauth_token")
         val callback by required<String>()
     }
+    object Netty : ConfigSpec() {
+        val port by required<Int>()
+        val host by required<Boolean>()
+    }
     object Censor : ConfigSpec() {
         val ip_services by required<List<String>>()
     }
