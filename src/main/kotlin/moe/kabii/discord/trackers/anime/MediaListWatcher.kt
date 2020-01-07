@@ -49,8 +49,8 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                         try {
                             return@associateBy site.parser.parse(it.list.id)
                         } catch(e: Exception) {
-                            LOG.warn("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
-                            LOG.debug(e.stackTraceString)
+                            LOG.error("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
+                            LOG.info(e.stackTraceString)
                             return@associateBy Err(MediaListIOErr)
                         }
                     }
@@ -155,7 +155,8 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                 }
                                 .onErrorResume { e ->
                                     // todo channel should be removed if it's no longer valid
-                                    LOG.info("${e.message} while sending anime list update to ${target.channelID}")
+                                    LOG.warn("Uncaught exception in MediaListWatcher: ${e.message} while sending anime list update to ${target.channelID}")
+                                    LOG.info(e.stackTraceString)
                                     Mono.empty()
                                 }
                                 .subscribe()

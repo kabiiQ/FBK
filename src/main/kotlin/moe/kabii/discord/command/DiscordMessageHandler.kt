@@ -16,6 +16,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.stackTraceString
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -149,13 +150,13 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                                         }.subscribe()
                             }
                             else -> {
-                                LOG.error("Uncaught client error in command ${command.baseName} on guild $targetID: ${ce.message}")
-                                ce.printStackTrace()
+                                LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetID: ${ce.message}")
+                                LOG.debug(ce.stackTraceString) // these can be relatively normal
                             }
                         }
                     } catch (e: Exception) {
-                        LOG.error("\nUncaught exception in command ${command.baseName} on guild $targetID: ${e.message}\nErroring command: $content")
-                        e.printStackTrace()
+                        LOG.error("\nUncaught (non-discord) exception in command ${command.baseName} on guild $targetID: ${e.message}\nErroring command: $content")
+                        LOG.warn(e.stackTraceString)
                     }
                 }
             }

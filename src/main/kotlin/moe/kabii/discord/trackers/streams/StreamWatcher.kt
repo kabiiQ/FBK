@@ -43,9 +43,14 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                                     val streams = site.parser.getStreams(ids)
                                     streams.forEach { (id, stream) ->
                                         val channel = channels.find { it.siteChannelID == id }!!
-                                        updateChannel(channel, stream)
+                                        transaction {
+                                            updateChannel(channel, stream)
+                                        }
                                     }
-                                }.result.ifErr(Throwable::printStackTrace) // don't end this thread
+                                }.result.ifErr { e -> // don't end this thread
+                                    LOG.error("Uncaught exception in StreamWatcher: $site :: ${e.message}")
+                                    LOG.warn(e.stackTraceString)
+                                }
                             }
                         }.joinAll()
                 }

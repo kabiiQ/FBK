@@ -10,6 +10,7 @@ import moe.kabii.data.mongodb.TwitchConfig
 import moe.kabii.discord.command.TwitchParameters
 import moe.kabii.joint.CommandManager
 import moe.kabii.structure.reply
+import moe.kabii.structure.stackTraceString
 
 class TwitchMessageHandler(val manager: CommandManager) {
     fun handle(event: ChannelMessageEvent) {
@@ -64,7 +65,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
                         }
                     } catch (e: Exception) {
                         LOG.error("Uncaught exception in Twitch command ${command.baseName}\n\"Erroring command: ${event.message}\"")
-                        e.printStackTrace()
+                        LOG.warn(e.stackTraceString)
                     }
                 }
             }

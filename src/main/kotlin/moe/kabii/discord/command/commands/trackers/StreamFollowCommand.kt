@@ -42,7 +42,9 @@ object TwitchFollow : CommandContainer {
                             val err = guildRole.value
                             if(err !is ClientException || err.status.code() != 404) {
                                 // this is an actual error. 404 would represent the role being deleted so that condition can just continue as if the role did not exist
-                                err.printStackTrace()
+                                LOG.info("follow command failed to get mention role: ${err.message}")
+                                LOG.debug(err.stackTraceString)
+                                error("There was an error getting the mention role in **${target.name}** for this stream. I may not have permission to do this.").awaitSingle()
                                 return@discord
                             } else null
                         }

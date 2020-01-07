@@ -5,9 +5,11 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import moe.kabii.LOG
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.commands.audio.QueueTracks
 import moe.kabii.rusty.Try
+import moe.kabii.structure.stackTraceString
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.YoutubeUtil
 import java.net.URL
@@ -81,7 +83,8 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             FriendlyException.Severity.COMMON, FriendlyException.Severity.SUSPICIOUS -> ": ${exception.message}"
             FriendlyException.Severity.FAULT -> "."
         }
-        exception.cause!!.printStackTrace()
+        LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
+        exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)
         origin.error("Unable to load audio track$error").block()
     }
 }

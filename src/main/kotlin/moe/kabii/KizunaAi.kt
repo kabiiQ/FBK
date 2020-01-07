@@ -36,6 +36,7 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.orNull
+import moe.kabii.structure.stackTraceString
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
@@ -177,8 +178,8 @@ fun main() {
         onReactionAdd, onReactionRemove, onReactionAdd2, onGuildReady,
         onInitialReady)
         .onErrorResume { t ->
-            LOG.info("Uncaught exception: ${t.message}")
-            t.printStackTrace()
+            LOG.error("Uncaught exception in event handler: ${t.message}")
+            LOG.warn(t.stackTraceString)
             Mono.empty()
         }
         .subscribe()

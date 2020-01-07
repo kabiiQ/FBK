@@ -3,19 +3,27 @@
     <logger name="io.netty" level="INFO"/>
     <logger name="reactor" level="INFO"/>
     <logger name="org.mongodb" level="INFO"/>
-    <logger name="moe.kabii" level="TRACE"/>"
+    <logger name="discord4j.gateway" level="INFO"/>
+    <logger name="discord4j.dispatch.0" level="INFO"/>
+    <logger name="discord4j.rest.http" level="INFO"/>
+    <logger name="discord4j.events" level="INFO"/>
+    <logger name="discord4j.events.0" level="INFO"/>
+    <logger name="com.github.twitch4j" level="INFO"/>
+    <logger name="Exposed" level="INFO"/>
 
-    <!-- https://logback.qos.ch/manual/layouts.html#ClassicPatternLayout -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/d4j.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>100MB</maxFileSize>
+            <fileNamePattern>logs/kizuna.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>20MB</maxFileSize>
             <maxHistory>90</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -31,7 +39,7 @@
     </appender>
 
     <!-- Base logger level: ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC"/>
     </root>

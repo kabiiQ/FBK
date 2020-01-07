@@ -42,7 +42,10 @@ class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
                             }
                         }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
                     }
-                }.result.ifErr { err -> err.printStackTrace() } // don't let this thread die
+                }.result.ifErr { t ->
+                    LOG.error("Uncaught exception in ReminderWatcher: ${t.message}")
+                    LOG.warn(t.stackTraceString)
+                } // don't let this thread die
             }
             val runtime = Duration.between(start, Instant.now())
             sleep(updateInterval - runtime.toMillis())
