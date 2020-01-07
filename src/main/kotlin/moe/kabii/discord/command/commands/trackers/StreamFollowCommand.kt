@@ -4,6 +4,7 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.spec.RoleCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
@@ -14,7 +15,10 @@ import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.stackTraceString
+import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitchFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {
@@ -35,8 +39,9 @@ object TwitchFollow : CommandContainer {
                     return@discord
                 }
                 // get or create mention role for this stream
-                val existingRole = if(dbTarget.mention != null) {
-                    when(val guildRole = target.getRoleById(dbTarget.mention!!.snowflake).tryAwait()) {
+                val mention = transaction { TrackedStreams.Mention.getMentionsFor(target.id, dbTarget.streamChannel.siteChannelID).firstOrNull() }
+                val existingRole = if(mention != null) {
+                    when(val guildRole = target.getRoleById(mention.mentionRole.snowflake).tryAwait()) {
                         is Ok -> guildRole.value
                         is Err -> {
                             val err = guildRole.value
@@ -50,6 +55,7 @@ object TwitchFollow : CommandContainer {
                         }
                     }
                 } else null
+                // if role did not exist or was deleted, make a new role
                 val mentionRole = if(existingRole != null) existingRole else {
                     // role does not exist
                     val siteName = targetChannel.parser.site.full
@@ -62,13 +68,22 @@ object TwitchFollow : CommandContainer {
                     if(new == null) {
                         error("There was an error creating a role in **${target.name}** for this stream. I may not have permission to create roles.").awaitSingle()
                         return@discord
-                    } else new
+                    }
+                    new
+                }
+                transaction {
+                    TrackedStreams.Mention.new {
+                        this.stream = dbTarget.streamChannel
+                        this.guild = dbTarget.discordChannel.guild!!
+                        this.mentionRole = mentionRole.id.asLong()
+                        this.isAutomaticSet = true
+                    }
                 }
                 if(member.roles.hasElement(mentionRole).awaitSingle()) {
                     embed("You already have the stream mention role **${mentionRole.name}** in **${targetChannel.displayName}**.").awaitSingle()
                     return@discord
                 }
-                member.addRole(mentionRole.id, "Self-assigned stream mention role")
+                member.addRole(mentionRole.id, "Self-assigned stream mention role").success().awaitSingle()
                 embed {
                     setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                     setDescription("You have been given the role **${mentionRole.name}** which will be mentioned when **${targetChannel.displayName}** goes live on **${targetChannel.parser.site.full}**.")
@@ -91,8 +106,7 @@ object TwitchFollow : CommandContainer {
                     usage("**unfollow** is used to remove a stream mention role from yourself.", "unfollow <twitch/mixer> <username>").awaitSingle()
                     return@discord
                 }
-                val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, TrackedStreams.StreamInfo(targetChannel.parser.site, targetChannel.userID))
-                val mentionRole = dbTarget?.mention
+                val mentionRole = TrackedStreams.Mention.getMentionsFor(target.id, targetChannel.userID).firstOrNull()
                 if(mentionRole == null) {
                     error("**${targetChannel.displayName}** does not have any associated mention role in **${target.name}**.").awaitSingle()
                     return@discord
@@ -123,7 +137,7 @@ object TwitchFollow : CommandContainer {
                 if(default != null) {
                     val stream = default.site.parser.getUser(default.id).orNull()
                     if(stream == null) {
-                        usage("There was an error getting the default channel set in **${target.name}**.", "follow <twitch username>").awaitSingle()
+                        usage("There was an error getting the default channel set in **${target.name}**.", "follow <twitch/mixer> <username>").awaitSingle()
                         error(Unit)
                     } else stream
                 } else null

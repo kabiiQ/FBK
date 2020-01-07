@@ -176,24 +176,28 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                         return@forEach
                     }
                 }
-                // get mention role
-                val mentionRole = target.mention?.let { roleID ->
-                    val role = chan.toMono()
-                        .ofType(GuildChannel::class.java)
-                        .flatMap(GuildChannel::getGuild)
-                        .flatMap { guild -> guild.getRoleById(roleID.snowflake) }
-                        .tryBlock()
-                    when (role) {
-                        is Ok -> role.value
-                        is Err -> {
-                            val err = role.value
-                            if (err is ClientException && err.status.code() == 404) {
-                                // mention role has been deleted
-                                target.mention = null
+                // get mention role from db
+                val mentionRole = guildID?.let { guildID ->
+                    val dbRole = target.streamChannel.mentionRoles
+                        .firstOrNull { men -> men.guild.guildID == guildID }
+                    if(dbRole != null) {
+                        val role = chan.toMono()
+                            .ofType(GuildChannel::class.java)
+                            .flatMap(GuildChannel::getGuild)
+                            .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
+                            .tryBlock()
+                        when (role) {
+                            is Ok -> role.value
+                            is Err -> {
+                                val err = role.value
+                                if (err is ClientException && err.status.code() == 404) {
+                                    // mention role has been deleted
+                                    dbRole.delete()
+                                }
+                                null
                             }
-                            null
                         }
-                    }
+                    } else null
                 }
                 val mention = mentionRole?.run {
                     edit { role -> role.setMentionable(true) }

@@ -21,7 +21,8 @@ internal object PostgresConnection {
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
                 TrackedStreams.Streams,
-                TrackedStreams.Notifications
+                TrackedStreams.Notifications,
+                TrackedStreams.Mentions
             )
         }
     }

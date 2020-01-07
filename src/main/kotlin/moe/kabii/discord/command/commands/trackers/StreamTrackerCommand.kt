@@ -13,6 +13,7 @@ import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -54,7 +55,6 @@ object StreamTrackerCommand : Tracker<TargetStream> {
             return
         }
 
-        val guildID = origin.target.id.asLong()
         val dbChannel = transaction { // get the db 'channel' object or create if this is a new stream channel
             TrackedStreams.StreamChannel.find { TrackedStreams.StreamChannels.siteChannelID eq streamID }
                 .elementAtOrElse(0) { _ ->
@@ -66,11 +66,9 @@ object StreamTrackerCommand : Tracker<TargetStream> {
         }
         transaction {
             TrackedStreams.Target.new { // record the track in db
-                this.channelID = dbChannel
-                this.discordChannel = origin.target.id.asLong()
+                this.streamChannel = dbChannel
+                this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
-                this.guild = origin.guild?.run { DiscordObjects.Guild.getOrInsert(id.asLong()) }
-                this.mention = null
             }
         }
         origin.embed("Now tracking **${stream.displayName}**!").awaitSingle()
@@ -95,22 +93,25 @@ object StreamTrackerCommand : Tracker<TargetStream> {
         // user can untrack stream if they tracked it or are channel moderator
         if (
             origin.isPM
-            || origin.author.id.asLong() == dbTarget.tracker.userID
-            || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+                    || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+                    || origin.author.id.asLong() == transaction { dbTarget.tracker.userID }
         ) {
-            val mentionRole = dbTarget.mention
+
+            if(origin.guild != null) {
+                val oldMentionRole = transaction {
+                    TrackedStreams.Mention.getMentionsFor(origin.guild.id, stream.userID)
+                        .singleOrNull(TrackedStreams.Mention::isAutomaticSet) // <- we can delete role if this stream had one and it is not in use (single) and we created it (automatic)
+                }
+                if (oldMentionRole != null) {
+                    origin.guild.getRoleById(oldMentionRole.mentionRole.snowflake)
+                        .flatMap { role -> role.delete("Stream untracked.") }
+                        .success().tryAwait().orNull()
+                }
+            }
             transaction {
                 dbTarget.delete()
             }
             origin.embed("No longer tracking **${stream.displayName}**.").awaitSingle()
-
-            // can delete associated mention role
-            if(mentionRole != null) {
-                origin.guild!!.getRoleById(mentionRole.snowflake)
-                    .flatMap { role -> role.delete("Stream untracked.") }
-                    .tryAwait().orNull()
-            }
-            Unit
         } else {
             val tracker = origin.chan.client
                 .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
