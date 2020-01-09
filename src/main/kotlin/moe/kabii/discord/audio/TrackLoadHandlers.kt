@@ -29,7 +29,8 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     }
 
     override fun trackLoaded(track: AudioTrack) {
-        track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+        track.userData = data
         if(startingTime in 0..track.duration) track.position = startingTime
         // set track
         if(!audio.player.startTrack(track, true)) {
@@ -43,6 +44,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 }.block()
                 return
             }
+            data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
             val addedDuration = track.duration - track.position
             val trackPosition = position ?: audio.queue.size
             val untilPlaying = audio.duration?.minus(addedDuration)
@@ -53,6 +55,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             origin.embed {
                 if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
                 setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**. $paused. $eta")
+            }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
             }.block()
         }
     }

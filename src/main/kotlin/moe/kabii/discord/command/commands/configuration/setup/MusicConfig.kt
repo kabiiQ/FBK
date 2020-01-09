@@ -19,17 +19,17 @@ object MusicConfig : CommandContainer {
             BooleanElement(
                 "Delete old Now Playing bot messages",
                 listOf("clean", "deleteold", "delete", "removeold", "clean", "cleanold", "remove"),
-                MusicSettings::deleteOldBotCommands
+                MusicSettings::deleteOldBotMessages
+            ),
+            BooleanElement(
+                """Delete old user "play" commands (requires Manage Messages)""",
+                listOf("cleanuser", "removeuser", "deleteuser"),
+                MusicSettings::deleteUserCommands
             ),
             BooleanElement(
                 "Song owner can force skip song with fskip",
                 listOf("ownerskip", "authorskip"),
                 MusicSettings::queuerFSkip
-            ),
-            BooleanElement(
-                "Delete old user messages (requires Manage Messages)",
-                listOf("cleanuser", "removeuser", "deleteuser"),
-                MusicSettings::deleteUserCommnads
             ),
             BooleanElement(
                 "Skip command will force skip when permitted",

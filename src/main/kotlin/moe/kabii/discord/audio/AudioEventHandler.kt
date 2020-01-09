@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.TextChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
@@ -15,6 +16,7 @@ import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.YoutubeUtil
+import reactor.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
@@ -56,7 +58,9 @@ object AudioEventHandler : AudioEventAdapter() {
                     embed.setDescription("$now **$title**. $paused")
                     if(track is YoutubeAudioTrack) embed.setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
                 }
-            }.subscribe()
+            }.map { np ->
+                QueueData.BotMessage.NPEmbed(np.channelId, np.id)
+            }.subscribe { np -> data.associatedMessages.add(np) }
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
@@ -70,6 +74,18 @@ object AudioEventHandler : AudioEventAdapter() {
                         player.playTrack(next)
                     }
                 }
+                // delete old messages per guild settings
+                val guildID = data.audio.guild
+                val config = GuildConfigurations.getOrCreateGuild(guildID)
+                data.associatedMessages.toFlux().filter { msg ->
+                    when(msg) {
+                        is QueueData.BotMessage.NPEmbed, is QueueData.BotMessage.TrackQueued -> config.musicBot.deleteOldBotMessages
+                        is QueueData.BotMessage.UserPlayCommand -> config.musicBot.deleteUserCommands
+                    }
+                }.flatMap { msg ->
+                    data.discord.getMessageById(msg.channelID, msg.messageID)
+                }.flatMap { message -> message.delete("""Old music bot command""")
+                }.subscribe()
             }
         }
     }

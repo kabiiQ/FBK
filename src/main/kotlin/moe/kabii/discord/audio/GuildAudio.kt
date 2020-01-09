@@ -140,7 +140,15 @@ data class QueueData(
     val author_name: String, // just caching the author's username as it is unlikely to change and is only used in output
     val author: Snowflake,
     val originChannel: Snowflake,
+
     val votes: MutableSet<Snowflake> = mutableSetOf(),
     val voting: Mutex = Mutex(),
-    var endMarkerMillis: Long? = null
-)
+    var endMarkerMillis: Long? = null,
+    val associatedMessages: MutableList<BotMessage> = mutableListOf()
+) {
+    sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake) {
+        class NPEmbed(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
+        class TrackQueued(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
+        class UserPlayCommand(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
+    }
+}
