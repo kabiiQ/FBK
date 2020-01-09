@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
+import moe.kabii.discord.command.commands.audio.ParseUtil
 import moe.kabii.structure.tryAwait
 
 object SearchTracks : AudioCommandContainer {
@@ -46,9 +47,21 @@ object SearchTracks : AudioCommandContainer {
                     setTitle("Select track to be played or \"exit\"")
                     setDescription(menu.toString())
                 }.awaitSingle()
-                val input = getLong(1..search.size.toLong(), embed, timeout = 150_000L)?.toInt()
-                if(input != null) {
-                    FallbackHandler(this).trackLoaded(search[input - 1])
+                var selected = listOf<Int>()
+                for(attempt in 0..25) { // after 25 messages or 2 minutes we'll stop listening
+                    val input = getString(timeout = 120_000L)
+                    if(input == null) break
+                    if(input.isNotBlank()) {
+                        val inputArgs = input.split(" ")
+                        val (sel, _) = ParseUtil.parseRanges(search.size, inputArgs)
+                        if(sel.isNotEmpty()) {
+                            selected = sel
+                            break
+                        }
+                    }
+                }
+                selected.forEach { selection ->
+                    FallbackHandler(this).trackLoaded(search[selection - 1])
                 }
                 embed.delete().tryAwait()
             }

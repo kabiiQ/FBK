@@ -31,44 +31,7 @@ object QueueEdit : AudioCommandContainer {
         }
     }
 
-    private fun parseRanges(audio: GuildAudio, args: List<String>, outputMessage: /*mut*/ StringBuilder): List<Int> {
-        val queue = audio.queue
-        val ranges = sequence {
-            args.map { arg ->
-                val parts = arg.split("-")
-                if (parts.size == 1) { // just a number to be skipped
-                    if(parts[0].toLowerCase() == "all") {
-                        yield(1..queue.size)
-                        outputMessage.append("Removing all songs from queue.")
-                        return@sequence
-                    }
-                    val parse = parts[0].toIntOrNull()
-                    if (parse != null && parse in 1..queue.size) yield(parse..parse)
-                    else outputMessage.append("Invalid track: $arg\n")
-                    return@map
-                }
-                if (parts.size > 2) {
-                    outputMessage.append("Invalid range: $arg\n")
-                    return@map
-                }
-                if (parts[0].isEmpty() && parts[1].isEmpty()) { // "-"
-                    yield(1..queue.size)
-                    outputMessage.append("Range matches entire queue: $arg\n")
-                    return@sequence
-                }
-                val lower = (if (parts[0].isEmpty()) null else parts[0].toIntOrNull()) ?: 1
-                val upper = (if (parts[1].isEmpty()) null else parts[1].toIntOrNull()) ?: queue.size
-                if (lower > upper || lower < 1 || upper > queue.size) {
-                    outputMessage.append("Out of bounds: $arg\n")
-                    return@map
-                }
-                yield(lower..upper)
-            }
-        }
-        return ranges.toList().flatten().distinct()
-    }
-
-    private suspend fun parseUsers(param: DiscordParameters, audio: GuildAudio, arg: String, outputMessage: StringBuilder): List<Int> {
+    private suspend fun parseUsers(param: DiscordParameters, audio: GuildAudio, arg: String): List<Int> {
         val queue = audio.queue
         // no valid tracks provided, try to take argument as a user name/id
         // 'self' will override to removing your own tracks. slight overlap if someone was named 'self' but this is not a dangerous op
@@ -101,13 +64,18 @@ object QueueEdit : AudioCommandContainer {
                     return@discord
                 }
                 val outputMessage = StringBuilder()
-                val ranges = parseRanges(audio, args, outputMessage)
-                val remove = if(ranges.isNotEmpty()) ranges else { // fall back to user search
-                    outputMessage.clear()
-                    val users = parseUsers(this, audio, noCmd, outputMessage)
+                val (selected, invalid) = ParseUtil.parseRanges(queue.size, args)
+                invalid.forEach { invalidArg ->
+                    outputMessage.append("Invalid range: $invalidArg\n")
+                }
+                if(selected.size == queue.size) {
+                    outputMessage.append("Clearing entire queue.\n")
+                }
+                val remove = if(selected.isNotEmpty()) selected else { // fall back to user search
+                    val users = parseUsers(this, audio, noCmd)
                     if(users.isNotEmpty()) users else {
                         usage(
-                            "${outputMessage.toString()}\nNo track numbers provided to remove.",
+                            "$outputMessage\nNo track numbers provided to remove.",
                             "remove <track numbers in queue or a username/id to remove all tracks from>"
                         ).awaitSingle()
                         return@discord
