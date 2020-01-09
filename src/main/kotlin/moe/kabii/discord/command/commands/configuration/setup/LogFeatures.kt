@@ -6,7 +6,7 @@ import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog", "log") {
+object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
     object ChannelLogModule : ConfigurationModule<LogSettings>(
         "channel log",
         BooleanElement(
@@ -48,6 +48,11 @@ object EditLog : Command("botlog", "editlog", "editbotlog", "botlogedit", "modlo
             "Message delete log",
             listOf("delete", "deletes"),
             LogSettings::deleteLog
+        ),
+        BooleanElement(
+            "Role update log",
+            listOf("roles", "role", "roleupdate"),
+            LogSettings::roleUpdateLog
         ),
         StringElement(
             "Join message", listOf("joinMessage"), LogSettings::joinFormat,

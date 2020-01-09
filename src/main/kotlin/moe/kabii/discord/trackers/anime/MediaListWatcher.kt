@@ -45,16 +45,13 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
     private fun spawn(site: MediaSite, trackedlists: List<TrackedMediaList>): Job = listWatcherThreads.launch {
         val lists = trackedlists
                 .associateBy {
-                    for(attempt in 1..3) {
-                        try {
-                            return@associateBy site.parser.parse(it.list.id)
-                        } catch(e: Exception) {
-                            LOG.error("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
-                            LOG.info(e.stackTraceString)
-                            return@associateBy Err(MediaListIOErr)
-                        }
+                    try {
+                        site.parser.parse(it.list.id)
+                    } catch(e: Exception) {
+                        LOG.error("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
+                        LOG.info(e.stackTraceString)
+                        Err(MediaListIOErr)
                     }
-                    Err(MediaListIOErr)
                 }
         for((newList, savedList) in lists) {
             if(savedList.targets.isEmpty()) {
@@ -66,7 +63,7 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
             var statusChange = false
             var statusUpdate = false
 
-            for(newMedia: Media in new) { // IDE parser bug? has error return type without specifying Media, but it compiles and runs either way
+            for(newMedia in new) {
                 val oldMedia = savedList.savedMediaList.media.find { saved -> saved.mediaID == newMedia.mediaID }
                 // don't create embed builder yet because the vast majority of media checked will not need one
                 var builder: MediaEmbedBuilder? = null

@@ -115,7 +115,8 @@ data class LogSettings(
     var usernameLog: Boolean = false,
     var voiceLog: Boolean = false,
     var editLog: Boolean = false,
-    var deleteLog: Boolean = false) {
+    var deleteLog: Boolean = false,
+    var roleUpdateLog: Boolean = false) {
 
     fun shouldInclude(user: User): Boolean = includeBots || !user.isBot
 

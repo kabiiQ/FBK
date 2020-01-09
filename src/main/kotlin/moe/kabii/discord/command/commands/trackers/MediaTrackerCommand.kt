@@ -3,6 +3,7 @@ package moe.kabii.discord.command.commands.trackers
 import discord4j.core.`object`.util.Permission
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MediaTarget
 import moe.kabii.data.mongodb.TrackedMediaList
@@ -33,56 +34,58 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
             origin.error("Unable to find ${target.list.site.full} list with identifier **$targetName**.").awaitSingle()
             return
         }
-        val targetList = target.list.copy(id = listID)
-        // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
-        val existingTrack = lists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelID }
-        if(existingTrack != null) {
-            origin.error("**${targetName}** is already tracked in this channel.").awaitSingle()
-            return
-        }
+        TrackedMediaLists.mutex.withLock {
+            val targetList = target.list.copy(id = listID)
+            // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
+            val existingTrack = lists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelID }
+            if(existingTrack != null) {
+                origin.error("**${targetName}** is already tracked in this channel.").awaitSingle()
+                return
+            }
 
-        // jikan can respond very slowly, let user know we're working on this command
-        val prompt = origin.embed("Retrieving MAL...").awaitSingle()
-        suspend fun editPrompt(spec: (EmbedCreateSpec).() -> Unit) {
-            prompt.edit { edit -> edit.setEmbed(spec) }.awaitSingle()
-        }
+            // jikan can respond very slowly, let user know we're working on this command
+            val prompt = origin.embed("Retrieving MAL...").awaitSingle()
+            suspend fun editPrompt(spec: (EmbedCreateSpec).() -> Unit) {
+                prompt.edit { edit -> edit.setEmbed(spec) }.awaitSingle()
+            }
 
-        // validate list
-        val request = parser.parse(listID)
-        val mediaList = when(request) {
-            is Ok -> request.value
-            is Err -> {
-                when(request.value) {
-                    is MediaListEmpty -> {
-                        editPrompt {
-                            errorColor(this)
-                            setDescription("Unable to find ${targetList.site.full} list with identifier **${targetName}**.")
+            // validate list
+            val request = parser.parse(listID)
+            val mediaList = when(request) {
+                is Ok -> request.value
+                is Err -> {
+                    when(request.value) {
+                        is MediaListEmpty -> {
+                            editPrompt {
+                                errorColor(this)
+                                setDescription("Unable to find ${targetList.site.full} list with identifier **${targetName}**.")
+                            }
+                            return
                         }
-                        return
-                    }
-                    else -> {
-                        editPrompt {
-                            errorColor(this)
-                            setDescription("Error tracking list! Possible ${targetList.site.full} outage.")
+                        else -> {
+                            editPrompt {
+                                errorColor(this)
+                                setDescription("Error tracking list! Possible ${targetList.site.full} outage.")
+                            }
+                            return
                         }
-                        return
                     }
                 }
             }
-        }
-        // track the list if it's not tracked at all
-        val find = lists.find { it.list == targetList }
-        val trackedList = find ?:
-                TrackedMediaList(list = targetList, savedMediaList = mediaList).also { list -> lists.add(list) }
+            // track the list if it's not tracked at all
+            val find = lists.find { it.list == targetList }
+            val trackedList = find ?:
+                    TrackedMediaList(list = targetList, savedMediaList = mediaList).also { list -> lists.add(list) }
 
-        // add this channel if the list isn't already tracked in this channel
-        // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
-        val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
-        trackedList.targets.add(mediaTarget)
-        trackedList.save()
-        editPrompt {
-            kizunaColor(this)
-            setDescription("Now tracking **$targetName**!")
+            // add this channel if the list isn't already tracked in this channel
+            // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
+            val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
+            trackedList.targets.add(mediaTarget)
+            trackedList.save()
+            editPrompt {
+                kizunaColor(this)
+                setDescription("Now tracking **$targetName**!")
+            }
         }
     }
 

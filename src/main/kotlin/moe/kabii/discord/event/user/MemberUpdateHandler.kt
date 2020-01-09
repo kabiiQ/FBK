@@ -1,13 +1,24 @@
 package moe.kabii.discord.event.user
 
+import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.guild.MemberUpdateEvent
+import discord4j.core.event.domain.role.RoleDeleteEvent
+import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.LogSettings
+import moe.kabii.discord.auditlog.AuditableEvent
+import moe.kabii.discord.auditlog.LogWatcher
+import moe.kabii.discord.auditlog.events.AuditRoleUpdate
+import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.filterNot
 import moe.kabii.structure.orNull
+import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryBlock
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
+import java.time.Instant
 
 object MemberUpdateHandler {
     fun handle(event: MemberUpdateEvent) {
@@ -38,6 +49,47 @@ object MemberUpdateHandler {
                                 .flatMap { removeID -> old.removeRole(removeID, "Role is exclusive with the added role ${roleID.asString()}")}
                         }.onErrorResume { _ -> Mono.empty() }
                 }.subscribe()
+
+            // role update log
+            val member = event.member.block()
+            val logs = config.logChannels()
+                .toFlux()
+                .map(FeatureChannel::logSettings)
+                .filter(LogSettings::roleUpdateLog)
+                .flatMap { log -> guild.getChannelById(log.channelID.snowflake) }
+                .ofType(TextChannel::class.java)
+                .onErrorContinue { _, _ ->  }
+
+            addedRoles.toFlux().flatMap { newID ->
+                event.client.getRoleById(guild.id, newID)
+            }.flatMap { addedRole ->
+                logs.flatMap { chan -> chan.createEmbed { embed ->
+                    kizunaColor(embed)
+                    embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                    embed.setDescription("Added to role **${addedRole.name}**")
+                    embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${addedRole.id.asString()}", null)
+                }}
+            }.subscribe() // todo auditevent here when d4j issue fixed
+
+            removedRoles.mapNotNull { oldID -> guild.getRoleById(oldID).tryBlock().orNull() } // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
+                .forEach { oldRole ->
+                    logs.flatMap { chan -> chan.createEmbed { embed ->
+                        kizunaColor(embed)
+                        embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                        embed.setDescription("Removed from role **${oldRole.name}**")
+                        embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)
+                    } }.subscribe { logMsg ->
+                      /* val auditEvent = AuditRoleUpdate(
+                           logMsg.channelId.asLong(),
+                           logMsg.id.asLong(),
+                           guild.id.asLong(),
+                           AuditRoleUpdate.Companion.RoleDirection.REMOVED,
+                           oldRole.id,
+                           member.id
+                       )
+                       LogWatcher.auditEvent(event.client, auditEvent)*/ // currently d4j issue preventing this
+                    }
+                }
         }
     }
 }

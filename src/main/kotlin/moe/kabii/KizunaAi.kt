@@ -6,6 +6,8 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClientBuilder
+import discord4j.core.`object`.audit.ActionType
+import discord4j.core.`object`.audit.ChangeKey
 import discord4j.core.event.domain.PresenceUpdateEvent
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent

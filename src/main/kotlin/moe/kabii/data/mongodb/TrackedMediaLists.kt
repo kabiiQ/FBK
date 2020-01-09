@@ -1,10 +1,8 @@
 package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
-import moe.kabii.discord.trackers.anime.KitsuParser
-import moe.kabii.discord.trackers.anime.MALParser
-import moe.kabii.discord.trackers.anime.MediaList
-import moe.kabii.discord.trackers.anime.MediaListParser
+import kotlinx.coroutines.sync.Mutex
+import moe.kabii.discord.trackers.anime.*
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
@@ -13,6 +11,7 @@ object TrackedMediaLists {
     // global - animelist collection
     val mediaLists: MutableList<TrackedMediaList>
     val mongoMediaLists = MongoDBConnection.mongoDB.getCollection<TrackedMediaList>()
+    val mutex = Mutex()
 
     init {
         mediaLists = runBlocking {
