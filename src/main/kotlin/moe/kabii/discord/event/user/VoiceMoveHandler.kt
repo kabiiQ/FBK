@@ -5,20 +5,21 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
+import kotlinx.coroutines.reactive.awaitLast
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.*
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 
-object VoiceMoveHandler {
-    fun handle(event: VoiceStateUpdateEvent) { // voicelog
+object VoiceMoveHandler : EventHandler<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
+    override suspend fun handle(event: VoiceStateUpdateEvent) { // voicelog
         val oldState = event.old.orNull()
         val newState = event.current
         // at this time we only care if the channel changes - this event triggers on mutes, etc.
@@ -26,20 +27,20 @@ object VoiceMoveHandler {
             return
         }
 
-        val newChannel = newState.channel.tryBlock().orNull()
+        val newChannel = newState.channel.tryAwait().orNull()
 
         val oldChannel = oldState?.run {
-            channel.tryBlock().orNull()
+            channel.tryAwait().orNull()
         }
         val old = oldChannel != null
         val new = newChannel != null
 
 
         val config = GuildConfigurations.getOrCreateGuild(newState.guildId.asLong())
-        val user = newState.user.block()
+        val user = newState.user.awaitSingle()
         val guildID = newState.guildId
 
-        val member by lazy { user.asMember(guildID).tryBlock().orNull() }
+        val member = user.asMember(guildID).tryAwait().orNull()
 
         // voice logs
         config.options.featureChannels.values.toList()
@@ -71,10 +72,10 @@ object VoiceMoveHandler {
             val temp = config.tempVoiceChannels.tempChannels
             val oldID = oldChannel!!.id.asLong()
             if(temp.contains(oldID)) {
-                if(!oldChannel.voiceStates.hasElements().block()) {
+                if(!oldChannel.voiceStates.hasElements().awaitSingle()) {
                     temp.remove(oldID)
                     config.save()
-                    oldChannel.delete("Empty temporary channel.").block()
+                    oldChannel.delete("Empty temporary channel.").success().awaitSingle()
                 }
             }
         }
@@ -111,12 +112,12 @@ object VoiceMoveHandler {
                 }
             } else emptyList() // no current channel, no roles needed
 
-            val guild = newState.guild.block()
+            val guild = newState.guild.awaitSingle()
             val eventMember = member ?: return // kicked
             rolesNeeded.toFlux()
                 .filter { cfg -> !eventMember.roleIds.contains(cfg.role.snowflake) } // add missing roles
                 .map { missingRole -> missingRole.role.snowflake }
-                .collectList().block()
+                .collectList().awaitSingle()
                 .forEach { targetRole ->
                     // check if roles still exist first
                     val cfgRole = guild.getRoleById(targetRole).tryBlock()
@@ -134,7 +135,7 @@ object VoiceMoveHandler {
                 .filter { roleID -> rolesNeeded.find { cfg -> cfg.role.snowflake == roleID } == null } // which is not currently needed
                 .flatMap(eventMember::removeRole)
                 .onErrorResume { _ -> Mono.empty() } // don't care about race conditions against other users/events. if the role is gone we don't worry about it.
-                .blockLast()
+                .subscribe()
         }
     }
 }

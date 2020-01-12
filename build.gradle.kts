@@ -26,11 +26,15 @@ repositories {
 }
 
 dependencies {
-    // kotlin libs
+    // kotlin
     api(kotlin("stdlib-jdk8"))
     api(kotlin("reflect"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
+
+    // kotlin libs
+    val coroutines = "1.3.3"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 

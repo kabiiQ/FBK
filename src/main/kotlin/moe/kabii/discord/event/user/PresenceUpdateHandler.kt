@@ -2,17 +2,20 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
+import kotlinx.coroutines.reactive.awaitLast
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import reactor.core.publisher.toFlux
 
-object PresenceUpdateHandler {
-    fun handle(event: PresenceUpdateEvent) {
-        val user = event.user.block()
+object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
+    override suspend fun handle(event: PresenceUpdateEvent) {
+        val user = event.user.awaitSingle()
         val oldUser = event.oldUser.orNull() ?: return
 
         val logChannels by lazy {
@@ -24,8 +27,8 @@ object PresenceUpdateHandler {
         }
 
         // avatarlogs
-        val newAvatar = user.avatar.block()
-        val oldAvatar = oldUser.avatar.block()
+        val newAvatar = user.avatar.awaitSingle()
+        val oldAvatar = oldUser.avatar.awaitSingle()
         if(newAvatar != oldAvatar) {
             logChannels
                 .filter(LogSettings::avatarLog)

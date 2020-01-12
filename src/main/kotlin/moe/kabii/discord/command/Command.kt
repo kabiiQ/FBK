@@ -24,7 +24,8 @@ import reactor.core.publisher.Mono
 import java.awt.Color
 import kotlin.coroutines.resume
 
-interface CommandContainer
+
+@Deprecated("Now purely aesthetic, Command inheritance is reflectively searched") interface CommandContainer
 
 abstract class Command(val baseName: String, vararg alias: String) {
     val aliases = listOf(baseName, *alias)

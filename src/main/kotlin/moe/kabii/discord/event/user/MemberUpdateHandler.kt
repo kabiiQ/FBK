@@ -4,6 +4,9 @@ import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.event.domain.role.RoleDeleteEvent
+import kotlinx.coroutines.reactive.awaitLast
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
@@ -11,6 +14,7 @@ import moe.kabii.discord.auditlog.AuditableEvent
 import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.auditlog.events.AuditRoleUpdate
 import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.filterNot
 import moe.kabii.structure.orNull
@@ -20,10 +24,10 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import java.time.Instant
 
-object MemberUpdateHandler {
-    fun handle(event: MemberUpdateEvent) {
+object MemberUpdateHandler : EventHandler<MemberUpdateEvent>(MemberUpdateEvent::class) {
+    override suspend fun handle(event: MemberUpdateEvent) {
         val old = event.old.orNull() ?: return
-        val guild = event.guild.block()
+        val guild = event.guild.awaitSingle()
         val config = GuildConfigurations.guildConfigurations[event.guildId.asLong()] ?: return
 
         // role update
@@ -51,7 +55,7 @@ object MemberUpdateHandler {
                 }.subscribe()
 
             // role update log
-            val member = event.member.block()
+            val member = event.member.awaitSingle()
             val logs = config.logChannels()
                 .toFlux()
                 .map(FeatureChannel::logSettings)
@@ -78,7 +82,8 @@ object MemberUpdateHandler {
                         embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                         embed.setDescription("Removed from role **${oldRole.name}**")
                         embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)
-                    } }.subscribe { logMsg ->
+                    } }.subscribe()
+                    //}.subscribe { logMsg ->
                       /* val auditEvent = AuditRoleUpdate(
                            logMsg.channelId.asLong(),
                            logMsg.id.asLong(),
@@ -88,7 +93,6 @@ object MemberUpdateHandler {
                            member.id
                        )
                        LogWatcher.auditEvent(event.client, auditEvent)*/ // currently d4j issue preventing this
-                    }
                 }
         }
     }

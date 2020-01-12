@@ -1,13 +1,16 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.event.domain.message.ReactionAddEvent
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.success
 import moe.kabii.util.EmojiCharacters
 
-object ReactionRoleHandler {
-    fun handle(event: ReactionAddEvent) {
+object ReactionRoleHandler : EventHandler<ReactionAddEvent>(ReactionAddEvent::class) {
+    override suspend fun handle(event: ReactionAddEvent) {
         // reaction role listeners
         // can immediately narrow down to unicode reactions in a guild
         val guildID = event.guildId.orNull() ?: return
@@ -33,6 +36,6 @@ object ReactionRoleHandler {
                 val info = "Reaction role message #${reactionRole.message.messageID}"
                 if(addRole) member.addRole(reactionRole.role.snowflake, info)
                 else member.removeRole(reactionRole.role.snowflake, info)
-            }.block()
+            }.success().awaitSingle()
     }
 }

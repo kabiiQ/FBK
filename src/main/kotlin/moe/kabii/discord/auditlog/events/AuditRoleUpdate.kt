@@ -20,6 +20,11 @@ class AuditRoleUpdate(logChannel: Long, logMessage: Long, guild: Long, val direc
         if(auditLogEntry.actionType != ActionType.MEMBER_ROLE_UPDATE) return false
         if(auditLogEntry.targetId.orNull() != userID) return false
         // match same user, role, and direction
+        auditLogEntry.getChange(ChangeKey.ROLES_REMOVE).map { change ->
+            change.currentValue.map { value ->
+                println(value)
+            }
+        }
         val roles = when(direction) {
             RoleDirection.ADDED -> auditLogEntry.getChange(ChangeKey.ROLES_ADD).orNull()?.currentValue?.orNull() ?: return false
             RoleDirection.REMOVED -> auditLogEntry.getChange(ChangeKey.ROLES_REMOVE).orNull()?.currentValue?.orNull() ?: return false

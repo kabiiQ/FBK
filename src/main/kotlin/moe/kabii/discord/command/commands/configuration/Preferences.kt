@@ -12,7 +12,7 @@ import moe.kabii.structure.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Preferences : CommandContainer {
-    object Guild : Command("setguild","set-guild", "server", "set-server", "myguild") {
+    object Guild : Command("setguild","set-guild", "set-server", "myguild") {
         init {
             discord {
                 val guildTarget = when {

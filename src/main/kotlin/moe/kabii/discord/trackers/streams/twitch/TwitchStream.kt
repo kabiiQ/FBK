@@ -21,5 +21,5 @@ data class TwitchStream(
 
     @Transient val startedAt = Instant.parse(_startedAt)
     @Transient val userID = _userID.toLong()
-    @Transient val gameID = _gameID.toLong()
+    @Transient val gameID = _gameID.toLongOrNull() ?: 0
 }

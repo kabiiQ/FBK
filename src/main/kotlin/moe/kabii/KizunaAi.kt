@@ -16,6 +16,9 @@ import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.core.event.domain.lifecycle.ReconnectEvent
 import discord4j.core.event.domain.message.*
 import discord4j.core.event.domain.role.RoleDeleteEvent
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
@@ -23,6 +26,7 @@ import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordMessageHandler
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.discord.event.guild.*
 import moe.kabii.discord.event.user.*
 import moe.kabii.discord.invite.InviteWatcher
@@ -41,6 +45,7 @@ import moe.kabii.structure.orNull
 import moe.kabii.structure.stackTraceString
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 fun main() {
@@ -49,6 +54,9 @@ fun main() {
     val postgres = PostgresConnection
     val version = Metadata.current
     val keys = Keys.config
+    val audio = AudioManager
+
+    val reflection = Reflections("moe.kabii")
 
     // twitch connection
     val credential = CredentialManagerBuilder.builder().build()
@@ -68,8 +76,7 @@ fun main() {
     val discordHandler = DiscordMessageHandler(manager, twitch)
     val twitchHandler = TwitchMessageHandler(manager)
 
-    Reflections("moe.kabii")
-        .getSubTypesOf(Command::class.java)
+    reflection.getSubTypesOf(Command::class.java)
         .forEach(manager::register)
 
     manager.register(object : Command("test") {
@@ -83,9 +90,6 @@ fun main() {
     // discord connection
     val discord = DiscordClientBuilder(keys[Keys.Discord.token]).build()
 
-    // discord audio setup
-    val audio = AudioManager
-
     // task threads
     val listWatcher = MediaListWatcher(discord)
     val streamWatcher = StreamWatcher(discord)
@@ -93,9 +97,6 @@ fun main() {
 
     // discord4j event listeners
     val events = discord.eventDispatcher
-    val onMessage = events.on(MessageCreateEvent::class.java)
-        .filter { event -> event.message.author.orNull()?.isBot?.not() ?: false }
-        .doOnNext(discordHandler::handle)
 
     val onGuildReady = events.on(ReadyEvent::class.java)
         .map { event -> event.guilds.size }
@@ -132,10 +133,22 @@ fun main() {
             reminderWatcher.start()
         }
 
+    // assemble "normal" event handlers
+    val handlers = reflection.getSubTypesOf(EventHandler::class.java)
+        .map { clazz ->
+            val instance = clazz.kotlin.objectInstance
+            if(instance == null) {
+                LOG.error("KClass provided with no static instance: $clazz")
+                return@map Mono.empty<Unit>()
+            }
+            LOG.info("Registering EventHandler: ${instance.eventType} :: $clazz")
+            events.on(instance.eventType.java)
+                .flatMap(instance::wrapAndHandle)
+        }
+
+    // special event handlers
     val onReactionAdd = events.on(ReactionAddEvent::class.java)
             .doOnNext(ReactionHandler::handleReactionAdded)
-    val onReactionAdd2 = events.on(ReactionAddEvent::class.java)
-        .doOnNext(ReactionRoleHandler::handle)
     val onReactionRemove = events.on(ReactionRemoveEvent::class.java)
         .doOnNext(ReactionHandler::handleReactionRemoved)
     val onJoin = events.on(MemberJoinEvent::class.java)
@@ -145,40 +158,25 @@ fun main() {
             .doOnNext { event ->
                 PartHandler.handle(event.guildId, event.user, event.member.orNull())
             }
-    val onVoiceUpdate = events.on(VoiceStateUpdateEvent::class.java)
-            .doOnNext(VoiceMoveHandler::handle)
-    val onPresenceUpdate = events.on(PresenceUpdateEvent::class.java)
-        .doOnNext(PresenceUpdateHandler::handle)
-    val onMessageUpdate = events.on(MessageUpdateEvent::class.java)
-        .doOnNext(MessageEditHandler::handle)
-    val onMessageDelete = events.on(MessageDeleteEvent::class.java)
-        .doOnNext(MessageDeletionHandler::handleDelete)
-    val onMessageBulkDelete = events.on(MessageBulkDeleteEvent::class.java)
-        .doOnNext(MessageDeletionHandler::handleBulkDelete)
-    val onTextChannelDelete = events.on(TextChannelDeleteEvent::class.java)
-        .doOnNext(ChannelDeletionHandler::handle)
     val onGatewayReconnection = events.on(ReconnectEvent::class.java)
         .doOnNext { Uptime.update() }
-    val onMemberUpdate = events.on(MemberUpdateEvent::class.java)
-        .doOnNext(MemberUpdateHandler::handle)
-    val onRoleDeletion = events.on(RoleDeleteEvent::class.java)
-        .doOnNext(RoleDeletionHandler::handle)
-    val onGuildUpdate = events.on(GuildUpdateEvent::class.java)
-        .doOnNext(GuildUpdateHandler::handle)
+
+    val onDiscordMessage = events.on(MessageCreateEvent::class.java)
+        .flatMap(discordHandler::handle)
 
     // twitch4j event listeners
     val onTwitchMessage = twitch.eventManager.onEvent(ChannelMessageEvent::class.java)
             .filter { it.user.name.toLowerCase() != "ai_kizuna" }
             .doOnNext(twitchHandler::handle)
 
+    val subscribers = mutableListOf(
+        onJoin, onPart, onGatewayReconnection, onReactionAdd,
+        onReactionRemove, onGuildReady, onInitialReady,
+        onDiscordMessage, onTwitchMessage
+    ).plus(handlers)
+
     // subscribe to bot lifetime events
-    Mono.`when`(
-        onMessage, onJoin, onPart, onVoiceUpdate,
-        onPresenceUpdate, onMessageUpdate, onMessageDelete, onMessageBulkDelete,
-        onTextChannelDelete, onGatewayReconnection, onMemberUpdate,
-        onTwitchMessage, onRoleDeletion, onGuildUpdate,
-        onReactionAdd, onReactionRemove, onReactionAdd2, onGuildReady,
-        onInitialReady)
+    Mono.`when`(subscribers)
         .onErrorResume { t ->
             LOG.error("Uncaught exception in event handler: ${t.message}")
             LOG.warn(t.stackTraceString)

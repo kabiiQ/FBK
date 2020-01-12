@@ -71,8 +71,8 @@ object RoleReactions : CommandContainer {
                 val configs = config.selfRoles.roleMentionMessages
                 // due to the nature of reactions (they may be manually removed) adding a config will just overwrite an existing config rather than erroring
                 // reset reactions and add
-                message.removeAllReactions().success().tryAwait()
-                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).success().tryAwait()
+                message.removeAllReactions().success().awaitSingle()
+                message.addReaction(ReactionEmoji.unicode(EmojiCharacters.check)).success().awaitSingle()
                 val reactX = message.addReaction(ReactionEmoji.unicode(EmojiCharacters.redX)).thenReturn(Unit).tryAwait()
                 if(reactX is Err) {
                     val error = reactX.value as? ClientException

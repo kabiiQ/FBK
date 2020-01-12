@@ -1,6 +1,7 @@
 package moe.kabii.data.mongodb
 
 import discord4j.core.`object`.entity.User
+import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.command.Command
@@ -63,11 +64,11 @@ data class GuildConfiguration(
         init {
             configProcessor
                 .subscribeOn(Schedulers.newSingle("ConfigProcessor"))
-                .subscribe { config ->
-                    runBlocking {
+                .flatMap { config ->
+                    mono {
                         GuildConfigurations.mongoConfigurations.updateOne(config, upsert)
                     }
-            }
+                }.subscribe()
         }
     }
 }

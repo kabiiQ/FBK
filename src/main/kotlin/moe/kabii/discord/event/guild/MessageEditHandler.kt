@@ -2,19 +2,22 @@ package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.toFlux
 
-object MessageEditHandler {
-    fun handle(event: MessageUpdateEvent) {
+object MessageEditHandler : EventHandler<MessageUpdateEvent>(MessageUpdateEvent::class) {
+    override suspend fun handle(event: MessageUpdateEvent) {
         val guildID = event.guildId.orNull()
         if(guildID == null || !event.isContentChanged) return
         val new = event.currentContent.orNull() ?: return
@@ -44,7 +47,7 @@ object MessageEditHandler {
         if(editLogs.none()) return
 
        // val author = event.message.block().author.orNull() ?: return
-        val channelName = event.channel.ofType(TextChannel::class.java).block().name
+        val channelName = event.channel.ofType(TextChannel::class.java).awaitSingle().name
         val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
 
         // post edit message

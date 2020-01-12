@@ -6,28 +6,28 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.conversation.Conversation
+import moe.kabii.discord.event.EventHandler
 import moe.kabii.joint.CommandManager
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class DiscordMessageHandler(val manager: CommandManager, private val twitch: TwitchClient) {
-    fun handle(event: MessageCreateEvent) {
+    fun handle(event: MessageCreateEvent) = mono {
+        // ignore bots
+        if(event.message.author.orNull()?.isBot ?: true) return@mono
         var content = event.message.content.orNull()
 
         // only embeds, files, skip any further processing at this time
-        if (content.isNullOrBlank()) {
-            return
-        }
+        if (content.isNullOrBlank()) return@mono
 
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
         val msgArgs = content.split(" ")
@@ -59,7 +59,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
             msgArgs[0].substring(global.length)
         } else null
 
-        val author = event.message.author.orNull() ?: return
+        val author = event.message.author.orNull() ?: return@mono
         if (cmdStr != null) {
             if(config != null) {
                 // dummy command listener
@@ -67,7 +67,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     if (!restrict || event.member.get().hasPermissions(Permission.MANAGE_MESSAGES)) {
                         event.message.channel
                             .flatMap { chan -> chan.createMessage(response) }
-                            .subscribe()
+                            .awaitSingle()
                     }
                 }
 
@@ -76,7 +76,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     ?.let { (command, role) ->
                         manager.context.launch {
                             val guildRole =
-                                event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryBlock()
+                                event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryAwait()
                             when(guildRole) {
                                 is Err -> {
                                     if(guildRole.value is ClientException) {
@@ -86,14 +86,14 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                                 }
                                 is Ok -> {
                                     val member = event.member.get()
-                                    member.addRole(role.snowflake).block()
+                                    member.addRole(role.snowflake).success().awaitSingle()
                                     event.message.channel.flatMap { chan ->
                                         chan.createEmbed { spec ->
                                             kizunaColor(spec)
                                             spec.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                                             spec.setDescription("You have been given the **${guildRole.value.name}** role.")
                                         }
-                                    }.subscribe()
+                                    }.awaitSingle()
                                 }
                             }
                         }
@@ -107,7 +107,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                 manager.context.launch {
                     val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
                     if(!enabled) return@launch
-                    val guild = event.guild.block()
+                    val guild = event.guild.awaitSingle()
                     val targetID = (if(isPM) author.id else guild.id).asLong()
                     val username = author.username
                     val guildName = if(isPM) username else guild.name
@@ -116,7 +116,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
                     val noCmd = content.substring(msgArgs[0].length).trim()
                     val args = noCmd.split(" ").filter(String::isNotBlank)
-                    val chan = event.message.channel.block()
+                    val chan = event.message.channel.awaitSingle()
                     val param = DiscordParameters(this@DiscordMessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr, twitch)
 
                     try {
@@ -129,7 +129,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                         val reqs = perms.perms.joinToString(", ")
                         param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
                     } catch (feat: FeatureDisabledException) {
-                        val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryBlock().orNull() == true
+                        val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryAwait().orNull() == true
                         val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
                         param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
                     } catch (ce: ClientException) {
@@ -138,7 +138,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                             403 -> {
                                 if (config == null || chan !is TextChannel) return@launch
                                 if (ce.errorResponse.fields["string"]?.equals("Missing Permissions") != true) return@launch
-                                val botPermissions = chan.getEffectivePermissions(event.client.selfId.get()).block()
+                                val botPermissions = chan.getEffectivePermissions(event.client.selfId.get()).awaitSingle()
                                 val listMissing = command.discordReqs
                                         .filterNot(botPermissions::contains)
                                         .joinToString("\n")
@@ -160,7 +160,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     }
                 }
             }
-            return
+            return@mono
         }
         // DISCORD CONVERSATION CALLBACKS
         Conversation.conversations.find { conversation ->

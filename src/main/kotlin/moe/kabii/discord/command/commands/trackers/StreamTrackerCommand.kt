@@ -105,7 +105,7 @@ object StreamTrackerCommand : Tracker<TargetStream> {
                 if (oldMentionRole != null) {
                     origin.guild.getRoleById(oldMentionRole.mentionRole.snowflake)
                         .flatMap { role -> role.delete("Stream untracked.") }
-                        .success().tryAwait().orNull()
+                        .success().awaitSingle()
                 }
             }
             transaction {
