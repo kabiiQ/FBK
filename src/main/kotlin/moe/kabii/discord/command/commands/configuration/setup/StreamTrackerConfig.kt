@@ -6,9 +6,9 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object TwitchTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams") {
-    object TwitchTrackerModule : ConfigurationModule<FeatureSettings>(
-        "twitch stream tracker",
+object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams") {
+    object StreamTrackerModule : ConfigurationModule<FeatureSettings>(
+        "livestream tracker",
         BooleanElement(
             "Edit stream notification with a summary rather than deleting the message when a stream ends",
             listOf("summary", "summarize", "streamsummary"),
@@ -42,8 +42,8 @@ object TwitchTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
             val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(
-                "Twitch tracker settings for #${chan.name}",
-                TwitchTrackerModule,
+                "Livestream tracker settings for #${chan.name}",
+                StreamTrackerModule,
                 features.featureSettings
             )
 

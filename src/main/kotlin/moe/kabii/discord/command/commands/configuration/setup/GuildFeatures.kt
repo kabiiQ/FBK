@@ -9,8 +9,8 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
     object GuildFeatureModule : ConfigurationModule<GuildSettings>(
         "guild",
         // BooleanElement("Use colored embeds for command responses", listOf("embeds", "embed"), GuildSettings::embedMessages), need to design fallback method first
-        BooleanElement("Twitch stream follow command/automatic role mentioning", listOf("follow", "followroles", "mentionroles", "mention"), GuildSettings::followRoles),
-        BooleanElement("Post information in Twitch chat when URLs are linked.", listOf("url", "urlinfo", "twitchurls"), GuildSettings::twitchURLInfo),
+        BooleanElement("Livestream \"follow\" command/automatic role mentioning", listOf("follow", "followroles", "mentionroles", "mention"), GuildSettings::followRoles),
+        BooleanElement("Post information in linked Twitch chat when URLs are linked.", listOf("url", "urlinfo", "twitchurls"), GuildSettings::twitchURLInfo),
         BooleanElement("Automatically give users their roles back when they rejoin the server.", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles)
     )
 
