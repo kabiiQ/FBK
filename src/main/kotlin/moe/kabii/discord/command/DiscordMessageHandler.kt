@@ -6,6 +6,7 @@ import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
@@ -107,10 +108,10 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                 manager.context.launch {
                     val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
                     if(!enabled) return@launch
-                    val guild = event.guild.awaitSingle()
-                    val targetID = (if(isPM) author.id else guild.id).asLong()
+                    val guild = event.guild.awaitFirstOrNull()
+                    val targetID = (guild?.id ?: author.id).asLong()
                     val username = author.username
-                    val guildName = if(isPM) username else guild.name
+                    val guildName = guild?.name ?: username
                     val context = if (isPM) "Private" else "Guild"
                     LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
                     LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
