@@ -14,7 +14,7 @@ object QueueSkip : AudioCommandContainer {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {
-                    error("There are no tracks currently playing.").awaitSingle()
+                    error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
                 if(!canVoteSkip(this, track)) {

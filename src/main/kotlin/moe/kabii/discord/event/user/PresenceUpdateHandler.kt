@@ -2,8 +2,13 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.asFlux
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
@@ -11,6 +16,7 @@ import moe.kabii.discord.command.logColor
 import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryAwait
 import reactor.core.publisher.toFlux
 
 object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
@@ -30,6 +36,7 @@ object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateE
         val newAvatar = user.avatar.awaitSingle()
         val oldAvatar = oldUser.avatar.awaitSingle()
         if(newAvatar != oldAvatar) {
+            val member = event.member.tryAwait().orNull()
             logChannels
                 .filter(LogSettings::avatarLog)
                 .filter { log -> log.shouldInclude(user) }
@@ -41,7 +48,7 @@ object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateE
                         embed.setAuthor("${user.username}#${user.discriminator}", null, null)
                         embed.setDescription("New avatar:")
                         embed.setImage(user.avatarUrl)
-                        logColor(event.member.block(), embed)
+                        logColor(member, embed)
                     }
                 }
                 .subscribe()
@@ -53,6 +60,7 @@ object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateE
         val oldUsername = oldUser.username
         val oldDiscrim = oldUser.discriminator
         if(newUsername != oldUsername || newDiscrim != oldDiscrim) {
+            val member = event.member.tryAwait().orNull()
             logChannels
                 .filter(LogSettings::usernameLog)
                 .filter { log -> log.shouldInclude(user) }
@@ -63,7 +71,7 @@ object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateE
                     channel.createEmbed { embed ->
                         embed.setAuthor("$oldUsername#$oldDiscrim", null, user.avatarUrl)
                         embed.setDescription("Changed username -> **${user.username}#${user.discriminator}**.")
-                        logColor(event.member.block(), embed)
+                        logColor(member, embed)
                     }
                 }
                 .subscribe()

@@ -15,6 +15,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MusicSettings
+import moe.kabii.discord.command.commands.audio.filters.FilterFactory
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Try
@@ -27,6 +28,7 @@ data class GuildAudio(
     val guild: Long,
     var player: AudioPlayer,
     var provider: AudioProvider,
+
     val queue: MutableList<AudioTrack> = mutableListOf(),
     val discord: AudioConnection = AudioConnection()
 ) {
@@ -144,11 +146,15 @@ data class QueueData(
     val votes: MutableSet<Snowflake> = mutableSetOf(),
     val voting: Mutex = Mutex(),
     var endMarkerMillis: Long? = null,
-    val associatedMessages: MutableList<BotMessage> = mutableListOf()
+    val associatedMessages: MutableList<BotMessage> = mutableListOf(),
+    val audioFilters: FilterFactory = FilterFactory()
 ) {
     sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake) {
         class NPEmbed(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
         class TrackQueued(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
         class UserPlayCommand(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
     }
+
+    var silent = false // don't post added to queue message. for bulk actions, etc
+    var apply = false // if this track is stopped, restart it. for applying filters
 }

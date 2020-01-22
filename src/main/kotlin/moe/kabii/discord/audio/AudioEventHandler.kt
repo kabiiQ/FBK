@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.TextChannel
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.errorColor
@@ -21,6 +22,10 @@ import reactor.core.publisher.toFlux
 object AudioEventHandler : AudioEventAdapter() {
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val data = track.userData as QueueData
+
+        // apply this track's audio filters. always reset filter factory to empty if there are no filters applied
+        player.setFilterFactory(data.audioFilters.export())
+
         val originChan = data.discord.getChannelById(data.originChannel)
             .ofType(TextChannel::class.java)
 
@@ -47,20 +52,31 @@ object AudioEventHandler : AudioEventAdapter() {
                 }
             }
         }
-        // post message when song starts playing if it wasn't direct played
-        originChan
-            .flatMap { chan ->
-                val paused = if(player.isPaused) "The bot is currently paused." else ""
+        // post message when song starts playing if it was a user action
+        if(!data.apply) {
+            originChan
+                .flatMap { chan ->
+                    val paused = if(player.isPaused) "The bot is currently paused." else ""
+                    chan.createEmbed { embed ->
+                        val title = AudioCommandContainer.trackString(track)
+                        kizunaColor(embed)
+                        val now = if(track.position > 0) "Resuming" else "Now playing"
+                        embed.setDescription("$now **$title**. $paused")
+                        if(track is YoutubeAudioTrack) embed.setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                    }
+                }.map { np ->
+                    QueueData.BotMessage.NPEmbed(np.channelId, np.id)
+                }.subscribe { np -> data.associatedMessages.add(np) }
+        } else {
+            data.apply = false
+            val filters = data.audioFilters.asString()
+            originChan.flatMap { chan ->
                 chan.createEmbed { embed ->
-                    val title = AudioCommandContainer.trackString(track)
                     kizunaColor(embed)
-                    val now = if(track.position > 0) "Resuming" else "Now playing"
-                    embed.setDescription("$now **$title**. $paused")
-                    if(track is YoutubeAudioTrack) embed.setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                    embed.setDescription("Applying filters:\n\n$filters")
                 }
-            }.map { np ->
-                QueueData.BotMessage.NPEmbed(np.channelId, np.id)
-            }.subscribe { np -> data.associatedMessages.add(np) }
+            }.subscribe()
+        }
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
@@ -68,6 +84,15 @@ object AudioEventHandler : AudioEventAdapter() {
         when(endReason) {
             AudioTrackEndReason.FINISHED, AudioTrackEndReason.LOAD_FAILED, AudioTrackEndReason.STOPPED -> {
                 if (data.audio.ending) return
+                if(endReason == AudioTrackEndReason.STOPPED && data.apply) { // restarting playback to apply audio filters
+                    val new = track.makeClone().apply {
+                        position = track.position
+                        userData = data
+                    }
+                    player.playTrack(new)
+                    return
+                }
+
                 data.audio.editQueueSync { // need to save queue even if there is no next track
                     if (data.audio.queue.isNotEmpty()) {
                         val next = removeAt(0)
@@ -84,7 +109,7 @@ object AudioEventHandler : AudioEventAdapter() {
                     }
                 }.flatMap { msg ->
                     data.discord.getMessageById(msg.channelID, msg.messageID)
-                }.flatMap { message -> message.delete("""Old music bot command""")
+                }.flatMap { message -> message.delete("Old music bot command")
                 }.subscribe()
             }
         }

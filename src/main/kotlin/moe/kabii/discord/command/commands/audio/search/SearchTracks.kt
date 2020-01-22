@@ -2,6 +2,7 @@ package moe.kabii.discord.command.commands.audio.search
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.FallbackHandler
+import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.commands.audio.ParseUtil
@@ -60,10 +61,24 @@ object SearchTracks : AudioCommandContainer {
                         }
                     }
                 }
+                val silent = selected.size > 1
                 selected.forEach { selection ->
-                    FallbackHandler(this).trackLoaded(search[selection - 1])
+                    val track = search[selection - 1].also { track ->
+                        if(silent) { // if multiple are selected, don't post a message for each one.
+                            val data = track.userData as QueueData
+                            data.silent = true
+                        }
+                    }
+                    // fallback handler = don't search or try to resolve a different track if videos is unavailable
+                    FallbackHandler(this).trackLoaded(track)
                 }
                 embed.delete().tryAwait()
+                if(silent) {
+                    embed {
+                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
+                        setDescription("Adding **${selected.size}** tracks to queue.")
+                    }.awaitSingle()
+                }
             }
         }
     }

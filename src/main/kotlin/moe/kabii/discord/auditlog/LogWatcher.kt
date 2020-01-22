@@ -10,10 +10,7 @@ import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.asCoroutineScope
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.*
 import reactor.core.publisher.Mono
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -42,7 +39,7 @@ object LogWatcher {
                 .flatMapMany(Guild::getAuditLog)
                 .doOnNext { entry -> println(entry) }
                 .takeUntil { entry -> entry.id.timestamp.isBefore(end) }
-                .collectList().tryBlock()
+                .collectList().tryAwait()
             when(logRequest) {
                 is Ok -> {
                     val auditLog = logRequest.value
@@ -67,7 +64,7 @@ object LogWatcher {
                                             embed.setDescription("$original $append")
                                         }
                                     }
-                                }.tryBlock()
+                                }.tryAwait()
                         }
                         if(auditTask.job == this) {
                             // if this is the assigned job for this task: this is the last attempt

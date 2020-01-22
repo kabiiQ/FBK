@@ -8,7 +8,7 @@ import moe.kabii.discord.command.Command
 import moe.kabii.structure.tryAwait
 
 object BotState : AudioCommandContainer {
-    object AudioReset : Command("reset", "restart", "reconnect") {
+    object AudioReset : Command("restart", "reconnect") {
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())

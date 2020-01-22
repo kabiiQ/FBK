@@ -39,8 +39,11 @@ dependencies {
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
     implementation("com.discord4j:discord4j-core:3.0.12") // discord websocket and api
-    implementation("com.sedmelluq:lavaplayer:1.3.32") // opus audio streams for music bot
     implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.17") // twitch irc
+
+    // music bot
+    implementation("com.sedmelluq:lavaplayer:1.3.32") // discord audio library
+    implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
     implementation("com.squareup.okhttp3:okhttp:4.2.2") // other api - http calls
 
