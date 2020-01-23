@@ -47,9 +47,13 @@ class FilterFactory {
                     is FilterType.Pitch -> pitch = filter.pitch
                     is FilterType.Bass -> {
                         val eq = Equalizer(format.channelCount, output)
-                        BassFilters.gain.forEach { band, gain ->
-                            eq.setGain(band, (gain * filter.bass).toFloat())
-                        }
+                        val multi = filter.bass.toFloat()
+                        eq.setGain(0, 0.4f * multi)
+                        eq.setGain(1, 0.9f * multi)
+                        eq.setGain(2, 1f * multi)
+                        eq.setGain(3, 0.85f * multi)
+                        eq.setGain(4, -0.1f * multi)
+                        eq.setGain(5, -0.2f * multi)
                         yield(eq)
                     }
                 }

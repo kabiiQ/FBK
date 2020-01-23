@@ -177,10 +177,9 @@ fun main() {
 
     // subscribe to bot lifetime events
     Mono.`when`(subscribers)
-        .onErrorResume { t ->
+        .onErrorContinue { t, _ ->
             LOG.error("Uncaught exception in event handler: ${t.message}")
             LOG.warn(t.stackTraceString)
-            Mono.empty()
         }
         .subscribe()
 
