@@ -2,13 +2,9 @@ package moe.kabii.discord.command.commands.configuration
 
 import discord4j.core.`object`.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.TempStates
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.trackers.streams.StreamUser
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
-import moe.kabii.rusty.Ok
 
 object CommandOptions : CommandContainer {
     object Prefix : Command("prefix", "setprefix", "prefix-set", "set-prefix", "changeprefix") {

@@ -3,7 +3,6 @@ package moe.kabii.discord.event.guild
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings

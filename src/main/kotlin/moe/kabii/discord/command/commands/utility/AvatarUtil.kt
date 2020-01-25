@@ -6,9 +6,7 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {

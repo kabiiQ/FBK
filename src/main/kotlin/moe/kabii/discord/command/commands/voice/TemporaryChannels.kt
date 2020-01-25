@@ -1,7 +1,6 @@
 package moe.kabii.discord.command.commands.voice
 
 import discord4j.core.`object`.PermissionOverwrite
-import discord4j.core.`object`.entity.Category
 import discord4j.core.`object`.util.Permission
 import discord4j.core.`object`.util.PermissionSet
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -9,13 +8,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.FeatureDisabledException
-import moe.kabii.discord.command.verify
-import moe.kabii.discord.util.Search
-import moe.kabii.rusty.Ok
 import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
 
 object TemporaryChannels : CommandContainer {
     object CreateTempChannel : Command("temp", "tempchannel", "createtemp", "createtempchannel", "temporarychannel", "tempchan", "temporarychan") {

@@ -8,7 +8,6 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.structure.orNull
 import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 

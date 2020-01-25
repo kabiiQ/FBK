@@ -2,12 +2,9 @@ package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.entity.User
-import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import discord4j.core.event.domain.message.MessageDeleteEvent
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory

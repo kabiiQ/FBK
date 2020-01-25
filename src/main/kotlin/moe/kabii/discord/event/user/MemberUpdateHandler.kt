@@ -3,16 +3,10 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.guild.MemberUpdateEvent
-import discord4j.core.event.domain.role.RoleDeleteEvent
-import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.auditlog.AuditableEvent
-import moe.kabii.discord.auditlog.LogWatcher
-import moe.kabii.discord.auditlog.events.AuditRoleUpdate
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.event.EventHandler
 import moe.kabii.discord.util.RoleUtil
@@ -22,7 +16,6 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
-import java.time.Instant
 
 object MemberUpdateHandler : EventHandler<MemberUpdateEvent>(MemberUpdateEvent::class) {
     override suspend fun handle(event: MemberUpdateEvent) {

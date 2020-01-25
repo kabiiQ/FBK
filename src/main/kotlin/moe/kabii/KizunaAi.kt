@@ -6,19 +6,14 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClientBuilder
-import discord4j.core.`object`.audit.ActionType
-import discord4j.core.`object`.audit.ChangeKey
-import discord4j.core.event.domain.PresenceUpdateEvent
-import discord4j.core.event.domain.VoiceStateUpdateEvent
-import discord4j.core.event.domain.channel.TextChannelDeleteEvent
-import discord4j.core.event.domain.guild.*
+import discord4j.core.event.domain.guild.GuildCreateEvent
+import discord4j.core.event.domain.guild.MemberJoinEvent
+import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.core.event.domain.lifecycle.ReconnectEvent
-import discord4j.core.event.domain.message.*
-import discord4j.core.event.domain.role.RoleDeleteEvent
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.reactor.mono
+import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.event.domain.message.ReactionAddEvent
+import discord4j.core.event.domain.message.ReactionRemoveEvent
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
@@ -27,8 +22,9 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordMessageHandler
 import moe.kabii.discord.event.EventHandler
-import moe.kabii.discord.event.guild.*
-import moe.kabii.discord.event.user.*
+import moe.kabii.discord.event.guild.ReactionHandler
+import moe.kabii.discord.event.user.JoinHandler
+import moe.kabii.discord.event.user.PartHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.AutojoinVoice
 import moe.kabii.discord.tasks.OfflineUpdateHandler
@@ -45,7 +41,6 @@ import moe.kabii.structure.orNull
 import moe.kabii.structure.stackTraceString
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 fun main() {

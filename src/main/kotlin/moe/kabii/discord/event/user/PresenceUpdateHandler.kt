@@ -2,13 +2,7 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.asFlux
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings

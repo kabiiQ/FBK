@@ -3,10 +3,7 @@ package moe.kabii.discord.event.guild
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.guild.GuildUpdateEvent
-import kotlinx.coroutines.reactive.awaitLast
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventHandler

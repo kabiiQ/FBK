@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.util.DateValidation
+import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
 import java.io.File
@@ -70,7 +71,7 @@ object SnowflakeUtil : CommandContainer {
     }
 
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
-    object Timestamp : Command("timestamp", "snowflake", "snowflakedate", "checktimestamp", "gettimestamp", "timeof", "timestampof", "snowflaketime") {
+    object Timestamp : Command("timestamp", "snowflakedate", "checktimestamp", "gettimestamp", "timeof", "timestampof", "snowflaketime") {
         init {
             discord {
                 // get the timestamp for a snowflake
@@ -95,6 +96,26 @@ object SnowflakeUtil : CommandContainer {
                     setDescription("${validation}The snowflake **$id** would represent a Discord object created:\n**$formatted**")
                     setFooter("Localized timestamp", null)
                     setTimestamp(snowflake.instant)
+                }.awaitSingle()
+            }
+        }
+    }
+
+    object GetID : Command("id") {
+        init {
+            discord {
+                // get an ID for a user. for noobs without developer mode enabled.
+                if(args.isEmpty()) {
+                    usage("**id** can be used to find the Discord ID for a user in your server.", "id <username>")
+                }
+                val targetUser = Search.user(this, noCmd, target)
+                if(targetUser == null) {
+                    error("Unable to find user **$noCmd**.")
+                    return@discord
+                }
+                embed {
+                    setAuthor("${targetUser.username}#${targetUser.discriminator}", null, targetUser.avatarUrl)
+                    setDescription("ID: ${targetUser.id.asString()}")
                 }.awaitSingle()
             }
         }

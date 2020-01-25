@@ -1,7 +1,6 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.event.EventHandler

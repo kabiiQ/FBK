@@ -3,8 +3,6 @@ package moe.kabii.discord.auditlog.events
 import discord4j.core.`object`.audit.ActionType
 import discord4j.core.`object`.audit.AuditLogEntry
 import discord4j.core.`object`.audit.ChangeKey
-import discord4j.core.`object`.audit.OptionKey
-import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.util.Snowflake
 import moe.kabii.discord.auditlog.AuditableEvent
 import moe.kabii.structure.orNull

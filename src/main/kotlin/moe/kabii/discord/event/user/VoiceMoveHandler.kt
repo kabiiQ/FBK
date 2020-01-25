@@ -6,7 +6,6 @@ import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.FeatureChannel

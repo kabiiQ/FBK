@@ -4,13 +4,8 @@ import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.UniversalPcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer
-import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerConfiguration
-import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerFactory
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlin.reflect.KClass
 
 sealed class FilterType {
     abstract fun asString(): String
@@ -48,7 +43,7 @@ class FilterFactory {
                     is FilterType.Bass -> {
                         val eq = Equalizer(format.channelCount, output)
                         val multi = filter.bass.toFloat()
-                        eq.setGain(0, 0.4f * multi)
+                        eq.setGain(0, 0.3f * multi)
                         eq.setGain(1, 0.9f * multi)
                         eq.setGain(2, 1f * multi)
                         eq.setGain(3, 0.85f * multi)

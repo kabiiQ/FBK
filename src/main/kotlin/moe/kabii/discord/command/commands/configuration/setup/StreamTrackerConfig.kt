@@ -6,7 +6,7 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams") {
+object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     object StreamTrackerModule : ConfigurationModule<FeatureSettings>(
         "livestream tracker",
         BooleanElement(

@@ -1,6 +1,5 @@
 package moe.kabii.discord.command.commands.audio
 
-import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter
 import discord4j.core.`object`.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MusicSettings
