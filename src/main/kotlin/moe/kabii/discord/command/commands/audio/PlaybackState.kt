@@ -34,7 +34,7 @@ object PlaybackState : AudioCommandContainer {
         }
     }
 
-    object PlaybackVolume : Command("volume", "setvolume") {
+    object PlaybackVolume : Command("volume", "setvolume", "vol") {
         init {
             discord {
                 validateChannel(this)

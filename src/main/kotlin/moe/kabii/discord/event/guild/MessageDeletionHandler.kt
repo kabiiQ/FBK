@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.entity.User
 import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import discord4j.core.event.domain.message.MessageDeleteEvent
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
@@ -24,7 +25,7 @@ object MessageDeletionHandler : EventHandler<MessageDeleteEvent>(MessageDeleteEv
     override suspend fun handle(event: MessageDeleteEvent) {
         val chan = event.channel
             .ofType(TextChannel::class.java)
-            .awaitSingle()
+            .awaitFirstOrNull()
         chan ?: return // ignore dm event
 
         val guild = chan.guild.awaitSingle()
