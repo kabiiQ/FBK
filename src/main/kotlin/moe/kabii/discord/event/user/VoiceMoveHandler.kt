@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
@@ -72,7 +73,7 @@ object VoiceMoveHandler : EventHandler<VoiceStateUpdateEvent>(VoiceStateUpdateEv
             val temp = config.tempVoiceChannels.tempChannels
             val oldID = oldChannel!!.id.asLong()
             if(temp.contains(oldID)) {
-                if(!oldChannel.voiceStates.hasElements().awaitSingle()) {
+                if(oldChannel.voiceStates.hasElements().awaitFirstOrNull() != true) {
                     temp.remove(oldID)
                     config.save()
                     oldChannel.delete("Empty temporary channel.").success().awaitSingle()

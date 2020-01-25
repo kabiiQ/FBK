@@ -83,6 +83,7 @@ data class FeatureChannel(
     var animeChannel: Boolean = false,
     var logChannel: Boolean = false,
     var musicChannel: Boolean = false,
+    var tempChannelCreation: Boolean = false,
     val logSettings: LogSettings = LogSettings(channelID),
     val featureSettings: FeatureSettings = FeatureSettings()
 ) {
@@ -220,7 +221,6 @@ data class GuildSettings(
 )
 
 data class TempChannels(
-    var tempChannelCategory: Long? = null,
     val tempChannels: MutableList<Long> = mutableListOf()
 )
 
