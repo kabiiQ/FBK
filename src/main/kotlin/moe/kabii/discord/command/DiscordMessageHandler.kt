@@ -125,6 +125,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     val cmdArgs = content.split(" ").filter(String::isNotBlank)
                     val args = cmdArgs
                         .drop(1)
+                        .filterNot { it.equals("@everyone", ignoreCase = true) }
                     val noCmd = args.joinToString(" ")
                     LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
                     val chan = event.message.channel.awaitSingle()

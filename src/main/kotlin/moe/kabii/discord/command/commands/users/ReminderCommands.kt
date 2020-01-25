@@ -66,7 +66,6 @@ object ReminderCommands : CommandContainer {
                     }
                 }
                     .joinToString(" ")
-                    .replace("@everyone", "")
                     .run {
                         if(guild != null) replace(guild.id.asString(), "") else this
                     }
