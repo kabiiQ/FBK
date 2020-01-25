@@ -102,6 +102,7 @@ fun main() {
         .map { event -> event.guilds.size }
         .doOnNext { count ->
             LOG.info("Connecting to $count guilds.")
+            manager.botID = discord.selfId.get()
         }
         .flatMap { count ->
             val recoverQueue = RecoverQueue()

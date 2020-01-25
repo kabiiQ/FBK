@@ -22,6 +22,11 @@ import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class DiscordMessageHandler(val manager: CommandManager, private val twitch: TwitchClient) {
+    val mention: Regex by lazy {
+        val id = manager.botID.asLong()
+        Regex("<@!?$id>")
+    }
+
     fun handle(event: MessageCreateEvent) = mono {
         // ignore bots
         if(event.message.author.orNull()?.isBot ?: true) return@mono
@@ -50,15 +55,18 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
         // this sets the prefix for PMs, as long as the guild is legitimate the default prefix is set in GuildConfiguration
         val prefix = config?.prefix ?: ";"
         val suffix = config?.suffix ?: "desu"
-        val global = manager.globalPrefix
-        val cmdStr = if (msgArgs[msgArgs.size - 1].equals(suffix, true)) {
-            content = content.substring(0, content.length - suffix.length)
-            msgArgs[0]
-        } else if (msgArgs[0].startsWith(prefix)) {
-            msgArgs[0].substring(prefix.length)
-        } else if(msgArgs[0].startsWith(global)) {
-            msgArgs[0].substring(global.length)
-        } else null
+        val cmdStr = when {
+            msgArgs[msgArgs.size - 1].equals(suffix, ignoreCase = true) -> {
+                content = content.substring(0, content.length - suffix.length)
+                msgArgs[0]
+            }
+            msgArgs[0].startsWith(prefix) -> msgArgs[0].substring(prefix.length)
+            mention.matches(msgArgs[0]) -> {
+                content = content.substring(msgArgs[0].length)
+                msgArgs.getOrNull(1)
+            }
+            else -> null
+        }
 
         val author = event.message.author.orNull() ?: return@mono
         if (cmdStr != null) {
@@ -114,9 +122,11 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                     val guildName = guild?.name ?: username
                     val context = if (isPM) "Private" else "Guild"
                     LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
+                    val cmdArgs = content.split(" ").filter(String::isNotBlank)
+                    val args = cmdArgs
+                        .drop(1)
+                    val noCmd = args.joinToString(" ")
                     LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
-                    val noCmd = content.substring(msgArgs[0].length).trim()
-                    val args = noCmd.split(" ").filter(String::isNotBlank)
                     val chan = event.message.channel.awaitSingle()
                     val param = DiscordParameters(this@DiscordMessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr, twitch)
 
@@ -137,6 +147,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                         // bot is missing permissions
                         when (ce.status.code()) {
                             403 -> {
+                                LOG.debug("403: ${ce.message}")
                                 if (config == null || chan !is TextChannel) return@launch
                                 if (ce.errorResponse.fields["string"]?.equals("Missing Permissions") != true) return@launch
                                 val botPermissions = chan.getEffectivePermissions(event.client.selfId.get()).awaitSingle()
@@ -152,7 +163,7 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                             }
                             else -> {
                                 LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetID: ${ce.message}")
-                                LOG.debug(ce.stackTraceString) // these can be relatively normal
+                                LOG.debug(ce.stackTraceString) // these can be relatively normal - deleted channels and other weirdness
                             }
                         }
                     } catch (e: Exception) {

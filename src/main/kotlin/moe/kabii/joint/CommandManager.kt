@@ -1,12 +1,13 @@
 package moe.kabii.joint
 
+import discord4j.core.`object`.util.Snowflake
 import moe.kabii.LOG
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.asCoroutineScope
 import java.util.concurrent.Executors
 
 class CommandManager {
-    internal val globalPrefix = ";;"
+    internal lateinit var botID: Snowflake
     internal val commandsDiscord = mutableListOf<Command>()
     internal val commandsTwitch = mutableListOf<Command>()
 
