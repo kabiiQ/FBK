@@ -14,24 +14,35 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.YoutubeUtil
 import java.net.URL
 
-abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, private val startingTime: Long) : AudioLoadResultHandler {
+abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery) : AudioLoadResultHandler {
     val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
 
     internal val query: String?
     get() {
         // no match found. error on URL messages are they are clearly not intended to be searched.
-        if (Try { URL(origin.noCmd) }.result.ok) {
-            origin.error("No playable audio source found for URL **${origin.noCmd}**").block()
+        if (Try { URL(extract.url) }.result.ok) {
+            origin.error("No playable audio source found for URL **${extract.url}**").block()
             return null
         }
         // try to load youtube track from text search
-        return "ytsearch: ${origin.noCmd}"
+        return "ytsearch: ${extract.url}"
+    }
+
+    fun applyParam(track: AudioTrack, data: QueueData) {
+        if(extract.timestamp in 0..track.duration) track.position = extract.timestamp
+        if(extract.sample != null) {
+            val remaining = track.duration - track.position
+            if(remaining > extract.sample) {
+                val endTarget = extract.sample + track.position
+                data.endMarkerMillis = endTarget
+            }
+        }
     }
 
     override fun trackLoaded(track: AudioTrack) {
         val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
         track.userData = data
-        if(startingTime in 0..track.duration) track.position = startingTime
+        applyParam(track, data)
         // set track
         if(!audio.player.startTrack(track, true)) {
             val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
@@ -93,30 +104,30 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     }
 }
 
-open class SingleTrackLoader(origin: DiscordParameters, private val position: Int? = null, startingTime: Long) : BaseLoader(origin, position, startingTime) {
+open class SingleTrackLoader(origin: DiscordParameters, private val position: Int? = null, extract: ExtractedQuery) : BaseLoader(origin, position, extract) {
     override fun noMatches() {
-        if(query != null) AudioManager.manager.loadItem(query, FallbackHandler(origin, position))
+        if(query != null) AudioManager.manager.loadItem(query, FallbackHandler(origin, position, extract))
     }
 
     override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
 }
 
-class FallbackHandler(origin: DiscordParameters, position: Int? = null) : SingleTrackLoader(origin, position, 0L) {
+class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : SingleTrackLoader(origin, position, extract) {
     // after a youtube search is attempted, load a single track if it succeeded. if it failed, we don't want to search again.
     override fun noMatches() {
-        origin.error("No YouTube video found matching **${origin.noCmd}**.").block()
+        origin.error("No YouTube video found matching **${extract.url}**.").block()
     }
 }
 
-class PlaylistTrackLoader(origin: DiscordParameters, position: Int? = null) : BaseLoader(origin, position, 0L) {
+class PlaylistTrackLoader(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : BaseLoader(origin, position, extract) {
     override fun noMatches() {
-        origin.error("${origin.noCmd} is not a valid playlist. If you want to search for a YouTube track make sure to use the **play** command.").block()
+        origin.error("${extract.url} is not a valid playlist. If you want to search for a YouTube track make sure to use the **play** command.").block()
     }
 }
 
-open class ForcePlayTrackLoader(origin: DiscordParameters, private val startingTime: Long) : SingleTrackLoader(origin, null, startingTime) {
+open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQuery) : SingleTrackLoader(origin, null, extract) {
     override fun noMatches() {
-        if(query != null) AudioManager.manager.loadItem(query, ForcePlayFallbackLoader(origin))
+        if(query != null) AudioManager.manager.loadItem(query, ForcePlayFallbackLoader(origin, extract))
     }
 
     override fun trackLoaded(track: AudioTrack) {
@@ -130,8 +141,9 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, private val startingT
             audio.forceAdd(oldTrack, origin.member, position = 0)
         }
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
-        track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
-        if(startingTime in 0..track.duration) track.position = startingTime
+        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+        applyParam(track, data)
+        track.userData = data
         audio.player.playTrack(track)
         with(audio.player) {
             if(isPaused) isPaused = false
@@ -139,8 +151,8 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, private val startingT
     }
 }
 
-class ForcePlayFallbackLoader(origin: DiscordParameters) : ForcePlayTrackLoader(origin, 0L) {
+class ForcePlayFallbackLoader(origin: DiscordParameters, extract: ExtractedQuery) : ForcePlayTrackLoader(origin, extract) {
     override fun noMatches() {
-        origin.error("No YouTube video found matching **${origin.noCmd}**.").block()
+        origin.error("No YouTube video found matching **${extract.url}**.").block()
     }
 }

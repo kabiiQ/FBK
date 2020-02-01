@@ -1,6 +1,7 @@
 package moe.kabii.discord.command.commands.audio.search
 
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
@@ -70,7 +71,7 @@ object SearchTracks : AudioCommandContainer {
                         }
                     }
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this).trackLoaded(track)
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier))
                 }
                 embed.delete().tryAwait()
                 if(silent) {
@@ -106,7 +107,8 @@ object SearchTracks : AudioCommandContainer {
                     error("No results found searching **${source.fullName}** for **$query**.").awaitSingle()
                     return@discord
                 }
-                FallbackHandler(this).trackLoaded(search[0])
+                val track = search[0]
+                FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoaded(search[0])
             }
         }
     }

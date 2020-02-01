@@ -4,35 +4,9 @@ import discord4j.core.`object`.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.verify
-import moe.kabii.util.DurationParser
 
 object QueueTracks : AudioCommandContainer {
-
-    data class TimestampedQuery(val url: String, val timestamp: Long)
-
-    private val timestampRegex = Regex("[&?#]t=([0-9smh]+)")
-    fun extractTimestamp(url: String): TimestampedQuery {
-        val match = timestampRegex.find(url)
-        val timestamp = match?.groups?.get(1)
-        val time = if(timestamp != null) {
-            DurationParser.tryParse(timestamp.value)
-        } else null
-        val url = if(timestamp != null) url.replace(match.value, "") else url
-        return if(time == null) TimestampedQuery(url, 0) else TimestampedQuery(url, time.toMillis())
-    }
-
-    private fun extractQuery(origin: DiscordParameters): TimestampedQuery? {
-        val attachment = origin.event.message.attachments.firstOrNull()
-        if(attachment != null) {
-            // if attached file, try to send this through first
-            return TimestampedQuery(attachment.url, timestamp = 0L)
-        }
-        if(origin.args.isEmpty()) return null
-        return extractTimestamp(origin.noCmd)
-    }
-
     object PlaySong : Command("play", "addsong", "queuesong") {
         init {
             discord {
@@ -42,12 +16,12 @@ object QueueTracks : AudioCommandContainer {
                     return@discord
                 }
                 // add a song to the end of the queue
-                val query = extractQuery(this)
+                val query = ExtractedQuery.from(this)
                 if(query == null) {
                     usage("**play** is used to play an audio track on the bot. You can provide a direct link or let the bot search and play the top Youtube result.", "play <track URL, youtube ID, or youtube search query>").awaitSingle()
                     return@discord
                 }
-                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, startingTime = query.timestamp))
+                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, extract = query))
             }
         }
     }
@@ -64,7 +38,8 @@ object QueueTracks : AudioCommandContainer {
                     usage("**playlist** is used to add a playlist into the bot's music queue.", "playlist <playlist url or youtube ID>").awaitSingle()
                     return@discord
                 }
-                AudioManager.manager.loadItem(noCmd, PlaylistTrackLoader(this))
+                val query = ExtractedQuery.default(noCmd)
+                AudioManager.manager.loadItem(noCmd, PlaylistTrackLoader(this, extract = query))
             }
         }
     }
@@ -74,12 +49,12 @@ object QueueTracks : AudioCommandContainer {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
                 // immediately start playing track
-                val query = extractQuery(this)
+                val query = ExtractedQuery.from(this)
                 if(query == null) {
                     usage("**fplay** immediately starts playing a track and resumes the current track when finished.", "fplay <track URL, youtube ID, or youtube search query>").awaitSingle()
                     return@discord
                 }
-                AudioManager.manager.loadItem(query.url, ForcePlayTrackLoader(this, query.timestamp))
+                AudioManager.manager.loadItem(query.url, ForcePlayTrackLoader(this, query))
             }
         }
     }
@@ -122,12 +97,12 @@ object QueueTracks : AudioCommandContainer {
                 validateChannel(this)
                 member.verify(Permission.MANAGE_MESSAGES)
                 // add a song to the front of the queue
-                val query = extractQuery(this)
+                val query = ExtractedQuery.from(this)
                 if(query == null) {
                     usage("**playnext** adds an audio track to the front of the queue so that it will be played next.", "playnext <track URL, youtube ID, or youtube search query>").awaitSingle()
                     return@discord
                 }
-                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, 0, query.timestamp))
+                AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, 0, query))
             }
         }
     }
