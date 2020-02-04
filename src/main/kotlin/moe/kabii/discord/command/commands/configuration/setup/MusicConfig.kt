@@ -28,12 +28,12 @@ object MusicConfig : CommandContainer {
             ),
             BooleanElement(
                 "Song owner can force skip song with fskip",
-                listOf("ownerskip", "authorskip"),
+                listOf("ownerperms", "ownerskip", "authorskip"),
                 MusicSettings::queuerFSkip
             ),
             BooleanElement(
                 "Skip command will force skip when permitted",
-                listOf("forceskip", "fskip", "force-skip"),
+                listOf("alwaysfskip", "forceskip", "fskip", "force-skip"),
                 MusicSettings::alwaysFSkip
             ),
             BooleanElement(
@@ -59,7 +59,7 @@ object MusicConfig : CommandContainer {
             ),
             LongElement(
                 "Max tracks in queue for one user (0 = unlimited)",
-                listOf("max", "tracks"),
+                listOf("max", "tracks", "maxtracks"),
                 MusicSettings::maxTracksUser,
                 range = 0..Long.MAX_VALUE,
                 default = MusicSettings.defaultMaxTracksUser,

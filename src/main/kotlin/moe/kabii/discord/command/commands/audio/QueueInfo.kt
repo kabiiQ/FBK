@@ -53,7 +53,7 @@ object QueueInfo : AudioCommandContainer {
         }
     }
 
-    object NowPlaying : Command("np", "nowplaying", "song") {
+    object NowPlaying : Command("music", "np", "nowplaying", "song") {
         init {
             discord {
                 validateChannel(this)
