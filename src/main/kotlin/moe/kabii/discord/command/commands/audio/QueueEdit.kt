@@ -117,7 +117,7 @@ object QueueEdit : AudioCommandContainer {
         }
     }
 
-    object ResetQueue : Command("clear", "empty") {
+    object ClearQueue : Command("clear", "empty") {
         init {
             discord {
                 RemoveTracks.executeDiscord!!(this.copy(args = listOf("-")))
