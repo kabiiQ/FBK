@@ -52,7 +52,7 @@ data class GuildAudio(
             ?.let(DurationFormatter::colonTime)
 
     // queue song for a user, returns false if user is over quota
-    fun tryAdd(track: AudioTrack, member: Member, position: Int? = null, checkLimits: Boolean = true): Boolean {
+    suspend fun tryAdd(track: AudioTrack, member: Member, position: Int? = null, checkLimits: Boolean = true): Boolean {
         val maxTracksUser = GuildConfigurations.getOrCreateGuild(guild).musicBot.maxTracksUser
         val meta = track.userData as? QueueData
         checkNotNull(meta) { "AudioTrack has no origin information: ${track.info}" }
@@ -67,7 +67,7 @@ data class GuildAudio(
         return true
     }
 
-    fun forceAdd(track: AudioTrack, member: Member, position: Int? = null) =
+    suspend fun forceAdd(track: AudioTrack, member: Member, position: Int? = null) =
         tryAdd(track, member, position, checkLimits = false)
 
     suspend fun resetAudio(voice: VoiceChannel?): GuildAudio {

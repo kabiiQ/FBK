@@ -6,6 +6,8 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import moe.kabii.data.Keys
 import reactor.core.publisher.Flux
 
@@ -26,22 +28,22 @@ object BotAdmin {
     }
 }
 
-fun Member.hasPermissions(vararg permissions: Permission): Boolean {
+suspend fun Member.hasPermissions(vararg permissions: Permission): Boolean {
     if(BotAdmin.check(userID = id.asLong())) return true
-    val basePermissions = basePermissions.block()
-    if(basePermissions.contains(Permission.ADMINISTRATOR)) return true
-    return basePermissions.containsAll(permissions.toList())
+    return basePermissions.awaitFirstOrNull()?.containsAll(permissions.toList()) == true
 }
 
 @Throws(MemberPermissionsException::class)
-fun Member.verify(vararg permissions: Permission) {
+suspend fun Member.verify(vararg permissions: Permission) {
     if(this.hasPermissions(*permissions)) return
     throw MemberPermissionsException(*permissions)
 }
 
+suspend fun Member.hasPermissions(channel: TextChannel, vararg permissions: Permission): Boolean = channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
+
 @Throws(MemberPermissionsException::class)
-fun Member.channelVerify(channel: TextChannel, vararg permissions: Permission) {
-    if(channel.getEffectivePermissions(this.id).block().containsAll(permissions.toList())) return
+suspend fun Member.channelVerify(channel: TextChannel, vararg permissions: Permission) {
+    if(hasPermissions(channel, *permissions)) return
     throw MemberPermissionsException(*permissions)
 }
 

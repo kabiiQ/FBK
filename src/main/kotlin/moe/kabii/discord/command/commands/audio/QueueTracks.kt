@@ -1,9 +1,11 @@
 package moe.kabii.discord.command.commands.audio
 
+import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.channelVerify
 import moe.kabii.discord.command.verify
 
 object QueueTracks : AudioCommandContainer {
@@ -47,7 +49,7 @@ object QueueTracks : AudioCommandContainer {
     object PlaySongForce : Command("fplay", "forceplay") {
         init {
             discord {
-                member.verify(Permission.MANAGE_CHANNELS)
+                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
                 // immediately start playing track
                 val query = ExtractedQuery.from(this)
                 if(query == null) {
@@ -95,7 +97,11 @@ object QueueTracks : AudioCommandContainer {
         init {
             discord {
                 validateChannel(this)
-                member.verify(Permission.MANAGE_MESSAGES)
+                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
+                if(!validateVoice(this)) {
+                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                    return@discord
+                }
                 // add a song to the front of the queue
                 val query = ExtractedQuery.from(this)
                 if(query == null) {

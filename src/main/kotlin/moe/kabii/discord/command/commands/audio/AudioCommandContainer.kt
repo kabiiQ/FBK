@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.VoiceChannel
 import discord4j.core.`object`.util.Permission
@@ -11,10 +12,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.discord.command.FeatureDisabledException
-import moe.kabii.discord.command.hasPermissions
+import moe.kabii.discord.command.*
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.filterNot
 import moe.kabii.structure.tryAwait
@@ -90,10 +88,10 @@ internal interface AudioCommandContainer : CommandContainer {
         return intArrayOf(minUsersRatio, config.skipUsers.toInt()).min()!!
     }
 
-    fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
+    suspend fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
         val data = track.userData as QueueData
         return if(origin.config.musicBot.queuerFSkip && data.author == origin.author.id) true
-        else origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+        else origin.member.hasPermissions(origin.chan as TextChannel, Permission.MANAGE_MESSAGES)
     }
 
     suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
