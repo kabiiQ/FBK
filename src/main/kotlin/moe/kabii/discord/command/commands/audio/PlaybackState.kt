@@ -4,6 +4,7 @@ import discord4j.core.`object`.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.discord.command.verify
@@ -38,30 +39,38 @@ object PlaybackState : AudioCommandContainer {
             discord {
                 validateChannel(this)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
+                val track = audio.player.playingTrack
+                if(track == null) {
+                    val default = config.musicBot.startingVolume
+                    error("There is no track currently playing. New tracks will start at **$default%** volume.").awaitSingle()
+                    return@discord
+                }
                 if(args.isEmpty()) {
                     usage("The current playback volume is **${audio.player.volume}%**.", "volume <new volume>").awaitSingle()
                     return@discord
                 }
+                if(!canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.").awaitSingle()
+                    return@discord
+                }
+                val data = track.userData as QueueData
                 val targetVolume = args[0].removeSuffix("%").toIntOrNull()
-                val maximum = config.musicBot.adminVolumeLimit
+                val maximum = config.musicBot.volumeLimit
                 when {
-                    targetVolume == null || targetVolume < 0 -> {
+                    targetVolume == null || targetVolume < 1 -> {
                         error("**${args[0]}** is not a valid volume value.").awaitSingle()
                         return@discord
                     }
-                    (targetVolume - MusicSettings.defaultVolume).absoluteValue <= 10 -> {} // +-10: unlocked
-                    targetVolume in 0..100 -> member.verify(Permission.MANAGE_MESSAGES) // 0-100: moderator
                     targetVolume > maximum -> {
-                        if(!member.hasPermissions(Permission.MANAGE_GUILD))
-                        error("The absolute volume limit is set at $maximum. This can be overriden with the **musicbot** configuration command, however this is not recommended.").awaitSingle()
+                        val tip = if(member.hasPermissions(Permission.MANAGE_CHANNELS)) " This can be overridden with the **musicbot** configure command." else ""
+                        error("The volume limit is set at **$maximum**.$tip").awaitSingle()
                         return@discord
                     }
-                    else -> member.verify(Permission.MANAGE_GUILD) // > 100: admin
                 }
-                val distort = if(targetVolume > 100) " Setting the volume over 100% will begin to cause audio distortion. " else ""
+                val distort = if(targetVolume!! > 100) " Setting the volume over 100% will begin to cause audio distortion. " else ""
                 val oldVolume = audio.player.volume
                 audio.player.volume = targetVolume
-                config.musicBot.volume = targetVolume
+                data.volume = targetVolume
                 config.save()
                 embed("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort").awaitSingle()
             }

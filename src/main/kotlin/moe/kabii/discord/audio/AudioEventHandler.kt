@@ -20,6 +20,7 @@ import reactor.core.publisher.toFlux
 object AudioEventHandler : AudioEventAdapter() {
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val data = track.userData as QueueData
+        player.volume = data.volume
 
         // apply this track's audio filters. always reset filter factory to empty if there are no filters applied
         player.setFilterFactory(data.audioFilters.export())

@@ -42,7 +42,8 @@ class RecoverQueue {
                                     discord = guild.client,
                                     author_name = track.author_name,
                                     author = track.author.snowflake,
-                                    originChannel = track.originChannel.snowflake
+                                    originChannel = track.originChannel.snowflake,
+                                    volume = config.musicBot.startingVolume
                                 )
                                 add(loaded)
                             }

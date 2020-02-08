@@ -42,7 +42,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     }
 
     override fun trackLoaded(track: AudioTrack) = runBlocking {
-        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
         // set track
@@ -82,7 +82,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         val maxTracksUser = origin.config.musicBot.maxTracksUser
         for(index in tracks.indices) {
             val track = tracks[index]
-            track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+            track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
             val add = audio.tryAdd(track, origin.member, position?.plus(index)) // add tracks sequentially if a position is provided, otherwise add to end
             if(!add) {
                 // the rest of the tracks will be skipped when the user reaches their quota
@@ -143,7 +143,7 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
             audio.forceAdd(oldTrack, origin.member, position = 0)
         }
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
-        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id)
+        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         applyParam(track, data)
         track.userData = data
         audio.player.playTrack(track)

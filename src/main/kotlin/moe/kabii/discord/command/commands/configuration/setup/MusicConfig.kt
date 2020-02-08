@@ -64,14 +64,13 @@ object MusicConfig : CommandContainer {
                 range = 0..Long.MAX_VALUE,
                 default = MusicSettings.defaultMaxTracksUser,
                 prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
-
             ),
             LongElement(
-                "Absolute maximum volume limit",
-                listOf("limit"),
-                MusicSettings::adminVolumeLimit,
+                "Volume limit",
+                listOf("volumeLimit", "maxVolume", "limit"),
+                MusicSettings::volumeLimit,
                 range = 0..Short.MAX_VALUE.toLong(),
-                default = MusicSettings.defaultAdminVolumeLimit,
+                default = MusicSettings.defaultVolumeLimit,
                 prompt = "Enter the new absolute maximum volume that server admins can enter using the volume command. Normal users will still be limited to 5-25 volume and moderators limited within 0-100 volume."
             )
         )

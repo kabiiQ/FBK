@@ -22,7 +22,6 @@ object AudioManager {
     internal fun createAudioComponents(guild: Long): AudioComponents {
         val config = GuildConfigurations.getOrCreateGuild(guild)
         val player = manager.createPlayer().apply {
-            volume = config.musicBot.volume
             addListener(AudioEventHandler)
         }
         val provider = object : AudioProvider(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize())) {

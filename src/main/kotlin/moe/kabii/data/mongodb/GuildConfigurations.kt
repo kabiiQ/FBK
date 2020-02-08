@@ -181,7 +181,7 @@ data class ReactionRoleMessage(
 )
 
 data class MusicSettings(
-    var volume: Int = defaultVolume,
+    var startingVolume: Int = defaultStartingVolume,
     var autoJoinChannel: Long? = null,
     var lastChannel: Long? = null,
     var deleteOldBotMessages: Boolean = true,
@@ -192,15 +192,15 @@ data class MusicSettings(
     var skipRatio: Long = defaultRatio,
     var skipUsers: Long = defaultUsers,
     var maxTracksUser: Long = defaultMaxTracksUser,
-    var adminVolumeLimit: Long = defaultAdminVolumeLimit,
+    var volumeLimit: Long = defaultVolumeLimit,
     var activeQueue: List<QueuedTrack> = listOf()
 ) {
     companion object {
         const val defaultRatio = 50L
         const val defaultUsers = 4L
-        const val defaultVolume = 15
+        const val defaultStartingVolume = 15
         const val defaultMaxTracksUser = 0L
-        const val defaultAdminVolumeLimit = 200L
+        const val defaultVolumeLimit = 100L
     }
 
     // just serializable info that we need to requeue the tracks after a restart
