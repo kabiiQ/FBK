@@ -9,7 +9,7 @@ import moe.kabii.structure.s
 import moe.kabii.util.YoutubeUtil
 
 object QueueInfo : AudioCommandContainer {
-    object CurrentQueue : Command("queue", "listqueue", "songs") {
+    object CurrentQueue : Command("queue", "listqueue", "songs", "q") {
         init {
             discord {
                 validateChannel(this)
