@@ -71,7 +71,7 @@ object SearchTracks : AudioCommandContainer {
                         }
                     }
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier))
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoaded(track)
                 }
                 embed.delete().tryAwait()
                 if(silent) {
