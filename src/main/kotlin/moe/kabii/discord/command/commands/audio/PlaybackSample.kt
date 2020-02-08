@@ -20,7 +20,7 @@ object PlaybackSample : AudioCommandContainer {
                     return@discord
                 }
                 if(!canFSkip(this, track)) {
-                    error("You must have permission to skip this track before you may limit its playback.").awaitSingle()
+                    error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.").awaitSingle()
                     return@discord
                 }
                 val sampleTime = DurationParser.tryParse(noCmd)?.run { Try(::toMillis) }?.result?.orNull()
@@ -54,7 +54,7 @@ object PlaybackSample : AudioCommandContainer {
                     return@discord
                 }
                 if(!canFSkip(this, track)) {
-                    error("You must have permission to skip this track before you may limit its playback.").awaitSingle()
+                    error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.").awaitSingle()
                     return@discord
                 }
                 val sampleTo = DurationParser.tryParse(noCmd)?.run { Try(::toMillis) }?.result?.orNull()
