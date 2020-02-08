@@ -77,7 +77,7 @@ object MusicConfig : CommandContainer {
 
         init {
             discord {
-                member.verify(Permission.MANAGE_GUILD)
+                member.verify(Permission.MANAGE_CHANNELS)
 
                 val configurator = Configurator(
                     "Music bot settings for ${target.name}",
