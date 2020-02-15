@@ -201,19 +201,12 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                         }
                     } else null
                 }
-                val mention = mentionRole?.run {
-                    edit { role -> role.setMentionable(true) }
-                        .map(Role::getMention)
-                        .tryBlock().orNull()
-                }
+                val mention = mentionRole?.mention
                 val newNotification = chan.createMessage { spec ->
                     if (mention != null) spec.setContent(mention)
                     spec.setEmbed(embed.automatic)
                 }.tryBlock().orNull()
 
-                mentionRole?.run {
-                    edit { role -> role.setMentionable(false) }.tryBlock()
-                }
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
                 TrackedStreams.Notification.new {
                     this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
