@@ -14,7 +14,7 @@ object AvatarUtil : CommandContainer {
             discord {
                 val targetUser = if (args.isEmpty()) author else Search.user(this, noCmd, guild)
                 if (targetUser == null) {
-                    error("Unable to find user $noCmd").awaitSingle()
+                    error("Unable to find user **$noCmd**").awaitSingle()
                     return@discord
                 }
                 embed {
