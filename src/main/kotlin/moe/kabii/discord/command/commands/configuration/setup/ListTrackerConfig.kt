@@ -6,7 +6,7 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify
 
-object ListTrackerConfig : Command("malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
+object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
     object ListTrackerModule : ConfigurationModule<FeatureSettings>(
         "anime list tracker",
         BooleanElement(
