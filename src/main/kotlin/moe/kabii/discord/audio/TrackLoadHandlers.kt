@@ -39,6 +39,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 data.endMarkerMillis = endTarget
             }
         }
+        audio.player.volume = extract.volume
     }
 
     override fun trackLoaded(track: AudioTrack) = runBlocking {
