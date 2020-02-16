@@ -7,14 +7,18 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.errorColor
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
+import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.YoutubeUtil
+import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
@@ -101,7 +105,20 @@ object AudioEventHandler : AudioEventAdapter() {
                 // delete old messages per guild settings
                 val guildID = data.audio.guild
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
-                data.associatedMessages.toFlux()
+                val (commandMsg, otherMsg) = data.associatedMessages.partition { it is QueueData.BotMessage.UserPlayCommand }
+                commandMsg.firstOrNull()?.let { msg ->
+                    data.discord.getMessageById(msg.channelID, msg.messageID).tryBlock().orNull()?.let { discordMsg ->
+                        // delete or react to user command depending on server settings
+                        if(msg.enabledFor(config)) {
+                            discordMsg.delete("Old user music bot command")
+                        } else {
+                            discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                        }.success().tryBlock().orNull()
+                    }
+                }
+
+                // other messages, defer to server settings
+                otherMsg.toFlux()
                     .filter { msg -> msg.enabledFor(config) }
                     .flatMap { msg -> data.discord.getMessageById(msg.channelID, msg.messageID) }
                     .flatMap { message -> message.delete("Old music bot command") }

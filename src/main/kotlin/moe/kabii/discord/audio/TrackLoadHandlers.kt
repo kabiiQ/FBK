@@ -46,11 +46,11 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
+        data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
         // set track
         if(!audio.player.startTrack(track, true)) {
             val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
             val add = audio.tryAdd(track, origin.member, position)
-            data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
             if(data.silent) return@runBlocking
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
