@@ -12,6 +12,6 @@ enum class AudioSource(val fullName: String, val regex: Regex, val handler: Sear
 
     companion object {
         fun parse(input: String): AudioSource? =
-            values().firstOrNull { source -> input.matches(source.regex) }
+            values().firstOrNull { source -> input.contains(source.regex) }
     }
 }
