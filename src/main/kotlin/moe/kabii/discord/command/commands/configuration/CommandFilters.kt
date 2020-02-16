@@ -11,7 +11,7 @@ import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import reactor.core.publisher.Mono
 
-object CommandFilters : CommandContainer {
+object  CommandFilters : CommandContainer {
     fun toggleList(param: DiscordParameters, config: GuildConfiguration): Mono<Message> {
         val filter = config.commandFilter
         return if(filter.whitelisted) {

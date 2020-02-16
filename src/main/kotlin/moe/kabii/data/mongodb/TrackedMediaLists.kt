@@ -2,7 +2,10 @@ package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import moe.kabii.discord.trackers.anime.*
+import moe.kabii.discord.trackers.anime.KitsuParser
+import moe.kabii.discord.trackers.anime.MALParser
+import moe.kabii.discord.trackers.anime.MediaList
+import moe.kabii.discord.trackers.anime.MediaListParser
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId

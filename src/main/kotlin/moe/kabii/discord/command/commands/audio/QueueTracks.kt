@@ -6,7 +6,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.channelVerify
-import moe.kabii.discord.command.verify
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {

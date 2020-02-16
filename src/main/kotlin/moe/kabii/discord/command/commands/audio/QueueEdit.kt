@@ -9,7 +9,6 @@ import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.channelVerify
-import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.withEach
 import moe.kabii.util.NumberUtil

@@ -3,7 +3,6 @@ package moe.kabii.discord.trackers.streams
 import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.GuildChannel
 import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.Role
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch

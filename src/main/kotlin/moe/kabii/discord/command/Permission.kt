@@ -6,7 +6,6 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import moe.kabii.data.Keys
 import reactor.core.publisher.Flux
