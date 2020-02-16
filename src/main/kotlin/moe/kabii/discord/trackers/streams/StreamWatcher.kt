@@ -203,7 +203,7 @@ class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
                 }
                 val mention = mentionRole?.mention
                 val newNotification = chan.createMessage { spec ->
-                    if (mention != null) spec.setContent(mention)
+                    if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                     spec.setEmbed(embed.automatic)
                 }.tryBlock().orNull()
 
