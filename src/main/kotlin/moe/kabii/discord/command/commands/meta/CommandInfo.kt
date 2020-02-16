@@ -5,7 +5,6 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.util.Search
 
 object CommandInfo : Command("command", "cmd", "commandinfo") {
-    override val commandExempt = true
     init {
         discord {
             if(args.isEmpty()) {
