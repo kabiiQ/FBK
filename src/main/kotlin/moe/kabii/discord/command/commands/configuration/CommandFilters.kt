@@ -37,6 +37,13 @@ object CommandFilters : CommandContainer {
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
                 when(args[0].toLowerCase()) {
+                    "use" -> {
+                        if(!filter.whitelisted) {
+                            filter.useWhitelist()
+                            config.save()
+                            embed("**${target.name}** will now use a command **whitelist**. By default most commands will be disabled. See the **whitelist** command to enable other commands.")
+                        } else error("Command whitelist is already enabled in **${target.name}**.")
+                    }
                     "toggle" -> toggleList(this, config)
                     "add", "insert" -> {
                         if(match == null) {
@@ -96,6 +103,13 @@ object CommandFilters : CommandContainer {
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
                 when(args[0].toLowerCase()) {
+                    "use" -> {
+                        if(!filter.blacklisted) {
+                            filter.useBlacklist()
+                            config.save()
+                            embed("**${target.name}** will now use a command **blacklist** (default behavior). By default most commands will be enabled. Use the **blacklist** command to disable commands.")
+                        } else error("Command blacklist is already enabled in **${target.name}**.")
+                    }
                     "toggle" -> toggleList(this, config)
                     "add", "insert" -> {
                         if(match == null) {
