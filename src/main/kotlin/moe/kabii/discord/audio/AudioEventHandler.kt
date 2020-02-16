@@ -101,15 +101,11 @@ object AudioEventHandler : AudioEventAdapter() {
                 // delete old messages per guild settings
                 val guildID = data.audio.guild
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
-                data.associatedMessages.toFlux().filter { msg ->
-                    when(msg) {
-                        is QueueData.BotMessage.NPEmbed, is QueueData.BotMessage.TrackQueued -> config.musicBot.deleteOldBotMessages
-                        is QueueData.BotMessage.UserPlayCommand -> config.musicBot.deleteUserCommands
-                    }
-                }.flatMap { msg ->
-                    data.discord.getMessageById(msg.channelID, msg.messageID)
-                }.flatMap { message -> message.delete("Old music bot command")
-                }.subscribe()
+                data.associatedMessages.toFlux()
+                    .filter { msg -> msg.enabledFor(config) }
+                    .flatMap { msg -> data.discord.getMessageById(msg.channelID, msg.messageID) }
+                    .flatMap { message -> message.delete("Old music bot command") }
+                    .subscribe()
             }
         }
     }

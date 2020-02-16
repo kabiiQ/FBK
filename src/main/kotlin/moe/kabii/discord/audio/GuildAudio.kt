@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.command.commands.audio.filters.FilterFactory
@@ -22,6 +23,7 @@ import moe.kabii.rusty.Try
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
+import kotlin.reflect.KProperty1
 
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(
@@ -150,10 +152,12 @@ data class QueueData(
     val associatedMessages: MutableList<BotMessage> = mutableListOf(),
     val audioFilters: FilterFactory = FilterFactory()
 ) {
-    sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake) {
-        class NPEmbed(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
-        class TrackQueued(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
-        class UserPlayCommand(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg)
+    sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake, private val cfgProp: KProperty1<MusicSettings, Boolean>) {
+        class NPEmbed(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteOldBotMessages)
+        class TrackQueued(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteOldBotMessages)
+        class UserPlayCommand(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteUserCommands)
+
+        fun enabledFor(config: GuildConfiguration): Boolean = cfgProp.get(config.musicBot)
     }
 
     var silent = false // don't post added to queue message. for bulk actions, etc
