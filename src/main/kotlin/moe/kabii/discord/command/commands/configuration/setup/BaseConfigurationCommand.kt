@@ -62,6 +62,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         }
 
         // <command> (no args) -> full menu embed
+
         if(origin.args.isEmpty()) {
             val configEmbed: EmbedReceiver = {
                 kizunaColor(this)
@@ -129,8 +130,10 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         }
 
         val targetElement = origin.args[0].toLowerCase()
+
         // <command> list/all -> list current config
-        if(targetElement == "list" || targetElement == "all") {
+
+        if(targetElement == "list") {
             origin.embed {
                 setTitle("Current ${module.name} configuration:")
                 module.elements.forEach { element ->
