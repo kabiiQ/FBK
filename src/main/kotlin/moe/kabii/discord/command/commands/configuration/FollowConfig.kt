@@ -8,7 +8,6 @@ import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.commands.trackers.TargetMatch
 import moe.kabii.discord.command.verify
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.util.Search
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select

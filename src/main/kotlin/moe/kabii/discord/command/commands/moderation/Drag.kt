@@ -41,7 +41,7 @@ object Drag : Command("drag", "move", "pull") {
                     with (TempStates.dragGuilds) {
                         if (contains(target.id)) {
                             remove(target.id)
-                            embed("Drag operation cancelled.").subscribe()
+                            embed("Drag operation cancelled.").awaitSingle()
                         } else {
                             add(target.id)
                             val message = embed("Ready! Move me to drag any users in my voice channel along with me.").awaitSingle()
@@ -60,6 +60,7 @@ object Drag : Command("drag", "move", "pull") {
                                 }
                                 true
                             }.create(message, add = true)
+                            Unit
                         }
                     }
                 }

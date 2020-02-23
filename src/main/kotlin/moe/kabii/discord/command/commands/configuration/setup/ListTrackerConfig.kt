@@ -5,7 +5,6 @@ import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.channelVerify
-import moe.kabii.discord.command.verify
 
 object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
     object ListTrackerModule : ConfigurationModule<FeatureSettings>(

@@ -18,7 +18,6 @@ import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.YoutubeUtil
-import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
