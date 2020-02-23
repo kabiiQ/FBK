@@ -16,6 +16,7 @@ object JoinRole : CommandContainer {
     // returns role, invite
     private fun getArgs(input: List<String>): Pair<String, String?> {
         // <role> (i:invitecode)
+        // role can be any number of args, but invite code, if provided, will be the last arg.
         val match = inviteCode.matchEntire(input.last())
         return if(match != null) {
             // if invite code is provided
@@ -31,7 +32,7 @@ object JoinRole : CommandContainer {
                 // autorole join create <role> (opt invite code)
                 member.verify(Permission.MANAGE_ROLES)
                 if(args.isEmpty()) {
-                    usage("This command is used to set up automatic role assignment when users join the server.", "autorole join add <role name or ID>").awaitSingle()
+                    usage("This command is used to set up automatic role assignment when users join the server.", "autorole join add <role name or ID> (optional: invite code)").awaitSingle()
                     return@discord
                 }
 
@@ -86,7 +87,7 @@ object JoinRole : CommandContainer {
                 // take role name w/ optional invite code. if no invite code provided, remove all configurations for this role
                 // autorole join remove <role> i:invitecode
                 if(args.isEmpty()) {
-                    usage("This command is used to remove an automatic role assignment.", "autorole join remove <role name or ID>").awaitSingle()
+                    usage("This command is used to remove an automatic role assignment.", "autorole join remove <role name or ID> (optional: invite code)").awaitSingle()
                     return@discord
                 }
                 val (roleArg, inviteArg) = getArgs(args)

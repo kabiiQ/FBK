@@ -49,7 +49,7 @@ object RoleReactions : CommandContainer {
                 if(args.size < 2) {
                     usage(
                         "This command is used to create reactions which assign a user a specific role. You can format a message in any way to indicate what the reactions will do, then run this command with that message's ID to add reactions that will assign the desired role.",
-                        "reactionrole add <message id> <role>").awaitSingle()
+                        "autorole reaction add <message id> <role>").awaitSingle()
                     return@discord
                 }
                 val roleArg = args.drop(1).joinToString("")
@@ -65,7 +65,7 @@ object RoleReactions : CommandContainer {
                 }
                 val message = args[0].toLongOrNull()?.snowflake?.run(chan::getMessageById)?.tryAwait()?.orNull()
                 if(message == null) {
-                    usage("I could not find a message with the ID **${args[0]}** in **${chan.mention}**.", "reactionrole add <message id> <role>").awaitSingle()
+                    usage("I could not find a message with the ID **${args[0]}** in **${chan.mention}**.", "autorole reaction add <message id> <role>").awaitSingle()
                     return@discord
                 }
                 val configs = config.selfRoles.roleMentionMessages
@@ -98,7 +98,7 @@ object RoleReactions : CommandContainer {
                 // reactionrole remove <messageid>
                 val messageID = args.getOrNull(0)?.removePrefix("#")?.toLongOrNull()
                 if(messageID == null) {
-                    usage("This command is used to unregister an existing reaction role message.", "reactionrole remove <message id>").awaitSingle()
+                    usage("This command is used to unregister an existing reaction role message.", "autorole reaction remove <message id>").awaitSingle()
                     return@discord
                 }
                 val removed = configs.removeIf { reactRole -> reactRole.message.messageID == messageID }

@@ -17,7 +17,7 @@ object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
         BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeChannel),
-        BooleanElement("Livestream tracking", listOf("twitch", "streams", "stream"), FeatureChannel::twitchChannel),
+        BooleanElement("Livestream tracking", listOf("stream", "streams", "twitch", "mixer"), FeatureChannel::twitchChannel),
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation)

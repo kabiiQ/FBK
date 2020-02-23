@@ -58,7 +58,7 @@ object UserModeration : CommandContainer {
         }
     }
 
-    object BanUserID : Command("ban", "banuser", "userban") {
+    object BanUserID : Command("ban", "banuser", "userban", "addban") {
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {
@@ -86,7 +86,7 @@ object UserModeration : CommandContainer {
         }
     }
 
-    object PardonUserID : Command("pardon", "unban", "un-ban") {
+    object PardonUserID : Command("pardon", "unban", "un-ban", "removeban") {
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {

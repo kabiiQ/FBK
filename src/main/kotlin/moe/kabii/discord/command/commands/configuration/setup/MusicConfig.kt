@@ -103,7 +103,7 @@ object MusicConfig : CommandContainer {
                         event.client.getChannelById(id.snowflake).ofType(VoiceChannel::class.java).tryAwait().orNull()
                     }
                     if(channel == null) {
-                        usage("The bot is not currently set to automatically join a voice channel.", "autojoin <channel id or \"set\" for current channel>").awaitSingle()
+                        usage("The bot is not currently set to automatically join a voice channel.", "autojoin <channel id or \"me\" for current channel>").awaitSingle()
                         return@discord
                     }
                     embed("The bot is currently set to auto join **${channel.name}**.").awaitSingle()

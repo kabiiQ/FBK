@@ -40,7 +40,8 @@ object AudioEventHandler : AudioEventAdapter() {
                 .flatMap(BotUtil::getBotVoiceChannel)
                 .tryBlock().orNull()
             if(chan != null) {
-                val userPresent = chan.voiceStates.filter { state -> state.userId == data.author }.hasElements().tryBlock().orNull()
+                val userPresent = chan.voiceStates
+                    .filter { state -> state.userId == data.author }.hasElements().tryBlock().orNull()
                 if(userPresent == false) {  // abandon this if it errors, but the bot should definitely be in a voice channel if this is reached
                     originChan.flatMap { chan ->
                         chan.createEmbed { embed ->
