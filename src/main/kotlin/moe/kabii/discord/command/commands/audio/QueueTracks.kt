@@ -1,11 +1,14 @@
 package moe.kabii.discord.command.commands.audio
 
+import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.channelVerify
+import moe.kabii.structure.mapNotNull
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {
@@ -108,6 +111,39 @@ object QueueTracks : AudioCommandContainer {
                     return@discord
                 }
                 AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, 0, query))
+            }
+        }
+    }
+
+    private val ignoredFilenames = Regex(".+\\.png|\\.jpg")
+    object PlayLastAttachment : Command("playlast", "playthat") {
+        init {
+            discord {
+                // play the last uploaded file in the channel
+                validateChannel(this)
+                if(!validateVoice(this)) {
+                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                    return@discord
+                }
+                // search for the attachment and add it to queue
+                val attachment = chan.getMessagesBefore(event.message.id)
+                    .take(10L)
+                    .map(Message::getAttachments)
+                    // todo test if sorting is needed to grab the newest message first
+                    .mapNotNull { attachments ->
+                        attachments.find { attachment ->
+                            !attachment.filename.matches(ignoredFilenames)
+                        }
+                    }
+                    .take(1)
+                    .awaitFirstOrNull()
+
+                if(attachment == null) {
+                    error("No nearby attachment found to play.").awaitSingle()
+                    return@discord
+                }
+                val attached = ExtractedQuery.default(attachment.url)
+                AudioManager.manager.loadItem(noCmd, SingleTrackLoader(this, extract = attached))
             }
         }
     }
