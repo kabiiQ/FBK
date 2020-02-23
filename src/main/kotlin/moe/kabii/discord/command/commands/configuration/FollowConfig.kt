@@ -19,28 +19,47 @@ object FollowConfig : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
-                if(args.isEmpty()) {
-                    usage("**setfollow** sets the Twitch channel that will be used when the **follow** command is used without stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch username or \"none\" to remove>").awaitSingle()
-                    return@discord
-                }
                 val settings = config.guildSettings
-                when(args[0].toLowerCase()) {
-                    "none", "reset", "clear", "empty" -> {
-                        settings.defaultFollowChannel = null
-                        config.save()
-                        embed("The default follow channel for **${target.name}** has been removed.").awaitSingle()
+                // setfollow <twitch/mixer/none> <username> OR setfollow <username> (implied to be twitch)
+                val (site, username) = when(args.size) {
+                    1 -> {
+                        when (args[0].toLowerCase()) {
+                            "none", "reset", "clear", "empty" -> {
+                                // setfollow none
+                                settings.defaultFollowChannel = null
+                                config.save()
+                                embed("The default follow channel for **${target.name}** has been removed.").awaitSingle()
+                                return@discord
+                            }
+                            else -> {
+                                // setfollow <username>
+                                TrackedStreams.Site.TWITCH to args[0]
+                            }
+                        }
+                    }
+                    2 -> {
+                        // setfollow twitch <username>
+                        val site = TargetMatch.parseStreamSite(args[0])
+                        if(site == null) {
+                            error("Unknown/unsupported livestream site **${args[0]}**. Supported sites are Twitch and Mixer.").awaitSingle()
+                            return@discord
+                        }
+                        site to args[1]
+                    }
+                    else -> {
+                        usage("**setfollow** sets the livestream that will be used when the **follow** command is used without specifying a stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch/mixer or \"none\" to remove> <username>").awaitSingle()
                         return@discord
                     }
                 }
-                val twitchStream = TwitchParser.getUser(args[0]).orNull()
-                if(twitchStream == null) {
-                    error("Invalid Twitch stream **${args[0]}**.").awaitSingle()
+
+                val stream = site.parser.getUser(username).orNull()
+                if(stream == null) {
+                    error("Unable to find the **${site.full}** stream **${username}**.").awaitSingle()
                     return@discord
                 }
-                val twitchID = twitchStream.userID
-                settings.defaultFollowChannel = TrackedStreams.StreamInfo(TrackedStreams.Site.TWITCH, twitchStream.userID)
+                settings.defaultFollowChannel = TrackedStreams.StreamInfo(site, stream.userID)
                 config.save()
-                embed("The default follow channel for **${target.name}** has been set to **${twitchStream.displayName}**.").awaitSingle()
+                embed("The default follow channel for **${target.name}** has been set to **${stream.displayName}**.").awaitSingle()
             }
         }
     }
