@@ -23,6 +23,7 @@ object GuildUtil : CommandContainer {
                 val memberCount = if(target.memberCount.isPresent) target.memberCount.asInt.toString() else "Unavailable"
                 val channelCount = target.channels.count().tryAwait().orNull()?.toString() ?: "Unavailable"
                 val emojiCount = target.emojiIds.count().toString()
+                val serverID = target.id.asString()
                 val mfa = target.mfaLevel
                 val notif = when(target.notificationLevel) {
                     Guild.NotificationLevel.ALL_MESSAGES -> "All Messages"
@@ -32,7 +33,7 @@ object GuildUtil : CommandContainer {
                 val region = target.regionId
                 val boosts = target.premiumSubcriptionsCount.orElse(0)
 
-                val owner = if(guildOwner != null) "${guildOwner.username}#${guildOwner.discriminator}" else "Unknown"
+                val owner = if(guildOwner != null) "${guildOwner.username}#${guildOwner.discriminator} (${guildOwner.id.asString()})" else "Unknown"
 
                 val more = StringBuilder()
                 more.append("This guild was created $creation.")
@@ -49,6 +50,7 @@ object GuildUtil : CommandContainer {
                     addField("Member Count", memberCount, true)
                     addField("Channel Count", channelCount, true)
                     addField("Emoji Count", emojiCount, true)
+                    addField("Server ID", serverID, true)
                     addField("Default Notifications", notif, true)
                     addField("Voice Region", region, true)
 
