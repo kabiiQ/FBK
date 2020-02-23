@@ -98,7 +98,7 @@ data class FeatureSettings(
     var streamEndGame: Boolean = true,
     var mediaNewItem: Boolean = true,
     var mediaStatusChange: Boolean = true,
-    var mediaUpdatedStatus: Boolean = false
+    var mediaUpdatedStatus: Boolean = true
 )
 
 data class TwitchConfig(
