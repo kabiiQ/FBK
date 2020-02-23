@@ -42,3 +42,11 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
         }
     }
 }
+
+object DocumentationLink : Command("help", "commands", "info") {
+    init {
+        discord {
+            embed("KizunaAi command documentation is available on [GitHub](https://github.com/kabiiQ/KizunaAi/wiki)").awaitSingle()
+        }
+    }
+}
