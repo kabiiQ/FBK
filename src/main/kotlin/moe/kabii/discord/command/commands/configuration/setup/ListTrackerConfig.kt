@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.channelVerify
 import moe.kabii.discord.command.verify
 
 object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
@@ -30,7 +31,7 @@ object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "
         discord {
             if(isPM) return@discord
             chan as TextChannel
-            member.verify(Permission.MANAGE_CHANNELS)
+            member.channelVerify(chan, Permission.MANAGE_CHANNELS)
             val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(
