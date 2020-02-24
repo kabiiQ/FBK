@@ -15,8 +15,9 @@ object QueueTracks : AudioCommandContainer {
         init {
             discord {
                 validateChannel(this) // throws feature exception if this is not a valid "music" channel, caught upstream
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 // add a song to the end of the queue
@@ -33,9 +34,9 @@ object QueueTracks : AudioCommandContainer {
     object PlayList : Command("playlist", "listplay") {
         init {
             discord {
-                validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -66,9 +67,9 @@ object QueueTracks : AudioCommandContainer {
     object ReplaySong : Command("replay", "repeat", "requeue") {
         init {
             discord {
-                validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 // re-queue current song at the end of the queue
@@ -98,10 +99,9 @@ object QueueTracks : AudioCommandContainer {
     object PlayNext : Command("playnext", "queuenext") {
         init {
             discord {
-                validateChannel(this)
-                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 // add a song to the front of the queue
@@ -120,9 +120,9 @@ object QueueTracks : AudioCommandContainer {
         init {
             discord {
                 // play the last uploaded file in the channel
-                validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 // search for the attachment and add it to queue

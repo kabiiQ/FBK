@@ -45,38 +45,9 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun trackString(track: AudioTrack, includeAuthor: Boolean = true): String = Companion.trackString(track, includeAuthor)
 
-    suspend fun permOverride(origin: DiscordParameters, botChan: VoiceChannel?): Boolean {
-        botChan ?: return false // if the bot is not in any voice channel there is no way to let them override the requirements
-        return botChan.getEffectivePermissions(origin.author.id).map { it.contains(Permission.MANAGE_CHANNELS) }.awaitSingle()
-    }
-
     fun validateChannel(origin: DiscordParameters) {
         val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
         if(musicChan != true) throw FeatureDisabledException("music", origin)
-    }
-
-    suspend fun validateVoice(origin: DiscordParameters): Boolean = with(origin) {
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
-        val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull() ?: return false
-        val botChannel =
-            event.client.self.flatMap { user -> user.asMember(target.id) }.flatMap(Member::getVoiceState)
-                .flatMap(VoiceState::getChannel).tryAwait().orNull()
-
-        val override = permOverride(this, botChannel)
-
-        if (botChannel != null) {
-            if (botChannel.id == userChannel.id) return true // can always queue in same channel
-            if (audio.playing && !override) return false // if bot is playing music in a different channel user can't queue
-        }
-
-        // if the bot is not playing or is not in a channel
-        config.musicBot.lastChannel = userChannel.id.asLong()
-        config.save()
-
-        audio.discord.mutex.withLock {
-            audio.resetAudio(userChannel)
-        }
-        return true // we join the user's channel and they can now queue songs
     }
 
     suspend fun getSkipsNeeded(origin: DiscordParameters): Int {

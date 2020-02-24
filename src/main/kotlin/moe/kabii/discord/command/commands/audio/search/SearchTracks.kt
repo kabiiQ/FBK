@@ -6,6 +6,7 @@ import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
+import moe.kabii.discord.command.commands.audio.AudioStateUtil
 import moe.kabii.discord.command.commands.audio.ParseUtil
 import moe.kabii.structure.tryAwait
 
@@ -14,9 +15,9 @@ object SearchTracks : AudioCommandContainer {
         init {
             discord {
                 // search source query
-                validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -88,8 +89,9 @@ object SearchTracks : AudioCommandContainer {
         init {
             discord {
                 validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                     return@discord
                 }
                 if(args.size < 2) {

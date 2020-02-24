@@ -31,9 +31,9 @@ object BotState : AudioCommandContainer {
     object BotSummon : Command("summon", "join") {
         init {
             discord {
-                validateChannel(this)
-                if(!validateVoice(this)) {
-                    error("You must be in the bot's voice channel if the bot is in use.").awaitSingle()
+                val voice = AudioStateUtil.checkAndJoinVoice(this)
+                if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                    error(voice.error).awaitSingle()
                 }
             }
         }
