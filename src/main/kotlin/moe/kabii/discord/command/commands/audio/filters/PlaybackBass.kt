@@ -28,12 +28,12 @@ object PlaybackBass : AudioCommandContainer {
                 val arg = args[0].replace("%", "")
                 val targetBass = when(val rate = arg.toDoubleOrNull()) {
                     null -> null
-                    in 0.0..1.2 -> rate
-                    in 2.0..120.0 -> rate / 100
+                    in 0.0..1.0 -> rate
+                    in 2.0..100.0 -> rate / 100
                     else -> null
                 }
                 if(targetBass == null) {
-                    error("Invalid bass level **$arg**. Value should be between 0% (0) and 120% (1.2/120)").awaitSingle()
+                    error("Invalid bass level **$arg**. Value should be between 0% (0) and 100% (1/100)").awaitSingle()
                     return@discord
                 }
                 val data = track.userData as QueueData
