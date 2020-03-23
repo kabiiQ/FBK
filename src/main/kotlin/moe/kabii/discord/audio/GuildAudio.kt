@@ -35,6 +35,7 @@ data class GuildAudio(
     val discord: AudioConnection = AudioConnection()
 ) {
     var ending: Boolean = false
+    var looping: Boolean = false
     private val mutex = Mutex()
 
     val playing: Boolean
@@ -54,11 +55,11 @@ data class GuildAudio(
             ?.let(DurationFormatter::colonTime)
 
     // queue song for a user, returns false if user is over quota
-    suspend fun tryAdd(track: AudioTrack, member: Member, position: Int? = null, checkLimits: Boolean = true): Boolean {
+    suspend fun tryAdd(track: AudioTrack, member: Member? = null, position: Int? = null, checkLimits: Boolean = true): Boolean {
         val maxTracksUser = GuildConfigurations.getOrCreateGuild(guild).musicBot.maxTracksUser
         val meta = track.userData as? QueueData
         checkNotNull(meta) { "AudioTrack has no origin information: ${track.info}" }
-        if (checkLimits && maxTracksUser != 0L) {
+        if (member != null && checkLimits && maxTracksUser != 0L) {
             val inQueue = queue.count { queuedTrack -> (queuedTrack.userData as QueueData).author == meta.author }
             if (inQueue >= maxTracksUser) {
                 if (!member.hasPermissions(Permission.MANAGE_MESSAGES)) return false
@@ -69,8 +70,11 @@ data class GuildAudio(
         return true
     }
 
-    suspend fun forceAdd(track: AudioTrack, member: Member, position: Int? = null) =
-        tryAdd(track, member, position, checkLimits = false)
+    fun forceAdd(track: AudioTrack, member: Member? = null, position: Int? = null): Boolean {
+        if(position != null) queue.add(position, track) else queue.add(track)
+        saveQueue()
+        return true
+    }
 
     suspend fun resetAudio(voice: VoiceChannel?): GuildAudio {
         check(discord.mutex.isLocked) { "Audio connection protected" }

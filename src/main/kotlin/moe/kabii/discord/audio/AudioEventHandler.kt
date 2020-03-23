@@ -40,7 +40,8 @@ object AudioEventHandler : AudioEventAdapter() {
                 .tryBlock().orNull()
             if(chan != null) {
                 val userPresent = chan.voiceStates
-                    .filter { state -> state.userId == data.author }.hasElements().tryBlock().orNull()
+                    .filter { state -> state.userId == data.author }
+                    .hasElements().tryBlock().orNull()
                 if(userPresent == false) {  // abandon this if it errors, but the bot should definitely be in a voice channel if this is reached
                     originChan.flatMap { chan ->
                         chan.createEmbed { embed ->
@@ -96,12 +97,23 @@ object AudioEventHandler : AudioEventAdapter() {
                     return
                 }
 
+                // if queue is set to loop, add this track to the end of the queue
+                if(data.audio.looping) {
+                    val newTrack = track.makeClone()
+                    newTrack.userData = data.apply {
+                        votes.clear()
+                        silent = true
+                    }
+                    data.audio.forceAdd(newTrack)
+                }
+
                 data.audio.editQueueSync { // need to save queue even if there is no next track
                     if (data.audio.queue.isNotEmpty()) {
                         val next = removeAt(0)
                         player.playTrack(next)
                     }
                 }
+
                 // delete old messages per guild settings
                 val guildID = data.audio.guild
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
@@ -123,6 +135,8 @@ object AudioEventHandler : AudioEventAdapter() {
                     .flatMap { msg -> data.discord.getMessageById(msg.channelID, msg.messageID) }
                     .flatMap { message -> message.delete("Old music bot command") }
                     .subscribe()
+
+                data.associatedMessages.clear()
             }
         }
     }

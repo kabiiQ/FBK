@@ -49,9 +49,9 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
         // set track
         if(!audio.player.startTrack(track, true)) {
-            val paused = if(audio.player.isPaused) "The bot is currently paused" else ""
+            val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
             val add = audio.tryAdd(track, origin.member, position)
-            if(data.silent) return@runBlocking
+            if(data.silent) return@runBlocking // don't send any messages for this track
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
                 origin.error {
@@ -60,16 +60,20 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 }.awaitSingle()
                 return@runBlocking
             }
+
             val addedDuration = track.duration - track.position
             val trackPosition = position ?: audio.queue.size
             val untilPlaying = audio.duration?.minus(addedDuration)
             val eta = if(untilPlaying != null) {
                 val formatted = DurationFormatter(untilPlaying).colonTime
-                "Estimated time until playing: $formatted."
-            } else "Unknown queue length with a stream in queue."
+                " Estimated time until playing: $formatted. "
+            } else " Unknown queue length with a stream in queue. "
+
+            val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
+
             origin.embed {
                 if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
-                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**. $paused. $eta")
+                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$paused$eta$looping")
             }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
             }.awaitSingle()
         }

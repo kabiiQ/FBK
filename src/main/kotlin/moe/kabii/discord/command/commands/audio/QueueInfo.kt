@@ -38,15 +38,18 @@ object QueueInfo : AudioCommandContainer {
                     }.joinToString("\n").take(1900)
                     "In queue:\n$list"
                 }
+
                 val playlist = audio.playlist
                 val duration = audio.formatDuration ?: "Unknown queue length with a stream in queue"
                 val size = playlist.size
                 val paused = if(audio.player.isPaused) "The bot is currently paused." else ""
+                val looping = if(audio.looping) " \nThe queue is currently configured to loop tracks. " else ""
                 val avatarUrl = event.client.self.map(User::getAvatarUrl).awaitSingle()
+
                 embed {
                     if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
                     setAuthor("Current queue for ${target.name}", null, avatarUrl)
-                    setDescription("$np\n\n$queueList")
+                    setDescription("$np\n\n$queueList$looping")
                     setFooter("$size track${size.s()} ($duration remaining) $paused", null)
                 }.awaitSingle()
             }
@@ -66,10 +69,11 @@ object QueueInfo : AudioCommandContainer {
                 if(track == null) {
                     embed("Currently loading the next track!")
                 } else {
-                    val paused = if(audio.player.isPaused) "The bot is currently paused." else ""
+                    val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
+                    val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
                     embed {
                         if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
-                        setDescription("Currently playing track **${trackString(track)}**. $paused")
+                        setDescription("Currently playing track **${trackString(track)}**.$paused$looping")
                     }
                 }.awaitSingle()
             }
