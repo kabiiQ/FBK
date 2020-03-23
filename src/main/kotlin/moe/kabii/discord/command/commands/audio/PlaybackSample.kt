@@ -57,7 +57,9 @@ object PlaybackSample : AudioCommandContainer {
                     error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.").awaitSingle()
                     return@discord
                 }
-                val sampleTo = DurationParser.tryParse(noCmd)?.run { Try(::toMillis) }?.result?.orNull()
+                val sampleTo = DurationParser.tryParse(noCmd)?.run { Try(::toMillis) }?.result?.orNull()?.let { position ->
+                    if(position > track.duration) track.duration else position
+                }
                 if(sampleTo == null) {
                     error("**$noCmd** is not a valid timestamp. Example: **sample 2m**.").awaitSingle()
                     return@discord
@@ -65,11 +67,6 @@ object PlaybackSample : AudioCommandContainer {
                 if(track.position > sampleTo) {
                     val targetColon = DurationFormatter(sampleTo).colonTime
                     error("The current track is already beyond the timestamp **$targetColon**.").awaitSingle()
-                    return@discord
-                }
-                if(sampleTo > track.duration) {
-                    val duration = DurationFormatter(track.duration).colonTime
-                    error("The current track does not contain $duration of audio.").awaitFirst()
                     return@discord
                 }
                 val data = track.userData as QueueData
