@@ -114,37 +114,4 @@ object QueueTracks : AudioCommandContainer {
             }
         }
     }
-
-    private val ignoredFilenames = Regex(".+\\.png|\\.jpg")
-    object PlayLastAttachment : Command("playlast", "playthat") {
-        init {
-            discord {
-                // play the last uploaded file in the channel
-                val voice = AudioStateUtil.checkAndJoinVoice(this)
-                if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
-                    return@discord
-                }
-                // search for the attachment and add it to queue
-                val attachment = chan.getMessagesBefore(event.message.id)
-                    .take(10L)
-                    .map(Message::getAttachments)
-                    // todo test if sorting is needed to grab the newest message first
-                    .mapNotNull { attachments ->
-                        attachments.find { attachment ->
-                            !attachment.filename.matches(ignoredFilenames)
-                        }
-                    }
-                    .take(1)
-                    .awaitFirstOrNull()
-
-                if(attachment == null) {
-                    error("No nearby attachment found to play.").awaitSingle()
-                    return@discord
-                }
-                val attached = ExtractedQuery.default(attachment.url)
-                AudioManager.manager.loadItem(noCmd, SingleTrackLoader(this, extract = attached))
-            }
-        }
-    }
 }
