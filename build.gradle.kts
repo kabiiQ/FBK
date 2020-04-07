@@ -23,6 +23,10 @@ repositories {
         name = "exposed-repo"
         url = uri("https://dl.bintray.com/kotlin/exposed")
     }
+    maven {
+        name = "sonatype-snapshots"
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
 }
 
 dependencies {
@@ -38,7 +42,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.0.12") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.0.14-SNAPSHOT") // discord websocket and api
     implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.17") // twitch irc
 
     // music bot
