@@ -1,7 +1,7 @@
 group = "moe.kabii"
 
 plugins {
-    val KOTLIN_VER = "1.3.61"
+    val KOTLIN_VER = "1.3.71"
     kotlin("jvm") version KOTLIN_VER
     kotlin("kapt") version KOTLIN_VER
     id("com.github.johnrengelman.shadow") version "5.2.0"
