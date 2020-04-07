@@ -46,10 +46,10 @@ dependencies {
     implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.17") // twitch irc
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.32") // discord audio library
+    implementation("com.sedmelluq:lavaplayer:1.3.46") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
-    implementation("com.squareup.okhttp3:okhttp:4.2.2") // other api - http calls
+    implementation("com.squareup.okhttp3:okhttp:4.5.0") // other api - http calls
 
     // other api - json response parsing
     val moshi = "1.9.2"
@@ -58,15 +58,15 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshi")
 
     // thumbnail file server
-    val ktor = "1.3.0-rc2"
+    val ktor = "1.3.1"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
 
     // database i/o
-    implementation("org.litote.kmongo:kmongo-coroutine:3.11.2") // mongodb per-guild configurations
+    implementation("org.litote.kmongo:kmongo-coroutine:4.0.0") // mongodb per-guild configurations
     // postgresql user data, message history, tracked streams
     implementation("org.jetbrains.exposed:exposed:0.17.7")
-    implementation("org.postgresql:postgresql:42.2.9")
+    implementation("org.postgresql:postgresql:42.2.12")
     api("com.uchuhimo:konf:0.22.1") // .toml token configuration
 
     // logging
@@ -74,7 +74,7 @@ dependencies {
 
     // other
     implementation("commons-validator:commons-validator:1.6")
-    implementation("org.reflections:reflections:0.9.11") // command detection and registration
+    implementation("org.reflections:reflections:0.9.12") // command detection and registration
 }
 
 val updateVersion = task("updateVersion") {
