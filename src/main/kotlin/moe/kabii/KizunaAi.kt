@@ -2,6 +2,7 @@ package moe.kabii
 
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
+import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
@@ -161,14 +162,17 @@ fun main() {
         .flatMap(discordHandler::handle)
 
     // twitch4j event listeners
-    val onTwitchMessage = twitch.eventManager.onEvent(ChannelMessageEvent::class.java)
+    val onTwitchMessage = twitch.eventManager
+        .getEventHandler(ReactorEventHandler::class.java)
+        .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
+    /*val onTwitchMessage = twitch.eventManager.onEvent(ChannelMessageEvent::class.java)
             .filter { it.user.name.toLowerCase() != "ai_kizuna" }
-            .doOnNext(twitchHandler::handle)
+            .doOnNext(twitchHandler::handle)*/
 
     val subscribers = mutableListOf(
         onJoin, onPart, onGatewayReconnection, onReactionAdd,
         onReactionRemove, onGuildReady, onInitialReady,
-        onDiscordMessage, onTwitchMessage
+        onDiscordMessage//, onTwitchMessage
     ).plus(handlers)
 
     // subscribe to bot lifetime events

@@ -14,14 +14,16 @@ import moe.kabii.structure.stackTraceString
 
 class TwitchMessageHandler(val manager: CommandManager) {
     fun handle(event: ChannelMessageEvent) {
+        if(event.user.name.toLowerCase() == "ai_kizuna") return
         // getGuild discord guild
+
         val msgArgs = event.message.split(" ").filterNot { it.isBlank() }
         val isMod = event.permissions.contains(CommandPermission.MODERATOR)
 
         LOG.debug("TwitchMessage#${event.channel.name}:\t${event.user.name}:\t${event.message}")
 
         // discord-twitch verification- check all messages even if not linked guild
-        val verification = TempStates.twitchVerify.entries.find { (id, config) ->
+        val verification = TempStates.twitchVerify.entries.find { (id, _) ->
             id == event.channel.id.toLong()
         }
         if (verification != null) {
