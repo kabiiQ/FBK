@@ -38,7 +38,7 @@ internal interface AudioCommandContainer : CommandContainer {
                 } else "stream"
                 val trackSeconds = track.position / 1000L
                 val uri = if(track is YoutubeAudioTrack && trackSeconds != 0L) "${meta.uri}&t=$trackSeconds" else meta.uri
-                "[${meta.title.trim()}]($uri)$author ($length)"
+                "[${meta.title?.trim()}]($uri)$author ($length)"
             } ?: "no details available"
         }
     }
