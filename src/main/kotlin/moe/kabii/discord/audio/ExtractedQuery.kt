@@ -18,6 +18,7 @@ data class ExtractedQuery private constructor(val url: String, val timestamp: Lo
             }
             if (origin.args.isEmpty()) return null
             var url = origin.noCmd
+
             // extract timestamp
             val matchTime = timestampRegex.find(url)
             val timestamp = matchTime?.groups?.get(1)
@@ -30,10 +31,14 @@ data class ExtractedQuery private constructor(val url: String, val timestamp: Lo
             val sample = sampleTime?.run { DurationParser.tryParse(value) }
             url = if(matchSample != null) url.replace(matchSample.value, "") else url
 
+            // extract volume param
             val matchVolume = volumeRegex.find(url)
             val volumePct = matchVolume?.groups?.get(1)
             val volume = volumePct?.value?.toIntOrNull()
             url = if(matchVolume != null) url.replace(matchVolume.value, "") else url
+
+            // ignore <> if they surround a URL - these can be used in Discord to avoid embedding a link
+            url = url.removeSurrounding("<", ">")
 
             return ExtractedQuery(
                 url = url,
@@ -43,6 +48,7 @@ data class ExtractedQuery private constructor(val url: String, val timestamp: Lo
             )
         }
 
+        // used for attachments, playlists, or internally in 'search' results - input requires no processing
         fun default(url: String): ExtractedQuery = ExtractedQuery(url, timestamp = 0L, sample = null, volume = MusicSettings.defaultStartingVolume)
     }
 }
