@@ -69,7 +69,7 @@ dependencies {
     // postgresql user data, message history, tracked streams
     implementation("org.jetbrains.exposed:exposed:0.17.7")
     implementation("org.postgresql:postgresql:42.2.12")
-    api("com.uchuhimo:konf:0.22.1") // .toml token configuration
+    implementation("com.uchuhimo:konf:0.22.1") // .toml token configuration
 
     // logging
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
