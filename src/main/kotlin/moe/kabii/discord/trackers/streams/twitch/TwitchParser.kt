@@ -50,8 +50,7 @@ object TwitchParser : StreamParser {
                         val timeout = if (reset != null) {
                             Duration.between(Instant.now(), Instant.ofEpochSecond(reset)).toMillis()
                         } else 12000L
-                        Thread.sleep(timeout) // rate limit retry later
-                        null
+                        Err(timeout) // rate limit retry later
 
                     } else if(response.code == 401) {
                         // require new api token
@@ -60,25 +59,33 @@ object TwitchParser : StreamParser {
 
                     } else {
                         LOG.error("Error getting Twitch call: $response")
-                        null
+                        Ok(null)
                     }
                 } else {
                     val body = response.body!!.string()
                     when(val json = MOSHI.adapter(R::class.java).fromJsonSafe(body)) {
-                        is Ok -> json.value
+                        is Ok -> Ok(json.value)
                         is Err -> {
                             LOG.error("Invalid JSON provided from Twitch: ${json.value} :: $body}")
-                            null
+                            Ok(null)
                         }
                     }
                 }
             }
             if(response is Ok) {
-                val json = response.value
-                return if(json != null) Ok(json) else Err(StreamErr.NotFound)
+                when(val jsonResponse = response.value) {
+                    is Ok -> {
+                        val json = jsonResponse.value
+                        return if(json != null) Ok(json) else Err(StreamErr.NotFound)
+                    }
+                    is Err -> {
+                        // rate limit or api issue
+                        Thread.sleep(jsonResponse.value)
+                    }
+                }
             } else {
-                // actual network issue
-                Thread.sleep(1000L)
+                // actual system network issue
+                Thread.sleep(2000L)
             }
         }
         return Err(StreamErr.IO) // if 3 attempts failed
