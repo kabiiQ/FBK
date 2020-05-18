@@ -11,15 +11,21 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.fromJsonSafe
+import okhttp3.FormBody
 import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.awt.Color
 import java.time.Duration
 import java.time.Instant
 
 object TwitchParser : StreamParser {
-    override val site by lazy { TrackedStreams.Site.TWITCH }
     override val color = Color(6570405)
     override val icon: String = NettyFileServer.glitch
+    override val site by lazy { TrackedStreams.Site.TWITCH }
+
+    private val clientID = Keys.config[Keys.Twitch.client]
+    private val oauth = Authorization()
 
     class TwitchUser(userID: Long, username: String, displayName: String, profileImage: String)
         : StreamUser(this, userID, username, displayName, profileImage) {
@@ -32,17 +38,26 @@ object TwitchParser : StreamParser {
         val request = Request.Builder()
             .get()
             .url(request)
-            .header("Client-ID", Keys.config[Keys.Twitch.client])
+            .header("Client-ID", clientID)
+            .header("Authorization", "Bearer ${oauth.accessToken}")
+
         for(attempt in 1..3) {
             val response = OkHTTP.make(request) { response ->
                 if (!response.isSuccessful) {
                     if (response.code == 429) {
+
                         val reset = response.headers.get("Ratelimit-Reset")?.toLong()
                         val timeout = if (reset != null) {
                             Duration.between(Instant.now(), Instant.ofEpochSecond(reset)).toMillis()
                         } else 12000L
                         Thread.sleep(timeout) // rate limit retry later
                         null
+
+                    } else if(response.code == 401) {
+                        // require new api token
+
+                        if(oauth.refreshOAuthToken() is Ok) Err(0L) else Err(1000L)
+
                     } else {
                         LOG.error("Error getting Twitch call: $response")
                         null

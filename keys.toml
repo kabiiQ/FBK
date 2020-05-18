@@ -24,6 +24,7 @@ bot_db = 'kizunaai'
 client_id = ''
 client_secret = ''
 chat_oauth_token = 'oauth:'
+app_access_token = ''
 callback = ''
 
 [censor]
