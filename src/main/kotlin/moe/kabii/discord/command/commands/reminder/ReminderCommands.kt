@@ -1,4 +1,4 @@
-package moe.kabii.discord.command.commands.users
+package moe.kabii.discord.command.commands.reminder
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.relational.DiscordObjects
