@@ -80,7 +80,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
             // add this channel if the list isn't already tracked in this channel
             // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
             val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
-            trackedList.targets.add(mediaTarget)
+            trackedList.targets += mediaTarget
             trackedList.save()
             editPrompt {
                 kizunaColor(this)
@@ -109,7 +109,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
                 if(origin.isPM
                         || origin.author.id.asLong() == trackedTarget.discordUserID
                         || origin.event.member.get().hasPermissions(Permission.MANAGE_MESSAGES)) {
-                    trackedList.targets.remove(trackedTarget)
+                    trackedList.targets -= trackedTarget
                     trackedList.save()
                     origin.embed("No longer tracking **$targetName**.").awaitSingle()
                     return

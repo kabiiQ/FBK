@@ -4,6 +4,7 @@ import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.PrivateChannel
 import discord4j.core.`object`.entity.TextChannel
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -151,7 +152,11 @@ class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists")
                                     }
                                 }
                                 .onErrorResume { e ->
-                                    // todo channel should be removed if it's no longer valid
+                                    if(e is ClientException && e.status.code() == 404) {
+                                        // remove target if no longer valid
+                                        savedList.targets -= target
+                                    }
+
                                     LOG.warn("Uncaught exception in MediaListWatcher: ${e.message} while sending anime list update to ${target.channelID}")
                                     LOG.info(e.stackTraceString)
                                     Mono.empty()

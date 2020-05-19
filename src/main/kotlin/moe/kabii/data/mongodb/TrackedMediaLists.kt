@@ -30,7 +30,7 @@ object TrackedMediaLists {
 data class TrackedMediaList(
     val _id: Id<TrackedMediaList> = newId(),
     val list: ListInfo,
-    val targets: MutableSet<MediaTarget> = mutableSetOf(),
+    var targets: Set<MediaTarget> = setOf(),
     var savedMediaList: MediaList) {
     suspend fun save() = TrackedMediaLists.mongoMediaLists.updateOne(this@TrackedMediaList,
         upsert
