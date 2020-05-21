@@ -1,4 +1,4 @@
-package moe.kabii.discord.command.commands.utility
+package moe.kabii.discord.command.commands.user
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
