@@ -48,7 +48,8 @@ class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
                 } // don't let this thread die
             }
             val runtime = Duration.between(start, Instant.now())
-            sleep(updateInterval - runtime.toMillis())
+            val delay = updateInterval - runtime.toMillis()
+            if(delay >= 0) sleep(delay) else sleep(0)
         }
     }
 
