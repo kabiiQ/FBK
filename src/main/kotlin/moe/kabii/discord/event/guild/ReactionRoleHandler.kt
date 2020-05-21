@@ -15,10 +15,6 @@ object ReactionRoleHandler : EventHandler<ReactionAddEvent>(ReactionAddEvent::cl
         // can immediately narrow down to unicode reactions in a guild
         val guildID = event.guildId.orNull() ?: return
         val emoji = event.emoji.asUnicodeEmoji().orNull() ?: return
-        when(emoji.raw) {
-            EmojiCharacters.check, EmojiCharacters.redX -> {}
-            else -> return
-        }
         val addRole = when(emoji.raw) {
             EmojiCharacters.check -> true
             EmojiCharacters.redX -> false

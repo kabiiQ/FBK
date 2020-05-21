@@ -165,14 +165,11 @@ fun main() {
     val onTwitchMessage = twitch.eventManager
         .getEventHandler(ReactorEventHandler::class.java)
         .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
-    /*val onTwitchMessage = twitch.eventManager.onEvent(ChannelMessageEvent::class.java)
-            .filter { it.user.name.toLowerCase() != "ai_kizuna" }
-            .doOnNext(twitchHandler::handle)*/
 
     val subscribers = mutableListOf(
         onJoin, onPart, onGatewayReconnection, onReactionAdd,
         onReactionRemove, onGuildReady, onInitialReady,
-        onDiscordMessage//, onTwitchMessage
+        onDiscordMessage
     ).plus(handlers)
 
     // subscribe to bot lifetime events
