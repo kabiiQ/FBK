@@ -55,7 +55,7 @@ dependencies {
     implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.7.1")
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.46") // discord audio library
+    implementation("com.sedmelluq:lavaplayer:1.3.49") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
     implementation("com.squareup.okhttp3:okhttp:4.5.0") // other api - http calls
