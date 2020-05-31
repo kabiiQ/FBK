@@ -1,6 +1,7 @@
 package moe.kabii.discord.conversation
 
 import discord4j.core.DiscordClient
+import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.MessageInfo
@@ -17,7 +18,7 @@ object ReactionManager {
 class ReactionListener(val messageInfo: MessageInfo,
                        val reactions: List<ReactionInfo>,
                        val user: Long?,
-                       val discord: DiscordClient,
+                       val discord: GatewayDiscordClient,
                        val listenRemove: Boolean = true,
                        val callback: (ReactionInfo, UserID, Conversation?) -> Complete) {
 

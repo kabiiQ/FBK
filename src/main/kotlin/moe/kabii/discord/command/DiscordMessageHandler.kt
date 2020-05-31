@@ -1,8 +1,8 @@
 package moe.kabii.discord.command
 
 import com.github.twitch4j.TwitchClient
-import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.rest.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.launch
@@ -22,17 +22,17 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class DiscordMessageHandler(val manager: CommandManager, private val twitch: TwitchClient) {
     val mention: Regex by lazy {
-        val id = manager.botID.asLong()
+        val id = DiscordBot.selfId
         Regex("<@!?$id>")
     }
 
     fun handle(event: MessageCreateEvent) = mono {
         // ignore bots
         if(event.message.author.orNull()?.isBot ?: true) return@mono
-        var content = event.message.content.orNull()
+        var content = event.message.content
 
         // only embeds, files, skip any further processing at this time
-        if (content.isNullOrBlank()) return@mono
+        if (content.isBlank()) return@mono
 
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
         val msgArgs = content.split(" ")
@@ -149,8 +149,8 @@ class DiscordMessageHandler(val manager: CommandManager, private val twitch: Twi
                             403 -> {
                                 LOG.debug("403: ${ce.message}")
                                 if (config == null || chan !is TextChannel) return@launch
-                                if (ce.errorResponse.fields["string"]?.equals("Missing Permissions") != true) return@launch
-                                val botPermissions = chan.getEffectivePermissions(event.client.selfId.get()).awaitSingle()
+                                if (ce.errorResponse.orNull()?.fields?.get("string")?.equals("Missing Permissions") != true) return@launch
+                                val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
                                 val listMissing = command.discordReqs
                                         .filterNot(botPermissions::contains)
                                         .joinToString("\n")

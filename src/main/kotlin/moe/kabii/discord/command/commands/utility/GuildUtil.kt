@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.utility
 
 import discord4j.core.`object`.entity.Guild
-import discord4j.core.`object`.util.Image
+import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
@@ -20,7 +20,7 @@ object GuildUtil : CommandContainer {
                 val creation = formatter.format(createdDateTime)
                 val description = target.description.orNull()
                 val guildOwner = target.owner.tryAwait().orNull()
-                val memberCount = if(target.memberCount.isPresent) target.memberCount.asInt.toString() else "Unavailable"
+                val memberCount = target.memberCount.toString()
                 val channelCount = target.channels.count().tryAwait().orNull()?.toString() ?: "Unavailable"
                 val emojiCount = target.emojiIds.count().toString()
                 val serverID = target.id.asString()
@@ -31,14 +31,14 @@ object GuildUtil : CommandContainer {
                     else -> "Error"
                 }
                 val region = target.regionId
-                val boosts = target.premiumSubcriptionsCount.orElse(0)
+                val boosts = target.premiumSubscriptionCount.orElse(0)
 
                 val owner = if(guildOwner != null) "${guildOwner.username}#${guildOwner.discriminator} (${guildOwner.id.asString()})" else "Unknown"
 
                 val more = StringBuilder()
                 more.append("This guild was created $creation.")
 
-                val large = target.isLarge.orElse(false)
+                val large = target.isLarge
                 if(large) more.append("\nThis guild is considered \"large\" by Discord.")
                 val features = target.features
 

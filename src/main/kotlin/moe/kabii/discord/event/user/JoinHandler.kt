@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import moe.kabii.data.mongodb.*
 import moe.kabii.discord.invite.InviteWatcher
@@ -10,7 +10,7 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import reactor.core.publisher.toFlux
-import java.awt.Color
+import discord4j.rest.util.Color
 
 object JoinHandler {
     fun handle(member: Member, online: Boolean = true) {
@@ -73,7 +73,7 @@ object JoinHandler {
                             .formatJoin(joinLog.joinFormat, invite)
                         channel.createEmbed { embed ->
                             embed.setDescription("$formatted$error")
-                            embed.setColor(Color(6750056))
+                            embed.setColor(Color.of(6750056))
                             if(joinLog.joinFormat.contains("&avatar")) {
                                 embed.setImage(member.avatarUrl)
                             }

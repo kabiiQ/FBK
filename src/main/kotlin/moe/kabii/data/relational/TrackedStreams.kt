@@ -1,6 +1,6 @@
 package moe.kabii.data.relational
 
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import moe.kabii.discord.trackers.streams.StreamParser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.structure.WithinExposedContext

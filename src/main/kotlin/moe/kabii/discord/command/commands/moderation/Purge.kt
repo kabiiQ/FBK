@@ -1,9 +1,9 @@
 package moe.kabii.discord.command.commands.moderation
 
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.Snowflake
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.rest.util.Permission
+import discord4j.common.util.Snowflake
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer

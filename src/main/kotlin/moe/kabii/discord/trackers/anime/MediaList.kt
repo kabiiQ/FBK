@@ -7,7 +7,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import okhttp3.Request
 import okhttp3.Response
-import java.awt.Color
+import discord4j.rest.util.Color
 import java.io.IOException
 
 abstract class MediaListParser {
@@ -90,11 +90,11 @@ data class Media(
 }
 
 enum class ConsumptionStatus(val color: Color) {
-    WATCHING(Color(3447003)),
-    COMPLETED(Color(2400300)),
-    HOLD(Color(10181046)),
-    DROPPED(Color(16723506)),
-    PTW(Color(12370112))
+    WATCHING(Color.of(3447003)),
+    COMPLETED(Color.of(2400300)),
+    HOLD(Color.of(10181046)),
+    DROPPED(Color.of(16723506)),
+    PTW(Color.of(12370112))
 }
 
 enum class MediaType {

@@ -23,10 +23,8 @@ class UserEventFormatter(val user: User) {
 
         val guild = member?.run { guild.tryBlock().orNull() }
         val membersMatcher = paramMatcher(formatted, "members")
-        if(membersMatcher != null) {
-            guild?.memberCount?.ifPresent { members ->
-                formatted = formatted.replace(membersMatcher.value, members.toString())
-            }
+        if(membersMatcher != null && guild != null) {
+            formatted = formatted.replace(membersMatcher.value, guild.memberCount.toString())
         }
 
         return formatted

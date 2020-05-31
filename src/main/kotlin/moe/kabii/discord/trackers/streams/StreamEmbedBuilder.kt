@@ -5,7 +5,7 @@ import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.javaInstant
 import moe.kabii.util.DurationFormatter
-import java.awt.Color
+import discord4j.rest.util.Color
 import java.time.Duration
 import java.time.Instant
 
@@ -70,7 +70,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
             }
 
             setAuthor("${builder.user.displayName} was live for $uptime", builder.user.url, builder.user.profileImage)
-            setColor(Color(3941986))
+            setColor(Color.of(3941986))
             val desc = description.toString()
             if(desc.isNotBlank()) setDescription(desc)
             setFooter("Stream ended ", builder.user.parser.icon)

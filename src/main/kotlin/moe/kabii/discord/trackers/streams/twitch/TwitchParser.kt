@@ -15,12 +15,12 @@ import okhttp3.FormBody
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.awt.Color
+import discord4j.rest.util.Color
 import java.time.Duration
 import java.time.Instant
 
 object TwitchParser : StreamParser {
-    override val color = Color(6570405)
+    override val color = Color.of(6570405)
     override val icon: String = NettyFileServer.glitch
     override val site by lazy { TrackedStreams.Site.TWITCH }
 

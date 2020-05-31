@@ -30,7 +30,7 @@ object MessageHistory {
                     messageID = message.id.asLong()
                     channel = DiscordObjects.Channel.getOrInsert(message.channelId.asLong(), guildID)
                     author = DiscordObjects.User.getOrInsert(message.author.get().id.asLong())
-                    content = message.content.orElse("")
+                    content = message.content
                 }
             }
         }

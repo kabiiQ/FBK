@@ -1,8 +1,8 @@
 package moe.kabii.discord.command.commands.audio
 
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*

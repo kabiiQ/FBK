@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.VoiceState
-import discord4j.core.`object`.entity.VoiceChannel
+import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.guild.GuildUpdateEvent
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.sync.withLock

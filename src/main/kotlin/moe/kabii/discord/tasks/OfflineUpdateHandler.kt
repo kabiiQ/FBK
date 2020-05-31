@@ -1,7 +1,7 @@
 package moe.kabii.discord.tasks
 
 import discord4j.core.`object`.entity.Guild
-import discord4j.core.`object`.entity.VoiceChannel
+import discord4j.core.`object`.entity.channel.VoiceChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildMember
 import moe.kabii.discord.event.user.JoinHandler

@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer

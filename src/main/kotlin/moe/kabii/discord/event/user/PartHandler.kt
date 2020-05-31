@@ -1,15 +1,15 @@
 package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.structure.snowflake
 import reactor.core.publisher.toFlux
-import java.awt.Color
+import discord4j.rest.util.Color
 
 object PartHandler {
     fun handle(guild: Snowflake, user: User, member: Member?) {
@@ -37,7 +37,7 @@ object PartHandler {
                         .formatPart(partLog.partFormat, member)
                     channel.createEmbed { embed ->
                         embed.setDescription(formatted)
-                        embed.setColor(Color(16739688))
+                        embed.setColor(Color.of(16739688))
                         if(partLog.partFormat.contains("&avatar")) {
                             embed.setImage(user.avatarUrl)
                         }

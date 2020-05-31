@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.configuration.roles
 
-import discord4j.core.`object`.entity.VoiceChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.VoiceConfiguration
 import moe.kabii.discord.command.Command

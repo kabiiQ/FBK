@@ -1,6 +1,6 @@
 package moe.kabii.data
 
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import moe.kabii.data.mongodb.GuildConfiguration
 
 // basic non-persistent in-memory storage

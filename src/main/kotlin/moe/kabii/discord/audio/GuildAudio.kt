@@ -4,9 +4,10 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.VoiceChannel
-import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.Snowflake
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.rest.util.Permission
+import discord4j.common.util.Snowflake
+import discord4j.core.GatewayDiscordClient
 import discord4j.voice.AudioProvider
 import discord4j.voice.VoiceConnection
 import kotlinx.coroutines.delay
@@ -144,7 +145,7 @@ data class GuildAudio(
 
 data class QueueData(
     val audio: GuildAudio,
-    val discord: DiscordClient,
+    val discord: GatewayDiscordClient,
     val author_name: String, // just caching the author's username as it is unlikely to change and is only used in output
     val author: Snowflake,
     val originChannel: Snowflake,

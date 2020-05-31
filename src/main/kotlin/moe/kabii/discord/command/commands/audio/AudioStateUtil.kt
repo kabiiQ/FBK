@@ -2,8 +2,8 @@ package moe.kabii.discord.command.commands.audio
 
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.VoiceChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager

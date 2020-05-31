@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild
 
-import discord4j.core.`object`.entity.TextChannel
 import discord4j.core.`object`.entity.User
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -44,7 +44,7 @@ object MessageDeletionHandler : EventHandler<MessageDeleteEvent>(MessageDeleteEv
         val sessionMessage = event.message.orNull()
         val (authorID, content) = if(sessionMessage != null) {
             if(sessionMessage.author.map(User::isBot).orNull() != false) return
-            sessionMessage.author.get().id.asLong() to sessionMessage.content.orNull()
+            sessionMessage.author.get().id.asLong() to sessionMessage.content
         }
         else transaction { history?.author?.userID to history?.content }
 

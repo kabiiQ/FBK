@@ -1,6 +1,7 @@
 package moe.kabii.discord.conversation
 
 import discord4j.core.DiscordClient
+import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -10,7 +11,7 @@ import moe.kabii.structure.mod
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
-class Conversation (val criteria: ResponseCriteria, val discord: DiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener :ReactionListener?) {
+class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener :ReactionListener?) {
     fun test(message: String) {
         if(message.isBlank()) return
         if(message.toLowerCase().trim() == "exit") {
@@ -111,7 +112,7 @@ class Conversation (val criteria: ResponseCriteria, val discord: DiscordClient, 
         val conversations
             get() = all_conversations.toList()
 
-        fun register(criteria: ResponseCriteria, discord: DiscordClient, callback: CancellableContinuation<*>, reactionListener: ReactionListener? = null, timeout: Long? = 40000): Conversation {
+        fun register(criteria: ResponseCriteria, discord: GatewayDiscordClient, callback: CancellableContinuation<*>, reactionListener: ReactionListener? = null, timeout: Long? = 40000): Conversation {
             // only one conversation per channel per user - best option unless we can clearly define the behavior with multiple conversations at once
             conversations.filter { conversation ->
                 conversation.criteria.channel == criteria.channel && conversation.criteria.user == criteria.user

@@ -1,6 +1,6 @@
 package moe.kabii.discord.games.connect4
 
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import moe.kabii.discord.games.base.AIPlayer
 import moe.kabii.discord.games.base.DiscordPlayer
 import moe.kabii.discord.games.base.GameBase

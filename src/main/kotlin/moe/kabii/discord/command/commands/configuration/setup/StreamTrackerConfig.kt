@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.configuration.setup;
 
-import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.channelVerify

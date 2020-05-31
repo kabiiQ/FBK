@@ -3,7 +3,8 @@ package moe.kabii.discord.command
 import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.entity.*
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.rest.util.Permission
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.delay
@@ -21,7 +22,7 @@ import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
-import java.awt.Color
+import discord4j.rest.util.Color
 import kotlin.coroutines.resume
 
 
@@ -59,9 +60,9 @@ abstract class Command(val baseName: String, vararg alias: String) {
 }
 
 fun errorColor(spec: EmbedCreateSpec) = spec.setColor(Color.RED)
-fun kizunaColor(spec: EmbedCreateSpec) = spec.setColor(Color(14310538))
-fun specColor(spec: EmbedCreateSpec) = spec.setColor(Color(13369088))
-fun reminderColor(spec: EmbedCreateSpec) = spec.setColor(Color(44031))
+fun kizunaColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(14310538))
+fun specColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(13369088))
+fun reminderColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(44031))
 fun logColor(member: Member?, spec: EmbedCreateSpec) =
     Mono.justOrEmpty(member)
         .flatMap { member -> RoleUtil.getColorRole(member!!) } // weird type interaction means this is Member? but it will never be null inside the operators

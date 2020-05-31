@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import moe.kabii.discord.conversation.Conversation

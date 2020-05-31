@@ -1,6 +1,6 @@
 package moe.kabii.discord.event.guild
 
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG

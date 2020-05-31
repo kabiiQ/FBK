@@ -1,6 +1,6 @@
 package moe.kabii.discord.command.commands.utility
 
-import discord4j.core.`object`.util.Image
+import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer

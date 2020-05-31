@@ -1,9 +1,10 @@
 package moe.kabii.discord.trackers.anime
 
 import discord4j.core.DiscordClient
-import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.PrivateChannel
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.PrivateChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import moe.kabii.LOG
@@ -19,7 +20,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
 
-class MediaListWatcher(val discord: DiscordClient) : Thread("TrackedMediaLists") {
+class MediaListWatcher(val discord: GatewayDiscordClient) : Thread("TrackedMediaLists") {
     var active = true
     private val listWatcherThreads = Executors.newFixedThreadPool(MediaSite.values().size).asCoroutineScope()
 

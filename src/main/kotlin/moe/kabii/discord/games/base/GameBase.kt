@@ -1,6 +1,6 @@
 package moe.kabii.discord.games.base
 
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 
 interface GameBase<P: GamePlayer> {
     val fullName: String

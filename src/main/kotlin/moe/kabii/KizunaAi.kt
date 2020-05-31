@@ -6,7 +6,9 @@ import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
+import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
+import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.core.event.domain.guild.MemberLeaveEvent
@@ -15,6 +17,8 @@ import discord4j.core.event.domain.lifecycle.ReconnectEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
+import discord4j.rest.entity.RestMember
+import discord4j.rest.request.BucketGlobalRateLimiter
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
@@ -45,7 +49,7 @@ import org.reflections.Reflections
 import reactor.core.publisher.Mono
 
 fun main() {
-    // init
+    // init global objects
     val mongo = MongoDBConnection
     val postgres = PostgresConnection
     val version = Metadata.current
@@ -54,7 +58,7 @@ fun main() {
 
     val reflection = Reflections("moe.kabii")
 
-    // twitch connection
+    // establish twitch connection
     val credential = CredentialManagerBuilder.builder().build()
     credential.registerIdentityProvider(TwitchIdentityProvider(
         keys[Keys.Twitch.client],
@@ -68,6 +72,7 @@ fun main() {
         .withChatAccount(oAuth)
         .build()
 
+    // register all commands
     val manager = CommandManager()
     val discordHandler = DiscordMessageHandler(manager, twitch)
     val twitchHandler = TwitchMessageHandler(manager)
@@ -83,42 +88,26 @@ fun main() {
         }
     })
 
-    // discord connection
-    val discord = DiscordClientBuilder(keys[Keys.Discord.token]).build()
+    // establish discord connection
+    val discord = DiscordClient.create(keys[Keys.Discord.token])
+    val gateway = discord.login().block()!!
 
     // task threads
-    val listWatcher = MediaListWatcher(discord)
-    val streamWatcher = StreamWatcher(discord)
-    val reminderWatcher = ReminderWatcher(discord)
+    val listWatcher = MediaListWatcher(gateway)
+    val streamWatcher = StreamWatcher(gateway)
+    val reminderWatcher = ReminderWatcher(gateway)
 
-    // discord4j event listeners
-    val events = discord.eventDispatcher
+    // start file server
+    if(keys[Keys.Netty.host]) {
+        NettyFileServer.server.start()
+    }
 
-    val onGuildReady = events.on(ReadyEvent::class.java)
-        .map { event -> event.guilds.size }
-        .doOnNext { count ->
-            LOG.info("Connecting to $count guilds.")
-            manager.botID = discord.selfId.get()
-        }
-        .flatMap { count ->
-            val recoverQueue = RecoverQueue()
-            events.on(GuildCreateEvent::class.java)
-                .take(count.toLong())
-                .map(GuildCreateEvent::getGuild)
-                .doOnNext(OfflineUpdateHandler::runChecks)
-                .doOnNext(AutojoinVoice::autoJoin)
-                .doOnNext { guild ->
-                    InviteWatcher.updateGuild(guild)
-                    recoverQueue.recover(guild)
-                    LOG.info("Connected to guild ${guild.name}")
-                }
-        }
-
-    val onInitialReady = events.on(ReadyEvent::class.java)
+    // listen for initial connection event, set initial state
+    val onInitialReady = gateway.on(ReadyEvent::class.java)
         .take(1)
         .map { event -> event.guilds.size }
         .flatMap { count ->
-            events.on(GuildCreateEvent::class.java)
+            gateway.on(GuildCreateEvent::class.java)
                 .take(count.toLong())
                 .collectList()
         }
@@ -130,7 +119,26 @@ fun main() {
             reminderWatcher.start()
         }
 
-    // assemble "normal" event handlers
+    // listen for guild connections, request any missing information
+    val onGuildReady = gateway.on(ReadyEvent::class.java)
+        .map { event -> event.guilds.size }
+        .doOnNext { count ->
+            LOG.info("Connecting to $count guilds.")
+        }
+        .flatMap { count ->
+            gateway.on(GuildCreateEvent::class.java)
+                .take(count.toLong())
+                .map(GuildCreateEvent::getGuild)
+                .doOnNext(OfflineUpdateHandler::runChecks)
+                .doOnNext(AutojoinVoice::autoJoin)
+                .doOnNext { guild ->
+                    InviteWatcher.updateGuild(guild)
+                    RecoverQueue.recover(guild)
+                    LOG.info("Connected to guild ${guild.name}")
+                }
+        }
+
+    // event handlers which simply recieve the event
     val handlers = reflection.getSubTypesOf(EventHandler::class.java)
         .map { clazz ->
             val instance = clazz.kotlin.objectInstance
@@ -139,29 +147,30 @@ fun main() {
                 return@map Mono.empty<Unit>()
             }
             LOG.info("Registering EventHandler: ${instance.eventType} :: $clazz")
-            events.on(instance.eventType.java)
+            gateway.on(instance.eventType.java)
                 .flatMap(instance::wrapAndHandle)
         }
 
-    // special event handlers
-    val onReactionAdd = events.on(ReactionAddEvent::class.java)
+    // event handlers requiring manual setup
+    val onReactionAdd = gateway.on(ReactionAddEvent::class.java)
             .doOnNext(ReactionHandler::handleReactionAdded)
-    val onReactionRemove = events.on(ReactionRemoveEvent::class.java)
+    val onReactionRemove = gateway.on(ReactionRemoveEvent::class.java)
         .doOnNext(ReactionHandler::handleReactionRemoved)
-    val onJoin = events.on(MemberJoinEvent::class.java)
+    val onJoin = gateway.on(MemberJoinEvent::class.java)
         .map(MemberJoinEvent::getMember)
         .doOnNext { member -> JoinHandler.handle(member) }
-    val onPart = events.on(MemberLeaveEvent::class.java)
+    val onPart = gateway.on(MemberLeaveEvent::class.java)
             .doOnNext { event ->
                 PartHandler.handle(event.guildId, event.user, event.member.orNull())
             }
-    val onGatewayReconnection = events.on(ReconnectEvent::class.java)
+
+    val onGatewayReconnection = gateway.on(ReconnectEvent::class.java)
         .doOnNext { Uptime.update() }
 
-    val onDiscordMessage = events.on(MessageCreateEvent::class.java)
+    val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
         .flatMap(discordHandler::handle)
 
-    // twitch4j event listeners
+    // twitch4j event listener
     val onTwitchMessage = twitch.eventManager
         .getEventHandler(ReactorEventHandler::class.java)
         .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
@@ -180,18 +189,10 @@ fun main() {
         }
         .subscribe()
 
-    // start file server
-    if(keys[Keys.Netty.host]) {
-        NettyFileServer.server.start()
-    }
-
     // join any linked channels on twitch IRC
     GuildConfigurations.guildConfigurations.values
         .mapNotNull { it.options.linkedTwitchChannel?.twitchid }
         .let(TwitchParser::getUsers).values
         .mapNotNull { user -> user.orNull()?.username }
         .forEach(twitch.chat::joinChannel)
-
-    // login
-    discord.login().subscribe()
 }

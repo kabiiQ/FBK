@@ -5,10 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.Metadata
-import moe.kabii.structure.Uptime
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.*
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.time.Duration
 import java.time.Instant
@@ -21,12 +18,14 @@ object BotStats : CommandContainer {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                 val ping = embed("Pong!").awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
-                val networkPing = event.client.responseTime
+                val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime
                 val pingEmbed: EmbedReceiver = {
                     kizunaColor(this)
                     setAuthor("Ping Test", null, avatar)
                     addField("Ping Command Response Time", "${commandPing}ms", false)
-                    addField("Heartbeat Response Time", "${networkPing}ms", false)
+                    if(heartbeat != null) {
+                        addField("Heartbeat Response Time", "${heartbeat}ms", false)
+                    }
                 }
                 ping.edit { spec -> spec.setEmbed(pingEmbed) }.awaitSingle()
             }
@@ -39,7 +38,7 @@ object BotStats : CommandContainer {
             discord {
                 val botUser = event.client.self.awaitSingle()
                 val guilds = event.client.guilds
-                    .collectMap({ guild -> guild }, { guild -> guild.memberCount.asInt })
+                    .collectMap({ guild -> guild }, { guild -> guild.memberCount })
                     .awaitSingle()
                 val guildCount = guilds.count().toString()
                 val users = guilds.values.sum().toString()

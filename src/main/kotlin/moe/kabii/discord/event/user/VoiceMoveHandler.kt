@@ -2,8 +2,8 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.VoiceChannel
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -81,7 +81,7 @@ object VoiceMoveHandler : EventHandler<VoiceStateUpdateEvent>(VoiceStateUpdateEv
         }
 
         // actions when the bot is moved
-        if(event.current.userId == event.client.selfId.get()) {
+        if(event.current.userId == DiscordBot.selfId) {
             config.musicBot.lastChannel = newChannel?.id?.asLong()
             config.save()
 

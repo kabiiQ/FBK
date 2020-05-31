@@ -1,8 +1,8 @@
 package moe.kabii.discord.command.commands.voice
 
 import discord4j.core.`object`.PermissionOverwrite
-import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.PermissionSet
+import discord4j.rest.util.Permission
+import discord4j.rest.util.PermissionSet
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command

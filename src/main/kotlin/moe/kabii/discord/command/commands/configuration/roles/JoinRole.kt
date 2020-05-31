@@ -1,6 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.roles
 
-import discord4j.core.`object`.util.Permission
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.JoinConfiguration
 import moe.kabii.discord.command.Command
@@ -74,7 +74,7 @@ object JoinRole : CommandContainer {
                 val new = JoinConfiguration(inviteArg, role.id.asLong())
                 configs.add(new)
                 config.save()
-                val describe = if(inviteArg == null) "all users joining **${target.name}**" else "users joining **${target.name}** with invite code **$inviteArg**"
+                val describe = if(inviteArg == null) "all users joining **${target.name}**" else "users joining **${target.name}** with invite code **$inviteArg** will be given"
                 embed("Autorole added for $describe: **${role.name}**.").awaitSingle()
             }
         }

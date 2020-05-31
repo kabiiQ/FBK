@@ -1,9 +1,10 @@
 package moe.kabii.discord.games.base
 
 import discord4j.core.DiscordClient
+import discord4j.core.GatewayDiscordClient
 
 enum class GameType(val clazz: Class<out GameBase<*>>)
 
-class GameManager(val discord: DiscordClient) {
+class GameManager(val discord: GatewayDiscordClient) {
     val currentGames = mutableListOf<GameBase<*>>()
 }

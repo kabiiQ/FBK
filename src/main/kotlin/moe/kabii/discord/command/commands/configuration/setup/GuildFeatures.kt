@@ -1,6 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.setup
 
-import discord4j.core.`object`.util.Permission
+import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.GuildSettings
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify

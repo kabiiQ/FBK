@@ -1,9 +1,10 @@
 package moe.kabii.discord.tasks
 
 import discord4j.core.DiscordClient
-import discord4j.core.`object`.entity.MessageChannel
-import discord4j.core.`object`.entity.PrivateChannel
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.PrivateChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -21,7 +22,7 @@ import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
-class ReminderWatcher(val discord: DiscordClient) : Thread("Reminders") {
+class ReminderWatcher(val discord: GatewayDiscordClient) : Thread("Reminders") {
     val active = true
     private val updateInterval = 60_000L
 

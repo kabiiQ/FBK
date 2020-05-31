@@ -3,7 +3,7 @@ package moe.kabii.structure
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
-import discord4j.core.`object`.util.Snowflake
+import discord4j.common.util.Snowflake
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import moe.kabii.rusty.Err

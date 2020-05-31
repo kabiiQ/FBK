@@ -4,10 +4,10 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.TextChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.VoiceChannel
-import discord4j.core.`object`.util.Permission
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager

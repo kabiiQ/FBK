@@ -1,8 +1,9 @@
 package moe.kabii.discord.trackers.streams
 
 import discord4j.core.DiscordClient
-import discord4j.core.`object`.entity.GuildChannel
-import discord4j.core.`object`.entity.MessageChannel
+import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -23,7 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
 
-class StreamWatcher(val discord: DiscordClient) : Thread("StreamWatcher") {
+class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher") {
     var active = true
     private val streamThreads = Executors.newFixedThreadPool(TrackedStreams.Site.values().size).asCoroutineScope()
 

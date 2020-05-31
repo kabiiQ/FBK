@@ -1,6 +1,7 @@
 package moe.kabii.discord.util
 
 import discord4j.core.`object`.entity.*
+import discord4j.core.`object`.entity.channel.GuildChannel
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordMessageHandler
 import moe.kabii.discord.command.DiscordParameters

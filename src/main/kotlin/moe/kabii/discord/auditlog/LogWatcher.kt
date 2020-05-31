@@ -1,6 +1,7 @@
 package moe.kabii.discord.auditlog
 
 import discord4j.core.DiscordClient
+import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import kotlinx.coroutines.CoroutineStart
@@ -32,7 +33,7 @@ object LogWatcher {
     private val executor = Executors.newSingleThreadExecutor().asCoroutineScope()
     private val currentEvents: MutableMap<Long, MutableList<AuditTask>> = mutableMapOf()
 
-    private fun createNewJob(discord: DiscordClient, guild: Long) = executor.launch(start = CoroutineStart.LAZY) {
+    private fun createNewJob(discord: GatewayDiscordClient, guild: Long) = executor.launch(start = CoroutineStart.LAZY) {
         try {
             delay(delay)
             // check all current auditable events for the guild when the checker runs. this is slow enough we will probably be able to combine calls which is a big optimization in this case
@@ -89,7 +90,7 @@ object LogWatcher {
         }
     }
 
-    fun auditEvent(discord: DiscordClient, event: AuditableEvent) {
+    fun auditEvent(discord: GatewayDiscordClient, event: AuditableEvent) {
         // todo verify bot even has audit log access to avoid 403s
         val job = createNewJob(discord, event.guild)
         currentEvents.getOrPut(event.guild, ::mutableListOf)

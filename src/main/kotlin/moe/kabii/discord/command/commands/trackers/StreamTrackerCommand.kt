@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.trackers
 
-import discord4j.core.`object`.util.Permission
-import discord4j.core.`object`.util.Snowflake
+import discord4j.rest.util.Permission
+import discord4j.common.util.Snowflake
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
