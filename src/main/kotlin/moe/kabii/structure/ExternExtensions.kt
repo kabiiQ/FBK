@@ -23,6 +23,9 @@ fun <T> Optional<T>.orNull(): T? = orElse(null)
 val Long.snowflake: Snowflake
 get() = Snowflake.of(this)
 
+val Snowflake.long: Long
+get() = asLong()
+
 // Kotlin coroutine dispatcher -> coroutine scope
 fun ExecutorService.asCoroutineScope() = CoroutineScope(this.asCoroutineDispatcher())
 

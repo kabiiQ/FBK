@@ -10,6 +10,7 @@ import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.structure.snowflake
 import reactor.core.publisher.toFlux
 import discord4j.rest.util.Color
+import moe.kabii.structure.long
 
 object PartHandler {
     fun handle(guild: Snowflake, user: User, member: Member?) {
@@ -20,7 +21,7 @@ object PartHandler {
 
         // save current roles if this setting is enabled
         if(config.guildSettings.reassignRoles && member != null) {
-            config.autoRoles.rejoinRoles[user.id.asLong()] = member.roleIds.map(Snowflake::asLong).toLongArray()
+            config.autoRoles.rejoinRoles[user.id.asLong()] = member.roleIds.map(Snowflake::long).toLongArray()
         }
         config.save()
 

@@ -10,12 +10,9 @@ import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.kizunaColor
 import moe.kabii.discord.event.EventHandler
 import moe.kabii.discord.util.RoleUtil
-import moe.kabii.structure.filterNot
-import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.*
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object MemberUpdateHandler : EventHandler<MemberUpdateEvent>(MemberUpdateEvent::class) {
     override suspend fun handle(event: MemberUpdateEvent) {
@@ -30,7 +27,7 @@ object MemberUpdateHandler : EventHandler<MemberUpdateEvent>(MemberUpdateEvent::
 
             // empty Twitch roles
             removedRoles.toFlux()
-                .map(Snowflake::asLong)
+                .map(Snowflake::long)
                 .flatMap { roleID -> RoleUtil.removeIfEmptyStreamRole(guild, roleID) }
                 .subscribe()
 
