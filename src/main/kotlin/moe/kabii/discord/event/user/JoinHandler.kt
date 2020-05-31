@@ -9,7 +9,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import discord4j.rest.util.Color
 
 object JoinHandler {

@@ -8,7 +8,7 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.structure.snowflake
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import discord4j.rest.util.Color
 import moe.kabii.structure.long
 

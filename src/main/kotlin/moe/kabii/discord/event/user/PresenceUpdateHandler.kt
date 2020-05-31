@@ -11,7 +11,7 @@ import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
     override suspend fun handle(event: PresenceUpdateEvent) {

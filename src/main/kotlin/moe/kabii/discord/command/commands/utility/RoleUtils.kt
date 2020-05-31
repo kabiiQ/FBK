@@ -9,7 +9,7 @@ import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object RoleUtils : CommandContainer {
     object RemoveEmpty : Command("cleanroles", "emptyroles") {

@@ -16,7 +16,7 @@ import moe.kabii.structure.stackTraceString
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object MessageDeletionHandler : EventHandler<MessageDeleteEvent>(MessageDeleteEvent::class) {
     override suspend fun handle(event: MessageDeleteEvent) {

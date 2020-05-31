@@ -16,7 +16,7 @@ import moe.kabii.discord.event.EventHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object VoiceMoveHandler : EventHandler<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
     override suspend fun handle(event: VoiceStateUpdateEvent) { // voicelog

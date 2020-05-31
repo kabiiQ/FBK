@@ -12,7 +12,7 @@ import moe.kabii.discord.command.channelVerify
 import moe.kabii.structure.filterNot
 import moe.kabii.structure.snowflake
 import reactor.core.publisher.Flux
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object Purge : CommandContainer {
     const val SMALL_MESSAGEID = 100_000_000_000_000_000L

@@ -18,7 +18,7 @@ import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.YoutubeUtil
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {

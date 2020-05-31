@@ -7,7 +7,7 @@ import moe.kabii.data.relational.TrackedStreams
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import java.util.stream.Collectors
 
 object RoleUtil {

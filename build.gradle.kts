@@ -27,6 +27,11 @@ repositories {
         name = "sonatype-snapshots"
         url = uri("https://oss.sonatype.org/content/repositories/snapshots")
     }
+    // reactor-kotlin-extensions
+    maven {
+        name = "spring.io-snapshots"
+        url = uri("https://repo.spring.io/snapshot")
+    }
 }
 
 dependencies {
@@ -39,6 +44,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
+
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 

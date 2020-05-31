@@ -13,7 +13,7 @@ import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object MessageEditHandler : EventHandler<MessageUpdateEvent>(MessageUpdateEvent::class) {
     override suspend fun handle(event: MessageUpdateEvent) {

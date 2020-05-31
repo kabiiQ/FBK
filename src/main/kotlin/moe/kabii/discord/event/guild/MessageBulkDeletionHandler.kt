@@ -10,7 +10,7 @@ import moe.kabii.discord.event.EventHandler
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 
 object MessageBulkDeletionHandler : EventHandler<MessageBulkDeleteEvent>(MessageBulkDeleteEvent::class) {
     override suspend fun handle(event: MessageBulkDeleteEvent) {
