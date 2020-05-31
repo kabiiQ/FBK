@@ -16,7 +16,7 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import java.util.concurrent.Executors
 
-class RecoverQueue {
+object RecoverQueue {
     // can be a very intensive, slow process. start immediately on reboot but let it run in the background
     private val pool = Executors.newSingleThreadExecutor().asCoroutineScope()
 
