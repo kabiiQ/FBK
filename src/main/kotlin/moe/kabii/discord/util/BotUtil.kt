@@ -5,13 +5,14 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.VoiceChannel
+import moe.kabii.structure.DiscordBot
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 object BotUtil {
     fun getBotVoiceChannel(target: Guild): Mono<VoiceChannel> =
         target.voiceStates
-            .filter { state -> state.userId == target.client.selfId.get() }
+            .filter { state -> state.userId == DiscordBot.selfId }
             .next()
             .flatMap(VoiceState::getChannel)
 

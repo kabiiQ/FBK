@@ -7,7 +7,6 @@ import moe.kabii.structure.asCoroutineScope
 import java.util.concurrent.Executors
 
 class CommandManager {
-    internal lateinit var botID: Snowflake
     internal val commandsDiscord = mutableListOf<Command>()
     internal val commandsTwitch = mutableListOf<Command>()
 
