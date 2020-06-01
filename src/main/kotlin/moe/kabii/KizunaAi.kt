@@ -26,7 +26,7 @@ import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordMessageHandler
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.guild.ReactionHandler
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
@@ -139,7 +139,7 @@ fun main() {
         }
 
     // event handlers which simply recieve the event
-    val handlers = reflection.getSubTypesOf(EventHandler::class.java)
+    val handlers = reflection.getSubTypesOf(EventListener::class.java)
         .map { clazz ->
             val instance = clazz.kotlin.objectInstance
             if(instance == null) {

@@ -7,13 +7,13 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
 import reactor.kotlin.core.publisher.toFlux
 
-object PresenceUpdateHandler : EventHandler<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
+object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
     override suspend fun handle(event: PresenceUpdateEvent) {
         val user = event.user.awaitSingle()
         val oldUser = event.oldUser.orNull() ?: return

@@ -8,13 +8,13 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object MemberUpdateHandler : EventHandler<MemberUpdateEvent>(MemberUpdateEvent::class) {
+object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent::class) {
     override suspend fun handle(event: MemberUpdateEvent) {
         val old = event.old.orNull() ?: return
         val guild = event.guild.awaitSingle()

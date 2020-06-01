@@ -8,14 +8,14 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toFlux
 
-object MessageEditHandler : EventHandler<MessageUpdateEvent>(MessageUpdateEvent::class) {
+object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEvent::class) {
     override suspend fun handle(event: MessageUpdateEvent) {
         val guildID = event.guildId.orNull()
         if(guildID == null || !event.isContentChanged) return

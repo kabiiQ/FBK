@@ -6,13 +6,13 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.kizunaColor
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object MessageBulkDeletionHandler : EventHandler<MessageBulkDeleteEvent>(MessageBulkDeleteEvent::class) {
+object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(MessageBulkDeleteEvent::class) {
     override suspend fun handle(event: MessageBulkDeleteEvent) {
         val config = GuildConfigurations.getOrCreateGuild(event.guildId.asLong())
 

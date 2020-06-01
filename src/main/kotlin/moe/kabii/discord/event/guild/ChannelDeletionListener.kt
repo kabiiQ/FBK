@@ -3,10 +3,10 @@ package moe.kabii.discord.event.guild
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object ChannelDeletionHandler : EventHandler<TextChannelDeleteEvent>(TextChannelDeleteEvent::class) {
+object ChannelDeletionListener : EventListener<TextChannelDeleteEvent>(TextChannelDeleteEvent::class) {
     override suspend fun handle(event: TextChannelDeleteEvent) {
         val chan = event.channel.id.asLong()
         val config = GuildConfigurations.guildConfigurations[event.channel.guildId.asLong()] ?: return

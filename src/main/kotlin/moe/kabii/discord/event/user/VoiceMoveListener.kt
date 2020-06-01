@@ -12,13 +12,13 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.logColor
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object VoiceMoveHandler : EventHandler<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
+object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
     override suspend fun handle(event: VoiceStateUpdateEvent) { // voicelog
         val oldState = event.old.orNull()
         val newState = event.current

@@ -6,10 +6,10 @@ import discord4j.core.event.domain.guild.GuildUpdateEvent
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.event.EventHandler
+import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.DiscordBot
 
-object GuildUpdateHandler : EventHandler<GuildUpdateEvent>(GuildUpdateEvent::class) {
+object GuildUpdateListener : EventListener<GuildUpdateEvent>(GuildUpdateEvent::class) {
     override suspend fun handle(event: GuildUpdateEvent) {
         val old = event.old.get()
         val guildID = event.current.id.asLong()

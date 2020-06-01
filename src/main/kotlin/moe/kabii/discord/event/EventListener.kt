@@ -5,7 +5,7 @@ import kotlinx.coroutines.reactor.mono
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
-abstract class EventHandler <E: Event> (val eventType: KClass<E>) {
+abstract class EventListener <E: Event> (val eventType: KClass<E>) {
     abstract suspend fun handle(event: E)
 
     fun wrapAndHandle(event: Event) = mono {
