@@ -7,8 +7,6 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
-import discord4j.core.event.domain.guild.GuildCreateEvent
-import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -76,50 +74,25 @@ fun main() {
     val discord = DiscordClient.create(keys[Keys.Discord.token])
     val gateway = discord.login().block()!!
 
-    // task threads
-    val listWatcher = MediaListWatcher(gateway)
-    val streamWatcher = StreamWatcher(gateway)
-    val reminderWatcher = ReminderWatcher(gateway)
-
     // start file server
     if(keys[Keys.Netty.host]) {
         NettyFileServer.server.start()
     }
 
-    // listen for initial connection event, set initial state
-    val onInitialReady = gateway.on(ReadyEvent::class.java)
-        .take(1)
-        .map { event -> event.guilds.size }
-        .flatMap { count ->
-            gateway.on(GuildCreateEvent::class.java)
-                .take(count.toLong())
-                .collectList()
-        }
-        .doOnNext { _ ->
-            // init tasks
-            Uptime
-            listWatcher.start()
-            streamWatcher.start()
-            reminderWatcher.start()
-        }
+    // start lifetime task threads
+    Uptime
+    MediaListWatcher(gateway).start()
+    StreamWatcher(gateway).start()
+    ReminderWatcher(gateway).start()
 
-    // listen for guild connections, request any missing information
-    val onGuildReady = gateway.on(ReadyEvent::class.java)
-        .map { event -> event.guilds.size }
-        .doOnNext { count ->
-            LOG.info("Connecting to $count guilds.")
-        }
-        .flatMap { count ->
-            gateway.on(GuildCreateEvent::class.java)
-                .take(count.toLong())
-                .map(GuildCreateEvent::getGuild)
-                .doOnNext(OfflineUpdateHandler::runChecks)
-                .doOnNext(AutojoinVoice::autoJoin)
-                .doOnNext { guild ->
-                    InviteWatcher.updateGuild(guild)
-                    RecoverQueue.recover(guild)
-                    LOG.info("Connected to guild ${guild.name}")
-                }
+    // perform initial offline checks
+    val offlineChecks = gateway.guilds
+        .doOnNext(OfflineUpdateHandler::runChecks)
+        .doOnNext(AutojoinVoice::autoJoin)
+        .doOnNext { guild ->
+            InviteWatcher.updateGuild(guild)
+            RecoverQueue.recover(guild)
+            LOG.info("Connected to guild ${guild.name}")
         }
 
     // primary message listener uses specific instance and is manually set up
@@ -139,7 +112,7 @@ fun main() {
                 .flatMap(instance::wrapAndHandle)
         }
 
-    val allListeners = eventListeners + listOf(onGuildReady, onInitialReady, onDiscordMessage)
+    val allListeners = eventListeners + listOf(offlineChecks, onDiscordMessage)
 
     // subscribe to bot lifetime discord events
     Mono.`when`(allListeners)
