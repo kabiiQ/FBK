@@ -1,19 +1,26 @@
 package moe.kabii.discord.event.user
 
-import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.channel.TextChannel
-import discord4j.core.`object`.entity.User
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.User
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.event.domain.guild.MemberLeaveEvent
+import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
+import moe.kabii.discord.event.EventListener
+import moe.kabii.structure.long
+import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import reactor.kotlin.core.publisher.toFlux
-import discord4j.rest.util.Color
-import moe.kabii.structure.long
 
 object PartHandler {
-    fun handle(guild: Snowflake, user: User, member: Member?) {
+    object PartListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
+        override suspend fun handle(event: MemberLeaveEvent) = handlePart(event.guildId, event.user, event.member.orNull())
+    }
+
+    fun handlePart(guild: Snowflake, user: User, member: Member?) {
         val config = GuildConfigurations.getOrCreateGuild(guild.asLong())
 
         val userID = user.id.asLong()

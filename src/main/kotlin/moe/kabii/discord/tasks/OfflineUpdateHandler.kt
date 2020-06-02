@@ -23,7 +23,7 @@ object OfflineUpdateHandler {
         guildMembers
             .filter { member ->
                 log.find { logged -> logged.userID == member.id.asLong() } == null
-            }.forEach { member -> JoinHandler.handle(member, online = false) }
+            }.forEach { member -> JoinHandler.handleJoin(member, online = false) }
 
         // check logged members are all present in server
         log
@@ -33,7 +33,7 @@ object OfflineUpdateHandler {
             .filter(GuildMember::current)
             .forEach { part ->
                 val user = guild.client.getUserById(part.userID.snowflake).tryBlock().orNull() ?: return@forEach
-                PartHandler.handle(guild.id, user, null)
+                PartHandler.handlePart(guild.id, user, null)
             }
 
          // check for empty twitch follower roles

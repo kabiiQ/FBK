@@ -1,16 +1,22 @@
 package moe.kabii.discord.event.guild
 
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.discord.conversation.ReactionManager
+import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 
 object ReactionHandler {
-    fun handleReactionAdded(event: ReactionAddEvent) = handleReaction(event.messageId, event.userId, event.emoji, true)
-    fun handleReactionRemoved(event: ReactionRemoveEvent) = handleReaction(event.messageId, event.userId, event.emoji, false)
+    object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
+        override suspend fun handle(event: ReactionAddEvent) = handleReaction(event.messageId, event.userId, event.emoji, true)
+    }
+
+    object ReactionRemoveListener : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
+        override suspend fun handle(event: ReactionRemoveEvent) = handleReaction(event.messageId, event.userId, event.emoji, false)
+    }
 
     private fun handleReaction(messageId: Snowflake, userId: Snowflake, emoji: ReactionEmoji, add: Boolean) {
         // conversational listeners

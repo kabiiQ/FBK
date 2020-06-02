@@ -7,29 +7,17 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
-import discord4j.core.DiscordClientBuilder
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.guild.GuildCreateEvent
-import discord4j.core.event.domain.guild.MemberJoinEvent
-import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
-import discord4j.core.event.domain.lifecycle.ReconnectEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
-import discord4j.core.event.domain.message.ReactionAddEvent
-import discord4j.core.event.domain.message.ReactionRemoveEvent
-import discord4j.rest.entity.RestMember
-import discord4j.rest.request.BucketGlobalRateLimiter
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.DiscordMessageHandler
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.event.guild.ReactionHandler
-import moe.kabii.discord.event.user.JoinHandler
-import moe.kabii.discord.event.user.PartHandler
+import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.AutojoinVoice
 import moe.kabii.discord.tasks.OfflineUpdateHandler
@@ -42,7 +30,6 @@ import moe.kabii.joint.CommandManager
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
-import moe.kabii.structure.orNull
 import moe.kabii.structure.stackTraceString
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
@@ -72,21 +59,13 @@ fun main() {
         .withChatAccount(oAuth)
         .build()
 
-    // register all commands
     val manager = CommandManager()
-    val discordHandler = DiscordMessageHandler(manager, twitch)
+    val discordHandler = MessageHandler(manager, twitch)
     val twitchHandler = TwitchMessageHandler(manager)
 
+    // register all commands with the command manager
     reflection.getSubTypesOf(Command::class.java)
         .forEach(manager::register)
-
-    manager.register(object : Command("test") {
-        init {
-            discord {
-                embed("Hello World!").subscribe()
-            }
-        }
-    })
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
@@ -138,8 +117,12 @@ fun main() {
                 }
         }
 
-    // event handlers which simply recieve the event
-    val handlers = reflection.getSubTypesOf(EventListener::class.java)
+    // primary message listener uses specific instance and is manually set up
+    val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
+        .flatMap(discordHandler::handle)
+
+    // all other event handlers simply recieve the event
+    val eventListeners = reflection.getSubTypesOf(EventListener::class.java)
         .map { clazz ->
             val instance = clazz.kotlin.objectInstance
             if(instance == null) {
@@ -151,43 +134,19 @@ fun main() {
                 .flatMap(instance::wrapAndHandle)
         }
 
-    // event handlers requiring manual setup
-    val onReactionAdd = gateway.on(ReactionAddEvent::class.java)
-            .doOnNext(ReactionHandler::handleReactionAdded)
-    val onReactionRemove = gateway.on(ReactionRemoveEvent::class.java)
-        .doOnNext(ReactionHandler::handleReactionRemoved)
-    val onJoin = gateway.on(MemberJoinEvent::class.java)
-        .map(MemberJoinEvent::getMember)
-        .doOnNext { member -> JoinHandler.handle(member) }
-    val onPart = gateway.on(MemberLeaveEvent::class.java)
-            .doOnNext { event ->
-                PartHandler.handle(event.guildId, event.user, event.member.orNull())
-            }
+    val allListeners = eventListeners + listOf(onGuildReady, onInitialReady, onDiscordMessage)
 
-    val onGatewayReconnection = gateway.on(ReconnectEvent::class.java)
-        .doOnNext { Uptime.update() }
-
-    val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
-        .flatMap(discordHandler::handle)
-
-    // twitch4j event listener
-    val onTwitchMessage = twitch.eventManager
-        .getEventHandler(ReactorEventHandler::class.java)
-        .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
-
-    val subscribers = mutableListOf(
-        onJoin, onPart, onGatewayReconnection, onReactionAdd,
-        onReactionRemove, onGuildReady, onInitialReady,
-        onDiscordMessage
-    ).plus(handlers)
-
-    // subscribe to bot lifetime events
-    Mono.`when`(subscribers)
-        .onErrorContinue { t, _ ->
+    // subscribe to bot lifetime discord events
+    Mono.`when`(allListeners)
+        .subscribe( {} ) { t ->
             LOG.error("Uncaught exception in event handler: ${t.message}")
             LOG.warn(t.stackTraceString)
         }
-        .subscribe()
+
+    // subscribe to twitch events
+    val onTwitchMessage = twitch.eventManager
+        .getEventHandler(ReactorEventHandler::class.java)
+        .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
 
     // join any linked channels on twitch IRC
     GuildConfigurations.guildConfigurations.values

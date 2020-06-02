@@ -2,18 +2,24 @@ package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.rest.http.client.ClientException
+import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.*
+import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import reactor.kotlin.core.publisher.toFlux
-import discord4j.rest.util.Color
 
 object JoinHandler {
-    fun handle(member: Member, online: Boolean = true) {
+    object JoinListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
+        override suspend fun handle(event: MemberJoinEvent) = handleJoin(event.member)
+    }
+
+    fun handleJoin(member: Member, online: Boolean = true) {
         val config = GuildConfigurations.getOrCreateGuild(member.guildId.asLong())
 
         // create user log
