@@ -16,6 +16,7 @@ import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
+import moe.kabii.discord.command.commands.twitch.TwitchBridgeOptions
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
@@ -60,12 +61,16 @@ fun main() {
         .build()
 
     val manager = CommandManager()
-    val discordHandler = MessageHandler(manager, twitch)
+    val discordHandler = MessageHandler(manager)
     val twitchHandler = TwitchMessageHandler(manager)
 
     // register all commands with the command manager
     reflection.getSubTypesOf(Command::class.java)
-        .forEach(manager::register)
+        .forEach(manager::registerClass)
+
+    // register twitch-discord bridge commands which require access to the twitch client
+    manager.registerInstance(TwitchBridgeOptions.SetLinkedChannel(twitch))
+    manager.registerInstance(TwitchBridgeOptions.UnlinkChannel(twitch))
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])

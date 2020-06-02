@@ -1,6 +1,5 @@
 package moe.kabii.discord.command
 
-import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.entity.*
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -25,7 +24,6 @@ import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
 import kotlin.coroutines.resume
-
 
 @Deprecated("Now purely aesthetic, Command inheritance is reflectively searched") interface CommandContainer
 
@@ -81,8 +79,7 @@ data class DiscordParameters (
     val noCmd: String,
     val args: List<String>,
     val command: Command,
-    val alias: String,
-    val twitchClient: TwitchClient) {
+    val alias: String) {
 
     val target: Guild
     get() {

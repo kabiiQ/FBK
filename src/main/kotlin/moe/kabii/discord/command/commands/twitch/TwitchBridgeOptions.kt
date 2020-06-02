@@ -1,5 +1,6 @@
-package moe.kabii.discord.command.commands.configuration
+package moe.kabii.discord.command.commands.twitch
 
+import com.github.twitch4j.TwitchClient
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.TempStates
@@ -10,9 +11,9 @@ import moe.kabii.discord.trackers.streams.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok
 
-object TwitchOptions : CommandContainer {
+object TwitchBridgeOptions : CommandContainer {
 
-    object SetLinkedChannel : Command("linktwitch", "twitchlink") {
+    class SetLinkedChannel(private val twitchClient: TwitchClient) : Command("linktwitch", "twitchlink") {
         init {
             discord {
                 if (args.isEmpty()) {
@@ -45,7 +46,7 @@ object TwitchOptions : CommandContainer {
         }
     }
 
-    object UnlinkChannel : Command("unlinktwitch", "twitchunlink") {
+    class UnlinkChannel(private val twitchClient: TwitchClient) : Command("unlinktwitch", "twitchunlink") {
         init {
             discord {
                 member.verify(Permission.MANAGE_GUILD)

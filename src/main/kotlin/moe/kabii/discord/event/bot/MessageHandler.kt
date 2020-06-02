@@ -1,6 +1,5 @@
 package moe.kabii.discord.event.bot
 
-import com.github.twitch4j.TwitchClient
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
@@ -21,7 +20,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class MessageHandler(val manager: CommandManager, private val twitch: TwitchClient) {
+class MessageHandler(val manager: CommandManager) {
     val mention: Regex by lazy {
         val id = DiscordBot.selfId
         Regex("<@!?$id>")
@@ -129,19 +128,7 @@ class MessageHandler(val manager: CommandManager, private val twitch: TwitchClie
                     val noCmd = args.joinToString(" ")
                     LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
                     val chan = event.message.channel.awaitSingle()
-                    val param = DiscordParameters(
-                        this@MessageHandler,
-                        event,
-                        chan,
-                        guild,
-                        author,
-                        isPM,
-                        noCmd,
-                        args,
-                        command,
-                        cmdStr,
-                        twitch
-                    )
+                    val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr)
 
                     try {
                         if (command.executeDiscord != null)

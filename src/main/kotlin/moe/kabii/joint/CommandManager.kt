@@ -13,15 +13,15 @@ class CommandManager {
 
     internal val context = Executors.newFixedThreadPool(10).asCoroutineScope()
 
-    fun register(command: Command) {
+    fun registerInstance(command: Command) {
         if(command.executeDiscord != null) commandsDiscord.add(command)
         if(command.executeTwitch != null) commandsTwitch.add(command)
         LOG.info("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
     }
 
-    fun register(clazz: Class<out Command>) {
+    fun registerClass(clazz: Class<out Command>) {
         val instance = clazz.kotlin.objectInstance
-        if(instance == null) LOG.error("KClass provided with no static instance: $clazz")
-        else register(instance)
+        if(instance != null) registerInstance(instance)
+        else LOG.info("Skipping static registration of command: $clazz")
     }
 }
