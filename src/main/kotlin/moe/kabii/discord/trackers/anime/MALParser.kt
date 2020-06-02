@@ -2,11 +2,13 @@ package moe.kabii.discord.trackers.anime
 
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.delay
+import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.fromJsonSafe
+import java.io.IOException
 
 object MALParser : MediaListParser() {
     override fun getListID(input: String): String? = input // mal does not have an offical api and thus no 'id' system. we just store name and can not track if a username changes.
@@ -21,8 +23,10 @@ object MALParser : MediaListParser() {
         var page = 1
         val animes = mutableListOf<MALAnimeList.MALAnime>()
         do {
-            val animeRequest = "https://api.jikan.moe/v3/user/$id/animelist/all/$page"
+            val animeRequest = "http://127.0.0.1:8000/v3/user/$id/animelist/all/$page"
             val responseBody = requestMediaList(animeRequest) { response ->
+                LOG.debug("MAL RESPONSE: $response")
+                LOG.debug(response.message)
                 if(!response.isSuccessful) {
                     return@requestMediaList when(response.code) {
                         400 -> {
@@ -31,7 +35,7 @@ object MALParser : MediaListParser() {
                             Err(MediaListEmpty)
                         }
                         429 -> Err(MediaListRateLimit(2000L)) // if jikan is being rate limited by mal, we wait arbitrary amount of time
-                        else -> Err(MediaListIOErr)
+                        else -> Err(MediaListIOErr(IOException(response.message)))
                     }
                 }
                 Ok(response.body!!.string())
@@ -43,15 +47,15 @@ object MALParser : MediaListParser() {
             if(animeListPage == null) break
             animes.addAll(animeListPage.anime)
             page++
-            delay(2000L)
+            delay(4000L)
         } while(animeListPage?.anime?.isNotEmpty() == true) // break if no more page (isEmpty or null)
         page = 1
         val mangas = mutableListOf<MALMangaList.MALManga>()
         do {
-            val mangaRequest = "https://api.jikan.moe/v3/user/$id/mangalist/all/$page"
+            val mangaRequest = "http://127.0.0.1:8000/v3/user/$id/mangalist/all/$page"
             val responseBody = requestMediaList(mangaRequest) { response ->
                 if(!response.isSuccessful) {
-                    return@requestMediaList if(response.code == 429) Err(MediaListRateLimit(2000L)) else Err(MediaListIOErr)
+                    return@requestMediaList if(response.code == 429) Err(MediaListRateLimit(2000L)) else Err(MediaListIOErr(IOException(response.toString())))
                 }
                 Ok(response.body!!.string())
             }
@@ -113,6 +117,7 @@ object MALParser : MediaListParser() {
             }
         }
         if(animes.isEmpty() && mangas.isEmpty()) return Err(MediaListEmpty)
+        delay(4000L)
         return Ok(MediaList(media))
     }
 

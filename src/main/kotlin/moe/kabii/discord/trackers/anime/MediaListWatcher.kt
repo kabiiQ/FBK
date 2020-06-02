@@ -35,8 +35,8 @@ class MediaListWatcher(val discord: GatewayDiscordClient) : Thread("TrackedMedia
                         .joinAll()
                 val runDuration = Duration.between(start, Instant.now())
                 // only run every few minutes at max
-                if(runDuration.toMinutes() < 2) {
-                    val wait = 120000L - runDuration.toMillis()
+                if(runDuration.toMinutes() < 5) {
+                    val wait = 300000L - runDuration.toMillis()
                     delay(wait)
                 }
             }
@@ -51,7 +51,7 @@ class MediaListWatcher(val discord: GatewayDiscordClient) : Thread("TrackedMedia
                     } catch(e: Exception) {
                         LOG.error("Uncaught exception parsing media item: ${it.list.id} :: ${e.message}")
                         LOG.info(e.stackTraceString)
-                        Err(MediaListIOErr)
+                        Err(MediaListIOErr(e))
                     }
                 }
         for((newList, savedList) in lists) {

@@ -8,6 +8,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.fromJsonSafe
 import okhttp3.Request
+import java.io.IOException
 
 object KitsuParser : MediaListParser() {
     override val attempts = 3
@@ -46,7 +47,7 @@ object KitsuParser : MediaListParser() {
                 if(!response.isSuccessful) {
                     // kitsu doesn't seem to have actual rate limit specifications
                     return@requestMediaList if(response.code >= 429) Err(MediaListRateLimit(2000L)) else
-                        Err(MediaListIOErr)
+                        Err(MediaListIOErr(IOException(response.toString())))
                 }
                 val body = response.body!!.string()
                 Ok(kitsuResponseAdapter.fromJson(body)!!)

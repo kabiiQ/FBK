@@ -2,6 +2,7 @@ package moe.kabii.discord.trackers.anime
 
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
+import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -20,25 +21,29 @@ abstract class MediaListParser {
             .get()
             .url(request)
         retry@for(attempt in 1..attempts) {
-            val call = OkHTTP.make(request, block).orNull()
+            val rawCall = OkHTTP.make(request, block)
+            val call = when(rawCall) {
+                is Ok -> rawCall.value
+                is Err -> {
+                    LOG.warn("MediaListParser IO error: ${rawCall.value}")
+                    delay(2000L)
+                    continue@retry
+                }
+            }
             // error handling and un-nesting
-            if(call != null) {
-                when(call) {
-                    is Ok -> return call
-                    is Err -> {
-                        val error = call.value
-                        when(error) {
-                            is MediaListRateLimit -> delay(error.timeout)
-                            is MediaListEmpty -> return call
-                            is MediaListIOErr -> break@retry
-                        }
+            when(call) {
+                is Ok -> return call
+                is Err -> {
+                    val error = call.value
+                    when(error) {
+                        is MediaListRateLimit -> delay(error.timeout)
+                        is MediaListEmpty -> return call
+                        is MediaListIOErr -> break@retry
                     }
                 }
-            } else {
-                delay(1000L) // actual network io error
             }
         }
-        return Err(MediaListIOErr)
+        return Err(MediaListIOErr(IOException()))
     }
 }
 
