@@ -1,7 +1,8 @@
 package moe.kabii.discord.command.commands.audio
 
-import discord4j.core.`object`.VoiceState
-import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.command.Command
@@ -12,17 +13,17 @@ object BotState : AudioCommandContainer {
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val botChannel = event.client.self.flatMap { user -> user.asMember(target.id) }.flatMap(Member::getVoiceState).flatMap(VoiceState::getChannel).tryAwait().orNull()
-                val locked = audio.discord.mutex.tryLock()
-                if(locked) {
-                    try {
-                        error("Reconnecting the music player for ${target.name}. This should rarely be necessary, I will join when you start to play music or if needed, I can be called with the **summon** command.").awaitSingle()
-                        audio.resetAudio(botChannel)
-                    } finally {
-                        audio.discord.mutex.unlock()
+                val connection = audio.discord.connection
+                if(connection != null && connection.isConnected.block()) {
+                    // should already be connected. reaffirm
+                    val botChannel = connection.channelId.awaitFirstOrNull()?.run(target::getChannelById)?.ofType(VoiceChannel::class.java)?.tryAwait()?.orNull()
+                    val join = if(botChannel != null) {
+                        audio.joinChannel(botChannel)
+                    } else null
+                    if(join?.orNull() == null) {
+                        error("Unable to connect. Try to play audio in a channel you are sure I have permissions to join.").awaitFirst()
+                        return@discord
                     }
-                } else {
-                    error("The music player is currently resetting.").block()
                 }
             }
         }

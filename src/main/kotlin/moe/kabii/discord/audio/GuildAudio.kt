@@ -2,28 +2,27 @@ package moe.kabii.discord.audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import discord4j.core.DiscordClient
+import discord4j.common.util.Snowflake
+import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
-import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.voice.AudioProvider
 import discord4j.voice.VoiceConnection
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.discord.command.commands.audio.filters.FilterFactory
 import moe.kabii.discord.command.hasPermissions
 import moe.kabii.rusty.Err
-import moe.kabii.rusty.Try
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
-import java.time.Duration
 import kotlin.reflect.KProperty1
 
 // contains the audio providers and current audio queue for a guild
@@ -37,7 +36,7 @@ data class GuildAudio(
 ) {
     var ending: Boolean = false
     var looping: Boolean = false
-    private val mutex = Mutex()
+    private val queueMutex = Mutex()
 
     val playing: Boolean
         get() = player.playingTrack != null || queue.isNotEmpty()
@@ -77,38 +76,50 @@ data class GuildAudio(
         return true
     }
 
-    suspend fun resetAudio(voice: VoiceChannel?): GuildAudio {
-        check(discord.mutex.isLocked) { "Audio connection protected" }
-        // save current playback state if track is playing
-        val playing = player.playingTrack
-        val resumeTrack = playing?.makeClone()?.apply {
-            position = playing.position
-            userData = playing.userData
-        }
-        // reset d4j provider/player
-        val (player, provider) = AudioManager.createAudioComponents(guild)
-        val newAudio = this.copy(player = player, provider = provider) // keeping existing queue intact
-        this.ending = true
-        this.player.stopTrack()
-        AudioManager.guilds[guild] = newAudio
-        // todo this is awful but there is no way to assign a new provider at this time, and join without disconnect sometimes infinitely suspends (d4j issue #523)
-        if (voice != null) {
-            discord.connection?.run {
-                Try(::disconnect).result // the actual disconnect runs async and is not in our code controls
-                delay(1500L)
+     suspend fun joinChannel(channel: VoiceChannel): Result<VoiceConnection, Throwable> {
+         discord.mutex.withLock {
+             val config = GuildConfigurations.getOrCreateGuild(channel.guildId.asLong())
+             val join = channel.join { spec ->
+                 spec.setProvider(this.provider)
+             }.tryAwait()
+             if (join is Ok) {
+                 discord.connection = join.value
+                 config.musicBot.lastChannel = channel.id.asLong()
+                 config.save()
+             }
+             return join
+         }
+     }
+
+    suspend fun refreshAudio(voice: VoiceChannel?): GuildAudio {
+        discord.mutex.withLock {
+            // save current playback state if track is playing
+            val playing = player.playingTrack
+            val resumeTrack = playing?.makeClone()?.apply {
+                position = playing.position
+                userData = playing.userData
             }
-            val join = voice.join { spec ->
-                spec.setProvider(newAudio.provider)
-            }.doOnNext { conn ->
-                newAudio.discord.connection = conn
-            }.timeout(Duration.ofSeconds(2)).tryAwait()
-            if (join is Err) {
-                throw IllegalStateException("Voice connection lost: ${join.value.message}") // todo currently seeing if this ever occurs
+            // create new player/provider
+            val (player, provider) = AudioManager.createAudioComponents(guild)
+            val newAudio = this.copy(player = player, provider = provider)
+            this.ending = true
+            this.player.stopTrack()
+            AudioManager.guilds[guild] = newAudio
+            if(voice != null) {
+                if(discord.connection != null) {
+                    discord.connection!!.disconnect().tryAwait().ifErr { err ->
+                        LOG.debug("Error resetting audio connection: $err")
+                    }
+                }
+                val join = newAudio.joinChannel(voice)
+                if(join is Err) {
+                    newAudio.discord.connection = null
+                    throw IllegalStateException("Voice connection lost: $join")
+                }
             }
+            newAudio.player.startTrack(resumeTrack, false)
+            return newAudio
         }
-        // resume from old state
-        newAudio.player.startTrack(resumeTrack, true)
-        return newAudio
     }
 
     // this needs to be called anywhere we manually edit the queue, adding/anything playing the next track is encapsulated but shuffling etc are not currently
@@ -128,7 +139,7 @@ data class GuildAudio(
     }
 
     suspend fun <R> editQueue(block: suspend MutableList<AudioTrack>.() -> R): R {
-        val edit = mutex.withLock {
+        val edit = queueMutex.withLock {
             block(queue)
         }
         saveQueue()
