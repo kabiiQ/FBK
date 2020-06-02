@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.anime
 
-import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel

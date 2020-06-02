@@ -1,8 +1,8 @@
 package moe.kabii.discord.command.commands.trackers
 
-import discord4j.rest.util.Permission
 import discord4j.core.spec.RoleCreateSpec
 import discord4j.rest.http.client.ClientException
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.relational.TrackedStreams

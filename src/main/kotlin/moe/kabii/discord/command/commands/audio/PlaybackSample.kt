@@ -1,6 +1,5 @@
 package moe.kabii.discord.command.commands.audio
 
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData

@@ -1,6 +1,5 @@
 package moe.kabii.joint
 
-import discord4j.common.util.Snowflake
 import moe.kabii.LOG
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.asCoroutineScope

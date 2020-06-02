@@ -1,6 +1,5 @@
 package moe.kabii.discord.conversation
 
-import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.delay

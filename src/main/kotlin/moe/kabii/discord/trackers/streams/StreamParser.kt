@@ -1,8 +1,8 @@
 package moe.kabii.discord.trackers.streams
 
+import discord4j.rest.util.Color
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.rusty.Result
-import discord4j.rest.util.Color
 
 sealed class StreamErr {
     object NotFound : StreamErr()

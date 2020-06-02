@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.streams
 
-import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel

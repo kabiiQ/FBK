@@ -1,6 +1,5 @@
 package moe.kabii.discord.auditlog
 
-import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message

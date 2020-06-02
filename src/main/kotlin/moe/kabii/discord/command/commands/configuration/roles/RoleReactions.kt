@@ -2,8 +2,8 @@ package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.rest.util.Permission
 import discord4j.rest.http.client.ClientException
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.ReactionRoleMessage

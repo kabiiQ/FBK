@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.anime
 
+import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
@@ -7,7 +8,6 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import okhttp3.Request
 import okhttp3.Response
-import discord4j.rest.util.Color
 import java.io.IOException
 
 abstract class MediaListParser {

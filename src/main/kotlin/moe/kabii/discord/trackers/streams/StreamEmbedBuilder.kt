@@ -1,11 +1,11 @@
 package moe.kabii.discord.trackers.streams
 
+import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.javaInstant
 import moe.kabii.util.DurationFormatter
-import discord4j.rest.util.Color
 import java.time.Duration
 import java.time.Instant
 

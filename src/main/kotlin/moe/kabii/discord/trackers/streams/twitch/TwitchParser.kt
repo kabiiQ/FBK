@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.streams.twitch
 
+import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
@@ -11,11 +12,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.fromJsonSafe
-import okhttp3.FormBody
 import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import discord4j.rest.util.Color
 import java.time.Duration
 import java.time.Instant
 

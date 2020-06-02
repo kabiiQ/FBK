@@ -1,7 +1,6 @@
 package moe.kabii.discord.command.commands.user
 
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.verify

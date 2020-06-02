@@ -1,7 +1,7 @@
 package moe.kabii.discord.command.commands.trackers
 
-import discord4j.rest.util.Permission
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations

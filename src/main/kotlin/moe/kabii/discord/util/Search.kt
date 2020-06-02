@@ -1,6 +1,9 @@
 package moe.kabii.discord.util
 
-import discord4j.core.`object`.entity.*
+import discord4j.core.`object`.entity.Guild
+import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.Role
+import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordParameters

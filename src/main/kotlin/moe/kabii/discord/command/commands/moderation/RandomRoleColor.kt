@@ -1,5 +1,6 @@
 package moe.kabii.discord.command.commands.moderation
 
+import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
@@ -12,7 +13,6 @@ import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.ColorUtil
 import moe.kabii.util.RGB
-import discord4j.rest.util.Color
 
 object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
     private fun randomColor() = Color.of((0..0xFFFFFF).random())

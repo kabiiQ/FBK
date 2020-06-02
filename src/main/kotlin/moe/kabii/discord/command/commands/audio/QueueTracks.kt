@@ -1,14 +1,11 @@
 package moe.kabii.discord.command.commands.audio
 
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.channelVerify
-import moe.kabii.structure.mapNotNull
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {
