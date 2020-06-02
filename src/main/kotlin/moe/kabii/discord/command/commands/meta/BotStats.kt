@@ -18,7 +18,7 @@ object BotStats : CommandContainer {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                 val ping = embed("Pong!").awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
-                val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime
+                val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
                 val pingEmbed: EmbedReceiver = {
                     kizunaColor(this)
                     setAuthor("Ping Test", null, avatar)
