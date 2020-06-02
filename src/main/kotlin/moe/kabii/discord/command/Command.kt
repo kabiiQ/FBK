@@ -15,6 +15,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.conversation.*
+import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.snowflake
@@ -71,7 +72,7 @@ fun logColor(member: Member?, spec: EmbedCreateSpec) =
         .defaultIfEmpty(kizunaColor(spec))
 
 data class DiscordParameters (
-    val handler: DiscordMessageHandler,
+    val handler: MessageHandler,
     val event: MessageCreateEvent,
     val chan: MessageChannel,
     val guild: Guild?,

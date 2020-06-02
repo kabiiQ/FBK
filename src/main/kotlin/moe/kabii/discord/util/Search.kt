@@ -3,8 +3,8 @@ package moe.kabii.discord.util
 import discord4j.core.`object`.entity.*
 import discord4j.core.`object`.entity.channel.GuildChannel
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.DiscordMessageHandler
 import moe.kabii.discord.command.DiscordParameters
+import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
@@ -88,7 +88,7 @@ object Search {
         return mention?.run { client.getChannelById(this).tryBlock().orNull() as? R? }
     }
 
-    fun commandByAlias(handler: DiscordMessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
+    fun commandByAlias(handler: MessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
         allowed && command.aliases.contains(name.toLowerCase())
     }
