@@ -116,10 +116,11 @@ fun main() {
 
     // subscribe to bot lifetime discord events
     Mono.`when`(allListeners)
-        .subscribe( {} ) { t ->
+        .onErrorContinue { t, _ ->
             LOG.error("Uncaught exception in event handler: ${t.message}")
             LOG.warn(t.stackTraceString)
         }
+        .subscribe()
 
     // subscribe to twitch events
     val onTwitchMessage = twitch.eventManager
