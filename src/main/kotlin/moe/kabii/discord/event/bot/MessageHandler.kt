@@ -22,7 +22,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class MessageHandler(val manager: CommandManager) {
     val mention: Regex by lazy {
-        val id = DiscordBot.selfId
+        val id = DiscordBot.selfId.long
         Regex("<@!?$id>")
     }
 
