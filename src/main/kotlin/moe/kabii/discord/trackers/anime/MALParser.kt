@@ -25,8 +25,8 @@ object MALParser : MediaListParser() {
         do {
             val animeRequest = "http://127.0.0.1:8000/v3/user/$id/animelist/all/$page"
             val responseBody = requestMediaList(animeRequest) { response ->
-                LOG.debug("MAL RESPONSE: $response")
-                LOG.debug(response.message)
+                LOG.trace("MAL RESPONSE: $response")
+                LOG.trace(response.message)
                 if(!response.isSuccessful) {
                     return@requestMediaList when(response.code) {
                         400 -> {
