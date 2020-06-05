@@ -45,7 +45,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT") // reactor kotlin coroutine compat
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
@@ -65,6 +65,9 @@ dependencies {
     implementation("com.squareup.moshi:moshi:$moshi")
     implementation("com.squareup.moshi:moshi-kotlin:$moshi")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshi")
+
+    // emote parsing
+    implementation("com.kcthota:emoji4j:6.0")
 
     // thumbnail file server
     val ktor = "1.3.1"

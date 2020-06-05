@@ -1,11 +1,13 @@
 package moe.kabii.data.mongodb
 
 import discord4j.core.`object`.entity.User
+import discord4j.core.`object`.reaction.ReactionEmoji
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.GuildID
+import moe.kabii.util.DiscordEmoji
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
@@ -172,11 +174,12 @@ data class ExclusiveRoleSet(
 data class SelfRoles(
     val enabledRoles: MutableList<Long> = mutableListOf(),
     val roleCommands: MutableMap<String, Long> = mutableMapOf(),
-    val roleMentionMessages: MutableList<ReactionRoleMessage> = mutableListOf()
+    val reactionRoles: MutableList<ReactionRoleConfig> = mutableListOf()
 )
 
-data class ReactionRoleMessage(
+data class ReactionRoleConfig(
     val message: MessageInfo,
+    val reaction: DiscordEmoji,
     val role: Long
 )
 
