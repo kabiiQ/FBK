@@ -61,12 +61,15 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
                     .append(dbStream.lastGame)
                     .append('\n')
             }
-            if(builder.settings.streamViewersSummary) {
+            if(builder.settings.streamPeakViewers) {
                 description.append("Peak viewers: ")
                     .append(dbStream.peakViewers)
                     .append('\n')
-                    .append("Average viewers: ")
+            }
+            if(builder.settings.streamAverageViewers) {
+                description.append("Average viewers: ")
                     .append(dbStream.averageViewers)
+                    .append('\n')
             }
 
             setAuthor("${builder.user.displayName} was live for $uptime", builder.user.url, builder.user.profileImage)
