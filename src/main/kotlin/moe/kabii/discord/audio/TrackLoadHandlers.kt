@@ -42,7 +42,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         data.volume = extract.volume
     }
 
-    override fun trackLoaded(track: AudioTrack) = runBlocking {
+    override fun trackLoaded(track: AudioTrack) {
         val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
@@ -50,15 +50,15 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         // set track
         if(!audio.player.startTrack(track, true)) {
             val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
-            val add = audio.tryAdd(track, origin.member, position)
-            if(data.silent) return@runBlocking // don't send any messages for this track
+            val add = runBlocking { audio.tryAdd(track, origin.member, position) }
+            if(data.silent) return // don't send any messages for this track
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
                 origin.error {
                     setAuthor("${origin.author.username}#${origin.author.discriminator}", null, origin.author.avatarUrl)
                     setDescription("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.")
-                }.awaitSingle()
-                return@runBlocking
+                }.block()
+                return
             }
 
             val addedDuration = track.duration - track.position
@@ -75,20 +75,20 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
                 setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$paused$eta$looping")
             }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
-            }.awaitSingle()
+            }.block()
         }
     }
 
-    override fun playlistLoaded(playlist: AudioPlaylist) = runBlocking {
+    override fun playlistLoaded(playlist: AudioPlaylist) {
         trackLoaded(playlist.tracks.first())
         val tracks = playlist.tracks.drop(1)
-        if(tracks.isEmpty()) return@runBlocking
+        if(tracks.isEmpty()) return
         var skipped = 0
         val maxTracksUser = origin.config.musicBot.maxTracksUser
         for(index in tracks.indices) {
             val track = tracks[index]
             track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
-            val add = audio.tryAdd(track, origin.member, position?.plus(index)) // add tracks sequentially if a position is provided, otherwise add to end
+            val add = runBlocking { audio.tryAdd(track, origin.member, position?.plus(index)) } // add tracks sequentially if a position is provided, otherwise add to end
             if(!add) {
                 // the rest of the tracks will be skipped when the user reaches their quota
                 skipped = tracks.size - index
@@ -137,7 +137,7 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
         if(query != null) AudioManager.manager.loadItem(query, ForcePlayFallbackLoader(origin, extract))
     }
 
-    override fun trackLoaded(track: AudioTrack) = runBlocking {
+    override fun trackLoaded(track: AudioTrack) {
         val playingTrack = audio.player.playingTrack
         if(playingTrack != null) { // save currently playing track
             // save current track's position to resume afterwards
