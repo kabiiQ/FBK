@@ -6,7 +6,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.VoiceChannel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
@@ -27,6 +29,17 @@ object RecoverQueue {
         if(activeQueue.isNotEmpty()) {
             val audio = AudioManager.getGuildAudio(guild.id.asLong())
             if(audio.playlist.isEmpty()) { // if this was just an interruption the queue will not have been reset
+                // rejoin voice channel if tracks are being recovered
+                if(audio.discord.connection == null && config.musicBot.lastChannel != null) {
+                    guild.getChannelById(config.musicBot.lastChannel!!.snowflake)
+                        .ofType(VoiceChannel::class.java)
+                        .flatMap { vc ->
+                            mono {
+                                audio.joinChannel(vc)
+                            }
+                        }.tryBlock()
+                }
+
                 // deserialize and try to re-queue all tracks in order
                 var fail = 0
                 audio.editQueue {
@@ -59,7 +72,6 @@ object RecoverQueue {
                             .flatMap { chan ->
                                 chan.createEmbed { spec ->
                                     kizunaColor(spec)
-                                    val fail = activeQueue.size - size
                                     spec.setDescription("Recovering from restart: $size tracks loaded, $fail tracks lost.")
                                 }
                             }.tryBlock()

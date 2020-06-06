@@ -18,7 +18,6 @@ import moe.kabii.discord.command.commands.twitch.TwitchBridgeOptions
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
-import moe.kabii.discord.tasks.AutojoinVoice
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.tasks.ReminderWatcher
@@ -88,7 +87,6 @@ fun main() {
     // perform initial offline checks
     val offlineChecks = gateway.guilds
         .doOnNext(OfflineUpdateHandler::runChecks)
-        .doOnNext(AutojoinVoice::autoJoin)
         .doOnNext { guild ->
             InviteWatcher.updateGuild(guild)
             RecoverQueue.recover(guild)

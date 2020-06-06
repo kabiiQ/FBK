@@ -90,47 +90,4 @@ object MusicConfig : CommandContainer {
             }
         }
     }
-
-    object AutojoinChannel : Command("autojoin", "setautojoin") {
-        init {
-            discord {
-                // ;autojoin chan
-                member.verify(Permission.MANAGE_CHANNELS)
-                val music = config.musicBot
-                // get channel
-                if(args.isEmpty()) {
-                    val channel = music.autoJoinChannel?.let { id ->
-                        event.client.getChannelById(id.snowflake).ofType(VoiceChannel::class.java).tryAwait().orNull()
-                    }
-                    if(channel == null) {
-                        usage("The bot is not currently set to automatically join a voice channel.", "autojoin <channel id or \"me\" for current channel>").awaitSingle()
-                        return@discord
-                    }
-                    embed("The bot is currently set to auto join **${channel.name}**.").awaitSingle()
-                    return@discord
-                }
-                // set channel
-                val joinTarget = when(args[0].toLowerCase()) {
-                    "none", "reset", "clear", "null", "remove" -> {
-                        music.autoJoinChannel = null
-                        config.save()
-                        embed("The bot has been set to not automatically join any voice channel.").awaitSingle()
-                        return@discord
-                    }
-                    "set", "current", "me", "mine" -> member.voiceState
-                        .flatMap(VoiceState::getChannel)
-                        .ofType(VoiceChannel::class.java)
-                        .tryAwait().orNull()
-                    else -> Search.channelByID(this, args[0])
-                }
-                if(joinTarget == null) {
-                    usage("**${args[0]}** does not seem to be a voice channel ID.", "autojoin <channel id or \"set\" for current channel>").awaitSingle()
-                    return@discord
-                }
-                music.autoJoinChannel = joinTarget.id.asLong()
-                config.save()
-                embed("The bot has been set to automatically join **${joinTarget.name}**.").awaitSingle()
-            }
-        }
-    }
 }

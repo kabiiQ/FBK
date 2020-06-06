@@ -186,7 +186,6 @@ data class ReactionRoleConfig(
 
 data class MusicSettings(
     var startingVolume: Int = defaultStartingVolume,
-    var autoJoinChannel: Long? = null,
     var lastChannel: Long? = null,
     var deleteOldBotMessages: Boolean = true,
     var deleteUserCommands: Boolean = false,
