@@ -4,7 +4,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import moe.kabii.discord.audio.QueueData
@@ -61,7 +61,7 @@ internal interface AudioCommandContainer : CommandContainer {
     suspend fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
         val data = track.userData as QueueData
         return if(origin.config.musicBot.queuerFSkip && data.author == origin.author.id) true
-        else origin.member.hasPermissions(origin.chan as TextChannel, Permission.MANAGE_MESSAGES)
+        else origin.member.hasPermissions(origin.chan as GuildChannel, Permission.MANAGE_MESSAGES)
     }
 
     suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {

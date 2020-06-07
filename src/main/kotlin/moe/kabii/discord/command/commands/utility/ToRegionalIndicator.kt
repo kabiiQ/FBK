@@ -2,7 +2,6 @@ package moe.kabii.discord.command.commands.utility
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.CommandContainer
 import moe.kabii.util.EmojiCharacters
 
 object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojiletters", "emojiletter", "regionalindicator", "emojitext", "textemoji", "textemojis", "textmoji", "textmojis") {

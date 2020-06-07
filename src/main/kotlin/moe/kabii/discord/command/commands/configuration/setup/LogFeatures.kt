@@ -1,6 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.discord.command.Command
@@ -70,9 +70,9 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
         discord {
             // editlog #channel
             if(isPM) return@discord
-            chan as TextChannel
+            chan as GuildChannel
             member.verify(Permission.MANAGE_GUILD)
-            val features = config.getOrCreateFeatures(chan.id.asLong())
+            val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(
                 "Log configuration for #${chan.name}",
@@ -83,10 +83,10 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 val any = features.logSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    embed("${chan.mention} is no longer a mod log channel.").subscribe()
+                    embed("${chan.getMention()} is no longer a mod log channel.").subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    embed("${chan.mention} is now a mod log channel.").subscribe()
+                    embed("${chan.getMention()} is now a mod log channel.").subscribe()
                 }
                 config.save()
             }

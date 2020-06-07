@@ -1,7 +1,6 @@
 package moe.kabii.data.mongodb
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.reaction.ReactionEmoji
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.relational.TrackedStreams

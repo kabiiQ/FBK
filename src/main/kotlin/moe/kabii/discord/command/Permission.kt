@@ -3,7 +3,7 @@ package moe.kabii.discord.command
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -38,10 +38,10 @@ suspend fun Member.verify(vararg permissions: Permission) {
     throw MemberPermissionsException(*permissions)
 }
 
-suspend fun Member.hasPermissions(channel: TextChannel, vararg permissions: Permission): Boolean = channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
+suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Permission): Boolean = channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
 
 @Throws(MemberPermissionsException::class)
-suspend fun Member.channelVerify(channel: TextChannel, vararg permissions: Permission) {
+suspend fun Member.channelVerify(channel: GuildChannel, vararg permissions: Permission) {
     if(hasPermissions(channel, *permissions)) return
     throw MemberPermissionsException(*permissions)
 }

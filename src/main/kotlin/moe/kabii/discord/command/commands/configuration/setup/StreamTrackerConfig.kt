@@ -1,6 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.setup;
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
@@ -42,9 +42,9 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
     init {
         discord {
             if(isPM) return@discord
-            chan as TextChannel
+            chan as GuildChannel
             member.channelVerify(chan, Permission.MANAGE_CHANNELS)
-            val features = config.getOrCreateFeatures(chan.id.asLong())
+            val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(
                 "Livestream tracker settings for #${chan.name}",

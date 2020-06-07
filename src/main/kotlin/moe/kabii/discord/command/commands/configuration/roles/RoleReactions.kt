@@ -1,7 +1,6 @@
 package moe.kabii.discord.command.commands.configuration.roles
 
 import discord4j.core.`object`.entity.channel.TextChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -18,7 +17,6 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
 import moe.kabii.structure.tryBlock
-import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.EmojiUtil
 
 object RoleReactions : CommandContainer {
