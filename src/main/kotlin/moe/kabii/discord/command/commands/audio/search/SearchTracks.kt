@@ -15,11 +15,6 @@ object SearchTracks : AudioCommandContainer {
         init {
             discord {
                 // search source query
-                val voice = AudioStateUtil.checkAndJoinVoice(this)
-                if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
-                    return@discord
-                }
                 if(args.isEmpty()) {
                     usage("**search** is used to search a source for audio to play. You can provide the source (currently the only options are YouTube [yt] or SoundCloud [sc]) as the first argument, or YouTube will automatically be used.", "search (source) <query>").awaitSingle()
                     return@discord
@@ -59,6 +54,13 @@ object SearchTracks : AudioCommandContainer {
                         val (sel, _) = ParseUtil.parseRanges(search.size, inputArgs)
                         if(sel.isNotEmpty()) {
                             selected = sel
+
+                            // join voice channel if not within
+                            val voice = AudioStateUtil.checkAndJoinVoice(this)
+                            if(voice is AudioStateUtil.VoiceValidation.Failure) {
+                                error(voice.error).awaitSingle()
+                                return@discord
+                            }
                             break
                         }
                     }
