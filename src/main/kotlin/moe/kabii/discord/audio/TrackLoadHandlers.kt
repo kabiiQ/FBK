@@ -84,14 +84,16 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         if(tracks.isEmpty()) return
         var skipped = 0
         val maxTracksUser = origin.config.musicBot.maxTracksUser
-        for(index in tracks.indices) {
-            val track = tracks[index]
-            track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
-            val add = runBlocking { audio.tryAdd(track, origin.member, position?.plus(index)) } // add tracks sequentially if a position is provided, otherwise add to end
-            if(!add) {
-                // the rest of the tracks will be skipped when the user reaches their quota
-                skipped = tracks.size - index
-                break
+        runBlocking {
+            for(index in tracks.indices) {
+                val track = tracks[index]
+                track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
+                val add = audio.tryAdd(track, origin.member, position?.plus(index)) // add tracks sequentially if a position is provided, otherwise add to end
+                if(!add) {
+                    // the rest of the tracks will be skipped when the user reaches their quota
+                    skipped = tracks.size - index
+                    break
+                }
             }
         }
         val location = if(position != null) "" else " end of the "
