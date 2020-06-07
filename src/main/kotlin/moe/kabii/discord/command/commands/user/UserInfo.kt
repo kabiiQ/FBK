@@ -12,8 +12,11 @@ object UserInfo : Command("user", "whoami", "jointime") {
     init {
         discord {
             val targetUser = if(args.isNotEmpty()) {
-                Search.user(this@discord, noCmd, guild) ?: author
-
+                val searchResult = Search.user(this@discord, noCmd, guild)
+                if(searchResult != null) searchResult else {
+                    error("Unable to find user **$noCmd**.").awaitSingle()
+                    return@discord
+                }
             } else author
 
             embed {
