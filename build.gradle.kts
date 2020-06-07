@@ -1,7 +1,7 @@
 group = "moe.kabii"
 
 plugins {
-    val KOTLIN_VER = "1.3.71"
+    val KOTLIN_VER = "1.3.72"
     kotlin("jvm") version KOTLIN_VER
     kotlin("kapt") version KOTLIN_VER
     id("com.github.johnrengelman.shadow") version "5.2.0"
@@ -40,7 +40,7 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutines = "1.3.5"
+    val coroutines = "1.3.7"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
@@ -58,7 +58,7 @@ dependencies {
     implementation("com.sedmelluq:lavaplayer:1.3.49") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
-    implementation("com.squareup.okhttp3:okhttp:4.5.0") // other api - http calls
+    implementation("com.squareup.okhttp3:okhttp:4.7.2") // other api - http calls
 
     // other api - json response parsing
     val moshi = "1.9.2"
@@ -75,10 +75,10 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor")
 
     // database i/o
-    implementation("org.litote.kmongo:kmongo-coroutine:4.0.0") // mongodb per-guild configurations
+    implementation("org.litote.kmongo:kmongo-coroutine:4.0.2") // mongodb per-guild configurations
     // postgresql user data, message history, tracked streams
     implementation("org.jetbrains.exposed:exposed:0.17.7")
-    implementation("org.postgresql:postgresql:42.2.12")
+    implementation("org.postgresql:postgresql:42.2.13")
     implementation("com.uchuhimo:konf:0.22.1") // .toml token configuration
 
     // logging
@@ -128,9 +128,9 @@ tasks {
 
     shadowJar {
         // KizunaAi-deploy.jar
-        baseName = "KizunaAi"
-        classifier = ""
-        version = "deploy"
+        archiveBaseName.set("KizunaAi")
+        archiveClassifier.set("")
+        archiveVersion.set("deploy")
     }
 }
 
