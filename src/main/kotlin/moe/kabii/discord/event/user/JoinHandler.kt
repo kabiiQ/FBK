@@ -34,6 +34,8 @@ object JoinHandler {
             config.save()
         }
 
+        var error = ""
+
         // if we can determine the invite used, we can apply specific autoroles
         val invite = if(online) {
             val invites = InviteWatcher.updateGuild(member.guild.block())
@@ -49,7 +51,14 @@ object JoinHandler {
                 !member.addRole(roleID.snowflake, "Reassigned roles").success().block()
             }
         } else {
-            config.autoRoles.joinConfigurations.toList()
+            val configs = config.autoRoles.joinConfigurations.toList()
+
+            if(configs.any { cfg -> cfg.inviteTarget != null && !config.guildSettings.utilizeInvites }) {
+                // error if any invite-specific configurations exist but we got 403'd for MANAGE_SERVER
+                error += " (A invite-specific role is configured but I am missing permissions to view invite information (Manage Server permission)"
+            }
+
+            configs
                 .filter { joinConfig ->
                     joinConfig.inviteTarget?.equals(invite) != false // find autoroles for this invite or for all users
                 }.filter { joinConfig ->
@@ -65,7 +74,7 @@ object JoinHandler {
                 }.map(JoinConfiguration::role)
         }
 
-        val error = if(failedRoles.isEmpty()) "" else "(Bot is missing permission to add roles: ${failedRoles.joinToString(", ")}"
+        if(failedRoles.isNotEmpty()) error += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
 
         config.options.featureChannels.values.toList().toFlux()
             .filter(FeatureChannel::logChannel)

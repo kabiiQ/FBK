@@ -224,7 +224,8 @@ data class GuildSettings(
     var followRoles: Boolean = true,
     var reassignRoles: Boolean = false,
     var defaultFollowChannel: TrackedStreams.StreamInfo? = null,
-    var twitchURLInfo: Boolean = false
+    var twitchURLInfo: Boolean = false,
+    var utilizeInvites: Boolean = true
 )
 
 data class TempChannels(
