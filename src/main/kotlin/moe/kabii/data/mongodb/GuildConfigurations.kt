@@ -58,6 +58,11 @@ data class GuildConfiguration(
         FeatureChannel(channel).also { save() }
     }
 
+    suspend fun removeSelf() {
+        GuildConfigurations.guildConfigurations.remove(guildid)
+        GuildConfigurations.mongoConfigurations.deleteOneById(this._id)
+    }
+
     companion object {
         private val configProcessor = DirectProcessor.create<GuildConfiguration>()
         private val queue = configProcessor.sink()
