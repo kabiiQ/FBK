@@ -2,6 +2,7 @@ package moe.kabii.discord.command
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.`object`.entity.*
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
@@ -102,6 +103,12 @@ data class DiscordParameters (
 
     val config: GuildConfiguration
     get() = GuildConfigurations.getOrCreateGuild(target.id.asLong())
+
+    // error if we need to verify channel permissions for targeting specific channel, but this was executed in DMs
+    val guildChan: GuildChannel
+    get() = (chan as? GuildChannel) ?: throw GuildTargetInvalidException("This command must be executed in a server's channel.")
+
+    suspend fun channelVerify(vararg permissions: Permission) = member.channelVerify(guildChan, *permissions)
 
     fun error(block: EmbedReceiver) = chan.createEmbed { embed ->
         errorColor(embed)

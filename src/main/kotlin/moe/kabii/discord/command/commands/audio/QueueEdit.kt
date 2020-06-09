@@ -1,6 +1,5 @@
 package moe.kabii.discord.command.commands.audio
 
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
@@ -8,7 +7,6 @@ import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.discord.command.channelVerify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.withEach
 import moe.kabii.util.NumberUtil
@@ -18,7 +16,7 @@ object QueueEdit : AudioCommandContainer {
         init {
             discord {
                 QueueTracks.validateChannel(this)
-                member.channelVerify(chan as GuildChannel, Permission.MANAGE_MESSAGES)
+                channelVerify(Permission.MANAGE_MESSAGES)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(audio.queue.isEmpty()) {
                     error("There are no tracks currently in queue to shuffle.").awaitSingle()

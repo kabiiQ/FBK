@@ -4,7 +4,6 @@ import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.channelVerify
 
 object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     object StreamTrackerModule : ConfigurationModule<FeatureSettings>(
@@ -43,7 +42,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
         discord {
             if(isPM) return@discord
             chan as GuildChannel
-            member.channelVerify(chan, Permission.MANAGE_CHANNELS)
+            channelVerify(Permission.MANAGE_CHANNELS)
             val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(

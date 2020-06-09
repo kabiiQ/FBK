@@ -4,7 +4,6 @@ import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.channelVerify
 
 object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
     object ListTrackerModule : ConfigurationModule<FeatureSettings>(
@@ -30,7 +29,7 @@ object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "
         discord {
             if(isPM) return@discord
             chan as GuildChannel
-            member.channelVerify(chan, Permission.MANAGE_CHANNELS)
+            channelVerify(Permission.MANAGE_CHANNELS)
             val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(

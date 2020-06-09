@@ -5,7 +5,6 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.verify
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
@@ -15,7 +14,7 @@ object UserModeration : CommandContainer {
         init {
             botReqs(Permission.MANAGE_CHANNELS)
             discord {
-                member.verify(Permission.MANAGE_CHANNELS)
+                channelVerify(Permission.MANAGE_CHANNELS)
                 val cooldown = args.getOrNull(0)?.toIntOrNull()
                 if(cooldown == null || cooldown !in 0..21600) {
                     usage("Sets the slowmode for this channel in seconds (0-21600)", "slowmode <time in seconds 0-21600>").awaitSingle()

@@ -51,7 +51,7 @@ object Purge : CommandContainer {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
                 // ;purge 20 <users to limit to, else all>=
-                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
+                channelVerify(Permission.MANAGE_MESSAGES)
                 if(args.isEmpty()) {
                     usage("**purge** will delete the specified number of messages. A user ID can also be provided to only remove the messages from specific users.",
                         "purge <message count> (optional user ID)")
@@ -73,7 +73,7 @@ object Purge : CommandContainer {
         init {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
-                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
+                channelVerify(Permission.MANAGE_MESSAGES)
                 if(args.isEmpty()) {
                     usage("**purgefrom** will delete messages after the provided message ID.", "purgefrom <start message ID> (optional user IDs)").awaitSingle()
                     return@discord

@@ -29,7 +29,7 @@ object  CommandFilters : CommandContainer {
         override val commandExempt = true
         init {
             discord {
-                member.verify(Permission.MANAGE_GUILD)
+                member.verify(Permission.MANAGE_CHANNELS)
                 if(args.isEmpty()) {
                     usage("**whitelist** is used to set up the bot command whitelist.", "whitelist <add/remove/view/reset/toggle>").awaitSingle()
                     return@discord
@@ -95,7 +95,7 @@ object  CommandFilters : CommandContainer {
         override val commandExempt = true
         init {
             discord {
-                member.verify(Permission.MANAGE_GUILD)
+                member.verify(Permission.MANAGE_CHANNELS)
                 if(args.isEmpty()) {
                     usage("**blacklist** is used to set up the bot command blacklist.", "blacklist <add/remove/view/reset/toggle>").awaitSingle()
                     return@discord

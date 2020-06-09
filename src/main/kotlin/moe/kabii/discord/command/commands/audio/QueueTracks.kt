@@ -1,11 +1,9 @@
 package moe.kabii.discord.command.commands.audio
 
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.channelVerify
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {
@@ -49,7 +47,7 @@ object QueueTracks : AudioCommandContainer {
     object PlaySongForce : Command("fplay", "forceplay") {
         init {
             discord {
-                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
+                channelVerify(Permission.MANAGE_MESSAGES)
                 // immediately start playing track
                 val query = ExtractedQuery.from(this)
                 if(query == null) {
