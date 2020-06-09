@@ -31,7 +31,7 @@ object CommandOptions : CommandContainer {
             discord {
                 if(args.isEmpty()) {
                     val suffix = config.suffix
-                    embed("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix remove**.").awaitSingle()
+                    embed("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix none**.").awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
@@ -41,7 +41,11 @@ object CommandOptions : CommandContainer {
                 }
                 config.suffix = suffix
                 config.save()
-                embed("The command suffix for **${target.name}** has been set to **$suffix**.").awaitSingle()
+                if(suffix == null) {
+                    embed("The command suffix for **${target.name}** has been removed.")
+                } else {
+                    embed("The command suffix for **${target.name}** has been set to **$suffix**.")
+                }.awaitSingle()
             }
         }
     }
