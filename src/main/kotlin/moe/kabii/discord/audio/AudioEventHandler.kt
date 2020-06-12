@@ -118,14 +118,15 @@ object AudioEventHandler : AudioEventAdapter() {
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
                 val (commandMsg, otherMsg) = data.associatedMessages.partition { it is QueueData.BotMessage.UserPlayCommand }
                 commandMsg.firstOrNull()?.let { msg ->
-                    data.discord.getMessageById(msg.channelID, msg.messageID).tryBlock().orNull()?.let { discordMsg ->
-                        // delete or react to user command depending on server settings
-                        if(msg.enabledFor(config)) {
-                            discordMsg.delete("Old user music bot command")
-                        } else {
-                            discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
-                        }.success().tryBlock().orNull()
-                    }
+                    data.discord.getMessageById(msg.channelID, msg.messageID)
+                        .flatMap { discordMsg ->
+                            // delete or reactor to user command depending on server settings
+                            if(msg.enabledFor(config)) {
+                                discordMsg.delete("Old user music bot command")
+                            } else {
+                                discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                            }
+                        }.subscribe()
                 }
 
                 // other messages, defer to server settings

@@ -7,7 +7,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.channelVerify
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
@@ -28,7 +27,7 @@ object ChannelFeatures : CommandContainer {
             discord {
                 if(isPM) return@discord
                 chan as GuildChannel
-                member.channelVerify(chan, Permission.MANAGE_CHANNELS)
+                channelVerify(Permission.MANAGE_CHANNELS)
                 val features = config.getOrCreateFeatures(chan.getId().asLong())
 
                 val wasLog = features.logChannel
