@@ -5,11 +5,13 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
+import moe.kabii.structure.tryAwait
 import moe.kabii.structure.tryBlock
 import java.util.*
 
@@ -21,13 +23,13 @@ object Search {
         // check if this a role id
         val snowflake = query.toLongOrNull()?.snowflake
         if (snowflake != null) {
-            val role = param.target.getRoleById(snowflake).tryBlock()
+            val role = param.target.getRoleById(snowflake).tryAwait()
             if (role is Ok) return role.value // if no match just continue, role name could still be a number
         }
         // check if this is a role mention
         val mention = roleMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
         if(mention != null) {
-            val role = param.target.getRoleById(mention).tryBlock()
+            val role = param.target.getRoleById(mention).tryAwait()
             if (role is Ok) return role.value
         }
 
@@ -40,7 +42,7 @@ object Search {
             val prompt = param.embed {
                 setTitle("Multiple roles found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
                 setDescription(roles)
-            }.block()
+            }.awaitSingle()
             val range = 0L..options.size // adding/subtracting here to give the user a 1-indexed interface
             val input = param.getLong(range, prompt, timeout = 240000L)
             prompt.delete().subscribe()
@@ -56,7 +58,7 @@ object Search {
         // get all roles and find partial matches. then check exact matches as they are a subset of partial matches
         val partial = param.target.roles
             .filter { role -> clean(role.name).contains(matchTo) }
-            .collectList().block()
+            .collectList().awaitSingle()
         val exact = partial
             .filter { role -> role.name.toLowerCase() == query.toLowerCase() }
 
@@ -78,17 +80,17 @@ object Search {
     }
 
     val channelMention = Regex("(<#)([0-9]+)(>)")
-    inline fun <reified R: GuildChannel> channelByID(param: DiscordParameters, query: String): R? {
+    suspend inline fun <reified R: GuildChannel> channelByID(param: DiscordParameters, query: String): R? {
         // check if this is a channel id
         val client = param.event.client
         val snowflake = query.toLongOrNull()?.snowflake
         if(snowflake != null) {
-            val channel = client.getChannelById(snowflake).tryBlock()
+            val channel = client.getChannelById(snowflake).tryAwait()
             if(channel is Ok) return channel.value as? R
         }
         // channel mention
         val mention = channelMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
-        return mention?.run { client.getChannelById(this).tryBlock().orNull() as? R? }
+        return mention?.run { client.getChannelById(this).tryAwait().orNull() as? R? }
     }
 
     fun commandByAlias(handler: MessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
@@ -100,7 +102,7 @@ object Search {
         // try to get user first, they don't need to belong to the guild. we can only do this by ID.
         val snowflake = query.toLongOrNull()?.snowflake
         if(snowflake != null) {
-            val user = param.event.client.getUserById(snowflake).tryBlock()
+            val user = param.event.client.getUserById(snowflake).tryAwait()
             if(user is Ok) return user.value
         }
         // try to match user by name if guild context is provided
@@ -114,13 +116,13 @@ object Search {
         // check if this is a user ID
         val snowflake = query.toLongOrNull()?.snowflake
         if(snowflake != null) {
-            val member = target.getMemberById(snowflake).tryBlock()
+            val member = target.getMemberById(snowflake).tryAwait()
             if(member is Ok) return member.value
         }
         // check if this is a user mention
         val mention = userMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
         if(mention != null) {
-            return target.getMemberById(mention).tryBlock().orNull()
+            return target.getMemberById(mention).tryAwait().orNull()
         }
 
         suspend fun prompt(options: List<Member>): Member? {
@@ -130,7 +132,7 @@ object Search {
             val prompt = param.embed {
                 setTitle("Multiple members found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
                 setDescription(members)
-            }.block()
+            }.awaitSingle()
             val range = 0L..options.size
             val input = param.getLong(range, prompt, timeout = 240000L)
             return if(input != null) {
@@ -158,7 +160,7 @@ object Search {
                     return@filter true
                 match(member.username)
             }
-            .collectList().block()
+            .collectList().awaitSingle()
         val exact = partial
             .filter { member ->
                 if(member.nickname.map { nick -> nick.toLowerCase() == query.toLowerCase() }.orElse(false))
