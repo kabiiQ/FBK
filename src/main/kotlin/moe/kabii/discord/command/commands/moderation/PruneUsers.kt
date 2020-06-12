@@ -1,4 +1,4 @@
-package moe.kabii.discord.command.commands.user
+package moe.kabii.discord.command.commands.moderation
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle

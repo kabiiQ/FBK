@@ -7,7 +7,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.*
@@ -58,7 +58,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                 event.client.getRoleById(guild.id, newID)
             }.flatMap { addedRole ->
                 logs.flatMap { chan -> chan.createEmbed { embed ->
-                    kizunaColor(embed)
+                    fbkColor(embed)
                     embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                     embed.setDescription("Added to role **${addedRole.name}**")
                     embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${addedRole.id.asString()}", null)
@@ -68,7 +68,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
             removedRoles.mapNotNull { oldID -> guild.getRoleById(oldID).tryBlock().orNull() } // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
                 .forEach { oldRole ->
                     logs.flatMap { chan -> chan.createEmbed { embed ->
-                        kizunaColor(embed)
+                        fbkColor(embed)
                         embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                         embed.setDescription("Removed from role **${oldRole.name}**")
                         embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)

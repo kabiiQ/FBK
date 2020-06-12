@@ -8,7 +8,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
@@ -66,7 +66,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
             .ofType(TextChannel::class.java)
             .flatMap { channel ->
                 channel.createEmbed { spec ->
-                    kizunaColor(spec)
+                    fbkColor(spec)
                     spec.setAuthor(embedAuthor, null, author?.avatarUrl)
                     if(content != null) {
                         spec.setDescription("Deleted message: $content")

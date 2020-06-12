@@ -7,7 +7,7 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.data.relational.MessageHistory
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
@@ -55,7 +55,7 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
                 event.guild.flatMap { guild -> guild.getChannelById(log.channelID.snowflake )}
             }.ofType(TextChannel::class.java)
             .flatMap { channel -> channel.createEmbed { spec ->
-                kizunaColor(spec)
+                fbkColor(spec)
                 spec.setAuthor("${author.username}#${author.discriminator} edited a message in #$channelName:", null, author.avatarUrl)
                 spec.setDescription("$oldContent\n\nNew message: $new")
                 spec.setFooter("User ID: ${author.id.asString()} - Message ID: ${event.messageId.asString()} - Original message timestamp", null)

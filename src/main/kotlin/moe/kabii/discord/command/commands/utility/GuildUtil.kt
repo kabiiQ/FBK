@@ -5,7 +5,7 @@ import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.structure.orNull
 import moe.kabii.structure.tryAwait
 import java.time.ZoneOffset
@@ -43,7 +43,7 @@ object GuildUtil : CommandContainer {
                 val features = target.features
 
                 embed {
-                    kizunaColor(this)
+                    fbkColor(this)
                     setDescription(more.toString())
                     setAuthor(target.name, null, target.getIconUrl(Image.Format.PNG).orNull())
                     addField("Server Owner", owner, true)

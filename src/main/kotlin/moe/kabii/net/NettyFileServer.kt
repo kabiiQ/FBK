@@ -39,7 +39,6 @@ object NettyFileServer {
         staticRoot.mkdirs()
         idRoot.mkdirs()
         val udLogo = File(staticRoot, "ud_logo.jpg")
-        val smug = File(staticRoot, "KizunaAi_Smug.png")
         val glitch = File(staticRoot, "Twitch_Glitch_Purple.png")
 
         routing {
@@ -88,9 +87,6 @@ object NettyFileServer {
             // static resources could just be a 'static' definition here - but I think there are few enough we can make nice short, controlled urls
             get ("/ud") {
                 call.respondFile(udLogo)
-            }
-            get("/smug") {
-                call.respondFile(smug)
             }
             get("/glitch") {
                 call.respondFile(glitch)

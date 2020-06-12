@@ -118,7 +118,7 @@ tasks {
     }
 
     jar {
-        manifest.attributes("Main-Class" to "moe.kabii.KizunaAiKt")
+        manifest.attributes("Main-Class" to "moe.kabii.FBKKt")
         // include build version in jar for bot self-info command
         from(".") {
             include("build.version")
@@ -127,8 +127,8 @@ tasks {
     }
 
     shadowJar {
-        // KizunaAi-deploy.jar
-        archiveBaseName.set("KizunaAi")
+        // FBK-deploy.jar
+        archiveBaseName.set("FBK")
         archiveClassifier.set("")
         archiveVersion.set("deploy")
     }

@@ -5,7 +5,7 @@ import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
@@ -42,7 +42,7 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
             .ofType(TextChannel::class.java)
             .flatMap { log ->
                 log.createEmbed { spec ->
-                    kizunaColor(spec)
+                    fbkColor(spec)
                     spec.setDescription("$messageCount messages from $authorCount users were bulk-deleted in ${eventChannel.name}.")
                 }
             }.onErrorResume { t ->

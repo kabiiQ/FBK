@@ -34,7 +34,7 @@ abstract class Command(val baseName: String, vararg alias: String) {
     open val helpURL: String? = null // TODO make this abstract once docs are available
     open val commandExempt: Boolean = false
 
-    val sourceRoot = "https://github.com/kabiiQ/KizunaAi/src/main/kotlin"
+    val sourceRoot = "https://github.com/kabiiQ/ShirakamiFubuki/src/main/kotlin"
 
     var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
     private set
@@ -60,7 +60,7 @@ abstract class Command(val baseName: String, vararg alias: String) {
 }
 
 fun errorColor(spec: EmbedCreateSpec) = spec.setColor(Color.RED)
-fun kizunaColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(14310538))
+fun fbkColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(12187102))
 fun specColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(13369088))
 fun reminderColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(44031))
 fun logColor(member: Member?, spec: EmbedCreateSpec) =
@@ -68,7 +68,7 @@ fun logColor(member: Member?, spec: EmbedCreateSpec) =
         .flatMap { member -> RoleUtil.getColorRole(member!!) } // weird type interaction means this is Member? but it will never be null inside the operators
         .map(Role::getColor)
         .map(spec::setColor)
-        .defaultIfEmpty(kizunaColor(spec))
+        .defaultIfEmpty(fbkColor(spec))
 
 data class DiscordParameters (
     val handler: MessageHandler,
@@ -116,7 +116,7 @@ data class DiscordParameters (
     }
 
     fun embed(block: EmbedReceiver) = chan.createEmbed { embed ->
-        kizunaColor(embed)
+        fbkColor(embed)
         embed.apply(block)
     }
 

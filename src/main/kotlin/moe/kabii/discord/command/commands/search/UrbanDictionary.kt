@@ -7,7 +7,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.conversation.Page
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Ok
@@ -48,7 +48,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                         val def = define.list[page.current]
                         val index = "${page.current + 1} / ${page.pageCount}"
                         spec.apply {
-                            kizunaColor(this)
+                            fbkColor(this)
                             setAuthor("UrbanDictionary", "https://urbandictionary.com", NettyFileServer.urbanDictionary)
                             setDescription("Lookup: [${def.word}](${def.permalink})")
                             addField("Definition $index:", def.definition, false)

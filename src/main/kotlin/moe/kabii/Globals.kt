@@ -14,7 +14,7 @@ val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
 
 // global okhttp instance
 object OkHTTP : OkHttpClient() {
-    private val userAgent = "DiscordBot-KizunaAi/1.0"
+    private val userAgent = "DiscordBot-srkmfbk/1.0"
     fun <R> make(request: Request.Builder, handler: (Response) -> R): Result<R, Throwable> =
         Try {
             newCall(request.header("User-Agent", userAgent).build()).execute()

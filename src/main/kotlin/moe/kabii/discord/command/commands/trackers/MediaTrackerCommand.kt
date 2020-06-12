@@ -83,7 +83,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
             trackedList.targets += mediaTarget
             trackedList.save()
             editPrompt {
-                kizunaColor(this)
+                fbkColor(this)
                 setDescription("Now tracking **$targetName**!")
             }
         }

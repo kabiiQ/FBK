@@ -97,7 +97,7 @@ class MessageHandler(val manager: CommandManager) {
                                     member.addRole(role.snowflake).success().awaitSingle()
                                     event.message.channel.flatMap { chan ->
                                         chan.createEmbed { spec ->
-                                            kizunaColor(spec)
+                                            fbkColor(spec)
                                             spec.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
                                             spec.setDescription("You have been given the **${guildRole.value.name}** role.")
                                         }

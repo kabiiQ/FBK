@@ -12,7 +12,7 @@ import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
@@ -71,7 +71,7 @@ object RecoverQueue {
                             .ofType(TextChannel::class.java)
                             .flatMap { chan ->
                                 chan.createEmbed { spec ->
-                                    kizunaColor(spec)
+                                    fbkColor(spec)
                                     spec.setDescription("Recovering from restart: $size tracks loaded, $fail tracks lost.")
                                 }
                             }.tryBlock()

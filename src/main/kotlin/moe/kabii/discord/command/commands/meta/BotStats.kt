@@ -4,7 +4,7 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.structure.*
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.time.Duration
@@ -20,7 +20,7 @@ object BotStats : CommandContainer {
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
                 val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
                 val pingEmbed: EmbedReceiver = {
-                    kizunaColor(this)
+                    fbkColor(this)
                     setAuthor("Ping Test", null, avatar)
                     addField("Ping Command Response Time", "${commandPing}ms", false)
                     if(heartbeat != null) {
@@ -55,7 +55,7 @@ object BotStats : CommandContainer {
                 val reconnection = DurationFormatUtils.formatDuration(reconnect.toMillis(), uptimeFormat, false)
 
                 embed {
-                    setAuthor("KizunaAi", null, botUser.avatarUrl)
+                    setAuthor("${botUser.username}#${botUser.discriminator}", null, botUser.avatarUrl)
                     addField("Process Uptime", connection, true)
                     addField("Connection Uptime", reconnection, true)
                     addField("Shards", "The bot currently only operates using one shard.", false)

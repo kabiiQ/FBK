@@ -11,10 +11,9 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.errorColor
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.YoutubeUtil
@@ -47,7 +46,7 @@ object AudioEventHandler : AudioEventAdapter() {
                         chan.createEmbed { embed ->
                             val title = AudioCommandContainer.trackString(track, includeAuthor = false)
                             val author = data.author_name
-                            kizunaColor(embed)
+                            fbkColor(embed)
                             embed.setDescription("Skipping **$title** because **$author** left the channel.")
                         }
                     }.subscribe()
@@ -63,7 +62,7 @@ object AudioEventHandler : AudioEventAdapter() {
                     val paused = if(player.isPaused) "The bot is currently paused." else ""
                     chan.createEmbed { embed ->
                         val title = AudioCommandContainer.trackString(track)
-                        kizunaColor(embed)
+                        fbkColor(embed)
                         val now = if(track.position > 0) "Resuming" else "Now playing"
                         embed.setDescription("$now **$title**. $paused")
                         if(track is YoutubeAudioTrack) embed.setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
@@ -76,7 +75,7 @@ object AudioEventHandler : AudioEventAdapter() {
             val filters = data.audioFilters.asString()
             originChan.flatMap { chan ->
                 chan.createEmbed { embed ->
-                    kizunaColor(embed)
+                    fbkColor(embed)
                     embed.setDescription("Applying filters:\n\n$filters")
                 }
             }.subscribe()

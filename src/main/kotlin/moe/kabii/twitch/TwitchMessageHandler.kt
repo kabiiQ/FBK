@@ -14,7 +14,7 @@ import moe.kabii.structure.stackTraceString
 
 class TwitchMessageHandler(val manager: CommandManager) {
     fun handle(event: ChannelMessageEvent) {
-        if(event.user.name.toLowerCase() == "ai_kizuna") return
+        if(event.user.name.toLowerCase() == "fbkbot") return
         // getGuild discord guild
 
         val msgArgs = event.message.split(" ").filterNot { it.isBlank() }

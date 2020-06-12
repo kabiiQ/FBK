@@ -2,7 +2,7 @@ package moe.kabii.discord.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.discord.command.kizunaColor
+import moe.kabii.discord.command.fbkColor
 import moe.kabii.structure.EmbedReceiver
 import kotlin.reflect.KMutableProperty1
 
@@ -65,7 +65,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         if(origin.args.isEmpty()) {
             val configEmbed: EmbedReceiver = {
-                kizunaColor(this)
+                fbkColor(this)
                 setAuthor(name, null, null)
                 // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
                 if(module.elements.any { element -> element is BooleanElement }) {
