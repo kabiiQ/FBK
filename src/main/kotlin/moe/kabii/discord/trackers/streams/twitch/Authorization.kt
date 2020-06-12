@@ -42,6 +42,8 @@ class Authorization {
                 val tokenResponse = response.value
                 if(tokenResponse != null) {
                     this.accessToken = tokenResponse.accessToken
+                    Keys.config[Keys.Twitch.token] = tokenResponse.accessToken
+                    Keys.saveConfigFile()
                     Ok(Unit)
 
                 } else Err(IOException())

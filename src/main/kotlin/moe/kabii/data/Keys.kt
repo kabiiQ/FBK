@@ -3,10 +3,14 @@ package moe.kabii.data
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.source.toml
+import com.uchuhimo.konf.source.toml.toToml
 
 object Keys : ConfigSpec("") {
+    private val lock = Any()
+    const val FILENAME = "keys.toml"
+
     val config = Config { addSpec(Keys) }
-        .from.toml.file("keys.toml")
+        .from.toml.file(FILENAME)
 
     object Discord : ConfigSpec() {
         val token by required<String>()
@@ -47,5 +51,11 @@ object Keys : ConfigSpec("") {
         val users by required<List<Long>>("admin_user")
         val channels by required<List<Long>>("admin_channels")
         val logChannel by required<Long>("log_channel")
+    }
+
+    fun saveConfigFile() {
+        synchronized(lock) {
+            config.toToml.toFile(FILENAME)
+        }
     }
 }
