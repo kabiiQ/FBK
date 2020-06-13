@@ -34,7 +34,7 @@ abstract class Command(val baseName: String, vararg alias: String) {
     open val helpURL: String? = null // TODO make this abstract once docs are available
     open val commandExempt: Boolean = false
 
-    val sourceRoot = "https://github.com/kabiiQ/ShirakamiFubuki/src/main/kotlin"
+    val sourceRoot = "https://github.com/kabiiQ/FBK/src/main/kotlin"
 
     var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
     private set
