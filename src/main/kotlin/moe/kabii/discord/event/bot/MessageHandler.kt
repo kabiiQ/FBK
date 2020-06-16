@@ -4,7 +4,8 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
@@ -26,7 +27,7 @@ class MessageHandler(val manager: CommandManager) {
         Regex("<@!?$id>")
     }
 
-    fun handle(event: MessageCreateEvent) = mono {
+    fun handle(event: MessageCreateEvent) = mono(manager.context + CoroutineName("MessageHandler") + SupervisorJob()) {
         // ignore bots
         if(event.message.author.orNull()?.isBot ?: true) return@mono
         var content = event.message.content
@@ -81,28 +82,26 @@ class MessageHandler(val manager: CommandManager) {
 
                 // role command listener
                 config.selfRoles.roleCommands.toMap().entries.find { (command, _) -> cmdStr.toLowerCase() == command }
-                    ?.let { (command, role) ->
-                        manager.context.launch {
-                            val guildRole =
-                                event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryAwait()
-                            when(guildRole) {
-                                is Err -> {
-                                    if(guildRole.value is ClientException) {
-                                        config.selfRoles.roleCommands.remove(command)
-                                        config.save()
+                    ?.also { (command, role) ->
+                        val guildRole =
+                            event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryAwait()
+                        when(guildRole) {
+                            is Err -> {
+                                if(guildRole.value is ClientException) {
+                                    config.selfRoles.roleCommands.remove(command)
+                                    config.save()
+                                }
+                            }
+                            is Ok -> {
+                                val member = event.member.get()
+                                member.addRole(role.snowflake).success().awaitSingle()
+                                event.message.channel.flatMap { chan ->
+                                    chan.createEmbed { spec ->
+                                        fbkColor(spec)
+                                        spec.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                                        spec.setDescription("You have been given the **${guildRole.value.name}** role.")
                                     }
-                                }
-                                is Ok -> {
-                                    val member = event.member.get()
-                                    member.addRole(role.snowflake).success().awaitSingle()
-                                    event.message.channel.flatMap { chan ->
-                                        chan.createEmbed { spec ->
-                                            fbkColor(spec)
-                                            spec.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
-                                            spec.setDescription("You have been given the **${guildRole.value.name}** role.")
-                                        }
-                                    }.awaitSingle()
-                                }
+                                }.awaitSingle()
                             }
                         }
                 }
@@ -112,64 +111,62 @@ class MessageHandler(val manager: CommandManager) {
             if (command != null) {
                 val isPM = !event.guildId.isPresent
                 // command parameters
-                manager.context.launch {
-                    val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
-                    if(!enabled) return@launch
-                    val guild = event.guild.awaitFirstOrNull()
-                    val targetID = (guild?.id ?: author.id).asLong()
-                    val username = author.username
-                    val guildName = guild?.name ?: username
-                    val context = if (isPM) "Private" else "Guild"
-                    LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
-                    val cmdArgs = content.split(" ").filter(String::isNotBlank)
-                    val args = cmdArgs
-                        .drop(1)
-                        .filterNot { it.equals("@everyone", ignoreCase = true) }
-                    val noCmd = args.joinToString(" ")
-                    LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
-                    val chan = event.message.channel.awaitSingle()
-                    val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr)
+                val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
+                if(!enabled) return@mono
+                val guild = event.guild.awaitFirstOrNull()
+                val targetID = (guild?.id ?: author.id).asLong()
+                val username = author.username
+                val guildName = guild?.name ?: username
+                val context = if (isPM) "Private" else "Guild"
+                LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
+                val cmdArgs = content.split(" ").filter(String::isNotBlank)
+                val args = cmdArgs
+                    .drop(1)
+                    .filterNot { it.equals("@everyone", ignoreCase = true) }
+                val noCmd = args.joinToString(" ")
+                LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
+                val chan = event.message.channel.awaitSingle()
+                val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr)
 
-                    try {
-                        if (command.executeDiscord != null)
-                            command.executeDiscord!!(param)
-                    } catch (parse: GuildTargetInvalidException) {
-                        param.error("${parse.string} Execute this command while in a guild channel or first use the **setguild** command to set your desired guild target.").subscribe()
-                    } catch (perms: MemberPermissionsException) {
-                        val s = if(perms.perms.size > 1) "s" else ""
-                        val reqs = perms.perms.joinToString(", ")
-                        param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
-                    } catch (feat: FeatureDisabledException) {
-                        val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryAwait().orNull() == true
-                        val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
-                        param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
-                    } catch (ce: ClientException) {
-                        // bot is missing permissions
-                        when (ce.status.code()) {
-                            403 -> {
-                                LOG.debug("403: ${ce.message}")
-                                if (config == null || chan !is TextChannel) return@launch
-                                if (ce.errorResponse.orNull()?.fields?.get("string")?.equals("Missing Permissions") != true) return@launch
-                                val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
-                                val listMissing = command.discordReqs
-                                        .filterNot(botPermissions::contains)
-                                        .joinToString("\n")
-                                author.privateChannel
-                                        .flatMap { pm ->
-                                            pm.createEmbed { spec ->
-                                                spec.setDescription("Configuration alert: you tried to use **${command.baseName}** in channel ${chan.mention} but I am missing required permissions\n\n**$listMissing\n**")
-                                            }
-                                        }.subscribe()
-                            }
-                            else -> {
-                                LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetID: ${ce.message}")
-                                LOG.debug(ce.stackTraceString) // these can be relatively normal - deleted channels and other weirdness
-                            }
+                try {
+                    if (command.executeDiscord != null)
+                        command.executeDiscord!!(param)
+                } catch (parse: GuildTargetInvalidException) {
+                    param.error("${parse.string} Execute this command while in a guild channel or first use the **setguild** command to set your desired guild target.").subscribe()
+                } catch (perms: MemberPermissionsException) {
+                    val s = if(perms.perms.size > 1) "s" else ""
+                    val reqs = perms.perms.joinToString(", ")
+                    param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
+                } catch (feat: FeatureDisabledException) {
+                    val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryAwait().orNull() == true
+                    val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
+                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
+                } catch (ce: ClientException) {
+                    // bot is missing permissions
+                    when (ce.status.code()) {
+                        403 -> {
+                            LOG.debug("403: ${ce.message}")
+                            if (config == null || chan !is TextChannel) return@mono
+                            if (ce.errorResponse.orNull()?.fields?.get("string")?.equals("Missing Permissions") != true) return@mono
+                            val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
+                            val listMissing = command.discordReqs
+                                    .filterNot(botPermissions::contains)
+                                    .joinToString("\n")
+                            author.privateChannel
+                                    .flatMap { pm ->
+                                        pm.createEmbed { spec ->
+                                            spec.setDescription("Configuration alert: you tried to use **${command.baseName}** in channel ${chan.mention} but I am missing required permissions\n\n**$listMissing\n**")
+                                        }
+                                    }.subscribe()
                         }
-                    } catch (e: Exception) {
-                        LOG.error("\nUncaught (non-discord) exception in command ${command.baseName} on guild $targetID: ${e.message}\nErroring command: $content")
-                        LOG.warn(e.stackTraceString)
+                        else -> {
+                            LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetID: ${ce.message}")
+                            LOG.debug(ce.stackTraceString) // these can be relatively normal - deleted channels and other weirdness
+                        }
                     }
+                } catch (e: Exception) {
+                    LOG.error("\nUncaught (non-discord) exception in command ${command.baseName} on guild $targetID: ${e.message}\nErroring command: $content")
+                    LOG.warn(e.stackTraceString)
                 }
             }
             return@mono

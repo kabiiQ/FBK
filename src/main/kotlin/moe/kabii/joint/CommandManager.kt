@@ -1,8 +1,8 @@
 package moe.kabii.joint
 
+import kotlinx.coroutines.asCoroutineDispatcher
 import moe.kabii.LOG
 import moe.kabii.discord.command.Command
-import moe.kabii.structure.asCoroutineScope
 import java.util.concurrent.Executors
 
 class CommandManager {
@@ -11,7 +11,7 @@ class CommandManager {
 
     internal val commands: List<Command> by lazy { commandsDiscord + commandsTwitch }
 
-    internal val context = Executors.newFixedThreadPool(10).asCoroutineScope()
+    internal val context = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
     fun registerInstance(command: Command) {
         if(command.executeDiscord != null) commandsDiscord.add(command)
