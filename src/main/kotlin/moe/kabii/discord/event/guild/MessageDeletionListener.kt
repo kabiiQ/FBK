@@ -68,7 +68,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
                 channel.createEmbed { spec ->
                     fbkColor(spec)
                     spec.setAuthor(embedAuthor, null, author?.avatarUrl)
-                    if(content != null) {
+                    if(content.isNotEmpty()) {
                         spec.setDescription("Deleted message: $content")
                     }
                     spec.setFooter("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null)

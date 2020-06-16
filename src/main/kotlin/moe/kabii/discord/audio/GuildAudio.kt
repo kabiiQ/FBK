@@ -70,7 +70,7 @@ data class GuildAudio(
         return true
     }
 
-    fun forceAdd(track: AudioTrack, member: Member? = null, position: Int? = null): Boolean {
+    fun forceAdd(track: AudioTrack, position: Int? = null): Boolean {
         if(position != null) queue.add(position, track) else queue.add(track)
         saveQueue()
         return true

@@ -35,12 +35,12 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
                 }
 
                 if(member.roleIds.contains(role.id)) {
-                    when(val remove = member.removeRole(role.id).tryAwait()) {
+                    when(member.removeRole(role.id).tryAwait()) {
                         is Ok -> createEmbed("You have been removed from the **${role.name}** role.")
                         is Err -> createEmbed("I tried to remove the **${role.name}** role from you, but I can not manage that role.")
                     }
                 } else {
-                    when(val add = member.addRole(role.id).tryAwait()) {
+                    when(member.addRole(role.id).tryAwait()) {
                         is Ok -> createEmbed("You have been given the **${role.name}** role.")
                         is Err -> error("I tried to give you the **${role.name}** but I can not manage that role.")
                     }

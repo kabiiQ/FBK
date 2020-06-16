@@ -6,7 +6,6 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import discord4j.voice.AudioProvider
-import moe.kabii.data.mongodb.GuildConfigurations
 import java.nio.ByteBuffer
 
 internal data class AudioComponents(val player: AudioPlayer, val provider: AudioProvider)
@@ -20,7 +19,6 @@ object AudioManager {
     }
 
     internal fun createAudioComponents(guild: Long): AudioComponents {
-        val config = GuildConfigurations.getOrCreateGuild(guild)
         val player = manager.createPlayer().apply {
             addListener(AudioEventHandler)
         }

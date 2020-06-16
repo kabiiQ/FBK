@@ -12,7 +12,6 @@ import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
 import java.util.*
 
 object Search {

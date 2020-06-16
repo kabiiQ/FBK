@@ -50,7 +50,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
 
         // twitch command handling
         // if the discord guild has a custom prefix we use that
-        val prefix = guild.prefix ?: ";"
+        val prefix = guild.prefix
         val cmdStr = if (msgArgs[0].startsWith(prefix)) {
             msgArgs[0].substring(prefix.length)
         } else null

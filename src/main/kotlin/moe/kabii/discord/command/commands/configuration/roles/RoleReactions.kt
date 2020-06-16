@@ -154,7 +154,7 @@ object RoleReactions : CommandContainer {
                 val messages = configs.toList()
                     // list reaction role messages that still have valid roles
                     .mapNotNull { reactRole ->
-                        val (messageInfo, reactionInfo, roleID) = reactRole
+                        val (_, _, roleID) = reactRole
                         when(val role = target.getRoleById(roleID.snowflake).tryAwait()) {
                             is Err -> {
                                 val error = role.value

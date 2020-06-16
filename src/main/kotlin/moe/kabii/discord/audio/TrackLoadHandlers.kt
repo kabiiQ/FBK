@@ -146,7 +146,7 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
                 position = playingTrack.position
                 userData = playingTrack.userData
             }
-            audio.forceAdd(oldTrack, origin.member, position = 0)
+            audio.forceAdd(oldTrack, position = 0)
         }
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
         val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)

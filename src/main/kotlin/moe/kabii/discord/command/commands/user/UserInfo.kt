@@ -4,7 +4,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 

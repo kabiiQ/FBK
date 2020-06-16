@@ -8,8 +8,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -24,7 +22,6 @@ import moe.kabii.structure.tryBlock
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
-import kotlin.coroutines.resume
 
 @Deprecated("Now purely aesthetic, Command inheritance is reflectively searched") interface CommandContainer
 
@@ -130,35 +127,6 @@ data class DiscordParameters (
 
     fun error(error: String) = error { setDescription(error) }
     fun embed(info: String) = embed { setDescription(info) }
-
-    suspend fun awaitCancel(param: DiscordParameters, react: Message? = null, timeout: Long? = 40000) = suspendCancellableCoroutine<Boolean> {
-
-        // TODO impractical
-        val (user, channel) = Criteria defaultFor param
-        val reactionListener = react?.run {
-            ReactionListener(
-                MessageInfo(react.channelId.asLong(), react.id.asLong()),
-                    listOf(
-                            ReactionInfo(EmojiCharacters.cancel, "cancel")
-                    ),
-                    user,
-                    param.event.client
-            ) { info, _, _ ->
-                try {
-                    it.resume(true)
-                } catch (e: Exception) {
-                }
-                true
-            }.apply { create(react, true) }
-        }
-        if (timeout != null) {
-            Conversation.timeouts.launch {
-                delay(timeout)
-                reactionListener?.cancel()
-                it.resume(true)
-            }
-        }
-    }
 
     suspend fun getString(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<String?> {
         var (user, channel) = Criteria defaultFor this

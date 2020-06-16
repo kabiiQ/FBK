@@ -34,7 +34,7 @@ object Purge : CommandContainer {
                 messageCount++
             }
             .map(Message::getId)
-            .compose(origin.chan::bulkDelete) // returns messages which could not be bulk deleted
+            .transform(origin.chan::bulkDelete) // returns messages which could not be bulk deleted
             .take(25) // arbitrary limit for manual one-by-one deletes
             .flatMap(origin.chan::getMessageById)
             .flatMap(Message::delete)

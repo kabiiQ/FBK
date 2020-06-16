@@ -27,7 +27,6 @@ object TwitchFollow : CommandContainer {
             discord {
                 // self-assigned role to be pinged when a stream goes live
                 // this feature must be enabled in the guild to use
-                val settings = config.guildSettings
                 val targetChannel = getTargetChannel(this)
                 if(targetChannel == null) {
                     usage("**follow** is used to add yourself to a role that will be pinged when a stream goes live.", "follow <twitch/mixer> <username>").awaitSingle()
