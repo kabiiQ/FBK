@@ -79,27 +79,28 @@ data class DiscordParameters (
     val command: Command,
     val alias: String) {
 
-    val target: Guild
-    get() {
-        if(guild != null) return guild
+    val target: Guild by lazy {
+        if(guild != null) return@lazy guild!!
         val user = transaction {
             DiscordObjects.User.getOrInsert(author.id.asLong())
         }
         val userTarget = user.target
         if (userTarget != null) {
             val dGuild = event.client.getGuildById(userTarget.snowflake).tryBlock().orNull()
-            if(dGuild != null) return dGuild else {
+            if(dGuild != null) return@lazy dGuild!! else {
                 user.target = null
                 throw GuildTargetInvalidException("Saved server **$userTarget** is no longer valid.")
             }
         } else throw GuildTargetInvalidException("Guild context unknown.")
     }
 
-    val member: Member
-    get() = target.getMemberById(author.id).tryBlock().orNull() ?: throw GuildTargetInvalidException("**${author.username}** is not a member of **${target.name}**.")
+    val member: Member by lazy {
+        target.getMemberById(author.id).tryBlock().orNull() ?: throw GuildTargetInvalidException("**${author.username}** is not a member of **${target.name}**.")
+    }
 
-    val config: GuildConfiguration
-    get() = GuildConfigurations.getOrCreateGuild(target.id.asLong())
+    val config: GuildConfiguration by lazy {
+        GuildConfigurations.getOrCreateGuild(target.id.asLong())
+    }
 
     // error if we need to verify channel permissions for targeting specific channel, but this was executed in DMs
     val guildChan: GuildChannel
