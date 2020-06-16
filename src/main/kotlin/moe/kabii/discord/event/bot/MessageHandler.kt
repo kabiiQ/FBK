@@ -34,7 +34,7 @@ class MessageHandler(val manager: CommandManager) {
         // only embeds, files, skip any further processing at this time
         if (content.isBlank()) return@mono
 
-        val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
+            val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull() // null if pm
         val msgArgs = content.split(" ")
 
         if (config != null) {

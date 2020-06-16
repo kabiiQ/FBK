@@ -59,7 +59,7 @@ object AudioEventHandler : AudioEventAdapter() {
         if(!data.apply) {
             originChan
                 .flatMap { chan ->
-                    val paused = if(player.isPaused) "The bot is currently paused." else ""
+                    val paused = if(player.isPaused) "\n\n**The bot is currently paused.**" else ""
                     chan.createEmbed { embed ->
                         val title = AudioCommandContainer.trackString(track)
                         fbkColor(embed)

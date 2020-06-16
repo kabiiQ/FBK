@@ -48,7 +48,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
         // set track
         if(!audio.player.startTrack(track, true)) {
-            val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
+            val paused = if(audio.player.isPaused) " \n\n**The bot is currently paused.** " else ""
             val add = runBlocking { audio.tryAdd(track, origin.member, position) }
             if(data.silent) return // don't send any messages for this track
             if(!add) {

@@ -9,6 +9,7 @@
     <logger name="discord4j.events" level="INFO"/>
     <logger name="discord4j.events.0" level="INFO"/>
     <logger name="com.github.twitch4j" level="INFO"/>
+    <logger name="org.apache.http" level="INFO"/>
     <logger name="Exposed" level="INFO"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
