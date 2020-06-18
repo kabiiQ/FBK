@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -16,6 +17,7 @@ import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.util.RoleUtil
+import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock
@@ -110,12 +112,23 @@ data class DiscordParameters (
 
     fun error(block: EmbedReceiver) = chan.createEmbed { embed ->
         errorColor(embed)
-        embed.apply(block)
+        runBlocking {
+            block(embed)
+        }
     }
 
     fun embed(block: EmbedReceiver) = chan.createEmbed { embed ->
         fbkColor(embed)
-        embed.apply(block)
+        runBlocking {
+            block(embed)
+        }
+    }
+
+    fun embedBlock(block: EmbedBlock) = chan.createEmbed { embed ->
+        fbkColor(embed)
+        runBlocking {
+            block(embed)
+        }
     }
 
     fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->

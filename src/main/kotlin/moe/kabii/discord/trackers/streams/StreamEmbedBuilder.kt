@@ -3,7 +3,7 @@ package moe.kabii.discord.trackers.streams
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.structure.EmbedReceiver
+import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.javaInstant
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
@@ -20,7 +20,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
         val url = stream.user.url
         val description = "[${stream.title}]($url)"
 
-        private val applyBase: EmbedReceiver = {
+        private val applyBase: EmbedBlock = {
             setAuthor(title, url, stream.user.profileImage)
             setDescription(description)
             setThumbnail(stream.game.artURL)
@@ -30,7 +30,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
             }
         }
 
-        val automatic: EmbedReceiver = {
+        val automatic: EmbedBlock = {
             applyBase(this)
             val time = Duration.between(stream.startedAt, Instant.now())
             val uptime = DurationFormatter(time).asUptime
@@ -38,7 +38,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
             setTimestamp(stream.startedAt)
         }
 
-        val manual: EmbedReceiver = {
+        val manual: EmbedBlock = {
             applyBase(this)
             val time = Duration.between(stream.startedAt, Instant.now())
             val uptime = DurationFormatter(time).asUptime
@@ -47,7 +47,7 @@ class StreamEmbedBuilder(val user: StreamUser, val settings: FeatureSettings) {
     }
 
     class StatisticsEmbed internal constructor(dbStream: TrackedStreams.Stream, builder: StreamEmbedBuilder) {
-        val create: EmbedReceiver = {
+        val create: EmbedBlock = {
             val recordedUptime = Duration.between(dbStream.startTime.javaInstant, Instant.now())
             val uptime = DurationFormatter(recordedUptime).fullTime
             val description = StringBuilder()

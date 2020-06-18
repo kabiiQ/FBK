@@ -13,7 +13,7 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -53,7 +53,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
         }
 
         // fall back to null if we can't get the author either
-        val author = if(authorID != null) event.client.getUserById(authorID.snowflake).tryBlock().orNull() else null
+        val author = if(authorID != null) event.client.getUserById(authorID.snowflake).tryAwait().orNull() else null
         val channelName = event.channel.ofType(TextChannel::class.java).awaitSingle().name
         val embedAuthor = if(author != null) {
             "A message by ${author.username}#${author.discriminator} was deleted in #$channelName:"

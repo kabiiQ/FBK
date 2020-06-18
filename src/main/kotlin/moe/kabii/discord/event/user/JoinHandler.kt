@@ -5,13 +5,15 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.*
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import reactor.kotlin.core.publisher.toFlux
 
 object JoinHandler {
@@ -19,7 +21,7 @@ object JoinHandler {
         override suspend fun handle(event: MemberJoinEvent) = handleJoin(event.member)
     }
 
-    fun handleJoin(member: Member, online: Boolean = true) {
+    suspend fun handleJoin(member: Member, online: Boolean = true) {
         val config = GuildConfigurations.getOrCreateGuild(member.guildId.asLong())
 
         // create user log
@@ -38,7 +40,7 @@ object JoinHandler {
 
         // if we can determine the invite used, we can apply specific autoroles
         val invite = if(online) {
-            val invites = InviteWatcher.updateGuild(member.guild.block())
+            val invites = InviteWatcher.updateGuild(member.guild.awaitFirst())
             invites.singleOrNull()
         } else null
 
@@ -48,7 +50,7 @@ object JoinHandler {
         val reassign = config.autoRoles.rejoinRoles.remove(memberID)
         val failedRoles = if(reassign != null && config.guildSettings.reassignRoles) {
             reassign.filter { roleID ->
-                !member.addRole(roleID.snowflake, "Reassigned roles").success().block()
+                !member.addRole(roleID.snowflake, "Reassigned roles").success().awaitFirst()
             }
         } else {
             val configs = config.autoRoles.joinConfigurations.toList()
@@ -62,7 +64,7 @@ object JoinHandler {
                 .filter { joinConfig ->
                     joinConfig.inviteTarget?.equals(invite) != false // find autoroles for this invite or for all users
                 }.filter { joinConfig ->
-                    val addedRole = member.addRole(joinConfig.role.snowflake, "Automatic user join role").thenReturn(Unit).tryBlock()
+                    val addedRole = member.addRole(joinConfig.role.snowflake, "Automatic user join role").thenReturn(Unit).tryAwait()
                     if(addedRole is Err) {
                         val error = addedRole.value as? ClientException
                         when(error?.status?.code()) {
@@ -84,13 +86,16 @@ object JoinHandler {
                 member.client.getChannelById(joinLog.channelID.snowflake)
                     .ofType(TextChannel::class.java)
                     .flatMap { channel ->
-                        val formatted = UserEventFormatter(member)
-                            .formatJoin(joinLog.joinFormat, invite)
-                        channel.createEmbed { embed ->
-                            embed.setDescription("$formatted$error")
-                            embed.setColor(Color.of(6750056))
-                            if(joinLog.joinFormat.contains("&avatar")) {
-                                embed.setImage(member.avatarUrl)
+                        mono {
+                            UserEventFormatter(member)
+                                .formatJoin(joinLog.joinFormat, invite)
+                        }.flatMap { formatted ->
+                            channel.createEmbed { embed ->
+                                embed.setDescription("$formatted$error")
+                                embed.setColor(Color.of(6750056))
+                                if(joinLog.joinFormat.contains("&avatar")) {
+                                    embed.setImage(member.avatarUrl)
+                                }
                             }
                         }
                     }

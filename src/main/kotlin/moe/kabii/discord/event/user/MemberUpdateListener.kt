@@ -4,6 +4,7 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
@@ -28,7 +29,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
             // empty Twitch roles
             removedRoles.toFlux()
                 .map(Snowflake::long)
-                .flatMap { roleID -> RoleUtil.removeIfEmptyStreamRole(guild, roleID) }
+                .flatMap { roleID -> mono { RoleUtil.removeIfEmptyStreamRole(guild, roleID) }}
                 .subscribe()
 
             // exclusive role sets
@@ -65,7 +66,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                 }}
             }.subscribe() // todo auditevent here when d4j issue fixed
 
-            removedRoles.mapNotNull { oldID -> guild.getRoleById(oldID).tryBlock().orNull() } // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
+            removedRoles.mapNotNull { oldID -> guild.getRoleById(oldID).tryAwait().orNull() } // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
                 .forEach { oldRole ->
                     logs.flatMap { chan -> chan.createEmbed { embed ->
                         fbkColor(embed)

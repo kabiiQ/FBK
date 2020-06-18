@@ -120,7 +120,7 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
                 .collectList().awaitSingle()
                 .forEach { targetRole ->
                     // check if roles still exist first
-                    val cfgRole = guild.getRoleById(targetRole).tryBlock()
+                    val cfgRole = guild.getRoleById(targetRole).tryAwait()
                     if (cfgRole is Ok) {
                         eventMember.addRole(cfgRole.value.id).subscribe()
                     } else {

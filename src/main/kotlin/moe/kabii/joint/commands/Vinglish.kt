@@ -1,5 +1,6 @@
 package moe.kabii.joint.commands
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.structure.reply
 
@@ -33,7 +34,7 @@ object Vinglish : Command("vinglish", "garble") {
 
     init {
         discord {
-            chan.createMessage(vinglishify(noCmd)).block()
+            chan.createMessage(vinglishify(noCmd)).awaitSingle()
         }
         twitch {
             event.reply(vinglishify(noCmd))

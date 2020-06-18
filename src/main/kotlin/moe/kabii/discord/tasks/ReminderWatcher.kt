@@ -91,7 +91,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
         }
         val age = Duration.between(reminder.created.javaInstant, Instant.now())
         val createdTime = DurationFormatter(age).fullTime
-        val embed: EmbedReceiver = {
+        val embed: EmbedBlock = {
             reminderColor(this)
             val clock = EmojiCharacters.alarm
             setAuthor("$clock Reminder for ${user.username}#${user.discriminator} $clock", null, user.avatarUrl)

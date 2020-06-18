@@ -14,7 +14,7 @@ object BotState : AudioCommandContainer {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val connection = audio.discord.connection
-                if(connection != null && connection.isConnected.block()) {
+                if(connection != null && connection.isConnected.awaitFirst()) {
                     // should already be connected. reaffirm
                     val botChannel = connection.channelId.awaitFirstOrNull()?.run(target::getChannelById)?.ofType(VoiceChannel::class.java)?.tryAwait()?.orNull()
                     val join = if(botChannel != null) {

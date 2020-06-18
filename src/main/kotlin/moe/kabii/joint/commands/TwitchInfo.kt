@@ -1,5 +1,6 @@
 package moe.kabii.joint.commands
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
@@ -24,7 +25,7 @@ object TwitchInfo : CommandContainer {
                 if(linkedTwitch != null) {
                     val stream = TwitchParser.getStream(linkedTwitch.twitchid)
                     if(stream is Ok) {
-                        embed("Current Twitch stream title: **${stream.value.title}**").block()
+                        embed("Current Twitch stream title: **${stream.value.title}**").awaitSingle()
                     }
                 }
             }
@@ -49,11 +50,11 @@ object TwitchInfo : CommandContainer {
                     if(stream is Ok) {
                         val uptime = Duration.between(stream.value.startedAt, Instant.now())
                         val uptimeStr = DurationFormatter(uptime).colonTime
-                        embed("${stream.value.username} has been live for $uptimeStr").block()
+                        embed("${stream.value.username} has been live for $uptimeStr").awaitSingle()
                     } else {
                         val user = TwitchParser.getUser(linkedTwitch.twitchid)
                         if(user is Ok) {
-                            embed("${user.value.username} is not live.").block()
+                            embed("${user.value.username} is not live.").awaitSingle()
                         }
                     }
                 }

@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.structure.UserID
+import moe.kabii.structure.success
 import moe.kabii.structure.tryBlock
 import reactor.core.publisher.Flux
 
@@ -26,10 +27,10 @@ class ReactionListener(val messageInfo: MessageInfo,
             if(none { listener -> listener.messageInfo == messageInfo }) {
                 add(this@ReactionListener)
                 if(add) {
-                    message.removeAllReactions().tryBlock()
+                    message.removeAllReactions().success().tryBlock()
                     Flux.fromIterable(reactions)
                         .flatMap { reaction -> message.addReaction(ReactionEmoji.unicode(reaction.unicode)) }
-                        .subscribe()
+                        .blockLast()
                 }
             }
 

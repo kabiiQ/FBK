@@ -10,7 +10,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::class) {
     override suspend fun handle(event: GuildCreateEvent) {
@@ -21,12 +21,13 @@ object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::clas
 
             // get meta info channel - log channel for bot events
             val metaChanId = Keys.config[Keys.Admin.logChannel]
+            val avatarUrl = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
             event.client.getChannelById(metaChanId.snowflake)
                 .ofType(TextChannel::class.java)
                 .flatMap { metaChan ->
                     metaChan.createEmbed { spec ->
                         spec.setColor(Color.of(6750056))
-                        spec.setAuthor("New server", null, event.client.self.map(User::getAvatarUrl).tryBlock().orNull())
+                        spec.setAuthor("New server", null, avatarUrl)
                         spec.setDescription("Bot added to new server: ${event.guild.name} (${event.guild.id.asString()})")
                     }
                 }

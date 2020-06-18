@@ -9,7 +9,7 @@ import moe.kabii.discord.command.errorColor
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.EmbedReceiver
+import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.ColorUtil
 import moe.kabii.util.RGB
@@ -36,7 +36,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                 error("You can not manage the role **${role.name}**.").awaitSingle()
                 return@discord
             }
-            fun colorPicker(color: Color): EmbedReceiver = {
+            fun colorPicker(color: Color): EmbedBlock = {
                 setColor(color)
                 val rgb = RGB(color)
                 val (r, g, b) = rgb
@@ -47,7 +47,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
 
             var currColor = randomColor()
             var hex = ColorUtil.hexString(currColor)
-            val prompt = embed(colorPicker(currColor)).awaitSingle()
+            val prompt = embedBlock(colorPicker(currColor)).awaitSingle()
             var first = true
             loop@while(true) {
                 // y/n /exit

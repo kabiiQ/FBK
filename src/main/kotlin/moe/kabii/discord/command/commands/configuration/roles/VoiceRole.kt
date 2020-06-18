@@ -11,7 +11,6 @@ import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
 
 object VoiceRole : CommandContainer {
     object AssignVoiceRole : Command("voiceroleassign", "voicerolecreate", "voiceroleadd", "assignvoicerole") {
@@ -120,7 +119,7 @@ object VoiceRole : CommandContainer {
                     setDescription("Users joining the following voice channels will receive the corresponding role.")
                     config.autoRoles.voiceConfigurations.forEach { cfg ->
                         val channel = if(cfg.targetChannel != null) {
-                            target.getChannelById(cfg.targetChannel.snowflake).tryBlock().orNull()
+                            target.getChannelById(cfg.targetChannel.snowflake).tryAwait().orNull()
                         } else null
                         val channelName =
                             if(cfg.targetChannel != null)
@@ -129,7 +128,7 @@ object VoiceRole : CommandContainer {
                                 else "Channel deleted"
                             else "Any Voice Channel"
                         val channelID = if(cfg.targetChannel != null && channel != null) " (${channel.id.asString()})" else ""
-                        val role = target.getRoleById(cfg.role.snowflake).tryBlock()
+                        val role = target.getRoleById(cfg.role.snowflake).tryAwait()
                         val roleName = if(role is Ok) role.value.name else "Role deleted"
                         addField("$channelName$channelID", "Role: $roleName", true)
                     }

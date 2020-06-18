@@ -11,7 +11,7 @@ import moe.kabii.discord.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toFlux
 
@@ -38,14 +38,13 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
             }
             oldMessage
         }
-        val message = event.message.tryBlock().orNull() ?: return
+        val message = event.message.tryAwait().orNull() ?: return
         val author = message.author.orNull()
         if(author == null || author.isBot) return
 
         val editLogs = logs.filter(LogSettings::editLog)
         if(editLogs.none()) return
 
-       // val author = event.message.block().author.orNull() ?: return
         val channelName = event.channel.ofType(TextChannel::class.java).awaitSingle().name
         val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
 

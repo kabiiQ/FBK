@@ -7,15 +7,15 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object InviteWatcher {
     private val invites: MutableMap<Long, MutableMap<String, Int>> = mutableMapOf()
 
-    fun updateGuild(guild: Guild): Set<String> {
+    suspend fun updateGuild(guild: Guild): Set<String> {
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
         if(config.guildSettings.utilizeInvites) {
-            val newInvites = when(val invites = guild.invites.collectList().tryBlock()) {
+            val newInvites = when(val invites = guild.invites.collectList().tryAwait()) {
                 is Ok -> invites.value.map { invite -> invite.code to invite.uses }.toMap().toMutableMap()
                 is Err -> {
                     val err = invites.value

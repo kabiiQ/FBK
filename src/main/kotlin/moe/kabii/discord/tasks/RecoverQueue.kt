@@ -15,7 +15,7 @@ import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.fbkColor
 import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import java.util.concurrent.Executors
 
 object RecoverQueue {
@@ -37,7 +37,7 @@ object RecoverQueue {
                             mono {
                                 audio.joinChannel(vc)
                             }
-                        }.tryBlock()
+                        }.tryAwait()
                 }
 
                 // deserialize and try to re-queue all tracks in order
@@ -74,7 +74,7 @@ object RecoverQueue {
                                     fbkColor(spec)
                                     spec.setDescription("Recovering from restart: $size tracks loaded, $fail tracks lost.")
                                 }
-                            }.tryBlock()
+                            }.tryAwait()
                     }
                 }
             }

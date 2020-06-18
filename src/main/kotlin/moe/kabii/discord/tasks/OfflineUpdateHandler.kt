@@ -2,22 +2,24 @@ package moe.kabii.discord.tasks
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildMember
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import moe.kabii.structure.withEach
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
-    fun runChecks(guild: Guild) {
+    suspend fun runChecks(guild: Guild) {
         // sync all guild members
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
         val log = config.userLog.users
-        val guildMembers = guild.members.collectList().block()
+        val guildMembers = guild.members.collectList().awaitFirst()
 
         // check current members are all accounted for in log
         guildMembers
@@ -32,7 +34,7 @@ object OfflineUpdateHandler {
             }
             .filter(GuildMember::current)
             .forEach { part ->
-                val user = guild.client.getUserById(part.userID.snowflake).tryBlock().orNull() ?: return@forEach
+                val user = guild.client.getUserById(part.userID.snowflake).tryAwait().orNull() ?: return@forEach
                 PartHandler.handlePart(guild.id, user, null)
             }
 
@@ -51,9 +53,9 @@ object OfflineUpdateHandler {
             .filter { id ->
                 guild.getChannelById(id.snowflake)
                     .ofType(VoiceChannel::class.java)
-                    .tryBlock().orNull()
+                    .tryAwait().orNull()
                     ?.let { vc ->
-                        val empty = vc.voiceStates.hasElements().block()
+                        val empty = vc.voiceStates.hasElements().awaitSingle()
                         if(empty == true) vc.delete("Empty temporary channel.").subscribe()
                         empty
                     } ?: true // remove from db if empty or already deleted

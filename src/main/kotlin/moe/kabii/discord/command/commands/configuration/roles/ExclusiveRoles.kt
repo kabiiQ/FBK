@@ -9,7 +9,7 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 import reactor.kotlin.core.publisher.toMono
 
 object ExclusiveRoles : CommandContainer {
@@ -123,7 +123,7 @@ object ExclusiveRoles : CommandContainer {
                             role.snowflake.toMono()
                                 .flatMap(target::getRoleById)
                                 .map(Role::getName)
-                                .tryBlock().orNull()
+                                .tryAwait().orNull()
                         }.joinToString("\n").ifEmpty { "No roles found!" }
                         addField("${set.name}:", roles, true)
                     }

@@ -3,7 +3,7 @@ package moe.kabii.discord.command.commands.configuration.setup
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.DiscordParameters
 import moe.kabii.discord.command.fbkColor
-import moe.kabii.structure.EmbedReceiver
+import moe.kabii.structure.EmbedBlock
 import kotlin.reflect.KMutableProperty1
 
 sealed class ConfigurationElement<T>(val fullName: String, val aliases: List<String>)
@@ -64,7 +64,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         // <command> (no args) -> full menu embed
 
         if(origin.args.isEmpty()) {
-            val configEmbed: EmbedReceiver = {
+            val configEmbed: EmbedBlock = {
                 fbkColor(this)
                 setAuthor(name, null, null)
                 // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
@@ -88,7 +88,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 setFooter("\"exit\" to save and exit immediately.", null)
             }
 
-            val menu = origin.embed(configEmbed).awaitSingle()
+            val menu = origin.embedBlock(configEmbed).awaitSingle()
             while(true) {
                 val inputStr = origin.getString(timeout = 120000L) ?: break
                 val input = inputStr.toIntOrNull() ?: continue

@@ -8,6 +8,7 @@ import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
@@ -71,7 +72,7 @@ fun main() {
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
-    val gateway = discord.login().block()!!
+    val gateway = requireNotNull(discord.login().block())
 
     // start file server
     if(keys[Keys.Netty.host]) {
@@ -86,11 +87,13 @@ fun main() {
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
-        .doOnNext(OfflineUpdateHandler::runChecks)
-        .doOnNext { guild ->
-            InviteWatcher.updateGuild(guild)
-            RecoverQueue.recover(guild)
+        .flatMap { guild ->
             LOG.info("Connected to guild ${guild.name}")
+            mono {
+                OfflineUpdateHandler.runChecks(guild)
+                InviteWatcher.updateGuild(guild)
+                RecoverQueue.recover(guild)
+            }
         }
 
     // primary message listener uses specific instance and is manually set up

@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import moe.kabii.data.Keys
 import reactor.core.publisher.Flux
@@ -58,8 +59,6 @@ object PermissionUtil {
                 .filter { role -> everyone || !role.isEveryone }
     }
 
-    fun isSafeRole(role: Role, forMember: Member, inGuild: Guild, managed: Boolean, everyone: Boolean): Boolean =
-        filterSafeRoles(Flux.just(role), forMember, inGuild, managed, everyone).hasElement(role).block()
-
-
+    suspend fun isSafeRole(role: Role, forMember: Member, inGuild: Guild, managed: Boolean, everyone: Boolean): Boolean =
+        filterSafeRoles(Flux.just(role), forMember, inGuild, managed, everyone).hasElement(role).awaitFirst()
 }

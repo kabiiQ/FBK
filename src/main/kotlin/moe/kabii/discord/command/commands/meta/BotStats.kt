@@ -19,7 +19,7 @@ object BotStats : CommandContainer {
                 val ping = embed("Pong!").awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
                 val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
-                val pingEmbed: EmbedReceiver = {
+                val pingEmbed: EmbedBlock = {
                     fbkColor(this)
                     setAuthor("Ping Test", null, avatar)
                     addField("Ping Command Response Time", "${commandPing}ms", false)

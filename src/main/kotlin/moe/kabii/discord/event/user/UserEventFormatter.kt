@@ -3,7 +3,8 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
-import moe.kabii.structure.tryBlock
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import moe.kabii.structure.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -14,14 +15,14 @@ enum class UserEvent { JOIN, PART }
 class UserEventFormatter(val user: User) {
     private fun paramMatcher(origin: String, param: String) = """&$param(?:="([^"]*)")?""".toRegex().find(origin)
 
-    private fun commonFields(unformatted: String, member: Member?): String {
+    private suspend fun commonFields(unformatted: String, member: Member?): String {
         var formatted = unformatted.replace("&name", user.username)
             .replace("&mention", user.mention)
             .replace("&id", user.id.asString())
             .replace("&discrim", "#${user.discriminator}")
             .replace("&avatar", "")
 
-        val guild = member?.run { guild.tryBlock().orNull() }
+        val guild = member?.run { guild.tryAwait().orNull() }
         val membersMatcher = paramMatcher(formatted, "members")
         if(membersMatcher != null && guild != null) {
             formatted = formatted.replace(membersMatcher.value, guild.memberCount.toString())
@@ -32,7 +33,7 @@ class UserEventFormatter(val user: User) {
 
     private fun plural(quantity: Long) = if(quantity != 1L) "s" else ""
 
-    fun formatJoin(unformatted: String, invite: String?): String {
+    suspend fun formatJoin(unformatted: String, invite: String?): String {
         var format = commonFields(unformatted, member = null)
         // group 1: if present then we have custom unknown invite text
         // &invite
@@ -67,17 +68,15 @@ class UserEventFormatter(val user: User) {
         return format
     }
 
-    fun formatPart(unformatted: String, member: Member?): String {
+    suspend fun formatPart(unformatted: String, member: Member?): String {
         var format = commonFields(unformatted, member)
-
-        val roles by lazy {
-            member?.run {
-                roles.collectList().block()
-            }
-        }
 
         val matchRoleList = paramMatcher(format, "roles")
         if (matchRoleList != null) {
+            val roles = if(member != null) {
+                member.roles.collectList().awaitFirstOrNull()
+            } else null
+
             format = if (roles != null) { // this was a part from while the bot/api was offline, we can't provide any of this info
                 format.replace(matchRoleList.value, roles!!.joinToString(", ", transform = Role::getName))
             } else {

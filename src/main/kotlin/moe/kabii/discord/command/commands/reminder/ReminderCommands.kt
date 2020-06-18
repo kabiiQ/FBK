@@ -8,7 +8,7 @@ import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.reminderColor
-import moe.kabii.structure.EmbedReceiver
+import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
@@ -96,7 +96,7 @@ object ReminderCommands : CommandContainer {
                 }
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
                 val reminderID = reminder.id
-                val embed: EmbedReceiver = {
+                val embed: EmbedBlock = {
                     reminderColor(this)
                     setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
                     setDescription("Reminder created! You will be sent a $location in **$length**.")

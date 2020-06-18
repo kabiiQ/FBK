@@ -1,5 +1,6 @@
 package moe.kabii.joint.commands
 
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
 import moe.kabii.discord.command.CommandContainer
 import moe.kabii.structure.mapNotNull
@@ -37,7 +38,7 @@ object RandomCommands : CommandContainer {
                             setTitle("Rolling ${diceCount}x $diceSides-sided dice:")
                             setDescription(desc)
                             setFooter("Total value: ${rolls.sum()}", null)
-                        }.block()
+                        }.awaitSingle()
                         return@discord
                     }
                 }
@@ -47,7 +48,7 @@ object RandomCommands : CommandContainer {
                 embed {
                     setTitle("Roll: $range")
                     setDescription("Result: $result")
-                }.block()
+                }.awaitSingle()
             }
             twitch {
                 val (range, result) = roll(args)
@@ -66,7 +67,7 @@ object RandomCommands : CommandContainer {
                         .mapNotNull { message -> message.author.orNull()?.username }
                         .distinct(String::hashCode)
                         .collectList()
-                        .block()
+                        .awaitSingle()
                 } else args
                 embed {
                     val choice = options.random()
@@ -108,7 +109,7 @@ object RandomCommands : CommandContainer {
         init {
             discord {
                 // TODO 8ball emoji
-                chan.createMessage { magicball.random() }.block()
+                chan.createMessage(magicball.random()).awaitSingle()
             }
             twitch {
                 event.reply(magicball.random())
@@ -132,7 +133,7 @@ object RandomCommands : CommandContainer {
             discord {
                 embed {
                     setDescription(flip(author.username))
-                }.block()
+                }.awaitSingle()
             }
             twitch {
                 event.reply(flip(event.user.name))

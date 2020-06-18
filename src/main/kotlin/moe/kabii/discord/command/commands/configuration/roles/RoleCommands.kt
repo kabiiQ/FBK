@@ -9,7 +9,7 @@ import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.tryAwait
 
 object SelfRoleCommands : CommandContainer {
     object RoleCommands : Command("rolecommands", "rolecommand") {
@@ -92,7 +92,7 @@ object SelfRoleCommands : CommandContainer {
                         setDescription("There are no role commands for **${target.name}**.")
                     } else {
                         commands.map { (command, role) ->
-                            val guildRole = target.getRoleById(role.snowflake).map(Role::getName).tryBlock().orNull() ?: "Deleted role"
+                            val guildRole = target.getRoleById(role.snowflake).map(Role::getName).tryAwait().orNull() ?: "Deleted role"
                             addField("Command: **$command**", "Role: $guildRole", false)
                         }
                     }

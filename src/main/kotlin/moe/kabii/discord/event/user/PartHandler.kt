@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.util.Color
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
@@ -20,7 +21,7 @@ object PartHandler {
         override suspend fun handle(event: MemberLeaveEvent) = handlePart(event.guildId, event.user, event.member.orNull())
     }
 
-    fun handlePart(guild: Snowflake, user: User, member: Member?) {
+    suspend fun handlePart(guild: Snowflake, user: User, member: Member?) {
         val config = GuildConfigurations.getOrCreateGuild(guild.asLong())
 
         val userID = user.id.asLong()
@@ -41,13 +42,16 @@ object PartHandler {
             user.client.getChannelById(partLog.channelID.snowflake)
                 .ofType(TextChannel::class.java)
                 .flatMap { channel ->
-                    val formatted = UserEventFormatter(user)
-                        .formatPart(partLog.partFormat, member)
-                    channel.createEmbed { embed ->
-                        embed.setDescription(formatted)
-                        embed.setColor(Color.of(16739688))
-                        if(partLog.partFormat.contains("&avatar")) {
-                            embed.setImage(user.avatarUrl)
+                    mono {
+                        UserEventFormatter(user)
+                            .formatPart(partLog.partFormat, member)
+                    }.flatMap { formatted ->
+                        channel.createEmbed { embed ->
+                            embed.setDescription(formatted)
+                            embed.setColor(Color.of(16739688))
+                            if (partLog.partFormat.contains("&avatar")) {
+                                embed.setImage(user.avatarUrl)
+                            }
                         }
                     }
                 }
