@@ -117,7 +117,6 @@ object MALParser : MediaListParser() {
             }
         }
         if(animes.isEmpty() && mangas.isEmpty()) return Err(MediaListEmpty)
-        delay(4000L)
         return Ok(MediaList(media))
     }
 

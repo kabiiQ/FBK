@@ -11,7 +11,7 @@ class CommandManager {
 
     internal val commands: List<Command> by lazy { commandsDiscord + commandsTwitch }
 
-    internal val context = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
+    internal val context = Executors.newCachedThreadPool().asCoroutineDispatcher()
 
     fun registerInstance(command: Command) {
         if(command.executeDiscord != null) commandsDiscord.add(command)

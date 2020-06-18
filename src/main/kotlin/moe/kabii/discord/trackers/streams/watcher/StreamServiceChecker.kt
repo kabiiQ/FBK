@@ -1,81 +1,83 @@
-package moe.kabii.discord.trackers.streams
+package moe.kabii.discord.trackers.streams.watcher
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.discord.trackers.streams.StreamDescriptor
+import moe.kabii.discord.trackers.streams.StreamEmbedBuilder
+import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.rusty.Result
-import moe.kabii.rusty.Try
 import moe.kabii.structure.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
+import kotlin.math.max
 
-class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher") {
-    var active = true
-    private val streamThreads = Executors.newFixedThreadPool(TrackedStreams.Site.values().size).asCoroutineScope()
-
+class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedStreams.Site, val discord: GatewayDiscordClient) : Runnable {
     override fun run() {
-        while(active) {
+        loop {
             val start = Instant.now()
-            transaction {
-                val tracked = TrackedStreams.StreamChannel.all() // capture the currently tracked streams
-                runBlocking {
-                    tracked.groupBy { it.site } // group by site and later re-assemble only because of the importance of bulk api calls
-                        .map { (site, channels) ->
-                            streamThreads.launch {
-                                Try {
-                                    // use 1 thread per site to call the appropriate api to get streams for that site in bulk
-                                    val ids = channels.map(TrackedStreams.StreamChannel::siteChannelID)
-                                    val streams = site.parser.getStreams(ids)
-                                    streams.forEach { (id, stream) ->
-                                        val channel = channels.find { it.siteChannelID == id }!!
-                                        transaction {
-                                            updateChannel(channel, stream)
-                                        }
-                                    }
-                                }.result.ifErr { e -> // don't end this thread
-                                    LOG.error("Uncaught exception in StreamWatcher: $site :: ${e.message}")
-                                    LOG.warn(e.stackTraceString)
+            // get all tracked sites for this service
+            try {
+                transaction {
+                    val tracked = TrackedStreams.StreamChannel.find {
+                        TrackedStreams.StreamChannels.site eq site
+                    }
+
+                    // get all the IDs to make bulk requests to the service.
+                    // no good way to do this besides temporarily dissociating ids from other data
+                    // very important to optimize requests to Twitch, etc
+                    val ids = tracked.map(TrackedStreams.StreamChannel::siteChannelID)
+                    // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
+                    val streamData = site.parser.getStreams(ids)
+
+                    // NOW we can split into coroutines for processing & sending messages to Discord.
+                    // we don't want tasks killing each other here
+                    val job = SupervisorJob()
+                    val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
+
+                    runBlocking {
+                        // re-associate SQL data with stream API data
+                        streamData.mapNotNull { (id, data) ->
+                            val trackedChannel = tracked.find { it.siteChannelID == id }!!
+                            if (data is Err && data.value is StreamErr.IO) {
+                                LOG.warn("Error contacting ${site.full} :: $trackedChannel")
+                                return@mapNotNull null
+                            }
+                            transaction {
+                                taskScope.launch {
+                                    updateChannel(trackedChannel, data.orNull())
                                 }
                             }
                         }.joinAll()
+                    }
                 }
+            } catch(e: Exception) {
+                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
+            // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
-            if(runDuration.toMinutes() < 2) {
-                val wait = 120_000L - runDuration.toMillis()
-                sleep(wait)
-            }
+            val delay = 180000L - runDuration.toMillis()
+            Thread.sleep(max(delay, 0L))
         }
     }
 
     @WithinExposedContext
-    private fun updateChannel(channel: TrackedStreams.StreamChannel, stream: Result<StreamDescriptor, StreamErr>) {
-        val stream = when(stream) {
-            is Ok -> stream.value
-            is Err -> when(stream.value) {
-                StreamErr.IO -> return // actual error contacting site
-                StreamErr.NotFound -> null // stream is not live
-            }
-        }
-
+    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
         // get streaming site user object when needed
-        val parser = channel.site.parser
         val user by lazy {
-            when (val user = parser.getUser(channel.siteChannelID)) {
+            when (val user = site.parser.getUser(channel.siteChannelID)) {
                 is Ok -> user.value
                 is Err -> {
                     val err = user.value
@@ -98,33 +100,35 @@ class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher")
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val dbMessage = notif.messageID
-                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryBlock().orNull()
+                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
-                            embed.setColor(parser.color)
+                            embed.setColor(site.parser.color)
                             embed.setFooter("Channel ID was ${channel.siteChannelID} on ${channel.site.full}.", null)
-                        }}?.tryBlock()
+                        }}?.tryAwait()
                         notif.delete()
                     }
                     return
                 }
                 val dbStream = streams.first()
                 // Stream is not live and we have stream history. edit/remove any existing notifications
-                if(user == null) return
                 notifications.forEach { notif ->
                     val messageID = notif.messageID
-                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
+                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
                     if(discordMessage != null) {
                         val features = discordMessage.guild.map { guild ->
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
                             config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        }.tryBlock().orNull() ?: FeatureSettings() // use default settings for PM
+                        }.tryAwait().orNull() ?: FeatureSettings() // use default settings for PM
                         if(features.streamSummaries) {
-                            val specEmbed = StreamEmbedBuilder(user!!, features).statistics(dbStream)
+                            val specEmbed = StreamEmbedBuilder(
+                                user!!,
+                                features
+                            ).statistics(dbStream)
                             discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                         } else {
                             discordMessage.delete()
-                        }.tryBlock()
+                        }.tryAwait()
                     }
                     notif.delete()
                     dbStream.delete()
@@ -166,7 +170,7 @@ class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher")
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
                     discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java)
-                        .tryBlock()) {
+                        .tryAwait()) {
                     is Ok -> disChan.value
                     is Err -> {
                         val err = disChan.value
@@ -186,7 +190,7 @@ class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher")
                             .ofType(GuildChannel::class.java)
                             .flatMap(GuildChannel::getGuild)
                             .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
-                            .tryBlock()
+                            .tryAwait()
                         when (role) {
                             is Ok -> role.value
                             is Err -> {
@@ -204,7 +208,7 @@ class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher")
                 val newNotification = chan.createMessage { spec ->
                     if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                     spec.setEmbed(embed.automatic)
-                }.tryBlock().orNull()
+                }.tryAwait().orNull()
 
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
                 TrackedStreams.Notification.new {
@@ -217,9 +221,9 @@ class StreamWatcher(val discord: GatewayDiscordClient) : Thread("StreamWatcher")
                     this.stream = dbStream
                 }
             } else {
-                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
+                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryAwait().orNull()
                 if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryBlock().orNull()
+                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait().orNull()
                 } else existing.delete()
             }
         }

@@ -71,3 +71,7 @@ fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try
 } catch(formatting: JsonDataException) {
     Err(IOException(formatting))
 }
+
+fun loop(process: () -> Unit) {
+    while(true) process.invoke()
+}
