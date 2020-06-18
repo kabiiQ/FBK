@@ -31,10 +31,10 @@ object TwitchParser : StreamParser {
         override val url: String = "https://twitch.tv/$username"
     }
 
-    private inline fun <reified R: Any>  request(request: String): Result<R, StreamErr> {
+    private inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
         val request = Request.Builder()
             .get()
-            .url(request)
+            .url(requestStr)
             .header("Client-ID", clientID)
             .header("Authorization", "Bearer ${oauth.accessToken}")
 

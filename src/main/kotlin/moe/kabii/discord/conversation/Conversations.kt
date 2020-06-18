@@ -10,7 +10,9 @@ import moe.kabii.structure.mod
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
-class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener :ReactionListener?) {
+// bit hacky, but unchecked casts are guaranteed by enum type.
+@Suppress("UNCHECKED_CAST")
+class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener: ReactionListener?) {
     fun test(message: String) {
         if(message.isBlank()) return
         if(message.toLowerCase().trim() == "exit") {
@@ -106,7 +108,7 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
 
     companion object {
         private val all_conversations = mutableListOf<Conversation>()
-        val timeouts = Executors.newSingleThreadExecutor().asCoroutineScope()
+        private val timeouts = Executors.newSingleThreadExecutor().asCoroutineScope()
 
         val conversations
             get() = all_conversations.toList()

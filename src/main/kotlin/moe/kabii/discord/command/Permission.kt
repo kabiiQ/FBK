@@ -53,7 +53,7 @@ object PermissionUtil {
             forMember.highestRole
                 .flatMap(Role::getPosition)
                 .flatMapMany { highest ->
-                    roles.filter { role -> role.position.block() < highest }
+                    roles.filter { role -> role.position.block()!! < highest }
                 }
                 .filter { role -> managed || !role.isManaged }
                 .filter { role -> everyone || !role.isEveryone }

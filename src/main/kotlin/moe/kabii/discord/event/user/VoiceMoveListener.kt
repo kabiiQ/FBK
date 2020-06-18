@@ -90,9 +90,9 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
                 oldState!!.channel
                     .flatMapMany(VoiceChannel::getVoiceStates)
                     .flatMap(VoiceState::getUser)
-                    .flatMap { user -> user.asMember(guildID) }
-                    .flatMap { member ->
-                        member.edit { spec ->
+                    .flatMap { vcUser -> vcUser.asMember(guildID) }
+                    .flatMap { vcMember ->
+                        vcMember.edit { spec ->
                             spec.setNewVoiceChannel(newChannel!!.id)
                         }
                     }.subscribe()

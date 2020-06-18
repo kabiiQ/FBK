@@ -28,15 +28,15 @@ object JoinHandler {
         val memberID = member.id.asLong()
         val log = config.userLog.users.find { it.userID == memberID }
         if (log == null) {
-            val member = GuildMember(true, memberID)
-            config.userLog.users.add(member)
+            val guildMember = GuildMember(true, memberID)
+            config.userLog.users.add(guildMember)
             config.save()
         } else if (!log.current) {
             log.current = true
             config.save()
         }
 
-        var error = ""
+        var errorStr = ""
 
         // if we can determine the invite used, we can apply specific autoroles
         val invite = if(online) {
@@ -57,7 +57,7 @@ object JoinHandler {
 
             if(configs.any { cfg -> cfg.inviteTarget != null && !config.guildSettings.utilizeInvites }) {
                 // error if any invite-specific configurations exist but we got 403'd for MANAGE_SERVER
-                error += " (A invite-specific role is configured but I am missing permissions to view invite information (Manage Server permission)"
+                errorStr += " (A invite-specific role is configured but I am missing permissions to view invite information (Manage Server permission)"
             }
 
             configs
@@ -76,7 +76,7 @@ object JoinHandler {
                 }.map(JoinConfiguration::role)
         }
 
-        if(failedRoles.isNotEmpty()) error += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
+        if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
 
         config.options.featureChannels.values.toList().toFlux()
             .filter(FeatureChannel::logChannel)
@@ -91,7 +91,7 @@ object JoinHandler {
                                 .formatJoin(joinLog.joinFormat, invite)
                         }.flatMap { formatted ->
                             channel.createEmbed { embed ->
-                                embed.setDescription("$formatted$error")
+                                embed.setDescription("$formatted$errorStr")
                                 embed.setColor(Color.of(6750056))
                                 if(joinLog.joinFormat.contains("&avatar")) {
                                     embed.setImage(member.avatarUrl)

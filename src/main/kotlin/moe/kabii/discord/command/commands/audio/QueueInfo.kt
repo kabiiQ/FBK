@@ -25,16 +25,16 @@ object QueueInfo : AudioCommandContainer {
                 } ?: 0
 
                 val track = audio.player.playingTrack
-                val np = track?.let { track -> "Now playing: ${trackString(track)}"} ?: "Currently loading the next track!"
+                val np = track?.run { "Now playing: ${trackString(this)}"} ?: "Currently loading the next track!"
                 // get 10 tracks start from starting point
 
                 val tracks = audio.queue.drop(starting).take(10)
                 val queueList = if(tracks.isEmpty()) {
                     "No additional songs in queue."
                 } else {
-                    val list = tracks.mapIndexed { index, track ->
-                        val index = index + starting + 1
-                        "$index. ${trackString(track)}"
+                    val list = tracks.mapIndexed { queueIndex, queueTrack ->
+                        val index = queueIndex + starting + 1
+                        "$index. ${trackString(queueTrack)}"
                     }.joinToString("\n").take(1900)
                     "In queue:\n$list"
                 }

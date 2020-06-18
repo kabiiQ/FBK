@@ -37,7 +37,7 @@ object ReactionRoleHandler {
 
         val info = "Reaction role message #${reactionRole.message.messageID} / emoji ${reactionRole.reaction.name}"
         val member = guild
-            .flatMap { guild -> guild.getMemberById(userId) }.awaitSingle()!!
+            .flatMap { g -> g.getMemberById(userId) }.awaitSingle()!!
 
         if(member.isBot) return
 

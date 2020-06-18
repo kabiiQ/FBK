@@ -41,12 +41,12 @@ object Urban : Command("urbandictionary", "urban", "ud") {
             var page: Page? = Page(define.list.size, 0)
             var first = true
             while (page != null) {
-                message.edit {
-                    it.setContent(null)
-                    it.setEmbed { spec ->
-                        val page = page!!
-                        val def = define.list[page.current]
-                        val index = "${page.current + 1} / ${page.pageCount}"
+                message.edit { editSpec ->
+                    editSpec.setContent(null)
+                    editSpec.setEmbed { spec ->
+                        val currentPage = page!!
+                        val def = define.list[currentPage.current]
+                        val index = "${currentPage.current + 1} / ${currentPage.pageCount}"
                         spec.apply {
                             fbkColor(this)
                             setAuthor("UrbanDictionary", "https://urbandictionary.com", NettyFileServer.urbanDictionary)

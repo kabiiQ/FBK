@@ -34,6 +34,7 @@ import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
 
+@Suppress("UNUSED_VARIABLE")
 fun main() {
     // init global objects
     val mongo = MongoDBConnection

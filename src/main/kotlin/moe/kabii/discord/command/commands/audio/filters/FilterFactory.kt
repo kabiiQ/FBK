@@ -24,7 +24,7 @@ sealed class FilterType {
 }
 
 class FilterFactory {
-    protected val filters = mutableListOf<FilterType>()
+    val filters = mutableListOf<FilterType>()
 
     inline fun <reified T: FilterType> addExclusiveFilter(filter: T) {
         filters.removeIf { it is T }

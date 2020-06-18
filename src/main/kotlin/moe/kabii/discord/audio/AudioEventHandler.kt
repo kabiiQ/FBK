@@ -34,11 +34,11 @@ object AudioEventHandler : AudioEventAdapter() {
         val config = GuildConfigurations.getOrCreateGuild(guildID).musicBot
         // guild option to skip song if queuer has left voice channel.
         if(config.skipIfAbsent) {
-            val chan = data.discord.getGuildById(guildID.snowflake)
+            val vc = data.discord.getGuildById(guildID.snowflake)
                 .flatMap(BotUtil::getBotVoiceChannel)
                 .tryBlock().orNull()
-            if(chan != null) {
-                val userPresent = chan.voiceStates
+            if(vc != null) {
+                val userPresent = vc.voiceStates
                     .filter { state -> state.userId == data.author }
                     .hasElements().tryBlock().orNull()
                 if(userPresent == false) {  // abandon this if it errors, but the bot should definitely be in a voice channel if this is reached
@@ -138,6 +138,7 @@ object AudioEventHandler : AudioEventAdapter() {
 
                 data.associatedMessages.clear()
             }
+            else -> return
         }
     }
 
@@ -151,7 +152,7 @@ object AudioEventHandler : AudioEventAdapter() {
                     errorColor(embed)
                     embed.setTitle("An error occured during audio playback")
                     embed.addField("Track", title, false)
-                    embed.addField("Error", exception.message, false)
+                    embed.addField("Error", exception.message ?: "broken", false)
                 }
             }.subscribe()
     }

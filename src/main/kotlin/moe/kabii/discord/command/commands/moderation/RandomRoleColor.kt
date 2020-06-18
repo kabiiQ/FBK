@@ -56,8 +56,8 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                 when (response) {
                     true -> { // set color
                         val oldColor = ColorUtil.hexString(role.color)
-                        val edit = role.edit { role ->
-                            role.setColor(currColor)
+                        val edit = role.edit { spec ->
+                            spec.setColor(currColor)
                         }.tryAwait().orNull()
                         if (edit != null) {
                             prompt.edit { message ->

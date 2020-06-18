@@ -29,16 +29,15 @@ object StreamTrackerCommand : Tracker<TargetStream> {
         }
 
         // validate stream is real and get id
-        val channelID = origin.chan.id.asLong()
-        val target = target.stream
-        val parser = target.site.parser
+        val targetStream = target.stream
+        val parser = targetStream.site.parser
 
-        val stream = when(val lookup = parser.getUser(target.id)) {
+        val stream = when(val lookup = parser.getUser(targetStream.id)) {
             is Ok -> lookup.value
             is Err -> {
                 val error = when(lookup.value) {
-                    is StreamErr.NotFound -> "Unable to find **${target.site.full}** stream **${target.id}**."
-                    is StreamErr.IO -> "Error tracking stream. Possible **${target.site.full}** API issue."
+                    is StreamErr.NotFound -> "Unable to find **${targetStream.site.full}** stream **${targetStream.id}**."
+                    is StreamErr.IO -> "Error tracking stream. Possible **${targetStream.site.full}** API issue."
                 }
                 origin.error(error).awaitSingle()
                 return
@@ -59,7 +58,7 @@ object StreamTrackerCommand : Tracker<TargetStream> {
             TrackedStreams.StreamChannel.find { TrackedStreams.StreamChannels.siteChannelID eq streamID }
                 .elementAtOrElse(0) { _ ->
                     TrackedStreams.StreamChannel.new {
-                        this.site = target.site
+                        this.site = targetStream.site
                         this.siteChannelID = streamID
                     }
                 }
@@ -76,11 +75,11 @@ object StreamTrackerCommand : Tracker<TargetStream> {
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetStream) {
         // get stream info from username the user provides
-        val target = target.stream
-        val stream = target.site.parser.getUser(target.id).orNull()
+        val targetStream = target.stream
+        val stream = targetStream.site.parser.getUser(targetStream.id).orNull()
 
         if(stream == null) {
-            origin.error("Unable to find **${target.site.full}** stream **${target.id}**.").awaitSingle()
+            origin.error("Unable to find **${targetStream.site.full}** stream **${targetStream.id}**.").awaitSingle()
             return
         }
 

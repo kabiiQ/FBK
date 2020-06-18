@@ -40,7 +40,7 @@ object TwitchInfo : CommandContainer {
                 if (stream is Ok) {
                     val uptime = Duration.between(stream.value.startedAt, Instant.now())
                     val uptimeStr = DurationFormatter(uptime).colonTime
-                    event.reply("${event.channel.name} has been live for $uptime")
+                    event.reply("${event.channel.name} has been live for $uptimeStr")
                 } else event.reply("Stream is not live!")
             }
             discord {

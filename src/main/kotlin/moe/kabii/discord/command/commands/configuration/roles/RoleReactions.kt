@@ -89,8 +89,8 @@ object RoleReactions : CommandContainer {
                 if(reactionAdd is Err) {
                     val err = reactionAdd.value as? ClientException
                     println(err)
-                    val message = if(err?.status?.code() == 403) "I am missing permissions to add reactions to that message." else "I am unable to add that reaction."
-                    error(message).awaitSingle()
+                    val errMessage = if(err?.status?.code() == 403) "I am missing permissions to add reactions to that message." else "I am unable to add that reaction."
+                    error(errMessage).awaitSingle()
                     return@discord
                 }
 

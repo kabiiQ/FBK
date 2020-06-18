@@ -104,7 +104,8 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     override fun loadFailed(exception: FriendlyException) {
         val error = when(exception.severity) {
             FriendlyException.Severity.COMMON, FriendlyException.Severity.SUSPICIOUS -> ": ${exception.message}"
-            FriendlyException.Severity.FAULT -> "."
+            //FriendlyException.Severity.FAULT,  -> "."
+            else -> "."
         }
         LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
         exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)

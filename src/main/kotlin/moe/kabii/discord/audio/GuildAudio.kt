@@ -91,6 +91,7 @@ data class GuildAudio(
          }
      }
 
+    @Suppress("unused")
     suspend fun refreshAudio(voice: VoiceChannel?): GuildAudio {
         discord.mutex.withLock {
             // save current playback state if track is playing
@@ -100,7 +101,7 @@ data class GuildAudio(
                 userData = playing.userData
             }
             // create new player/provider
-            val (player, provider) = AudioManager.createAudioComponents(guild)
+            val (player, provider) = AudioManager.createAudioComponents()
             val newAudio = this.copy(player = player, provider = provider)
             this.ending = true
             this.player.stopTrack()

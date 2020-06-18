@@ -40,8 +40,8 @@ class UserEventFormatter(val user: User) {
         // &invite="Unknown Invite"
         val matchInvite = paramMatcher(format, "invite")
         if(matchInvite != null) {
-            val invite = invite ?: matchInvite.groups[1]?.value ?: "Unknown"
-            format = format.replace(matchInvite.value, "**$invite**")
+            val inviteStr = invite ?: matchInvite.groups[1]?.value ?: "Unknown"
+            format = format.replace(matchInvite.value, "**$inviteStr**")
         }
         val matchNewAcc = paramMatcher(format, "new")
         if(matchNewAcc != null) {
@@ -78,7 +78,7 @@ class UserEventFormatter(val user: User) {
             } else null
 
             format = if (roles != null) { // this was a part from while the bot/api was offline, we can't provide any of this info
-                format.replace(matchRoleList.value, roles!!.joinToString(", ", transform = Role::getName))
+                format.replace(matchRoleList.value, roles.joinToString(", ", transform = Role::getName))
             } else {
                 format.replace(matchRoleList.value, "")
             }

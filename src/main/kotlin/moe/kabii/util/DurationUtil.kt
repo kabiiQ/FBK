@@ -22,8 +22,8 @@ object DurationParser {
         return input.trim()
             .toUpperCase()
             .replace(" ", "") // remove spaces
-            .let { str -> // parse weeks and days
-                var str = str
+            .let { string -> // parse weeks and days
+                var str = string
                 // get days and weeks component from input - weeks is not part of Duration, so we need to add weeks to the days component
                 val patternWeeks = Regex("([0-9]+)W(?:EEKS?)?") // match 2W, 2WEEK, 2WEEKS
                 val matchWeeks = patternWeeks.find(str)

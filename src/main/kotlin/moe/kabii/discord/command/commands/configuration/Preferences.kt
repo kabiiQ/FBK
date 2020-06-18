@@ -36,8 +36,8 @@ object Preferences : CommandContainer {
                         if (mutual.isNullOrEmpty()) null
                         else {
                             // embed to prompt user to select a server
-                            val servers = mutual.mapIndexed { index, guild ->
-                                val index = index + 1
+                            val servers = mutual.mapIndexed { guildIndex, guild ->
+                                val index = guildIndex + 1
                                 "$index: ${guild.name}"
                             }.joinToString("\n").take(1900)
                             val botAvatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()

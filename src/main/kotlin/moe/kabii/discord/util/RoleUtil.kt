@@ -26,9 +26,10 @@ object RoleUtil {
             .onErrorResume { Mono.empty() }
     }
 
-    suspend fun removeIfEmptyStreamRole(target: Guild, mention: Long): Flux<Void> =
+    suspend fun removeIfEmptyStreamRole(target: Guild, mention: Long): Mono<Void> =
         RoleUtil.emptyRoles(target, listOf(mention))
-            .filter { role ->
+            .single()
+            .filter { _ ->
                 // remove role if it is a twitch mention role
                 transaction {
                     TrackedStreams.Mention.find { TrackedStreams.Mentions.mentionRole eq mention }.empty().not()

@@ -37,7 +37,7 @@ object PartHandler {
             .filter(FeatureChannel::logChannel)
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::partLog)
-            .filter { log -> log.shouldInclude(user) }
+            .filter { partLog -> partLog.shouldInclude(user) }
             .flatMap { partLog ->
             user.client.getChannelById(partLog.channelID.snowflake)
                 .ofType(TextChannel::class.java)

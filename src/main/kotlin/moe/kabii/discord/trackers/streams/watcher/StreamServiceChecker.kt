@@ -182,9 +182,9 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     }
                 }
                 // get mention role from db
-                val mentionRole = guildID?.let { guildID ->
+                val mentionRole = guildID?.let { targetGuildId ->
                     val dbRole = target.streamChannel.mentionRoles
-                        .firstOrNull { men -> men.guild.guildID == guildID }
+                        .firstOrNull { men -> men.guild.guildID == targetGuildId }
                     if(dbRole != null) {
                         val role = chan.toMono()
                             .ofType(GuildChannel::class.java)

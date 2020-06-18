@@ -7,6 +7,7 @@ import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.structure.stackTraceString
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
@@ -16,10 +17,10 @@ abstract class MediaListParser {
     abstract suspend fun parse(id: String): Result<MediaList, MediaListErr>
     abstract fun getListID(input: String): String?
 
-    suspend fun <R: Any> requestMediaList(request: String,  block: (Response) -> Result<R, MediaListErr>): Result<R, MediaListErr> {
+    suspend fun <R: Any> requestMediaList(requestStr: String, block: (Response) -> Result<R, MediaListErr>): Result<R, MediaListErr> {
         val request = Request.Builder()
             .get()
-            .url(request)
+            .url(requestStr)
         retry@for(attempt in 1..attempts) {
             val rawCall = OkHTTP.make(request, block)
             val call = when(rawCall) {
@@ -38,7 +39,12 @@ abstract class MediaListParser {
                     when(error) {
                         is MediaListRateLimit -> delay(error.timeout)
                         is MediaListEmpty -> return call
-                        is MediaListIOErr -> break@retry
+                        is MediaListIOErr -> {
+                            val err = error.err
+                            LOG.warn("Media list request IO error: $requestStr :: $err")
+                            LOG.debug(err.stackTraceString)
+                            break@retry
+                        }
                     }
                 }
             }

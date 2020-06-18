@@ -25,7 +25,8 @@ import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
 
-@Deprecated("Now purely aesthetic, Command inheritance is reflectively searched") interface CommandContainer
+// Now purely aesthetic, Command inheritance is reflectively searched
+interface CommandContainer
 
 abstract class Command(val baseName: String, vararg alias: String) {
     val aliases = listOf(baseName, *alias)
@@ -64,7 +65,7 @@ fun specColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(13369088))
 fun reminderColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(44031))
 fun logColor(member: Member?, spec: EmbedCreateSpec) =
     Mono.justOrEmpty(member)
-        .flatMap { member -> RoleUtil.getColorRole(member!!) } // weird type interaction means this is Member? but it will never be null inside the operators
+        .flatMap { m -> RoleUtil.getColorRole(m!!) } // weird type interaction means this is Member? but it will never be null inside the operators
         .map(Role::getColor)
         .map(spec::setColor)
         .defaultIfEmpty(fbkColor(spec))
@@ -81,6 +82,8 @@ data class DiscordParameters (
     val command: Command,
     val alias: String) {
 
+    // javac thinks that guild could be null after non-null check?
+    @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
     val target: Guild by lazy {
         if(guild != null) return@lazy guild!!
         val user = transaction {

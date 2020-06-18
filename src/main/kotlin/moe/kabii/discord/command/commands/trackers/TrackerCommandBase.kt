@@ -137,6 +137,7 @@ object TrackerCommandBase : CommandContainer {
                 Action.TRACK -> StreamTrackerCommand.track(param, TargetStream(TrackedStreams.StreamQueryInfo(TrackedStreams.Site.TWITCH, listID)))
                 Action.UNTRACK -> StreamTrackerCommand.untrack(param, TargetStream(TrackedStreams.StreamQueryInfo(TrackedStreams.Site.TWITCH, listID)))
             }
+            TargetMatch.MIXER -> param.error("Mixer support is not yet implemented. Let @kabii#0001 know if you would use Mixer stream integration so that this feature can be prioritized.")
         }
     }
 } 

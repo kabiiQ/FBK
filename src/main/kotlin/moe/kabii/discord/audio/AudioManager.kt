@@ -18,7 +18,7 @@ object AudioManager {
         AudioSourceManagers.registerRemoteSources(manager)
     }
 
-    internal fun createAudioComponents(guild: Long): AudioComponents {
+    internal fun createAudioComponents(): AudioComponents {
         val player = manager.createPlayer().apply {
             addListener(AudioEventHandler)
         }
@@ -46,7 +46,7 @@ object AudioManager {
     }
 
     @Synchronized fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
-        val (player, provider) = createAudioComponents(guild)
+        val (player, provider) = createAudioComponents()
         GuildAudio(guild, player, provider)
     }
 }
