@@ -3,14 +3,10 @@ package moe.kabii.discord.auditlog
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString
 import moe.kabii.structure.tryAwait
@@ -29,7 +25,9 @@ data class AuditTask(val event: AuditableEvent, val job: Job)
 object LogWatcher {
     const val delay = 5_000L // another arbitrary delay to wait for discord - this entire task is because the audit log may not update immediately. this delay might need to be increased.
 
-    private val executor = Executors.newSingleThreadExecutor().asCoroutineScope()
+    private val watcherThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val executor = CoroutineScope(watcherThread + SupervisorJob())
+
     private val currentEvents: MutableMap<Long, MutableList<AuditTask>> = mutableMapOf()
 
     private fun createNewJob(discord: GatewayDiscordClient, guild: Long) = executor.launch(start = CoroutineStart.LAZY) {

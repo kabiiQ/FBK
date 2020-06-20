@@ -1,11 +1,8 @@
 package moe.kabii.discord.conversation
 
 import discord4j.core.GatewayDiscordClient
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import moe.kabii.discord.command.DiscordParameters
-import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.mod
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
@@ -108,7 +105,9 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
 
     companion object {
         private val all_conversations = mutableListOf<Conversation>()
-        private val timeouts = Executors.newSingleThreadExecutor().asCoroutineScope()
+
+        private val timeoutThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        private val timeouts = CoroutineScope(timeoutThread + SupervisorJob())
 
         val conversations
             get() = all_conversations.toList()

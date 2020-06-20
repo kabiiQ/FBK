@@ -7,22 +7,25 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.command.fbkColor
-import moe.kabii.structure.asCoroutineScope
 import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
 import java.util.concurrent.Executors
 
 object RecoverQueue {
     // can be a very intensive, slow process. start immediately on reboot but let it run in the background
-    private val pool = Executors.newSingleThreadExecutor().asCoroutineScope()
+    private val recoverThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val taskScope = CoroutineScope(recoverThread + SupervisorJob())
 
-    fun recover(guild: Guild) = pool.launch {
+    fun recover(guild: Guild) = taskScope.launch {
         // restore audio queue
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
         val activeQueue = config.musicBot.activeQueue
@@ -37,7 +40,7 @@ object RecoverQueue {
                             mono {
                                 audio.joinChannel(vc)
                             }
-                        }.tryAwait()
+                        }.awaitSingle()
                 }
 
                 // deserialize and try to re-queue all tracks in order
@@ -74,7 +77,7 @@ object RecoverQueue {
                                     fbkColor(spec)
                                     spec.setDescription("Recovering from restart: $size tracks loaded, $fail tracks lost.")
                                 }
-                            }.tryAwait()
+                            }.awaitSingle()
                     }
                 }
             }
