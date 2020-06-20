@@ -51,8 +51,9 @@ dependencies {
 
     implementation("com.discord4j:discord4j-core:3.1.0.RC2") // discord websocket and api
 
-    implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.19") // twitch irc
-    implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.7.1")
+    // twitch irc
+    implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.19")
+    //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
     implementation("com.sedmelluq:lavaplayer:1.3.49") // discord audio library

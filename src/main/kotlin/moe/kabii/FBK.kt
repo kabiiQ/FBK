@@ -2,7 +2,7 @@ package moe.kabii
 
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
-import com.github.philippheuer.events4j.reactor.ReactorEventHandler
+import com.github.philippheuer.events4j.simple.SimpleEventHandler
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
@@ -126,7 +126,7 @@ fun main() {
 
     // subscribe to twitch events
     val onTwitchMessage = twitch.eventManager
-        .getEventHandler(ReactorEventHandler::class.java)
+        .getEventHandler(SimpleEventHandler::class.java)
         .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
 
     // join any linked channels on twitch IRC
