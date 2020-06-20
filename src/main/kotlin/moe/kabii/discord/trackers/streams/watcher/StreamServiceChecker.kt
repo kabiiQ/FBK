@@ -54,8 +54,8 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                                 LOG.warn("Error contacting ${site.full} :: $trackedChannel")
                                 return@mapNotNull null
                             }
-                            transaction {
-                                taskScope.launch {
+                            taskScope.launch {
+                                transaction {
                                     updateChannel(trackedChannel, data.orNull())
                                 }
                             }
@@ -74,7 +74,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
     }
 
     @WithinExposedContext
-    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
+    private fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
         // get streaming site user object when needed
         val user by lazy {
             when (val user = site.parser.getUser(channel.siteChannelID)) {
@@ -100,12 +100,12 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val dbMessage = notif.messageID
-                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
+                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryBlock().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(site.parser.color)
                             embed.setFooter("Channel ID was ${channel.siteChannelID} on ${channel.site.full}.", null)
-                        }}?.tryAwait()
+                        }}?.tryBlock()
                         notif.delete()
                     }
                     return
@@ -114,12 +114,12 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
                     val messageID = notif.messageID
-                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
+                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
                     if(discordMessage != null) {
                         val features = discordMessage.guild.map { guild ->
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
                             config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        }.tryAwait().orNull() ?: FeatureSettings() // use default settings for PM
+                        }.tryBlock().orNull() ?: FeatureSettings() // use default settings for PM
                         if(features.streamSummaries) {
                             val specEmbed = StreamEmbedBuilder(
                                 user!!,
@@ -128,7 +128,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                             discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                         } else {
                             discordMessage.delete()
-                        }.tryAwait()
+                        }.tryBlock()
                     }
                     notif.delete()
                     dbStream.delete()
@@ -170,7 +170,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
                     discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java)
-                        .tryAwait()) {
+                        .tryBlock()) {
                     is Ok -> disChan.value
                     is Err -> {
                         val err = disChan.value
@@ -190,7 +190,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                             .ofType(GuildChannel::class.java)
                             .flatMap(GuildChannel::getGuild)
                             .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
-                            .tryAwait()
+                            .tryBlock()
                         when (role) {
                             is Ok -> role.value
                             is Err -> {
@@ -208,7 +208,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 val newNotification = chan.createMessage { spec ->
                     if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                     spec.setEmbed(embed.automatic)
-                }.tryAwait().orNull()
+                }.tryBlock().orNull()
 
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
                 TrackedStreams.Notification.new {
@@ -221,9 +221,9 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     this.stream = dbStream
                 }
             } else {
-                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryAwait().orNull()
+                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
                 if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait().orNull()
+                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryBlock().orNull()
                 } else existing.delete()
             }
         }
