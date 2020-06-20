@@ -135,12 +135,14 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                 }
             }
             if (builder != null) {
-                for (target in savedList.targets) {
+                targets@for (target in savedList.targets) {
                     // send embed to all channels this user's mal is tracked in
-                    val user = discord.getUserById(target.discordUserID.snowflake).tryAwait().orNull()
-                    if(user == null) {
-                        LOG.warn("Unable to get Discord user ${target.discordUserID} in list checker: deleted user?")
-                        continue
+                    val user = when(val userCall = discord.getUserById(target.discordUserID.snowflake).tryAwait()) {
+                        is Ok -> userCall.value
+                        is Err -> {
+                            LOG.warn("Unable to get Discord user ${target.discordUserID} in list checker :: ${userCall.value.message}")
+                            continue@targets
+                        }
                     }
                     builder.withUser(user)
 
