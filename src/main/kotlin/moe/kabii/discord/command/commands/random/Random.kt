@@ -1,4 +1,4 @@
-package moe.kabii.joint.commands
+package moe.kabii.discord.command.commands.random
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command
@@ -7,7 +7,7 @@ import moe.kabii.structure.mapNotNull
 import moe.kabii.structure.orNull
 import moe.kabii.structure.reply
 
-object RandomCommands : CommandContainer {
+object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
         private fun roll(args: List<String>): Pair<String, ULong> {
             fun arg(index: Int) = args.getOrNull(index)?.toULongOrNull()
@@ -44,14 +44,18 @@ object RandomCommands : CommandContainer {
                 }
 
 
-                val (range, result) = roll(args)
+                val (range, result) = roll(
+                    args
+                )
                 embed {
                     setTitle("Roll: $range")
                     setDescription("Result: $result")
                 }.awaitSingle()
             }
             twitch {
-                val (range, result) = roll(args)
+                val (range, result) = roll(
+                    args
+                )
                 event.reply("Roll $range: $result")
             }
         }
@@ -132,11 +136,19 @@ object RandomCommands : CommandContainer {
         init {
             discord {
                 embed {
-                    setDescription(flip(author.username))
+                    setDescription(
+                        flip(
+                            author.username
+                        )
+                    )
                 }.awaitSingle()
             }
             twitch {
-                event.reply(flip(event.user.name))
+                event.reply(
+                    flip(
+                        event.user.name
+                    )
+                )
             }
         }
     }

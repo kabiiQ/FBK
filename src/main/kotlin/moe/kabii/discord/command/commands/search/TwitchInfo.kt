@@ -1,4 +1,4 @@
-package moe.kabii.joint.commands
+package moe.kabii.discord.command.commands.search
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.command.Command

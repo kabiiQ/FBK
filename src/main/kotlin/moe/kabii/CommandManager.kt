@@ -1,7 +1,6 @@
-package moe.kabii.joint
+package moe.kabii
 
 import kotlinx.coroutines.asCoroutineDispatcher
-import moe.kabii.LOG
 import moe.kabii.discord.command.Command
 import java.util.concurrent.Executors
 
