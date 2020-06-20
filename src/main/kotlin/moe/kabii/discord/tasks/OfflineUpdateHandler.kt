@@ -8,7 +8,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildMember
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
-import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
 import moe.kabii.structure.withEach

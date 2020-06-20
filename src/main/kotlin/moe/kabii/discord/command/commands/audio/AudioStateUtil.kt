@@ -26,7 +26,7 @@ object AudioStateUtil {
     suspend fun checkAndJoinVoice(origin: DiscordParameters): VoiceValidation = with(origin) {
         val audio = AudioManager.getGuildAudio(target.id.asLong())
         val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull()
-        if(userChannel == null) return VoiceValidation.Failure("You must be in a voice chnanel to use audio commands.")
+        if(userChannel == null) return VoiceValidation.Failure("You must be in a voice channel to use audio commands.")
         val botChannel = audio.discord.connection?.channelId?.awaitFirstOrNull()
         val override = permOverride(this, userChannel)
 
