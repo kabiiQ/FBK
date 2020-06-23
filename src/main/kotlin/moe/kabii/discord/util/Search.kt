@@ -6,8 +6,8 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.DiscordParameters
+import moe.kabii.command.Command
+import moe.kabii.command.DiscordParameters
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake

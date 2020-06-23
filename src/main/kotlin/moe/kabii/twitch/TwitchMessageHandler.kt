@@ -3,12 +3,12 @@ package moe.kabii.twitch
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import kotlinx.coroutines.launch
-import moe.kabii.CommandManager
+import moe.kabii.command.CommandManager
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.TwitchConfig
-import moe.kabii.discord.command.TwitchParameters
+import moe.kabii.command.TwitchParameters
 import moe.kabii.structure.reply
 import moe.kabii.structure.stackTraceString
 

@@ -7,7 +7,7 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.data.relational.MessageHistory
-import moe.kabii.discord.command.fbkColor
+import moe.kabii.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake

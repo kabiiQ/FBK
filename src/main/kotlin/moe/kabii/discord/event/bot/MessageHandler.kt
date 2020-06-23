@@ -7,13 +7,13 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.CommandManager
+import moe.kabii.command.CommandManager
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
-import moe.kabii.discord.command.*
+import moe.kabii.command.*
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

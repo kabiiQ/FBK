@@ -6,7 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.command.logColor
+import moe.kabii.command.logColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake

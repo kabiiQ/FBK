@@ -14,8 +14,9 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.command.Command
-import moe.kabii.discord.command.commands.twitch.TwitchBridgeOptions
+import moe.kabii.command.Command
+import moe.kabii.command.CommandManager
+import moe.kabii.command.commands.twitch.TwitchBridgeOptions
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher

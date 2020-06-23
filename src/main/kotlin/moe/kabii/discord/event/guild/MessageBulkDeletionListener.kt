@@ -5,7 +5,7 @@ import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.fbkColor
+import moe.kabii.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.stackTraceString

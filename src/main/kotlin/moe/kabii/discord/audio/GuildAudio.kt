@@ -16,8 +16,8 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MusicSettings
-import moe.kabii.discord.command.commands.audio.filters.FilterFactory
-import moe.kabii.discord.command.hasPermissions
+import moe.kabii.command.commands.audio.filters.FilterFactory
+import moe.kabii.command.hasPermissions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result

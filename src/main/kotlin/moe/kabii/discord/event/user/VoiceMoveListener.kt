@@ -11,7 +11,7 @@ import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
-import moe.kabii.discord.command.logColor
+import moe.kabii.command.logColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*

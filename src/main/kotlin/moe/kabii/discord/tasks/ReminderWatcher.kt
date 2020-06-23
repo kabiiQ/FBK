@@ -9,7 +9,7 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
-import moe.kabii.discord.command.reminderColor
+import moe.kabii.command.reminderColor
 import moe.kabii.structure.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters

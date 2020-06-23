@@ -10,9 +10,9 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.command.commands.audio.AudioCommandContainer
-import moe.kabii.discord.command.errorColor
-import moe.kabii.discord.command.fbkColor
+import moe.kabii.command.commands.audio.AudioCommandContainer
+import moe.kabii.command.errorColor
+import moe.kabii.command.fbkColor
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock

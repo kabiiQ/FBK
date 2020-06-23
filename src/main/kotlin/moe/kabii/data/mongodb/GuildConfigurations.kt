@@ -3,7 +3,7 @@ package moe.kabii.data.mongodb
 import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.discord.command.Command
+import moe.kabii.command.Command
 import moe.kabii.structure.GuildID
 import moe.kabii.util.DiscordEmoji
 import org.litote.kmongo.Id

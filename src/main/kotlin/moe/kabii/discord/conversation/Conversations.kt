@@ -2,7 +2,7 @@ package moe.kabii.discord.conversation
 
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.*
-import moe.kabii.discord.command.DiscordParameters
+import moe.kabii.command.DiscordParameters
 import moe.kabii.structure.mod
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
