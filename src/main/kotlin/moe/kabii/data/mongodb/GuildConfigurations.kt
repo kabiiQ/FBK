@@ -32,8 +32,8 @@ object GuildConfigurations {
 data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
     val guildid: Long,
-    var prefix: String = ";",
-    var suffix: String? = "desu",
+    var prefix: String = defaultPrefix,
+    var suffix: String? = defaultSuffix,
     val options: OptionalFeatures = OptionalFeatures(),
     val commands: DummyCommands = DummyCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
@@ -43,6 +43,11 @@ data class GuildConfiguration(
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
     val userLog: UserLog = UserLog()) {
+
+    companion object {
+        const val defaultPrefix = ";"
+        const val defaultSuffix = "desu"
+    }
 
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
