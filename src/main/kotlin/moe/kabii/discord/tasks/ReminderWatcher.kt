@@ -13,6 +13,7 @@ import moe.kabii.discord.command.reminderColor
 import moe.kabii.structure.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -34,27 +35,27 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
         loop {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
-            transaction {
-                try {
-                    val window = DateTime.now().plus(updateInterval)
-                    val reminders = Reminder.find { Reminders.remind lessEq window }.toList()
+            try {
+                val window = DateTime.now().plus(updateInterval)
+                val reminders = transaction { Reminder.find { Reminders.remind lessEq window }.toList() }
 
-                    // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
-                    val job = SupervisorJob()
-                    val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
+                // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
+                val job = SupervisorJob()
+                val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
 
-                    runBlocking {
-                        reminders.map { reminder ->
-                            discordScope.launch {
+                runBlocking {
+                    reminders.map { reminder ->
+                        discordScope.launch {
+                            newSuspendedTransaction {
                                 scheduleReminder(reminder)
                             }
-                        }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
-                    }
-                } catch(t: Throwable) {
-                    LOG.error("Uncaught exception in ReminderWatcher :: ${t.message}")
-                    LOG.debug(t.stackTraceString)
-                } // don't let this thread die
-            }
+                        }
+                    }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
+                }
+            } catch(t: Throwable) {
+                LOG.error("Uncaught exception in ReminderWatcher :: ${t.message}")
+                LOG.debug(t.stackTraceString)
+            } // don't let this thread die
             val runtime = Duration.between(start, Instant.now())
             val delay = updateInterval - runtime.toMillis()
             Thread.sleep(max(delay, 0L)) // don't sleep negative - not sure how this was happening though

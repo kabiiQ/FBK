@@ -2,15 +2,13 @@ package moe.kabii.twitch
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import moe.kabii.CommandManager
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.TwitchConfig
 import moe.kabii.discord.command.TwitchParameters
-import moe.kabii.CommandManager
 import moe.kabii.structure.reply
 import moe.kabii.structure.stackTraceString
 
@@ -19,7 +17,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
         if(event.user.name.toLowerCase() == "fbkbot") return
         // getGuild discord guild
 
-        CoroutineScope(manager.context + SupervisorJob()).launch {
+        manager.context.launch {
             val msgArgs = event.message.split(" ").filterNot { it.isBlank() }
             val isMod = event.permissions.contains(CommandPermission.MODERATOR)
 

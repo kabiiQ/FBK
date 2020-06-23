@@ -12,7 +12,7 @@ import moe.kabii.discord.util.Search
 import reactor.core.publisher.Mono
 
 object  CommandFilters : CommandContainer {
-    fun toggleList(param: DiscordParameters, config: GuildConfiguration): Mono<Message> {
+    suspend fun toggleList(param: DiscordParameters, config: GuildConfiguration): Mono<Message> {
         val filter = config.commandFilter
         return if(filter.whitelisted) {
             filter.useBlacklist()

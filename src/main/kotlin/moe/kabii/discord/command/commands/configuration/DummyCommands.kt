@@ -10,7 +10,7 @@ import moe.kabii.discord.command.verify
 import moe.kabii.structure.reply
 
 object DummyCommands : CommandContainer {
-    private fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
+    private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
         val command = args[0].toLowerCase()
         val response = noCmd.substring(command.length + 1)
         val dummy = DummyCommand(command, response, restrict)
@@ -65,7 +65,7 @@ object DummyCommands : CommandContainer {
     }
 
     object Remove : Command("removecommand", "delcommand", "remcommand", "deletecommand", "remove-command") {
-        private fun removeCommand(config: GuildConfiguration, command: String): String {
+        private suspend fun removeCommand(config: GuildConfiguration, command: String): String {
             val reply =
                     if (config.commands.remove(command))
                         "Command \"$command\" removed."

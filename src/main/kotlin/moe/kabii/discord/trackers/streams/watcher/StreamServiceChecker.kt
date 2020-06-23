@@ -17,6 +17,7 @@ import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
@@ -55,7 +56,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                                 return@mapNotNull null
                             }
                             taskScope.launch {
-                                transaction {
+                                newSuspendedTransaction {
                                     updateChannel(trackedChannel, data.orNull())
                                 }
                             }
@@ -74,7 +75,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
     }
 
     @WithinExposedContext
-    private fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
+    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
         // get streaming site user object when needed
         val user by lazy {
             when (val user = site.parser.getUser(channel.siteChannelID)) {
@@ -100,12 +101,12 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val dbMessage = notif.messageID
-                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryBlock().orNull()
+                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(site.parser.color)
                             embed.setFooter("Channel ID was ${channel.siteChannelID} on ${channel.site.full}.", null)
-                        }}?.tryBlock()
+                        }}?.tryAwait()
                         notif.delete()
                     }
                     return
@@ -114,12 +115,12 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
                     val messageID = notif.messageID
-                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryBlock().orNull()
+                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
                     if(discordMessage != null) {
                         val features = discordMessage.guild.map { guild ->
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-                            config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        }.tryBlock().orNull() ?: FeatureSettings() // use default settings for PM
+                            runBlocking { config.getOrCreateFeatures(messageID.channel.channelID).featureSettings }
+                        }.tryAwait().orNull() ?: FeatureSettings() // use default settings for PM
                         if(features.streamSummaries) {
                             val specEmbed = StreamEmbedBuilder(
                                 user!!,
@@ -128,7 +129,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                             discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                         } else {
                             discordMessage.delete()
-                        }.tryBlock()
+                        }.tryAwait()
                     }
                     notif.delete()
                     dbStream.delete()
@@ -162,7 +163,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
             // get channel twitch settings
             val guildID = target.discordChannel.guild?.guildID
             val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).featureSettings }
+            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).featureSettings }}
                 ?: FeatureSettings() // use default settings for pm notifications
 
             val embed = StreamEmbedBuilder(user!!, features).stream(stream)
@@ -170,7 +171,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
                     discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java)
-                        .tryBlock()) {
+                        .tryAwait()) {
                     is Ok -> disChan.value
                     is Err -> {
                         val err = disChan.value
@@ -190,7 +191,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                             .ofType(GuildChannel::class.java)
                             .flatMap(GuildChannel::getGuild)
                             .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
-                            .tryBlock()
+                            .tryAwait()
                         when (role) {
                             is Ok -> role.value
                             is Err -> {
@@ -208,7 +209,7 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                 val newNotification = chan.createMessage { spec ->
                     if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                     spec.setEmbed(embed.automatic)
-                }.tryBlock().orNull()
+                }.tryAwait().orNull()
 
                 if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
                 TrackedStreams.Notification.new {
@@ -221,9 +222,9 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     this.stream = dbStream
                 }
             } else {
-                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryBlock().orNull()
+                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryAwait().orNull()
                 if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryBlock().orNull()
+                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait().orNull()
                 } else existing.delete()
             }
         }

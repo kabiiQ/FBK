@@ -98,7 +98,7 @@ fun main() {
 
     // primary message listener uses specific instance and is manually set up
     val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
-        .flatMap(discordHandler::handle)
+        .flatMap { event -> mono { discordHandler.handle(event) }}
 
     // all other event handlers simply recieve the event
     val eventListeners = reflection.getSubTypesOf(EventListener::class.java)

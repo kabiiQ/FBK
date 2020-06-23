@@ -4,18 +4,17 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
+import moe.kabii.CommandManager
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.FeatureChannel
+import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.command.*
 import moe.kabii.discord.conversation.Conversation
-import moe.kabii.CommandManager
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
@@ -27,15 +26,16 @@ class MessageHandler(val manager: CommandManager) {
         Regex("<@!?$id>")
     }
 
-    fun handle(event: MessageCreateEvent) = mono(manager.context + CoroutineName("MessageHandler") + SupervisorJob()) {
+    //fun handle(event: MessageCreateEvent) { = mono(manager.context + CoroutineName("MessageHandler") + SupervisorJob()) {}
+    fun handle(event: MessageCreateEvent) = manager.context.launch {
         // ignore bots
-        if(event.message.author.orNull()?.isBot ?: true) return@mono
+        if(event.message.author.orNull()?.isBot ?: true) return@launch
         var content = event.message.content
 
         // only embeds, files, skip any further processing at this time
-        if (content.isBlank()) return@mono
+        if (content.isBlank()) return@launch
 
-            val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull() // null if pm
+        val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull() // null if pm
         val msgArgs = content.split(" ")
 
         if (config != null) {
@@ -68,7 +68,7 @@ class MessageHandler(val manager: CommandManager) {
             else -> null
         }
 
-        val author = event.message.author.orNull() ?: return@mono
+        val author = event.message.author.orNull() ?: return@launch
         if (cmdStr != null) {
             if(config != null) {
                 // dummy command listener
@@ -112,7 +112,7 @@ class MessageHandler(val manager: CommandManager) {
                 val isPM = !event.guildId.isPresent
                 // command parameters
                 val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
-                if(!enabled) return@mono
+                if(!enabled) return@launch
                 val guild = event.guild.awaitFirstOrNull()
                 val targetID = (guild?.id ?: author.id).asLong()
                 val username = author.username
@@ -146,8 +146,8 @@ class MessageHandler(val manager: CommandManager) {
                     when (ce.status.code()) {
                         403 -> {
                             LOG.debug("403: ${ce.message}")
-                            if (config == null || chan !is TextChannel) return@mono
-                            if (ce.errorResponse.orNull()?.fields?.get("string")?.equals("Missing Permissions") != true) return@mono
+                            if (config == null || chan !is TextChannel) return@launch
+                            if (ce.errorResponse.orNull()?.fields?.get("message")?.equals("Missing Permissions") != true) return@launch
                             val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
                             val listMissing = command.discordReqs
                                     .filterNot(botPermissions::contains)
@@ -155,7 +155,8 @@ class MessageHandler(val manager: CommandManager) {
                             author.privateChannel
                                     .flatMap { pm ->
                                         pm.createEmbed { spec ->
-                                            spec.setDescription("Configuration alert: you tried to use **${command.baseName}** in channel ${chan.mention} but I am missing required permissions\n\n**$listMissing\n**")
+                                            errorColor(spec)
+                                            spec.setDescription("I tried to respond to your command **${command.baseName}** in channel ${chan.mention} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
                                         }
                                     }.subscribe()
                         }
@@ -169,7 +170,7 @@ class MessageHandler(val manager: CommandManager) {
                     LOG.warn(e.stackTraceString)
                 }
             }
-            return@mono
+            return@launch
         }
         // DISCORD CONVERSATION CALLBACKS
         Conversation.conversations.find { conversation ->

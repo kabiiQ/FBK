@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.ReactionRoleConfig
 import moe.kabii.discord.command.Command
@@ -174,7 +175,7 @@ object RoleReactions : CommandContainer {
                             val channel = target.getChannelById(channelID).ofType(TextChannel::class.java).tryBlock().orNull()
                             if(channel == null) {
                                 configs.remove(reactConfig)
-                                config.save()
+                                runBlocking { config.save() }
                                 "Removed config in invalid channel $channelID"
                             } else {
                                 val link = "https://discordapp.com/channels/${target.id.asString()}/${reactConfig.message.channelID}/${reactConfig.message.messageID}"

@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
+import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.command.commands.audio.AudioCommandContainer
 import moe.kabii.discord.command.errorColor
@@ -103,7 +104,7 @@ object AudioEventHandler : AudioEventAdapter() {
                         votes.clear()
                         silent = true
                     }
-                    data.audio.forceAdd(newTrack)
+                    runBlocking { data.audio.forceAdd(newTrack) }
                 }
 
                 data.audio.editQueueSync { // need to save queue even if there is no next track

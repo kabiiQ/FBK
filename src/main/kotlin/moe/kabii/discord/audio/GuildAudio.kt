@@ -70,7 +70,7 @@ data class GuildAudio(
         return true
     }
 
-    fun forceAdd(track: AudioTrack, position: Int? = null): Boolean {
+    suspend fun forceAdd(track: AudioTrack, position: Int? = null): Boolean {
         if(position != null) queue.add(position, track) else queue.add(track)
         saveQueue()
         return true
@@ -124,7 +124,7 @@ data class GuildAudio(
     }
 
     // this needs to be called anywhere we manually edit the queue, adding/anything playing the next track is encapsulated but shuffling etc are not currently
-    private fun saveQueue() {
+    private suspend fun saveQueue() {
         val config = GuildConfigurations.getOrCreateGuild(guild)
         // save copy of queue to db with just serializable info that we need to requeue
         config.musicBot.activeQueue = playlist.map { track ->

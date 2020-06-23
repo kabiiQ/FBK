@@ -8,6 +8,7 @@ import moe.kabii.discord.command.CommandContainer
 import moe.kabii.discord.command.PermissionUtil
 import moe.kabii.discord.command.verify
 import moe.kabii.discord.util.Search
+import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
 
@@ -78,7 +79,7 @@ object SelfRoles : CommandContainer {
                 val enabled = config.selfRoles.enabledRoles.toList()
                     .mapNotNull { id ->
                         val role = target.getRoleById(id.snowflake).tryAwait()
-                        role.ifErr { _ ->  // remove deleted roles from listing and db
+                        if(role is Err) {  // remove deleted roles from listing and db
                             config.selfRoles.enabledRoles.remove(id)
                             config.save()
                         }

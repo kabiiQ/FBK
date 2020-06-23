@@ -1,7 +1,6 @@
 package moe.kabii.data.mongodb
 
 import discord4j.core.`object`.entity.User
-import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.command.Command
@@ -10,8 +9,6 @@ import moe.kabii.util.DiscordEmoji
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
-import reactor.core.publisher.DirectProcessor
-import reactor.core.scheduler.Schedulers
 import java.util.concurrent.ConcurrentHashMap
 
 object GuildConfigurations {
@@ -50,32 +47,17 @@ data class GuildConfiguration(
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
 
-    fun save() {
-        queue.next(this)
+    suspend fun save() {
+        GuildConfigurations.mongoConfigurations.updateOne(this, upsert)
     }
 
-    fun getOrCreateFeatures(channel: Long): FeatureChannel = options.featureChannels.getOrPut(channel) {
+    suspend fun getOrCreateFeatures(channel: Long): FeatureChannel = options.featureChannels.getOrPut(channel) {
         FeatureChannel(channel).also { save() }
     }
 
     suspend fun removeSelf() {
         GuildConfigurations.guildConfigurations.remove(guildid)
         GuildConfigurations.mongoConfigurations.deleteOneById(this._id)
-    }
-
-    companion object {
-        private val configProcessor = DirectProcessor.create<GuildConfiguration>()
-        private val queue = configProcessor.sink()
-
-        init {
-            configProcessor
-                .subscribeOn(Schedulers.newSingle("ConfigProcessor"))
-                .flatMap { config ->
-                    mono {
-                        GuildConfigurations.mongoConfigurations.updateOne(config, upsert)
-                    }
-                }.subscribe()
-        }
     }
 }
 
