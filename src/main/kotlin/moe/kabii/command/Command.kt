@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.*
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
+import moe.kabii.command.types.TerminalParameters
 import moe.kabii.command.types.DiscordParameters
 import moe.kabii.command.types.TwitchParameters
 import moe.kabii.discord.util.RoleUtil
@@ -24,6 +25,8 @@ abstract class Command(val baseName: String, vararg alias: String) {
     private set
     var executeTwitch: (suspend (TwitchParameters) -> Unit)? = null
     private set
+    var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
+    private set
 
     var discordReqs: List<Permission> = listOf(
             Permission.SEND_MESSAGES,
@@ -40,6 +43,10 @@ abstract class Command(val baseName: String, vararg alias: String) {
 
     fun twitch(block: suspend TwitchParameters.() -> Unit) {
         executeTwitch = block
+    }
+
+    fun terminal(block: suspend TerminalParameters.() -> Unit) {
+        executeTerminal = block
     }
 }
 

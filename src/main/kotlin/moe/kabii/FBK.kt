@@ -30,6 +30,7 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
 import moe.kabii.structure.stackTraceString
+import moe.kabii.terminal.TerminalListener
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
@@ -70,6 +71,9 @@ fun main() {
     // register twitch-discord bridge commands which require access to the twitch client
     manager.registerInstance(TwitchBridgeOptions.SetLinkedChannel(twitch))
     manager.registerInstance(TwitchBridgeOptions.UnlinkChannel(twitch))
+
+    // begin listening for terminal commands
+    TerminalListener(manager).launch()
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
