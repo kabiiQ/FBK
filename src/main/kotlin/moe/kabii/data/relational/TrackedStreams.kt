@@ -25,7 +25,6 @@ object TrackedStreams {
 
     enum class Site(val full: String, val parser: StreamParser) {
         TWITCH("Twitch", TwitchParser);
-        //MIXER("Mixer", MixerParser)
     }
 
     object StreamChannels : IntIdTable() {

@@ -10,7 +10,6 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.types.DiscordParameters
 
 private enum class Action { TRACK, UNTRACK }
-private enum class TargetType { ANIME, STREAM }
 
 enum class TargetMatch(
     val url: Regex,
@@ -28,15 +27,11 @@ enum class TargetMatch(
     TWITCH(
         Regex("twitch.tv/([a-zA-Z0-9_]{4,25})"),
         "twitch", "twitch.tv", "ttv"
-    ),
-    MIXER(
-        Regex("mixer.tv/([a-zA-Z0-9_]{1,20})"),
-        "mixer", "mixer.tv", "mtv"
     );
 
     companion object {
         fun parseStreamSite(name: String): TrackedStreams.Site? {
-            val streams = arrayOf(TWITCH, MIXER)
+            val streams = arrayOf(TWITCH)
             val match = streams.find { pattern -> pattern.alias.find(name.toLowerCase()::equals) != null }
             return when (match) {
                 TWITCH -> TrackedStreams.Site.TWITCH
@@ -137,7 +132,6 @@ object TrackerCommandBase : CommandContainer {
                 Action.TRACK -> StreamTrackerCommand.track(param, TargetStream(TrackedStreams.StreamQueryInfo(TrackedStreams.Site.TWITCH, listID)))
                 Action.UNTRACK -> StreamTrackerCommand.untrack(param, TargetStream(TrackedStreams.StreamQueryInfo(TrackedStreams.Site.TWITCH, listID)))
             }
-            TargetMatch.MIXER -> param.error("Mixer support is not yet implemented. Let @kabii#0001 know if you would use Mixer stream integration so that this feature can be prioritized.")
         }
     }
 } 
