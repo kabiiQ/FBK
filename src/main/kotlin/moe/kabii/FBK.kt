@@ -72,12 +72,12 @@ fun main() {
     manager.registerInstance(TwitchBridgeOptions.SetLinkedChannel(twitch))
     manager.registerInstance(TwitchBridgeOptions.UnlinkChannel(twitch))
 
-    // begin listening for terminal commands
-    TerminalListener(manager).launch()
-
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
     val gateway = requireNotNull(discord.login().block())
+
+    // begin listening for terminal commands
+    TerminalListener(manager, gateway).launch()
 
     // start file server
     if(keys[Keys.Netty.host]) {

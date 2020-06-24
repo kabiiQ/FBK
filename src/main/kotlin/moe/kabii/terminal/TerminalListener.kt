@@ -1,5 +1,6 @@
 package moe.kabii.terminal
 
+import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
@@ -7,7 +8,7 @@ import moe.kabii.command.types.TerminalParameters
 import moe.kabii.structure.loop
 import moe.kabii.structure.stackTraceString
 
-class TerminalListener(val manager: CommandManager) : Runnable {
+class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordClient) : Runnable {
     private var active = false
 
     fun launch() {
@@ -39,7 +40,7 @@ class TerminalListener(val manager: CommandManager) : Runnable {
 
                 val args = msgArgs.drop(1)
                 val noCmd = line.substring(cmdStr.length - 1)
-                val param = TerminalParameters(noCmd, args)
+                val param = TerminalParameters(discord, noCmd, args)
 
                 try {
                     command.executeTerminal!!(param)
