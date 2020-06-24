@@ -29,6 +29,12 @@ object BotStats : CommandContainer {
                 }
                 ping.edit { spec -> spec.setEmbed(pingEmbed) }.awaitSingle()
             }
+
+            terminal {
+                println("\nPong!")
+                val heartbeat = discord.gatewayClientGroup.find(0).orNull()?.responseTime?.toMillis()
+                println("Gateway heartbeat: ${heartbeat}ms\n")
+            }
         }
     }
 
