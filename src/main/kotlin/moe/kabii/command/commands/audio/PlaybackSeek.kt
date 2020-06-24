@@ -5,7 +5,7 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.command.Command
-import moe.kabii.command.DiscordParameters
+import moe.kabii.command.types.DiscordParameters
 import moe.kabii.rusty.Try
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.util.DurationFormatter

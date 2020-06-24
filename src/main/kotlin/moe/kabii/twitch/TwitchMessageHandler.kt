@@ -8,7 +8,7 @@ import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.TwitchConfig
-import moe.kabii.command.TwitchParameters
+import moe.kabii.command.types.TwitchParameters
 import moe.kabii.structure.reply
 import moe.kabii.structure.stackTraceString
 

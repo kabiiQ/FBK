@@ -91,7 +91,7 @@ data class GuildAudio(
          }
      }
 
-    @Suppress("unused")
+    @Suppress("unused") // todo: currently seems to be a non-issue
     suspend fun refreshAudio(voice: VoiceChannel?): GuildAudio {
         discord.mutex.withLock {
             // save current playback state if track is playing

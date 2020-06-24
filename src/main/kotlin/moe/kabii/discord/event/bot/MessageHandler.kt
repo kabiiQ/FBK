@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.command.*
+import moe.kabii.command.types.DiscordParameters
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

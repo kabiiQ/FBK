@@ -7,7 +7,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.command.DiscordParameters
+import moe.kabii.command.types.DiscordParameters
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.tryAwait

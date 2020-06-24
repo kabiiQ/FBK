@@ -45,17 +45,18 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
         val editLogs = logs.filter(LogSettings::editLog)
         if(editLogs.none()) return
 
-        val channelName = event.channel.ofType(TextChannel::class.java).awaitSingle().name
+        val msgChannel = event.channel.ofType(TextChannel::class.java).awaitSingle()
         val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
+        val jumpLink = "https://discord.com/channels/${guildID.asString()}/${msgChannel.id.asString()}/${message.id.asString()}"
 
         // post edit message
         editLogs.toFlux()
             .flatMap { log ->
-                event.guild.flatMap { guild -> guild.getChannelById(log.channelID.snowflake )}
+                event.guild.flatMap { guild -> guild.getChannelById(log.channelID.snowflake)}
             }.ofType(TextChannel::class.java)
             .flatMap { channel -> channel.createEmbed { spec ->
                 fbkColor(spec)
-                spec.setAuthor("${author.username}#${author.discriminator} edited a message in #$channelName:", null, author.avatarUrl)
+                spec.setAuthor("${author.username}#${author.discriminator} edited a message in #${channel.name}:", jumpLink, author.avatarUrl)
                 spec.setDescription("$oldContent\n\nNew message: $new")
                 spec.setFooter("User ID: ${author.id.asString()} - Message ID: ${event.messageId.asString()} - Original message timestamp", null)
                 spec.setTimestamp(event.messageId.timestamp)

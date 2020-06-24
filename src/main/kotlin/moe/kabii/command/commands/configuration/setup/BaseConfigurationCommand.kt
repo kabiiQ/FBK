@@ -1,7 +1,7 @@
 package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.DiscordParameters
+import moe.kabii.command.types.DiscordParameters
 import moe.kabii.command.fbkColor
 import moe.kabii.structure.EmbedBlock
 import kotlin.reflect.KMutableProperty1

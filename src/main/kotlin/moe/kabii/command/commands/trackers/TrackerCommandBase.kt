@@ -7,7 +7,7 @@ import moe.kabii.data.mongodb.MediaSite
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.DiscordParameters
+import moe.kabii.command.types.DiscordParameters
 
 private enum class Action { TRACK, UNTRACK }
 private enum class TargetType { ANIME, STREAM }
