@@ -58,8 +58,7 @@ get() {
 // exceptionless json parse
 fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try {
     val parse = this.fromJson(input)
-    // strange linter bug showing error without cast - this successfully compiles without "as T" but always shows error in IDEA
-    if(parse != null) Ok(parse as T) else Err(IOException("Invalid JSON"))
+    if(parse != null) Ok(parse) else Err(IOException("Invalid JSON"))
 } catch(malformed: IOException) {
     Err(malformed)
 } catch(formatting: JsonDataException) {
