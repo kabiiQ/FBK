@@ -4,12 +4,13 @@ import discord4j.common.util.Snowflake
 import moe.kabii.discord.trackers.streams.StreamParser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.structure.WithinExposedContext
-import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.select
 
 object TrackedStreams {

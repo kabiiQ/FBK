@@ -56,13 +56,13 @@ dependencies {
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.49") // discord audio library
+    implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
     implementation("com.squareup.okhttp3:okhttp:4.7.2") // other api - http calls
 
     // other api - json response parsing
-    val moshi = "1.9.2"
+    val moshi = "1.9.3"
     implementation("com.squareup.moshi:moshi:$moshi")
     implementation("com.squareup.moshi:moshi-kotlin:$moshi")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshi")
@@ -76,11 +76,18 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor")
 
     // database i/o
-    implementation("org.litote.kmongo:kmongo-coroutine:4.0.2") // mongodb per-guild configurations
+    // mongodb per-guild configurations
+    implementation("org.litote.kmongo:kmongo-coroutine:4.0.2")
+
     // postgresql user data, message history, tracked streams
-    implementation("org.jetbrains.exposed:exposed:0.17.7")
-    implementation("org.postgresql:postgresql:42.2.13")
-    implementation("com.uchuhimo:konf:0.22.1") // .toml token configuration
+    implementation("org.jetbrains.exposed:exposed-core:0.26.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.26.1")
+    implementation("org.jetbrains.exposed:exposed-jodatime:0.26.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.26.1")
+    implementation("org.postgresql:postgresql:42.2.14")
+
+    // .toml token configuration
+    implementation("com.uchuhimo:konf:0.22.1")
 
     // logging
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
@@ -109,10 +116,9 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     compileKotlin {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
+        kotlinOptions.jvmTarget = "11"
     }
+    java.targetCompatibility = JavaVersion.VERSION_11
 
     build {
         dependsOn(updateVersion)
