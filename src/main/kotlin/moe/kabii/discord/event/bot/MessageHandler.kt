@@ -38,7 +38,6 @@ class MessageHandler(val manager: CommandManager) {
 
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull() // null if pm
         val msgArgs = content.split(" ")
-            .filter(String::isNotBlank)
 
         if (config != null) {
             // log messages if this server has an edit/delete log
@@ -121,7 +120,9 @@ class MessageHandler(val manager: CommandManager) {
                 val guildName = guild?.name ?: username
                 val context = if (isPM) "Private" else "Guild"
                 LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
-                val args = msgArgs
+                val cmdArgs = content.split(" ")
+                val args = cmdArgs
+                    .filter(String::isNotBlank)
                     .drop(1)
                     .filterNot { it.equals("@everyone", ignoreCase = true) }
                 val noCmd = args.joinToString(" ")
