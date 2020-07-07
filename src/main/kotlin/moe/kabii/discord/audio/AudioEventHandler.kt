@@ -98,7 +98,7 @@ object AudioEventHandler : AudioEventAdapter() {
                 }
 
                 // if queue is set to loop, add this track to the end of the queue
-                if(data.audio.looping) {
+                if(data.audio.looping && endReason != AudioTrackEndReason.STOPPED) {
                     val newTrack = track.makeClone()
                     newTrack.userData = data.apply {
                         votes.clear()

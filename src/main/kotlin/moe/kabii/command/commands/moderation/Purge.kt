@@ -21,13 +21,13 @@ object Purge : CommandContainer {
         val limitUsers = userArgs
             .mapNotNull(String::toLongOrNull)
             .map(Long::snowflake)
-        fun purgeUser(user: Snowflake) = limitUsers.isEmpty() || limitUsers.contains(user)
+        fun shouldPurge(user: Snowflake): Boolean = limitUsers.isEmpty() || limitUsers.contains(user)
         var messageCount = 0
-        val users = mutableListOf<Snowflake>()
+        val users = mutableSetOf<Snowflake>()
 
         messages
             .filterNot(Message::isPinned)
-            .filter { message -> purgeUser(message.author.get().id) }
+            .filter { message -> shouldPurge(message.author.get().id) }
             .doOnNext { message ->
                 users.add(message.author.get().id)
                 messageCount++
@@ -39,10 +39,7 @@ object Purge : CommandContainer {
             .flatMap(Message::delete)
             .collectList()
             .awaitSingle()
-        val userCount = users.toFlux()
-            .distinct(Snowflake::hashCode)
-            .count().awaitSingle()
-        origin.embed("Deleted $messageCount messages from $userCount users.").awaitSingle()
+        origin.embed("Deleted $messageCount messages from ${users.size} users.").awaitSingle()
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {

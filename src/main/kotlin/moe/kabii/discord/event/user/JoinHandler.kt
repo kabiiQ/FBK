@@ -57,7 +57,7 @@ object JoinHandler {
 
             if(configs.any { cfg -> cfg.inviteTarget != null && !config.guildSettings.utilizeInvites }) {
                 // error if any invite-specific configurations exist but we got 403'd for MANAGE_SERVER
-                errorStr += " (A invite-specific role is configured but I am missing permissions to view invite information (Manage Server permission)"
+                errorStr += " (An invite-specific role is configured but I am missing permissions to view invite information [Manage Server permission]. Please address the missing permission and re-enable this feature with the **serverconfig invites enable** command.)"
             }
 
             configs
