@@ -7,6 +7,8 @@ import moe.kabii.command.Command
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 validateChannel(this) // throws feature exception if this is not a valid "music" channel, caught upstream
@@ -27,6 +29,8 @@ object QueueTracks : AudioCommandContainer {
     }
 
     object PlayList : Command("playlist", "listplay") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
@@ -45,6 +49,8 @@ object QueueTracks : AudioCommandContainer {
     }
 
     object PlaySongForce : Command("fplay", "forceplay") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 channelVerify(Permission.MANAGE_MESSAGES)
@@ -60,6 +66,8 @@ object QueueTracks : AudioCommandContainer {
     }
 
     object ReplaySong : Command("replay", "repeat", "requeue") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
@@ -92,6 +100,8 @@ object QueueTracks : AudioCommandContainer {
     }
 
     object PlayNext : Command("playnext", "queuenext") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)

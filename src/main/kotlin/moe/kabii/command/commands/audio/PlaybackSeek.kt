@@ -30,6 +30,8 @@ object PlaybackSeek : AudioCommandContainer {
     }
 
     object SeekPosition : Command("seek", "position") {
+        override val wikiPath = "Music-Player#playback-manipulation"
+
         init {
             discord {
                 validateChannel(this)
@@ -68,6 +70,8 @@ object PlaybackSeek : AudioCommandContainer {
     }
 
     object PlaybackForward : Command("ff", "fastforward", "forward") {
+        override val wikiPath = "Music-Player#playback-manipulation"
+
         init {
             discord {
                 validateChannel(this)
@@ -96,6 +100,8 @@ object PlaybackSeek : AudioCommandContainer {
     }
 
     object PlaybackRewind : Command("rewind", "back", "backward", "backwards") {
+        override val wikiPath = "Music-Player#playback-manipulation"
+
         init {
             discord {
                 validateChannel(this)

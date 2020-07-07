@@ -9,6 +9,8 @@ import moe.kabii.structure.reply
 
 object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
+        override val wikiPath by lazy { TODO() }
+
         private fun roll(args: List<String>): Pair<String, ULong> {
             fun arg(index: Int) = args.getOrNull(index)?.toULongOrNull()
             val (left, right) = when {
@@ -62,6 +64,8 @@ object Random : CommandContainer {
     }
 
     object Pick : Command("pick", "choose", "select") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 val options = if (args.isEmpty()) { // pick a recent user
@@ -87,6 +91,8 @@ object Random : CommandContainer {
     }
 
     object Ask : Command("ask", "question", "8ball", "magic8ball", "magic8") {
+        override val wikiPath by lazy { TODO() }
+
         private val magicball = arrayOf(
                 "It is certain.",
                 "It is decidedly so.",
@@ -122,6 +128,7 @@ object Random : CommandContainer {
     }
 
     object Coinflip : Command("coinflip", "flip", "coin", "coin-flip", "flipcoin", "headsortails") {
+        override val wikiPath by lazy { TODO() }
 
         private val flip = { user: String ->
             val flip = when ((0..1000).random()) {

@@ -10,6 +10,8 @@ import moe.kabii.structure.tryAwait
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {
+        override val wikiPath = "Discord-Info-Commands#get-user-avatar"
+
         init {
             discord {
                 val targetUser = if (args.isEmpty()) author else Search.user(this, noCmd, guild)
@@ -26,6 +28,8 @@ object AvatarUtil : CommandContainer {
     }
 
     object GuildIcon : Command("icon", "guildicon", "guildavatar", "guildimage", "image") {
+        override val wikiPath = "Discord-Info-Commands#get-server-icon"
+
         init {
             discord {
                 val iconUrl = target.getIconUrl(Image.Format.PNG).orNull()

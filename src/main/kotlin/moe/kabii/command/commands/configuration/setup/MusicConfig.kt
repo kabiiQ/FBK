@@ -4,9 +4,12 @@ import discord4j.rest.util.Permission
 import moe.kabii.data.mongodb.MusicSettings
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.verify
 
 object MusicConfig : CommandContainer {
     object MusicBot : Command("musicbot", "musicconfig", "musicsetup", "music", "musicsettings") {
+        override val wikiPath = "Music-Player#configuration"
+
         object MusicSettingsModule : ConfigurationModule<MusicSettings>(
             "music bot",
             BooleanElement(
@@ -70,7 +73,7 @@ object MusicConfig : CommandContainer {
 
         init {
             discord {
-                channelVerify(Permission.MANAGE_CHANNELS)
+                member.verify(Permission.MANAGE_CHANNELS)
 
                 val configurator = Configurator(
                     "Music bot settings for ${target.name}",

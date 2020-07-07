@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter
 
 object SnowflakeUtil : CommandContainer {
     object GetIDs : Command("ids", "getids", "allids", "roleids") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 val includeAll = args.getOrNull(0)?.endsWith("all") ?: false
@@ -72,6 +74,8 @@ object SnowflakeUtil : CommandContainer {
 
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
     object Timestamp : Command("timestamp", "snowflakedate", "checktimestamp", "gettimestamp", "timeof", "timestampof", "snowflaketime") {
+        override val wikiPath = "Discord-Info-Commands#-get-the-timestamp-for-any-discord-id-snowflake"
+
         init {
             discord {
                 // get the timestamp for a snowflake
@@ -102,6 +106,8 @@ object SnowflakeUtil : CommandContainer {
     }
 
     object GetID : Command("id") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 // get an ID for a user. for noobs without developer mode enabled.

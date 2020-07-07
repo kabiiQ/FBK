@@ -8,6 +8,8 @@ import moe.kabii.command.commands.audio.AudioCommandContainer
 
 object FilterPresets : AudioCommandContainer {
     object DoubleTime : Command("dt", "doubletime") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)
@@ -29,6 +31,8 @@ object FilterPresets : AudioCommandContainer {
     }
 
     object Nightcore : Command("nightcore", "nc") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)
@@ -51,6 +55,8 @@ object FilterPresets : AudioCommandContainer {
     }
 
     object Daycore : Command("daycore", "dc") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)
@@ -73,6 +79,8 @@ object FilterPresets : AudioCommandContainer {
     }
 
     object ResetFilters : Command("reset") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)

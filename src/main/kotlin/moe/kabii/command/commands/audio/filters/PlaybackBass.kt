@@ -9,6 +9,8 @@ import moe.kabii.command.specColor
 
 object PlaybackBass : AudioCommandContainer {
     object SetBass : Command("bass", "bassboost", "bboost") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)

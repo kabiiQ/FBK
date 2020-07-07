@@ -23,6 +23,8 @@ object ChannelFeatures : CommandContainer {
     )
 
     object ChannelFeatures : Command("features", "channelfeatures", "config", "channel") {
+        override val wikiPath= "Configuration-Commands#the-config-command-channel-features"
+
         init {
             discord {
                 if(isPM) return@discord
@@ -47,6 +49,8 @@ object ChannelFeatures : CommandContainer {
     }
 
     object ListFeatureChannels : Command("channels", "featurechannels", "channelconfigs") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 // list active feature channels in this guild

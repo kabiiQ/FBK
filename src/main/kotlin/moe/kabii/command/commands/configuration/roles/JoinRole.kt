@@ -26,6 +26,8 @@ object JoinRole : CommandContainer {
     }
 
     object AssignAutoRole : Command("joinroleassign", "assignjoinrole", "joinroleadd", "addjoinrole", "joinrolecreate", "createjoinrole") {
+        override val wikiPath = "Auto-Roles#assigning-a-role-to-users-joining-your-server"
+
         init {
             discord {
                 // create a configuration that assigns a role on user join
@@ -81,6 +83,8 @@ object JoinRole : CommandContainer {
     }
 
     object UnassignAutoRole : Command("joinroleremove", "joinroleunassign", "removejoinrole", "unassignjoinrole") {
+        override val wikiPath = "Auto-Roles#removing-an-existing-autorole-rule"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -113,6 +117,8 @@ object JoinRole : CommandContainer {
     }
 
     object ListAutoRoleSetup : Command("listjoinrole", "joinrolelist") {
+        override val wikiPath = "Auto-Roles#listing-existing-join-autorole-rules"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

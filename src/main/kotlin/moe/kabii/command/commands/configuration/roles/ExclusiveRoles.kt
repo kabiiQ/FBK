@@ -14,6 +14,8 @@ import reactor.kotlin.core.publisher.toMono
 
 object ExclusiveRoles : CommandContainer {
     object CreateExclusiveSet : Command("createset", "addset", "exclusiveset", "createtrack", "exclusive", "exclusiveroles") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -35,6 +37,8 @@ object ExclusiveRoles : CommandContainer {
     }
 
     object RemoveExclusiveSet : Command("removeset", "removeexclusiveset", "removetrack") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -57,6 +61,8 @@ object ExclusiveRoles : CommandContainer {
     }
 
     object EditExclusiveSet : Command("editset", "editexclusiveset", "edittrack") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -106,6 +112,8 @@ object ExclusiveRoles : CommandContainer {
     }
 
     object ListExclusiveSets : Command("listsets", "listset", "listexclusivesets", "listtracks") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 // list the exclusive role configurations in this guild

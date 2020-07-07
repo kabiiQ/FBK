@@ -13,6 +13,8 @@ import moe.kabii.structure.tryAwait
 
 object SelfRoleCommands : CommandContainer {
     object RoleCommands : Command("rolecommands", "rolecommand") {
+        override val wikiPath = "Command-Roles"
+
         init {
             discord {
                 if(args.isEmpty()) {
@@ -33,6 +35,8 @@ object SelfRoleCommands : CommandContainer {
     }
 
     object AddRoleCommand : Command("rolecommandadd", "rolecommandsadd", "addrolecommand", "rolecommand-add", "add-rolecommand") {
+        override val wikiPath = "Command-Roles#creating-a-custom-role-command"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -61,6 +65,8 @@ object SelfRoleCommands : CommandContainer {
     }
 
     object RemoveRoleCommand : Command("removerolecommand", "rolecommandsremove", "rolecommandremove", "remove-rolecommand", "rolecommand-remove") {
+        override val wikiPath = "Command-Roles#removing-a-custom-role-command"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -83,6 +89,8 @@ object SelfRoleCommands : CommandContainer {
     }
 
     object ListRoleCommands : Command("listrolecommand", "rolecommandslist", "rolecommandlist", "rolecommand-list", "list-rolecommand") {
+        override val wikiPath = "Command-Roles#listing-existing-custom-role-commands"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

@@ -10,6 +10,8 @@ import moe.kabii.util.YoutubeUtil
 
 object QueueInfo : AudioCommandContainer {
     object CurrentQueue : Command("queue", "listqueue", "songs", "q") {
+        override val wikiPath = "Music-Player#queue-information"
+
         init {
             discord {
                 validateChannel(this)
@@ -57,6 +59,8 @@ object QueueInfo : AudioCommandContainer {
     }
 
     object NowPlaying : Command("music", "np", "nowplaying", "song") {
+        override val wikiPath = "Music-Player#queue-information"
+
         init {
             discord {
                 validateChannel(this)

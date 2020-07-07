@@ -5,6 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.util.EmojiCharacters
 
 object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojiletters", "emojiletter", "regionalindicator", "emojitext", "textemoji", "textemojis", "textmoji", "textmojis") {
+    override val wikiPath by lazy { TODO() }
 
     private val regionalIndicators = arrayOf('\uDDE6', '\uDDE7', '\uDDE8', '\uDDE9', '\uDDEA', '\uDDEB', '\uDDEC', '\uDDED', '\uDDEE', '\uDDEF', '\uDDF0', '\uDDF1', '\uDDF2', '\uDDF3', '\uDDF4', '\uDDF5', '\uDDF6', '\uDDF7', '\uDDF8', '\uDDF9', '\uDDFA', '\uDDFB', '\uDDFC', '\uDDFD', '\uDDFE', '\uDDFF')
 

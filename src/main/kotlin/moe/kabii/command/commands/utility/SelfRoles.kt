@@ -11,6 +11,8 @@ import moe.kabii.structure.tryAwait
 
 
 object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "self", "selfrole", "toggle", "togglerole", "roletoggle") {
+    override val wikiPath by lazy { TODO() }
+
     init {
         botReqs(Permission.MANAGE_ROLES)
         discord {

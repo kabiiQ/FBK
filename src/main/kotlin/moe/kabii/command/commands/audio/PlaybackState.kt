@@ -9,6 +9,8 @@ import moe.kabii.command.hasPermissions
 
 object PlaybackState : AudioCommandContainer {
     object PausePlayback : Command("pause", "pausequeue") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 validateChannel(this)
@@ -20,6 +22,8 @@ object PlaybackState : AudioCommandContainer {
     }
 
     object ResumePlayback : Command("resume", "unpause", "resumequeue", "unpausequeue") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 validateChannel(this)
@@ -32,6 +36,8 @@ object PlaybackState : AudioCommandContainer {
     }
 
     object PlaybackVolume : Command("volume", "setvolume", "vol") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 validateChannel(this)

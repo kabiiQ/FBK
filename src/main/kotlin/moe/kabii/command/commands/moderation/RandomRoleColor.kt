@@ -15,6 +15,8 @@ import moe.kabii.util.ColorUtil
 import moe.kabii.util.RGB
 
 object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
+    override val wikiPath = "Moderation-Commands#randomizing-a-roles-color"
+
     private fun randomColor() = Color.of((0..0xFFFFFF).random())
 
     init {

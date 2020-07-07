@@ -13,6 +13,8 @@ import java.time.temporal.ChronoUnit
 
 object BotStats : CommandContainer {
     object Ping : Command("ping", "pong") {
+        override val wikiPath: String? by lazy { TODO() }
+
         init {
             discord {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
@@ -40,6 +42,8 @@ object BotStats : CommandContainer {
 
     private val uptimeFormat = "dddd'd'HH'h'mm'm'"
     object BotInfo : Command("bot", "botinfo", "botstats", "uptime") {
+        override val wikiPath: String? by lazy { TODO() }
+
         init {
             discord {
                 val botUser = event.client.self.awaitSingle()

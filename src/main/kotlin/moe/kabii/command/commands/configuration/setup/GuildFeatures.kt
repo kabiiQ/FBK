@@ -6,12 +6,14 @@ import moe.kabii.command.Command
 import moe.kabii.command.verify
 
 object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "configureguild", "configureserver", "guildsettings", "guildfeatures") {
+    override val wikiPath = "Configuration-Commands#the-serverconfig-command"
+
     object GuildFeatureModule : ConfigurationModule<GuildSettings>(
         "guild",
         // BooleanElement("Use colored embeds for command responses", listOf("embeds", "embed"), GuildSettings::embedMessages), need to design fallback method first
         BooleanElement("Livestream \"follow\" command/automatic role mentioning", listOf("follow", "followroles", "mentionroles", "mention"), GuildSettings::followRoles),
         //BooleanElement("Post information in linked Twitch chat when URLs are linked.", listOf("url", "urlinfo", "twitchurls"), GuildSettings::twitchURLInfo),
-        BooleanElement("Use this server's invite info (required for invite-specific roles, bot requires Manage Server permission)", listOf("invites", "useinvites", "inviteperm"), GuildSettings::utilizeInvites),
+        BooleanElement("Use this server's invite info (required for invite-specific roles, bot requires Manage Server permission)", listOf("invite", "invites", "useinvites", "inviteperm"), GuildSettings::utilizeInvites),
         BooleanElement("Automatically give users their roles back when they rejoin the server.", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles)
     )
 

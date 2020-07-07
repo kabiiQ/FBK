@@ -8,6 +8,8 @@ import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
 
 object PruneUsers : Command("prunemembers") {
+    override val wikiPath by lazy { TODO() }
+
     init {
         botReqs(Permission.KICK_MEMBERS)
         discord {

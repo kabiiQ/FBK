@@ -10,6 +10,8 @@ import moe.kabii.util.DurationParser
 
 object PlaybackSample : AudioCommandContainer {
     object SampleTrack : Command("sample", "preview", "limit") {
+        override val wikiPath = "Music-Player#playback-manipulation"
+
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
@@ -44,6 +46,8 @@ object PlaybackSample : AudioCommandContainer {
     }
 
     object SampleTrackTimestamp : Command("sampleto", "playuntil", "limitto") {
+        override val wikiPath = "Music-Player#playback-manipulation"
+
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())

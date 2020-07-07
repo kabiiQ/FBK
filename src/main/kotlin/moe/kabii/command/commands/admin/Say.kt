@@ -8,6 +8,9 @@ import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
 
 object Say : Command("botsay", "say") {
+    override val wikiPath: String? = null
+    override val commandExempt = true
+
     init {
         terminal {
             if(args.size < 2) {

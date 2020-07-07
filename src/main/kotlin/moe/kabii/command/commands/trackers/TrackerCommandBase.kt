@@ -53,6 +53,8 @@ interface Tracker<in T: TrackerTarget> {
 
 object TrackerCommandBase : CommandContainer {
     object TrackCommandBase : Command("track") {
+        override val wikiPath: String? = null // undocumented 'base' command
+
         init {
             discord {
                 trackCommand(this, Action.TRACK)
@@ -61,6 +63,8 @@ object TrackerCommandBase : CommandContainer {
     }
 
     object UntrackCommandBase : Command("untrack") {
+        override val wikiPath: String? = null // undocumented 'base' command
+
         init {
             discord {
                 trackCommand(this, Action.UNTRACK)

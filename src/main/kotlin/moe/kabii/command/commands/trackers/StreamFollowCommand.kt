@@ -22,6 +22,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitchFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {
+        override val wikiPath = "Livestream-Tracker#user-commands"
+
         init {
             botReqs(Permission.MANAGE_ROLES)
             discord {
@@ -92,6 +94,8 @@ object TwitchFollow : CommandContainer {
     }
 
     object UnfollowStream : Command("unfollow") {
+        override val wikiPath = "Livestream-Tracker#user-commands"
+
         init {
             botReqs(Permission.MANAGE_ROLES)
             discord {

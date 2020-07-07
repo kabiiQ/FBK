@@ -13,6 +13,8 @@ import moe.kabii.structure.success
 
 object TemporaryChannels : CommandContainer {
     object CreateTempChannel : Command("temp", "tempchannel", "createtemp", "createtempchannel", "temporarychannel", "tempchan", "temporarychan") {
+        override val wikiPath = "Utility-Commands#temporary-voice-channels"
+
         init {
             botReqs(Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS)
             discord {

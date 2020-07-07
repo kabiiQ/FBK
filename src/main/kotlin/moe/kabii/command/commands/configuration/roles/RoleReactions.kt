@@ -22,6 +22,8 @@ import moe.kabii.util.EmojiUtil
 
 object RoleReactions : CommandContainer {
     object ReactionRoleCommands : Command("reactionrole", "rolereaction") {
+        override val wikiPath = "Auto-Roles#assigning-a-role-to-users-reacting-to-a-specific-message"
+
         init {
             discord {
                 if(args.isEmpty()) {
@@ -42,6 +44,8 @@ object RoleReactions : CommandContainer {
     }
 
     object AddReactionRole : Command("addreactionrole", "reactionroleadd") {
+        override val wikiPath = "Auto-Roles#activating-a-reaction-role-message"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -105,6 +109,8 @@ object RoleReactions : CommandContainer {
     }
 
     object RemoveReactionRole : Command("removereactionrole", "reactionroleremove") {
+        override val wikiPath = "Auto-Roles#deactivating-a-reaction-role-message"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -148,6 +154,8 @@ object RoleReactions : CommandContainer {
     }
 
     object ListReactionRoles : Command("listreactionrole", "reactionrolelist") {
+        override val wikiPath = "Auto-Roles#listing-existing-reaction-role-messages"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

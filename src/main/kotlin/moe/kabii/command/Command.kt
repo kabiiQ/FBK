@@ -17,10 +17,8 @@ interface CommandContainer
 abstract class Command(val baseName: String, vararg alias: String) {
     val aliases = listOf(baseName, *alias)
 
-    open val helpURL: String? = null // TODO make this abstract once docs are available
+    abstract val wikiPath: String?
     open val commandExempt: Boolean = false
-
-    val sourceRoot = "https://github.com/kabiiQ/FBK/tree/master/src/main/kotlin"
 
     var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
     private set
@@ -28,6 +26,8 @@ abstract class Command(val baseName: String, vararg alias: String) {
     private set
     var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
     private set
+
+    fun getHelpURL(): String? = wikiPath?.let { "${SourcePaths.wikiURL}/$wikiPath}" }
 
     var discordReqs: List<Permission> = listOf(
             Permission.SEND_MESSAGES,

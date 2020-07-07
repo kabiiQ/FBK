@@ -38,3 +38,9 @@ object Uptime {
 object DiscordBot {
     val selfId: Snowflake = TokenUtil.getSelfId(Keys.config[Keys.Discord.token]).snowflake
 }
+
+object SourcePaths {
+    const val gitURL = "https://github.com/kabiiQ/FBK"
+    val sourceRoot = "$gitURL/tree/master/src/main/kotlin"
+    val wikiURL = "$gitURL/wiki"
+}

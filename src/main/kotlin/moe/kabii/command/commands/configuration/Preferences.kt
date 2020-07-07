@@ -13,6 +13,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object Preferences : CommandContainer {
     object Guild : Command("setguild","set-guild", "set-server", "myguild") {
+        override val wikiPath: String? = null // intentionally undocumented command
+
         init {
             discord {
                 val guildTarget = when {

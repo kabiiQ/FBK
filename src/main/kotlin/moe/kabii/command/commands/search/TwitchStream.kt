@@ -8,6 +8,8 @@ import moe.kabii.discord.trackers.streams.StreamEmbedBuilder
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 
 object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
+    override val wikiPath = "Lookup-Commands#twitch-stream-lookup"
+
     init {
         discord {
             // manually post a Twitch stream

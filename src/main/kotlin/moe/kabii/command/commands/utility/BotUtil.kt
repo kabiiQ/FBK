@@ -7,6 +7,8 @@ import moe.kabii.command.CommandContainer
 
 object BotUtil : CommandContainer {
     object Screenshare : Command("screenshare", "screen-share", "share", "sharescreen", "screanshare") {
+        override val wikiPath = "Utility-Commands#screenshare"
+
         init {
             discord {
                 member.voiceState
@@ -22,6 +24,8 @@ object BotUtil : CommandContainer {
     }
 
     object GlitchLink : Command("glitch") {
+        override val wikiPath: String? = null // yeah
+
         init {
             discord {
                 val link = "https://discordapp.com/channels/${target.id.asString()}/${chan.id.asString()}/1"

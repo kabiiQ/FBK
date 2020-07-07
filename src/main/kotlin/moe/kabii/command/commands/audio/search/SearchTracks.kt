@@ -12,6 +12,8 @@ import moe.kabii.structure.tryAwait
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 // search source query
@@ -88,6 +90,8 @@ object SearchTracks : AudioCommandContainer {
     }
 
     object PlayFromSource : Command("playfrom", "playfromsource", "usesource") {
+        override val wikiPath: String? = null // intentionally undocumented command
+
         init {
             discord {
                 validateChannel(this)

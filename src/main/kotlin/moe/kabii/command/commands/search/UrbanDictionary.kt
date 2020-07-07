@@ -17,6 +17,8 @@ import okhttp3.Request
 object Urban : Command("urbandictionary", "urban", "ud") {
     val udAdapter: JsonAdapter<Response> = MOSHI.adapter(Response::class.java)
 
+    override val wikiPath = "Lookup-Commands#urbandictionary-lookup"
+
     init {
         discord {
             val lookup = if (args.isEmpty()) author.username else noCmd

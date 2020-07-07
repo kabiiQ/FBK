@@ -6,6 +6,8 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.command.Command
 
 object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {
+    override val wikiPath = "Anime-List-Tracker#configuration"
+
     object ListTrackerModule : ConfigurationModule<FeatureSettings>(
         "anime list tracker",
         BooleanElement(

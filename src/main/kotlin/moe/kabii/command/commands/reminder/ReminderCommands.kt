@@ -18,6 +18,8 @@ import java.time.Duration
 
 object ReminderCommands : CommandContainer {
     object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
+        override val wikiPath = "Utility-Commands#commands"
+
         init {
             discord {
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
@@ -108,6 +110,8 @@ object ReminderCommands : CommandContainer {
     }
 
     object CancelReminder : Command("cancelreminder", "remindercancel","cancel") {
+        override val wikiPath = "Utility-Commands#commands"
+
         init {
             discord {
                 // cancel <reminder id>

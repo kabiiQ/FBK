@@ -8,7 +8,9 @@ import moe.kabii.command.verify
 
 object CommandOptions : CommandContainer {
     object Prefix : Command("prefix", "setprefix", "prefix-set", "set-prefix", "changeprefix") {
+        override val wikiPath = "Configuration#changing-command-prefix-andor-suffix"
         override val commandExempt = true
+
         init {
             discord {
                 if(args.isEmpty()) {
@@ -26,7 +28,9 @@ object CommandOptions : CommandContainer {
     }
 
     object Suffix : Command("suffix", "setsuffix", "set-suffix", "changesuffix") {
+        override val wikiPath = "Configuration#changing-command-prefix-andor-suffix"
         override val commandExempt = true
+
         init {
             discord {
                 if(args.isEmpty()) {

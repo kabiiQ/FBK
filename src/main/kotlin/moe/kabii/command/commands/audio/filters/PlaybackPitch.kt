@@ -9,6 +9,8 @@ import moe.kabii.command.specColor
 
 object PlaybackPitch : AudioCommandContainer {
     object PlaybackPitch : Command("pitch", "setpitch", "playbackpitch") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 // pitch 1.5, pitch 150, pitch 150%, pitch %150

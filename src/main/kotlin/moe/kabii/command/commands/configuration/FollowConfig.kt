@@ -15,6 +15,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object FollowConfig : CommandContainer {
     object SetDefaultFollow : Command("setfollow", "followset", "defaultfollow") {
+        override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
@@ -64,6 +66,8 @@ object FollowConfig : CommandContainer {
     }
 
     object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionrole", "setmention") {
+        override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
+
         init {
             discord {
                 // manually set mention role for a followed stream - for servers where a role already exists

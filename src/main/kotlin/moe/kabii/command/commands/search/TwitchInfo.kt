@@ -12,6 +12,8 @@ import java.time.Instant
 
 object TwitchInfo : CommandContainer {
     object Title : Command("title", "streamtitle", "streamname") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             twitch {
                 val api = TwitchParser.getStream(event.channel.id.toLong())
@@ -34,6 +36,8 @@ object TwitchInfo : CommandContainer {
 
     // TODO game specifc uptime?
     object Uptime : Command("uptime", "up-time") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             twitch {
                 val stream = TwitchParser.getStream(event.channel.id.toLong())

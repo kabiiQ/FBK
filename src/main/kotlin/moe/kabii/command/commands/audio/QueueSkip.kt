@@ -8,6 +8,8 @@ import moe.kabii.command.Command
 
 object QueueSkip : AudioCommandContainer {
     object VoteSkip : Command("skip", "voteskip", "skipsong") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 validateChannel(this)
@@ -49,6 +51,8 @@ object QueueSkip : AudioCommandContainer {
     }
 
     object ForceSkip : Command("fskip", "forceskip", "fskipsong", "skipf") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 validateChannel(this)

@@ -11,6 +11,8 @@ import moe.kabii.structure.tryAwait
 
 object UserModeration : CommandContainer {
     object SetSlowmode : Command("slowmode", "setslowmode", "set-slowmode") {
+        override val wikiPath = "Moderation-Commands#generic-moderation-commands"
+
         init {
             botReqs(Permission.MANAGE_CHANNELS)
             discord {
@@ -29,6 +31,8 @@ object UserModeration : CommandContainer {
     }
 
     object KickUser : Command("kick", "kickmember") {
+        override val wikiPath = "Moderation-Commands#generic-moderation-commands"
+
         init {
             botReqs(Permission.KICK_MEMBERS)
             discord {
@@ -58,6 +62,8 @@ object UserModeration : CommandContainer {
     }
 
     object BanUserID : Command("ban", "banuser", "userban", "addban") {
+        override val wikiPath = "Moderation-Commands#generic-moderation-commands"
+
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {
@@ -86,6 +92,8 @@ object UserModeration : CommandContainer {
     }
 
     object PardonUserID : Command("pardon", "unban", "un-ban", "removeban") {
+        override val wikiPath = "Moderation-Commands#generic-moderation-commands"
+
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {

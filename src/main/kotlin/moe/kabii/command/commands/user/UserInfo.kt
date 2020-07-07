@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter
 object UserInfo : Command("user", "whoami", "jointime") {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
 
+    override val wikiPath = "Discord-Info-Commands#user-info-summary-server-join-time"
+
     init {
         discord {
             val targetUser = if(args.isNotEmpty()) {

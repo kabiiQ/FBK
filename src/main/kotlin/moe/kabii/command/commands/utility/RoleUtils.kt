@@ -13,6 +13,8 @@ import reactor.kotlin.core.publisher.toFlux
 
 object RoleUtils : CommandContainer {
     object RemoveEmpty : Command("cleanroles", "emptyroles") {
+        override val wikiPath = "Moderation-Commands#removing-emptyunused-roles"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

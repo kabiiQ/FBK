@@ -9,6 +9,8 @@ import moe.kabii.command.specColor
 
 object PlaybackSpeed : AudioCommandContainer {
     object SetSpeed : Command("speed", "rate", "playbackrate", "playback") {
+        override val wikiPath = "Music-Player#audio-manipulationfilters"
+
         init {
             discord {
                 // speed 1.5, speed 150, speed 150%, speed %150

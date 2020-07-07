@@ -25,6 +25,8 @@ object DummyCommands : CommandContainer {
     }
 
     object Add : Command("addcommand", "add-command", "command-add", "commandadd", "newcommand", "editcommand", "command-edit", "edit-command") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
@@ -45,6 +47,8 @@ object DummyCommands : CommandContainer {
     }
 
     object Mod : Command("modcommand", "mod-command", "command-mod", "commandmod", "editmodcommand") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
@@ -65,6 +69,8 @@ object DummyCommands : CommandContainer {
     }
 
     object Remove : Command("removecommand", "delcommand", "remcommand", "deletecommand", "remove-command") {
+        override val wikiPath by lazy { TODO() }
+
         private suspend fun removeCommand(config: GuildConfiguration, command: String): String {
             val reply =
                     if (config.commands.remove(command))

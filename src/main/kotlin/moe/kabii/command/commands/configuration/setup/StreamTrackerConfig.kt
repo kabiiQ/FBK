@@ -6,6 +6,8 @@ import moe.kabii.data.mongodb.FeatureSettings
 import moe.kabii.command.Command
 
 object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
+    override val wikiPath = "Livestream-Tracker#configuration"
+
     object StreamTrackerModule : ConfigurationModule<FeatureSettings>(
         "livestream tracker",
         BooleanElement(

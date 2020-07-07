@@ -13,6 +13,8 @@ import moe.kabii.util.EmojiCharacters
 import reactor.core.publisher.Mono
 
 object Drag : Command("drag", "move", "pull") {
+    override val wikiPath = "Moderation-Commands#mass-drag-users-in-voice-channels"
+
     init {
         discord {
             when (args.getOrNull(0)) {

@@ -3,8 +3,11 @@ package moe.kabii.command.commands.meta
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Search
+import moe.kabii.structure.SourcePaths
 
 object CommandInfo : Command("command", "cmd", "commandinfo") {
+    override val wikiPath: String? by lazy { TODO() }
+
     init {
         discord {
             if(args.isEmpty()) {
@@ -20,12 +23,12 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
 
             val pack = match::class.java.`package`.name
             val source = pack.replace(".", "/")
-            val sourcePath = "$sourceRoot/$source"
+            val sourcePath = "${SourcePaths.sourceRoot}/$source"
 
             embed {
                 setTitle("Command information: ${match.baseName}")
-                if(match.helpURL != null) {
-                    setDescription("[Command Page](${match.helpURL})")
+                if(match.wikiPath != null) {
+                    setDescription("[Command Page](${match.wikiPath})")
                 }
                 addField("All Command Aliases:", match.aliases.joinToString(", "), false)
                 if(!isPM) {
@@ -44,6 +47,8 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
 }
 
 object DocumentationLink : Command("help", "commands", "info") {
+    override val wikiPath: String? = null // intentionally undocumented command
+
     init {
         discord {
             embed("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki)").awaitSingle()

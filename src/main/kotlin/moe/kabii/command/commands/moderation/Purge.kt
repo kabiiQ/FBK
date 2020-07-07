@@ -46,6 +46,8 @@ object Purge : CommandContainer {
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
@@ -69,6 +71,8 @@ object Purge : CommandContainer {
     }
 
     object PurgeFrom : Command("purgefrom", "purgeafter", "cleanfrom", "cleanafter", "prunefrom", "pruneafter") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
@@ -90,6 +94,8 @@ object Purge : CommandContainer {
     }
 
     object PurgeBetween : Command("purgebetween", "cleanbetween", "prunebetween") {
+        override val wikiPath by lazy { TODO() }
+
         init {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {

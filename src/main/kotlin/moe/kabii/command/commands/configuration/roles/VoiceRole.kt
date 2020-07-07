@@ -14,6 +14,8 @@ import moe.kabii.structure.tryAwait
 
 object VoiceRole : CommandContainer {
     object AssignVoiceRole : Command("voiceroleassign", "voicerolecreate", "voiceroleadd", "assignvoicerole") {
+        override val wikiPath = "Auto-Roles#assigning-a-role-to-users-in-a-voice-channel"
+
         init {
             botReqs(Permission.MANAGE_ROLES)
             discord {
@@ -64,6 +66,8 @@ object VoiceRole : CommandContainer {
     }
 
     object UnassignVoiceRole : Command("voiceroleremove", "voiceroleunassign", "removevoicerole", "unassignvoicerole") {
+        override val wikiPath = "Auto-Roles#removing-existing-voice-autorole-rules"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
@@ -106,6 +110,8 @@ object VoiceRole : CommandContainer {
     }
 
     object ListVoiceRoleSetup : Command("listvoicerole", "list-voicerole", "voicerolelist") {
+        override val wikiPath = "Auto-Roles#listing-existing-voice-autorole-rules"
+
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)

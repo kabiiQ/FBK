@@ -26,7 +26,9 @@ object  CommandFilters : CommandContainer {
     }
 
     object Whitelist : Command("whitelist", "white-list") {
+        override val wikiPath = "Configuration#using-a-command-blacklist-or-whitelist"
         override val commandExempt = true
+
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
@@ -92,7 +94,9 @@ object  CommandFilters : CommandContainer {
     }
 
     object Blacklist : Command("blacklist", "black-list") {
+        override val wikiPath = "Configuration#using-a-command-blacklist-or-whitelist"
         override val commandExempt = true
+
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)

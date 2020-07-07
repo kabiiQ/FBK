@@ -10,6 +10,8 @@ import moe.kabii.structure.tryAwait
 
 object BotState : AudioCommandContainer {
     object AudioReset : Command("restart", "reconnect") {
+        override val wikiPath: String? = null // intentionally undocumented command
+
         init {
             discord {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
@@ -30,6 +32,8 @@ object BotState : AudioCommandContainer {
     }
 
     object BotSummon : Command("summon", "join") {
+        override val wikiPath = "Music-Player#playing-audio"
+
         init {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)

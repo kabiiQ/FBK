@@ -7,6 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.verify
 
 object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
+    override val wikiPath by lazy { TODO() }
+
     object ChannelLogModule : ConfigurationModule<LogSettings>(
         "channel log",
         BooleanElement(

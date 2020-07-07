@@ -6,6 +6,8 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.command.Command
 
 object QueueLoop : Command("loop") {
+    override val wikiPath = "Music-Player#queue-manipulation"
+
     init {
         discord {
             // toggles queue "loop" feature

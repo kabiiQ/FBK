@@ -13,7 +13,10 @@ import java.time.format.DateTimeFormatter
 
 object GuildUtil : CommandContainer {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
+
     object GuildInfo : Command("server", "serverinfo", "guild", "guildinfo") {
+        override val wikiPath = "Discord-Info-Commands#get-server-info"
+
         init {
             discord {
                 val createdDateTime = target.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()

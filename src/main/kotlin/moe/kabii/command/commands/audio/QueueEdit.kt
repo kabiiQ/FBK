@@ -47,6 +47,8 @@ object QueueEdit : AudioCommandContainer {
     }
 
     object RemoveTracks : Command("remove", "unqueue", "removequeue") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 // remove 1,2, 4-5 only remove tracks the user can skip normally
@@ -119,6 +121,8 @@ object QueueEdit : AudioCommandContainer {
     }
 
     object ClearQueue : Command("clear", "empty") {
+        override val wikiPath = "Music-Player#queue-manipulation"
+
         init {
             discord {
                 RemoveTracks.executeDiscord!!(this.copy(args = listOf("-")))
