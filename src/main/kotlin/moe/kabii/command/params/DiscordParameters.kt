@@ -1,4 +1,4 @@
-package moe.kabii.command.types
+package moe.kabii.command.params
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
@@ -96,7 +96,7 @@ data class DiscordParameters (
     fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->
         specColor(embed)
         val link = if(linkText != null) {
-            if(command.helpURL != null) " Command usage: **[$linkText](${command.helpURL})**." else " Command usage: **$linkText**."
+            if(command.wikiPath != null) " Command usage: **[$linkText](${command.wikiPath})**." else " Command usage: **$linkText**."
         } else ""
         embed.setDescription("$commandError$link")
     }

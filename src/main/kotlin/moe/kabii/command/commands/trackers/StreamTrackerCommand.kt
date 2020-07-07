@@ -6,7 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.command.types.DiscordParameters
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.discord.trackers.streams.StreamErr

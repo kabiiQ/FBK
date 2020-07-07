@@ -1,4 +1,4 @@
-package moe.kabii.command.types
+package moe.kabii.command.params
 
 import discord4j.core.GatewayDiscordClient
 

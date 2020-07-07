@@ -4,10 +4,11 @@ import discord4j.core.`object`.entity.*
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
-import moe.kabii.command.types.TerminalParameters
-import moe.kabii.command.types.DiscordParameters
-import moe.kabii.command.types.TwitchParameters
+import moe.kabii.command.params.TerminalParameters
+import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.params.TwitchParameters
 import moe.kabii.discord.util.RoleUtil
+import moe.kabii.structure.SourcePaths
 import reactor.core.publisher.Mono
 
 // Now purely aesthetic, Command inheritance is reflectively searched

@@ -1,4 +1,4 @@
-package moe.kabii.command.types
+package moe.kabii.command.params
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import moe.kabii.data.mongodb.GuildConfiguration

@@ -9,7 +9,7 @@ import moe.kabii.data.mongodb.MediaTarget
 import moe.kabii.data.mongodb.TrackedMediaList
 import moe.kabii.data.mongodb.TrackedMediaLists
 import moe.kabii.command.*
-import moe.kabii.command.types.DiscordParameters
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.trackers.anime.MediaListEmpty
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

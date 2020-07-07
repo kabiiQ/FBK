@@ -4,7 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
-import moe.kabii.command.types.TerminalParameters
+import moe.kabii.command.params.TerminalParameters
 import moe.kabii.structure.loop
 import moe.kabii.structure.stackTraceString
 

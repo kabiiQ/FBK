@@ -9,7 +9,7 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.types.DiscordParameters
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.discord.util.BotUtil
