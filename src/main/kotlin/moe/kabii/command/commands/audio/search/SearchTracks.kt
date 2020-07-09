@@ -12,7 +12,7 @@ import moe.kabii.structure.tryAwait
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Music-Player#playing-audio"
 
         init {
             discord {

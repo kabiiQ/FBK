@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 
 object SnowflakeUtil : CommandContainer {
     object GetIDs : Command("ids", "getids", "allids", "roleids") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Discord-Info-Commands#get-all-ids-in-a-server"
 
         init {
             discord {
@@ -106,11 +106,10 @@ object SnowflakeUtil : CommandContainer {
     }
 
     object GetID : Command("id") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Discord-Info-Commands#get-a-users-discord-id"
 
         init {
             discord {
-                // get an ID for a user. for noobs without developer mode enabled.
                 if(args.isEmpty()) {
                     usage("**id** can be used to find the Discord ID for a user in your server.", "id <username>")
                 }

@@ -4,6 +4,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 
 object AutoRole : Command("autorole", "auto-role")  {
+    override val wikiPath = "Auto-Roles"
+
     init {
         discord {
             // autorole <category> <action> (stuff)

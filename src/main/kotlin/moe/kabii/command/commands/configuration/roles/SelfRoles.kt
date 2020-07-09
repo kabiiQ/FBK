@@ -14,7 +14,7 @@ import moe.kabii.structure.tryAwait
 
 object SelfRoles : CommandContainer {
     object UnlockRole : Command("unlock", "unlockrole", "enablerole", "roleunlock") {
-        override val wikiPath: String? by lazy { TODO() }
+        override val wikiPath = "Command-Roles#unlocking-roles"
 
         init {
             discord {
@@ -49,7 +49,7 @@ object SelfRoles : CommandContainer {
     }
 
     object LockRole : Command("lock", "lockrole", "disablerole", "rolelock") {
-        override val wikiPath: String? by lazy { TODO() }
+        override val wikiPath = "Command-Roles#locking-roles"
 
         init {
             discord {
@@ -78,7 +78,7 @@ object SelfRoles : CommandContainer {
     }
 
     object ListUnlockedRoles : Command("roles", "selfroles", "listselfroles", "unlockedroles", "listunlockedroles", "availableroles", "gimmeroles", "iamroles", "openroles") {
-        override val wikiPath: String? by lazy { TODO() }
+        override val wikiPath = "Command-Roles#listing-unlocked-roles-with-roles"
 
         init {
             discord {
