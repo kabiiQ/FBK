@@ -104,5 +104,4 @@ object NettyFileServer {
     fun twitchThumbnail(id: Long) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
-    fun idsAll(id: String) = "$domain/ids/$id-all.txt"
 }

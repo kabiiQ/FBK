@@ -16,12 +16,9 @@ object SnowflakeUtil : CommandContainer {
 
         init {
             discord {
-                val includeAll = args.getOrNull(0)?.endsWith("all") ?: false
-                val all = if(includeAll) "-all" else ""
-                val targetFile = File(NettyFileServer.idRoot, "${target.id.asString()}$all.txt")
-                val warning = if (includeAll) {
-                    chan.createMessage("Getting ALL IDs may take a minute for a large guild. Working...").awaitSingle()
-                } else null
+                val targetId = target.id.asString()
+                val targetFile = File(NettyFileServer.idRoot, "$targetId.txt")
+                val warning = chan.createMessage("Gathering IDs...").awaitSingle()
                 val output = StringBuilder()
                 output.append("IDs for guild ${target.name}\n\nRoles:\n")
                 target.roles
@@ -35,39 +32,37 @@ object SnowflakeUtil : CommandContainer {
                             .append('\n')
                     }
 
-                if (includeAll) {
-                    // add channels and users
-                    output.append("\n\nChannels: \n")
-                    target.channels
-                        .collectList()
-                        .awaitSingle()
-                        .forEach { channel ->
-                            output.append("#${channel.name}")
-                                .append(": ")
-                                .append(channel.id.asString())
-                                .append('\n')
+                // add channels and users
+                output.append("\n\nChannels: \n")
+                target.channels
+                    .collectList()
+                    .awaitSingle()
+                    .forEach { channel ->
+                        output.append("#${channel.name}")
+                            .append(": ")
+                            .append(channel.id.asString())
+                            .append('\n')
+                    }
+                output.append("\n\nUsers: \n")
+                target.members
+                    .collectList()
+                    .awaitSingle()
+                    .forEach { user ->
+                        output.append(user.username)
+                        user.nickname.ifPresent {
+                            output.append(" (")
+                                .append(it)
+                                .append(")")
                         }
-                    output.append("\n\nUsers: \n")
-                    target.members
-                        .collectList()
-                        .awaitSingle()
-                        .forEach { user ->
-                            output.append(user.username)
-                            user.nickname.ifPresent {
-                                output.append(" (")
-                                    .append(it)
-                                    .append(")")
-                            }
-                            output.append(": ")
-                                .append(user.id.asString())
-                                .append('\n')
-                        }
+                        output.append(": ")
+                            .append(user.id.asString())
+                            .append('\n')
+                    }
 
-                }
                 targetFile.writeText(output.toString())
-                val url = if(includeAll) NettyFileServer.idsAll(target.id.asString()) else NettyFileServer.ids(target.id.asString())
+                val url = NettyFileServer.ids(targetId)
                 warning?.delete()?.subscribe()
-                embed("[IDs for all roles]($url)").awaitSingle()
+                embed("[List of IDs for ${target.name}]($url)").awaitSingle()
             }
         }
     }
