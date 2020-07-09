@@ -93,7 +93,7 @@ class UserEventFormatter(val user: User) {
                     SimpleDateFormat(dateFormatParam.value)
                 } else {
                     // default format
-                    SimpleDateFormat("dd MMMM yyyy'@'HH:mm")
+                    SimpleDateFormat("dd MMMM yyyy")
                 }
                 format.replace(matchJoinDate.value, joinDateFormat.format(member.joinTime))
             } else {
