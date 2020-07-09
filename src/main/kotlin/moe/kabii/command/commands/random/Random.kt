@@ -119,7 +119,7 @@ object Random : CommandContainer {
         init {
             discord {
                 // TODO 8ball emoji
-                chan.createMessage(magicball.random()).awaitSingle()
+                embed(magicball.random()).awaitSingle()
             }
             twitch {
                 event.reply(magicball.random())

@@ -49,7 +49,7 @@ object PlaybackState : AudioCommandContainer {
                     return@discord
                 }
                 if(args.isEmpty()) {
-                    usage("The current playback volume is **${audio.player.volume}%**.", "volume <new volume>").awaitSingle()
+                    usage("The current playback volume is **${audio.player.volume}%**.", "$alias <new volume>").awaitSingle()
                     return@discord
                 }
                 if(!canFSkip(this, track)) {
