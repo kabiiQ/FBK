@@ -38,8 +38,8 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
                     val exempt = if(match.commandExempt) " (exempt)" else ""
                     addField("Command Enabled (using $list):", "$enabled$exempt", false)
                 }
-                addField("Discord Command:", (match.executeDiscord != null).toString(), true)
-                addField("Twitch Command:", (match.executeTwitch != null).toString(), true)
+//                addField("Discord Command:", (match.executeDiscord != null).toString(), true)
+//                addField("Twitch Command:", (match.executeTwitch != null).toString(), true)
                 addField("Location in Source Code:", "[$pack]($sourcePath)", false)
             }.awaitSingle()
         }
