@@ -35,7 +35,7 @@ data class GuildConfiguration(
     var prefix: String = defaultPrefix,
     var suffix: String? = defaultSuffix,
     val options: OptionalFeatures = OptionalFeatures(),
-    val commands: DummyCommands = DummyCommands(),
+    val echoCommands: EchoCommands = EchoCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
     val selfRoles: SelfRoles = SelfRoles(),
     val guildSettings: GuildSettings = GuildSettings(),
@@ -124,19 +124,19 @@ data class LogSettings(
     fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, usernameLog, voiceLog, editLog, deleteLog).any(true::equals)
 }
 
-data class DummyCommands(
-    val commands: MutableList<DummyCommand> = mutableListOf()) {
+data class EchoCommands(
+    val commands: MutableList<EchoCommand> = mutableListOf()) {
 
-    fun remove(command: String) = commands.removeIf { it.command == command }
+    fun removeByName(command: String) = commands.removeIf { it.command == command }
 
-    fun insertIsUpdated(command: DummyCommand): Boolean {
+    fun insertIsUpdated(command: EchoCommand): Boolean {
         val replacing = commands.removeIf { it.command == command.command }
         commands.add(command)
         return replacing
     }
 }
 
-data class DummyCommand(
+data class EchoCommand(
         val command: String,
         var response: String,
         var restrict: Boolean)

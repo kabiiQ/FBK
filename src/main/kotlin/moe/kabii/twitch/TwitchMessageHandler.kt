@@ -42,8 +42,8 @@ class TwitchMessageHandler(val manager: CommandManager) {
             val guild = GuildConfigurations.getGuildForTwitch(event.channel.id.toLong())
             if (guild == null) return@launch // shouldn't happen but if we are in non-verified channel, ignore the message
 
-            // dummy command handling
-            guild.commands.commands.find { it.command == msgArgs[0] }?.run {
+            // echo command handling
+            guild.echoCommands.commands.find { it.command == msgArgs[0] }?.run {
                 if (!restrict || isMod) {
                     event.reply(response)
                 }
