@@ -16,6 +16,9 @@ object BotUtil {
             .next()
             .flatMap(VoiceState::getChannel)
 
+    fun isSingleClient(target: VoiceChannel): Mono<Boolean> =
+        target.voiceStates.count().map(1L::equals)
+
     fun getMutualGuilds(user: User): Flux<Guild> =
         user.client.guilds
             .filterWhen { guild ->

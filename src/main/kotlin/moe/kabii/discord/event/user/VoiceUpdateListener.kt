@@ -12,13 +12,15 @@ import moe.kabii.data.mongodb.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.LogSettings
 import moe.kabii.command.logColor
+import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.BotUtil
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
+object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
     override suspend fun handle(event: VoiceStateUpdateEvent) { // voicelog
         val oldState = event.old.orNull()
         val newState = event.current
@@ -43,7 +45,7 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
         val member = user.asMember(guildID).tryAwait().orNull()
 
         // voice logs
-        config.options.featureChannels.values.toList()
+        config.options.featureChannels.values.asSequence()
             .filter(FeatureChannel::logChannel)
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::voiceLog)
@@ -67,8 +69,8 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
                     }
             }.subscribe()
 
-        // temporary voice channel listeners
         if(old) {
+            // temporary voice channel listeners
             val temp = config.tempVoiceChannels.tempChannels
             val oldID = oldChannel!!.id.asLong()
             if(temp.contains(oldID)) {
@@ -103,6 +105,7 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
         // find applicable autoroles for new channel
 
         if(!user.isBot) {
+            val guild = newState.guild.awaitSingle()
             val autoRoles = config.autoRoles.voiceConfigurations
             val rolesNeeded = if (new) { // has a current channel, may need auto roles
                 autoRoles.filter { cfg ->
@@ -112,7 +115,21 @@ object VoiceMoveListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdate
                 }
             } else emptyList() // no current channel, no roles needed
 
-            val guild = newState.guild.awaitSingle()
+            // check if we should start disconnection timeout
+            val alone = BotUtil.getBotVoiceChannel(guild)
+                .flatMap(BotUtil::isSingleClient)
+                .awaitFirstOrNull()
+            val audio = AudioManager.getGuildAudio(guildID.long)
+            if(alone == false) {
+                // someone is in the bot channel. if audio is being played, cancel any timeouts
+                if(audio.player.playingTrack != null || audio.queue.isNotEmpty()) {
+                    AudioManager.timeouts.cancelPendingTimeout(audio)
+                } // otherwise, let the timeout continue. we leave the vc if not in use
+            } else {
+                // bot is alone... schedule a disconnection
+                AudioManager.timeouts.startTimeout(audio)
+            }
+
             val eventMember = member ?: return // kicked
             rolesNeeded.toFlux()
                 .filter { cfg -> !eventMember.roleIds.contains(cfg.role.snowflake) } // add missing roles

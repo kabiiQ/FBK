@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.command.commands.audio.AudioCommandContainer
@@ -21,6 +22,8 @@ import moe.kabii.util.YoutubeUtil
 import reactor.kotlin.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
+    val manager = AudioManager
+
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val data = track.userData as QueueData
         player.volume = data.volume
@@ -81,6 +84,15 @@ object AudioEventHandler : AudioEventAdapter() {
                 }
             }.subscribe()
         }
+
+        // if the bot is not alone when something starts playing, cancel any inactivity timeouts
+        val alone = data.discord.getGuildById(guildID.snowflake)
+            .flatMap(BotUtil::getBotVoiceChannel)
+            .flatMap(BotUtil::isSingleClient)
+            .block()
+        if(alone == false) {
+            AudioManager.timeouts.cancelPendingTimeout(data.audio)
+        }
     }
 
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
@@ -111,6 +123,9 @@ object AudioEventHandler : AudioEventAdapter() {
                     if (data.audio.queue.isNotEmpty()) {
                         val next = removeAt(0)
                         player.playTrack(next)
+                    } else {
+                        // no more tracks being added, start timeout for leaving vc
+                        manager.timeouts.startTimeout(data.audio)
                     }
                 }
 

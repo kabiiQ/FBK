@@ -11,8 +11,10 @@ import java.nio.ByteBuffer
 internal data class AudioComponents(val player: AudioPlayer, val provider: AudioProvider)
 
 object AudioManager {
-    val manager = DefaultAudioPlayerManager()
     internal val guilds = mutableMapOf<Long, GuildAudio>()
+
+    val manager = DefaultAudioPlayerManager()
+    val timeouts = TimeoutManager()
 
     init {
         AudioSourceManagers.registerRemoteSources(manager)
