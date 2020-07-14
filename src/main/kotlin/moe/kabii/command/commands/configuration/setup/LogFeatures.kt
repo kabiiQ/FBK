@@ -58,12 +58,12 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
         ),
         StringElement(
             "Join message", listOf("joinMessage"), LogSettings::joinFormat,
-            prompt = "Enter a new message to be sent in this channel when users join this server and the join log is enabled. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.", // todo wiki page?
+            prompt = "Enter a new message to be sent in this channel when users join this server and the join log is enabled. See the [wiki page](Moderation-Logs#join-and-leave-message-configuration) for available variables. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.",
             default = LogSettings.defaultJoin
         ),
         StringElement(
             "Part (leave) message", listOf("partMessage", "leaveMessage"), LogSettings::partFormat,
-            prompt = "Enter a new message to be sent in this channel when users leave this server and the part log is enabled. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.",
+            prompt = "Enter a new message to be sent in this channel when users leave this server and the part log is enabled. See the [wiki page](Moderation-Logs#join-and-leave-message-configuration) for available variables. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.",
             default = LogSettings.defaultPart
         )
     )
