@@ -6,7 +6,7 @@ import moe.kabii.discord.util.Search
 import moe.kabii.structure.SourcePaths
 
 object CommandInfo : Command("command", "cmd", "commandinfo") {
-    override val wikiPath: String? by lazy { TODO() }
+    override val wikiPath = "Bot-Meta-Commands#command-information"
 
     init {
         discord {
@@ -29,6 +29,8 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
                 setTitle("Command information: ${match.baseName}")
                 if(match.wikiPath != null) {
                     setDescription("[Command Page](${match.wikiPath})")
+                } else {
+                    setDescription("Command wiki page not found.")
                 }
                 addField("All Command Aliases:", match.aliases.joinToString(", "), false)
                 if(!isPM) {

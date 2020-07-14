@@ -47,7 +47,7 @@ object EchoCommands : CommandContainer {
     }
 
     object Mod : Command("modcommand", "mod-command", "command-mod", "commandmod", "editmodcommand") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath: String? = null // undocumented, removal of twitch features pending
 
         init {
             discord {

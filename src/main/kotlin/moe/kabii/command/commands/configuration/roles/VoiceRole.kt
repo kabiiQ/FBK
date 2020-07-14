@@ -22,7 +22,6 @@ object VoiceRole : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
                 // voicerole(-)add channelid/all
                 if (args.isEmpty()) {
-                    // todo wiki link
                     usage("This command is used to create roles linked to a voice channel.", "autorole voice add <voice channel id or \"all\">").awaitSingle()
                     return@discord
                 }

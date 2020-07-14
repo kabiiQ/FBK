@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 
 object BotStats : CommandContainer {
     object Ping : Command("ping", "pong") {
-        override val wikiPath: String? by lazy { TODO() }
+        override val wikiPath = "Bot-Meta-Commands#ping"
 
         init {
             discord {
@@ -42,7 +42,7 @@ object BotStats : CommandContainer {
 
     private val uptimeFormat = "dddd'd'HH'h'mm'm'"
     object BotInfo : Command("bot", "botinfo", "botstats", "uptime") {
-        override val wikiPath: String? by lazy { TODO() }
+        override val wikiPath = "Bot-Meta-Commands#bot-info-command"
 
         init {
             discord {

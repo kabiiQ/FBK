@@ -48,8 +48,8 @@ object ChannelFeatures : CommandContainer {
         }
     }
 
-    object ListFeatureChannels : Command("channels", "featurechannels", "channelconfigs") {
-        override val wikiPath by lazy { TODO() }
+    object ListFeatureChannels : Command("channels", "featurechannels", "channelconfigs", "channelfeatures") {
+        override val wikiPath = "Configuration-Commands#listing-enabled-channel-features-in-the-server"
 
         init {
             discord {
