@@ -25,7 +25,7 @@ object Purge : CommandContainer {
         var messageCount = 0
         val users = mutableSetOf<Snowflake>()
 
-        messages
+        val skipped = messages
             .filterNot(Message::isPinned)
             .filter { message -> shouldPurge(message.author.get().id) }
             .doOnNext { message ->
@@ -34,12 +34,10 @@ object Purge : CommandContainer {
             }
             .map(Message::getId)
             .transform(origin.chan::bulkDelete) // returns messages which could not be bulk deleted
-            .take(25) // arbitrary limit for manual one-by-one deletes
-            .flatMap(origin.chan::getMessageById)
-            .flatMap(Message::delete)
             .collectList()
             .awaitSingle()
-        origin.embed("Deleted $messageCount messages from ${users.size} users.").awaitSingle()
+        val warnSkip = if(skipped.isNotEmpty()) " ${skipped.size} messages were skipped as they were [too old](https://github.com/discord/discord-api-docs/issues/208) to be purged." else ""
+        origin.embed("Deleted $messageCount messages from ${users.size} users.$warnSkip").awaitSingle()
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
