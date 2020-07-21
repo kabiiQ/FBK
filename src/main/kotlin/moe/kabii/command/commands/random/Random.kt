@@ -118,7 +118,6 @@ object Random : CommandContainer {
 
         init {
             discord {
-                // TODO 8ball emoji
                 embed(magicball.random()).awaitSingle()
             }
             twitch {
@@ -143,19 +142,11 @@ object Random : CommandContainer {
         init {
             discord {
                 embed {
-                    setDescription(
-                        flip(
-                            author.username
-                        )
-                    )
+                    setDescription(flip(author.username))
                 }.awaitSingle()
             }
             twitch {
-                event.reply(
-                    flip(
-                        event.user.name
-                    )
-                )
+                event.reply(flip(event.user.name))
             }
         }
     }

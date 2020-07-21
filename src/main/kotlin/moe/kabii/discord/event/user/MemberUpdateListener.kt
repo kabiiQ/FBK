@@ -5,9 +5,9 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
-import moe.kabii.data.mongodb.FeatureChannel
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.LogSettings
+import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.RoleUtil
@@ -74,8 +74,8 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         embed.setDescription("Removed from role **${oldRole.name}**")
                         embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)
                     } }.subscribe()
-                    //}.subscribe { logMsg ->
-                      /* val auditEvent = AuditRoleUpdate(
+                    /* }  }.subscribe { logMsg ->
+                       val auditEvent = AuditRoleUpdate(
                            logMsg.channelId.asLong(),
                            logMsg.id.asLong(),
                            guild.id.asLong(),
@@ -83,7 +83,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                            oldRole.id,
                            member.id
                        )
-                       LogWatcher.auditEvent(event.client, auditEvent)*/ // currently d4j issue preventing this
+                       LogWatcher.auditEvent(event.client, auditEvent) } */ // currently d4j issue preventing this
                 }
         }
     }
