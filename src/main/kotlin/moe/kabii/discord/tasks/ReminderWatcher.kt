@@ -5,7 +5,6 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
@@ -66,7 +65,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
     private suspend fun scheduleReminder(reminder: Reminder) {
         // todo check if was old reminder
         val time = Duration.between(Instant.now(), reminder.remind.javaInstant)
-        delay(time)
+        delay(max(time.toMillis(), 0L))
         val user = discord.getUserById(reminder.user.userID.snowflake)
             .tryAwait().orNull()
         if(user == null) {
