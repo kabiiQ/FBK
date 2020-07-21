@@ -32,6 +32,7 @@ object MALParser : MediaListParser() {
                         400 -> {
                             // currently 400 bad request from MAL means list does not exist
                             // TODO untrack / notify server? need process to handle this event
+                            LOG.warn("MAL 400: list not found")
                             Err(MediaListEmpty)
                         }
                         429 -> Err(MediaListRateLimit(2000L)) // if jikan is being rate limited by mal, we wait arbitrary amount of time

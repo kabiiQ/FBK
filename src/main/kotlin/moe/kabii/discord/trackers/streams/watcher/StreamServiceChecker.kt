@@ -211,7 +211,10 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     spec.setEmbed(embed.automatic)
                 }.tryAwait().orNull()
 
-                if(newNotification == null) return@forEach // can't post message, probably want some mech for untracking in this case. todo?
+                if(newNotification == null) {
+                    LOG.warn("Unable to post message to ${chan.id.asString()}")
+                    return@forEach
+                } // can't post message, probably want some mech for untracking in this case. todo?
                 TrackedStreams.Notification.new {
                     this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
                         .elementAtOrElse(0) { _ ->
