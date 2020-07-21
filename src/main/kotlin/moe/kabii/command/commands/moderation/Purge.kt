@@ -43,7 +43,7 @@ object Purge : CommandContainer {
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Purge-Messages#purging-by-specifying-the-number-of-messages-to-delete-purge"
 
         init {
             botReqs(Permission.MANAGE_MESSAGES)
@@ -68,7 +68,7 @@ object Purge : CommandContainer {
     }
 
     object PurgeFrom : Command("purgefrom", "purgeafter", "cleanfrom", "cleanafter", "prunefrom", "pruneafter") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Purge-Messages#purging-by-specifying-the-first-message-id-to-delete-purgefrom"
 
         init {
             botReqs(Permission.MANAGE_MESSAGES)
@@ -91,7 +91,7 @@ object Purge : CommandContainer {
     }
 
     object PurgeBetween : Command("purgebetween", "cleanbetween", "prunebetween") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "Purge-Messages#purging-by-specifying-the-first-and-last-messages-to-delete-purgebetween"
 
         init {
             botReqs(Permission.MANAGE_MESSAGES)

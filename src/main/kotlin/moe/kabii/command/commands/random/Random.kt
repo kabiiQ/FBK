@@ -9,7 +9,7 @@ import moe.kabii.structure.reply
 
 object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "RNG-Commands#the-roll-command"
 
         private fun roll(args: List<String>): Pair<String, ULong> {
             fun arg(index: Int) = args.getOrNull(index)?.toULongOrNull()
@@ -64,7 +64,7 @@ object Random : CommandContainer {
     }
 
     object Pick : Command("pick", "choose", "select") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "RNG-Commands#the-pick-command"
 
         init {
             discord {
@@ -91,7 +91,7 @@ object Random : CommandContainer {
     }
 
     object Ask : Command("ask", "question", "8ball", "magic8ball", "magic8") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "RNG-Commands#the-ask-command"
 
         private val magicball = arrayOf(
                 "It is certain.",
@@ -128,7 +128,7 @@ object Random : CommandContainer {
     }
 
     object Coinflip : Command("coinflip", "flip", "coin", "coin-flip", "flipcoin", "headsortails") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath = "RNG-Commands#the-flip-command"
 
         private val flip = { user: String ->
             val flip = when ((0..1000).random()) {

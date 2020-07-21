@@ -6,7 +6,7 @@ import moe.kabii.structure.reply
 
 
 object Vinglish : Command("vinglish", "garble") {
-    override val wikiPath by lazy { TODO() }
+    override val wikiPath = "Other-Commands#garble-text-"
 
     private fun random() = (1..100).random() / 100.00
     private val vinglishify = { original: String ->

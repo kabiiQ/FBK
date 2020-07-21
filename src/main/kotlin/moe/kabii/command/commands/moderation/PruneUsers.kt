@@ -8,7 +8,7 @@ import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
 
 object PruneUsers : Command("prunemembers") {
-    override val wikiPath by lazy { TODO() }
+    override val wikiPath: String? = null // intentionally undocumented command (for now)
 
     init {
         botReqs(Permission.KICK_MEMBERS)
