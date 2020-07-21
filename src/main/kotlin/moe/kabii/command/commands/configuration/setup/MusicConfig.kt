@@ -1,7 +1,7 @@
 package moe.kabii.command.commands.configuration.setup
 
 import discord4j.rest.util.Permission
-import moe.kabii.data.mongodb.MusicSettings
+import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify

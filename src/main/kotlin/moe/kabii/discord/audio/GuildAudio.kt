@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.MusicSettings
+import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.rusty.Err
@@ -91,7 +91,6 @@ data class GuildAudio(
          }
      }
 
-    @Suppress("unused") // todo: currently seems to be a non-issue
     suspend fun refreshAudio(voice: VoiceChannel?): GuildAudio {
         discord.mutex.withLock {
             // save current playback state if track is playing

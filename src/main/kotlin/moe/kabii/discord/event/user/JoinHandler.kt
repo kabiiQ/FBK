@@ -8,6 +8,9 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.*
+import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.data.mongodb.guilds.JoinConfiguration
+import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err

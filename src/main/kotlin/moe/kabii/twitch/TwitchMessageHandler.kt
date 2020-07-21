@@ -7,7 +7,7 @@ import moe.kabii.command.CommandManager
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.TwitchConfig
+import moe.kabii.data.mongodb.guilds.TwitchConfig
 import moe.kabii.command.params.TwitchParameters
 import moe.kabii.structure.reply
 import moe.kabii.structure.stackTraceString
@@ -30,7 +30,8 @@ class TwitchMessageHandler(val manager: CommandManager) {
             if (verification != null) {
                 if (event.message.trim().toLowerCase().startsWith(";verify") && event.permissions.contains(CommandPermission.MODERATOR)) {
                     val targetConfig = verification.value
-                    targetConfig.options.linkedTwitchChannel = TwitchConfig(verification.key)
+                    targetConfig.options.linkedTwitchChannel =
+                        TwitchConfig(verification.key)
                     targetConfig.save()
                     TempStates.twitchVerify.remove(verification.key)
                     event.reply("Chat linked! Hello :)")

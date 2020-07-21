@@ -2,7 +2,7 @@ package moe.kabii.command.commands.configuration
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.EchoCommand
+import moe.kabii.data.mongodb.guilds.EchoCommand
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer

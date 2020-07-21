@@ -3,7 +3,7 @@ package moe.kabii.command.commands.configuration.roles
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.ExclusiveRoleSet
+import moe.kabii.data.mongodb.guilds.ExclusiveRoleSet
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify

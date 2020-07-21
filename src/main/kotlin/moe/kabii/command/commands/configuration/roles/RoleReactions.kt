@@ -6,7 +6,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.data.mongodb.ReactionRoleConfig
+import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
@@ -99,7 +99,11 @@ object RoleReactions : CommandContainer {
                     return@discord
                 }
 
-                val newCfg = ReactionRoleConfig(MessageInfo.of(message), reactEmoji, role.id.asLong())
+                val newCfg = ReactionRoleConfig(
+                    MessageInfo.of(message),
+                    reactEmoji,
+                    role.id.asLong()
+                )
                 configs.add(newCfg)
                 config.save()
                 val link = "https://discordapp.com/channels/${target.id.asLong()}/${message.channelId.asLong()}/${message.id.asLong()}"

@@ -2,7 +2,7 @@ package moe.kabii.command.commands.configuration.setup
 
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
-import moe.kabii.data.mongodb.LogSettings
+import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 

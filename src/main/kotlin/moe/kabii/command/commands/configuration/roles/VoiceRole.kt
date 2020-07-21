@@ -3,7 +3,7 @@ package moe.kabii.command.commands.configuration.roles
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.VoiceConfiguration
+import moe.kabii.data.mongodb.guilds.VoiceConfiguration
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
@@ -53,7 +53,10 @@ object VoiceRole : CommandContainer {
                     spec.setName(vcName)
                 }.awaitSingle()
                 val roleSetup =
-                    VoiceConfiguration(channelTarget?.id?.asLong(), newRole.id.asLong())
+                    VoiceConfiguration(
+                        channelTarget?.id?.asLong(),
+                        newRole.id.asLong()
+                    )
                 configs.add(roleSetup)
                 config.save()
                 val describe = if(channelTarget == null) "users in any voice channel" else "users in the voice channel **${channelTarget.name}**"

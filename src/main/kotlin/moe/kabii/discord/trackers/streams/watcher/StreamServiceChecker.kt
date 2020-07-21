@@ -6,7 +6,7 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import moe.kabii.LOG
-import moe.kabii.data.mongodb.FeatureSettings
+import moe.kabii.data.mongodb.guilds.FeatureSettings
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams

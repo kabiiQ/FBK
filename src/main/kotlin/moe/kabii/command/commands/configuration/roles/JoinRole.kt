@@ -2,7 +2,7 @@ package moe.kabii.command.commands.configuration.roles
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.JoinConfiguration
+import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
@@ -73,7 +73,8 @@ object JoinRole : CommandContainer {
                     error("An existing autorole already exists matching this configuration.").awaitSingle()
                     return@discord
                 }
-                val new = JoinConfiguration(inviteArg, role.id.asLong())
+                val new =
+                    JoinConfiguration(inviteArg, role.id.asLong())
                 configs.add(new)
                 config.save()
                 val describe = if(inviteArg == null) "all users joining **${target.name}**" else "users joining **${target.name}** with invite code **$inviteArg** will be given"

@@ -2,7 +2,7 @@ package moe.kabii.command.commands.configuration.setup
 
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
-import moe.kabii.data.mongodb.FeatureSettings
+import moe.kabii.data.mongodb.guilds.FeatureSettings
 import moe.kabii.command.Command
 
 object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "animeconfig", "mangaconfig", "animelistconfig", "trackerconfig", "kitsuconfig") {

@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.streams
 
 import discord4j.rest.util.Color
-import moe.kabii.data.mongodb.FeatureSettings
+import moe.kabii.data.mongodb.guilds.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.javaInstant
