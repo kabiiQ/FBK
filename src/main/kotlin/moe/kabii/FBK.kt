@@ -8,6 +8,8 @@ import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -74,7 +76,7 @@ fun main() {
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
-    val gateway = requireNotNull(discord.login().block())
+    val gateway = checkNotNull(discord.login().block())
 
     // begin listening for terminal commands
     TerminalListener(manager, gateway).launch()

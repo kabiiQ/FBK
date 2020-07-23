@@ -42,7 +42,6 @@ object MusicConfig : CommandContainer {
                 listOf("ratio", "skipratio"),
                 MusicSettings::skipRatio,
                 range = 1..100L,
-                default = MusicSettings.defaultRatio,
                 prompt = "Enter the new value for the vote skip ratio (% of users in channel needed to vote skip). If either the user ratio or the user count votes, the current song will be skipped. For example, type 50 if you want a vote skip to require half the users in the channel."
             ),
             LongElement(
@@ -50,7 +49,6 @@ object MusicConfig : CommandContainer {
                 listOf("count", "usercount", "skipcount"),
                 MusicSettings::skipUsers,
                 range = 1..20L,
-                default = MusicSettings.defaultUsers,
                 prompt = "Enter the new value for the minimum users to vote skip a song. If either the user ratio or the user count is reached, the current song will be skipped."
             ),
             LongElement(
@@ -58,7 +56,6 @@ object MusicConfig : CommandContainer {
                 listOf("max", "tracks", "maxtracks"),
                 MusicSettings::maxTracksUser,
                 range = 0..Long.MAX_VALUE,
-                default = MusicSettings.defaultMaxTracksUser,
                 prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
             ),
             LongElement(
@@ -66,7 +63,6 @@ object MusicConfig : CommandContainer {
                 listOf("volumeLimit", "maxVolume", "limit"),
                 MusicSettings::volumeLimit,
                 range = 0..Short.MAX_VALUE.toLong(),
-                default = MusicSettings.defaultVolumeLimit,
                 prompt = "Enter the new absolute maximum volume that server admins can enter using the volume command. Normal users will still be limited to 5-25 volume and moderators limited within 0-100 volume."
             )
         )

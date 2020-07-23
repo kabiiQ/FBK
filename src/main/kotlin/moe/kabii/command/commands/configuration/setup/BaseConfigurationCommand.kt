@@ -26,8 +26,7 @@ class DoubleElement<T>(
     aliases: List<String>,
     val prop: KMutableProperty1<T, Double>,
     val range: ClosedRange<Double>,
-    val prompt: String,
-    val default: Double
+    val prompt: String
 ) : ConfigurationElement<T>(fullName, aliases)
 
 class LongElement<T>(
@@ -35,8 +34,7 @@ class LongElement<T>(
     aliases: List<String>,
     val prop: KMutableProperty1<T, Long>,
     val range: LongRange,
-    val prompt: String,
-    val default: Long
+    val prompt: String
 ) : ConfigurationElement<T>(fullName, aliases)
 
 open class ConfigurationModule<T>(val name: String, vararg val elements: ConfigurationElement<T>)
