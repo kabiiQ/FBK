@@ -1,12 +1,13 @@
 package moe.kabii.util
 
 object EmojiCharacters {
-    val cancel = "\u274C"
-    val yes = "\uD83C\uDDFE"
-    val no = "\uD83C\uDDF3"
-    val regionalChar = "\uD83C"
-    val check = "\u2714"
-    val checkBox = "\u2705"
-    val redX = "\u274C"
-    val alarm = "\u23F0"
+    const val cancel = "\u274C"
+    const val yes = "\uD83C\uDDFE"
+    const val no = "\uD83C\uDDF3"
+    const val regionalChar = "\uD83C"
+    const val check = "\u2714"
+    const val checkBox = "\u2705"
+    const val redX = "\u274C"
+    const val alarm = "\u23F0"
+    const val star = "\u2B50"
 }

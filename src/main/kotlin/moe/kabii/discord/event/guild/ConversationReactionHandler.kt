@@ -9,7 +9,7 @@ import moe.kabii.discord.conversation.ReactionManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 
-object ReactionHandler {
+object ConversationReactionHandler {
     object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
         override suspend fun handle(event: ReactionAddEvent) = handleReaction(event.messageId, event.userId, event.emoji, true)
     }

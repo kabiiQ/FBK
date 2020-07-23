@@ -20,7 +20,7 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
 
     override fun run() {
         loop {
-            val line = requireNotNull(readLine()) { "Terminal input ending" }
+            val line = checkNotNull(readLine()) { "Terminal input ending" }
             manager.context.launch {
                 if(line.isBlank()) return@launch
 
