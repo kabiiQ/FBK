@@ -8,12 +8,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.runBlocking
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.errorColor
 import moe.kabii.command.fbkColor
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryBlock

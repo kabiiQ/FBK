@@ -2,11 +2,11 @@ package moe.kabii.command.commands.configuration.roles
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait

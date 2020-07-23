@@ -6,7 +6,6 @@ import com.squareup.moshi.JsonDataException
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Message
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result

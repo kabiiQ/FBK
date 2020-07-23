@@ -1,21 +1,15 @@
 package moe.kabii.data.mongodb.guilds
 
-import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.structure.*
 import moe.kabii.util.EmojiCharacters
-import java.util.function.Consumer
 
 data class StarboardSetup(
     var channel: Long,

@@ -3,10 +3,10 @@ package moe.kabii.command.commands.twitch
 import com.github.twitch4j.TwitchClient
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.TempStates
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
+import moe.kabii.data.TempStates
 import moe.kabii.discord.trackers.streams.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok

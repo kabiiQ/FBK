@@ -1,13 +1,10 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.TextChannel
-import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup

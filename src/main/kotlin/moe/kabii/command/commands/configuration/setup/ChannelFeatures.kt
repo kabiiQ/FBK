@@ -4,9 +4,9 @@ import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.snowflake

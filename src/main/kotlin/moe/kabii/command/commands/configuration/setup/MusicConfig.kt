@@ -1,10 +1,10 @@
 package moe.kabii.command.commands.configuration.setup
 
 import discord4j.rest.util.Permission
-import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.guilds.MusicSettings
 
 object MusicConfig : CommandContainer {
     object MusicBot : Command("musicbot", "musicconfig", "musicsetup", "music", "musicsettings") {

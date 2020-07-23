@@ -1,9 +1,9 @@
 package moe.kabii.command.commands.search
 
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.mongodb.guilds.FeatureSettings
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureSettings
 import moe.kabii.discord.trackers.streams.StreamEmbedBuilder
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 

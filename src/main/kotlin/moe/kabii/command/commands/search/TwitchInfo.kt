@@ -12,7 +12,8 @@ import java.time.Instant
 
 object TwitchInfo : CommandContainer {
     object Title : Command("title", "streamtitle", "streamname") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath: String?
+            get() = TODO()
 
         init {
             twitch {

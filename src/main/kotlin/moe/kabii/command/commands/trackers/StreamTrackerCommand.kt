@@ -3,12 +3,12 @@ package moe.kabii.command.commands.trackers
 import discord4j.common.util.Snowflake
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.hasPermissions
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.command.params.DiscordParameters
-import moe.kabii.command.FeatureDisabledException
-import moe.kabii.command.hasPermissions
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

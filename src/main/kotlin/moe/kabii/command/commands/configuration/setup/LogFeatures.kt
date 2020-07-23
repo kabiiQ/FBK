@@ -2,9 +2,9 @@ package moe.kabii.command.commands.configuration.setup
 
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
-import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.command.Command
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.guilds.LogSettings
 
 object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
     override val wikiPath = "Moderation-Logs"

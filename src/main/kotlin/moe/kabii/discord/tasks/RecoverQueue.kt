@@ -13,10 +13,10 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.command.fbkColor
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.command.fbkColor
 import moe.kabii.structure.snowflake
 import java.util.concurrent.Executors
 

@@ -6,9 +6,9 @@ import discord4j.core.event.domain.message.MessageDeleteEvent
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.command.fbkColor
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
-import moe.kabii.command.fbkColor
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake

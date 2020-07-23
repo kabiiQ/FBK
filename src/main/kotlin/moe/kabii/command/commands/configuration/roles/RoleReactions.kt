@@ -5,19 +5,16 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
-import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.*
 import moe.kabii.util.EmojiUtil
 
 object RoleReactions : CommandContainer {

@@ -1,13 +1,13 @@
 package moe.kabii.command.commands.trackers
 
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.Command
+import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.ListInfo
 import moe.kabii.data.mongodb.MediaSite
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
-import moe.kabii.command.params.DiscordParameters
 
 private enum class Action { TRACK, UNTRACK }
 

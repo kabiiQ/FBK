@@ -1,7 +1,7 @@
 package moe.kabii.discord.audio
 
-import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
 
 data class ExtractedQuery private constructor(val url: String, val timestamp: Long, val sample: Long?, val volume: Int) {

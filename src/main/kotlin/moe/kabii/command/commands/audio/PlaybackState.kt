@@ -2,10 +2,10 @@ package moe.kabii.command.commands.audio
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.audio.QueueData
 import moe.kabii.command.Command
 import moe.kabii.command.hasPermissions
+import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.audio.QueueData
 
 object PlaybackState : AudioCommandContainer {
     object PausePlayback : Command("pause", "pausequeue") {

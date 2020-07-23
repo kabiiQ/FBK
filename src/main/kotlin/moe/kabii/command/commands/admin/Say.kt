@@ -1,8 +1,6 @@
 package moe.kabii.command.commands.admin
 
 import discord4j.core.`object`.entity.channel.TextChannel
-import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait

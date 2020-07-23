@@ -5,10 +5,10 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.streams.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.util.RoleUtil

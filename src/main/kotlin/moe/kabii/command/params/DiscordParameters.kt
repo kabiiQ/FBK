@@ -16,11 +16,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.conversation.*
-import moe.kabii.discord.conversation.BoolResponseCriteria
-import moe.kabii.discord.conversation.Criteria
-import moe.kabii.discord.conversation.DoubleResponseCriteria
-import moe.kabii.discord.conversation.LongResponseCriteria
-import moe.kabii.discord.conversation.PageResponseCriteria
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.EmbedReceiver

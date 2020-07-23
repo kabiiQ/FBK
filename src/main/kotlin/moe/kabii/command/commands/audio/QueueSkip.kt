@@ -2,9 +2,9 @@ package moe.kabii.command.commands.audio
 
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
+import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.command.Command
 
 object QueueSkip : AudioCommandContainer {
     object VoteSkip : Command("skip", "voteskip", "skipsong") {

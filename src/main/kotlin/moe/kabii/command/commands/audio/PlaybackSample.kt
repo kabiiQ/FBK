@@ -1,9 +1,9 @@
 package moe.kabii.command.commands.audio
 
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.command.Command
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
