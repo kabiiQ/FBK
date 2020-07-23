@@ -4,6 +4,9 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Message
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -67,4 +70,10 @@ fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try
 
 fun loop(process: () -> Unit) {
     while(true) process.invoke()
+}
+
+suspend fun Message.createJumpLink(): String {
+    val guild = guild.awaitFirstOrNull()
+    return if(guild != null) "https://discord.com/channels/${guild.id.asString()}/${channelId.asString()}/${id.asString()}"
+    else "https://discord.com/channels/@me/${channelId.asString()}/${id.asString()}"
 }

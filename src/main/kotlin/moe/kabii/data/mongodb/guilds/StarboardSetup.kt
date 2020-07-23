@@ -71,14 +71,13 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${EmojiCharacters.star} $stars <#${starboard.channel}>$mention"
     }
 
-    fun starboardEmbed(message: Message): EmbedBlock = {
+    fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
         setDescription(message.content)
         val attachment = message.attachments.firstOrNull()
         if(attachment != null) {
             setImage(attachment.url)
         }
-        // TODO jumplink
-        addField("Link", "[Jump to message](https://discord.com)", false)
+        addField("Link", "[Jump to message]($jumpLink)", false)
         setFooter("Message ID: ${message.id.asString()}, sent ", null)
         setTimestamp(message.timestamp)
     }
@@ -87,9 +86,10 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val starboardChannel = getStarboardChannel()
         val starCount = stars.count().toLong()
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
+        val jumpLink = message.createJumpLink()
         val starboardMessage = starboardChannel.createMessage { spec ->
             spec.setContent(starboardContent(starCount, authorId))
-            spec.setEmbed(starboardEmbed(message))
+            spec.setEmbed(starboardEmbed(message, jumpLink))
         }.awaitSingle()
 
         val starboarded = StarredMessage(message.id.asLong(), starboardMessage.id.asLong(), authorId, stars, exempt)

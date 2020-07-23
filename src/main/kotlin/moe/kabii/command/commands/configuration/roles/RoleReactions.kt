@@ -106,7 +106,7 @@ object RoleReactions : CommandContainer {
                 )
                 configs.add(newCfg)
                 config.save()
-                val link = "https://discordapp.com/channels/${target.id.asLong()}/${message.channelId.asLong()}/${message.id.asLong()}"
+                val link = message.createJumpLink()
                 embed("A reaction role for **${role.name}** has been configured on message [${message.id.asString()}]($link).").awaitSingle()
             }
         }
@@ -190,7 +190,7 @@ object RoleReactions : CommandContainer {
                                 runBlocking { config.save() }
                                 "Removed config in invalid channel $channelID"
                             } else {
-                                val link = "https://discordapp.com/channels/${target.id.asString()}/${reactConfig.message.channelID}/${reactConfig.message.messageID}"
+                                val link = "https://discord.com/channels/${target.id.asString()}/${reactConfig.message.channelID}/${reactConfig.message.messageID}"
                                 "Message #[${reactConfig.message.messageID}]($link) in ${channel.name} for role **${role.name}**";
                             }
                         }

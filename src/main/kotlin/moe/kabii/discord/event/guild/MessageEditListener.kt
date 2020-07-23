@@ -47,7 +47,7 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
 
         val msgChannel = event.channel.ofType(TextChannel::class.java).awaitSingle()
         val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
-        val jumpLink = "https://discord.com/channels/${guildID.asString()}/${msgChannel.id.asString()}/${message.id.asString()}"
+        val jumpLink = message.createJumpLink()
 
         // post edit message
         editLogs.toFlux()
