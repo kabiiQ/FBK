@@ -84,12 +84,12 @@ object Search {
         val client = param.event.client
         val snowflake = query.toLongOrNull()?.snowflake
         if(snowflake != null) {
-            val channel = client.getChannelById(snowflake).tryAwait()
+            val channel = param.target.getChannelById(snowflake).tryAwait()
             if(channel is Ok) return channel.value as? R
         }
         // channel mention
         val mention = channelMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
-        return mention?.run { client.getChannelById(this).tryAwait().orNull() as? R? }
+        return mention?.run { param.target.getChannelById(this).tryAwait().orNull() as? R? }
     }
 
     fun commandByAlias(handler: MessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
