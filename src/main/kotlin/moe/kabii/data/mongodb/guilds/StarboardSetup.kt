@@ -1,0 +1,122 @@
+package moe.kabii.data.mongodb.guilds
+
+import discord4j.common.util.Snowflake
+import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.Guild
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageEditSpec
+import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
+import moe.kabii.data.mongodb.GuildConfiguration
+import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.structure.*
+import moe.kabii.util.EmojiCharacters
+import java.util.function.Consumer
+
+data class StarboardSetup(
+    var channel: Long,
+    var starsAdd: Long = 3L,
+    var starsRemove: Long = 1L,
+    var removeOnClear: Boolean = true,
+    var removeOnDelete: Boolean = true,
+    var mentionUser: Boolean = false,
+    var includeNsfw: Boolean = false,
+    val starred: MutableList<StarredMessage> = mutableListOf()
+) {
+    fun asStarboard(guild: Guild, config: GuildConfiguration) = Starboard(this, guild, config)
+    fun findAssociated(messageId: Long) = starred.find { starred -> starred.starboardMessageId == messageId || starred.messageId == messageId }
+}
+
+data class StarredMessage(
+    val messageId: Long,
+    val starboardMessageId: Long,
+    val originalAuthorId: Long?,
+    val stars: MutableSet<Long>,
+    val exempt: Boolean = false
+)
+
+class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {
+    private suspend fun getStarboardChannel(): TextChannel {
+        return try {
+            guild.getChannelById(starboard.channel.snowflake).awaitSingle() as TextChannel
+        } catch(ce: ClientException) {
+            if(ce.status.code() == 404) {
+                LOG.info("Starboard for guild ${guild.id.asString()} not found. Channel ${starboard.channel} does not exist. Removing configuration.")
+                config.starboard = null
+                config.save()
+            } else LOG.debug("Couldn't access Starboard for guild ${guild.id.asString()}")
+            throw ce
+        }
+    }
+
+    private suspend fun getStarboardMessage(channel: TextChannel, message: StarredMessage): Message {
+        return try {
+            channel.getMessageById(message.starboardMessageId.snowflake).awaitSingle()
+        } catch(ce: ClientException) {
+            if(ce.status.code() == 404) {
+                LOG.trace("Unable to retrieve starboard message :: ${ce.stackTraceString}")
+                starboard.starred.remove(message)
+                config.save()
+            }
+            throw ce
+        }
+    }
+
+    fun starboardContent(stars: Long, author: Long?): String {
+        val mention = if(author != null) " <@$author>" else ""
+        return "${EmojiCharacters.star} $stars <#${starboard.channel}>$mention"
+    }
+
+    fun starboardEmbed(message: Message): EmbedBlock = {
+        setDescription(message.content)
+        val attachment = message.attachments.firstOrNull()
+        if(attachment != null) {
+            setImage(attachment.url)
+        }
+        // TODO jumplink
+        addField("Link", "[Jump to message](https://discord.com)", false)
+        setFooter("Message ID: ${message.id.asString()}, sent ", null)
+        setTimestamp(message.timestamp)
+    }
+
+    suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) {
+        val starboardChannel = getStarboardChannel()
+        val starCount = stars.count().toLong()
+        val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
+        val starboardMessage = starboardChannel.createMessage { spec ->
+            spec.setContent(starboardContent(starCount, authorId))
+            spec.setEmbed(starboardEmbed(message))
+        }.awaitSingle()
+
+        val starboarded = StarredMessage(message.id.asLong(), starboardMessage.id.asLong(), authorId, stars, exempt)
+        starboard.starred.add(starboarded)
+        config.save()
+
+        // add star reaction to starboard post
+        starboardMessage.addReaction(ReactionEmoji.unicode(EmojiCharacters.star)).success().tryAwait()
+    }
+
+    suspend fun removeFromBoard(message: StarredMessage) {
+        val starboardChannel = getStarboardChannel()
+        starboard.starred.remove(message)
+        config.save()
+        val starboardMessage = getStarboardMessage(starboardChannel, message)
+        // bot owns message, can always delete
+        starboardMessage.delete().success().tryAwait()
+    }
+
+    suspend fun updateCount(message: StarredMessage) {
+        config.save()
+        val starboardChannel = getStarboardChannel()
+        val starboardMessage = getStarboardMessage(starboardChannel, message)
+
+        val starCount = message.stars.count().toLong()
+        starboardMessage.edit { spec ->
+            spec.setContent(starboardContent(starCount, message.originalAuthorId))
+        }.awaitSingle()
+    }
+}

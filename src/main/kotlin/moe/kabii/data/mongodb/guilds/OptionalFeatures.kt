@@ -12,9 +12,8 @@ data class FeatureChannel(
     var logChannel: Boolean = false,
     var musicChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
-    val logSettings: LogSettings = LogSettings(
-        channelID
-    ),
+    var allowStarboarding: Boolean = true,
+    val logSettings: LogSettings = LogSettings(channelID),
     val featureSettings: FeatureSettings = FeatureSettings()
 ) {
     fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
