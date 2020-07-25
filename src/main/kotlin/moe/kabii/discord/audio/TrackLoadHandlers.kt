@@ -41,16 +41,19 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         data.volume = extract.volume
     }
 
-    override fun trackLoaded(track: AudioTrack) {
+    override fun trackLoaded(track: AudioTrack) = trackLoadedModifiers(track)
+
+    fun trackLoadedModifiers(track: AudioTrack, silent: Boolean = false, warnPlaylist: Boolean = false) {
         val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
         data.associatedMessages.add(QueueData.BotMessage.UserPlayCommand(origin.event.message.channelId, origin.event.message.id))
         // set track
         if(!audio.player.startTrack(track, true)) {
-            val paused = if(audio.player.isPaused) " \n\n**The bot is currently paused.** " else ""
+            val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else ""
+            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, use the **playlist** command rather than **play**." else ""
             val add = runBlocking { audio.tryAdd(track, origin.member, position) }
-            if(data.silent) return // don't send any messages for this track
+            if(silent) return // don't send any messages for this track
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
                 origin.error {
@@ -68,11 +71,11 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
                 " Estimated time until playing: $formatted. "
             } else " Unknown queue length with a stream in queue. "
 
-            val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
+            val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
             origin.embed {
                 if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
-                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$paused$eta$looping")
+                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
             }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
             }.block()
         }
@@ -118,7 +121,7 @@ open class SingleTrackLoader(origin: DiscordParameters, private val position: In
         if(query != null) AudioManager.manager.loadItem(query, FallbackHandler(origin, position, extract))
     }
 
-    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoadedModifiers(playlist.tracks.first(), warnPlaylist = true)
 }
 
 class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : SingleTrackLoader(origin, position, extract) {

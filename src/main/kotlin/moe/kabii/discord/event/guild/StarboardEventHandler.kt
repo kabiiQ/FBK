@@ -18,7 +18,7 @@ object StarboardEventHandler {
 
             val guildId = event.guildId.orNull()?.asLong() ?: return
             // only continue if star reaction
-            if(event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
+            if(event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star }.orNull() == null) return
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)

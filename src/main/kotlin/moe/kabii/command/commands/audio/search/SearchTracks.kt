@@ -67,16 +67,11 @@ object SearchTracks : AudioCommandContainer {
                         }
                     }
                 }
-                val silent = selected.size > 1
+                val silent = selected.size > 1 // if multiple are selected, don't post a message for each one.
                 selected.forEach { selection ->
-                    val track = search[selection - 1].also { track ->
-                        if(silent) { // if multiple are selected, don't post a message for each one.
-                            val data = track.userData as QueueData
-                            data.silent = true
-                        }
-                    }
+                    val track = search[selection - 1]
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoaded(track)
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true)
                 }
                 embed.delete().tryAwait()
                 if(silent) {

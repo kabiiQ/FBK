@@ -86,11 +86,13 @@ object AudioEventHandler : AudioEventAdapter() {
         }
 
         // if the bot is not alone when something starts playing, cancel any inactivity timeouts
-        val alone = data.discord.getGuildById(guildID.snowflake)
-            .flatMap(BotUtil::getBotVoiceChannel)
-            .flatMap(BotUtil::isSingleClient)
-            .block()
-        if(alone == false) {
+        val alone = runBlocking {
+            data.discord.getGuildById(guildID.snowflake)
+                .flatMap(BotUtil::getBotVoiceChannel)
+                .flatMap(BotUtil::isSingleClient)
+                .awaitSingle()
+        }
+        if(alone != true) {
             AudioManager.timeouts.cancelPendingTimeout(data.audio)
         }
     }

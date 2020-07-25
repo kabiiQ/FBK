@@ -31,6 +31,7 @@ class TimeoutManager {
             delay(TIMEOUT_DELAY) // delay before actually leaving
 
             if(isActive) {
+                println("Timeout executing for guild ${guildAudio.discord}")
                 guildAudio.discord.connection?.disconnect()?.success()?.awaitSingle()
                 timeoutJobs.remove(guildAudio)
             }
