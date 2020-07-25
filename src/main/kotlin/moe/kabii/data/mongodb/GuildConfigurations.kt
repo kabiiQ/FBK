@@ -39,8 +39,7 @@ data class GuildConfiguration(
     val tempVoiceChannels: TempChannels = TempChannels(),
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
-    var starboard: StarboardSetup? = null,
-    val userLog: UserLog = UserLog()) {
+    var starboard: StarboardSetup? = null) {
 
     companion object {
         const val defaultPrefix = ";"
@@ -63,12 +62,3 @@ data class GuildConfiguration(
         GuildConfigurations.mongoConfigurations.deleteOneById(this._id)
     }
 }
-
-// todo should be sql data
-data class UserLog(
-    val users: MutableList<GuildMember> = mutableListOf())
-
-// separate data type for GuildMember because it will probably be expanded in the future to log more user info
-data class GuildMember(
-        var current: Boolean,
-        val userID: Long)

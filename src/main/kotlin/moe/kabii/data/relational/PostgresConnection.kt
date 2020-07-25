@@ -22,7 +22,8 @@ internal object PostgresConnection {
                 TrackedStreams.Targets,
                 TrackedStreams.Streams,
                 TrackedStreams.Notifications,
-                TrackedStreams.Mentions
+                TrackedStreams.Mentions,
+                UserLog.GuildRelationships
             )
         }
     }

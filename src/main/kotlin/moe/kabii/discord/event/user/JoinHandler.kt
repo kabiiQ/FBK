@@ -8,16 +8,17 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.GuildMember
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
+import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.success
 import moe.kabii.structure.tryAwait
+import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toFlux
 
 object JoinHandler {
@@ -28,16 +29,14 @@ object JoinHandler {
     suspend fun handleJoin(member: Member, online: Boolean = true) {
         val config = GuildConfigurations.getOrCreateGuild(member.guildId.asLong())
 
-        // create user log
-        val memberID = member.id.asLong()
-        val log = config.userLog.users.find { it.userID == memberID }
-        if (log == null) {
-            val guildMember = GuildMember(true, memberID)
-            config.userLog.users.add(guildMember)
-            config.save()
-        } else if (!log.current) {
-            log.current = true
-            config.save()
+        // create user log entry
+        val memberId = member.id.asLong()
+        val guildId = member.guildId.asLong()
+        transaction {
+            val logUser = UserLog.GuildRelationship.getOrInsert(memberId, guildId)
+            if(!logUser.currentMember) {
+                logUser.currentMember = true
+            }
         }
 
         var errorStr = ""
@@ -51,7 +50,7 @@ object JoinHandler {
         // reassign roles if the feature is enabled and the user rejoined. otherwise assign normal joinroles
         // currently intentional that users being reassigned roles don't get the autoroles
         // always remove saved roles on rejoin so nothing is stale in the long run
-        val reassign = config.autoRoles.rejoinRoles.remove(memberID)
+        val reassign = config.autoRoles.rejoinRoles.remove(memberId)
         val failedRoles = if(reassign != null && config.guildSettings.reassignRoles) {
             reassign.filter { roleID ->
                 !member.addRole(roleID.snowflake, "Reassigned roles").success().awaitFirst()

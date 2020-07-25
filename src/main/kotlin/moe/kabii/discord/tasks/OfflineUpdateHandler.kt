@@ -5,37 +5,41 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.GuildMember
+import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
 import moe.kabii.structure.withEach
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
     suspend fun runChecks(guild: Guild) {
         // sync all guild members
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-        val log = config.userLog.users
         val guildMembers = guild.members.collectList().awaitFirst()
+        val guildId = guild.id.asLong()
 
-        // check current members are all accounted for in log
-        guildMembers
-            .filter { member ->
-                log.find { logged -> logged.userID == member.id.asLong() } == null
-            }.forEach { member -> JoinHandler.handleJoin(member, online = false) }
+        newSuspendedTransaction {
+            val userLog = UserLog.GuildRelationship.getAllForGuild(guildId)
 
-        // check logged members are all present in server
-        log
-            .filter { logged ->
-                guildMembers.find { member -> logged.userID == member.id.asLong() } == null
-            }
-            .filter(GuildMember::current)
-            .forEach { part ->
-                val user = guild.client.getUserById(part.userID.snowflake).tryAwait().orNull() ?: return@forEach
-                PartHandler.handlePart(guild.id, user, null)
-            }
+            // make sure members are accounted for in log
+            guildMembers.filter { member ->
+                userLog.find { log -> log.user.userID == member.id.asLong() } == null
+            }.forEach { join -> JoinHandler.handleJoin(join, online = false) }
+
+            // check logged members are present in server
+            userLog
+                .filter { log ->
+                    guildMembers.find { member -> member.id.asLong() == log.user.userID } == null
+                }
+                .filter(UserLog.GuildRelationship::currentMember)
+                .forEach { part ->
+                    val user = guild.client.getUserById(part.user.userID.snowflake).tryAwait().orNull() ?: return@forEach
+                    PartHandler.handlePart(guild.id, user, null)
+                }
+        }
 
          // check for empty twitch follower roles
         val guildRoles = guild.roleIds

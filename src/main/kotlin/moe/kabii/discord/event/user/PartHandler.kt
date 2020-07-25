@@ -10,10 +10,12 @@ import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
+import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.long
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
+import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toFlux
 
 object PartHandler {
@@ -23,9 +25,6 @@ object PartHandler {
 
     suspend fun handlePart(guild: Snowflake, user: User, member: Member?) {
         val config = GuildConfigurations.getOrCreateGuild(guild.asLong())
-
-        val userID = user.id.asLong()
-        val log = config.userLog.users.find { it.userID == userID }
 
         // save current roles if this setting is enabled
         if(config.guildSettings.reassignRoles && member != null) {
@@ -57,8 +56,9 @@ object PartHandler {
                 }
         }.subscribe()
 
-        checkNotNull(log) { "User missing in DB: $userID" }
-        log.current = false
-        config.save()
+        transaction {
+            val logUser = UserLog.GuildRelationship.getOrInsert(user.id.asLong(), guild.long)
+            logUser.currentMember = false
+        }
     }
 }
