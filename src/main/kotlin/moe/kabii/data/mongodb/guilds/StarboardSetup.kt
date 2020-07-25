@@ -26,13 +26,16 @@ data class StarboardSetup(
     fun findAssociated(messageId: Long) = starred.find { starred -> starred.starboardMessageId == messageId || starred.messageId == messageId }
 }
 
-data class StarredMessage(
+class StarredMessage(
     val messageId: Long,
     val starboardMessageId: Long,
     val originalAuthorId: Long?,
     val stars: MutableSet<Long>,
     val exempt: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean = other is StarredMessage && other.starboardMessageId == starboardMessageId
+    override fun hashCode(): Int = starboardMessageId.hashCode()
+}
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {
     private suspend fun getStarboardChannel(): TextChannel {
@@ -67,6 +70,9 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
     }
 
     fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
+        val author = message.author.orNull()
+        setAuthor(author?.username ?: "Unknown", null, author?.avatarUrl)
+        starColor(this)
         setDescription(message.content)
         val attachment = message.attachments.firstOrNull()
         if(attachment != null) {

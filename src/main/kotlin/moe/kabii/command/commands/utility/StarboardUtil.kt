@@ -42,6 +42,11 @@ object StarboardUtil : CommandContainer {
                     return@discord
                 }
 
+                if(starboardCfg.findAssociated(targetId.asLong()) != null) {
+                    error("Message **${targetId}** is already starboarded.").awaitSingle()
+                    return@discord
+                }
+
                 val starboard = starboardCfg.asStarboard(target, config)
                 starboard.addToBoard(targetMessage, mutableSetOf(), exempt = true)
 

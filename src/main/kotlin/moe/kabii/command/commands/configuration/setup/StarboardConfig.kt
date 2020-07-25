@@ -12,7 +12,7 @@ import moe.kabii.discord.util.Search
 import moe.kabii.structure.orNull
 import moe.kabii.util.EmojiCharacters
 
-object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star") {
+object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {
     override val wikiPath: String?
         get() = TODO("pending docs")
 
