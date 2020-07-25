@@ -33,6 +33,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
+                validateChannel(this)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()
@@ -70,6 +71,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
+                validateChannel(this)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()
@@ -104,6 +106,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
+                validateChannel(this)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()

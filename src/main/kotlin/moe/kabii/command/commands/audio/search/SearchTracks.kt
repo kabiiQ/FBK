@@ -7,7 +7,6 @@ import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.commands.audio.ParseUtil
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
-import moe.kabii.discord.audio.QueueData
 import moe.kabii.structure.tryAwait
 
 object SearchTracks : AudioCommandContainer {
@@ -16,6 +15,7 @@ object SearchTracks : AudioCommandContainer {
 
         init {
             discord {
+                validateChannel(this)
                 // search source query
                 if(args.isEmpty()) {
                     usage("**search** is used to search a source for audio to play. You can provide the source (currently the only options are YouTube [yt] or SoundCloud [sc]) as the first argument, or YouTube will automatically be used.", "search (source) <query>").awaitSingle()
