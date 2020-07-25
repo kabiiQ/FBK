@@ -26,7 +26,8 @@ object OfflineUpdateHandler {
 
             // make sure members are accounted for in log
             guildMembers.filter { member ->
-                userLog.find { log -> log.user.userID == member.id.asLong() } == null
+                val find = userLog.find { log -> log.user.userID == member.id.asLong() }
+                find == null || !find.currentMember
             }.forEach { join -> JoinHandler.handleJoin(join, online = false) }
 
             // check logged members are present in server
