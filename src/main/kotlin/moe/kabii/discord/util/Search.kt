@@ -81,7 +81,6 @@ object Search {
     val channelMention = Regex("(<#)([0-9]+)(>)")
     suspend inline fun <reified R: GuildChannel> channelByID(param: DiscordParameters, query: String): R? {
         // check if this is a channel id
-        val client = param.event.client
         val snowflake = query.toLongOrNull()?.snowflake
         if(snowflake != null) {
             val channel = param.target.getChannelById(snowflake).tryAwait()

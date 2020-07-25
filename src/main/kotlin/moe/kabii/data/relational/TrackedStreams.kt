@@ -79,7 +79,8 @@ object TrackedStreams {
             fun getMentionsFor(guildID: Snowflake, streamChannelID: Long) = Mention.wrapRows(
                 Mentions
                     .innerJoin(StreamChannels)
-                    .innerJoin(DiscordObjects.Guilds).select {
+                    .innerJoin(DiscordObjects.Guilds)
+                    .select {
                         DiscordObjects.Guilds.guildID eq guildID.asLong() and
                                 (StreamChannels.siteChannelID eq streamChannelID)
                     })

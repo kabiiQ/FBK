@@ -2,7 +2,6 @@ package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -46,7 +45,6 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
         val editLogs = logs.filter(LogSettings::editLog)
         if(editLogs.none()) return
 
-        val msgChannel = event.channel.ofType(TextChannel::class.java).awaitSingle()
         val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
         val jumpLink = message.createJumpLink()
 
