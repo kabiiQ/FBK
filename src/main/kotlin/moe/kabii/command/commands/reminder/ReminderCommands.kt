@@ -3,11 +3,11 @@ package moe.kabii.command.commands.reminder
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.reminderColor
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
+import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.tryAwait
 import moe.kabii.util.DurationFormatter

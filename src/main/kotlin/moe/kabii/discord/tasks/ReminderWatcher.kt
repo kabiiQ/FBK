@@ -6,9 +6,9 @@ import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import kotlinx.coroutines.*
 import moe.kabii.LOG
-import moe.kabii.command.reminderColor
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
+import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters

@@ -5,9 +5,9 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.PermissionUtil
-import moe.kabii.command.errorColor
 import moe.kabii.command.verify
 import moe.kabii.discord.util.Search
+import moe.kabii.discord.util.errorColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.tryAwait

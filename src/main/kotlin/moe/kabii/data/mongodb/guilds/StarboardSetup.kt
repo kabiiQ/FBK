@@ -8,6 +8,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
+import moe.kabii.discord.util.starColor
 import moe.kabii.structure.*
 import moe.kabii.util.EmojiCharacters
 

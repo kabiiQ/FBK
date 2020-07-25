@@ -3,11 +3,11 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.logColor
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.logColor
 import moe.kabii.structure.orNull
 import moe.kabii.structure.snowflake
 import moe.kabii.structure.tryAwait
