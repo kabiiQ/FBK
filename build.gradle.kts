@@ -46,10 +46,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
 
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT") // reactor kotlin coroutine compat
+    implementation("io.projectreactor:reactor-core") {
+        version {
+            strictly("3.3.8.RELEASE")
+        }
+    }
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.1.0.RC2") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.1.0.RC4") // discord websocket and api
 
     // twitch irc
     implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.19")
