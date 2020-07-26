@@ -19,7 +19,7 @@ import moe.kabii.discord.trackers.anime.MediaList
 import moe.kabii.discord.trackers.anime.MediaType
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import reactor.core.publisher.Mono
 import java.time.Duration
 import java.time.Instant

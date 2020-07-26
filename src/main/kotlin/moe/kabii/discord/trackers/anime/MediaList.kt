@@ -7,7 +7,7 @@ import moe.kabii.OkHTTP
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.stackTraceString
+import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException

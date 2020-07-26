@@ -5,9 +5,9 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryAwait
 
 object UserModeration : CommandContainer {
     object SetSlowmode : Command("slowmode", "setslowmode", "set-slowmode") {

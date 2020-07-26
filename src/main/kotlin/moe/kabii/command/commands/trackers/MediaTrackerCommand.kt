@@ -16,8 +16,8 @@ import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 
 object MediaTrackerCommand : Tracker<TargetMediaList> {
     override suspend fun track(origin: DiscordParameters, target: TargetMediaList) {

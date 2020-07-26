@@ -8,7 +8,7 @@ import moe.kabii.data.Keys
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.fromJsonSafe
+import moe.kabii.structure.extensions.fromJsonSafe
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException

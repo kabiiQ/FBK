@@ -5,7 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.reply
+import moe.kabii.structure.extensions.reply
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.Instant

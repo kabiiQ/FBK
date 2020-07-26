@@ -5,8 +5,8 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.structure.UserID
-import moe.kabii.structure.success
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryBlock
 import reactor.core.publisher.Flux
 
 typealias Complete = Boolean

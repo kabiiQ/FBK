@@ -10,6 +10,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.util.starColor
 import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import moe.kabii.util.EmojiCharacters
 
 data class StarboardSetup(

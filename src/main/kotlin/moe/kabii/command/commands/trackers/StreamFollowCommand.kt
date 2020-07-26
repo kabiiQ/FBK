@@ -14,10 +14,10 @@ import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitchFollow : CommandContainer {

@@ -9,7 +9,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.orNull
+import moe.kabii.structure.extensions.orNull
 import moe.kabii.util.EmojiCharacters
 
 object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {

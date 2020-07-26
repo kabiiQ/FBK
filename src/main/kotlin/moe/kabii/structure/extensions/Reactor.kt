@@ -1,4 +1,4 @@
-package moe.kabii.structure
+package moe.kabii.structure.extensions
 
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import moe.kabii.LOG

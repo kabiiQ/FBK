@@ -7,7 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.EchoCommand
-import moe.kabii.structure.reply
+import moe.kabii.structure.extensions.reply
 
 object EchoCommands : CommandContainer {
     private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {

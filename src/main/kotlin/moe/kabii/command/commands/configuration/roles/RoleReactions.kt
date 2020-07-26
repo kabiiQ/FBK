@@ -14,7 +14,7 @@ import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import moe.kabii.util.EmojiUtil
 
 object RoleReactions : CommandContainer {

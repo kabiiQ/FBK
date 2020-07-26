@@ -10,9 +10,9 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.rusty.Err
-import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.orNull
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 import reactor.core.publisher.Mono
 
 object ReactionRoleHandler {

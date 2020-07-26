@@ -4,8 +4,8 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verify
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryAwait
 
 object PruneUsers : Command("prunemembers") {
     override val wikiPath: String? = null // intentionally undocumented command (for now)

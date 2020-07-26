@@ -21,7 +21,7 @@ import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.util.DurationFormatter
 import kotlin.reflect.KProperty1
 

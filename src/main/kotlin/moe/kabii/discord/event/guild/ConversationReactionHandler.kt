@@ -7,7 +7,7 @@ import discord4j.core.event.domain.message.ReactionRemoveEvent
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.discord.conversation.ReactionManager
 import moe.kabii.discord.event.EventListener
-import moe.kabii.structure.orNull
+import moe.kabii.structure.extensions.orNull
 
 object ConversationReactionHandler {
     object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {

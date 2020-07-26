@@ -7,8 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Preferences : CommandContainer {

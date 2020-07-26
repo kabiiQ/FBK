@@ -5,7 +5,7 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.structure.s
+import moe.kabii.structure.extensions.s
 import moe.kabii.util.YoutubeUtil
 
 object QueueInfo : AudioCommandContainer {

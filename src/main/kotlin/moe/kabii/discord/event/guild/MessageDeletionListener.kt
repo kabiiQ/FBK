@@ -10,10 +10,10 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.orNull
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.orNull
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux

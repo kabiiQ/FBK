@@ -7,9 +7,9 @@ import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.stackTraceString
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.tryAwait
 import reactor.core.publisher.Mono
 import java.time.Instant
 import java.util.concurrent.Executors

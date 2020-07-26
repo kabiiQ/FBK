@@ -8,8 +8,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.FeatureDisabledException
-import moe.kabii.structure.orNull
-import moe.kabii.structure.success
+import moe.kabii.structure.extensions.orNull
+import moe.kabii.structure.extensions.success
 
 object TemporaryChannels : CommandContainer {
     object CreateTempChannel : Command("temp", "tempchannel", "createtemp", "createtempchannel", "temporarychannel", "tempchan", "temporarychan") {

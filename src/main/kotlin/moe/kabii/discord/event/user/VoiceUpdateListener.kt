@@ -17,6 +17,7 @@ import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.logColor
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
@@ -62,7 +63,7 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
                     .ofType(MessageChannel::class.java)
                     .flatMap { chan ->
                         chan.createEmbed { embed ->
-                            embed.setAuthor("${user.username}#${user.discriminator}", null, user.avatarUrl)
+                            embed.userAsAuthor(user)
                             embed.setDescription(status)
                             logColor(member, embed)
                         }

@@ -8,8 +8,8 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 
 object SelfRoleCommands : CommandContainer {
     object RoleCommands : Command("rolecommands", "rolecommand") {

@@ -10,6 +10,7 @@ import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction

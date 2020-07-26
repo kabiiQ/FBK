@@ -8,7 +8,7 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.withEach
+import moe.kabii.structure.extensions.withEach
 import moe.kabii.util.NumberUtil
 
 object QueueEdit : AudioCommandContainer {

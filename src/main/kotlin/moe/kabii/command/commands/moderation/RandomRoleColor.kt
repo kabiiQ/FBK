@@ -10,7 +10,7 @@ import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.errorColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.util.ColorUtil
 import moe.kabii.util.RGB
 

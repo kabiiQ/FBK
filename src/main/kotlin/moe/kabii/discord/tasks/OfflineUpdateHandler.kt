@@ -8,9 +8,9 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
-import moe.kabii.structure.withEach
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.withEach
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 // this is for checking after bot/api outages for any missed events

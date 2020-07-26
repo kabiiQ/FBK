@@ -10,7 +10,7 @@ import moe.kabii.LOG
 import moe.kabii.command.commands.audio.QueueTracks
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.rusty.Try
-import moe.kabii.structure.stackTraceString
+import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.YoutubeUtil
 import java.net.URL

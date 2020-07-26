@@ -4,7 +4,7 @@ import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.FeatureSettings
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.javaInstant
+import moe.kabii.structure.extensions.javaInstant
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.Instant

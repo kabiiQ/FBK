@@ -7,7 +7,7 @@ import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.commands.audio.ParseUtil
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.tryAwait
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search", "select", "selectfrom") {

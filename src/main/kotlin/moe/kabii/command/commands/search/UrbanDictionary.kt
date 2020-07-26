@@ -11,7 +11,7 @@ import moe.kabii.discord.conversation.Page
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.fromJsonSafe
+import moe.kabii.structure.extensions.fromJsonSafe
 import okhttp3.Request
 
 object Urban : Command("urbandictionary", "urban", "ud") {

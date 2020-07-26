@@ -5,8 +5,8 @@ import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
 import moe.kabii.command.params.TerminalParameters
-import moe.kabii.structure.loop
-import moe.kabii.structure.stackTraceString
+import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.stackTraceString
 
 class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordClient) : Runnable {
     private var active = false

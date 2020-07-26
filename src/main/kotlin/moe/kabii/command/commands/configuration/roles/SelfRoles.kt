@@ -9,8 +9,8 @@ import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 
 object SelfRoles : CommandContainer {
     object UnlockRole : Command("unlock", "unlockrole", "enablerole", "roleunlock") {

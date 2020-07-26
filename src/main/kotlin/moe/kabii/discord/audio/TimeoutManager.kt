@@ -2,7 +2,7 @@ package moe.kabii.discord.audio
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.structure.success
+import moe.kabii.structure.extensions.success
 import java.util.concurrent.Executors
 
 class TimeoutManager {

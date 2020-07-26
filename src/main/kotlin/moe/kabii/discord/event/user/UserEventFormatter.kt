@@ -4,7 +4,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.SimpleDateFormat
 import java.time.Duration

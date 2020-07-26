@@ -9,8 +9,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.channelVerify
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.structure.filterNot
-import moe.kabii.structure.snowflake
+import moe.kabii.structure.extensions.filterNot
+import moe.kabii.structure.extensions.snowflake
 import reactor.core.publisher.Flux
 
 object Purge : CommandContainer {

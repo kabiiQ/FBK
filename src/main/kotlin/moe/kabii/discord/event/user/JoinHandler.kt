@@ -15,9 +15,9 @@ import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toFlux
 

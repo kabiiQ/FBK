@@ -7,7 +7,7 @@ import moe.kabii.MOSHI
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.fromJsonSafe
+import moe.kabii.structure.extensions.fromJsonSafe
 import java.io.IOException
 
 object MALParser : MediaListParser() {

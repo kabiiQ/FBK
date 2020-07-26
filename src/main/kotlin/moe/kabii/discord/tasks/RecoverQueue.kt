@@ -17,7 +17,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.snowflake
+import moe.kabii.structure.extensions.snowflake
 import java.util.concurrent.Executors
 
 object RecoverQueue {

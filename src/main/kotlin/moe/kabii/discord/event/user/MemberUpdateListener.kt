@@ -11,7 +11,7 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
@@ -60,7 +60,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
             }.flatMap { addedRole ->
                 logs.flatMap { chan -> chan.createEmbed { embed ->
                     fbkColor(embed)
-                    embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                    embed.userAsAuthor(member)
                     embed.setDescription("Added to role **${addedRole.name}**")
                     embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${addedRole.id.asString()}", null)
                 }}
@@ -70,7 +70,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                 .forEach { oldRole ->
                     logs.flatMap { chan -> chan.createEmbed { embed ->
                         fbkColor(embed)
-                        embed.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                        embed.userAsAuthor(member)
                         embed.setDescription("Removed from role **${oldRole.name}**")
                         embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)
                     } }.subscribe()

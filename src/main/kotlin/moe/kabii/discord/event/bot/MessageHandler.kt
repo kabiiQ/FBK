@@ -20,6 +20,7 @@ import moe.kabii.discord.util.fbkColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.*
+import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class MessageHandler(val manager: CommandManager) {
@@ -100,7 +101,7 @@ class MessageHandler(val manager: CommandManager) {
                                 event.message.channel.flatMap { chan ->
                                     chan.createEmbed { spec ->
                                         fbkColor(spec)
-                                        spec.setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
+                                        spec.userAsAuthor(member)
                                         spec.setDescription("You have been given the **${guildRole.value.name}** role.")
                                     }
                                 }.awaitSingle()

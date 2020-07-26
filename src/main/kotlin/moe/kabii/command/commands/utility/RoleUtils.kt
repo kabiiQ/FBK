@@ -7,8 +7,8 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.discord.util.RoleUtil
-import moe.kabii.structure.success
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.success
+import moe.kabii.structure.extensions.tryAwait
 import reactor.kotlin.core.publisher.toFlux
 
 object RoleUtils : CommandContainer {

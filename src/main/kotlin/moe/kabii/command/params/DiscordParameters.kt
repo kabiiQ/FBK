@@ -24,8 +24,8 @@ import moe.kabii.discord.util.fbkColor
 import moe.kabii.discord.util.specColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryBlock
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryBlock
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 

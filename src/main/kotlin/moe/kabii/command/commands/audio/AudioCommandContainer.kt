@@ -13,8 +13,8 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.structure.filterNot
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.filterNot
+import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.util.DurationFormatter
 
 internal interface AudioCommandContainer : CommandContainer {

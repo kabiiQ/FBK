@@ -9,8 +9,8 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.snowflake
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(

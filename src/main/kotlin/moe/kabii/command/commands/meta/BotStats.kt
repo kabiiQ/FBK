@@ -6,6 +6,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.*
+import moe.kabii.structure.extensions.orNull
+import moe.kabii.structure.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.time.Duration
 import java.time.Instant

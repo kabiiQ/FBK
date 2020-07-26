@@ -9,7 +9,7 @@ import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.tryAwait
+import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.jetbrains.exposed.sql.transactions.transaction

@@ -6,7 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
-import moe.kabii.structure.snowflake
+import moe.kabii.structure.extensions.snowflake
 
 object StarboardUtil : CommandContainer {
     object StarMessage : Command("starmessage", "addstar", "starboardmessage") {

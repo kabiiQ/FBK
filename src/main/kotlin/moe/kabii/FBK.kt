@@ -29,7 +29,7 @@ import moe.kabii.discord.trackers.streams.watcher.StreamUpdateManager
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
-import moe.kabii.structure.stackTraceString
+import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections
