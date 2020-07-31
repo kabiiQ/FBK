@@ -36,6 +36,7 @@ object AudioStateUtil {
             if(audio.playing && !override) return VoiceValidation.Failure("You must be in the bot's voice channel if the bot is in use.")
         }
 
+        // bot is not in a channel or is in a different channel
         return when(val join = audio.joinChannel(userChannel)) {
             is Ok -> VoiceValidation.Success
             is Err -> {

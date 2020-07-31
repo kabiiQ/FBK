@@ -118,10 +118,11 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     val messageID = notif.messageID
                     val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
                     if(discordMessage != null) {
-                        val features = discordMessage.guild.map { guild ->
+                        val guild = discordMessage.guild.tryAwait().orNull()
+                        val features = if(guild != null) {
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-                            runBlocking { config.getOrCreateFeatures(messageID.channel.channelID).featureSettings }
-                        }.tryAwait().orNull() ?: FeatureSettings() // use default settings for PM
+                            config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
+                        } else FeatureSettings() // use default settings for PM
                         if(features.streamSummaries) {
                             val specEmbed = StreamEmbedBuilder(
                                 user!!,

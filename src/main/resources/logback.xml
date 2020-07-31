@@ -6,6 +6,7 @@
     <logger name="discord4j.gateway" level="INFO"/>
     <logger name="discord4j.dispatch.0" level="INFO"/>
     <logger name="discord4j.rest.http" level="INFO"/>
+    <logger name="discord4j.rest.request" level="INFO"/>
     <logger name="discord4j.events" level="INFO"/>
     <logger name="discord4j.events.0" level="INFO"/>
     <logger name="com.github.twitch4j" level="INFO"/>
