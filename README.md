@@ -41,7 +41,8 @@ We try to cover a wide range of functionality with the bot, so not all commands 
 
 - General Utility
   - [**Set timed reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
-  - [**Teamspeak-style temporary voice channels**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
+  - [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
+  - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
   - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
   - [Access server voice channel screenshare](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
 

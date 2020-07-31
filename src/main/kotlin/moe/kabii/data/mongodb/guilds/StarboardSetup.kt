@@ -16,7 +16,7 @@ import moe.kabii.util.EmojiCharacters
 data class StarboardSetup(
     var channel: Long,
     var starsAdd: Long = 3L,
-    var starsRemove: Long = 1L,
+    var starsRemove: Long = 0L,
     var removeOnClear: Boolean = true,
     var removeOnDelete: Boolean = true,
     var mentionUser: Boolean = false,
@@ -31,6 +31,7 @@ class StarredMessage(
     val messageId: Long,
     val starboardMessageId: Long,
     val originalAuthorId: Long?,
+    val originalChannelId: Long = 0L,
     val stars: MutableSet<Long>,
     val exempt: Boolean = false
 ) {
@@ -65,9 +66,9 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         }
     }
 
-    fun starboardContent(stars: Long, author: Long?): String {
+    fun starboardContent(stars: Long, author: Long?, channel: Long): String {
         val mention = if(author != null) " <@$author>" else ""
-        return "${EmojiCharacters.star} $stars <#${starboard.channel}>$mention"
+        return "${EmojiCharacters.star} $stars <#$channel>$mention"
     }
 
     fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
@@ -89,12 +90,13 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val starCount = stars.count().toLong()
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
         val jumpLink = message.createJumpLink()
+        val channelId = message.channelId.asLong()
         val starboardMessage = starboardChannel.createMessage { spec ->
-            spec.setContent(starboardContent(starCount, authorId))
+            spec.setContent(starboardContent(starCount, authorId, channelId))
             spec.setEmbed(starboardEmbed(message, jumpLink))
         }.awaitSingle()
 
-        val starboarded = StarredMessage(message.id.asLong(), starboardMessage.id.asLong(), authorId, stars, exempt)
+        val starboarded = StarredMessage(message.id.asLong(), starboardMessage.id.asLong(), authorId, channelId, stars, exempt)
         starboard.starred.add(starboarded)
         config.save()
 
@@ -118,7 +120,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
         val starCount = message.stars.count().toLong()
         starboardMessage.edit { spec ->
-            spec.setContent(starboardContent(starCount, message.originalAuthorId))
+            spec.setContent(starboardContent(starCount, message.originalAuthorId, message.originalChannelId))
         }.awaitSingle()
     }
 }

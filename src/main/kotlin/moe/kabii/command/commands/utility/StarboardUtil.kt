@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.utility
 
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -16,6 +17,7 @@ object StarboardUtil : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
+                chan as TextChannel
 
                 val starboardCfg = config.starboard
                 if(starboardCfg == null) {
@@ -38,7 +40,7 @@ object StarboardUtil : CommandContainer {
                 val targetMessage = try {
                     chan.getMessageById(targetId).awaitSingle()
                 } catch(ce: ClientException) {
-                    error("Unable to find a message with ID **$targetId**.").awaitSingle()
+                    error("Unable to find the message with ID **$targetId** in ${chan.name}.").awaitSingle()
                     return@discord
                 }
 
