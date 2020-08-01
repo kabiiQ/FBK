@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object UserLog {
     internal object GuildRelationships : LongIdTable() {
@@ -35,8 +36,8 @@ object UserLog {
                     }
             ).elementAtOrElse(0) { _ ->
                 new {
-                    user = DiscordObjects.User.getOrInsert(userId)
-                    guild = DiscordObjects.Guild.getOrInsert(guildId)
+                    user = transaction { DiscordObjects.User.getOrInsert(userId) }
+                    guild = transaction { DiscordObjects.Guild.getOrInsert(guildId) }
                     currentMember = true
                 }
             }

@@ -6,7 +6,9 @@ import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
@@ -96,12 +98,12 @@ object JoinHandler {
                             channel.createEmbed { embed ->
                                 embed.setDescription("$formatted$errorStr")
                                 embed.setColor(Color.of(6750056))
-                                if(joinLog.joinFormat.contains("&avatar")) {
+                                if (joinLog.joinFormat.contains("&avatar")) {
                                     embed.setImage(member.avatarUrl)
                                 }
                             }
                         }
                     }
-            }.subscribe()
+            }.awaitSingle()
     }
 }
