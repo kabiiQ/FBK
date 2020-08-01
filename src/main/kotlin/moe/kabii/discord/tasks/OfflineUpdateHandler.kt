@@ -2,18 +2,13 @@ package moe.kabii.discord.tasks
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.relational.UserLog
-import moe.kabii.discord.event.user.JoinHandler
-import moe.kabii.discord.event.user.PartHandler
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.structure.extensions.long
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.structure.extensions.withEach
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {

@@ -2,8 +2,6 @@ package moe.kabii.data.mongodb
 
 import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.trackers.anime.KitsuParser
 import moe.kabii.discord.trackers.anime.MALParser
 import moe.kabii.discord.trackers.anime.MediaList

@@ -11,7 +11,6 @@ import moe.kabii.discord.util.logColor
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAsAuthor
 import reactor.kotlin.core.publisher.toFlux
 
 object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdateEvent::class) {

@@ -8,7 +8,6 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MediaSite

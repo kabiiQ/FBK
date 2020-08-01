@@ -16,7 +16,7 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.logColor
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.*
+import moe.kabii.structure.DiscordBot
 import moe.kabii.structure.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux

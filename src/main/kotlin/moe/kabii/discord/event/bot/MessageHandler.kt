@@ -19,7 +19,7 @@ import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.*
+import moe.kabii.structure.DiscordBot
 import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 

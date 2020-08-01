@@ -4,7 +4,6 @@ import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
