@@ -60,25 +60,36 @@ object JoinHandler {
         } else {
             val configs = config.autoRoles.joinConfigurations.toList()
 
-            if(configs.any { cfg -> cfg.inviteTarget != null && !config.guildSettings.utilizeInvites }) {
+            if (configs.any { cfg -> cfg.inviteTarget != null && !config.guildSettings.utilizeInvites }) {
                 // error if any invite-specific configurations exist but we got 403'd for MANAGE_SERVER
                 errorStr += " (An invite-specific role is configured but I am missing permissions to view invite information [Manage Server permission]. Please address the missing permission and re-enable this feature with the **serverconfig invites enable** command.)"
             }
 
-            configs
+            val apply = configs
                 .filter { joinConfig ->
                     joinConfig.inviteTarget?.equals(invite) != false // find autoroles for this invite or for all users
-                }.filter { joinConfig ->
-                    val addedRole = member.addRole(joinConfig.role.snowflake, "Automatic user join role").thenReturn(Unit).tryAwait()
-                    if(addedRole is Err) {
+                }
+
+            if (apply.isNotEmpty() && member.roleIds.isNotEmpty()) {
+                // if the user already has a role given, skip role assignment.
+                // can cause undesirable interactions with exclusive roles and other permission setups
+                errorStr += " User already has a role, automatic role assignment will be skipped."
+                emptyList()
+            } else {
+                apply.filter { joinConfig ->
+                    val addedRole = member.addRole(joinConfig.role.snowflake, "Automatic user join role")
+                        .thenReturn(Unit)
+                        .tryAwait()
+                    if (addedRole is Err) {
                         val error = addedRole.value as? ClientException
-                        when(error?.status?.code()) {
+                        when (error?.status?.code()) {
                             403 -> return@filter true
                             404 -> config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted,
                         }
                     }
                     false
                 }.map(JoinConfiguration::role)
+            }
         }
 
         if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
