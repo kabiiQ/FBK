@@ -28,7 +28,7 @@ object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::clas
                     metaChan.createEmbed { spec ->
                         spec.setColor(Color.of(6750056))
                         spec.setAuthor("New server", null, avatarUrl)
-                        spec.setDescription("Bot added to new server: ${event.guild.name} (${event.guild.id.asString()})")
+                        spec.setDescription("Config created for server: ${event.guild.name} (${event.guild.id.asString()})")
                     }
                 }
                 .doOnError { e ->
