@@ -6,7 +6,12 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import discord4j.voice.AudioProvider
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import java.nio.ByteBuffer
+import java.util.concurrent.Executors
 
 internal data class AudioComponents(val player: AudioPlayer, val provider: AudioProvider)
 
@@ -14,7 +19,7 @@ object AudioManager {
     internal val guilds = mutableMapOf<Long, GuildAudio>()
 
     val manager = DefaultAudioPlayerManager()
-    val timeouts = TimeoutManager()
+    val timeouts = Timeouts()
 
     init {
         AudioSourceManagers.registerRemoteSources(manager)
@@ -49,6 +54,16 @@ object AudioManager {
 
     @Synchronized fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
         val (player, provider) = createAudioComponents()
-        GuildAudio(guild, player, provider)
+        GuildAudio(this, guild, player, provider)
     }
+}
+
+class Timeouts {
+    companion object {
+        const val TIMEOUT_DELAY = 120_000L
+    }
+
+    private val timeoutThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    val timeoutContext =
+        CoroutineScope(timeoutThread + CoroutineName("Voice-Timeout") + SupervisorJob())
 }

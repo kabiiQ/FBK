@@ -34,7 +34,7 @@ object AudioEventHandler : AudioEventAdapter() {
         val originChan = data.discord.getChannelById(data.originChannel)
             .ofType(TextChannel::class.java)
 
-        val guildID = data.audio.guild
+        val guildID = data.audio.guildId
         val config = GuildConfigurations.getOrCreateGuild(guildID).musicBot
         // guild option to skip song if queuer has left voice channel.
         if(config.skipIfAbsent) {
@@ -93,7 +93,7 @@ object AudioEventHandler : AudioEventAdapter() {
                 .awaitSingle()
         }
         if(alone != true) {
-            AudioManager.timeouts.cancelPendingTimeout(data.audio)
+            data.audio.discord.cancelPendingTimeout()
         }
     }
 
@@ -127,12 +127,12 @@ object AudioEventHandler : AudioEventAdapter() {
                         player.playTrack(next)
                     } else {
                         // no more tracks being added, start timeout for leaving vc
-                        manager.timeouts.startTimeout(data.audio)
+                        data.audio.discord.startTimeout()
                     }
                 }
 
                 // delete old messages per guild settings
-                val guildID = data.audio.guild
+                val guildID = data.audio.guildId
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
                 val (commandMsg, otherMsg) = data.associatedMessages.partition { it is QueueData.BotMessage.UserPlayCommand }
                 commandMsg.firstOrNull()?.let { msg ->

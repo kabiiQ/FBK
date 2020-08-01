@@ -124,11 +124,11 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
             if(alone == false) {
                 // someone is in the bot channel. if audio is being played, cancel any timeouts
                 if(audio.player.playingTrack != null || audio.queue.isNotEmpty()) {
-                    AudioManager.timeouts.cancelPendingTimeout(audio)
+                    audio.discord.cancelPendingTimeout()
                 } // otherwise, let the timeout continue. we leave the vc if not in use
             } else {
                 // bot is alone... schedule a disconnection
-                AudioManager.timeouts.startTimeout(audio)
+                audio.discord.startTimeout()
             }
 
             val eventMember = member ?: return // kicked

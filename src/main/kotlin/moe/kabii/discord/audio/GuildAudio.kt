@@ -27,13 +27,14 @@ import kotlin.reflect.KProperty1
 
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(
-    val guild: Long,
+    val manager: AudioManager,
+    val guildId: Long,
     var player: AudioPlayer,
     var provider: AudioProvider,
-
-    val queue: MutableList<AudioTrack> = mutableListOf(),
-    val discord: AudioConnection = AudioConnection()
+    val queue: MutableList<AudioTrack> = mutableListOf()
 ) {
+    val discord: AudioConnection = AudioConnection(this)
+
     var ending: Boolean = false
     var looping: Boolean = false
     private val queueMutex = Mutex()
@@ -56,7 +57,7 @@ data class GuildAudio(
 
     // queue song for a user, returns false if user is over quota
     suspend fun tryAdd(track: AudioTrack, member: Member? = null, position: Int? = null, checkLimits: Boolean = true): Boolean {
-        val maxTracksUser = GuildConfigurations.getOrCreateGuild(guild).musicBot.maxTracksUser
+        val maxTracksUser = GuildConfigurations.getOrCreateGuild(guildId).musicBot.maxTracksUser
         val meta = track.userData as? QueueData
         checkNotNull(meta) { "AudioTrack has no origin information: ${track.info}" }
         if (member != null && checkLimits && maxTracksUser != 0L) {
@@ -104,7 +105,7 @@ data class GuildAudio(
             val newAudio = this.copy(player = player, provider = provider)
             this.ending = true
             this.player.stopTrack()
-            AudioManager.guilds[guild] = newAudio
+            AudioManager.guilds[guildId] = newAudio
             if(voice != null) {
                 if(discord.connection != null) {
                     discord.connection!!.disconnect().tryAwait().ifErr { err ->
@@ -124,7 +125,7 @@ data class GuildAudio(
 
     // this needs to be called anywhere we manually edit the queue, adding/anything playing the next track is encapsulated but shuffling etc are not currently
     private suspend fun saveQueue() {
-        val config = GuildConfigurations.getOrCreateGuild(guild)
+        val config = GuildConfigurations.getOrCreateGuild(guildId)
         // save copy of queue to db with just serializable info that we need to requeue
         config.musicBot.activeQueue = playlist.map { track ->
             val data = track.userData as QueueData
@@ -148,10 +149,6 @@ data class GuildAudio(
 
     fun <R> editQueueSync(block: suspend MutableList<AudioTrack>.() -> R): R = runBlocking { editQueue(block) }
 
-    data class AudioConnection(
-        var connection: VoiceConnection? = null,
-        val mutex: Mutex = Mutex()
-    )
 }
 
 data class QueueData(
