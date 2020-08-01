@@ -67,17 +67,19 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         }
     }
 
-    fun starboardContent(stars: Long, author: Long?, channel: Long): String {
+    private fun starboardContent(stars: Long, author: Long?, channel: Long): String {
         val mention = if(author != null) " <@$author>" else ""
         return "${EmojiCharacters.star} $stars <#$channel>$mention"
     }
 
-    fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
+    private fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
         val author = message.author.orNull()
         setAuthor(author?.username ?: "Unknown", null, author?.avatarUrl)
         starColor(this)
         setDescription(message.content)
         val attachment = message.attachments.firstOrNull()
+        // todo if image, set image
+        // todo otherwise, re-add as attachment
         if(attachment != null) {
             setImage(attachment.url)
         }
@@ -92,10 +94,16 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
         val jumpLink = message.createJumpLink()
         val channelId = message.channelId.asLong()
-        val starboardMessage = starboardChannel.createMessage { spec ->
-            spec.setContent(starboardContent(starCount, authorId, channelId))
-            spec.setEmbed(starboardEmbed(message, jumpLink))
-        }.awaitSingle()
+        val starboardMessage = try {
+            starboardChannel.createMessage { spec ->
+                spec.setContent(starboardContent(starCount, authorId, channelId))
+                spec.setEmbed(starboardEmbed(message, jumpLink))
+            }.awaitSingle()
+        } catch(ce: ClientException) {
+            if(ce.status.code() == 403) {
+                throw BotSendMessageException("Missing permissions to post message to starboard", starboardChannel.id.long)
+            } else throw ce
+        }
 
         val starboarded = StarredMessage(message.id.asLong(), starboardMessage.id.asLong(), authorId, channelId, stars, exempt)
         starboard.starred.add(starboarded)

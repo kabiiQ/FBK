@@ -155,6 +155,9 @@ class MessageHandler(val manager: CommandManager) {
                 } catch (ba: BotAdminException) {
                     LOG.info("Bot admin check failed: $param")
 
+                } catch (perms: BotSendMessageException) {
+                    LOG.warn("${perms.message} :: channel=${perms.channel}")
+
                 } catch (ce: ClientException) {
                     // bot is missing permissions
                     when (ce.status.code()) {

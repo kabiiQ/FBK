@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux
 
 class MemberPermissionsException(vararg val perms: Permission) : RuntimeException()
 class BotAdminException : RuntimeException()
+class BotSendMessageException(override val message: String, val channel: Long) : RuntimeException()
 
 @Throws(BotAdminException::class)
 fun MessageCreateEvent.verifyBotAdmin() {
