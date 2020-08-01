@@ -5,8 +5,10 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MediaSite
@@ -31,8 +33,10 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
             val start = Instant.now()
             // get current state of tracked lists for this site
             try {
-                val lists = TrackedMediaLists.mediaLists.toList()
-                    .filter { tracked -> tracked.list.site == this.site }
+                val lists = TrackedMediaLists.lock.withLock {
+                    TrackedMediaLists.mediaLists.toList()
+                        .filter { tracked -> tracked.list.site == this.site }
+                }
 
                 val job = SupervisorJob()
                 val taskScope = CoroutineScope(DiscordTaskPool.listThreads + job)

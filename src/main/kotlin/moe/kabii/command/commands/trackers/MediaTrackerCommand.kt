@@ -2,6 +2,7 @@ package moe.kabii.command.commands.trackers
 
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.command.FeatureDisabledException
@@ -29,7 +30,6 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
         }
 
         val targetName = target.list.id
-        val lists = TrackedMediaLists.mediaLists
         val channelID = origin.chan.id.asLong()
 
         val parser = target.list.site.parser
@@ -38,63 +38,67 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
             origin.error("Unable to find ${target.list.site.full} list with identifier **$targetName**.").awaitSingle()
             return
         }
-        TrackedMediaLists.mutex.withLock {
-            val targetList = target.list.copy(id = listID)
-            // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
-            val existingTrack = lists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelID }
-            if(existingTrack != null) {
-                origin.error("**${targetName}** is already tracked in this channel.").awaitSingle()
-                return
-            }
+        val targetList = target.list.copy(id = listID)
+        // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
+        val existingTrack = TrackedMediaLists.lock.withLock {
+            TrackedMediaLists.mediaLists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelID }
+        }
 
-            // jikan can respond very slowly, let user know we're working on this command
-            val prompt = origin.embed("Retrieving MAL...").awaitSingle()
-            suspend fun editPrompt(spec: (EmbedCreateSpec).() -> Unit) {
-                prompt.edit { edit -> edit.setEmbed(spec) }.awaitSingle()
-            }
+        if(existingTrack != null) {
+            origin.error("**${targetName}** is already tracked in this channel.").awaitSingle()
+            return
+        }
 
-            // validate list
-            val request = parser.parse(listID)
-            val mediaList = when(request) {
-                is Ok -> request.value
-                is Err -> {
-                    when(request.value) {
-                        is MediaListEmpty -> {
-                            editPrompt {
-                                errorColor(this)
-                                setDescription("Unable to find ${targetList.site.full} list with identifier **${targetName}**.")
-                            }
-                            return
+        // jikan can respond very slowly, let user know we're working on this command
+        val prompt = origin.embed("Retrieving MAL...").awaitSingle()
+        suspend fun editPrompt(spec: (EmbedCreateSpec).() -> Unit) {
+            prompt.edit { edit -> edit.setEmbed(spec) }.awaitSingle()
+        }
+
+        // validate list
+        val request = parser.parse(listID)
+        val mediaList = when(request) {
+            is Ok -> request.value
+            is Err -> {
+                when(request.value) {
+                    is MediaListEmpty -> {
+                        editPrompt {
+                            errorColor(this)
+                            setDescription("Unable to find ${targetList.site.full} list with identifier **${targetName}**.")
                         }
-                        else -> {
-                            editPrompt {
-                                errorColor(this)
-                                setDescription("Error tracking list! Possible ${targetList.site.full} outage.")
-                            }
-                            return
+                        return
+                    }
+                    else -> {
+                        editPrompt {
+                            errorColor(this)
+                            setDescription("Error tracking list! Possible ${targetList.site.full} outage.")
                         }
+                        return
                     }
                 }
             }
-            // track the list if it's not tracked at all
-            val find = lists.find { it.list == targetList }
-            val trackedList = find ?:
-                    TrackedMediaList(list = targetList, savedMediaList = mediaList).also { list -> lists.add(list) }
+        }
+        // track the list if it's not tracked at all
+        val find = TrackedMediaLists.lock.withLock {
+            TrackedMediaLists.mediaLists.find { it.list == targetList }
+        }
+        val trackedList = TrackedMediaLists.lock.withLock {
+            find ?:
+                TrackedMediaList(list = targetList, savedMediaList = mediaList).also { new -> TrackedMediaLists.mediaLists.add(new) }
+        }
 
-            // add this channel if the list isn't already tracked in this channel
-            // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
-            val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
-            trackedList.targets += mediaTarget
-            trackedList.save()
-            editPrompt {
-                fbkColor(this)
-                setDescription("Now tracking **$targetName**!")
-            }
+        // add this channel if the list isn't already tracked in this channel
+        // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
+        val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
+        trackedList.targets += mediaTarget
+        trackedList.save()
+        editPrompt {
+            fbkColor(this)
+            setDescription("Now tracking **$targetName**!")
         }
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetMediaList) {
-        val lists = TrackedMediaLists.mediaLists
         val parser = target.list.site.parser
         val listID = parser.getListID(target.list.id)
         if(listID == null) {
@@ -105,7 +109,9 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
         val targetList = target.list.copy(id = listID)
 
         // untrack the list from this location if it's tracked
-        val trackedList = lists.find { it.list == targetList } // find tracked list with matching id/site
+        val trackedList = TrackedMediaLists.lock.withLock { // find tracked list with matching id/site
+            TrackedMediaLists.mediaLists.find { it.list == targetList }
+        }
 
         if(trackedList != null) { // this list is tracked in some channel
             val trackedTarget = trackedList.targets.find { it.channelID == origin.chan.id.asLong()}

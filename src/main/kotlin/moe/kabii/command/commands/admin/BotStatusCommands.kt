@@ -1,6 +1,7 @@
 package moe.kabii.command.commands.admin
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.presence.Activity
 import discord4j.core.`object`.presence.Presence
 import kotlinx.coroutines.reactive.awaitSingle

@@ -1,5 +1,6 @@
 package moe.kabii.data.mongodb
 
+import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -15,13 +16,11 @@ object TrackedMediaLists {
     // global - animelist collection
     val mediaLists: MutableList<TrackedMediaList>
     val mongoMediaLists = MongoDBConnection.mongoDB.getCollection<TrackedMediaList>()
-    val mutex = Mutex()
+    val lock = reentrantLock()
 
     init {
         mediaLists = runBlocking {
-            mutex.withLock {
-                mongoMediaLists.find().toList().toMutableList()
-            }
+            mongoMediaLists.find().toList().toMutableList()
         }
     }
     suspend fun remove(list: TrackedMediaList) {
