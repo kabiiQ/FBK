@@ -90,7 +90,8 @@ class MessageHandler(val manager: CommandManager) {
                             event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryAwait()
                         when(guildRole) {
                             is Err -> {
-                                if(guildRole.value is ClientException) {
+                                val err = guildRole.value
+                                if(err is ClientException && err.status.code() == 404) {
                                     config.selfRoles.roleCommands.remove(command)
                                     config.save()
                                 }

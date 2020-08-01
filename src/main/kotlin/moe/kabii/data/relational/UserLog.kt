@@ -16,6 +16,8 @@ object UserLog {
         val guild = reference("guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val current = bool("current_member")
 
+        // good place for XP system in the future if implemented
+
         override val primaryKey: PrimaryKey = PrimaryKey(user, guild)
     }
 
