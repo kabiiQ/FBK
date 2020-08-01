@@ -71,7 +71,7 @@ object BotStats : CommandContainer {
                     setAuthor("${botUser.username}#${botUser.discriminator}", null, botUser.avatarUrl)
                     addField("Process Uptime", connection, true)
                     addField("Connection Uptime", reconnection, true)
-                    addField("Discord Shards", shards, false)
+                    addField("Discord Shards", shards.toString(), false)
                     addField("Guild Count", guildCount, true)
                     addField("Users Served", users, true)
                     addField("Build Info", buildInfo, false)
