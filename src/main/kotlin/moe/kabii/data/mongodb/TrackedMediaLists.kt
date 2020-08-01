@@ -2,6 +2,7 @@ package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.discord.trackers.anime.KitsuParser
 import moe.kabii.discord.trackers.anime.MALParser
 import moe.kabii.discord.trackers.anime.MediaList
@@ -18,7 +19,9 @@ object TrackedMediaLists {
 
     init {
         mediaLists = runBlocking {
-            mongoMediaLists.find().toList().toMutableList()
+            mutex.withLock {
+                mongoMediaLists.find().toList().toMutableList()
+            }
         }
     }
     suspend fun remove(list: TrackedMediaList) {

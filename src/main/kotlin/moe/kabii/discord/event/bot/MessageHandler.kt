@@ -133,18 +133,27 @@ class MessageHandler(val manager: CommandManager) {
                 val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr)
 
                 try {
+
+                    // main command execution
                     if (command.executeDiscord != null)
                         command.executeDiscord!!(param)
+
                 } catch (parse: GuildTargetInvalidException) {
                     param.error("${parse.string} Execute this command while in a guild channel or first use the **setguild** command to set your desired guild target.").subscribe()
+
                 } catch (perms: MemberPermissionsException) {
                     val s = if(perms.perms.size > 1) "s" else ""
                     val reqs = perms.perms.joinToString(", ")
                     param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
+
                 } catch (feat: FeatureDisabledException) {
                     val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryAwait().orNull() == true
                     val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
                     param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
+
+                } catch (ba: BotAdminException) {
+                    LOG.info("Bot admin check failed: $param")
+
                 } catch (ce: ClientException) {
                     // bot is missing permissions
                     when (ce.status.code()) {
