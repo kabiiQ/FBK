@@ -8,6 +8,8 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.user.JoinHandler
 import moe.kabii.discord.event.user.PartHandler
+import moe.kabii.discord.util.RoleUtil
+import moe.kabii.structure.extensions.long
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.structure.extensions.withEach
@@ -16,38 +18,12 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
     suspend fun runChecks(guild: Guild) {
-        // sync all guild members
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-        val guildMembers = guild.members.collectList().awaitFirst()
-        val guildId = guild.id.asLong()
-
-        newSuspendedTransaction {
-            val userLog = UserLog.GuildRelationship.getAllForGuild(guildId)
-
-            // make sure members are accounted for in log
-            guildMembers.filter { member ->
-                val find = userLog.find { log -> log.user.userID == member.id.asLong() }
-                find == null || !find.currentMember
-            }.forEach { join -> JoinHandler.handleJoin(join, online = false) }
-
-            // check logged members are present in server
-            userLog
-                .filter { log ->
-                    guildMembers.find { member -> member.id.asLong() == log.user.userID } == null
-                }
-                .filter(UserLog.GuildRelationship::currentMember)
-                .forEach { part ->
-                    val user = guild.client.getUserById(part.user.userID.snowflake).tryAwait().orNull() ?: return@forEach
-                    PartHandler.handlePart(guild.id, user, null)
-                }
-        }
 
          // check for empty twitch follower roles
-        val guildRoles = guild.roleIds
-
-        // check for removed roles and remove any commands
-        config.selfRoles.roleCommands.values
-            .removeIf { role -> !guildRoles.contains(role.snowflake) }
+        guild.roleIds.forEach { roleId ->
+            RoleUtil.removeIfEmptyStreamRole(guild, roleId.long)
+        }
 
         // sync all temporary voice channel states
         val tempChannels = config.tempVoiceChannels.tempChannels

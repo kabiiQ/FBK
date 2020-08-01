@@ -28,7 +28,7 @@ object JoinHandler {
         override suspend fun handle(event: MemberJoinEvent) = handleJoin(event.member)
     }
 
-    suspend fun handleJoin(member: Member, online: Boolean = true) {
+    suspend fun handleJoin(member: Member) {
         val config = GuildConfigurations.getOrCreateGuild(member.guildId.asLong())
 
         // create user log entry
@@ -44,10 +44,7 @@ object JoinHandler {
         var errorStr = ""
 
         // if we can determine the invite used, we can apply specific autoroles
-        val invite = if(online) {
-            val invites = InviteWatcher.updateGuild(member.guild.awaitFirst())
-            invites.singleOrNull()
-        } else null
+        val invite = InviteWatcher.updateGuild(member.guild.awaitFirst()).singleOrNull()
 
         // reassign roles if the feature is enabled and the user rejoined. otherwise assign normal joinroles
         // currently intentional that users being reassigned roles don't get the autoroles
@@ -73,6 +70,7 @@ object JoinHandler {
             if (apply.isNotEmpty() && member.roleIds.isNotEmpty()) {
                 // if the user already has a role given, skip role assignment.
                 // can cause undesirable interactions with exclusive roles and other permission setups
+                // this should no longer occur as of 3840 with the removal of the offline update checker
                 errorStr += " User already has a role, automatic role assignment will be skipped."
                 emptyList()
             } else {
