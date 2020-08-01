@@ -4,12 +4,15 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.relational.Reminder
 import moe.kabii.data.relational.Reminders
 import moe.kabii.discord.util.reminderColor
-import moe.kabii.structure.*
+import moe.kabii.structure.EmbedBlock
+import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.EmojiCharacters
@@ -64,7 +67,6 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
 
     @WithinExposedContext
     private suspend fun scheduleReminder(reminder: Reminder) {
-        // todo check if was old reminder
         val time = Duration.between(Instant.now(), reminder.remind.javaInstant)
         delay(max(time.toMillis(), 0L))
         val user = discord.getUserById(reminder.user.userID.snowflake)
@@ -73,23 +75,9 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
             LOG.warn("Skipping reminder: user ${reminder.user} not found") // this should not happen
             return
         }
-        // get guild channel/pm channel
-        val discordChannel = discord.getChannelById(reminder.channel.snowflake)
-            .ofType(MessageChannel::class.java)
-            .tryAwait().orNull()
-        val remindChannel: MessageChannel? = when(discordChannel) {
-            is PrivateChannel -> discordChannel
-            is TextChannel -> {
-                val member = user.asMember(discordChannel.guildId).tryAwait().orNull()
-                if(member != null) discordChannel
-                else user.privateChannel.tryAwait().orNull() // if user is no longer in guild, send reminder in pm
-            }
-            else -> null // guild channel can be deleted entirely
-        }
-        if(remindChannel == null) {
-            LOG.info("Skipping reminder: channel ${reminder.channel} is no longer valid")
-            return
-        }
+        // TODO rewrite:
+
+        // try to send reminder, send in PM if failed
         val age = Duration.between(reminder.created.javaInstant, Instant.now())
         val createdTime = DurationFormatter(age).fullTime
         val embed: EmbedBlock = {
@@ -108,10 +96,56 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
             setFooter("Reminder created", null)
             setTimestamp(reminder.created.javaInstant)
         }
-        remindChannel.createMessage { spec ->
-            spec.setContent(user.mention)
-            spec.setEmbed(embed)
-            }.tryAwait() // todo 404 or 403 -> bot removed from channel, resend in PM?
+
+        suspend fun sendReminder(target: MessageChannel) {
+            target.createMessage { spec ->
+                spec.setContent(user.mention)
+                spec.setEmbed(embed)
+            }.awaitSingle()
+        }
+
+        suspend fun dmFallback() {
+            val dmChannel = user.privateChannel.tryAwait().orNull()
+            if(dmChannel != null) {
+                sendReminder(dmChannel)
+            } else {
+                LOG.info("Unable to send reminder: unable to send DM fallback message :: $reminder")
+            }
+        }
+        // if guild channel, try to send and fall back to DM
+        // if DM channel, send to DM
+        val discordChannel = discord.getChannelById(reminder.channel.snowflake)
+            .ofType(MessageChannel::class.java)
+            .tryAwait().orNull()
+        try {
+            when (discordChannel) {
+                is PrivateChannel -> sendReminder(discordChannel)
+                is TextChannel -> {
+                    val member = user.asMember(discordChannel.guildId).tryAwait().orNull()
+                    if (member != null) {
+                        try {
+                            sendReminder(discordChannel)
+                        } catch (ce: ClientException) {
+                            val err = ce.status.code()
+                            if (err == 403 || err == 404) {
+                                // unable to send message, try to DM fallback
+                                dmFallback()
+                            }
+                        }
+
+                    } else {
+                        // member no longer in server, try to DM fallback
+                        dmFallback()
+                    }
+                }
+            }
+        } catch(ce: ClientException) {
+            LOG.info("Completely unable to send reminder: skipping :: $reminder")
+        } catch(t: Throwable) {
+            LOG.error("Uncaught exception sending reminder :: ${t.message}")
+            LOG.debug(t.stackTraceString)
+        }
         reminder.delete()
     }
+
 }
