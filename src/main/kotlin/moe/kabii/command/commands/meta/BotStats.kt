@@ -53,6 +53,7 @@ object BotStats : CommandContainer {
                     .collectMap({ guild -> guild }, { guild -> guild.memberCount })
                     .awaitSingle()
                 val guildCount = guilds.count().toString()
+                val shards = event.client.gatewayClientGroup.shardCount
                 val users = guilds.values.sum().toString()
                 val build = Metadata.current
                 val buildInfo = if(build == null) "Development Build" else {
@@ -70,7 +71,7 @@ object BotStats : CommandContainer {
                     setAuthor("${botUser.username}#${botUser.discriminator}", null, botUser.avatarUrl)
                     addField("Process Uptime", connection, true)
                     addField("Connection Uptime", reconnection, true)
-                    addField("Shards", "The bot currently only operates using one shard.", false)
+                    addField("Discord Shards", shards, false)
                     addField("Guild Count", guildCount, true)
                     addField("Users Served", users, true)
                     addField("Build Info", buildInfo, false)
