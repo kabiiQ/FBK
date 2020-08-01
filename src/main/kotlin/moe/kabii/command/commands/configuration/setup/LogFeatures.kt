@@ -81,14 +81,19 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 ChannelLogModule,
                 features.logSettings
             )
+
+            val newSettings = features.logSettings
             if(configurator.run(this)) {
-                val any = features.logSettings.anyEnabled()
+                val any = newSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
                     embed("${chan.getMention()} is no longer a mod log channel.").subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
                     embed("${chan.getMention()} is now a mod log channel.").subscribe()
+                }
+                if(newSettings.joinFormat.contains("&invite")) {
+                    config.guildSettings.utilizeInvites = true
                 }
                 config.save()
             }

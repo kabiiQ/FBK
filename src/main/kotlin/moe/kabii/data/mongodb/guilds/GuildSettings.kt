@@ -8,7 +8,7 @@ data class GuildSettings(
     var reassignRoles: Boolean = false,
     var defaultFollowChannel: TrackedStreams.StreamInfo? = null,
     var twitchURLInfo: Boolean = false,
-    var utilizeInvites: Boolean = true
+    var utilizeInvites: Boolean = false
 )
 
 data class TwitchConfig(
