@@ -7,7 +7,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
@@ -17,10 +17,10 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.rusty.Err
 import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
-import reactor.kotlin.core.publisher.toFlux
 
 object JoinHandler {
     object JoinListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
@@ -78,10 +78,12 @@ object JoinHandler {
                         .thenReturn(Unit)
                         .tryAwait()
                     if (addedRole is Err) {
-                        val error = addedRole.value as? ClientException
-                        when (error?.status?.code()) {
-                            403 -> return@filter true
-                            404 -> config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted,
+                        val ce = addedRole.value as? ClientException
+                        val err = ce?.status?.code()
+                        if(err == 404 || err == 403) {
+                            LOG.info("Unable to access role in join configuration :: $joinConfig. Removing configuration")
+                            config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted or not accessible
+                            config.save()
                         }
                     }
                     false
@@ -91,27 +93,38 @@ object JoinHandler {
 
         if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
 
-        config.options.featureChannels.values.toList().toFlux()
-            .filter(FeatureChannel::logChannel)
+        // send log message
+
+        config.logChannels()
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::joinLog)
-            .flatMap { joinLog ->
-                member.client.getChannelById(joinLog.channelID.snowflake)
-                    .ofType(TextChannel::class.java)
-                    .flatMap { channel ->
-                        mono {
-                            UserEventFormatter(member)
-                                .formatJoin(joinLog.joinFormat, invite)
-                        }.flatMap { formatted ->
-                            channel.createEmbed { embed ->
-                                embed.setDescription("$formatted$errorStr")
-                                embed.setColor(Color.of(6750056))
-                                if (joinLog.joinFormat.contains("&avatar")) {
-                                    embed.setImage(member.avatarUrl)
-                                }
-                            }
+            .filter { joinLog -> joinLog.shouldInclude(member) }
+            .forEach { targetLog ->
+                try {
+                    val formatted = UserEventFormatter(member)
+                        .formatJoin(targetLog.joinFormat, invite)
+
+                    val logChan = member.client.getChannelById(targetLog.channelID.snowflake)
+                        .ofType(TextChannel::class.java)
+                        .awaitSingle()
+
+                    logChan.createEmbed { spec ->
+                        spec.setDescription("$formatted$errorStr")
+                        spec.setColor(Color.of(6750056))
+                        if (targetLog.joinFormat.contains("&avatar")) {
+                            spec.setImage(member.avatarUrl)
                         }
-                    }
-            }.awaitSingle()
+                    }.awaitSingle()
+
+                } catch(ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        LOG.info("Unable to send join log for guild '$guildId'. Disabling user join log.")
+                        LOG.debug(ce.stackTraceString)
+                        targetLog.joinLog = false
+                        config.save()
+                    } else throw ce
+                }
+            }
     }
 }

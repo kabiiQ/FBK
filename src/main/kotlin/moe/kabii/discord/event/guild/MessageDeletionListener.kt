@@ -3,7 +3,7 @@ package moe.kabii.discord.event.guild
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
-import kotlinx.coroutines.reactive.awaitFirstOrNull
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -15,18 +15,11 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
-import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.toFlux
 
 object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
     override suspend fun handle(event: MessageDeleteEvent) {
-        val chan = event.channel
-            .ofType(TextChannel::class.java)
-            .awaitFirstOrNull()
-        chan ?: return // ignore dm event
-
-        val guild = chan.guild.awaitSingle()
-        val config = GuildConfigurations.guildConfigurations[guild.id.asLong()] ?: return
+        val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
+        val config = GuildConfigurations.guildConfigurations[guildId] ?: return
 
         val deleteLogs = config.logChannels()
             .filter { channel -> channel.logSettings.deleteLog }
@@ -59,25 +52,35 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
             "A message by ${author.username}#${author.discriminator} was deleted in #$channelName:"
         } else "A message was deleted in $channelName but I did not have this message logged."
 
-        deleteLogs.toFlux()
-            .flatMap { log ->
-                guild.getChannelById(log.channelID.snowflake)
-            }
-            .ofType(TextChannel::class.java)
-            .flatMap { channel ->
-                channel.createEmbed { spec ->
-                    fbkColor(spec)
-                    spec.setAuthor(embedAuthor, null, author?.avatarUrl)
-                    if(content.isNotEmpty()) {
-                        spec.setDescription("Deleted message: $content")
+        deleteLogs
+            .forEach { targetLog ->
+                val logMessage = event.client
+                    .getChannelById(targetLog.channelID.snowflake)
+                    .ofType(TextChannel::class.java)
+                    .flatMap { logChan ->
+                        logChan.createEmbed { spec ->
+                            fbkColor(spec)
+                            spec.setAuthor(embedAuthor, null, author?.avatarUrl)
+                            if(content.isNotEmpty()) {
+                                spec.setDescription("Deleted message: $content")
+                            }
+                            spec.setFooter("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null)
+                            spec.setTimestamp(event.messageId.timestamp)
+                        }
                     }
-                    spec.setFooter("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null)
-                    spec.setTimestamp(event.messageId.timestamp)
+
+                try {
+                    logMessage.awaitSingle()
+                } catch(ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        // channel is deleted or we don't have send message perms. remove log configuration
+                        LOG.info("Unable to send message delete log for channel '${targetLog.channelID}'. Disabling message deletion log")
+                        LOG.debug(ce.stackTraceString)
+                        targetLog.logSettings.deleteLog = false
+                        config.save()
+                    } else throw ce
                 }
-            }.onErrorResume { t ->
-                LOG.info("Exception caught sending delete log :: ${t.message}")
-                LOG.debug(t.stackTraceString)
-                Mono.empty()
-            }.subscribe()
+            }
     }
 }

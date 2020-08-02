@@ -1,12 +1,13 @@
 package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.VoiceState
-import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -46,29 +47,42 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
         val member = user.asMember(guildID).tryAwait().orNull()
 
         // voice logs
-        config.options.featureChannels.values.asSequence()
-            .filter(FeatureChannel::logChannel)
+        config.logChannels()
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::voiceLog)
             .filter { log -> log.shouldInclude(user) }
-            .toFlux().flatMap { voiceLog ->
+            .forEach { targetLog ->
                 val status = when {
                     new && !old -> "Connected to voice channel ``${newChannel!!.name}``"
                     !new && old -> "Disconnected from voice channel ``${oldChannel!!.name}``"
                     new && old -> "Moved from channel ``${oldChannel!!.name}`` -> ``${newChannel!!.name}``"
-                    else -> return@flatMap Mono.empty<Message>()
+                    else -> return@forEach
                 }
 
-                event.client.getChannelById(voiceLog.channelID.snowflake)
-                    .ofType(MessageChannel::class.java)
-                    .flatMap { chan ->
-                        chan.createEmbed { embed ->
-                            embed.userAsAuthor(user)
-                            embed.setDescription(status)
-                            logColor(member, embed)
+                val logMessage = event.client
+                    .getChannelById(targetLog.channelID.snowflake)
+                    .ofType(TextChannel::class.java)
+                    .flatMap { logChan ->
+                        logChan.createEmbed { spec ->
+                            spec.userAsAuthor(user)
+                            spec.setDescription(status)
+                            logColor(member, spec)
                         }
                     }
-            }.subscribe()
+
+                try {
+                    logMessage.awaitSingle()
+                } catch (ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        // channel is deleted or we don't have send message perms. remove log configuration
+                        LOG.info("Unable to send voice state log for channel '${targetLog.channelID}'. Disabling voicelog.")
+                        LOG.debug(ce.stackTraceString)
+                        targetLog.voiceLog = false
+                        config.save()
+                    } else throw ce
+                }
+            }
 
         if(old) {
             // temporary voice channel listeners

@@ -21,7 +21,6 @@ import moe.kabii.discord.trackers.anime.MediaType
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.*
-import reactor.core.publisher.Mono
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -103,7 +102,7 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                     statusChange = true
                     builder = MediaEmbedBuilder(newMedia)
                     builder.descriptionFmt = when (newMedia.status) {
-                        ConsumptionStatus.WATCHING -> when(newMedia.type) {
+                        ConsumptionStatus.WATCHING -> when (newMedia.type) {
                             MediaType.ANIME -> "Started watching %s!"
                             MediaType.MANGA -> "Started reading %s!"
                         }
@@ -125,7 +124,7 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                         ConsumptionStatus.PTW -> "Updated their Plan to Watch for %s."
                         ConsumptionStatus.WATCHING -> {
                             builder.oldProgress = oldMedia.progressStr(withTotal = false)
-                            when(newMedia.type) {
+                            when (newMedia.type) {
                                 MediaType.ANIME -> "Watched $progress ${"episode".plural(progress)} of %s."
                                 MediaType.MANGA -> "Read $progress ${"chapter".plural(progress)} of %s."
                             }
@@ -138,9 +137,9 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                 }
             }
             if (builder != null) {
-                targets@for (target in savedList.targets) {
+                targets@ for (target in savedList.targets) {
                     // send embed to all channels this user's mal is tracked in
-                    val user = when(val userCall = discord.getUserById(target.discordUserID.snowflake).tryAwait()) {
+                    val user = when (val userCall = discord.getUserById(target.discordUserID.snowflake).tryAwait()) {
                         is Ok -> userCall.value
                         is Err -> {
                             LOG.warn("Unable to get Discord user ${target.discordUserID} in list checker :: ${userCall.value.message}")
@@ -149,11 +148,11 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                     }
                     builder.withUser(user)
 
-                    discord.getChannelById(target.channelID.snowflake)
+                    val updateMessage = discord.getChannelById(target.channelID.snowflake)
                         .ofType(MessageChannel::class.java)
                         .filter { chan ->
                             // check if channel is currently enabled (or pm channel)
-                            when(chan) {
+                            when (chan) {
                                 is TextChannel -> {
                                     val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
                                     val featureSettings = config.options.featureChannels[chan.id.asLong()]?.featureSettings
@@ -175,18 +174,19 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                                 builder.createEmbedConsumer(savedList.list)(spec)
                             }
                         }
-                        .onErrorResume { e ->
-                            if(e is ClientException && e.status.code() == 404) {
-                                // remove target if no longer valid
-                                savedList.targets -= target
-                                runBlocking { savedList.save() }
-                            }
 
-                            LOG.warn("Uncaught exception in MediaListWatcher: ${e.message} while sending anime list update to ${target.channelID}")
-                            LOG.info(e.stackTraceString)
-                            Mono.empty()
-                        }
-                        .awaitSingle()
+                    try {
+                        updateMessage.awaitSingle()
+                    } catch (ce: ClientException) {
+                        val err = ce.status.code()
+                        if (err == 404 || err == 403) {
+                            // remove target if no longer valid
+                            LOG.info("Unable to send MediaList update to channel '${target.channelID}'. Configuration target will be removed")
+                            LOG.debug(ce.stackTraceString)
+                            savedList.targets -= target
+                            savedList.save()
+                        } else throw ce
+                    }
                 }
             }
         }

@@ -4,12 +4,11 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.rest.util.Color
-import moe.kabii.LOG
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.tryAwait
 
 object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::class) {
@@ -30,11 +29,7 @@ object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::clas
                         spec.setAuthor("New server", null, avatarUrl)
                         spec.setDescription("Config created for server: ${event.guild.name} (${event.guild.id.asString()})")
                     }
-                }
-                .doOnError { e ->
-                    LOG.error("Error sending meta log event: ${e.message}")
-                    LOG.debug(e.stackTraceString)
-                }.subscribe()
+                }.awaitSingle()
         }
     }
 }

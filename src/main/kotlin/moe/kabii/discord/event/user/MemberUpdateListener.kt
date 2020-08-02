@@ -1,10 +1,13 @@
 package moe.kabii.discord.event.user
 
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -45,45 +48,63 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         }.onErrorResume { _ -> Mono.empty() }
                 }.subscribe()
 
-            // role update log
+            // post role update log
             val member = event.member.awaitSingle()
-            val logs = config.logChannels()
-                .toFlux()
+            config.logChannels()
                 .map(FeatureChannel::logSettings)
                 .filter(LogSettings::roleUpdateLog)
-                .flatMap { log -> guild.getChannelById(log.channelID.snowflake) }
-                .ofType(TextChannel::class.java)
-                .onErrorContinue { _, _ ->  }
+                .forEach { targetLog ->
+                    try {
+                        val logChan = event.client
+                            .getChannelById(targetLog.channelID.snowflake)
+                            .ofType(TextChannel::class.java)
+                            .awaitSingle()
 
-            addedRoles.toFlux().flatMap { newID ->
-                event.client.getRoleById(guild.id, newID)
-            }.flatMap { addedRole ->
-                logs.flatMap { chan -> chan.createEmbed { embed ->
-                    fbkColor(embed)
-                    embed.userAsAuthor(member)
-                    embed.setDescription("Added to role **${addedRole.name}**")
-                    embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${addedRole.id.asString()}", null)
-                }}
-            }.subscribe() // todo auditevent here when d4j issue fixed
+                        val added = addedRoles.toFlux()
+                            .flatMap { addedRoleId ->
+                                guild.getRoleById(addedRoleId)
+                            }
+                            .map(Role::getName)
+                            .collectList().awaitSingle()
 
-            removedRoles.mapNotNull { oldID -> guild.getRoleById(oldID).tryAwait().orNull() } // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
-                .forEach { oldRole ->
-                    logs.flatMap { chan -> chan.createEmbed { embed ->
-                        fbkColor(embed)
-                        embed.userAsAuthor(member)
-                        embed.setDescription("Removed from role **${oldRole.name}**")
-                        embed.setFooter("User ID: ${member.id.asString()} - Role ID: ${oldRole.id.asString()}", null)
-                    } }.subscribe()
-                    /* }  }.subscribe { logMsg ->
-                       val auditEvent = AuditRoleUpdate(
-                           logMsg.channelId.asLong(),
-                           logMsg.id.asLong(),
-                           guild.id.asLong(),
-                           AuditRoleUpdate.Companion.RoleDirection.REMOVED,
-                           oldRole.id,
-                           member.id
-                       )
-                       LogWatcher.auditEvent(event.client, auditEvent) } */ // currently d4j issue preventing this
+                        if(added.isNotEmpty()) {
+                            val addedStr = added.joinToString(", ")
+
+                            logChan.createEmbed { spec ->
+                                fbkColor(spec)
+                                spec.userAsAuthor(member)
+                                spec.setDescription("Added to role **$addedStr**")
+                                spec.setFooter("User ID: ${member.id.asString()}", null)
+                            }.awaitSingle()
+                            // todo auditevent here when d4j issue fixed
+                        }
+
+                        // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
+                        val removed = removedRoles
+                            .mapNotNull { oldID -> guild.getRoleById(oldID).tryAwait().orNull() }
+                            .map(Role::getName)
+
+                        if(removed.isNotEmpty()) {
+                            val removedStr = removed.joinToString(", ")
+
+                            logChan.createEmbed { spec ->
+                                fbkColor(spec)
+                                spec.userAsAuthor(member)
+                                spec.setDescription("Removed from role **$removedStr**")
+                                spec.setFooter("User ID: ${member.id.asString()}", null)
+
+                            }.awaitSingle()
+                        }
+
+                    } catch(ce: ClientException) {
+                        val err = ce.status.code()
+                        if(err == 404 || err == 403) {
+                            LOG.info("Unable to send role update log for guild '${event.guildId.asString()}'. Disabling role update log")
+                            LOG.debug(ce.stackTraceString)
+                            targetLog.roleUpdateLog = false
+                            config.save()
+                        } else throw ce
+                    }
                 }
         }
     }

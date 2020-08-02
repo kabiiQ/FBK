@@ -5,8 +5,10 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
-import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -15,8 +17,8 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.extensions.long
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.transaction
-import reactor.kotlin.core.publisher.toFlux
 
 object PartHandler {
     object PartListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
@@ -29,32 +31,40 @@ object PartHandler {
         // save current roles if this setting is enabled
         if(config.guildSettings.reassignRoles && member != null) {
             config.autoRoles.rejoinRoles[user.id.asLong()] = member.roleIds.map(Snowflake::long).toLongArray()
+            config.save()
         }
-        config.save()
 
-        config.options.featureChannels.values.toList().toFlux()
-            .filter(FeatureChannel::logChannel)
+        config.logChannels()
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::partLog)
             .filter { partLog -> partLog.shouldInclude(user) }
-            .flatMap { partLog ->
-            user.client.getChannelById(partLog.channelID.snowflake)
-                .ofType(TextChannel::class.java)
-                .flatMap { channel ->
-                    mono {
-                        UserEventFormatter(user)
-                            .formatPart(partLog.partFormat, member)
-                    }.flatMap { formatted ->
-                        channel.createEmbed { embed ->
-                            embed.setDescription(formatted)
-                            embed.setColor(Color.of(16739688))
-                            if (partLog.partFormat.contains("&avatar")) {
-                                embed.setImage(user.avatarUrl)
-                            }
+            .forEach { targetLog ->
+                try {
+                    val formatted = UserEventFormatter(user)
+                        .formatPart(targetLog.partFormat, member)
+
+                    val logChan = user.client.getChannelById(targetLog.channelID.snowflake)
+                        .ofType(TextChannel::class.java)
+                        .awaitSingle()
+
+                    logChan.createEmbed { spec ->
+                        spec.setDescription(formatted)
+                        spec.setColor(Color.of(16739688))
+                        if (targetLog.partFormat.contains("&avatar")) {
+                            spec.setImage(user.avatarUrl)
                         }
-                    }
+                    }.awaitSingle()
+
+                } catch (ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        LOG.info("Unable to send part log for guild '${guild.asString()}'. Disabling user join log.")
+                        LOG.debug(ce.stackTraceString)
+                        targetLog.partLog = false
+                        config.save()
+                    } // todo log clientexception needed?
                 }
-        }.subscribe()
+            }
 
         transaction {
             val logUser = UserLog.GuildRelationship.getOrInsert(user.id.asLong(), guild.long)

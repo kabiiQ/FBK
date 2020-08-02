@@ -2,15 +2,14 @@ package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageBulkDeleteEvent
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.logColor
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
-import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.toFlux
 
 object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(MessageBulkDeleteEvent::class) {
     override suspend fun handle(event: MessageBulkDeleteEvent) {
@@ -32,24 +31,29 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
             .distinct()
         val messageCount = event.messages.size
 
-        deleteLogs.toFlux()
-            .map { log -> log.channelID.snowflake }
-            .flatMap { logID ->
-                event.guild.flatMap { guild ->
-                    guild.getChannelById(logID)
+        deleteLogs
+            .forEach { targetLog ->
+                val logMessage = event.client
+                    .getChannelById(targetLog.channelID.snowflake)
+                    .ofType(TextChannel::class.java)
+                    .flatMap { logChan ->
+                        logChan.createEmbed { spec ->
+                            logColor(null, spec)
+                            spec.setDescription("$messageCount messages from $authorCount users were bulk-deleted in ${eventChannel.name}.")
+                        }
+                    }
+                try {
+                    logMessage.awaitSingle()
+                } catch(ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        // channel is deleted or we don't have send message perms. remove log configuration
+                        LOG.info("Unable to send bulk delete log for channel '${targetLog.channelID}'. Disabling message deletion log.")
+                        LOG.debug(ce.stackTraceString)
+                        targetLog.logSettings.deleteLog = false
+                        config.save()
+                    } else throw ce
                 }
             }
-            .ofType(TextChannel::class.java)
-            .flatMap { log ->
-                log.createEmbed { spec ->
-                    fbkColor(spec)
-                    spec.setDescription("$messageCount messages from $authorCount users were bulk-deleted in ${eventChannel.name}.")
-                }
-            }.onErrorResume { t ->
-                LOG.info("Exception caught sending bulk delete log :: ${t.message}")
-                LOG.debug(t.stackTraceString)
-                Mono.empty()
-            }
-            .subscribe()
     }
 }

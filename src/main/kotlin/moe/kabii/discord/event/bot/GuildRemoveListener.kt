@@ -4,13 +4,12 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.util.Color
-import moe.kabii.LOG
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.structure.DiscordBot
 import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.tryBlock
 
 object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
@@ -28,10 +27,7 @@ object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::c
                         spec.setAuthor("Leaving server", null, event.client.self.map(User::getAvatarUrl).tryBlock().orNull())
                         spec.setDescription("Bot removed from server with ID ${event.guildId.asString()}.")
                     }
-                }.doOnError { e ->
-                    LOG.error("Error sending meta log event: ${e.message}")
-                    LOG.debug(e.stackTraceString)
-                }.subscribe()
+                }.awaitSingle()
         }
     }
 }

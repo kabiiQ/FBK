@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureSettings
@@ -207,16 +208,23 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                         }
                     } else null
                 }
-                val mention = mentionRole?.mention
-                val newNotification = chan.createMessage { spec ->
-                    if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
-                    spec.setEmbed(embed.automatic)
-                }.tryAwait().orNull()
 
-                if(newNotification == null) {
-                    LOG.warn("Unable to post message to ${chan.id.asString()}")
-                    return@forEach
-                } // can't post message, probably want some mech for untracking in this case. todo?
+                val mention = mentionRole?.mention
+                val newNotification = try {
+                    chan.createMessage { spec ->
+                        if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
+                        spec.setEmbed(embed.automatic)
+                    }.awaitSingle()
+                } catch (ce: ClientException) {
+                    val err = ce.status.code()
+                    if(err == 404 || err == 403) {
+                        // notification channel has been deleted or we don't have perms to send. untrack this target :/
+                        LOG.info("Unable to send stream notification to channel '${chan.id.asString()}'. Untracking target :: $target")
+                        target.delete()
+                        return@forEach
+                    } else throw ce
+                }
+
                 TrackedStreams.Notification.new {
                     this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
                         .elementAtOrElse(0) { _ ->
