@@ -53,6 +53,7 @@ object MALParser : MediaListParser() {
         page = 1
         val mangas = mutableListOf<MALMangaList.MALManga>()
         do {
+            delay(4000L)
             val mangaRequest = "http://127.0.0.1:8000/v3/user/$id/mangalist/all/$page"
             val responseBody = requestMediaList(mangaRequest) { response ->
                 if(!response.isSuccessful) {
