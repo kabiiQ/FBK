@@ -40,7 +40,7 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutines = "1.3.7"
+    val coroutines = "1.3.8"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")

@@ -4,7 +4,12 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
 
-data class ExtractedQuery private constructor(val url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
+data class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
+    init {
+        // ignore <> if they surround a URL - these can be used in Discord to avoid embedding a link
+        url = url.removeSurrounding("<", ">")
+    }
+
     companion object {
         private val timestampRegex = Regex("[&?#](?:t|time)=([0-9smh]*)")
         private val sampleRegex = Regex("[&?]sample=([0-9smh]*)")
@@ -36,9 +41,6 @@ data class ExtractedQuery private constructor(val url: String, val timestamp: Lo
             val volumePct = matchVolume?.groups?.get(1)
             val volume = volumePct?.value?.toIntOrNull()
             url = if(matchVolume != null) url.replace(matchVolume.value, "") else url
-
-            // ignore <> if they surround a URL - these can be used in Discord to avoid embedding a link
-            url = url.removeSurrounding("<", ">")
 
             return ExtractedQuery(
                 url = url,

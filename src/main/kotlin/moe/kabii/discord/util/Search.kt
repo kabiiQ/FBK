@@ -17,7 +17,7 @@ import java.util.*
 object Search {
     private fun clean(str: String) = str.trim().toLowerCase().replace(" ", "").replace(",", "") // comma to help assist matching, most commands accept comma separation so we'll remove them in the actual role names too
 
-    private val roleMention = Regex("(<@&)([0-9]+)(>)")
+    private val roleMention = Regex("<@&([0-9]+)>")
     suspend fun roleByNameOrID(param: DiscordParameters, query: String): Role? {
         // check if this a role id
         val snowflake = query.toLongOrNull()?.snowflake
@@ -26,7 +26,7 @@ object Search {
             if (role is Ok) return role.value // if no match just continue, role name could still be a number
         }
         // check if this is a role mention
-        val mention = roleMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
+        val mention = roleMention.find(query)?.groups?.get(1)?.value?.toLongOrNull()?.snowflake
         if(mention != null) {
             val role = param.target.getRoleById(mention).tryAwait()
             if (role is Ok) return role.value
@@ -78,7 +78,7 @@ object Search {
         }
     }
 
-    val channelMention = Regex("(<#)([0-9]+)(>)")
+    val channelMention = Regex("<#([0-9]+)>")
     suspend inline fun <reified R: GuildChannel> channelByID(param: DiscordParameters, query: String): R? {
         // check if this is a channel id
         val snowflake = query.toLongOrNull()?.snowflake
@@ -87,7 +87,7 @@ object Search {
             if(channel is Ok) return channel.value as? R
         }
         // channel mention
-        val mention = channelMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
+        val mention = channelMention.find(query)?.groups?.get(1)?.value?.toLongOrNull()?.snowflake
         return mention?.run { param.target.getChannelById(this).tryAwait().orNull() as? R? }
     }
 
@@ -105,11 +105,14 @@ object Search {
         }
         // try to match user by name if guild context is provided
         return if(guildContext != null) {
-            memberByNameOrID(param, guildContext, query)
+            val member = memberByNameOrID(param, guildContext, query)
+            if(member != null) {
+                param.event.client.getUserById(member.id).tryAwait().orNull()
+            } else null
         } else null
     }
 
-    private val userMention = Regex("(<@!?)([0-9]+)(>)")
+    private val userMention = Regex("<@!?([0-9]+)>")
     private suspend fun memberByNameOrID(param: DiscordParameters, target: Guild, query: String): Member? {
         // check if this is a user ID
         val snowflake = query.toLongOrNull()?.snowflake
@@ -118,7 +121,7 @@ object Search {
             if(member is Ok) return member.value
         }
         // check if this is a user mention
-        val mention = userMention.find(query)?.groups?.get(2)?.value?.toLongOrNull()?.snowflake
+        val mention = userMention.find(query)?.groups?.get(1)?.value?.toLongOrNull()?.snowflake
         if(mention != null) {
             return target.getMemberById(mention).tryAwait().orNull()
         }

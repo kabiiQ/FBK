@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -18,7 +19,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
     override suspend fun handle(event: MessageDeleteEvent) {
-        val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
+        val guildId = event.channel.ofType(TextChannel::class.java).awaitFirstOrNull()?.guildId?.asLong() ?: return
+        // todo: restore rc4+ val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
         val config = GuildConfigurations.guildConfigurations[guildId] ?: return
 
         val deleteLogs = config.logChannels()
