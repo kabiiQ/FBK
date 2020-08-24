@@ -19,8 +19,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
     override suspend fun handle(event: MessageDeleteEvent) {
-        val guildId = event.channel.ofType(TextChannel::class.java).awaitFirstOrNull()?.guildId?.asLong() ?: return
-        // todo: restore rc4+ val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
+        val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
         val config = GuildConfigurations.guildConfigurations[guildId] ?: return
 
         val deleteLogs = config.logChannels()
