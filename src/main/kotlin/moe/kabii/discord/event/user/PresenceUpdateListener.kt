@@ -27,9 +27,7 @@ object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdat
         }
 
         // avatarlogs
-        val newAvatar = user.avatar.awaitSingle()
-        val oldAvatar = oldUser.avatar.awaitSingle()
-        if(newAvatar != oldAvatar) {
+        if(user.avatarUrl != oldUser.avatarUrl) {
             val member = event.member.tryAwait().orNull()
             logChannels
                 .filter(LogSettings::avatarLog)
