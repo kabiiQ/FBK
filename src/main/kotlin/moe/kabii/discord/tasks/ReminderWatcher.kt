@@ -75,7 +75,6 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
             LOG.warn("Skipping reminder: user ${reminder.user} not found") // this should not happen
             return
         }
-        // TODO rewrite:
 
         // try to send reminder, send in PM if failed
         val age = Duration.between(reminder.created.javaInstant, Instant.now())

@@ -61,7 +61,7 @@ object PartHandler {
                         LOG.debug(ce.stackTraceString)
                         targetLog.partLog = false
                         config.save()
-                    } // todo log clientexception needed?
+                    } else throw ce
                 }
             }
 
