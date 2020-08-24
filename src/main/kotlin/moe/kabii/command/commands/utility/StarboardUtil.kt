@@ -11,8 +11,7 @@ import moe.kabii.structure.extensions.snowflake
 
 object StarboardUtil : CommandContainer {
     object StarMessage : Command("starmessage", "addstar", "starboardmessage") {
-        override val wikiPath: String?
-            get() = TODO()
+        override val wikiPath = "Starboard#manually-adding-a-message-to-the-starboard-starmessage"
 
         init {
             discord {

@@ -13,8 +13,7 @@ import moe.kabii.structure.extensions.orNull
 import moe.kabii.util.EmojiCharacters
 
 object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {
-    override val wikiPath: String?
-        get() = TODO("pending docs")
+    override val wikiPath = "Starboard#starboard-configuration-starboard"
 
     object StarboardModule : ConfigurationModule<StarboardSetup>(
         "starboard",
