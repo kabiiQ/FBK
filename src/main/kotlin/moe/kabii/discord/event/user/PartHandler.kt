@@ -37,7 +37,6 @@ object PartHandler {
         config.logChannels()
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::partLog)
-            .filter { partLog -> partLog.shouldInclude(user) }
             .forEach { targetLog ->
                 try {
                     val formatted = UserEventFormatter(user)

@@ -98,7 +98,6 @@ object JoinHandler {
         config.logChannels()
             .map(FeatureChannel::logSettings)
             .filter(LogSettings::joinLog)
-            .filter { joinLog -> joinLog.shouldInclude(member) }
             .forEach { targetLog ->
                 try {
                     val formatted = UserEventFormatter(member)
