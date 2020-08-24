@@ -40,7 +40,8 @@ fun main() {
     // init global objects
     val mongo = MongoDBConnection
     val postgres = PostgresConnection
-    val version = Metadata.current
+    LOG.info("FBK version: ${Metadata.buildInfo}")
+
     val keys = Keys.config
     val audio = AudioManager
 

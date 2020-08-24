@@ -57,11 +57,7 @@ object BotStats : CommandContainer {
                 val guildCount = guilds.count().toString()
                 val shards = event.client.gatewayClientGroup.shardCount
                 val users = guilds.values.sum().toString()
-                val build = Metadata.current
-                val buildInfo = if(build == null) "Development Build" else {
-                    val buildFlag = if(build.flag.isNullOrBlank()) "-${build.flag}" else ""
-                    "Release ${build.major}.${build.minor}$buildFlag\nBuild #${build.build}"
-                }
+                val build = Metadata.buildInfo
 
                 val now = Instant.now()
                 val connect = Duration.between(Uptime.connection, now)
@@ -76,7 +72,7 @@ object BotStats : CommandContainer {
                     addField("Discord Shards", shards.toString(), false)
                     addField("Guild Count", guildCount, true)
                     addField("Users Served", users, true)
-                    addField("Build Info", buildInfo, false)
+                    addField("Build Info", build, false)
                 }.subscribe()
             }
         }
