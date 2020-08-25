@@ -23,7 +23,7 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding)
     )
 
-    object ChannelFeatures : Command("features", "channelfeatures", "config", "channel") {
+    object ChannelFeatures : Command("feature", "features", "channelfeatures", "config", "channel") {
         override val wikiPath= "Configuration-Commands#the-config-command-channel-features"
 
         init {
