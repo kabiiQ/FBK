@@ -4,7 +4,10 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
+import io.ktor.http.*
+import io.ktor.util.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.BotSendMessageException
@@ -13,6 +16,10 @@ import moe.kabii.discord.util.starColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.extensions.*
 import moe.kabii.util.EmojiCharacters
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import java.io.File
+import java.io.InputStream
+import java.net.URL
 
 data class StarboardSetup(
     var channel: Long,
@@ -72,17 +79,30 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${EmojiCharacters.star} $stars <#$channel>$mention"
     }
 
-    private fun starboardEmbed(message: Message, jumpLink: String): EmbedBlock = {
+    private fun starboardEmbed(message: Message, jumpLink: String, newSpec: MessageCreateSpec): EmbedBlock = {
         val author = message.author.orNull()
         setAuthor(author?.username ?: "Unknown", null, author?.avatarUrl)
         starColor(this)
         setDescription(message.content)
+
         val attachment = message.attachments.firstOrNull()
-        // todo if image, set image
-        // todo otherwise, re-add as attachment
-        if(attachment != null) {
-            setImage(attachment.url)
+        if(attachment != null && !attachment.filename.isBlank()) {
+            val supportedImage = listOf(".png", ".jpg", ".jpeg", ".gif").any { attachment.filename.endsWith(it, ignoreCase = true) }
+
+            if(supportedImage) {
+                // if there is an uploaded image, put it in the embed
+                setImage(attachment.url)
+            } else {
+                // if this is a different type of attachment, just reattach it... (videos etc)
+                try {
+                    val stream = URL(attachment.url).openStream()
+                    newSpec.addFile(attachment.url, stream)
+                } catch (e: Exception) {
+                    addField("Attachment", attachment.url, false)
+                }
+            }
         }
+
         addField("Link", "[Jump to message]($jumpLink)", false)
         setFooter("Message ID: ${message.id.asString()}, sent ", null)
         setTimestamp(message.timestamp)
@@ -97,7 +117,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val starboardMessage = try {
             starboardChannel.createMessage { spec ->
                 spec.setContent(starboardContent(starCount, authorId, channelId))
-                spec.setEmbed(starboardEmbed(message, jumpLink))
+                spec.setEmbed(starboardEmbed(message, jumpLink, spec))
             }.awaitSingle()
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
