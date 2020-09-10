@@ -79,9 +79,9 @@ object NettyFileServer {
                 }
             }
 
-            get("/ids/{file}.{...}") {
+            get("/ids/{file}") {
                 val file = call.parameters["file"]
-                call.respondFile(File(idRoot, "$file.txt"))
+                call.respondFile(File(idRoot, "$file"))
             }
 
             // static resources could just be a 'static' definition here - but I think there are few enough we can make nice short, controlled urls
