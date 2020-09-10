@@ -9,7 +9,6 @@ import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
 import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
 
 object TrackedMediaLists {
     // global - animelist collection

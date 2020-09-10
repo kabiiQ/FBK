@@ -6,8 +6,6 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
-import io.ktor.http.*
-import io.ktor.util.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.BotSendMessageException
@@ -16,9 +14,6 @@ import moe.kabii.discord.util.starColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.extensions.*
 import moe.kabii.util.EmojiCharacters
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import java.io.File
-import java.io.InputStream
 import java.net.URL
 
 data class StarboardSetup(

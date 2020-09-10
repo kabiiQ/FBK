@@ -1,13 +1,11 @@
 package moe.kabii.net
 
-import io.ktor.application.call
-import io.ktor.http.ContentType
-import io.ktor.response.respondBytes
-import io.ktor.response.respondFile
-import io.ktor.routing.get
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys

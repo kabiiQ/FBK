@@ -6,7 +6,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.hasPermissions
-import moe.kabii.command.verify
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait

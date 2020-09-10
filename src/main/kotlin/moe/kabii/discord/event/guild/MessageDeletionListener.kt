@@ -4,7 +4,6 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
