@@ -1,6 +1,5 @@
 package moe.kabii.data.mongodb
 
-import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.coroutines.runBlocking
 import moe.kabii.discord.trackers.anime.KitsuParser
 import moe.kabii.discord.trackers.anime.MALParser
@@ -9,12 +8,14 @@ import moe.kabii.discord.trackers.anime.MediaListParser
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
+import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 object TrackedMediaLists {
     // global - animelist collection
     val mediaLists: MutableList<TrackedMediaList>
     val mongoMediaLists = MongoDBConnection.mongoDB.getCollection<TrackedMediaList>()
-    val lock = reentrantLock()
+    val lock = ReentrantLock()
 
     init {
         mediaLists = runBlocking {

@@ -2,7 +2,6 @@ package moe.kabii.command.commands.trackers
 
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
-import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
@@ -18,6 +17,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import kotlin.concurrent.withLock
 
 object MediaTrackerCommand : Tracker<TargetMediaList> {
     override suspend fun track(origin: DiscordParameters, target: TargetMediaList) {

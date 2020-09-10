@@ -5,7 +5,6 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
-import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -23,6 +22,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.*
 import java.time.Duration
 import java.time.Instant
+import kotlin.concurrent.withLock
 import kotlin.math.max
 
 class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, val discord: GatewayDiscordClient) : Runnable {

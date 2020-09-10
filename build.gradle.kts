@@ -1,9 +1,9 @@
 group = "moe.kabii"
 
 plugins {
-    val KOTLIN_VER = "1.3.72"
-    kotlin("jvm") version KOTLIN_VER
-    kotlin("kapt") version KOTLIN_VER
+    val kotlinVer = "1.4.10"
+    kotlin("jvm") version kotlinVer
+    kotlin("kapt") version kotlinVer
     id("com.github.johnrengelman.shadow") version "5.2.0"
     idea
 }
@@ -40,56 +40,54 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutines = "1.3.8"
+    val coroutinesVer = "1.3.9"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT") // reactor kotlin coroutine compat
-    implementation("io.projectreactor:reactor-core") {
-        version {
-            strictly("3.3.8.RELEASE")
-        }
-    }
+    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT") // can update once d4j 3.2 is available
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE") // reactor kotlin coroutine compat
+    implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
     implementation("com.discord4j:discord4j-core:3.1.0") // discord websocket and api
 
     // twitch irc
-    implementation("com.github.twitch4j:twitch4j:1.0.0-alpha.19")
+    implementation("com.github.twitch4j:twitch4j:1.1.1")
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
     implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
-    implementation("com.squareup.okhttp3:okhttp:4.7.2") // other api - http calls
+    implementation("com.squareup.okhttp3:okhttp:4.8.1") // other api - http calls
 
     // other api - json response parsing
-    val moshi = "1.9.3"
-    implementation("com.squareup.moshi:moshi:$moshi")
-    implementation("com.squareup.moshi:moshi-kotlin:$moshi")
-    implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshi")
+    val moshiVer = "1.9.3"
+    implementation("com.squareup.moshi:moshi:$moshiVer")
+    implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
+    implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
 
     // emote parsing
     implementation("com.kcthota:emoji4j:6.0")
 
     // thumbnail file server
-    val ktor = "1.3.1"
+    val ktor = "1.4.0"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.0.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.1.2")
 
     // postgresql user data, message history, tracked streams
-    implementation("org.jetbrains.exposed:exposed-core:0.26.1")
-    implementation("org.jetbrains.exposed:exposed-dao:0.26.1")
-    implementation("org.jetbrains.exposed:exposed-jodatime:0.26.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.26.1")
-    implementation("org.postgresql:postgresql:42.2.14")
+    val exposedVer = "0.27.1"
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
+    implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
+    implementation("org.postgresql:postgresql:42.2.16")
 
     // .toml token configuration
     implementation("com.uchuhimo:konf:0.22.1")

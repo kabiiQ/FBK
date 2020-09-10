@@ -55,7 +55,7 @@ internal interface AudioCommandContainer : CommandContainer {
             .filterNot(User::isBot)
             .count().tryAwait().orNull() ?: 0
         val minUsersRatio = ((config.skipRatio / 100.0) * vcUsers).toInt()
-        return intArrayOf(minUsersRatio, config.skipUsers.toInt()).min()!!
+        return intArrayOf(minUsersRatio, config.skipUsers.toInt()).minOrNull()!!
     }
 
     suspend fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
