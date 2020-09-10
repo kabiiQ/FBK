@@ -129,6 +129,8 @@ class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract:
     override fun noMatches() {
         origin.error("No YouTube video found matching **${extract.url}**.").block()
     }
+
+    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoadedModifiers(playlist.tracks.first(), warnPlaylist = false)
 }
 
 class PlaylistTrackLoader(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : BaseLoader(origin, position, extract) {
