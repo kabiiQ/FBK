@@ -44,9 +44,6 @@ object Keys : ConfigSpec("") {
         val port by required<Int>()
         val host by required<Boolean>()
     }
-    object Censor : ConfigSpec() {
-        val ip_services by required<List<String>>()
-    }
     object Admin : ConfigSpec() {
         val users by required<List<Long>>("admin_user")
         val channels by required<List<Long>>("admin_channels")
