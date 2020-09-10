@@ -148,7 +148,7 @@ class MessageHandler(val manager: CommandManager) {
                     param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
 
                 } catch (feat: FeatureDisabledException) {
-                    val serverMod = feat.origin.member.basePermissions.map { perms -> perms.contains(Permission.MANAGE_CHANNELS) }.tryAwait().orNull() == true
+                    val serverMod = feat.origin.member.hasPermissions(Permission.MANAGE_CHANNELS)
                     val enableNotice = if(serverMod) " Server moderators+ can enable this feature using **${prefix}config ${feat.feature} enable**." else ""
                     param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
 

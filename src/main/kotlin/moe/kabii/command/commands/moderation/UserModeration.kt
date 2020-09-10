@@ -5,6 +5,8 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.hasPermissions
+import moe.kabii.command.verify
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
@@ -36,7 +38,7 @@ object UserModeration : CommandContainer {
         init {
             botReqs(Permission.KICK_MEMBERS)
             discord {
-                if(!member.basePermissions.awaitSingle().contains(Permission.KICK_MEMBERS)) {
+                if(!member.hasPermissions(Permission.KICK_MEMBERS)) {
                     error("You do not have permission to kick members from **${target.name}**.").awaitSingle()
                     return@discord
                 }
@@ -67,7 +69,7 @@ object UserModeration : CommandContainer {
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {
-                if(!member.basePermissions.awaitSingle().contains(Permission.BAN_MEMBERS)) {
+                if(!member.hasPermissions(Permission.BAN_MEMBERS)) {
                     error("You do not have permission to ban users from **${target.name}**.").awaitSingle()
                     return@discord
                 }
@@ -97,7 +99,7 @@ object UserModeration : CommandContainer {
         init {
             botReqs(Permission.BAN_MEMBERS)
             discord {
-                if(!member.basePermissions.awaitSingle().contains(Permission.BAN_MEMBERS)) {
+                if(!member.hasPermissions(Permission.BAN_MEMBERS)) {
                     error("You do not have permission to pardon users from **${target.name}**.").awaitSingle()
                     return@discord
                 }

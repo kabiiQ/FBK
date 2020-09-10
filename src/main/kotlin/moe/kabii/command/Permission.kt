@@ -31,7 +31,9 @@ object BotAdmin {
 
 suspend fun Member.hasPermissions(vararg permissions: Permission): Boolean {
     if(BotAdmin.check(userID = id.asLong())) return true
-    return basePermissions.awaitFirstOrNull()?.containsAll(permissions.toList()) == true
+    val perms = basePermissions.awaitFirstOrNull() ?: return false
+    if(perms.contains(Permission.ADMINISTRATOR)) return true
+    return perms.containsAll(permissions.toList())
 }
 
 @Throws(MemberPermissionsException::class)
