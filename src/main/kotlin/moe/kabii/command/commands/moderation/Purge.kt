@@ -95,7 +95,7 @@ object Purge : CommandContainer {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
                 // purgebetween begin end users
-                member.channelVerify(chan as TextChannel, Permission.MANAGE_MESSAGES)
+                channelVerify(Permission.MANAGE_MESSAGES)
                 if(args.size < 2) {
                     usage("**purgebetween** will delete messages between two provided message IDs. For simple purging of recent messages see **purge** or **purgefrom**.",
                         "purgebetween <beginning message ID> <ending message ID> (optional user IDs)").awaitSingle()

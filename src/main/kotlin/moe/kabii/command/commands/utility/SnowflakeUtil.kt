@@ -107,6 +107,7 @@ object SnowflakeUtil : CommandContainer {
             discord {
                 if(args.isEmpty()) {
                     usage("**id** can be used to find the Discord ID for a user in your server.", "id <username>")
+                    return@discord
                 }
                 val targetUser = Search.user(this, noCmd, target)
                 if(targetUser == null) {

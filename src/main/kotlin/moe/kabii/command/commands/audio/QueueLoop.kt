@@ -11,7 +11,6 @@ object QueueLoop : Command("loop") {
     init {
         discord {
             // toggles queue "loop" feature
-            channelVerify(Permission.MANAGE_MESSAGES)
             val audio = AudioManager.getGuildAudio(target.id.asLong())
             if(audio.looping) {
                 audio.looping = false

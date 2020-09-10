@@ -38,7 +38,7 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
                     val list = if(filter.blacklisted) "blacklist" else "whitelist"
                     val enabled = filter.isCommandEnabled(match).toString()
                     val exempt = if(match.commandExempt) " (exempt)" else ""
-                    addField("Command Enabled (using $list):", "$enabled$exempt", false)
+                    addField("Command enabled in server (using $list):", "$enabled$exempt", false)
                 }
 //                addField("Discord Command:", (match.executeDiscord != null).toString(), true)
 //                addField("Twitch Command:", (match.executeTwitch != null).toString(), true)

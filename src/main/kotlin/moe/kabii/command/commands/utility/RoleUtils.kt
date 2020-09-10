@@ -16,6 +16,7 @@ object RoleUtils : CommandContainer {
         override val wikiPath = "Moderation-Commands#removing-emptyunused-roles"
 
         init {
+            botReqs(Permission.MANAGE_ROLES)
             discord {
                 member.verify(Permission.MANAGE_ROLES)
                 val emptyRoles = RoleUtil.emptyRoles(target)
@@ -31,7 +32,7 @@ object RoleUtils : CommandContainer {
                 val response = getBool(prompt)
                 if(response == true) {
                     val deleted = emptyRoles.toFlux()
-                        .flatMap { role -> role.delete().success() }
+                        .filterWhen { role -> role.delete().success() }
                         .count().awaitSingle()
                     embed("$deleted roles were deleted.")
                 } else {

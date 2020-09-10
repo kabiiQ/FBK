@@ -72,7 +72,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                             error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.").tryAwait()
                             prompt.edit { message ->
                                 message.setEmbed { embed ->
-                                    embed.setDescription("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.")
+                                    embed.setDescription("I am unable to edit the role **${role.name}**. I must have a role above **${role.name}** to to edit it. The hex value for the color you wanted to set was $hex.")
                                     errorColor(embed)
                                 }
                             }.tryAwait()

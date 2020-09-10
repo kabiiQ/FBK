@@ -95,7 +95,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
             config.save()
             embed {
                 setAuthor(target.name, null, target.getIconUrl(Image.Format.PNG).orNull())
-                setDescription("Starboard has been created. Messages which receive ${new.starsAdd} stars ${EmojiCharacters.star} will be placed on the starboard in ${channelTarget.mention}.")
+                setDescription("Starboard has been created. Messages which receive ${new.starsAdd} stars ${EmojiCharacters.star} will be placed on the starboard in ${channelTarget.mention}. This threshold can be changed by running the [**starboard stars <star requirement>**](https://github.com/kabiiQ/FBK/wiki/Starboard#starboard-configuration-starboard) command.")
             }.awaitSingle()
         }
     }
