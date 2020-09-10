@@ -13,7 +13,7 @@ FBK is currently in active development and will see a public release in 2020.
 # Features
 FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
 
-We try to cover a wide range of functionality with the bot, so not all commands will be listed here. 
+We try to cover a wide range of functionality with the bot, so not all features will be described here. A raw [command list](https://github.com/kabiiQ/FBK/wiki/Command-List) is available. 
 **Features include, and are not limited to:**
 
 - [Music Player](https://github.com/kabiiQ/FBK/wiki/Music-Player)
@@ -53,8 +53,8 @@ We try to cover a wide range of functionality with the bot, so not all commands 
 
 
 - Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
-  - **Configurable, comprehensive moderation logs**
-  - Purging messages from a chat
+  - [**Configurable, comprehensive moderation logs**](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
+  - [Purging messages from a chat](https://github.com/kabiiQ/FBK/wiki/Purge-Messages)
   - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels)
 
 
@@ -64,6 +64,8 @@ We try to cover a wide range of functionality with the bot, so not all commands 
 Current feature/issue plans are tracked on my [Glo Board](https://app.gitkraken.com/glo/board/XRmi8OAM1wAPgyBv).
 
 Feature ideas/requests, issue reports, and general questions are welcome in the bot's [Discord server](https://discord.com/invite/ucVhtnh).
+
+This bot is written in [Kotlin](https://kotlinlang.org/).
 
 The big libraries making my work on KizunaAi doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L37) file.
 
