@@ -82,7 +82,7 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
         var statusUpdate = false
 
         for(newMedia in new) {
-            val oldMedia = savedList.savedMediaList.media.find { saved -> saved.mediaID == newMedia.mediaID }
+            val oldMedia = savedList.savedMediaList.media.find(newMedia::equals)
             // don't create embed builder yet because the vast majority of media checked will not need one
             var builder: MediaEmbedBuilder? = null
             if (oldMedia == null) {
