@@ -6,6 +6,8 @@ data class MusicSettings(
     var deleteOldBotMessages: Boolean = true,
     var deleteUserCommands: Boolean = false,
     var queuerFSkip: Boolean = true,
+    var restrictFilters: Boolean = false,
+    var restrictSeek: Boolean = true,
     var alwaysFSkip: Boolean = false,
     var skipIfAbsent: Boolean = false,
     var skipRatio: Long = defaultRatio,

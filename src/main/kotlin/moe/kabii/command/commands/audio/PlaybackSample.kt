@@ -20,7 +20,7 @@ object PlaybackSample : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
-                if(!canFSkip(this, track)) {
+                if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
                     error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.").awaitSingle()
                     return@discord
                 }
@@ -56,7 +56,7 @@ object PlaybackSample : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
-                if(!canFSkip(this, track)) {
+                if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
                     error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.").awaitSingle()
                     return@discord
                 }

@@ -28,6 +28,10 @@ object PlaybackSpeed : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
+                if(!canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to adjust the playback speed for this track.").awaitSingle()
+                    return@discord
+                }
                 val arg = args[0].replace("%", "") // ignore % user might provide
                 val targetRate = when(val rate = arg.toDoubleOrNull()) {
                     null -> null

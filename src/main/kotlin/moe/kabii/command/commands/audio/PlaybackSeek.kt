@@ -45,6 +45,10 @@ object PlaybackSeek : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
+                if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.").awaitSingle()
+                    return@discord
+                }
                 val seekTo = DurationParser.tryParse(noCmd)
                 if(seekTo == null) {
                     error("**$noCmd** is not a valid timestamp. Example: **seek 1:12**.").awaitSingle()
@@ -81,6 +85,10 @@ object PlaybackSeek : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
+                if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.").awaitSingle()
+                    return@discord
+                }
                 val seekForwards = if(args.isEmpty()) {
                     Duration.ofSeconds(10)
                 } else {
@@ -109,6 +117,10 @@ object PlaybackSeek : AudioCommandContainer {
                 val track = audio.player.playingTrack
                 if(track == null) {
                     error("There is no track currently playing.").awaitSingle()
+                    return@discord
+                }
+                if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.").awaitSingle()
                     return@discord
                 }
                 val seekBackwards = if(args.isEmpty()) {

@@ -52,11 +52,10 @@ object PlaybackState : AudioCommandContainer {
                     usage("The current playback volume is **${audio.player.volume}%**.", "$alias <new volume>").awaitSingle()
                     return@discord
                 }
-                /* todo make configuration flag
                 if(!canFSkip(this, track)) {
                     error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.").awaitSingle()
                     return@discord
-                }*/
+                }
                 val data = track.userData as QueueData
                 val targetVolume = args[0].removeSuffix("%").toIntOrNull()
                 val maximum = config.musicBot.volumeLimit

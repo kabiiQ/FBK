@@ -19,6 +19,10 @@ object FilterPresets : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
+                if(!canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
+                    return@discord
+                }
                 val data = track.userData as QueueData
                 with(data.audioFilters) {
                     reset()
@@ -40,6 +44,10 @@ object FilterPresets : AudioCommandContainer {
                 val track = audio.player.playingTrack
                 if(track == null) {
                     error("There is no track currently playing.").awaitSingle()
+                    return@discord
+                }
+                if(!canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
                     return@discord
                 }
                 val data = track.userData as QueueData
@@ -88,6 +96,10 @@ object FilterPresets : AudioCommandContainer {
                 val track = audio.player.playingTrack
                 if(track == null) {
                     error("There is no track currently playing.").awaitSingle()
+                    return@discord
+                }
+                if(!canFSkip(this, track)) {
+                    error("You must be the DJ (track requester) or be a channel moderator to reset audio filters for this track.").awaitSingle()
                     return@discord
                 }
                 val data = track.userData as QueueData

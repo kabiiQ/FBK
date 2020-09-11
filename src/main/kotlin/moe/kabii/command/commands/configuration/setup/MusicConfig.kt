@@ -28,6 +28,16 @@ object MusicConfig : CommandContainer {
                 MusicSettings::queuerFSkip
             ),
             BooleanElement(
+                "Restrict the usage of audio filters (volume, bass) to users with fskip permission",
+                listOf("restrictfilters", "limitfilters"),
+                MusicSettings::restrictFilters
+            ),
+            BooleanElement(
+                "Restrict the usage of playback manipulation (ff, seek) to users with fskip permission",
+                listOf("restrictseek", "restrictmanipulation"),
+                MusicSettings::restrictSeek
+            ),
+            BooleanElement(
                 "Skip command will force skip when permitted",
                 listOf("alwaysfskip", "forceskip", "fskip", "force-skip"),
                 MusicSettings::alwaysFSkip
