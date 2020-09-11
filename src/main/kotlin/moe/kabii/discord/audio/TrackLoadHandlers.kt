@@ -144,6 +144,8 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
         if(query != null) AudioManager.manager.loadItem(query, ForcePlayFallbackLoader(origin, extract))
     }
 
+    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+
     override fun trackLoaded(track: AudioTrack) {
         val playingTrack = audio.player.playingTrack
         if(playingTrack != null) { // save currently playing track
