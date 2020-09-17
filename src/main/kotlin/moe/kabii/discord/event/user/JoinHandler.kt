@@ -66,29 +66,21 @@ object JoinHandler {
                     joinConfig.inviteTarget?.equals(invite) != false // find autoroles for this invite or for all users
                 }
 
-            if (apply.isNotEmpty() && member.roleIds.isNotEmpty()) {
-                // if the user already has a role given, skip role assignment.
-                // can cause undesirable interactions with exclusive roles and other permission setups
-                // this should no longer occur as of 3840 with the removal of the offline update checker
-                errorStr += " User already has a role, automatic role assignment will be skipped."
-                emptyList()
-            } else {
-                apply.filter { joinConfig ->
-                    val addedRole = member.addRole(joinConfig.role.snowflake, "Automatic user join role")
-                        .thenReturn(Unit)
-                        .tryAwait()
-                    if (addedRole is Err) {
-                        val ce = addedRole.value as? ClientException
-                        val err = ce?.status?.code()
-                        if(err == 404 || err == 403) {
-                            LOG.info("Unable to access role in join configuration :: $joinConfig. Removing configuration")
-                            config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted or not accessible
-                            config.save()
-                        }
+            apply.filter { joinConfig ->
+                try {
+                    member.addRole(joinConfig.role.snowflake, "Automatic user join role")
+                        .thenReturn(Unit).awaitSingle()
+                } catch (ce: ClientException) {
+                    val err = ce.status.code()
+                    if (err == 404 || err == 403) {
+                        LOG.info("Unable to access role in join configuration :: $joinConfig. Removing configuration")
+                        config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted or not accessible
+                        config.save()
+                        return@filter true
                     }
-                    false
-                }.map(JoinConfiguration::role)
-            }
+                }
+                false
+            }.map(JoinConfiguration::role)
         }
 
         if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
