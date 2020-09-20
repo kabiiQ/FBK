@@ -117,13 +117,13 @@ object RoleReactions : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
                 val configs = config.selfRoles.reactionRoles
                 // reactionrole remove <messageid> <emoji>
-                if(args.size < 2) {
-                    usage("This command is used to remove an existing reaction role.", "autorole reaction remove <message id> <emoji>").awaitSingle()
+                if(args.isEmpty()) {
+                    usage("This command is used to remove an existing reaction role.", "autorole reaction remove <message id> (emoji)").awaitSingle()
                     return@discord
                 }
                 val messageID = args[0].removePrefix("#").toLongOrNull()
                 if(messageID == null) {
-                    usage("Invalid message ID **${args[0]}**.", "autorole reaction remove **<message id>** <emoji>").awaitSingle()
+                    usage("Invalid message ID **${args[0]}**.", "autorole reaction remove **<message id>** (emoji)").awaitSingle()
                     return@discord
                 }
                 // filter potential configuration matches
@@ -133,23 +133,30 @@ object RoleReactions : CommandContainer {
                     return@discord
                 }
 
-                val matchExact = EmojiUtil.parseEmoji(args[1])
-                val reactionConfig = if(matchExact != null) {
-                    // find config with this emoji
-                    messageConfigs.find { cfg -> cfg.reaction == matchExact }
-                } else {
-                    // emoji could be deleted. try to match by name, which otherwise is not a reliable way to identify emojis.
-                    configs.find { cfg -> cfg.reaction.name.equals(args[1], ignoreCase = true) }
-                }
+                val emojiArg = args.getOrNull(1)
+                val reactionConfigs = if(emojiArg != null) {
+                    // if emoji is specified, find config with this specific emoji
+                    val matchExact = EmojiUtil.parseEmoji(emojiArg)
+                    val reactionConfig = if(matchExact != null) {
+                        // find config with this emoji
+                        messageConfigs.find { cfg -> cfg.reaction == matchExact }
+                    } else {
+                        // emoji could be deleted. try to match by name, which otherwise is not a reliable way to identify emojis.
+                        configs.find { cfg -> cfg.reaction.name.equals(args[1], ignoreCase = true) }
+                    }
+                    listOfNotNull(reactionConfig)
+                } else messageConfigs // if no emoji specified, remove all reaction roles from this message
 
-                if(reactionConfig == null) {
-                    error("There is no existing reaction role for the message **${messageID}** with emoji ${args[1]}. See **autorole reaction list** for existing configs in **${target.name}**.").awaitSingle()
+                if(reactionConfigs.isEmpty()) {
+                    val emojiName = emojiArg ?: "any"
+                    error("There are no existing reaction roles on the message **${messageID}** with emoji '$emojiName'. See **autorole reaction list** for existing configs in **${target.name}**.").awaitSingle()
                     return@discord
                 }
 
-                configs.remove(reactionConfig)
+                reactionConfigs.forEach(configs::remove)
                 config.save()
-                embed("The reaction role configuration on message **$messageID** for emoji ${reactionConfig.reaction.name} has been removed.").awaitSingle()
+                val count = reactionConfigs.size
+                embed("$count reaction role configuration${count.s()} removed from message **$messageID**.").awaitSingle()
             }
         }
     }
