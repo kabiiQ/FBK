@@ -6,6 +6,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
+import moe.kabii.command.CommandAbortedException
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.relational.TrackedStreams
@@ -18,6 +19,7 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitchFollow : CommandContainer {
@@ -40,44 +42,48 @@ object TwitchFollow : CommandContainer {
                     return@discord
                 }
                 // get or create mention role for this stream
-                val mention = transaction { TrackedStreams.Mention.getMentionsFor(target.id, dbTarget.streamChannel.siteChannelID).firstOrNull() }
-                val existingRole = if(mention != null) {
-                    when(val guildRole = target.getRoleById(mention.mentionRole.snowflake).tryAwait()) {
-                        is Ok -> guildRole.value
-                        is Err -> {
-                            val err = guildRole.value
-                            if(err !is ClientException || err.status.code() != 404) {
-                                // this is an actual error. 404 would represent the role being deleted so that condition can just continue as if the role did not exist
-                                LOG.info("follow command failed to get mention role: ${err.message}")
-                                LOG.debug(err.stackTraceString)
-                                error("There was an error getting the mention role in **${target.name}** for this stream. I may not have permission to do this.").awaitSingle()
-                                return@discord
-                            } else null
+
+                val mentionRole = newSuspendedTransaction {
+                    val mention = TrackedStreams.Mention.getMentionsFor(target.id, dbTarget.streamChannel.siteChannelID)
+                        .firstOrNull()
+                    val existingRole = if (mention != null) {
+                        when (val guildRole = target.getRoleById(mention.mentionRole.snowflake).tryAwait()) {
+                            is Ok -> guildRole.value
+                            is Err -> {
+                                val err = guildRole.value
+                                if (err !is ClientException || err.status.code() != 404) {
+                                    // this is an actual error. 404 would represent the role being deleted so that condition can just continue as if the role did not exist
+                                    LOG.info("follow command failed to get mention role: ${err.message}")
+                                    LOG.debug(err.stackTraceString)
+                                    error("There was an error getting the mention role in **${target.name}** for this stream. I may not have permission to do this.").awaitSingle()
+                                    throw CommandAbortedException()
+                                } else null
+                            }
                         }
-                    }
-                } else null
-                // if role did not exist or was deleted, make a new role
-                val mentionRole = if(existingRole != null) existingRole else {
-                    // role does not exist
-                    val siteName = targetChannel.parser.site.full
-                    val streamName = targetChannel.displayName
-                    val spec: (RoleCreateSpec.() -> Unit) = {
-                        setName("$siteName/$streamName")
-                        setColor(targetChannel.parser.color)
-                    }
-                    val new = target.createRole(spec).tryAwait().orNull()
-                    if(new == null) {
-                        error("There was an error creating a role in **${target.name}** for this stream. I may not have permission to create roles.").awaitSingle()
-                        return@discord
-                    }
-                    new
-                }
-                transaction {
-                    TrackedStreams.Mention.new {
-                        this.stream = dbTarget.streamChannel
-                        this.guild = dbTarget.discordChannel.guild!!
-                        this.mentionRole = mentionRole.id.asLong()
-                        this.isAutomaticSet = true
+                    } else null
+
+                    // if role did not exist or was deleted, make a new role
+                    if (existingRole != null) existingRole else {
+                        // role does not exist
+                        val siteName = targetChannel.parser.site.full
+                        val streamName = targetChannel.displayName
+                        val spec: (RoleCreateSpec.() -> Unit) = {
+                            setName("$siteName/$streamName")
+                            setColor(targetChannel.parser.color)
+                        }
+                        val new = target.createRole(spec).tryAwait().orNull()
+                        if (new == null) {
+                            error("There was an error creating a role in **${target.name}** for this stream. I may not have permission to create roles.").awaitSingle()
+                            throw CommandAbortedException()
+                        }
+
+                        TrackedStreams.Mention.new {
+                            this.stream = dbTarget.streamChannel
+                            this.guild = dbTarget.discordChannel.guild!!
+                            this.mentionRole = new.id.asLong()
+                            this.isAutomaticSet = true
+                        }
+                        new
                     }
                 }
                 if(member.roles.hasElement(mentionRole).awaitSingle()) {
@@ -109,24 +115,27 @@ object TwitchFollow : CommandContainer {
                     usage("**unfollow** is used to remove a stream mention role from yourself.", "unfollow <twitch/mixer> <username>").awaitSingle()
                     return@discord
                 }
-                val mentionRole = TrackedStreams.Mention.getMentionsFor(target.id, targetChannel.userID).firstOrNull()
-                if(mentionRole == null) {
-                    error("**${targetChannel.displayName}** does not have any associated mention role in **${target.name}**.").awaitSingle()
-                    return@discord
-                }
-                val role = member.roles.filter { role -> role.id.asLong() == mentionRole.mentionRole }.single().tryAwait().orNull()
-                if(role == null) {
-                    embed("You do not have the stream mention role for **${targetChannel.displayName}**.").awaitSingle()
-                    return@discord
-                }
-                val removed = member.removeRole(mentionRole.mentionRole.snowflake).success().awaitSingle()
-                if(removed) {
-                    embed("You have been removed from the stream mention role **${role.name}** in **${target.name}**.")
-                } else {
-                    error("I was unable to remove your stream mention role **${role.name}**. I may not have permission to manage this role.")
-                }.awaitSingle()
+                newSuspendedTransaction {
+                    val mentionRole = TrackedStreams.Mention.getMentionsFor(target.id, targetChannel.userID).firstOrNull()
+                    if(mentionRole == null) {
+                        error("**${targetChannel.displayName}** does not have any associated mention role in **${target.name}**.").awaitSingle()
+                        return@newSuspendedTransaction
+                    }
+                    val role = member.roles.filter { role -> role.id.asLong() == mentionRole.mentionRole }.single().tryAwait().orNull()
+                    if(role == null) {
+                        embed("You do not have the stream mention role for **${targetChannel.displayName}**.").awaitSingle()
+                        return@newSuspendedTransaction
+                    }
+                    val removed = member.removeRole(mentionRole.mentionRole.snowflake).success().awaitSingle()
+                    if(removed) {
+                        embed("You have been removed from the stream mention role **${role.name}** in **${target.name}**.")
+                    } else {
+                        error("I was unable to remove your stream mention role **${role.name}**. I may not have permission to manage this role.")
+                    }.awaitSingle()
 
-                RoleUtil.removeIfEmptyStreamRole(target, mentionRole.mentionRole) // delete role if now empty
+                    RoleUtil.removeIfEmptyStreamRole(target, mentionRole.mentionRole) // delete role if now empty
+
+                }
             }
         }
     }
