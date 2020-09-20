@@ -96,7 +96,7 @@ data class DiscordParameters (
     fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->
         specColor(embed)
         val link = if(linkText != null) {
-            if(command.wikiPath != null) " Command usage: **[$linkText](${command.wikiPath})**." else " Command usage: **$linkText**."
+            if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
         } else ""
         embed.setDescription("$commandError$link")
     }

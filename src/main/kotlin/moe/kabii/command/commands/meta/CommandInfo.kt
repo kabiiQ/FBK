@@ -27,8 +27,9 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
 
             embed {
                 setTitle("Command information: ${match.baseName}")
-                if(match.wikiPath != null) {
-                    setDescription("[Command Page](${match.wikiPath})")
+                val wikiPage = match.getHelpURL()
+                if(wikiPage != null) {
+                    setDescription("[Command Page]($wikiPage)")
                 } else {
                     setDescription("Command wiki page not found.")
                 }
