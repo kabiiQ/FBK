@@ -33,7 +33,7 @@ object TwitchFollow : CommandContainer {
                 // this feature must be enabled in the guild to use
                 val targetChannel = getTargetChannel(this)
                 if(targetChannel == null) {
-                    usage("**follow** is used to add yourself to a role that will be pinged when a stream goes live.", "follow <twitch/mixer> <username>").awaitSingle()
+                    usage("**follow** is used to add yourself to a role that will be pinged when a stream goes live.", "follow (twitch) <username>").awaitSingle()
                     return@discord
                 }
                 val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, TrackedStreams.StreamInfo(targetChannel.parser.site, targetChannel.userID))
@@ -112,7 +112,7 @@ object TwitchFollow : CommandContainer {
                 }
                 val targetChannel = getTargetChannel(this)
                 if(targetChannel == null) {
-                    usage("**unfollow** is used to remove a stream mention role from yourself.", "unfollow <twitch/mixer> <username>").awaitSingle()
+                    usage("**unfollow** is used to remove a stream mention role from yourself.", "unfollow (twitch) <username>").awaitSingle()
                     return@discord
                 }
                 newSuspendedTransaction {
@@ -149,7 +149,7 @@ object TwitchFollow : CommandContainer {
                 if(default != null) {
                     val stream = default.site.parser.getUser(default.id).orNull()
                     if(stream == null) {
-                        usage("There was an error getting the default channel set in **${target.name}**.", "follow <twitch/mixer> <username>").awaitSingle()
+                        usage("There was an error getting the default channel set in **${target.name}**.", "follow (twitch) <username>").awaitSingle()
                         error(Unit)
                     } else stream
                 } else null
@@ -171,7 +171,7 @@ object TwitchFollow : CommandContainer {
                 // track twitch <name>
                 val site = TargetMatch.parseStreamSite(args[0])
                 if(site == null) {
-                    error("Unknown/unsupported streaming site **${args[0]}**. Supported sites are Twitch and Mixer.").awaitSingle()
+                    error("Unknown/unsupported streaming site **${args[0]}**. The only site currently supported is Twitch.").awaitSingle()
                     error(Unit)
                 }
                 val stream = site.parser.getUser(args[1]).orNull()

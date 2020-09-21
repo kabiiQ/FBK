@@ -21,7 +21,7 @@ object FollowConfig : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val settings = config.guildSettings
-                // setfollow <twitch/mixer/none> <username> OR setfollow <username> (implied to be twitch)
+                // setfollow <twitch/none> <username> OR setfollow <username> (implied to be twitch)
                 val (site, username) = when(args.size) {
                     1 -> {
                         when (args[0].toLowerCase()) {
@@ -42,13 +42,13 @@ object FollowConfig : CommandContainer {
                         // setfollow twitch <username>
                         val site = TargetMatch.parseStreamSite(args[0])
                         if(site == null) {
-                            error("Unknown/unsupported livestream site **${args[0]}**. Supported sites are Twitch and Mixer.").awaitSingle()
+                            error("Unknown/unsupported livestream site **${args[0]}**. The only site supported currently is Twitch.").awaitSingle()
                             return@discord
                         }
                         site to args[1]
                     }
                     else -> {
-                        usage("**setfollow** sets the livestream that will be used when the **follow** command is used without specifying a stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch/mixer or \"none\" to remove> <username>").awaitSingle()
+                        usage("**setfollow** sets the livestream that will be used when the **follow** command is used without specifying a stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch or \"none\" to remove> <username>").awaitSingle()
                         return@discord
                     }
                 }
@@ -72,15 +72,15 @@ object FollowConfig : CommandContainer {
             discord {
                 // manually set mention role for a followed stream - for servers where a role already exists
                 // verify stream is tracked, but override any existing mention role
-                // mentionrole <twitch/mixer> <stream name> <role>
+                // mentionrole <twitch> <stream name> <role>
                 target
                 if(args.size < 3) {
-                    usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole <twitch/mixer> <stream username> <discord role name or ID>").awaitSingle()
+                    usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (twitch) <stream username> <discord role name or ID>").awaitSingle()
                     return@discord
                 }
                 val targetSite = TargetMatch.parseStreamSite(args[0])
                 if(targetSite == null) {
-                    error("Unknown/unsupported streaming site **${args[0]}**. Supported sites are Twitch and Mixer.").awaitSingle()
+                    error("Unknown/unsupported streaming site **${args[0]}**. The only site currently supported is Twitch.").awaitSingle()
                     return@discord
                 }
                 val targetStream = targetSite.parser.getUser(args[1]).orNull()

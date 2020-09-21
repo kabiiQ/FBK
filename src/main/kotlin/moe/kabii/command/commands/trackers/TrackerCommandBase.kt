@@ -35,7 +35,6 @@ enum class TargetMatch(
             val match = streams.find { pattern -> pattern.alias.find(name.toLowerCase()::equals) != null }
             return when (match) {
                 TWITCH -> TrackedStreams.Site.TWITCH
-                //MIXER -> TrackedStreams.Site.MIXER
                 else -> null
             }
         }
