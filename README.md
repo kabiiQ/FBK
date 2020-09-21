@@ -13,7 +13,10 @@ FBK is currently in active development and will see a public release in 2020.
 # Features
 FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
 
-We try to cover a wide range of functionality with the bot, so not all features will be described here. A raw [command list](https://github.com/kabiiQ/FBK/wiki/Command-List) is available. 
+We try to cover a wide range of functionality with the bot, so not all features will be described here. 
+
+A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available. 
+
 **Features include, and are not limited to:**
 
 - [Music Player](https://github.com/kabiiQ/FBK/wiki/Music-Player)
