@@ -124,8 +124,9 @@ data class DiscordParameters (
         Conversation.register(responseCriteria, event.client, it, timeout = timeout)
     }
 
-    suspend fun getBool(react: Message?=null, timeout: Long? = null, add: Boolean = true) = suspendCancellableCoroutine<Boolean?> {
-        val (user, channel) = Criteria defaultFor this
+    suspend fun getBool(react: Message?=null, timeout: Long? = null, add: Boolean = true, limitDifferentUser: Long? = null) = suspendCancellableCoroutine<Boolean?> {
+        var (user, channel) = Criteria defaultFor this
+        user = limitDifferentUser ?: user
         val responseCriteria = BoolResponseCriteria(user, channel, react?.id?.asLong())
         val reactionListener = react?.run {
             ReactionListener(

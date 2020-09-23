@@ -20,7 +20,7 @@ object ConversationReactionHandler {
 
     private fun handleReaction(messageId: Snowflake, userId: Snowflake, emoji: ReactionEmoji, add: Boolean) {
         // conversational listeners
-        ReactionManager.listeners.asSequence().find { listener ->
+        ReactionManager.listeners.find { listener ->
             if (messageId.asLong() == listener.messageInfo.messageID) {
                 if(!listener.listenRemove && !add) return@find false
                 if (listener.user != null) {
@@ -29,7 +29,7 @@ object ConversationReactionHandler {
             }
             false
         }?.run {
-            val info = reactions.asSequence()
+            val info = reactions
                 .find { emoji.asUnicodeEmoji().orNull()?.raw ?: return@run == it.unicode }
             val conversation =
                 Conversation.conversations.find { it.reactionListener?.messageInfo?.messageID == this.messageInfo.messageID }
