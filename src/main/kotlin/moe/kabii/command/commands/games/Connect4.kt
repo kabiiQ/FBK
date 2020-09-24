@@ -32,13 +32,23 @@ object Connect4 : Command("c4", "connect4", "1v1") {
             when(args[0].toLowerCase()) {
                 "cancel", "end" -> {
                     // cancels an ongoing game
-                    if(p1Existing == null) {
+                    if(p1Existing == null || p1Existing !is Connect4Game) {
                         error("You have no game to cancel in this channel.").awaitSingle()
                         return@discord
                     }
                     p1Existing.cancelGame()
+
+                    // if there were game embeds in different channels, notify about the game ending.
+                    // todo same bug as elsewhere - awaiting on Message::delete seems to end some scheduler within reactor/d4j
+                    // so we'll just subscribe this and hand it off
+                    p1Existing.gameEmbeds.filter { embed -> embed.channelId != p1Channel.id }
+                        .toFlux()
+                        .flatMap { embed -> event.client.getMessageById(embed.channelId, embed.messageId) }
+                        .flatMap(Message::delete)
+                        .onErrorResume { Mono.empty() }
+                        .subscribe()
                 }
-                "private" -> {
+                "private", "pm" -> {
                     // moves an ongoing game into the user's DMs. neither user can have an ongoing DM game so there will be some checks
                     TODO()
                 }
@@ -65,72 +75,85 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                 }
                 else -> { // check if this is a new challenge request
                     // check for conflicts with p1's (command user's) games
-                    if(p1Existing != null) {
-                        error("You are currently in a game of **${p1Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.").awaitSingle()
+                    if (p1Existing != null) {
+                        error("You are currently in a game of **${p1Existing.gameNameFull}** which would conflict with a new game of **Connect 4**. You can end this game with the **c4 cancel** command.").awaitSingle()
                         return@discord
                     }
 
                     // verify they have challenged a real user
                     val p2Target = Search.user(this, noCmd, guild)
-                    if(p2Target == null || p2Target.isBot) {
+                    if (p2Target == null || p2Target.isBot) {
                         error("Unable to target user **$noCmd**. Search by username or ID, or alternatively use an @mention.").awaitSingle()
                         return@discord
                     }
-                    val p2Channel = if(guild != null) p1Channel else {
+                    val p2Channel = if (guild != null) p1Channel else {
                         p2Target.privateChannel.tryAwait().orNull()
                     }
-                    if(p2Channel == null) {
+                    if (p2Channel == null) {
                         error("I am unable to send a private message to **${p2Target.username}#${p2Target.discriminator}**. They may have their DMs closed.").awaitSingle()
                         return@discord
                     }
                     val p2Existing = GameManager.matchGame(p2Target.id, p2Channel.id)
-                    if(p2Existing != null) {
+                    if (p2Existing != null) {
                         error("**${p2Target.username}#${p2Target.discriminator}** has an ongoing game of **${p2Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.").awaitSingle()
                         return@discord
                     }
 
                     // neither player is in a game, can issue the challenge
-                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.username}#${author.discriminator}**. Do you accept?").awaitSingle()
+                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.username}#${author.discriminator}**. Do you accept?")
+                        .awaitSingle()
+
+                    val notice = if (guild == null) {
+                        embed("Your challenge has been sent.").awaitSingle()
+                    } else null
+
                     val response = getBool(prompt, timeout = 600000L /* 10 minutes */, limitDifferentUser = p2Target.id.asLong())
-                    if(response == true) {
-                        // send initial messages
-                        val targets = mutableListOf(p1Channel)
-                        if (p1Channel.id != p2Channel.id) {
-                            targets += p2Channel
-                        }
-                        val messages = try {
-                            targets.map { targetChan ->
-                                targetChan.createMessage("Connect 4 game is starting!").awaitSingle()
+                    when (response) { // (Boolean?) type
+                        true -> {
+                            // send initial messages
+                            val targets = mutableListOf(p1Channel)
+                            if (p1Channel.id != p2Channel.id) {
+                                targets += p2Channel
                             }
-                        } catch(ce: ClientException) {
-                            error("I am unable to send a private message to **${p2Target.username}#${p2Target.discriminator}**. They may have their DMs closed.").awaitSingle()
-                            return@discord
-                        }
-                        // challenge accepted, both users have successfully been messaged, the game can begin!
-                        val gameEmbeds = messages.map { msg -> EmbedInfo(msg.channelId, msg.id) }
-                        val newGame = Connect4Game(author, p2Target, gameEmbeds)
-                        GameManager.ongoingGames.add(newGame)
+                            val messages = try {
+                                targets.map { targetChan ->
+                                    targetChan.createMessage("Connect 4 game is starting!").awaitSingle()
+                                }
+                            } catch (ce: ClientException) {
+                                error("I am unable to send a private message to **${p2Target.username}#${p2Target.discriminator}**. They may have their DMs closed.").awaitSingle()
+                                return@discord
+                            }
+                            // challenge accepted, both users have successfully been messaged, the game can begin!
+                            val gameEmbeds = messages.map(EmbedInfo::from)
+                            val newGame = Connect4Game(author, p2Target, gameEmbeds)
+                            GameManager.ongoingGames.add(newGame)
 
-                        // draw initial game board
-                        messages.forEach { msg ->
-                            msg.edit(newGame::generateGameMessage).awaitSingle()
-                        }
+                            // draw initial game board
+                            messages.forEach { msg ->
+                                msg.edit(newGame::messageEditor).awaitSingle()
+                            }
 
-                        // add reactions if possible
-                        val reactions = (1..7).map { int -> "$int\u20E3" }
-                            .map(ReactionEmoji::unicode)
+                            // add reactions if possible
+                            val reactions = (1..7).map { int -> "$int\u20E3" }
+                                .map(ReactionEmoji::unicode)
 
-                        messages.forEach messages@{ message ->
-                            reactions.forEach { reaction ->
-                                try {
-                                    message.addReaction(reaction)
-                                        .success().awaitSingle()
-                                } catch(ce: ClientException) {
-                                    return@messages // break this from this message in loop
+                            messages.forEach messages@{ message ->
+                                reactions.forEach { reaction ->
+                                    try {
+                                        message.addReaction(reaction)
+                                            .success().awaitSingle()
+                                    } catch (ce: ClientException) {
+                                        return@messages // break this from this message in loop
+                                    }
                                 }
                             }
                         }
+                        false -> {
+                            embed("**${p2Target.username} declined the challenge.").awaitSingle()
+                        }
+                        // else -> user did not respond to the challenge within 10 minutes
                     }
+                    prompt.delete().success().awaitSingle()
                 }
             }
         }
