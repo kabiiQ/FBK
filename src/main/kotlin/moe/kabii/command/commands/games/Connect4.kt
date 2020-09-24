@@ -1,8 +1,6 @@
 package moe.kabii.command.commands.games
 
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -126,7 +124,11 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                             // challenge accepted, both users have successfully been messaged, the game can begin!
                             val gameEmbeds = messages.map(EmbedInfo::from)
                             val newGame = Connect4Game(author, p2Target, gameEmbeds)
-                            GameManager.ongoingGames.add(newGame)
+                            with(GameManager.ongoingGames) {
+                                synchronized(this) {
+                                    add(newGame)
+                                }
+                            }
 
                             // draw initial game board
                             messages.forEach { msg ->

@@ -52,9 +52,11 @@ object AudioManager {
         return AudioComponents(player, provider)
     }
 
-    @Synchronized fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
-        val (player, provider) = createAudioComponents()
-        GuildAudio(this, guild, player, provider)
+    fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
+        synchronized(guilds) {
+            val (player, provider) = createAudioComponents()
+            GuildAudio(this, guild, player, provider)
+        }
     }
 }
 

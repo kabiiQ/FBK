@@ -2,7 +2,6 @@ package moe.kabii.discord.event.user
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.Channel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.MessageCreateEvent

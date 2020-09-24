@@ -15,11 +15,9 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
-import moe.kabii.rusty.Err
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object JoinHandler {

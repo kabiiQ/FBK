@@ -105,7 +105,11 @@ data class GuildAudio(
             val newAudio = this.copy(player = player, provider = provider)
             this.ending = true
             this.player.stopTrack()
-            AudioManager.guilds[guildId] = newAudio
+            with(AudioManager.guilds) {
+                synchronized(this) {
+                    put(guildId, newAudio)
+                }
+            }
             if(voice != null) {
                 if(discord.connection != null) {
                     discord.connection!!.disconnect().tryAwait().ifErr { err ->

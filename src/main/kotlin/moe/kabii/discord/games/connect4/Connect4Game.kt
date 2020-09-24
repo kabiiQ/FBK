@@ -4,13 +4,11 @@ import discord4j.common.util.Snowflake
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.Channel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.discord.games.DiscordGame
@@ -114,7 +112,11 @@ class Connect4Game(
 
     override fun cancelGame() {
         inProgress = false
-        GameManager.ongoingGames.remove(this)
+        with(GameManager.ongoingGames) {
+            synchronized(this) {
+                remove(this@Connect4Game)
+            }
+        }
     }
 
     private suspend fun doTurn(target: GridCoordinate, discord: GatewayDiscordClient) {

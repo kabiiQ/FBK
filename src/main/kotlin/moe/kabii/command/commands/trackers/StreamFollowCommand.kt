@@ -20,7 +20,6 @@ import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitchFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {

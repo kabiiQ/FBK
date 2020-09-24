@@ -1,8 +1,6 @@
 package moe.kabii.discord.games
 
 import discord4j.common.util.Snowflake
-import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.Channel
 
 /*
     Need to be able to retrieve a 'game' state from arbitrary responses - reactions or text messages in channels throughout discord
@@ -12,5 +10,7 @@ import discord4j.core.`object`.entity.channel.Channel
 object GameManager {
     val ongoingGames: MutableList<DiscordGame> = mutableListOf()
 
-    fun matchGame(userId: Snowflake, channelId: Snowflake): DiscordGame? = ongoingGames.find { game -> game.matchGameMember(userId, channelId) }
+    fun matchGame(userId: Snowflake, channelId: Snowflake): DiscordGame? = synchronized(ongoingGames) {
+        ongoingGames.find { game -> game.matchGameMember(userId, channelId) }
+    }
 }

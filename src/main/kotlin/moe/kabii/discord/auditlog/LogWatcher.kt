@@ -28,6 +28,7 @@ object LogWatcher {
     private val watcherThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val executor = CoroutineScope(watcherThread + SupervisorJob())
 
+    // todo will need thread-safety if this feature is finished
     private val currentEvents: MutableMap<Long, MutableList<AuditTask>> = mutableMapOf()
 
     private fun createNewJob(discord: GatewayDiscordClient, guild: Long) = executor.launch(start = CoroutineStart.LAZY) {
