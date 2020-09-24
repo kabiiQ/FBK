@@ -30,12 +30,11 @@ object ListTrackerConfig : Command("listtracker", "animetracker", "malconfig", "
     init {
         discord {
             if(isPM) return@discord
-            chan as GuildChannel
             channelVerify(Permission.MANAGE_CHANNELS)
             val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(
-                "Anime list tracker settings for #${chan.name}",
+                "Anime list tracker settings for #${guildChan.name}",
                 ListTrackerModule,
                 features.featureSettings
             )

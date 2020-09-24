@@ -16,7 +16,6 @@ object StarboardUtil : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
-                chan as TextChannel
 
                 val starboardCfg = config.starboard
                 if(starboardCfg == null) {
@@ -39,7 +38,7 @@ object StarboardUtil : CommandContainer {
                 val targetMessage = try {
                     chan.getMessageById(targetId).awaitSingle()
                 } catch(ce: ClientException) {
-                    error("Unable to find the message with ID **$targetId** in ${chan.name}.").awaitSingle()
+                    error("Unable to find the message with ID **$targetId** in ${guildChan.name}.").awaitSingle()
                     return@discord
                 }
 

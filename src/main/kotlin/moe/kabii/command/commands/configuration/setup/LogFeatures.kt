@@ -72,12 +72,11 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
         discord {
             // editlog #channel
             if(isPM) return@discord
-            chan as GuildChannel
             member.verify(Permission.MANAGE_GUILD)
             val features = config.getOrCreateFeatures(chan.getId().asLong())
 
             val configurator = Configurator(
-                "Log configuration for #${chan.name}",
+                "Log configuration for #${guildChan.name}",
                 ChannelLogModule,
                 features.logSettings
             )
@@ -87,10 +86,10 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 val any = newSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    embed("${chan.getMention()} is no longer a mod log channel.").subscribe()
+                    embed("${chan.mention} is no longer a mod log channel.").subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    embed("${chan.getMention()} is now a mod log channel.").subscribe()
+                    embed("${chan.mention} is now a mod log channel.").subscribe()
                 }
                 if(newSettings.joinFormat.contains("&invite")) {
                     config.guildSettings.utilizeInvites = true

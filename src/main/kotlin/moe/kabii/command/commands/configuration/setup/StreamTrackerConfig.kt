@@ -43,12 +43,11 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
     init {
         discord {
             if(isPM) return@discord
-            chan as GuildChannel
             channelVerify(Permission.MANAGE_CHANNELS)
-            val features = config.getOrCreateFeatures(chan.getId().asLong())
+            val features = config.getOrCreateFeatures(guildChan.getId().asLong())
 
             val configurator = Configurator(
-                "Livestream tracker settings for #${chan.name}",
+                "Livestream tracker settings for #${guildChan.name}",
                 StreamTrackerModule,
                 features.featureSettings
             )

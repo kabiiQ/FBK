@@ -61,7 +61,7 @@ internal interface AudioCommandContainer : CommandContainer {
     suspend fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
         val data = track.userData as QueueData
         return if(origin.config.musicBot.queuerFSkip && data.author == origin.author.id) true
-        else origin.member.hasPermissions(origin.chan as GuildChannel, Permission.MANAGE_MESSAGES)
+        else origin.member.hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)
     }
 
     suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {

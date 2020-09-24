@@ -68,7 +68,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
                 error("Unable to find channel **$channelArg**.").awaitSingle()
                 return@with
             } else search
-        } else chan as TextChannel
+        } else guildChan
 
         // check if guild has starboard
         val current = config.starboard

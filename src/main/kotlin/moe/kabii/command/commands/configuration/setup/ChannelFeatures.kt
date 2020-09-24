@@ -29,13 +29,12 @@ object ChannelFeatures : CommandContainer {
         init {
             discord {
                 if(isPM) return@discord
-                chan as GuildChannel
                 channelVerify(Permission.MANAGE_CHANNELS)
                 val features = config.getOrCreateFeatures(chan.getId().asLong())
 
                 val wasLog = features.logChannel
                 val configurator = Configurator(
-                    "Feature configuration for #${chan.name}",
+                    "Feature configuration for #${guildChan.name}",
                     ChannelFeatureModule,
                     features
                 )
