@@ -170,12 +170,11 @@ class Connect4Game(
             CircleState.BLUE -> "Current turn: <@$blueId>"
             else -> ""
         }
-        spec.setContent(content)
+
         spec.setEmbed { embed ->
-            embed.setDescription(gameGrid.drawGrid())
+        spec.setDescription(gameGrid.drawGrid())
             embed.setColor(currentTurn.turnColor)
-            embed.addField(CircleState.RED.emote, redDisplayName, true)
-            embed.addField(CircleState.BLUE.emote, blueDisplayName, true)
-        }
+        spec.addField(EmojiCharacters.redSquare, redDisplayName, true)
+        spec.addField(EmojiCharacters.blueSquare, blueDisplayName, true)
     }
 }
