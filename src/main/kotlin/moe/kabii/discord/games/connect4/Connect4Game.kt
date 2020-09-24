@@ -7,6 +7,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.Channel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -18,9 +19,14 @@ import moe.kabii.discord.util.errorColor
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.EmojiCharacters
 import reactor.core.publisher.Mono
 
-data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake)
+data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake) {
+    companion object {
+        fun from(message: Message) = EmbedInfo(message.channelId, message.id)
+    }
+}
 
 class Connect4Game(
     playerRed: User,
@@ -148,7 +154,7 @@ class Connect4Game(
         val updated = gameEmbeds.filter { (channelId, messageId) ->
             try {
                 val message = discord.getMessageById(channelId, messageId).awaitSingle()
-                message.edit(::generateGameMessage).awaitSingle()
+                message.edit(::messageEditor).awaitSingle()
 
                 if(currentTurn == CircleState.VICTOR) {
                     message.removeAllReactions().success().tryAwait()
@@ -164,16 +170,25 @@ class Connect4Game(
         gameEmbeds = updated
     }
 
-    fun generateGameMessage(spec: MessageEditSpec) {
-        val content = when(currentTurn) {
-            CircleState.RED -> "Current turn: <@$redId>"
-            CircleState.BLUE -> "Current turn: <@$blueId>"
-            else -> ""
-        }
+    fun messageEditor(spec: MessageEditSpec) {
+        spec.setContent(generateGameContent())
+        spec.setEmbed(::generateGameEmbed)
+    }
 
-        spec.setEmbed { embed ->
+    fun messageCreator(spec: MessageCreateSpec) {
+        spec.setContent(generateGameContent())
+        spec.setEmbed(::generateGameEmbed)
+    }
+
+    private fun generateGameContent(): String = when(currentTurn) {
+        CircleState.RED -> "Current turn: <@$redId>"
+        CircleState.BLUE -> "Current turn: <@$blueId>"
+        else -> ""
+    }
+
+    private fun generateGameEmbed(spec: EmbedCreateSpec) {
         spec.setDescription(gameGrid.drawGrid())
-            embed.setColor(currentTurn.turnColor)
+        spec.setColor(currentTurn.turnColor)
         spec.addField(EmojiCharacters.redSquare, redDisplayName, true)
         spec.addField(EmojiCharacters.blueSquare, blueDisplayName, true)
     }

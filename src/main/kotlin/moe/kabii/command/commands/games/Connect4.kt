@@ -42,6 +42,27 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                     // moves an ongoing game into the user's DMs. neither user can have an ongoing DM game so there will be some checks
                     TODO()
                 }
+                "repost", "resend" -> {
+                    // resend the current game board if it was flooded away
+                    if(p1Existing == null || p1Existing !is Connect4Game) {
+                        error("You have no ongoing game in this channel that I can re-post.")
+                        return@discord
+                    }
+                    if(guild != null) {
+                        val newEmbed = chan.createMessage(p1Existing::messageCreator).awaitSingle()
+                        p1Existing.gameEmbeds = listOf(EmbedInfo.from(newEmbed))
+                    } else {
+                        val dmChan = author.privateChannel.awaitSingle()
+                        val oldEmbed = p1Existing.gameEmbeds.single { embed -> embed.channelId == dmChan.id }
+
+                        val newEmbed = dmChan.createMessage(p1Existing::messageCreator).awaitSingle()
+                        p1Existing.gameEmbeds = p1Existing.gameEmbeds.apply {
+                            val newInfo = EmbedInfo.from(newEmbed)
+                            minus(oldEmbed)
+                            plus(newEmbed)
+                        }
+                    }
+                }
                 else -> { // check if this is a new challenge request
                     // check for conflicts with p1's (command user's) games
                     if(p1Existing != null) {
