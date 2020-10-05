@@ -20,10 +20,10 @@ internal object PostgresConnection {
                 Reminders,
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
-                TrackedStreams.Streams,
                 TrackedStreams.Notifications,
                 TrackedStreams.Mentions,
-                UserLog.GuildRelationships
+                DBTwitchStreams.TwitchStreams,
+                UserLog.GuildRelationships,
             )
         }
     }

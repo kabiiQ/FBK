@@ -6,10 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.MediaTarget
-import moe.kabii.data.mongodb.TrackedMediaList
-import moe.kabii.data.mongodb.TrackedMediaLists
+import moe.kabii.data.mongodb.*
 import moe.kabii.discord.trackers.anime.MediaListEmpty
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
@@ -19,8 +16,8 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import kotlin.concurrent.withLock
 
-object MediaTrackerCommand : Tracker<TargetMediaList> {
-    override suspend fun track(origin: DiscordParameters, target: TargetMediaList) {
+object MediaTrackerCommand {
+    suspend fun track(origin: DiscordParameters, target: ListInfo) {
         // if this is in a guild make sure the media list feature is enabled here
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
         if(config != null) {
@@ -28,23 +25,23 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
             if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
         }
 
-        val targetName = target.list.id
-        val channelID = origin.chan.id.asLong()
+        val listName = target.id
+        val channelId = origin.chan.id.asLong()
 
-        val parser = target.list.site.parser
-        val listID = parser.getListID(target.list.id)
+        val parser = target.site.parser
+        val listID = parser.getListID(target.id)
         if(listID == null) {
-            origin.error("Unable to find ${target.list.site.full} list with identifier **$targetName**.").awaitSingle()
+            origin.error("Unable to find ${target.site.full} list with identifier **$listName**.").awaitSingle()
             return
         }
-        val targetList = target.list.copy(id = listID)
+        val targetList = target.copy(id = listID)
         // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
         val existingTrack = TrackedMediaLists.lock.withLock {
-            TrackedMediaLists.mediaLists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelID }
+            TrackedMediaLists.mediaLists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelId }
         }
 
         if(existingTrack != null) {
-            origin.error("**${targetName}** is already tracked in this channel.").awaitSingle()
+            origin.error("**${listName}** is already tracked in this channel.").awaitSingle()
             return
         }
 
@@ -63,7 +60,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
                     is MediaListEmpty -> {
                         editPrompt {
                             errorColor(this)
-                            setDescription("Unable to find ${targetList.site.full} list with identifier **${targetName}**.")
+                            setDescription("Unable to find ${targetList.site.full} list with identifier **${listName}**.")
                         }
                         return
                     }
@@ -88,24 +85,24 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
 
         // add this channel if the list isn't already tracked in this channel
         // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
-        val mediaTarget = MediaTarget(channelID, origin.author.id.asLong())
+        val mediaTarget = MediaTarget(channelId, origin.author.id.asLong())
         trackedList.targets += mediaTarget
         trackedList.save()
         editPrompt {
             fbkColor(this)
-            setDescription("Now tracking **$targetName**!")
+            setDescription("Now tracking **$listName**!")
         }
     }
 
-    override suspend fun untrack(origin: DiscordParameters, target: TargetMediaList) {
-        val parser = target.list.site.parser
-        val listID = parser.getListID(target.list.id)
-        if(listID == null) {
-            origin.error("Unable to find ${target.list.site.full} list with identifier **${target.list.id}**.").awaitSingle()
+    suspend fun untrack(origin: DiscordParameters, target: ListInfo) {
+        val parser = target.site.parser
+        val listId = parser.getListID(target.id)
+        if(listId == null) {
+            origin.error("Unable to find ${target.site.full} list with identifier **${target.id}**.").awaitSingle()
             return
         }
-        val targetName = target.list.id
-        val targetList = target.list.copy(id = listID)
+        val targetName = target.id
+        val targetList = target.copy(id = listId)
 
         // untrack the list from this location if it's tracked
         val trackedList = TrackedMediaLists.lock.withLock { // find tracked list with matching id/site
@@ -124,7 +121,7 @@ object MediaTrackerCommand : Tracker<TargetMediaList> {
                     return
                 } else {
                     val tracker = origin.chan.client.getUserById(trackedTarget.discordUserID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                    origin.error("You may not untrack **$targetName** unless you are $tracker or a server moderator.").awaitSingle()
+                    origin.error("You may not un-track **$targetName** unless you are $tracker or a server moderator.").awaitSingle()
                     return
                 }
             }

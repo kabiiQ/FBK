@@ -10,7 +10,6 @@ import moe.kabii.command.CommandAbortedException
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.discord.trackers.streams.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
@@ -22,7 +21,7 @@ import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object TwitchFollow : CommandContainer {
-    object FollowStream : Command("follow", "followrole") {
+    object FollowTwitch : Command("follow", "followrole") {
         override val wikiPath = "Livestream-Tracker#user-commands"
 
         init {
@@ -35,7 +34,7 @@ object TwitchFollow : CommandContainer {
                     usage("**follow** is used to add yourself to a role that will be pinged when a stream goes live.", "follow (twitch) <username>").awaitSingle()
                     return@discord
                 }
-                val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, TrackedStreams.StreamInfo(targetChannel.parser.site, targetChannel.userID))
+                val dbTarget = TwitchTrackerCommand.getDBTarget(chan.id, TrackedStreams.StreamInfo(targetChannel.parser.site, targetChannel.userID))
                 if(dbTarget == null) {
                     error("**${targetChannel.displayName}** is not a tracked stream in **${target.name}**.").awaitSingle()
                     return@discord
@@ -98,7 +97,7 @@ object TwitchFollow : CommandContainer {
         }
     }
 
-    object UnfollowStream : Command("unfollow") {
+    object UnfollowTwitch : Command("unfollow") {
         override val wikiPath = "Livestream-Tracker#user-commands"
 
         init {

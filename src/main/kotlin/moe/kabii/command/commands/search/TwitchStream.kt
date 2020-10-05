@@ -4,7 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureSettings
-import moe.kabii.discord.trackers.streams.StreamEmbedBuilder
+import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 
 object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
@@ -30,7 +30,7 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
             val settings = guild?.run {
                 GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.featureSettings
             } ?: FeatureSettings()
-            val stream = StreamEmbedBuilder(twitchUser, settings)
+            val stream = TwitchEmbedBuilder(twitchUser, settings)
                 .stream(twitchStream)
                 .manual
             embedBlock(stream).awaitSingle()

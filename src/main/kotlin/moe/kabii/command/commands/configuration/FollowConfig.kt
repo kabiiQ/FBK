@@ -5,10 +5,12 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.commands.trackers.TargetMatch
+import moe.kabii.command.commands.trackers.TrackCommandUtil
 import moe.kabii.command.verify
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.util.Search
+import moe.kabii.rusty.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -34,7 +36,7 @@ object FollowConfig : CommandContainer {
                             }
                             else -> {
                                 // setfollow <username>
-                                TrackedStreams.Site.TWITCH to args[0]
+                                TrackedStreams.DBSite.TWITCH to args[0]
                             }
                         }
                     }
@@ -72,12 +74,33 @@ object FollowConfig : CommandContainer {
             discord {
                 // manually set mention role for a followed stream - for servers where a role already exists
                 // verify stream is tracked, but override any existing mention role
-                // mentionrole <twitch> <stream name> <role>
+                // mentionrole (site) <stream name> <role>
                 target
-                if(args.size < 3) {
-                    usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (twitch) <stream username> <discord role name or ID>").awaitSingle()
+                if(args.size < 2) {
+                    usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (site name) <stream username> <discord role name or ID>").awaitSingle()
                     return@discord
                 }
+                // last arg must be discord role
+                val roleArg = args.last()
+                val targetArgs = args.dropLast(1)
+
+                val targetParse = TrackCommandUtil.parseTrackTarget(this, targetArgs, TargetMatch.TWITCH)
+                val (site, accountId) = when(targetParse) {
+                    is Ok -> targetParse.value
+                    is Err -> {
+                        val err = targetParse.value
+                        usage("${err}The only site currently supported is Twitch.", "mentionrole (site name) <stream username/ID> <discord role name/ID>").awaitSingle()
+                        return@discord
+                    }
+                }
+
+
+
+
+
+
+
+
                 val targetSite = TargetMatch.parseStreamSite(args[0])
                 if(targetSite == null) {
                     error("Unknown/unsupported streaming site **${args[0]}**. The only site currently supported is Twitch.").awaitSingle()

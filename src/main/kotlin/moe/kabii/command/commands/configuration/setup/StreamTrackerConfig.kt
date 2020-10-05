@@ -1,42 +1,41 @@
 package moe.kabii.command.commands.configuration.setup;
 
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Permission
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.FeatureSettings
+import moe.kabii.data.mongodb.guilds.TwitchSettings
 
 object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     override val wikiPath = "Livestream-Tracker#configuration"
 
-    object StreamTrackerModule : ConfigurationModule<FeatureSettings>(
+    object StreamTrackerModule : ConfigurationModule<TwitchSettings>(
         "livestream tracker",
         BooleanElement(
             "Edit stream notification with a summary rather than deleting the message when a stream ends",
             listOf("summary", "summarize", "streamsummary"),
-            FeatureSettings::streamSummaries
+            TwitchSettings::summaries
         ),
         BooleanElement(
             "Include the current stream thumbnail in the stream notification",
             listOf("thumbnail", "thumbnails", "image", "picture"),
-            FeatureSettings::streamThumbnails
+            TwitchSettings::thumbnails
         ),
         BooleanElement(
             "Include peak viewer count in summary",
             listOf("peak", "peakviews", "peakviewers", "viewers"),
-            FeatureSettings::streamPeakViewers
+            TwitchSettings::peakViewers
         ),
         BooleanElement(
             "Include average viewer count in summary",
             listOf("average", "averageviews", "averageviewers", "avg"),
-            FeatureSettings::streamAverageViewers
+            TwitchSettings::averageViewers
         ),
         BooleanElement("Include stream ending title in summary",
             listOf("title", "endtitle"),
-            FeatureSettings::streamEndTitle
+            TwitchSettings::endTitle
         ),
         BooleanElement("Include stream ending game in summary",
             listOf("game", "endgame"),
-            FeatureSettings::streamEndGame
+            TwitchSettings::endGame
         )
     )
 
@@ -49,7 +48,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
             val configurator = Configurator(
                 "Livestream tracker settings for #${guildChan.name}",
                 StreamTrackerModule,
-                features.featureSettings
+                features.twitchSettings
             )
 
             if(configurator.run(this)) {

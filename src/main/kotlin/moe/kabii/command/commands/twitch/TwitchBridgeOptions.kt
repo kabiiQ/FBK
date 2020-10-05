@@ -7,7 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.TempStates
-import moe.kabii.discord.trackers.streams.StreamUser
+import moe.kabii.discord.trackers.streams.twitch.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.rusty.Ok
 

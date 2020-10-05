@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -39,10 +38,14 @@ object ChannelFeatures : CommandContainer {
                     features
                 )
                 if(configurator.run(this)) {
+                    // validate default track target, if configured
+                    features.validateDefaultTarget()
+
                     config.save()
                     if(!wasLog && features.logChannel) {
-                        embed("${chan.getMention()} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.").subscribe()
+                        embed("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.").subscribe()
                     }
+
                 }
             }
         }
