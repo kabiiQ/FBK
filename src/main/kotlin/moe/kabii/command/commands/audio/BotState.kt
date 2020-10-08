@@ -7,8 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.structure.extensions.tryAwait
 
-object BotState {
-    object AudioReset : AudioCommand("restart", "reconnect") {
+object BotState : AudioCommandContainer {
+    object AudioReset : Command("restart", "reconnect") {
         override val wikiPath: String? = null // intentionally undocumented command
 
         init {
