@@ -38,7 +38,7 @@ object StreamTrackerCommand {
             is Ok -> lookup.value
             is Err -> {
                 val error = when (lookup.value) {
-                    is StreamErr.NotFound -> "Unable to find **${streamTarget.full}** stream **$target**."
+                    is StreamErr.NotFound -> "Unable to find **${streamTarget.full}** stream **${target.identifier}**."
                     is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
                 origin.error(error).awaitSingle()
@@ -82,7 +82,7 @@ object StreamTrackerCommand {
         val streamInfo = streamTarget.getChannel(target.identifier).orNull()
 
         if(streamInfo == null) {
-            origin.error("Unable to find **${streamTarget.full}** stream **$target**.").awaitSingle()
+            origin.error("Unable to find **${streamTarget.full}** stream **${target.identifier}**.").awaitSingle()
             return
         }
         val streamId = streamInfo.accountId

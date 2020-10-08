@@ -82,7 +82,8 @@ object KitsuTarget : AnimeTarget(
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
 
     companion object {
-        // a bit rigid design-wise
+        // a bit rigid design-wise - enforces the current structure of the tracker classes to be nested.
+        // however, simple and better than manually adding targets
         val declaredTargets = TrackerTarget::class.sealedSubclasses
             .flatMap { c -> c.sealedSubclasses }
             .mapNotNull { c -> c.objectInstance }
@@ -147,6 +148,5 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             }
         }
     }
-
 }
 
