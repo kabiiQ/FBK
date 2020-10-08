@@ -8,12 +8,15 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureSettings
+import moe.kabii.data.mongodb.guilds.TwitchSettings
 import moe.kabii.data.relational.DBTwitchStreams
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.streams.twitch.*
+import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.streams.twitch.TwitchStreamInfo
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
@@ -54,7 +57,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                         // re-associate SQL data with stream API data
                         streamData.mapNotNull { (id, data) ->
                             val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
-                            if (data is Err && data.value is TwitchErr.IO) {
+                            if (data is Err && data.value is StreamErr.IO) {
                                 LOG.warn("Error contacting Twitch :: $trackedChannel")
                                 return@mapNotNull null
                             }
@@ -87,11 +90,12 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                 is Ok -> user.value
                 is Err -> {
                     val err = user.value
-                    if (err is TwitchErr.NotFound) {
+                    val siteName = channel.site.targetType.full
+                    if (err is StreamErr.NotFound) {
                         // call succeeded and the user ID does not exist.
-                        LOG.info("Invalid ${channel.site.full} user: $twitchId. Untracking user...")
+                        LOG.info("Invalid $siteName user: $twitchId. Untracking user...")
                         channel.delete()
-                    } else LOG.error("Error getting ${channel.site.full} user: $twitchId: $err")
+                    } else LOG.error("Error getting $siteName user: $twitchId: $err")
                     null
                 }
             }
@@ -114,7 +118,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(TwitchParser.color)
-                            embed.setFooter("Channel ID was $twitchId on ${channel.site.full}.", null)
+                            embed.setFooter("Channel ID was $twitchId on ${channel.site.targetType.full}.", null)
                         }}?.tryAwait()
                         notif.delete()
                     }
@@ -129,9 +133,9 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                         val guild = discordMessage.guild.tryAwait().orNull()
                         val features = if(guild != null) {
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-                            config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        } else FeatureSettings() // use default settings for PM
-                        if(features.streamSummaries) {
+                            config.getOrCreateFeatures(messageID.channel.channelID).twitchSettings
+                        } else TwitchSettings() // use default settings for PM
+                        if(features.summaries) {
                             val specEmbed = TwitchEmbedBuilder(
                                 user!!,
                                 features
@@ -179,8 +183,8 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
             // get channel twitch settings
             val guildID = target.discordChannel.guild?.guildID
             val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).featureSettings }}
-                ?: FeatureSettings() // use default settings for pm notifications
+            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }}
+                ?: TwitchSettings() // use default settings for pm notifications
 
             val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
             if (existing == null) { // post a new stream notification

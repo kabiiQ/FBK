@@ -1,6 +1,11 @@
 package moe.kabii.data.mongodb.guilds
 
-import moe.kabii.command.commands.trackers.TargetMatch
+import moe.kabii.discord.trackers.AnimeTarget
+import moe.kabii.discord.trackers.MALTarget
+import moe.kabii.discord.trackers.TrackerTarget
+import moe.kabii.discord.trackers.TwitchTarget
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSuperclassOf
 
 
 data class OptionalFeatures(
@@ -15,49 +20,32 @@ data class FeatureChannel(
     var musicChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
     var allowStarboarding: Boolean = true,
-    var defaultTracker: TargetMatch? = null,
+    var defaultTracker: TrackerTarget? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val twitchSettings: TwitchSettings = TwitchSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
     fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
 
-    fun findDefaultTarget(): TargetMatch? {
-        if(defaultTracker != null) return checkNotNull(defaultTracker)
+    fun findDefaultTarget(type: KClass<TrackerTarget> = TrackerTarget::class): TrackerTarget? {
+        // if type is specified, this is a restriction on what type of target we need
+        if(defaultTracker != null && type.isSuperclassOf(defaultTracker!!::class)) return defaultTracker
 
-        // fallback to enabled tracker
+        // fallback to enabled tracker of specified type
+        // twitch first, so if multiple are enabled, twitch will be the default
         return when {
-            // twitch first, so if multiple are enabled, twitch will be the default
-            twitchChannel -> TargetMatch.TWITCH
-            animeChannel -> TargetMatch.MAL
+            twitchChannel && type.isSuperclassOf(TwitchTarget::class) -> TwitchTarget
+            animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             else -> null
-        }
-    }
-
-    fun findDefaultTarget(vararg subset: TargetMatch): TargetMatch? {
-        if(defaultTracker != null && subset.contains(defaultTracker)) return checkNotNull(defaultTracker)
-
-        return when {
-            twitchChannel && subset.contains(TargetMatch.TWITCH) -> TargetMatch.TWITCH
-            animeChannel && subset.contains(TargetMatch.MAL) -> TargetMatch.MAL
-            else -> null
-        }
-    }
-
-    fun targetFeatureEnabled(target: TargetMatch): Boolean {
-        // match tracker targets to associated channel features
-        return when(target) {
-            TargetMatch.TWITCH -> twitchChannel
-            TargetMatch.MAL -> animeChannel
-            TargetMatch.KITSU -> animeChannel
         }
     }
 
     fun validateDefaultTarget() {
         // if a default tracker is set, remove it if that feature is disabled
-        val defaultEnabled = targetFeatureEnabled(defaultTracker ?: return)
-
-        if(!defaultEnabled) {
+        if(defaultTracker == null) return
+        
+        val enabled = defaultTracker?.channelFeature?.get(this) ?: return
+        if(!enabled) {
             defaultTracker = null
         }
     }

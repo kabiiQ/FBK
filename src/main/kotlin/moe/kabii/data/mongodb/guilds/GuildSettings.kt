@@ -1,14 +1,19 @@
 package moe.kabii.data.mongodb.guilds
 
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.discord.trackers.StreamingTarget
 
 data class GuildSettings(
     var embedMessages: Boolean = true,
     var followRoles: Boolean = true,
     var reassignRoles: Boolean = false,
-    var defaultFollowChannel: TrackedStreams.StreamInfo? = null,
+    var defaultFollow: StreamInfo? = null,
     var twitchURLInfo: Boolean = false,
     var utilizeInvites: Boolean = false
+)
+
+data class StreamInfo(
+    val site: StreamingTarget,
+    val id: String
 )
 
 data class TwitchConfig(

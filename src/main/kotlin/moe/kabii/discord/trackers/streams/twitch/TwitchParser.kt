@@ -5,8 +5,8 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
+import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.twitch.json.Helix
-import moe.kabii.discord.trackers.streams.twitch.json.TwitchGame
 import moe.kabii.discord.trackers.streams.twitch.json.TwitchGameResponse
 import moe.kabii.discord.trackers.streams.twitch.json.TwitchStreamRequest
 import moe.kabii.net.NettyFileServer
@@ -25,7 +25,7 @@ object TwitchParser {
     private val clientID = Keys.config[Keys.Twitch.client]
     private val oauth = Authorization()
 
-    private inline fun <reified R: Any>  request(requestStr: String): Result<R, TwitchErr> {
+    private inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
         val request = Request.Builder()
             .get()
             .url(requestStr)
@@ -67,7 +67,7 @@ object TwitchParser {
                 when(val jsonResponse = response.value) {
                     is Ok -> {
                         val json = jsonResponse.value
-                        return if(json != null) Ok(json) else Err(TwitchErr.NotFound)
+                        return if(json != null) Ok(json) else Err(StreamErr.NotFound)
                     }
                     is Err -> {
                         // rate limit or api issue
@@ -79,10 +79,10 @@ object TwitchParser {
                 Thread.sleep(2000L)
             }
         }
-        return Err(TwitchErr.IO) // if 3 attempts failed
+        return Err(StreamErr.IO) // if 3 attempts failed
     }
 
-    fun getUsers(ids: Collection<Long>): Map<Long, Result<TwitchUserInfo, TwitchErr>> {
+    fun getUsers(ids: Collection<Long>): Map<Long, Result<TwitchUserInfo, StreamErr>> {
         val userLists = ids.chunked(100).map { chunk ->
             val users = chunk.joinToString("&id=")
             val call =
@@ -95,28 +95,28 @@ object TwitchParser {
                     // map to twitchid, streamuser
                     requestID to if (match != null) {
                         Ok(TwitchUserInfo(match.id.toLong(), match.login, match.display_name, match.profile_image_url))
-                    } else Err(TwitchErr.NotFound)
+                    } else Err(StreamErr.NotFound)
                 }
-            } else ids.map { it to Err(TwitchErr.IO) } // call failed
+            } else ids.map { it to Err(StreamErr.IO) } // call failed
         }
         return(userLists.flatten().toMap())
     }
 
-    fun getUser(id: Long): Result<TwitchUserInfo, TwitchErr> =
+    fun getUser(id: Long): Result<TwitchUserInfo, StreamErr> =
         getUsers(listOf(id)).values.single()
 
-    fun getUser(name: String): Result<TwitchUserInfo, TwitchErr> {
+    fun getUser(name: String): Result<TwitchUserInfo, StreamErr> {
         val call =
             request<Helix.UserResponse>("https://api.twitch.tv/helix/users?login=$name")
         if(call is Ok) {
             val user = call.value.data.getOrNull(0)
             return if(user != null) {
                 Ok(TwitchUserInfo(user.id.toLong(), user.login, user.display_name, user.profile_image_url))
-            } else Err(TwitchErr.NotFound)
-        } else return Err(TwitchErr.IO)
+            } else Err(StreamErr.NotFound)
+        } else return Err(StreamErr.IO)
     }
 
-    fun getStreams(ids: Collection<Long>): Map<Long, Result<TwitchStreamInfo, TwitchErr>> {
+    fun getStreams(ids: Collection<Long>): Map<Long, Result<TwitchStreamInfo, StreamErr>> {
         val streamLists = ids.chunked(100).map { chunk ->
             val streams = chunk.joinToString("&user_id=")
             val call =
@@ -128,14 +128,14 @@ object TwitchParser {
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
                         Ok(TwitchStreamInfo(match.userID, match.username, match.title, match.viewers, match.startedAt, match.thumbnail, match.gameID))
-                    } else Err(TwitchErr.NotFound)
+                    } else Err(StreamErr.NotFound)
                 }
-            } else ids.map { it to Err(TwitchErr.IO) }
+            } else ids.map { it to Err(StreamErr.IO) }
         }
         return(streamLists.flatten().toMap())
     }
 
-    fun getStream(id: Long): Result<TwitchStreamInfo, TwitchErr> = getStreams(listOf(id)).values.single()
+    fun getStream(id: Long): Result<TwitchStreamInfo, StreamErr> = getStreams(listOf(id)).values.single()
 
     fun getGame(id: Long): TwitchGameInfo {
         if (id == 0L) return TwitchGameInfo(

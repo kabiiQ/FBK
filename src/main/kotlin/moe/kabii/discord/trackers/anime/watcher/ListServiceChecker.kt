@@ -155,13 +155,13 @@ class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, va
                             when (chan) {
                                 is TextChannel -> {
                                     val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
-                                    val featureSettings = config.options.featureChannels[chan.id.asLong()]?.featureSettings
+                                    val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
                                     // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
                                     when {
-                                        featureSettings == null -> false
-                                        featureSettings.mediaNewItem && newEntry -> true
-                                        featureSettings.mediaStatusChange && statusChange -> true
-                                        featureSettings.mediaUpdatedStatus && statusUpdate -> true
+                                        animeSettings == null -> false
+                                        animeSettings.postNewItem && newEntry -> true
+                                        animeSettings.postStatusChange && statusChange -> true
+                                        animeSettings.postUpdatedStatus && statusUpdate -> true
                                         else -> false
                                     }
                                 }

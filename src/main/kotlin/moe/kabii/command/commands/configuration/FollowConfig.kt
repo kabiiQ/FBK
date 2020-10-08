@@ -4,13 +4,15 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.commands.trackers.TargetMatch
-import moe.kabii.command.commands.trackers.TrackCommandUtil
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.guilds.StreamInfo
 import moe.kabii.data.relational.DiscordObjects
 import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.discord.trackers.StreamingTarget
+import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.Search
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -23,138 +25,132 @@ object FollowConfig : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val settings = config.guildSettings
-                // setfollow <twitch/none> <username> OR setfollow <username> (implied to be twitch)
-                val (site, username) = when(args.size) {
-                    1 -> {
-                        when (args[0].toLowerCase()) {
-                            "none", "reset", "clear", "empty" -> {
-                                // setfollow none
-                                settings.defaultFollowChannel = null
-                                config.save()
-                                embed("The default follow channel for **${target.name}** has been removed.").awaitSingle()
-                                return@discord
-                            }
-                            else -> {
-                                // setfollow <username>
-                                TrackedStreams.DBSite.TWITCH to args[0]
-                            }
-                        }
+
+                if (args.isEmpty()) {
+                    usage("**setfollow** sets the livestream that will be used when the **follow** command is used without specifying a stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch/yt or \"none\" to remove> <username>").awaitSingle()
+                    return@discord
+                }
+
+                // setfollow <twitch/none> <username> OR setfollow <username>
+                if (args.size == 1 && arrayOf("none", "reset", "clear", "empty").any(args[0].toLowerCase()::equals)) {
+                    // setfollow none
+                    // remove a set follow target
+                    settings.defaultFollow = null
+                    config.save()
+                    embed("The default follow channel for **${target.name}** has been removed.").awaitSingle()
+                    return@discord
+                }
+
+                // setfollow (site name) <account ID>
+                val siteTarget = when (val findTarget = TargetArguments.parseFor(this, args)) {
+                    is Ok -> findTarget.value
+                    is Err -> {
+                        usage(findTarget.value, "setfollow <twitch/yt or \"none\" to remove> <username>").awaitSingle()
+                        return@discord
                     }
-                    2 -> {
-                        // setfollow twitch <username>
-                        val site = TargetMatch.parseStreamSite(args[0])
-                        if(site == null) {
-                            error("Unknown/unsupported livestream site **${args[0]}**. The only site supported currently is Twitch.").awaitSingle()
-                            return@discord
-                        }
-                        site to args[1]
-                    }
-                    else -> {
-                        usage("**setfollow** sets the livestream that will be used when the **follow** command is used without specifying a stream name. This is useful for an opt-in to a streamer discord's notification role.", "setfollow <twitch or \"none\" to remove> <username>").awaitSingle()
+                }
+                if (siteTarget.site !is StreamingTarget) {
+                    error("The **setfollow** command is only supported for **livestream** sources.").awaitSingle()
+                    return@discord
+                }
+
+                val streamInfo = when (val streamCall = siteTarget.site.getChannel(siteTarget.identifier)) {
+                    is Ok -> streamCall.value
+                    is Err -> {
+                        error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.").awaitSingle()
                         return@discord
                     }
                 }
 
-                val stream = site.parser.getUser(username).orNull()
-                if(stream == null) {
-                    error("Unable to find the **${site.full}** stream **${username}**.").awaitSingle()
-                    return@discord
-                }
-                settings.defaultFollowChannel = TrackedStreams.StreamInfo(site, stream.userID)
+                settings.defaultFollow = StreamInfo(streamInfo.site, streamInfo.accountId)
                 config.save()
-                embed("The default follow channel for **${target.name}** has been set to **${stream.displayName}**.").awaitSingle()
+                embed("The default follow channel for **${target.name}** has been set to **${streamInfo.displayName}**.").awaitSingle()
             }
         }
-    }
 
-    object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionrole", "setmention") {
-        override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
+        object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionrole", "setmention") {
+            override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
 
-        init {
-            discord {
-                // manually set mention role for a followed stream - for servers where a role already exists
-                // verify stream is tracked, but override any existing mention role
-                // mentionrole (site) <stream name> <role>
-                target
-                if(args.size < 2) {
-                    usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (site name) <stream username> <discord role name or ID>").awaitSingle()
-                    return@discord
-                }
-                // last arg must be discord role
-                val roleArg = args.last()
-                val targetArgs = args.dropLast(1)
-
-                val targetParse = TrackCommandUtil.parseTrackTarget(this, targetArgs, TargetMatch.TWITCH)
-                val (site, accountId) = when(targetParse) {
-                    is Ok -> targetParse.value
-                    is Err -> {
-                        val err = targetParse.value
-                        usage("${err}The only site currently supported is Twitch.", "mentionrole (site name) <stream username/ID> <discord role name/ID>").awaitSingle()
+            init {
+                discord {
+                    // manually set mention role for a followed stream - for servers where a role already exists
+                    // verify stream is tracked, but override any existing mention role
+                    // mentionrole (site) <stream name> <role>
+                    member.verify(Permission.MANAGE_CHANNELS)
+                    if (args.size < 2) {
+                        usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (site name) <stream username> <discord role ID>").awaitSingle()
                         return@discord
                     }
-                }
+                    // last arg must be discord role
+                    val roleArg = args.last()
+                    val targetArgs = args.dropLast(1)
 
-
-
-
-
-
-
-
-                val targetSite = TargetMatch.parseStreamSite(args[0])
-                if(targetSite == null) {
-                    error("Unknown/unsupported streaming site **${args[0]}**. The only site currently supported is Twitch.").awaitSingle()
-                    return@discord
-                }
-                val targetStream = targetSite.parser.getUser(args[1]).orNull()
-                if(targetStream == null) {
-                    error("Unable to find the **${targetSite.full}** stream **${args[1]}**.").awaitSingle()
-                    return@discord
-                }
-                // get stream from db - verify that it is tracked in this server
-                // get any target for this stream in this guild
-                val matchingTarget = transaction {
-                    TrackedStreams.Target.wrapRows(
-                        TrackedStreams.Targets
-                            .innerJoin(TrackedStreams.StreamChannels)
-                            .innerJoin(DiscordObjects.Channels)
-                            .innerJoin(DiscordObjects.Guilds).select {
-                                TrackedStreams.StreamChannels.site eq targetSite and
-                                        (TrackedStreams.StreamChannels.siteChannelID eq targetStream.userID) and
-                                        (DiscordObjects.Guilds.guildID eq target.id.asLong())
-                            }
-                    ).firstOrNull()
-                }
-                if(matchingTarget == null) {
-                    error("**${targetStream.displayName}** is not being tracked in **${target.name}**.").awaitSingle()
-                    return@discord
-                }
-                val roleParam = args.drop(2).joinToString(" ")
-                val newMentionRole = Search.roleByNameOrID(this, roleParam)
-                if(newMentionRole == null) {
-                    error("Unable to find the role **$roleParam** in **${target.name}**.").awaitSingle()
-                    return@discord
-                }
-                // create or overwrite mention for this guild
-                transaction {
-                    val dbGuild = DiscordObjects.Guild.getOrInsert(target.id.asLong())
-                    val existingMention = TrackedStreams.Mention.find {
-                        TrackedStreams.Mentions.streamChannel eq matchingTarget.streamChannel.id and
-                                (TrackedStreams.Mentions.guild eq dbGuild.id)
-                    }.firstOrNull()
-                    if(existingMention != null) {
-                        existingMention.mentionRole = newMentionRole.id.asLong()
-                        existingMention.isAutomaticSet = false
-                    } else {
-                        TrackedStreams.Mention.new {
-                            this.stream = matchingTarget.streamChannel
-                            this.guild = dbGuild
-                            this.mentionRole = newMentionRole.id.asLong()
-                            this.isAutomaticSet = false
+                    val siteTarget = when (val findTarget = TargetArguments.parseFor(this, targetArgs)) {
+                        is Ok -> findTarget.value
+                        is Err -> {
+                            usage(findTarget.value, "setmention (site) <stream name> <role>").awaitSingle()
+                            return@discord
                         }
                     }
+
+                    if (siteTarget.site !is StreamingTarget) {
+                        error("The **setmention** command is only supported for **livestream sources**.").awaitSingle()
+                        return@discord
+                    }
+
+                    val streamInfo = when (val streamCall = siteTarget.site.getChannel(siteTarget.identifier)) {
+                        is Ok -> streamCall.value
+                        is Err -> {
+                            error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.").awaitSingle()
+                            return@discord
+                        }
+                    }
+
+                    // get stream from db - verify that it is tracked in this server
+                    // get any target for this stream in this guild
+                    val matchingTarget = transaction {
+                        TrackedStreams.Target.wrapRows(
+                            TrackedStreams.Targets
+                                .innerJoin(TrackedStreams.StreamChannels)
+                                .innerJoin(DiscordObjects.Channels)
+                                .innerJoin(DiscordObjects.Guilds).select {
+                                    TrackedStreams.StreamChannels.site eq streamInfo.site.dbSite and
+                                            (TrackedStreams.StreamChannels.siteChannelID eq streamInfo.accountId) and
+                                            (DiscordObjects.Guilds.guildID eq target.id.asLong())
+                                }
+                        ).firstOrNull()
+                    }
+                    if (matchingTarget == null) {
+                        error("**${streamInfo.displayName}** is not being tracked in **${target.name}**.").awaitSingle()
+                        return@discord
+                    }
+
+                    val newMentionRole = Search.roleByNameOrID(this, roleArg)
+                    if (newMentionRole == null) {
+                        error("Unable to find the role **$roleArg** in **${target.name}**.").awaitSingle()
+                        return@discord
+                    }
+                    // create or overwrite mention for this guild
+                    transaction {
+                        val dbGuild = DiscordObjects.Guild.getOrInsert(target.id.asLong())
+                        val existingMention = TrackedStreams.Mention.find {
+                            TrackedStreams.Mentions.streamChannel eq matchingTarget.streamChannel.id and
+                                    (TrackedStreams.Mentions.guild eq dbGuild.id)
+                        }.firstOrNull()
+                        if (existingMention != null) {
+                            existingMention.mentionRole = newMentionRole.id.asLong()
+                            existingMention.isAutomaticSet = false
+                        } else {
+                            TrackedStreams.Mention.new {
+                                this.stream = matchingTarget.streamChannel
+                                this.guild = dbGuild
+                                this.mentionRole = newMentionRole.id.asLong()
+                                this.isAutomaticSet = false
+                            }
+                        }
+                    }
+                    embed("The mention role for **${streamInfo.displayName}** has been set to **${newMentionRole.name}**.").awaitSingle()
                 }
-                embed("The mention role for **${targetStream.displayName}** has been set to **${newMentionRole.name}**.").awaitSingle()
             }
         }
     }

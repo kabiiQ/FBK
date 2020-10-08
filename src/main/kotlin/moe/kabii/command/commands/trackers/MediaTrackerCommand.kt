@@ -7,6 +7,8 @@ import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.*
+import moe.kabii.discord.trackers.AnimeTarget
+import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.anime.MediaListEmpty
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
@@ -17,7 +19,8 @@ import moe.kabii.structure.extensions.tryAwait
 import kotlin.concurrent.withLock
 
 object MediaTrackerCommand {
-    suspend fun track(origin: DiscordParameters, target: ListInfo) {
+    suspend fun track(origin: DiscordParameters, target: TargetArguments) {
+        val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
         // if this is in a guild make sure the media list feature is enabled here
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
         if(config != null) {
@@ -25,16 +28,16 @@ object MediaTrackerCommand {
             if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
         }
 
-        val listName = target.id
+        val listName = target.identifier
         val channelId = origin.chan.id.asLong()
 
-        val parser = target.site.parser
-        val listID = parser.getListID(target.id)
-        if(listID == null) {
-            origin.error("Unable to find ${target.site.full} list with identifier **$listName**.").awaitSingle()
+        val parser = site.parser
+        val listId = parser.getListID(target.identifier)
+        if(listId == null) {
+            origin.error("Unable to find ${site.full} list with identifier **$listName**.").awaitSingle()
             return
         }
-        val targetList = target.copy(id = listID)
+        val targetList = ListInfo(site, listId)
         // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
         val existingTrack = TrackedMediaLists.lock.withLock {
             TrackedMediaLists.mediaLists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelId }
@@ -52,7 +55,7 @@ object MediaTrackerCommand {
         }
 
         // validate list
-        val request = parser.parse(listID)
+        val request = parser.parse(listId)
         val mediaList = when(request) {
             is Ok -> request.value
             is Err -> {
@@ -94,15 +97,16 @@ object MediaTrackerCommand {
         }
     }
 
-    suspend fun untrack(origin: DiscordParameters, target: ListInfo) {
-        val parser = target.site.parser
-        val listId = parser.getListID(target.id)
+    suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+        val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
+        val parser = site.parser
+        val listId = parser.getListID(target.identifier)
         if(listId == null) {
-            origin.error("Unable to find ${target.site.full} list with identifier **${target.id}**.").awaitSingle()
+            origin.error("Unable to find ${site.full} list with identifier **${target.identifier}**.").awaitSingle()
             return
         }
-        val targetName = target.id
-        val targetList = target.copy(id = listId)
+        val targetName = target.identifier
+        val targetList = ListInfo(site, listId)
 
         // untrack the list from this location if it's tracked
         val trackedList = TrackedMediaLists.lock.withLock { // find tracked list with matching id/site
