@@ -10,19 +10,22 @@ import moe.kabii.command.CommandAbortedException
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.discord.trackers.streams.StreamUser
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.BasicStreamChannel
+import moe.kabii.discord.trackers.StreamingTarget
+import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-object TwitchFollow : CommandContainer {
-    object FollowStream : Command("follow", "followrole") {
+object StreamFollow : CommandContainer {
+    object StreamFollowCommand : Command("follow", "followrole") {
         override val wikiPath = "Livestream-Tracker#user-commands"
 
         init {
@@ -30,12 +33,16 @@ object TwitchFollow : CommandContainer {
             discord {
                 // self-assigned role to be pinged when a stream goes live
                 // this feature must be enabled in the guild to use
-                val targetChannel = getTargetChannel(this)
-                if(targetChannel == null) {
-                    usage("**follow** is used to add yourself to a role that will be pinged when a stream goes live.", "follow (twitch) <username>").awaitSingle()
-                    return@discord
+                val targetChannel = when(val findTarget = getTargetChannel(this, args)) {
+                    is Ok -> findTarget.value
+                    is Err -> {
+                        usage(findTarget.value, "follow (site name) <username>").awaitSingle()
+                        return@discord
+                    }
                 }
-                val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, TrackedStreams.StreamInfo(targetChannel.parser.site, targetChannel.userID))
+                val siteName = targetChannel.site.full
+
+                val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, targetChannel.site.dbSite, targetChannel.accountId)
                 if(dbTarget == null) {
                     error("**${targetChannel.displayName}** is not a tracked stream in **${target.name}**.").awaitSingle()
                     return@discord
@@ -64,11 +71,10 @@ object TwitchFollow : CommandContainer {
                     // if role did not exist or was deleted, make a new role
                     if (existingRole != null) existingRole else {
                         // role does not exist
-                        val siteName = targetChannel.parser.site.full
                         val streamName = targetChannel.displayName
                         val spec: (RoleCreateSpec.() -> Unit) = {
                             setName("$siteName/$streamName")
-                            setColor(targetChannel.parser.color)
+                            setColor(targetChannel.site.serviceColor)
                         }
                         val new = target.createRole(spec).tryAwait().orNull()
                         if (new == null) {
@@ -86,36 +92,34 @@ object TwitchFollow : CommandContainer {
                     }
                 }
                 if(member.roles.hasElement(mentionRole).awaitSingle()) {
-                    embed("You already have the stream mention role **${mentionRole.name}** in **${targetChannel.displayName}**.").awaitSingle()
+                    embed("You already have the stream mention role **${mentionRole.name}** in **${target.name}**.").awaitSingle()
                     return@discord
                 }
                 member.addRole(mentionRole.id, "Self-assigned stream mention role").success().awaitSingle()
                 embed {
                     setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
-                    setDescription("You have been given the role **${mentionRole.name}** which will be mentioned when **${targetChannel.displayName}** goes live on **${targetChannel.parser.site.full}**.")
+                    setDescription("You have been given the role **${mentionRole.name}** which will be mentioned when **${targetChannel.displayName}** goes live on **$siteName**.")
                 }.awaitSingle()
             }
         }
     }
 
-    object UnfollowStream : Command("unfollow") {
+    object UnfollowTwitch : Command("unfollow") {
         override val wikiPath = "Livestream-Tracker#user-commands"
 
         init {
             botReqs(Permission.MANAGE_ROLES)
             discord {
-                val settings = config.guildSettings
-                if(!settings.followRoles) {
-                    error("Stream mention roles are disabled in **${target.name}**.").awaitSingle()
-                    return@discord
+                val targetChannel = when(val findTarget = getTargetChannel(this, args)) {
+                    is Ok -> findTarget.value
+                    is Err -> {
+                        usage(findTarget.value, "unfollow (site name) <username>").awaitSingle()
+                        return@discord
+                    }
                 }
-                val targetChannel = getTargetChannel(this)
-                if(targetChannel == null) {
-                    usage("**unfollow** is used to remove a stream mention role from yourself.", "unfollow (twitch) <username>").awaitSingle()
-                    return@discord
-                }
+
                 newSuspendedTransaction {
-                    val mentionRole = TrackedStreams.Mention.getMentionsFor(target.id, targetChannel.userID).firstOrNull()
+                    val mentionRole = TrackedStreams.Mention.getMentionsFor(target.id, targetChannel.accountId).firstOrNull()
                     if(mentionRole == null) {
                         error("**${targetChannel.displayName}** does not have any associated mention role in **${target.name}**.").awaitSingle()
                         return@newSuspendedTransaction
@@ -139,47 +143,48 @@ object TwitchFollow : CommandContainer {
         }
     }
 
-    private suspend fun getTargetChannel(origin: DiscordParameters): StreamUser? = with(origin) {
-        val settings = config.guildSettings
-        val default = settings.defaultFollowChannel
-        when {
+    private fun getTargetChannel(origin: DiscordParameters, inputArgs: List<String>): Result<BasicStreamChannel, String> {
+        val config = origin.config
+        val default = config.guildSettings.defaultFollow
+        return when {
             // if no stream name is provided, follow guild default stream. always let users follow a streamer server's channel
-            args.isEmpty() -> {
+            inputArgs.isEmpty() -> {
                 if(default != null) {
-                    val stream = default.site.parser.getUser(default.id).orNull()
-                    if(stream == null) {
-                        usage("There was an error getting the default channel set in **${target.name}**.", "follow (twitch) <username>").awaitSingle()
-                        error(Unit)
-                    } else stream
-                } else null
+                    val streamTarget = default.site.targetType
+                    val streamInfo = streamTarget.getChannelById(default.id).orNull()
+                    if(streamInfo == null) {
+                        return Err("There was an error getting the default channel set in **${origin.target.name}**.")
+                    } else Ok(streamInfo)
+                } else Err("No stream was provided and there is no default set in **${origin.target.name}**.")
             }
             // if arguments are specified, the mention roles feature needs to be enabled in this guild.
-            !settings.followRoles -> {
-                error("Stream mention roles have been disabled by **${target.name}**.").awaitSingle()
-                error(Unit)
+            !config.guildSettings.followRoles -> {
+                return Err("Stream mention roles have been disabled by **${origin.target.name}**.")
             }
-            args.size == 1 -> { // default to assuming the user intends 'twitch' for now
-                val stream = TwitchParser.getUser(args[0]).orNull()
-                if(stream == null) {
-                    error("Unable to find the Twitch stream **${args[0]}**.").awaitSingle()
-                    error(Unit)
-                } else stream
-            }
-            args.size == 2 -> {
-                // user specifying target
-                // track twitch <name>
-                val site = TargetMatch.parseStreamSite(args[0])
-                if(site == null) {
-                    error("Unknown/unsupported streaming site **${args[0]}**. The only site currently supported is Twitch.").awaitSingle()
-                    error(Unit)
+            inputArgs.size == 1 || inputArgs.size == 2 -> {
+                // determine the target and identifier the user is trying to follow
+                // follow (site) <username>
+                when(val findTarget = TargetArguments.parseFor(origin, inputArgs)) {
+                    is Ok -> {
+
+                        val trackTarget = findTarget.value
+                        if(trackTarget.site !is StreamingTarget) {
+                            return Err("The **follow** command is only supported for **livestream** sources.")
+                        }
+
+                        when(val streamCall = trackTarget.site.getChannel(trackTarget.identifier)) {
+                            is Ok -> Ok(streamCall.value)
+                            is Err -> when(streamCall.value) {
+                                StreamErr.IO -> Err("Unable to reach **${trackTarget.site.full}**.")
+                                StreamErr.NotFound -> Err("Unable to find the **${trackTarget.site.full}** stream **${trackTarget.identifier}**.")
+                            }
+                        }
+
+                    }
+                    is Err -> Err(findTarget.value)
                 }
-                val stream = site.parser.getUser(args[1]).orNull()
-                if(stream == null) {
-                    error("Unable to find the **${site.full}** stream **${args[1]}**.").awaitSingle()
-                    error(Unit)
-                } else stream
             }
-            else -> null
+            else -> Err("Invalid syntax.")
         }
     }
 }

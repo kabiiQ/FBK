@@ -5,8 +5,10 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.data.relational.TrackedStreams
-import moe.kabii.discord.trackers.streams.*
+import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.streams.twitch.json.Helix
+import moe.kabii.discord.trackers.streams.twitch.json.TwitchGameResponse
+import moe.kabii.discord.trackers.streams.twitch.json.TwitchStreamRequest
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -16,20 +18,12 @@ import okhttp3.Request
 import java.time.Duration
 import java.time.Instant
 
-object TwitchParser : StreamParser {
-    override val color = Color.of(6570405)
-    override val icon: String = NettyFileServer.glitch
-    override val site by lazy { TrackedStreams.Site.TWITCH }
+object TwitchParser {
+    val color = Color.of(6570405)
+    val icon: String = NettyFileServer.glitch
 
     private val clientID = Keys.config[Keys.Twitch.client]
     private val oauth = Authorization()
-
-    class TwitchUser(userID: Long, username: String, displayName: String, profileImage: String)
-        : StreamUser(this, userID, username, displayName, profileImage) {
-        override val thumbnailUrl: String
-        get() = NettyFileServer.twitchThumbnail(userID)
-        override val url: String = "https://twitch.tv/$username"
-    }
 
     private inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
         val request = Request.Builder()
@@ -88,7 +82,7 @@ object TwitchParser : StreamParser {
         return Err(StreamErr.IO) // if 3 attempts failed
     }
 
-    override fun getUsers(ids: Collection<Long>): Map<Long, Result<StreamUser, StreamErr>> {
+    fun getUsers(ids: Collection<Long>): Map<Long, Result<TwitchUserInfo, StreamErr>> {
         val userLists = ids.chunked(100).map { chunk ->
             val users = chunk.joinToString("&id=")
             val call =
@@ -100,7 +94,7 @@ object TwitchParser : StreamParser {
                     val match = responseUsers.find { responseUser -> responseUser.id.toLong() == requestID }
                     // map to twitchid, streamuser
                     requestID to if (match != null) {
-                        Ok(TwitchUser(match.id.toLong(), match.login, match.display_name, match.profile_image_url))
+                        Ok(TwitchUserInfo(match.id.toLong(), match.login, match.display_name, match.profile_image_url))
                     } else Err(StreamErr.NotFound)
                 }
             } else ids.map { it to Err(StreamErr.IO) } // call failed
@@ -108,21 +102,21 @@ object TwitchParser : StreamParser {
         return(userLists.flatten().toMap())
     }
 
-    override fun getUser(id: Long): Result<StreamUser, StreamErr> =
+    fun getUser(id: Long): Result<TwitchUserInfo, StreamErr> =
         getUsers(listOf(id)).values.single()
 
-    override fun getUser(name: String): Result<StreamUser, StreamErr> {
+    fun getUser(name: String): Result<TwitchUserInfo, StreamErr> {
         val call =
             request<Helix.UserResponse>("https://api.twitch.tv/helix/users?login=$name")
         if(call is Ok) {
             val user = call.value.data.getOrNull(0)
             return if(user != null) {
-                Ok(TwitchUser(user.id.toLong(), user.login, user.display_name, user.profile_image_url))
+                Ok(TwitchUserInfo(user.id.toLong(), user.login, user.display_name, user.profile_image_url))
             } else Err(StreamErr.NotFound)
         } else return Err(StreamErr.IO)
     }
 
-    override fun getStreams(ids: Collection<Long>): Map<Long, Result<StreamDescriptor, StreamErr>> {
+    fun getStreams(ids: Collection<Long>): Map<Long, Result<TwitchStreamInfo, StreamErr>> {
         val streamLists = ids.chunked(100).map { chunk ->
             val streams = chunk.joinToString("&user_id=")
             val call =
@@ -133,16 +127,7 @@ object TwitchParser : StreamParser {
                     // find the stream for each user in the request
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
-                        Ok(object : StreamDescriptor(this, match.userID.toString(), match.username, match.title, match.viewers, match.startedAt, match.thumbnail) {
-                            // Twitch does not return this information when getting a stream unlike mixer,
-                            // so we make a request when this information is needed for Twitch streams.
-                            override val game by lazy {
-                                getGame(match.gameID)
-                            }
-                            override val user by lazy {
-                                getUser(requestID).unwrap()
-                            }
-                        })
+                        Ok(TwitchStreamInfo(match.userID, match.username, match.title, match.viewers, match.startedAt, match.thumbnail, match.gameID))
                     } else Err(StreamErr.NotFound)
                 }
             } else ids.map { it to Err(StreamErr.IO) }
@@ -150,10 +135,10 @@ object TwitchParser : StreamParser {
         return(streamLists.flatten().toMap())
     }
 
-    override fun getStream(id: Long): Result<StreamDescriptor, StreamErr> = getStreams(listOf(id)).values.single()
+    fun getStream(id: Long): Result<TwitchStreamInfo, StreamErr> = getStreams(listOf(id)).values.single()
 
-    private fun getGame(id: Long): StreamGame {
-        if (id == 0L) return StreamGame(
+    fun getGame(id: Long): TwitchGameInfo {
+        if (id == 0L) return TwitchGameInfo(
             "0",
             "Nothing",
             NettyFileServer.glitch
@@ -162,8 +147,8 @@ object TwitchParser : StreamParser {
             request<TwitchGameResponse>("https://api.twitch.tv/helix/games?id=$id")
         if(call is Ok) {
             val game = call.value.data.getOrNull(0)
-            if(game != null) return StreamGame(game.id, game.name, game.boxArtURL)
+            if(game != null) return TwitchGameInfo(game.id, game.name, game.boxArtURL)
         }
-        return StreamGame("-1", "Unknown", NettyFileServer.glitch)
+        return TwitchGameInfo("-1", "Unknown", NettyFileServer.glitch)
     }
 }

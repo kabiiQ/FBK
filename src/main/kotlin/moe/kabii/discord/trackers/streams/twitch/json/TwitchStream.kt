@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.twitch
+package moe.kabii.discord.trackers.streams.twitch.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

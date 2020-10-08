@@ -1,8 +1,8 @@
 package moe.kabii.data.relational
 
 import discord4j.common.util.Snowflake
-import moe.kabii.discord.trackers.streams.StreamParser
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.StreamingTarget
+import moe.kabii.discord.trackers.TwitchTarget
 import moe.kabii.structure.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -10,27 +10,18 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.select
 
+// generic logic to handle tracking any stream source
 object TrackedStreams {
-    data class StreamQueryInfo(
-        val site: Site,
-        val id: String
-    )
-
-    data class StreamInfo(
-        val site: Site,
-        val id: Long
-    )
-
-    enum class Site(val full: String, val parser: StreamParser) {
-        TWITCH("Twitch", TwitchParser);
+    // Basic enum, more rigid than StreamingTarget - this enum will be relied upon for deserialization
+    enum class DBSite(val targetType: StreamingTarget) {
+        TWITCH(TwitchTarget)
     }
 
     object StreamChannels : IntIdTable() {
-        val site = enumeration("site_id", Site::class)
-        val siteChannelID = long("site_channel_id").uniqueIndex()
+        val site = enumeration("site_id", DBSite::class)
+        val siteChannelID = varchar("site_channel_id", 64).uniqueIndex()
     }
 
     class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
@@ -39,7 +30,6 @@ object TrackedStreams {
 
         val targets by Target referrersOn Targets.streamChannel
         val notifications by Notification referrersOn Notifications.channelID
-        val streams by Stream referrersOn Streams.channelID
         val mentionRoles by Mention referrersOn Mentions.streamChannel
 
         companion object : IntEntityClass<StreamChannel>(StreamChannels)
@@ -76,7 +66,7 @@ object TrackedStreams {
 
         companion object : IntEntityClass<Mention>(Mentions) {
             @WithinExposedContext
-            fun getMentionsFor(guildID: Snowflake, streamChannelID: Long) = Mention.wrapRows(
+            fun getMentionsFor(guildID: Snowflake, streamChannelID: String) = Mention.wrapRows(
                 Mentions
                     .innerJoin(StreamChannels)
                     .innerJoin(DiscordObjects.Guilds)
@@ -87,45 +77,16 @@ object TrackedStreams {
         }
     }
 
-    object Streams : IntIdTable() {
-        val channelID = reference("assoc_stream_channel_id", StreamChannels, ReferenceOption.CASCADE).uniqueIndex()
-        val startTime = datetime("started_at")
-        val peakViewers = integer("peak_viewers")
-        val uptimeTicks = integer("uptime_ticks")
-        val averageViewers = integer("average_viewers")
-        val lastTitle = text("last_title")
-        val lastGame = text("last_game_name")
-    }
-
-    class Stream(id: EntityID<Int>) : IntEntity(id) {
-        var channelID by StreamChannel referencedOn Streams.channelID
-        var startTime by Streams.startTime
-        var peakViewers by Streams.peakViewers
-        var uptimeTicks by Streams.uptimeTicks
-        var averageViewers by Streams.averageViewers
-        var lastTitle by Streams.lastTitle
-        var lastGame by Streams.lastGame
-
-        companion object : IntEntityClass<Stream>(Streams)
-
-        fun updateViewers(current: Int) {
-            if(current > peakViewers) peakViewers = current
-            averageViewers += (current - averageViewers) / ++uptimeTicks
-        }
-    }
-
     object Notifications : IntIdTable() {
         val targetID = reference("assoc_target_id", Targets, ReferenceOption.CASCADE).uniqueIndex()
         val channelID = reference("channel_id", StreamChannels, ReferenceOption.CASCADE)
         val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
-        val stream = reference("stream_id", Streams, ReferenceOption.SET_NULL).nullable()
     }
 
     class Notification(id: EntityID<Int>) : IntEntity(id) {
         var targetID by Target referencedOn Notifications.targetID
         var channelID by StreamChannel referencedOn Notifications.channelID
         var messageID by MessageHistory.Message referencedOn Notifications.message
-        var stream by Stream optionalReferencedOn Notifications.stream
 
         companion object : IntEntityClass<Notification>(Notifications)
     }

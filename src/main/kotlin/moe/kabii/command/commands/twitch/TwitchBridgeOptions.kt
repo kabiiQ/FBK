@@ -7,8 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.TempStates
-import moe.kabii.discord.trackers.streams.StreamUser
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.streams.twitch.TwitchUserInfo
 import moe.kabii.rusty.Ok
 
 object TwitchBridgeOptions : CommandContainer {
@@ -56,7 +56,7 @@ object TwitchBridgeOptions : CommandContainer {
                 member.verify(Permission.MANAGE_GUILD)
                 val twitch = config.options.linkedTwitchChannel
                 if (twitch?.twitchid != null) {
-                    TwitchParser.getUser(twitch.twitchid).mapOk(StreamUser::username).ifSuccess(twitchClient.chat::leaveChannel)
+                    TwitchParser.getUser(twitch.twitchid).mapOk(TwitchUserInfo::username).ifSuccess(twitchClient.chat::leaveChannel)
                     config.options.linkedTwitchChannel = null
                     config.save()
                     embed("Removed Twitch channel linked to **${target.name}**.").awaitSingle()

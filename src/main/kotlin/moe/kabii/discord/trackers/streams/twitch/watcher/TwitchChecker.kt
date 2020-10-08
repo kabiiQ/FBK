@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.watcher
+package moe.kabii.discord.trackers.streams.twitch.watcher
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildChannel
@@ -8,13 +8,15 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureSettings
+import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.relational.DBTwitchStreams
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.streams.StreamDescriptor
-import moe.kabii.discord.trackers.streams.StreamEmbedBuilder
 import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
+import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.streams.twitch.TwitchStreamInfo
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
@@ -26,23 +28,27 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedStreams.Site, val discord: GatewayDiscordClient) : Runnable {
+class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
     override fun run() {
         loop {
             val start = Instant.now()
             // get all tracked sites for this service
             try {
                 transaction {
+                    // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
-                        TrackedStreams.StreamChannels.site eq site
+                        TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
                     }
 
                     // get all the IDs to make bulk requests to the service.
                     // no good way to do this besides temporarily dissociating ids from other data
                     // very important to optimize requests to Twitch, etc
-                    val ids = tracked.map(TrackedStreams.StreamChannel::siteChannelID)
+                    // Twitch IDs are always type Long
+                    val ids = tracked
+                        .map(TrackedStreams.StreamChannel::siteChannelID)
+                        .map(String::toLong)
                     // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
-                    val streamData = site.parser.getStreams(ids)
+                    val streamData = TwitchParser.getStreams(ids)
 
                     // NOW we can split into coroutines for processing & sending messages to Discord.
                     // we don't want tasks killing each other here
@@ -52,9 +58,9 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                     runBlocking {
                         // re-associate SQL data with stream API data
                         streamData.mapNotNull { (id, data) ->
-                            val trackedChannel = tracked.find { it.siteChannelID == id }!!
+                            val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
                             if (data is Err && data.value is StreamErr.IO) {
-                                LOG.warn("Error contacting ${site.full} :: $trackedChannel")
+                                LOG.warn("Error contacting Twitch :: $trackedChannel")
                                 return@mapNotNull null
                             }
                             taskScope.launch {
@@ -77,37 +83,44 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
     }
 
     @WithinExposedContext
-    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: StreamDescriptor?) {
+    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?) {
+        val twitchId = channel.siteChannelID.toLong()
+
         // get streaming site user object when needed
         val user by lazy {
-            when (val user = site.parser.getUser(channel.siteChannelID)) {
+            when (val user = TwitchParser.getUser(twitchId)) {
                 is Ok -> user.value
                 is Err -> {
                     val err = user.value
+                    val siteName = channel.site.targetType.full
                     if (err is StreamErr.NotFound) {
                         // call succeeded and the user ID does not exist.
-                        LOG.info("Invalid ${channel.site.full} user: ${channel.siteChannelID}. Untracking user...")
+                        LOG.info("Invalid $siteName user: $twitchId. Untracking user...")
                         channel.delete()
-                    } else LOG.error("Error getting ${channel.site.full} user: ${channel.siteChannelID}: $err")
+                    } else LOG.error("Error getting $siteName user: $twitchId: $err")
                     null
                 }
             }
+        }
+
+        // existing stream info in db
+        val streams by lazy {
+            DBTwitchStreams.TwitchStream.getStreamDataFor(twitchId)
         }
 
         if(stream == null) {
             // stream is not live, check if there are any existing notifications to remove
             val notifications = channel.notifications
             if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
-                // make sure we have stream history
-                val streams = channel.streams
+
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val dbMessage = notif.messageID
                         val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
                         message?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
-                            embed.setColor(site.parser.color)
-                            embed.setFooter("Channel ID was ${channel.siteChannelID} on ${channel.site.full}.", null)
+                            embed.setColor(TwitchParser.color)
+                            embed.setFooter("Channel ID was $twitchId on ${channel.site.targetType.full}.", null)
                         }}?.tryAwait()
                         notif.delete()
                     }
@@ -122,10 +135,10 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
                         val guild = discordMessage.guild.tryAwait().orNull()
                         val features = if(guild != null) {
                             val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-                            config.getOrCreateFeatures(messageID.channel.channelID).featureSettings
-                        } else FeatureSettings() // use default settings for PM
-                        if(features.streamSummaries) {
-                            val specEmbed = StreamEmbedBuilder(
+                            config.getOrCreateFeatures(messageID.channel.channelID).twitchSettings
+                        } else TwitchSettings() // use default settings for PM
+                        if(features.summaries) {
+                            val specEmbed = TwitchEmbedBuilder(
                                 user!!,
                                 features
                             ).statistics(dbStream)
@@ -141,20 +154,26 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
             return
         }
         // stream is live, edit or post a notification in each target channel
-        val find = channel.streams.firstOrNull()
-        val dbStream = find?.apply { // update or create stream stats
-            updateViewers(stream.viewers)
-            lastTitle = stream.title
-            lastGame = stream.game.name
-        } ?: transaction {
-            TrackedStreams.Stream.new {
-                this.channelID = channel
-                this.startTime = stream.startedAt.jodaDateTime
-                this.peakViewers = stream.viewers
-                this.averageViewers = stream.viewers
-                this.uptimeTicks = 1
-                this.lastTitle = stream.title
-                this.lastGame = stream.game.name
+        val find = streams.firstOrNull()
+        if(find != null) {
+            find.apply {
+                // update stream stats
+                updateViewers(stream.viewers)
+                lastTitle = stream.title
+                lastGame = stream.game.name
+            }
+        } else {
+            // create stream stats
+            transaction {
+                DBTwitchStreams.TwitchStream.new {
+                    this.channelID = channel
+                    this.startTime = stream.startedAt.jodaDateTime
+                    this.peakViewers = stream.viewers
+                    this.averageViewers = stream.viewers
+                    this.uptimeTicks = 1
+                    this.lastTitle = stream.title
+                    this.lastGame = stream.game.name
+                }
             }
         }
 
@@ -166,10 +185,10 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
             // get channel twitch settings
             val guildID = target.discordChannel.guild?.guildID
             val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).featureSettings }}
-                ?: FeatureSettings() // use default settings for pm notifications
+            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }}
+                ?: TwitchSettings() // use default settings for pm notifications
 
-            val embed = StreamEmbedBuilder(user!!, features).stream(stream)
+            val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
             if (existing == null) { // post a new stream notification
                 // get target channel in discord, make sure it still exists
                 val chan = when (val disChan =
@@ -227,12 +246,11 @@ class StreamServiceChecker(val manager: StreamUpdateManager, val site: TrackedSt
 
                 TrackedStreams.Notification.new {
                     this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
-                        .elementAtOrElse(0) { _ ->
+                        .elementAtOrElse(0) {
                             MessageHistory.Message.new(target.discordChannel.guild?.guildID, newNotification)
                         }
                     this.targetID = target
                     this.channelID = channel
-                    this.stream = dbStream
                 }
             } else {
                 val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryAwait().orNull()

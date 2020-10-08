@@ -24,8 +24,8 @@ import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.watcher.ListUpdateManager
+import moe.kabii.discord.trackers.streams.ServiceWatcherManager
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
-import moe.kabii.discord.trackers.streams.watcher.StreamUpdateManager
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
@@ -89,7 +89,7 @@ fun main() {
     Uptime
     ListUpdateManager(gateway).launch()
     ReminderWatcher(gateway).launch()
-    StreamUpdateManager(gateway).launch()
+    ServiceWatcherManager(gateway).launch()
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
