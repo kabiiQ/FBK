@@ -62,7 +62,7 @@ object FollowConfig : CommandContainer {
                     }
                 }
 
-                settings.defaultFollow = StreamInfo(streamInfo.site, streamInfo.accountId)
+                settings.defaultFollow = StreamInfo(streamInfo.site.dbSite, streamInfo.accountId)
                 config.save()
                 embed("The default follow channel for **${target.name}** has been set to **${streamInfo.displayName}**.").awaitSingle()
             }

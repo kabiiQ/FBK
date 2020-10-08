@@ -25,7 +25,6 @@ sealed class TrackerTarget(
 data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String)
 
 sealed class StreamingTarget(
-    val dbSite: TrackedStreams.DBSite,
     val serviceColor: Color,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
@@ -33,19 +32,23 @@ sealed class StreamingTarget(
     vararg alias: String
 ) : TrackerTarget(full, channelFeature, url, *alias) {
 
+    // dbsite should not be constructor property as these refer to each other - will not be initalized yet
+    abstract val dbSite: TrackedStreams.DBSite
+
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
     abstract fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
     abstract fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr>
 }
 
 object TwitchTarget : StreamingTarget(
-    TrackedStreams.DBSite.TWITCH,
     TwitchParser.color,
     "Twitch",
     FeatureChannel::twitchChannel,
     Regex("twitch.tv/([a-zA-Z0-9_]{4,25})"),
     "twitch", "twitch.tv", "ttv"
 ) {
+    override val dbSite
+        get() = TrackedStreams.DBSite.TWITCH
 
     override fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
     override fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
@@ -79,7 +82,10 @@ object KitsuTarget : AnimeTarget(
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
 
     companion object {
-        val declaredTargets = TrackerTarget::class.sealedSubclasses.mapNotNull { c -> c.objectInstance }
+        // a bit rigid design-wise
+        val declaredTargets = TrackerTarget::class.sealedSubclasses
+            .flatMap { c -> c.sealedSubclasses }
+            .mapNotNull { c -> c.objectInstance }
 
         fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID

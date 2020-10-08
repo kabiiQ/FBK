@@ -92,7 +92,7 @@ object StreamFollow : CommandContainer {
                     }
                 }
                 if(member.roles.hasElement(mentionRole).awaitSingle()) {
-                    embed("You already have the stream mention role **${mentionRole.name}** in **${targetChannel.displayName}**.").awaitSingle()
+                    embed("You already have the stream mention role **${mentionRole.name}** in **${target.name}**.").awaitSingle()
                     return@discord
                 }
                 member.addRole(mentionRole.id, "Self-assigned stream mention role").success().awaitSingle()
@@ -150,7 +150,7 @@ object StreamFollow : CommandContainer {
             // if no stream name is provided, follow guild default stream. always let users follow a streamer server's channel
             inputArgs.isEmpty() -> {
                 if(default != null) {
-                    val streamTarget = default.site
+                    val streamTarget = default.site.targetType
                     val streamInfo = streamTarget.getChannelById(default.id).orNull()
                     if(streamInfo == null) {
                         return Err("There was an error getting the default channel set in **${origin.target.name}**.")

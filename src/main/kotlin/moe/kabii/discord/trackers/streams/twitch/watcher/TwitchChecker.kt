@@ -44,7 +44,9 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     // no good way to do this besides temporarily dissociating ids from other data
                     // very important to optimize requests to Twitch, etc
                     // Twitch IDs are always type Long
-                    val ids = tracked.map(TrackedStreams.StreamChannel::siteChannelID).map(String::toLong)
+                    val ids = tracked
+                        .map(TrackedStreams.StreamChannel::siteChannelID)
+                        .map(String::toLong)
                     // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
                     val streamData = TwitchParser.getStreams(ids)
 

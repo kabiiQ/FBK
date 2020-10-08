@@ -1,5 +1,6 @@
 package moe.kabii.data.mongodb.guilds
 
+import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
 
 data class GuildSettings(
@@ -12,7 +13,7 @@ data class GuildSettings(
 )
 
 data class StreamInfo(
-    val site: StreamingTarget,
+    val site: TrackedStreams.DBSite,
     val id: String
 )
 
