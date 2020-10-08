@@ -28,7 +28,7 @@ object GameResponseHandler {
             val message = if(event.guildId.isPresent) event.message else null
 
             // if this user is in a game in this channel, notify the game about a potential response
-            game.provide(user, event.message.content, event.message.channel.awaitSingle(), event.message)
+            game.provide(user, event.message.content, event.message.channel.awaitSingle(), message)
         }
     }
 

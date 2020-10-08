@@ -4,7 +4,6 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import moe.kabii.command.CommandContainer
