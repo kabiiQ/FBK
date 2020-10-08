@@ -20,7 +20,7 @@ class Connect4Grid {
         // append emotes for each 'x' value onto the 'y' strings
         val rows = Array(height) { StringBuilder() }
 
-        grid.forEachIndexed { colIndex, colContent ->
+        grid.forEachIndexed { _, colContent ->
             colContent.forEachIndexed { rowIndex, circleState ->
                 rows[rowIndex].append(circleState.emote)
             }
@@ -30,7 +30,7 @@ class Connect4Grid {
             .joinToString("\n")
     }
 
-    fun validateDrop(colNum: Int, state: CircleState): GridCoordinate? {
+    fun validateDrop(colNum: Int): GridCoordinate? {
         // subtract 1 to get index so that we can just drop(1) rather than drop(0)
         val colIndex = colNum - 1;
 

@@ -64,10 +64,9 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                         val oldEmbed = p1Existing.gameEmbeds.single { embed -> embed.channelId == dmChan.id }
 
                         val newEmbed = dmChan.createMessage(p1Existing::messageCreator).awaitSingle()
-                        p1Existing.gameEmbeds = p1Existing.gameEmbeds.apply {
+                        p1Existing.gameEmbeds = p1Existing.gameEmbeds.run {
                             val newInfo = EmbedInfo.from(newEmbed)
-                            minus(oldEmbed)
-                            plus(newEmbed)
+                            this - oldEmbed + newInfo
                         }
                     }
                 }

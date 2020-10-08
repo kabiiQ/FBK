@@ -73,7 +73,7 @@ class Connect4Game(
         val target = response.toIntOrNull() ?: return
         if(target !in 1..Connect4Grid.width) return
 
-        val circle = gameGrid.validateDrop(target, currentTurn)
+        val circle = gameGrid.validateDrop(target)
         if(circle == null) {
             try {
                 reply.createEmbed { spec ->
