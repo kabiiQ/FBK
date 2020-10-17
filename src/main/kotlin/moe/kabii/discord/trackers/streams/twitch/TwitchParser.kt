@@ -20,7 +20,6 @@ import java.time.Instant
 
 object TwitchParser {
     val color = Color.of(6570405)
-    val icon: String = NettyFileServer.glitch
 
     private val clientID = Keys.config[Keys.Twitch.client]
     private val oauth = Authorization()
@@ -32,6 +31,7 @@ object TwitchParser {
             .header("Client-ID", clientID)
             .header("Authorization", "Bearer ${oauth.accessToken}")
 
+        // todo pls rewrite - copy my more recent YoutubeParser for more normal exception flow
         for(attempt in 1..3) {
             val response = OkHTTP.make(request) { response ->
                 if (!response.isSuccessful) {

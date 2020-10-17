@@ -77,7 +77,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
             }
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 180000L - runDuration.toMillis()
+            val delay = 90000L - runDuration.toMillis()
             Thread.sleep(max(delay, 0L))
         }
     }
@@ -185,7 +185,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
             // get channel twitch settings
             val guildID = target.discordChannel.guild?.guildID
             val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { runBlocking { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }}
+            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }
                 ?: TwitchSettings() // use default settings for pm notifications
 
             val embed = TwitchEmbedBuilder(user!!, features).stream(stream)

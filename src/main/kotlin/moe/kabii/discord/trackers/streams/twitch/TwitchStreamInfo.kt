@@ -3,7 +3,7 @@ package moe.kabii.discord.trackers.streams.twitch
 import moe.kabii.net.NettyFileServer
 import java.time.Instant
 
-class TwitchStreamInfo( //statistics embed needs this info ..
+data class TwitchStreamInfo( //statistics embed needs this info ..
     val userID: Long,
     val username: String,
     val title: String,
@@ -21,7 +21,7 @@ class TwitchStreamInfo( //statistics embed needs this info ..
     }
 }
 
-class TwitchUserInfo(
+data class TwitchUserInfo(
     val userID: Long,
     val username: String,
     val displayName: String,
@@ -33,7 +33,7 @@ class TwitchUserInfo(
     val url: String = "https://twitch.tv/$username"
 }
 
-class TwitchGameInfo(
+data class TwitchGameInfo(
     val id: String,
     val name: String,
     val artURL: String
