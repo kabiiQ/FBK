@@ -10,7 +10,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
     object StreamTrackerModule : ConfigurationModule<TwitchSettings>(
         "livestream tracker",
         BooleanElement(
-            "Edit stream notification with a summary rather than deleting the message when a stream ends",
+            "Edit stream notification with a summary or VOD information rather than deleting the message when a stream ends",
             listOf("summary", "summarize", "streamsummary"),
             TwitchSettings::summaries
         ),

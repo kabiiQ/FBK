@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.streams.twitch
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.TwitchSettings
 import moe.kabii.data.relational.DBTwitchStreams
+import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.javaInstant
@@ -37,7 +38,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: TwitchSettings)
             applyBase(this)
             val time = Duration.between(stream.startedAt, Instant.now())
             val uptime = DurationFormatter(time).asUptime
-            setFooter("Uptime: $uptime - Live since ", TwitchParser.icon)
+            setFooter("Uptime: $uptime - Live since ", NettyFileServer.glitch)
             setTimestamp(stream.startedAt)
         }
 
@@ -45,7 +46,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: TwitchSettings)
             applyBase(this)
             val time = Duration.between(stream.startedAt, Instant.now())
             val uptime = DurationFormatter(time).asUptime
-            setFooter("Uptime: $uptime", TwitchParser.icon)
+            setFooter("Uptime: $uptime", NettyFileServer.glitch)
         }
     }
 
@@ -79,7 +80,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: TwitchSettings)
             setColor(Color.of(3941986))
             val desc = description.toString()
             if(desc.isNotBlank()) setDescription(desc)
-            setFooter("Stream ended ", TwitchParser.icon)
+            setFooter("Stream ended ", NettyFileServer.glitch)
             setTimestamp(Instant.now())
         }
     }

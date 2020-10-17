@@ -41,7 +41,7 @@
     </appender>
 
     <!-- Base logger level: ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF -->
-    <root level="DEBUG">
+    <root level="TRACE">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC"/>
     </root>

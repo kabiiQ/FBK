@@ -38,6 +38,7 @@ object NettyFileServer {
         idRoot.mkdirs()
         val udLogo = File(staticRoot, "ud_logo.jpg")
         val glitch = File(staticRoot, "Twitch_Glitch_Purple.png")
+        val youtubeLogo = File(staticRoot, "youtube_social_circle_red.png")
 
         routing {
             get("/thumbnails/twitch/{twitchid}/{...}") {
@@ -89,12 +90,16 @@ object NettyFileServer {
             get("/glitch") {
                 call.respondFile(glitch)
             }
+            get("/ytlogo") {
+                call.respondFile(youtubeLogo)
+            }
         }
     }
 
     val urbanDictionary = "$domain/ud"
     val smug = "$domain/smug"
     val glitch = "$domain/glitch"
+    val youtubeLogo = "$domain/ytlogo"
     fun rgb(rgb: RGB): String {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"

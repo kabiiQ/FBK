@@ -61,7 +61,11 @@ dependencies {
     implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
-    implementation("com.squareup.okhttp3:okhttp:4.8.1") // other api - http calls
+    // webscraper
+    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.0.0-alpha-6")
+
+    // other api - http calls
+    implementation("com.squareup.okhttp3:okhttp:4.8.1")
 
     // other api - json response parsing
     val moshiVer = "1.9.3"

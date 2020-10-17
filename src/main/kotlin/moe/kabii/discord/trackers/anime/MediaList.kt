@@ -53,9 +53,6 @@ abstract class MediaListParser {
     }
 }
 
-
-class RateLimitException(val retryMillis: Long) : IOException()
-
 data class MediaList(
     val media: List<Media>
 )

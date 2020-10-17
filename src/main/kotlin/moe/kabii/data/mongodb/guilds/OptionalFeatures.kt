@@ -60,10 +60,6 @@ data class TwitchSettings(
     var endGame: Boolean = true
 )
 
-data class YoutubeSettings(
-    var vodInfo: Boolean = true,
-)
-
 data class AnimeSettings(
     var postNewItem: Boolean = true,
     var postStatusChange: Boolean = true,

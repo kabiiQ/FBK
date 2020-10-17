@@ -1,6 +1,7 @@
 package moe.kabii.discord.trackers
 
 import discord4j.rest.util.Color
+import moe.kabii.LOG
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MediaSite
@@ -8,9 +9,11 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.streams.youtube.YoutubeParser
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.structure.extensions.stackTraceString
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -52,6 +55,32 @@ object TwitchTarget : StreamingTarget(
 
     override fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
     override fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
+}
+
+object YoutubeTarget : StreamingTarget(
+    YoutubeParser.color,
+    "YouTube",
+    FeatureChannel::twitchChannel,
+    Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})"),
+    "youtube", "yt", "youtube.com", "utube", "ytube"
+) {
+    override val dbSite: TrackedStreams.DBSite
+        get() = TrackedStreams.DBSite.YOUTUBE
+
+    override fun getChannel(id: String) = getChannelByUnknown(id)
+    override fun getChannelById(id: String) = getChannelByUnknown(id)
+
+    private fun getChannelByUnknown(identifier: String) = try {
+        val channel = YoutubeParser.getChannelFromUnknown(identifier)
+        if(channel != null) {
+            val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name)
+            Ok(info)
+        } else Err(StreamErr.NotFound)
+    } catch(e: Exception) {
+        LOG.debug("Error getting YouTube channel: ${e.message}")
+        LOG.trace(e.stackTraceString)
+        Err(StreamErr.IO)
+    }
 }
 
 // anime targets

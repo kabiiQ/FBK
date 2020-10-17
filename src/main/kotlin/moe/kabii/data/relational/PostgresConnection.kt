@@ -23,6 +23,7 @@ internal object PostgresConnection {
                 TrackedStreams.Notifications,
                 TrackedStreams.Mentions,
                 DBTwitchStreams.TwitchStreams,
+                DBYoutubeStreams.YoutubeStreams,
                 UserLog.GuildRelationships,
             )
         }

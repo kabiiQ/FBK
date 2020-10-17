@@ -3,6 +3,7 @@ package moe.kabii.data.relational
 import discord4j.common.util.Snowflake
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitchTarget
+import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.structure.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -16,7 +17,8 @@ import org.jetbrains.exposed.sql.select
 object TrackedStreams {
     // Basic enum, more rigid than StreamingTarget - this enum will be relied upon for deserialization
     enum class DBSite(val targetType: StreamingTarget) {
-        TWITCH(TwitchTarget)
+        TWITCH(TwitchTarget),
+        YOUTUBE(YoutubeTarget)
     }
 
     object StreamChannels : IntIdTable() {
