@@ -1,3 +1,7 @@
+import java.io.IOException
+import java.net.URL
+import java.util.zip.ZipInputStream
+
 group = "moe.kabii"
 
 plugins {
@@ -121,6 +125,42 @@ val updateVersion = task("updateVersion") {
     }
 }
 
+val getWebDriver = task("getWebDriver") {
+    val webDriverRepo = "https://chromedriver.storage.googleapis.com"
+
+    val webDriverVersion = URL("$webDriverRepo/LATEST_RELEASE").readText()
+    val webDriverPath = "$webDriverRepo/$webDriverVersion"
+
+    arrayOf("chromedriver_win32.zip", "chromedriver_linux64.zip").forEach { target ->
+        // download each required zipped file
+        val driverLocation = URL("$webDriverPath/$target")
+        println("Checking driver: $target")
+
+        try {
+            ZipInputStream(driverLocation.openStream()).use { stream ->
+                val zipEntry = stream.nextEntry
+
+                val localTarget = File(zipEntry.name)
+                if (!localTarget.exists()) {
+
+                    println("Downloading driver '$target' from $driverLocation")
+                    // don't download if driver already exists. un-needed with every single build
+                    localTarget.outputStream().use { out ->
+                        var byte = stream.read()
+                        while (byte != -1) {
+                            out.write(byte)
+                            byte = stream.read()
+                        }
+                    }
+                }
+                stream.closeEntry()
+            }
+        } catch (e: IOException) {
+
+        }
+    }
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "11"
@@ -145,6 +185,8 @@ tasks {
         archiveBaseName.set("FBK")
         archiveClassifier.set("")
         archiveVersion.set("deploy")
+
+        dependsOn(getWebDriver)
     }
 }
 
