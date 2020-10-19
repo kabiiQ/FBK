@@ -150,7 +150,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                             }
                         }
                         false -> {
-                            embed("**${p2Target.username} declined the challenge.").awaitSingle()
+                            embed("**${p2Target.username}** declined the challenge.").awaitSingle()
                         }
                         // else -> user did not respond to the challenge within 10 minutes
                     }
