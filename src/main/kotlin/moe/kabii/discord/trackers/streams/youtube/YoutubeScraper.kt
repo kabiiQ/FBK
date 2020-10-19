@@ -25,8 +25,11 @@ class YoutubeScraper : Closeable {
 
         init {
             val headless = Keys.config[Keys.Selenium.headless]
-            chromeOptions = ChromeOptions().setHeadless(headless)
-            chromeService = ChromeDriverService.Builder().build()
+
+            val driver = Keys.config[Keys.Selenium.chromeDriver]
+            if(driver.isNotBlank()) {
+                System.setProperty("webdriver.chrome.driver", driver)
+            }
 
             val chromeLog = File("logs/chromedriver.log")
 
@@ -35,12 +38,10 @@ class YoutubeScraper : Closeable {
             }
             chromeLog.createNewFile()
 
-            chromeService.sendOutputTo(FileOutputStream("logs/chromedriver.log"))
+            chromeOptions = ChromeOptions().setHeadless(headless)
 
-            val driver = Keys.config[Keys.Selenium.chromeDriver]
-            if(driver.isNotBlank()) {
-                System.setProperty("webdriver.chrome.driver", driver)
-            }
+            chromeService = ChromeDriverService.Builder().build()
+            chromeService.sendOutputTo(FileOutputStream("logs/chromedriver.log"))
         }
     }
 
