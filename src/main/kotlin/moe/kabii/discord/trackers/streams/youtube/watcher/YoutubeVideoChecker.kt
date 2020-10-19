@@ -37,6 +37,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                     newSuspendedTransaction {
                         DBYoutubeStreams.YoutubeStream.all()
                             .asSequence()
+                            .shuffled()
                             .chunked(50)
                             .flatMap { chunk ->
                                 // chunk, call API, and match api response back to to database object
@@ -57,7 +58,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
             }
 
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 90_000L - runDuration.toMillis()
+            val delay = (90_000L..160_000L).random() - runDuration.toMillis()
             Thread.sleep(max(delay, 0L))
         }
     }
