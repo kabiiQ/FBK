@@ -3,12 +3,13 @@ import java.net.URL
 import java.util.zip.ZipInputStream
 
 group = "moe.kabii"
+version = "deploy"
 
 plugins {
     val kotlinVer = "1.4.10"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    application
     idea
 }
 
@@ -113,9 +114,8 @@ val updateVersion = task("updateVersion") {
     val versionsFile = file("build.version")
     val versions = versionsFile.readLines()
     val (major, minor, build, flag) = versions.map { line -> line.substring(line.indexOf(':') + 1, line.length).trim() }
-    val buildFlag = if(flag.isNotBlank()) "-$flag" else ""
+    //val buildFlag = if(flag.isNotBlank()) "-$flag" else ""
     val buildCount = build.toInt() + 1
-    version = "$major.$minor$buildFlag Build #$buildCount"
 
     versionsFile.bufferedWriter().use { output ->
         output.write("major: $major\n")
@@ -188,22 +188,24 @@ tasks {
     }
 
     jar {
-        manifest.attributes("Main-Class" to "moe.kabii.FBKKt")
         // include build version in jar for bot self-info command
         from(".") {
             include("build.version")
         }
-        dependsOn(shadowJar)
-    }
-
-    shadowJar {
-        // FBK-deploy.jar
-        archiveBaseName.set("FBK")
-        archiveClassifier.set("")
-        archiveVersion.set("deploy")
 
         dependsOn(getWebDriver)
     }
+
+    // credit to https://github.com/gradle/gradle/issues/1989#issuecomment-550192866
+    named<CreateStartScripts>("startScripts") {
+        doLast {
+            windowsScript.writeText(windowsScript.readText().replace(Regex("set CLASSPATH=.*"), "set CLASSPATH=%APP_HOME%\\\\lib\\\\*"))
+        }
+    }
+}
+
+application {
+    mainClass.set("moe.kabii.FBKKt")
 }
 
 idea {
