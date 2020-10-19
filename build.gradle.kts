@@ -126,46 +126,62 @@ val updateVersion = task("updateVersion") {
 }
 
 val getWebDriver = task("getWebDriver") {
+    // custom script to download latest chromedriver binaries
     val webDriverRepo = "https://chromedriver.storage.googleapis.com"
 
+    val driverDir = File("chromedriver")
+    driverDir.mkdirs()
+
+    val currentVersionFile = File(driverDir, "VERSION")
+    val currentVersion = if(currentVersionFile.exists()) {
+        currentVersionFile.readText()
+    } else null
+
     val webDriverVersion = URL("$webDriverRepo/LATEST_RELEASE").readText()
+    if(webDriverVersion == currentVersion) {
+        println("chromedriver up-to-date: $currentVersion")
+        return@task
+    }
+
     val webDriverPath = "$webDriverRepo/$webDriverVersion"
 
     arrayOf("chromedriver_win32.zip", "chromedriver_linux64.zip").forEach { target ->
-        // download each required zipped file
+        // download each required distribution's driver
         val driverLocation = URL("$webDriverPath/$target")
-        println("Checking driver: $target")
+        println("Updating driver: $target -> $webDriverVersion")
 
         try {
             ZipInputStream(driverLocation.openStream()).use { stream ->
                 val zipEntry = stream.nextEntry
 
-                val localTarget = File(zipEntry.name)
-                if (!localTarget.exists()) {
+                val localTarget = File(driverDir, zipEntry.name)
 
-                    println("Downloading driver '$target' from $driverLocation")
-                    // don't download if driver already exists. un-needed with every single build
-                    localTarget.outputStream().use { out ->
-                        var byte = stream.read()
-                        while (byte != -1) {
-                            out.write(byte)
-                            byte = stream.read()
-                        }
+                println("Downloading driver '$target' from $driverLocation")
+                localTarget.outputStream().use { out ->
+                    var byte = stream.read()
+                    while (byte != -1) {
+                        out.write(byte)
+                        byte = stream.read()
                     }
                 }
                 stream.closeEntry()
             }
-        } catch (e: IOException) {
 
+        } catch (e: IOException) {
+            println("Unable to get driver '$target': ${e.message}")
+            return@task
         }
     }
+
+    // if successful, update current version file
+    currentVersionFile.writeText(webDriverVersion)
 }
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "14"
     }
-    java.targetCompatibility = JavaVersion.VERSION_11
+    java.targetCompatibility = JavaVersion.VERSION_14
 
     build {
         dependsOn(updateVersion)
