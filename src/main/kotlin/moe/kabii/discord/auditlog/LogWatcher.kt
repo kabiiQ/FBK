@@ -82,9 +82,9 @@ object LogWatcher {
                     currentEvents.remove(guild)
                 }
             }
-        } catch (t: Throwable) { // don't end the executor
-            LOG.error("Uncaught exception in LogWatcher: ${t.message}")
-            LOG.info(t.stackTraceString)
+        } catch (e: Exception) { // don't end the executor
+            LOG.error("Uncaught exception in LogWatcher: ${e.message}")
+            LOG.info(e.stackTraceString)
         }
     }
 

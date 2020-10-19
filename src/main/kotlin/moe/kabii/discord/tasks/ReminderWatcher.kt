@@ -55,9 +55,9 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
                         }
                     }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
                 }
-            } catch(t: Throwable) {
-                LOG.error("Uncaught exception in ReminderWatcher :: ${t.message}")
-                LOG.debug(t.stackTraceString)
+            } catch(e: Exception) {
+                LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             } // don't let this thread die
             val runtime = Duration.between(start, Instant.now())
             val delay = updateInterval - runtime.toMillis()
@@ -140,9 +140,9 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
             }
         } catch(ce: ClientException) {
             LOG.info("Completely unable to send reminder: skipping :: $reminder")
-        } catch(t: Throwable) {
-            LOG.error("Uncaught exception sending reminder :: ${t.message}")
-            LOG.debug(t.stackTraceString)
+        } catch(e: Exception) {
+            LOG.error("Uncaught exception sending reminder :: ${e.message}")
+            LOG.debug(e.stackTraceString)
         }
         reminder.delete()
     }

@@ -15,25 +15,25 @@ fun <T, R> Flux<T>.mapNotNull(mapper: (T) -> R?): Flux<R> {
     }
 }
 
-fun <T: Any> Mono<T>.tryBlock(): Result<T, Throwable> {
+fun <T: Any> Mono<T>.tryBlock(): Result<T, Exception> {
     return try {
         val result = block() ?: return Err(NullPointerException())
         Ok(result)
-    } catch (t: Throwable) {
-        LOG.warn("Exception suppressed in tryBlock: ${t.message}.")
-        LOG.debug(t.stackTraceString)
-        Err(t)
+    } catch (e: Exception) {
+        LOG.warn("Exception suppressed in tryBlock: ${e.message}.")
+        LOG.debug(e.stackTraceString)
+        Err(e)
     }
 }
 
-suspend fun <T: Any> Mono<T>.tryAwait(): Result<T, Throwable> {
+suspend fun <T: Any> Mono<T>.tryAwait(): Result<T, Exception> {
     return try {
         val result = awaitFirstOrNull() ?: return Err(NullPointerException())
         Ok(result)
-    } catch (t: Throwable) {
-        LOG.warn("Exception suppressed in tryAwait: ${t.message}.")
-        LOG.debug(t.stackTraceString)
-        Err(t)
+    } catch (e: Exception) {
+        LOG.warn("Exception suppressed in tryAwait: ${e.message}.")
+        LOG.debug(e.stackTraceString)
+        Err(e)
     }
 }
 
