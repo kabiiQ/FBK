@@ -20,7 +20,7 @@ import kotlin.reflect.KProperty1
 sealed class TrackerTarget(
     val full: String,
     val channelFeature: KProperty1<FeatureChannel, Boolean>,
-    val url: Regex,
+    val url: List<Regex>,
     vararg val alias: String
 )
 
@@ -31,7 +31,7 @@ sealed class StreamingTarget(
     val serviceColor: Color,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
-    url: Regex,
+    url: List<Regex>,
     vararg alias: String
 ) : TrackerTarget(full, channelFeature, url, *alias) {
 
@@ -47,7 +47,9 @@ object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     "Twitch",
     FeatureChannel::twitchChannel,
-    Regex("twitch.tv/([a-zA-Z0-9_]{4,25})"),
+    listOf(
+        Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
+    ),
     "twitch", "twitch.tv", "ttv"
 ) {
     override val dbSite
@@ -61,7 +63,10 @@ object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::twitchChannel,
-    Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})"),
+    listOf(
+        Regex("([a-zA-Z0-9-_]{24})"),
+        Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})")
+    ),
     "youtube", "yt", "youtube.com", "utube", "ytube"
 ) {
     override val dbSite: TrackedStreams.DBSite
@@ -88,7 +93,7 @@ sealed class AnimeTarget(
     val dbSite: MediaSite,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
-    url: Regex,
+    url: List<Regex>,
     vararg alias: String
 ) : TrackerTarget(full, channelFeature, url, *alias)
 
@@ -96,14 +101,18 @@ object MALTarget : AnimeTarget(
     MediaSite.MAL,
     "MyAnimeList",
     FeatureChannel::animeChannel,
-    Regex("myanimelist.net/(animelist|mangalist|profile)/[a-zA-Z0-9_]{2,16}"),
+    listOf(
+        Regex("myanimelist.net/(animelist|mangalist|profile)/[a-zA-Z0-9_]{2,16}")
+    ),
     "mal", "myanimelist", "myanimelist.net", "animelist", "mangalist"
 )
 object KitsuTarget : AnimeTarget(
     MediaSite.KITSU,
     "Kitsu",
     FeatureChannel::animeChannel,
-    Regex("kitsu.io/users/[a-zA-Z0-9_]{3,20}"),
+    listOf(
+        Regex("kitsu.io/users/[a-zA-Z0-9_]{3,20}")
+    ),
     "kitsu", "kitsu.io"
 )
 
@@ -131,9 +140,11 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             return if(inputArgs.size == 1) {
 
                 // if 1 arg, user supplied just a username OR a url (containing site and username)
-                val urlMatch = declaredTargets.mapNotNull { supportedSite ->
-                    supportedSite.url.find(inputArgs[0])?.to(supportedSite)
-                }.firstOrNull()
+                val urlMatch = declaredTargets.map { supportedSite ->
+                    supportedSite.url.mapNotNull { exactUrl ->
+                        exactUrl.find(inputArgs[0])?.to(supportedSite)
+                    }
+                }.flatten().firstOrNull()
 
                 if(urlMatch != null) {
                     Ok(
