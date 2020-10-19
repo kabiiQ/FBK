@@ -73,7 +73,7 @@ object StreamFollow : CommandContainer {
                         // role does not exist
                         val streamName = targetChannel.displayName
                         val spec: (RoleCreateSpec.() -> Unit) = {
-                            setName("$siteName/$streamName")
+                            setName("$siteName: $streamName")
                             setColor(targetChannel.site.serviceColor)
                         }
                         val new = target.createRole(spec).tryAwait().orNull()

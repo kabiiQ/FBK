@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.streams
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.discord.trackers.streams.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.streams.youtube.watcher.YoutubeLiveScraper
+import moe.kabii.discord.trackers.streams.youtube.watcher.YoutubeVideoChecker
 
 class ServiceWatcherManager(val discord: GatewayDiscordClient) {
     // launch service watcher threads
@@ -14,8 +15,12 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             val twitch = TwitchChecker(discord)
             yield(Thread(twitch, "TwitchChecker"))
 
-            val youtubeChecker = YoutubeLiveScraper(discord)
-            yield(Thread(youtubeChecker, "YoutubeChannelChecker"))
+            val youtubeScraper = YoutubeLiveScraper(discord)
+            yield(Thread(youtubeScraper, "YoutubeLiveScraper"))
+
+            val youtubeChecker = YoutubeVideoChecker(discord)
+            yield(Thread(youtubeChecker, "YoutubeVideoChecker"))
+
         }.toList()
     }
 

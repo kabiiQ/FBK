@@ -50,8 +50,8 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                 LOG.debug(e.stackTraceString)
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 120_000L - runDuration.toMillis()
-            Thread.sleep(max(delay, 0L))
+            val delay = 90_000L - runDuration.toMillis()
+            Thread.sleep(max(delay, (1500L..3000L).random()))
         }
     }
 
