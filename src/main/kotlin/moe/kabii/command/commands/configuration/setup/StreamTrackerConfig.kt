@@ -20,20 +20,20 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
             TwitchSettings::thumbnails
         ),
         BooleanElement(
-            "Include peak viewer count in summary",
+            "Include peak viewer count in summary (twitch)",
             listOf("peak", "peakviews", "peakviewers", "viewers"),
             TwitchSettings::peakViewers
         ),
         BooleanElement(
-            "Include average viewer count in summary",
+            "Include average viewer count in summary (twitch)",
             listOf("average", "averageviews", "averageviewers", "avg"),
             TwitchSettings::averageViewers
         ),
-        BooleanElement("Include stream ending title in summary",
+        BooleanElement("Include stream ending title in summary (twitch)",
             listOf("title", "endtitle"),
             TwitchSettings::endTitle
         ),
-        BooleanElement("Include stream ending game in summary",
+        BooleanElement("Include stream ending game in summary (twitch)",
             listOf("game", "endgame"),
             TwitchSettings::endGame
         )

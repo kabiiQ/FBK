@@ -1,10 +1,18 @@
 package moe.kabii.data.relational
 
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Role
+import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.rest.http.client.ClientException
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitchTarget
 import moe.kabii.discord.trackers.YoutubeTarget
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -12,6 +20,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import reactor.kotlin.core.publisher.toMono
 
 // generic logic to handle tracking any stream source
 object TrackedStreams {
@@ -76,6 +85,30 @@ object TrackedStreams {
                         DiscordObjects.Guilds.guildID eq guildID.asLong() and
                                 (StreamChannels.siteChannelID eq streamChannelID)
                     })
+
+            suspend fun getMentionRoleFor(dbStream: StreamChannel, guildId: Long, targetChannel: MessageChannel): Role? {
+                val dbRole = dbStream.mentionRoles
+                    .firstOrNull { men -> men.guild.guildID == guildId }
+                return if(dbRole != null) {
+                    val role = targetChannel.toMono()
+                        .ofType(GuildChannel::class.java)
+                        .flatMap(GuildChannel::getGuild)
+                        .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
+                        .tryAwait()
+                    when(role) {
+                        is Ok -> role.value
+                        is Err -> {
+                            val err = role.value
+                            if(err is ClientException && err.status.code() == 404) {
+                                // role has been deleted, remove configuration
+                                dbRole.delete()
+                            }
+                            null
+                        }
+                    }
+                } else null
+            }
+
         }
     }
 

@@ -132,9 +132,9 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     val messageID = notif.messageID
                     val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
                     if(discordMessage != null) {
-                        val guild = discordMessage.guild.tryAwait().orNull()
-                        val features = if(guild != null) {
-                            val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
+                        val guildId = discordMessage.guildId.orNull()
+                        val features = if(guildId != null) {
+                            val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
                             config.getOrCreateFeatures(messageID.channel.channelID).twitchSettings
                         } else TwitchSettings() // use default settings for PM
                         if(features.summaries) {
@@ -205,28 +205,9 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     }
                 }
                 // get mention role from db
-                val mentionRole = guildID?.let { targetGuildId ->
-                    val dbRole = target.streamChannel.mentionRoles
-                        .firstOrNull { men -> men.guild.guildID == targetGuildId }
-                    if(dbRole != null) {
-                        val role = chan.toMono()
-                            .ofType(GuildChannel::class.java)
-                            .flatMap(GuildChannel::getGuild)
-                            .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
-                            .tryAwait()
-                        when (role) {
-                            is Ok -> role.value
-                            is Err -> {
-                                val err = role.value
-                                if (err is ClientException && err.status.code() == 404) {
-                                    // mention role has been deleted
-                                    dbRole.delete()
-                                }
-                                null
-                            }
-                        }
-                    } else null
-                }
+                val mentionRole = if(guildID != null) {
+                    TrackedStreams.Mention.getMentionRoleFor(target.streamChannel, guildID, chan)
+                } else null
 
                 val mention = mentionRole?.mention
                 val newNotification = try {
