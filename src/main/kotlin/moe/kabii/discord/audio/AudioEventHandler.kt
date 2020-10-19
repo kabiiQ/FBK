@@ -16,6 +16,7 @@ import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.structure.extensions.tryBlock
 import moe.kabii.util.EmojiCharacters
 import moe.kabii.util.YoutubeUtil
@@ -90,7 +91,7 @@ object AudioEventHandler : AudioEventAdapter() {
             data.discord.getGuildById(guildID.snowflake)
                 .flatMap(BotUtil::getBotVoiceChannel)
                 .flatMap(BotUtil::isSingleClient)
-                .awaitSingle()
+                .tryAwait().orNull()
         }
         if(alone != true) {
             data.audio.discord.cancelPendingTimeout()
