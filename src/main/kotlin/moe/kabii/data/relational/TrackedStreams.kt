@@ -86,6 +86,7 @@ object TrackedStreams {
                                 (StreamChannels.siteChannelID eq streamChannelID)
                     })
 
+            @WithinExposedContext
             suspend fun getMentionRoleFor(dbStream: StreamChannel, guildId: Long, targetChannel: MessageChannel): Role? {
                 val dbRole = dbStream.mentionRoles
                     .firstOrNull { men -> men.guild.guildID == guildId }

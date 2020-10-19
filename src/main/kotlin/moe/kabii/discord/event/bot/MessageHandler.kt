@@ -49,7 +49,7 @@ class MessageHandler(val manager: CommandManager) {
                 .any()
             if(log) {
                 transaction {
-                    MessageHistory.Message.new(event.guildId.get().asLong(), event.message)
+                    MessageHistory.Message.new(event.message)
                 }
             }
         }

@@ -226,10 +226,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                 }
 
                 TrackedStreams.Notification.new {
-                    this.messageID = MessageHistory.Message.find { MessageHistory.Messages.messageID eq newNotification.id.asLong() }
-                        .elementAtOrElse(0) {
-                            MessageHistory.Message.new(target.discordChannel.guild?.guildID, newNotification)
-                        }
+                    this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                     this.targetID = target
                     this.channelID = channel
                 }

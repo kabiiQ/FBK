@@ -1,5 +1,6 @@
 package moe.kabii.data.relational
 
+import moe.kabii.structure.extensions.orNull
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -25,13 +26,20 @@ object MessageHistory {
         else "https://discord.com/channels/@me/${channel.channelID}/$messageID"
 
         companion object : LongEntityClass<Message>(Messages) {
-            fun new(guildID: Long?, message: discord4j.core.`object`.entity.Message): Message {
+            fun new(message: discord4j.core.`object`.entity.Message): Message {
                 return new {
                     messageID = message.id.asLong()
-                    channel = DiscordObjects.Channel.getOrInsert(message.channelId.asLong(), guildID)
+                    channel = DiscordObjects.Channel.getOrInsert(message.channelId.asLong(), message.guildId.orNull()?.asLong())
                     author = DiscordObjects.User.getOrInsert(message.author.get().id.asLong())
                     content = message.content
                 }
+            }
+
+            fun getOrInsert(message: discord4j.core.`object`.entity.Message): Message {
+                return find { Messages.messageID eq message.id.asLong() }
+                    .elementAtOrElse(0) { _ ->
+                        new(message)
+                    }
             }
         }
     }
