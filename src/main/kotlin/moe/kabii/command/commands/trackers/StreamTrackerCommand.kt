@@ -72,7 +72,7 @@ object StreamTrackerCommand {
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
             }
         }
-        origin.embed("Now tracking **${streamInfo.displayName}**!").awaitSingle()
+        origin.embed("Now tracking **${streamInfo.displayName}** on **${streamTarget.full}**!").awaitSingle()
     }
 
     suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
