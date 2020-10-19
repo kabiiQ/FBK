@@ -20,6 +20,10 @@ password = ''
 auth_db = 'kizunaai'
 bot_db = 'kizunaai'
 
+[netty]
+port = 8000
+host = true
+
 [twitch]
 client_id = ''
 client_secret = ''
@@ -39,3 +43,8 @@ admin_user = [
 admin_channels = [
     582802415057633281
 ]
+log_channel = 0
+
+[selenium]
+chrome_driver = "chromedriver"
+headless = true
