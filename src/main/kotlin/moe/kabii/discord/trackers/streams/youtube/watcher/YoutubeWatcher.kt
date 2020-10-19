@@ -9,6 +9,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
 import moe.kabii.data.relational.DBYoutubeStreams
+import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo
@@ -16,6 +17,7 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.EmbedBlock
+import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
@@ -56,7 +58,7 @@ abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
         try {
             val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
 
-            return chan.createMessage { spec ->
+            val newNotification = chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     val liveMessage = if(new) " went live!" else " is live."
@@ -70,6 +72,16 @@ abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
+
+            // log message in db
+            TrackedStreams.Notification.new {
+                this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                this.targetID = target
+                this.channelID = target.streamChannel
+            }
+
+            return newNotification
+
         } catch (ce: ClientException) {
             val err = ce.status.code()
             if(err == 404 || err == 403) {
@@ -85,6 +97,7 @@ abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
         return newSuspendedTransaction {
             if(channel.targets.empty()) {
                 channel.delete()
+                LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
                 true
             } else false
         }

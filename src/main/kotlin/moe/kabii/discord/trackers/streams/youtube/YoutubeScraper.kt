@@ -8,9 +8,9 @@ import moe.kabii.data.Keys
 import moe.kabii.structure.extensions.stackTraceString
 import org.openqa.selenium.By
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeDriverService
 import org.openqa.selenium.chrome.ChromeOptions
-import java.io.Closeable
-import java.io.IOException
+import java.io.*
 
 class YoutubeChannelError(message: String, cause: Throwable? = null) : IOException(message, cause)
 
@@ -21,10 +21,21 @@ class YoutubeScraper : Closeable {
         private val matchUrl = Regex("/watch\\?v=([a-zA-Z0-9-_]{11})")
 
         private val chromeOptions: ChromeOptions
+        private val chromeService: ChromeDriverService
 
         init {
             val headless = Keys.config[Keys.Selenium.headless]
             chromeOptions = ChromeOptions().setHeadless(headless)
+            chromeService = ChromeDriverService.Builder().build()
+
+            val chromeLog = File("logs/chromedriver.log")
+
+            if(chromeLog.exists()) {
+                chromeLog.delete()
+            }
+            chromeLog.createNewFile()
+
+            chromeService.sendOutputTo(FileOutputStream("logs/chromedriver.log"))
 
             val driver = Keys.config[Keys.Selenium.chromeDriver]
             if(driver.isNotBlank()) {
@@ -38,7 +49,7 @@ class YoutubeScraper : Closeable {
 
     init {
         try {
-            chrome = ChromeDriver(chromeOptions)
+            chrome = ChromeDriver(chromeService, chromeOptions)
         } catch(e: Exception) {
             LOG.error("Exception while launching chrome : ${e.message}")
             LOG.info(e.stackTraceString)
