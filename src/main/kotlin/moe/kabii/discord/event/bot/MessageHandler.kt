@@ -74,8 +74,8 @@ class MessageHandler(val manager: CommandManager) {
         val author = event.message.author.orNull() ?: return@launch
         if (cmdStr != null) {
             if(config != null) {
-                // echo command listener
-                config.echoCommands.commands.find { echo -> echo.command == cmdStr.toLowerCase() }?.run {
+                // custom command listener
+                config.customCommands.commands.find { custom -> custom.command == cmdStr.toLowerCase() }?.run {
                     if (!restrict || event.member.get().hasPermissions(Permission.MANAGE_MESSAGES)) {
                         event.message.channel
                             .flatMap { chan -> chan.createMessage(response) }

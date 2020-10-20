@@ -32,7 +32,7 @@ data class GuildConfiguration(
     var prefix: String = defaultPrefix,
     var suffix: String? = defaultSuffix,
     val options: OptionalFeatures = OptionalFeatures(),
-    val echoCommands: EchoCommands = EchoCommands(),
+    val customCommands: CustomCommands = CustomCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
     val selfRoles: SelfRoles = SelfRoles(),
     val guildSettings: GuildSettings = GuildSettings(),
