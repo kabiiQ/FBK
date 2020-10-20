@@ -97,13 +97,15 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
 
                     // stream has ended and vod is available - edit notifications to reflect
                     val duration = youtube.duration?.run(::DurationFormatter)
+                    val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
                     val embedEdit: EmbedBlock = {
-                        setAuthor("${youtube.channel.name} was live.", youtube.url, youtube.channel.avatar)
+                        setAuthor("${youtube.channel.name} was live.", channelLink, youtube.channel.avatar)
                         if(duration != null) setDescription("The video [${duration.colonTime}] is available.")
                         setUrl(youtube.url)
                         setColor(inactiveColor)
                         setTitle(youtube.title)
-                        setFooter("YouTube video", NettyFileServer.youtubeLogo)
+                        setThumbnail(youtube.thumbnail)
+                        setFooter("YouTube VOD", NettyFileServer.youtubeLogo)
                     }
                     streamEnd(dbStream, embedEdit)
                 }
@@ -125,6 +127,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                                 setUrl(videoLink)
                                 setColor(inactiveColor)
                                 setTitle("No VOD is available.")
+                                setThumbnail(dbStream.lastThumbnail)
                                 setDescription("Last video title: $lastTitle")
                             }
                             streamEnd(dbStream, embedEdit)
