@@ -12,7 +12,6 @@
     <logger name="discord4j.core.event" level="DEBUG"/>
     <logger name="com.github.twitch4j" level="INFO"/>
     <logger name="org.apache.http" level="INFO"/>
-    <logger name="org.openqa.selenium" level="WARN" />
     <logger name="Exposed" level="INFO"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

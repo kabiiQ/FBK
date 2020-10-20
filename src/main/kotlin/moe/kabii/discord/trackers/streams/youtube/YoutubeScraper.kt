@@ -14,11 +14,13 @@ import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.logging.Level
+import java.util.logging.Logger
 
 class YoutubeChannelError(override val message: String, val ytText: String, cause: Throwable? = null) : IOException(cause)
 
 // instanced to re-use browser for single scraping 'session'
-class YoutubeScraper : Closeable {
+class YoutubeScraper : AutoCloseable {
 
     companion object {
         private val matchUrl = Regex("/watch\\?v=([a-zA-Z0-9-_]{11})")
@@ -29,22 +31,24 @@ class YoutubeScraper : Closeable {
         init {
             val headless = Keys.config[Keys.Selenium.headless]
 
+            // setting this seems to be required on linux or when running from ide
             val driver = Keys.config[Keys.Selenium.chromeDriver]
             if(driver.isNotBlank()) {
                 System.setProperty("webdriver.chrome.driver", driver)
             }
 
+            // remove some logs from console each time chromedriver starts
             val chromeLog = File("logs/chromedriver.log")
-
             if(chromeLog.exists()) {
                 chromeLog.delete()
             }
             chromeLog.createNewFile()
 
             chromeOptions = ChromeOptions().setHeadless(headless)
-
             chromeService = ChromeDriverService.Builder().build()
-            chromeService.sendOutputTo(FileOutputStream("logs/chromedriver.log"))
+
+            chromeService.sendOutputTo(FileOutputStream(chromeLog))
+            Logger.getLogger("org.openqa.selenium").level = Level.WARNING
         }
     }
 
@@ -111,7 +115,7 @@ class YoutubeScraper : Closeable {
             // we can find video-specific information on this page and avoid a call to /videos/
             val thumbnailUrl = "https://i.ytimg.com/vi/$videoId/hqdefault_live.jpg"
 
-            val titleElement = videoElement.findElements(By.xpath("//*[@id=\"video-title\"]")).firstOrNull()
+            val titleElement = videoElement.findElements(By.xpath(".//*[@id=\"video-title\"]")).firstOrNull()
             val title = titleElement?.getAttribute("title").orEmpty()
 
             val descriptionElement = videoElement.findElements(By.xpath(".//*[@id=\"description-text\"]")).firstOrNull()
