@@ -13,6 +13,7 @@ import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.streams.StreamWatcher
 import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.trackers.streams.twitch.TwitchStreamInfo
@@ -26,7 +27,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
+class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(discord) {
     override fun run() {
         loop {
             val start = Instant.now()
@@ -36,6 +37,9 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
+                    }.filter { streamChannel ->
+                        // untrack stream and do not do any further work if it has no discord targets
+                        !untrackStaleEntity(streamChannel)
                     }
 
                     // get all the IDs to make bulk requests to the service.
@@ -89,12 +93,11 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     is Ok -> user.value
                     is Err -> {
                         val err = user.value
-                        val siteName = channel.site.targetType.full
                         if (err is StreamErr.NotFound) {
                             // call succeeded and the user ID does not exist.
-                            LOG.info("Invalid $siteName user: $twitchId. Untracking user...")
+                            LOG.info("Invalid Twitch user: $twitchId. Untracking user...")
                             channel.delete()
-                        } else LOG.error("Error getting $siteName user: $twitchId: $err")
+                        } else LOG.error("Error getting Twitch user: $twitchId: $err")
                         null
                     }
                 }

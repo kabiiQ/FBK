@@ -15,7 +15,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class YoutubeChannelError(message: String, cause: Throwable? = null) : IOException(message, cause)
+class YoutubeChannelError(override val message: String, val ytText: String, cause: Throwable? = null) : IOException(cause)
 
 // instanced to re-use browser for single scraping 'session'
 class YoutubeScraper : Closeable {
@@ -76,7 +76,8 @@ class YoutubeScraper : Closeable {
             // check for YouTube error - the channel should definitely exist to reach this point, but may be terminated, suspended, etc...
             val error = chrome.findElementsByCssSelector(".ERROR.yt-alert-renderer").firstOrNull()
             if(error != null) {
-                throw YoutubeChannelError("Youtube channel '$channelId' returned an error: ${error.text}")
+                val err = error.text.trim()
+                throw YoutubeChannelError("Youtube channel '$channelId' returned an error: $err", err)
             }
 
             // if a channel is live - it will be the first video on the /channel/ page (obviously, you want people to see you are live)

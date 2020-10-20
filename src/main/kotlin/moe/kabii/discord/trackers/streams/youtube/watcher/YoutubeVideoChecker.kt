@@ -63,8 +63,8 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
 
     private suspend fun updateStream(dbStream: DBYoutubeStreams.YoutubeStream, ytStream: Result<YoutubeVideoInfo, StreamErr>) {
 
-        // if this stream has no remaining targets, do not call API, and delete it from DB to prevent further work
-        if(untrackChannelIfDead(dbStream.streamChannel)) {
+        // if this stream has no remaining targets, delete it from DB to prevent further work
+        if(untrackStaleEntity(dbStream.streamChannel)) {
             return
         }
 

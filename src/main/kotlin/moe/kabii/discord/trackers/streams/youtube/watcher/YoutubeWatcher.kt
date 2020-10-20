@@ -8,30 +8,23 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
-import moe.kabii.data.relational.DBYoutubeStreams
 import moe.kabii.data.relational.MessageHistory
 import moe.kabii.data.relational.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
+import moe.kabii.discord.trackers.streams.StreamWatcher
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
+abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(discord) {
 
     suspend fun createLiveNotification(liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
-
-        // get channel stream embed settings
-        val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-        val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }
-            ?: TwitchSettings() // use default settings for pm notifications
 
         // get target channel in discord, make sure it still exists
         val disChan = discord.getChannelById(target.discordChannel.channelID.snowflake)
@@ -48,6 +41,14 @@ abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
                 return null
             }
         }
+
+        // get channel stream embed settings
+        val guildId = target.discordChannel.guild?.guildID
+        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }
+            ?: TwitchSettings() // use default settings for pm notifications
+
+        // make sure 'stream' feature is enabled still todo
 
         // get mention role from db if one is registered
         val mentionRole = if(guildId != null) {
@@ -90,16 +91,6 @@ abstract class YoutubeWatcher(val discord: GatewayDiscordClient) {
                 target.delete()
                 return null
             } else throw ce
-        }
-    }
-
-    suspend fun untrackChannelIfDead(channel: TrackedStreams.StreamChannel): Boolean {
-        return newSuspendedTransaction {
-            if(channel.targets.empty()) {
-                channel.delete()
-                LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
-                true
-            } else false
         }
     }
 }

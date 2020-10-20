@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.DBYoutubeStreams
 import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.discord.trackers.streams.youtube.YoutubeChannelError
 import moe.kabii.discord.trackers.streams.youtube.YoutubeScraper
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.stackTraceString
@@ -56,14 +57,14 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
     private suspend fun checkChannel(channel: TrackedStreams.StreamChannel, channelId: String, scraper: YoutubeScraper) {
 
         // if this channel has no discord targets, do not page scrape, and delete from db to prevent further work
-        if(untrackChannelIfDead(channel)) {
+        if(untrackStaleEntity(channel)) {
             return
         }
 
         try {
             // this channel has no known stream info. check if it is currently live, and record this information
             val liveStream = scraper.getLiveStream(channelId)
-            if(liveStream == null) return // stream not live
+            if (liveStream == null) return // stream not live
 
             // record stream in database
             newSuspendedTransaction {
@@ -90,7 +91,15 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
 
         } catch(e: Exception) {
             LOG.error("Problem checking YouTube stream '$channelId' :: ${e.message}")
-            LOG.debug(e.stackTraceString)
+
+            if(e is YoutubeChannelError && e.ytText.contains("This channel does not exist")) {
+
+                LOG.info("Untracking YouTube channel '$channelId' as it no longer exists.")
+                channel.delete()
+
+            } else {
+                LOG.debug(e.stackTraceString)
+            }
         }
     }
 }
