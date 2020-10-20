@@ -39,8 +39,8 @@ sealed class StreamingTarget(
     abstract val dbSite: TrackedStreams.DBSite
 
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
-    abstract fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
-    abstract fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr>
+    abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
+    abstract suspend fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr>
 }
 
 object TwitchTarget : StreamingTarget(
@@ -55,8 +55,8 @@ object TwitchTarget : StreamingTarget(
     override val dbSite
         get() = TrackedStreams.DBSite.TWITCH
 
-    override fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
-    override fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
+    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
+    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
 }
 
 object YoutubeTarget : StreamingTarget(
@@ -72,8 +72,8 @@ object YoutubeTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.YOUTUBE
 
-    override fun getChannel(id: String) = getChannelByUnknown(id)
-    override fun getChannelById(id: String) = getChannelByUnknown(id)
+    override suspend fun getChannel(id: String) = getChannelByUnknown(id)
+    override suspend fun getChannelById(id: String) = getChannelByUnknown(id)
 
     private fun getChannelByUnknown(identifier: String) = try {
         val channel = YoutubeParser.getChannelFromUnknown(identifier)

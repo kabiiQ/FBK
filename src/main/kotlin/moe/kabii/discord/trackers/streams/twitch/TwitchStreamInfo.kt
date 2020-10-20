@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.streams.twitch
 
+import kotlinx.coroutines.runBlocking
 import moe.kabii.net.NettyFileServer
 import java.time.Instant
 
@@ -13,11 +14,15 @@ data class TwitchStreamInfo( //statistics embed needs this info ..
     val gameID: Long
 ) {
     val game: TwitchGameInfo by lazy {
-        TwitchParser.getGame(gameID)
+        runBlocking {
+            TwitchParser.getGame(gameID)
+        }
     }
 
     val user: TwitchUserInfo by lazy {
-        TwitchParser.getUser(userID).unwrap()
+        runBlocking {
+            TwitchParser.getUser(userID).unwrap()
+        }
     }
 }
 

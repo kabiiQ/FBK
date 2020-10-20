@@ -46,22 +46,20 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
                 val job = SupervisorJob()
                 val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
 
-                runBlocking {
-                    reminders.map { reminder ->
-                        discordScope.launch {
-                            newSuspendedTransaction {
-                                scheduleReminder(reminder)
-                            }
+                reminders.map { reminder ->
+                    discordScope.launch {
+                        newSuspendedTransaction {
+                            scheduleReminder(reminder)
                         }
-                    }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
-                }
+                    }
+                }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             } // don't let this thread die
             val runtime = Duration.between(start, Instant.now())
             val delay = updateInterval - runtime.toMillis()
-            Thread.sleep(max(delay, 0L)) // don't sleep negative - not sure how this was happening though
+            delay(max(delay, 0L)) // don't sleep negative - not sure how this was happening though
         }
     }
 

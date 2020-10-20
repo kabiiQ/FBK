@@ -2,7 +2,7 @@ package moe.kabii.discord.trackers.streams.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.rest.util.Color
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
@@ -33,23 +33,21 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
 
             // check known live streams, can group up to 50 video IDs in an API call
             try {
-                runBlocking {
-                    newSuspendedTransaction {
-                        DBYoutubeStreams.YoutubeStream.all()
-                            .asSequence()
-                            .shuffled()
-                            .chunked(50)
-                            .flatMap { chunk ->
-                                // chunk, call API, and match api response back to to database object
-                                val chunkIds = chunk.map(DBYoutubeStreams.YoutubeStream::youtubeVideoId)
-                                val videos = YoutubeParser.getVideos(chunkIds)
-                                chunk.associateWith { stream ->
-                                    videos.getValue(stream.youtubeVideoId)
-                                }.entries
-                            }.forEach { (yt, db) ->
-                                updateStream(yt, db)
-                            }
-                    }
+                newSuspendedTransaction {
+                    DBYoutubeStreams.YoutubeStream.all()
+                        .asSequence()
+                        .shuffled()
+                        .chunked(50)
+                        .flatMap { chunk ->
+                            // chunk, call API, and match api response back to to database object
+                            val chunkIds = chunk.map(DBYoutubeStreams.YoutubeStream::youtubeVideoId)
+                            val videos = YoutubeParser.getVideos(chunkIds)
+                            chunk.associateWith { stream ->
+                                videos.getValue(stream.youtubeVideoId)
+                            }.entries
+                        }.forEach { (yt, db) ->
+                            updateStream(yt, db)
+                        }
                 }
 
             } catch (e: Exception) {
@@ -59,7 +57,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
 
             val runDuration = Duration.between(start, Instant.now())
             val delay = (90_000L..160_000L).random() - runDuration.toMillis()
-            Thread.sleep(max(delay, 0L))
+            delay(max(delay, 0L))
         }
     }
 
@@ -98,10 +96,10 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                 } else {
 
                     // stream has ended and vod is available - edit notifications to reflect
-                    val duration = youtube.duration?.run(::DurationFormatter)?.fullTime
+                    val duration = youtube.duration?.run(::DurationFormatter)
                     val embedEdit: EmbedBlock = {
                         setAuthor("${youtube.channel.name} was live.", youtube.url, youtube.channel.avatar)
-                        if(duration != null) setDescription("A VOD is available with $duration of video.")
+                        if(duration != null) setDescription("The video [${duration.colonTime}] is available.")
                         setUrl(youtube.url)
                         setColor(inactiveColor)
                         setTitle(youtube.title)

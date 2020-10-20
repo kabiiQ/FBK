@@ -143,7 +143,7 @@ object StreamFollow : CommandContainer {
         }
     }
 
-    private fun getTargetChannel(origin: DiscordParameters, inputArgs: List<String>): Result<BasicStreamChannel, String> {
+    private suspend fun getTargetChannel(origin: DiscordParameters, inputArgs: List<String>): Result<BasicStreamChannel, String> {
         val config = origin.config
         val default = config.guildSettings.defaultFollow
         return when {

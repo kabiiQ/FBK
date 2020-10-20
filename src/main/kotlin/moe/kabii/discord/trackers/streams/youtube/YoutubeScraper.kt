@@ -10,7 +10,10 @@ import org.openqa.selenium.By
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeDriverService
 import org.openqa.selenium.chrome.ChromeOptions
-import java.io.*
+import java.io.Closeable
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class YoutubeChannelError(message: String, cause: Throwable? = null) : IOException(message, cause)
 

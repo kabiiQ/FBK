@@ -2,7 +2,6 @@ package moe.kabii.discord.trackers.streams.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.data.relational.DBYoutubeStreams
 import moe.kabii.data.relational.TrackedStreams
@@ -30,18 +29,16 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                     }
                         .associateBy(TrackedStreams.StreamChannel::siteChannelID)
                         .filter { (id, _) ->
-                        // we only want youtube channels that are not currently known to be live - cross-check with 'live' db
-                        DBYoutubeStreams.YoutubeStream.findStream(id).empty()
+                            // we only want youtube channels that are not currently known to be live - cross-check with 'live' dbs
+                            DBYoutubeStreams.YoutubeStream.findStream(id).empty()
                     }
                 }
 
                 // for now, this is called in-place, blocking the current thread. we really want to be careful about page scraping
                 // too fast, so this is fine.
-                runBlocking {
-                    checkChannels.forEach { (id, channel) ->
-                        checkChannel(channel, id, browser)
-                        delay((1000..2000).random().toLong())
-                    }
+                checkChannels.forEach { (id, channel) ->
+                    checkChannel(channel, id, browser)
+                    delay((1000..2000).random().toLong())
                 }
 
                 browser.close()
@@ -51,7 +48,7 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = 90_000L - runDuration.toMillis()
-            Thread.sleep(max(delay, (1500L..3000L).random()))
+            delay(max(delay, (1500L..3000L).random()))
         }
     }
 

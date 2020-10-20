@@ -5,15 +5,12 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.entity.Guild
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import java.util.concurrent.Executors

@@ -1,5 +1,6 @@
 package moe.kabii.structure.extensions
 
+import kotlinx.coroutines.runBlocking
 import org.joda.time.DateTime
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -29,6 +30,10 @@ get() {
     }
 }
 
-fun loop(process: () -> Unit) {
-    while(true) process()
+fun loop(process: suspend () -> Unit) {
+    while(true) {
+        runBlocking {
+            process()
+        }
+    }
 }

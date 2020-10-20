@@ -1,7 +1,6 @@
 package moe.kabii.discord.trackers.streams.twitch.watcher
 
 import discord4j.core.GatewayDiscordClient
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
@@ -23,7 +22,6 @@ import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -34,7 +32,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
             val start = Instant.now()
             // get all tracked sites for this service
             try {
-                transaction {
+                newSuspendedTransaction {
                     // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
@@ -55,21 +53,19 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
                     val job = SupervisorJob()
                     val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
 
-                    runBlocking {
-                        // re-associate SQL data with stream API data
-                        streamData.mapNotNull { (id, data) ->
-                            val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
-                            if (data is Err && data.value is StreamErr.IO) {
-                                LOG.warn("Error contacting Twitch :: $trackedChannel")
-                                return@mapNotNull null
+                    // re-associate SQL data with stream API data
+                    streamData.mapNotNull { (id, data) ->
+                        val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
+                        if (data is Err && data.value is StreamErr.IO) {
+                            LOG.warn("Error contacting Twitch :: $trackedChannel")
+                            return@mapNotNull null
+                        }
+                        taskScope.launch {
+                            newSuspendedTransaction {
+                                updateChannel(trackedChannel, data.orNull())
                             }
-                            taskScope.launch {
-                                newSuspendedTransaction {
-                                    updateChannel(trackedChannel, data.orNull())
-                                }
-                            }
-                        }.joinAll()
-                    }
+                        }
+                    }.joinAll()
                 }
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
@@ -78,7 +74,7 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
             val delay = 90000L - runDuration.toMillis()
-            Thread.sleep(max(delay, 0L))
+            delay(max(delay, 0L))
         }
     }
 
@@ -88,17 +84,19 @@ class TwitchChecker(val discord: GatewayDiscordClient) : Runnable {
 
         // get streaming site user object when needed
         val user by lazy {
-            when (val user = TwitchParser.getUser(twitchId)) {
-                is Ok -> user.value
-                is Err -> {
-                    val err = user.value
-                    val siteName = channel.site.targetType.full
-                    if (err is StreamErr.NotFound) {
-                        // call succeeded and the user ID does not exist.
-                        LOG.info("Invalid $siteName user: $twitchId. Untracking user...")
-                        channel.delete()
-                    } else LOG.error("Error getting $siteName user: $twitchId: $err")
-                    null
+            runBlocking {
+                when (val user = TwitchParser.getUser(twitchId)) {
+                    is Ok -> user.value
+                    is Err -> {
+                        val err = user.value
+                        val siteName = channel.site.targetType.full
+                        if (err is StreamErr.NotFound) {
+                            // call succeeded and the user ID does not exist.
+                            LOG.info("Invalid $siteName user: $twitchId. Untracking user...")
+                            channel.delete()
+                        } else LOG.error("Error getting $siteName user: $twitchId: $err")
+                        null
+                    }
                 }
             }
         }

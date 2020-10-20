@@ -9,6 +9,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
 import moe.kabii.command.commands.twitch.TwitchBridgeOptions
@@ -135,9 +136,11 @@ fun main() {
         .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
 
     // join any linked channels on twitch IRC
-    GuildConfigurations.guildConfigurations.values
-        .mapNotNull { it.options.linkedTwitchChannel?.twitchid }
-        .let(TwitchParser::getUsers).values
-        .mapNotNull { user -> user.orNull()?.username }
-        .forEach(twitch.chat::joinChannel)
+    runBlocking {
+        val twitchChannels = GuildConfigurations.guildConfigurations.values
+            .mapNotNull { config -> config.options.linkedTwitchChannel?.twitchid }
+        TwitchParser.getUsers(twitchChannels).values
+            .mapNotNull { user -> user.orNull()?.username }
+            .forEach(twitch.chat::joinChannel)
+    }
 }
