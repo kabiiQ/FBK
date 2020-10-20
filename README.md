@@ -37,7 +37,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Livestream integration](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
     - Post information on specific streams while they are live
     - Optionally mention a role when they become live
-    - Currently supports **Twitch** (eventual plans for Youtube streams)
+    - Currently supports **Twitch** and **YouTube** live streams
   - [Anime/manga list integration](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList and Kitsu**
@@ -70,7 +70,7 @@ Feature ideas/requests, issue reports, and general questions are welcome in the 
 
 This bot is written in [Kotlin](https://kotlinlang.org/).
 
-The big libraries making my work on KizunaAi doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L37) file.
+The big libraries making my work on KizunaAi doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L42) file.
 
 ## Self-Hosting:
 As an open-source project, KizunaAi can be compiled using her Gradle build script, and ran independently. To run a custom version of the bot will require editing keys.toml with your own API keys. As provided, she will require access to a [MongoDB](https://www.mongodb.com/try/download/community) and a [PostgreSQL](https://www.postgresql.org/download/) server. Detailed instructions or support should not be expected for this use case. You are free to do so, but I would still appreciate your feedback for the public version or your membership in the community Discord server.
@@ -82,4 +82,4 @@ This Discord bot is named after, but has no association to the virtual YouTuber 
 
 FBK is licensed under the GPL 3.0 license, viewable in the ``LICENSE`` file. 
 
- Some commands may echo user input. I am not responsible for this user-created content.
+ Some commands may echo user input. No user-created content should be considered as an opinion or statement from myself. 
