@@ -1,10 +1,20 @@
 package moe.kabii.discord.trackers.streams
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.Role
+import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.rest.http.client.ClientException
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.structure.WithinExposedContext
+import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     suspend fun untrackStaleEntity(channel: TrackedStreams.StreamChannel): Boolean {
@@ -30,5 +40,29 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 true
             } else false
         }
+    }
+
+    @WithinExposedContext
+    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel): Role? {
+        val dbRole = dbStream.mentionRoles
+            .firstOrNull { men -> men.guild.guildID == guildId }
+        return if(dbRole != null) {
+            val role = targetChannel.toMono()
+                .ofType(GuildChannel::class.java)
+                .flatMap(GuildChannel::getGuild)
+                .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
+                .tryAwait()
+            when(role) {
+                is Ok -> role.value
+                is Err -> {
+                    val err = role.value
+                    if(err is ClientException && err.status.code() == 404) {
+                        // role has been deleted, remove configuration
+                        dbRole.delete()
+                    }
+                    null
+                }
+            }
+        } else null
     }
 }

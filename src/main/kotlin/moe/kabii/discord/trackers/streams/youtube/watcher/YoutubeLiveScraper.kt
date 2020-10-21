@@ -3,14 +3,13 @@ package moe.kabii.discord.trackers.streams.youtube.watcher
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
-import moe.kabii.data.relational.DBYoutubeStreams
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.streams.DBYoutubeStreams
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.streams.youtube.YoutubeChannelError
 import moe.kabii.discord.trackers.streams.youtube.YoutubeScraper
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -24,7 +23,7 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                 val browser = YoutubeScraper()
 
                 // target all tracked youtube channels that are not currently 'live'
-                val checkChannels = transaction {
+                val checkChannels = newSuspendedTransaction {
                     TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                     }

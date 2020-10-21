@@ -8,8 +8,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
-import moe.kabii.data.relational.MessageHistory
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.streams.StreamWatcher
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo
@@ -17,13 +17,14 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.EmbedBlock
+import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(discord) {
 
+    @WithinExposedContext
     suspend fun createLiveNotification(liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
@@ -51,8 +52,8 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         // make sure 'stream' feature is enabled still todo
 
         // get mention role from db if one is registered
-        val mentionRole = if(guildId != null) {
-            TrackedStreams.Mention.getMentionRoleFor(target.streamChannel, guildId, chan)
+        val mentionRole = if(guildId != null) { 
+            getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
         val mention = mentionRole?.mention

@@ -8,9 +8,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
-import moe.kabii.data.relational.DBTwitchStreams
-import moe.kabii.data.relational.MessageHistory
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.DBTwitchStreams
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.StreamWatcher
@@ -89,6 +89,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
         // get streaming site user object when needed
         val user by lazy {
             runBlocking {
+                delay(400L)
                 when (val user = TwitchParser.getUser(twitchId)) {
                     is Ok -> user.value
                     is Err -> {
@@ -207,7 +208,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 }
                 // get mention role from db
                 val mentionRole = if(guildID != null) {
-                    TrackedStreams.Mention.getMentionRoleFor(target.streamChannel, guildID, chan)
+                    getMentionRoleFor(target.streamChannel, guildID, chan)
                 } else null
 
                 val mention = mentionRole?.mention

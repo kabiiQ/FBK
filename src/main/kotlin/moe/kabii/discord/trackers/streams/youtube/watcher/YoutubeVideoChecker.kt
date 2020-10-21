@@ -6,7 +6,7 @@ import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchSettings
-import moe.kabii.data.relational.DBYoutubeStreams
+import moe.kabii.data.relational.streams.DBYoutubeStreams
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.youtube.YoutubeParser
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo

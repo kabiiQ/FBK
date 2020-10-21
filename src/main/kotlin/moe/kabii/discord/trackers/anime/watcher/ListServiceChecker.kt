@@ -124,7 +124,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                         ConsumptionStatus.HOLD -> "Updated their on-hold status for %s."
                         ConsumptionStatus.PTW -> "Updated their Plan to Watch for %s."
                         ConsumptionStatus.WATCHING -> {
-                            builder.oldProgress = oldMedia.progressStr(withTotal = false)
+                            builder.oldProgress = oldMedia.progressStr()
                             when (newMedia.type) {
                                 MediaType.ANIME -> "Watched $progress ${"episode".plural(progress)} of %s."
                                 MediaType.MANGA -> "Read $progress ${"chapter".plural(progress)} of %s."
@@ -133,23 +133,25 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                     }
                     if (newMedia.score != oldMedia.score) {
                         statusUpdate = true
-                        builder.oldScore = oldMedia.scoreStr(withMax = false)
+                        builder.oldScore = oldMedia.scoreStr()
                     }
                 }
             }
             if (builder != null) {
-                targets@ for (target in savedList.targets) {
+                trackedList.targets.forEach { target ->
                     // send embed to all channels this user's mal is tracked in
-                    val user = when (val userCall = discord.getUserById(target.discordUserID.snowflake).tryAwait()) {
+                    val userId = target.userTracked.userID
+                    val user = when (val userCall = discord.getUserById(userId.snowflake).tryAwait()) {
                         is Ok -> userCall.value
                         is Err -> {
-                            LOG.warn("Unable to get Discord user ${target.discordUserID} in list checker :: ${userCall.value.message}")
-                            continue@targets
+                            LOG.warn("Unable to get Discord user $userId in list checker :: ${userCall.value.message}")
+                            return@forEach
                         }
                     }
                     builder.withUser(user)
 
-                    val updateMessage = discord.getChannelById(target.channelID.snowflake)
+                    val channelId = target.discord.channelID
+                    val updateMessage = discord.getChannelById(channelId.snowflake)
                         .ofType(MessageChannel::class.java)
                         .filter { chan ->
                             // check if channel is currently enabled (or pm channel)
@@ -172,7 +174,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                         }
                         .flatMap { chan ->
                             chan.createEmbed { spec ->
-                                builder.createEmbedConsumer(savedList.list)(spec)
+                                builder.createEmbedConsumer(site, trackedList.siteListId)(spec)
                             }
                         }
 
@@ -182,10 +184,9 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                         val err = ce.status.code()
                         if (err == 404 || err == 403) {
                             // remove target if no longer valid
-                            LOG.info("Unable to send MediaList update to channel '${target.channelID}'. Configuration target will be removed")
+                            LOG.info("Unable to send MediaList update to channel '$channelId'. Configuration target will be removed")
                             LOG.debug(ce.stackTraceString)
-                            savedList.targets -= target
-                            savedList.save()
+                            target.delete()
                         } else throw ce
                     }
                 }
@@ -193,8 +194,32 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
         }
         // save list state
         if (newEntry || statusChange || statusUpdate) {
-            savedList.savedMediaList = newList
-            savedList.save()
+
+            val listJson = newMediaList.toDBJson()
+            trackedList.lastListJson = listJson
         }
+    }
+
+    private fun untrackStaleList(list: TrackedMediaLists.MediaList): Boolean {
+        val targets = list.targets
+            .filter { target ->
+                val discordTarget = target.discord
+
+                // make sure target is enabled in discord channel
+                val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
+                val enabled = GuildConfigurations.getOrCreateGuild(guildId)
+                    .options.featureChannels[discordTarget.channelID]?.animeChannel == true
+                if(!enabled) {
+                    target.delete()
+                    LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} as the 'anime' feature has been disabled in '${discordTarget.channelID}'.")
+                }
+                enabled
+            }
+
+        return if(targets.isEmpty()) {
+            list.delete()
+            LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} as it has no active targets.")
+            true
+        } else false
     }
 }
