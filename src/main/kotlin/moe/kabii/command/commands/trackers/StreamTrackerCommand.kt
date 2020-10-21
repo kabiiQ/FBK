@@ -57,12 +57,13 @@ object StreamTrackerCommand {
         }
 
         val dbChannel = transaction { // get the db 'channel' object or create if this is a new stream channel
-            TrackedStreams.StreamChannel.find { TrackedStreams.StreamChannels.siteChannelID eq streamId }
-                .elementAtOrElse(0) { _ ->
-                    TrackedStreams.StreamChannel.new {
-                        this.site = site
-                        this.siteChannelID = streamId
-                    }
+            TrackedStreams.StreamChannel.find {
+                TrackedStreams.StreamChannels.site eq site and
+                        (TrackedStreams.StreamChannels.siteChannelID eq streamId)
+            }.elementAtOrElse(0) { _ ->
+                TrackedStreams.StreamChannel.new {
+                    this.site = site
+                    this.siteChannelID = streamId
                 }
         }
         transaction {
@@ -130,7 +131,7 @@ object StreamTrackerCommand {
                 .innerJoin(TrackedStreams.StreamChannels)
                 .innerJoin(DiscordObjects.Channels).select {
                     TrackedStreams.StreamChannels.site eq site and
-                            (TrackedStreams.StreamChannels.siteChannelID eq channelId) and
+                            (TrackedStreams.StreamChannels.siteChannelID eq  channelId) and
                             (DiscordObjects.Channels.channelID eq discordChan.asLong())
             }
         ).firstOrNull()
