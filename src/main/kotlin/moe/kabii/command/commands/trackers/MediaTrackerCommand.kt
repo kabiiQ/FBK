@@ -3,24 +3,27 @@ package moe.kabii.command.commands.trackers
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
 import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.mongodb.*
+import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.relational.anime.TrackedMediaLists
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.trackers.AnimeTarget
 import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.anime.MediaListEmpty
+import moe.kabii.discord.trackers.anime.MediaListDeletedException
+import moe.kabii.discord.trackers.anime.MediaListIOException
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake
+import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.tryAwait
-import kotlin.concurrent.withLock
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object MediaTrackerCommand {
     suspend fun track(origin: DiscordParameters, target: TargetArguments) {
-        val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
         // if this is in a guild make sure the media list feature is enabled here
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
         if(config != null) {

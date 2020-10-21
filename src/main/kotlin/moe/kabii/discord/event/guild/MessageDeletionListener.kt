@@ -7,7 +7,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.relational.MessageHistory
+import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.orNull

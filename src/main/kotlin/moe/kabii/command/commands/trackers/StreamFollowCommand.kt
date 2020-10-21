@@ -9,7 +9,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandAbortedException
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.BasicStreamChannel
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments

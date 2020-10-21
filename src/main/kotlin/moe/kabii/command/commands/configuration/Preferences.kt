@@ -5,7 +5,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.data.relational.DiscordObjects
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait

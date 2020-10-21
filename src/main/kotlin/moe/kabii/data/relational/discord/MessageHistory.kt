@@ -1,4 +1,4 @@
-package moe.kabii.data.relational
+package moe.kabii.data.relational.discord
 
 import moe.kabii.structure.extensions.orNull
 import org.jetbrains.exposed.dao.LongEntity
@@ -29,7 +29,10 @@ object MessageHistory {
             fun new(message: discord4j.core.`object`.entity.Message): Message {
                 return new {
                     messageID = message.id.asLong()
-                    channel = DiscordObjects.Channel.getOrInsert(message.channelId.asLong(), message.guildId.orNull()?.asLong())
+                    channel = DiscordObjects.Channel.getOrInsert(
+                        message.channelId.asLong(), message.guildId.orNull()
+                            ?.asLong()
+                    )
                     author = DiscordObjects.User.getOrInsert(message.author.get().id.asLong())
                     content = message.content
                 }

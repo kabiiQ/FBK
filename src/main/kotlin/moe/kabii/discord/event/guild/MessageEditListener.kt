@@ -8,7 +8,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
-import moe.kabii.data.relational.MessageHistory
+import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.*

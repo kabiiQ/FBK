@@ -1,4 +1,4 @@
-package moe.kabii.data.relational
+package moe.kabii.data.relational.discord
 
 import moe.kabii.structure.WithinExposedContext
 import org.jetbrains.exposed.dao.LongEntity

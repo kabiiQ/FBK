@@ -8,8 +8,8 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.data.relational.Reminder
-import moe.kabii.data.relational.Reminders
+import moe.kabii.data.relational.discord.Reminder
+import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext

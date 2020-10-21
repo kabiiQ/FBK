@@ -5,84 +5,85 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.MediaSite
-import moe.kabii.data.mongodb.TrackedMediaList
-import moe.kabii.data.mongodb.TrackedMediaLists
-import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.anime.ConsumptionStatus
-import moe.kabii.discord.trackers.anime.MediaEmbedBuilder
-import moe.kabii.discord.trackers.anime.MediaList
-import moe.kabii.discord.trackers.anime.MediaType
+import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.data.relational.anime.TrackedMediaLists
+import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.*
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant
-import kotlin.concurrent.withLock
 import kotlin.math.max
 
-class ListServiceChecker(val manager: ListUpdateManager, val site: MediaSite, val discord: GatewayDiscordClient) : Runnable {
+class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) : Runnable {
     override fun run() {
         loop {
+
             val start = Instant.now()
-            // get current state of tracked lists for this site
             try {
-                val lists = TrackedMediaLists.lock.withLock {
-                    TrackedMediaLists.mediaLists.toList()
-                        .filter { tracked -> tracked.list.site == this.site }
-                }
+                newSuspendedTransaction {
 
-                val job = SupervisorJob()
-                val taskScope = CoroutineScope(DiscordTaskPool.listThreads + job)
+                    // get all tracked lists for this site
+                    val lists = TrackedMediaLists.MediaList.find {
+                        TrackedMediaLists.MediaLists.site eq site
+                    }.filter { mediaList ->
+                        !untrackStaleList(mediaList)
+                    }
 
-                // request the tracked lists.
-                runBlocking {
-                    lists.mapNotNull { trackedList ->
-                        if (trackedList.targets.isEmpty()) {
-                            // if a list does not have any more channels it is tracked in, we can stop requesting it.
-                            trackedList.removeSelf()
-                            return@mapNotNull null
+                    // work on single thread to call api - heavy rate limits
+                    lists.forEach { trackedList ->
+                        val newList = try {
+                            trackedList.downloadCurrentList()!!
+                        } catch(delete: MediaListDeletedException) {
+                            LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
+                            trackedList.delete()
+                            return@forEach
+                        } catch(e: Exception) {
+                            LOG.warn("Exception parsing media item: ${trackedList.siteListId} :: ${e.message}")
+                            LOG.trace(e.stackTraceString)
+                            return@forEach
                         }
 
-                        val newList = when(val parse = site.parser.parse(trackedList.list.id)){
-                            is Ok -> parse.value
-                            is Err -> {
-                                LOG.warn("Exception parsing media item: ${trackedList.list.id} :: ${parse.value}")
-                                return@mapNotNull null
-                            }
-                        }
-                        val task = taskScope.launch {
-                            compareAndUpdate(trackedList, newList)
-                        }
+                        compareAndUpdate(trackedList, newList)
+
                         // arbitrary delay - heavy rate limits between calls on these platforms
-                        // wait before starting next call - but can go ahead and compare/message discord.
-                        delay(4000L)
-                        task
-                    }.joinAll()
+                        delay(3500L)
+                    }
                 }
-            } catch (e: Exception) {
+            } catch(e: Exception) {
+                // catch-all, we don't wan this thread to end
                 LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             }
             // only run every few minutes at max
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 300000L - runDuration.toMillis()
-            Thread.sleep(max(delay, 0L))
+            val delay = 300_000 - runDuration.toMillis()
+            delay(max(delay, 0L))
         }
     }
 
-    private suspend fun compareAndUpdate(savedList: TrackedMediaList, newList: MediaList) {
-        val new = newList.media
-        var newEntry = false // these could perhaps be heirarchical for a typical use case. but for customization they are seperate configurations and any one must be met to post the message
+    private suspend fun compareAndUpdate(trackedList: TrackedMediaLists.MediaList, newMediaList: MediaList) {
+
+        val oldList = trackedList.extractMedia()
+        val newList = newMediaList.media
+
+        // flags set when list update conditions are met
+        // for customization they are seperate configurations and any one must be met to post the message
+        var newEntry = false
         var statusChange = false
         var statusUpdate = false
 
-        for(newMedia in new) {
-            val oldMedia = savedList.savedMediaList.media.find(newMedia::equals)
+        for(newMedia in newList) {
+            // find same entry on old list (may not be present if it is a new addition to list)
+            val oldMedia = oldList.find { oldItem ->
+                oldItem.mediaId == newMedia.mediaID && oldItem.type == newMedia.type
+            }
             // don't create embed builder yet because the vast majority of media checked will not need one
             var builder: MediaEmbedBuilder? = null
             if (oldMedia == null) {

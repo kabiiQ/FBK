@@ -1,6 +1,6 @@
 package moe.kabii.data.mongodb.guilds
 
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.streams.TrackedStreams
 
 data class GuildSettings(
     var embedMessages: Boolean = true,

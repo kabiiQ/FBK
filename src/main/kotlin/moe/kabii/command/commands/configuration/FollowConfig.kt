@@ -6,8 +6,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StreamInfo
-import moe.kabii.data.relational.DiscordObjects
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.Search

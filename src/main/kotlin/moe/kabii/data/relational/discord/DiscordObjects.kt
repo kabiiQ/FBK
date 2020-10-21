@@ -1,4 +1,4 @@
-package moe.kabii.data.relational
+package moe.kabii.data.relational.discord
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

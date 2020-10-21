@@ -13,7 +13,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.data.relational.MessageHistory
+import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor

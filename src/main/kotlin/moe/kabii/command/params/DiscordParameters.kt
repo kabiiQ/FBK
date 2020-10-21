@@ -16,7 +16,7 @@ import moe.kabii.command.channelVerify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.data.relational.DiscordObjects
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.util.errorColor
