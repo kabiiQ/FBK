@@ -24,6 +24,8 @@ internal object PostgresConnection {
             SchemaUtils.createMissingTablesAndColumns(
                 DiscordObjects.Users,
                 DiscordObjects.Channels,
+                TrackedMediaLists.MediaLists,
+                TrackedMediaLists.ListTargets,
                 MessageHistory.Messages,
                 Reminders,
                 TrackedStreams.StreamChannels,

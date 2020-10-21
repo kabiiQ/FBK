@@ -4,9 +4,9 @@ import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.MediaSite
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.data.relational.TrackedStreams
+import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.discord.trackers.streams.youtube.YoutubeParser
@@ -90,31 +90,39 @@ object YoutubeTarget : StreamingTarget(
 
 // anime targets
 sealed class AnimeTarget(
-    val dbSite: MediaSite,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, channelFeature, url, *alias)
+) : TrackerTarget(full, channelFeature, url, *alias) {
+
+    // dbsite should not be constructor property as these refer to each other - will not be initalized yet
+    abstract val dbSite: ListSite
+}
 
 object MALTarget : AnimeTarget(
-    MediaSite.MAL,
     "MyAnimeList",
     FeatureChannel::animeChannel,
     listOf(
         Regex("myanimelist.net/(animelist|mangalist|profile)/[a-zA-Z0-9_]{2,16}")
     ),
     "mal", "myanimelist", "myanimelist.net", "animelist", "mangalist"
-)
+) {
+    override val dbSite: ListSite
+        get() = ListSite.MAL
+}
+
 object KitsuTarget : AnimeTarget(
-    MediaSite.KITSU,
     "Kitsu",
     FeatureChannel::animeChannel,
     listOf(
         Regex("kitsu.io/users/[a-zA-Z0-9_]{3,20}")
     ),
     "kitsu", "kitsu.io"
-)
+) {
+    override val dbSite: ListSite
+        get() = ListSite.KITSU
+}
 
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {

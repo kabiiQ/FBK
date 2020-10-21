@@ -24,8 +24,7 @@ import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.tasks.ReminderWatcher
-import moe.kabii.discord.trackers.anime.watcher.ListUpdateManager
-import moe.kabii.discord.trackers.streams.ServiceWatcherManager
+import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
@@ -88,7 +87,6 @@ fun main() {
 
     // start lifetime task threads
     Uptime
-    ListUpdateManager(gateway).launch()
     ReminderWatcher(gateway).launch()
     ServiceWatcherManager(gateway).launch()
 

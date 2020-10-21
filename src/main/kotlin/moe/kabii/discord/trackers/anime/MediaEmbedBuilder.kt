@@ -2,8 +2,7 @@ package moe.kabii.discord.trackers.anime
 
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
-import moe.kabii.data.mongodb.ListInfo
-import moe.kabii.data.mongodb.MediaSite
+import moe.kabii.data.relational.anime.ListSite
 
 class MediaEmbedBuilder(val media: Media) {
     // store message details until given a discord object to build on - don't store any discord objects
@@ -18,14 +17,13 @@ class MediaEmbedBuilder(val media: Media) {
     var oldScore: String? = null
     var descriptionFmt = ""
 
-    fun createEmbedConsumer(listInfo: ListInfo) = fun(spec: EmbedCreateSpec) {
-        val id = listInfo.id
-        val url = when(listInfo.site) {
-            MediaSite.MAL -> when(media.type) {
+    fun createEmbedConsumer(site: ListSite, id: String) = fun(spec: EmbedCreateSpec) {
+        val url = when(site) {
+            ListSite.MAL -> when(media.type) {
                 MediaType.ANIME -> "https://myanimelist.net/animelist/$id"
                 MediaType.MANGA -> "https://myanimelist.net/mangalist/$id"
             }
-            MediaSite.KITSU -> when(media.type) {
+            ListSite.KITSU -> when(media.type) {
                 MediaType.ANIME -> "https://kitsu.io/users/$id/library?media=anime"
                 MediaType.MANGA -> "https://kitsu.io/users/$id/library?media=manga"
             }
@@ -40,12 +38,12 @@ class MediaEmbedBuilder(val media: Media) {
             footer.append(oldProgress)
                     .append(" -> ")
         }
-        footer.append(media.progressStr(withTotal = true))
+        footer.append(media.progressStr())
                 .append(" Score: ")
         if (oldScore != null) {
             footer.append(oldScore).append(" -> ")
         }
-        footer.append(media.scoreStr(withMax = true))
+        footer.append(media.scoreStr())
         spec.setFooter(footer.toString(), null)
 
         val title = "[${media.title}](${media.url})"

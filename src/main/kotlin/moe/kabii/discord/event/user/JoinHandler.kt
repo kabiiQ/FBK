@@ -12,7 +12,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
-import moe.kabii.data.relational.UserLog
+import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.structure.extensions.snowflake

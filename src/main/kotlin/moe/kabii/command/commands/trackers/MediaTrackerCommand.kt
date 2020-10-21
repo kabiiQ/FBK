@@ -31,108 +31,127 @@ object MediaTrackerCommand {
             if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
         }
 
-        val listName = target.identifier
-        val channelId = origin.chan.id.asLong()
-
+        val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
+        val siteName = site.targetType.full
         val parser = site.parser
-        val listId = parser.getListID(target.identifier)
-        if(listId == null) {
-            origin.error("Unable to find ${site.full} list with identifier **$listName**.").awaitSingle()
+        val inputId = target.identifier
+
+        // this may (ex. for kitsu) or may not (ex. for mal) make a call to find list ID - mal we only will know when we request the full list :/
+        val siteListId = parser.getListID(inputId)
+        if(siteListId == null) {
+            origin.error("Unable to find **$siteName** list with identifier **$inputId**.").awaitSingle()
             return
         }
-        val targetList = ListInfo(site, listId)
-        // if the list is already tracked we need to return early rather than letting io be spammed. weird flow here but saving lots of i/o time. should still be refactored
-        val existingTrack = TrackedMediaLists.lock.withLock {
-            TrackedMediaLists.mediaLists.find { trackedList -> trackedList.list == targetList }?.targets?.find { target -> target.channelID == channelId }
+
+        // check if this list is already tracked in this channel, before we download the entire list (can be slow)
+        val channelId = origin.chan.id.asLong()
+        val existingTrack = newSuspendedTransaction {
+            TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId, channelId)
         }
 
         if(existingTrack != null) {
-            origin.error("**${listName}** is already tracked in this channel.").awaitSingle()
+            origin.error("**$siteName/$inputId** is already tracked in this channel.").awaitSingle()
             return
         }
 
-        // jikan can respond very slowly, let user know we're working on this command
-        val prompt = origin.embed("Retrieving MAL...").awaitSingle()
-        suspend fun editPrompt(spec: (EmbedCreateSpec).() -> Unit) {
-            prompt.edit { edit -> edit.setEmbed(spec) }.awaitSingle()
+        val notice = origin.embed("Retrieving **$siteName** list...").awaitSingle()
+        suspend fun editNotice(spec: (EmbedCreateSpec.() -> Unit)) {
+            notice.edit { message -> message.setEmbed(spec) }.awaitSingle()
         }
 
-        // validate list
-        val request = parser.parse(listId)
-        val mediaList = when(request) {
-            is Ok -> request.value
-            is Err -> {
-                when(request.value) {
-                    is MediaListEmpty -> {
-                        editPrompt {
-                            errorColor(this)
-                            setDescription("Unable to find ${targetList.site.full} list with identifier **${listName}**.")
-                        }
-                        return
-                    }
-                    else -> {
-                        editPrompt {
-                            errorColor(this)
-                            setDescription("Error tracking list! Possible ${targetList.site.full} outage.")
-                        }
-                        return
-                    }
+        // download and validate list
+        val mediaList = try {
+            parser.parse(siteListId)
+        } catch(delete: MediaListDeletedException) {
+            null
+        } catch(io: MediaListIOException) {
+            LOG.warn("Media list IO issue: ${io.message}")
+
+            editNotice {
+                errorColor(this)
+                setDescription("Unable to download your list from **$siteName**: ${io.message}")
+            }
+            return
+        } catch(e: Exception) {
+            LOG.warn("Caught Exception downloading media list: ${e.message}")
+            LOG.trace(e.stackTraceString)
+
+            editNotice {
+                errorColor(this)
+                setDescription("Unable to download your list! Possible $siteName outage.")
+            }
+            return
+        }
+
+        if(mediaList == null) {
+            editNotice {
+                errorColor(this)
+                setDescription("Unable to find **$siteName** list with identifier **$inputId**.")
+            }
+            return
+        }
+
+        newSuspendedTransaction {
+
+            // track the list if it's not tracked at all, providing downloaded medialist as a base
+            val dbList = TrackedMediaLists.MediaList.find {
+                TrackedMediaLists.MediaLists.site eq site and
+                        (TrackedMediaLists.MediaLists.siteChannelId eq siteListId)
+            }.elementAtOrElse(0) { _ ->
+                val listJson = mediaList.toDBJson()
+                TrackedMediaLists.MediaList.new {
+                    this.site = site
+                    this.siteListId = siteListId
+                    this.lastListJson = listJson
                 }
             }
-        }
-        // track the list if it's not tracked at all
-        val find = TrackedMediaLists.lock.withLock {
-            TrackedMediaLists.mediaLists.find { it.list == targetList }
-        }
-        val trackedList = TrackedMediaLists.lock.withLock {
-            find ?:
-                TrackedMediaList(list = targetList, savedMediaList = mediaList).also { new -> TrackedMediaLists.mediaLists.add(new) }
+
+            // add this channel as a target for this list's updates, we know this does not exist
+            TrackedMediaLists.ListTarget.new {
+                this.mediaList = dbList
+                this.discord = DiscordObjects.Channel.getOrInsert(channelId, origin.guild?.id?.asLong())
+                this.userTracked = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
+            }
         }
 
-        // add this channel if the list isn't already tracked in this channel
-        // don't just compare MediaTarget because we don't care about WHO tracked the list in this case
-        val mediaTarget = MediaTarget(channelId, origin.author.id.asLong())
-        trackedList.targets += mediaTarget
-        trackedList.save()
-        editPrompt {
+        editNotice {
             fbkColor(this)
-            setDescription("Now tracking **$listName**!")
+            setDescription("Now tracking **$inputId** on **$siteName**.")
         }
     }
 
     suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
+        val siteName = site.targetType.full
         val parser = site.parser
-        val listId = parser.getListID(target.identifier)
-        if(listId == null) {
-            origin.error("Unable to find ${site.full} list with identifier **${target.identifier}**.").awaitSingle()
+        val inputId = target.identifier
+
+        val siteListId = parser.getListID(inputId)
+        if(siteListId == null) {
+            origin.error("Unable to find $siteName list with identifier **${target.identifier}**.").awaitSingle()
             return
         }
-        val targetName = target.identifier
-        val targetList = ListInfo(site, listId)
 
-        // untrack the list from this location if it's tracked
-        val trackedList = TrackedMediaLists.lock.withLock { // find tracked list with matching id/site
-            TrackedMediaLists.mediaLists.find { it.list == targetList }
-        }
+        val channelId = origin.chan.id.asLong()
 
-        if(trackedList != null) { // this list is tracked in some channel
-            val trackedTarget = trackedList.targets.find { it.channelID == origin.chan.id.asLong()}
-            if(trackedTarget != null) { // this list is tracked in this channel
-                if(origin.isPM
-                        || origin.author.id.asLong() == trackedTarget.discordUserID
-                        || origin.event.member.get().hasPermissions(Permission.MANAGE_MESSAGES)) {
-                    trackedList.targets -= trackedTarget
-                    trackedList.save()
-                    origin.embed("No longer tracking **$targetName**.").awaitSingle()
-                    return
-                } else {
-                    val tracker = origin.chan.client.getUserById(trackedTarget.discordUserID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                    origin.error("You may not un-track **$targetName** unless you are $tracker or a server moderator.").awaitSingle()
-                    return
-                }
+        newSuspendedTransaction {
+            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId, channelId)
+            if (existingTrack == null) {
+                origin.error("**$inputId** is not currently being tracked on $siteName.").awaitSingle()
+                return@newSuspendedTransaction
+            }
+
+            if(origin.isPM // always allow untrack in pm
+                    || origin.author.id.asLong() == existingTrack.userTracked.userID // not in pm, check for same user as tracker
+                    || origin.event.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
+
+                existingTrack.delete()
+                origin.embed("No longer tracking **$inputId** on **$siteName**.").awaitSingle()
+
+            } else {
+                val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
+                origin.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.").awaitSingle()
             }
         }
-        origin.error("**$targetName** is not currently being tracked.").awaitSingle()
     }
 }
