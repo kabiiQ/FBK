@@ -2,7 +2,7 @@ package moe.kabii.discord.trackers.streams.twitch
 
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.TwitchSettings
-import moe.kabii.data.relational.DBTwitchStreams
+import moe.kabii.data.relational.streams.DBTwitchStreams
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
@@ -21,16 +21,16 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: TwitchSettings)
 
     class StreamEmbed internal constructor(stream: TwitchStreamInfo, builder: TwitchEmbedBuilder) {
         val title = "${stream.username} playing ${stream.game.name} for ${stream.viewers} viewers"
-        val url = stream.user.url
+        val url = builder.user.url
         val description = "[${stream.title}]($url)"
 
         private val applyBase: EmbedBlock = {
-            setAuthor(title, url, stream.user.profileImage)
+            setAuthor(title, url, builder.user.profileImage)
             setDescription(description)
             setThumbnail(stream.game.artURL)
             setColor(TwitchParser.color)
             if(builder.settings.thumbnails) {
-                setImage(stream.user.thumbnailUrl)
+                setImage(builder.user.thumbnailUrl)
             }
         }
 

@@ -18,12 +18,6 @@ data class TwitchStreamInfo( //statistics embed needs this info ..
             TwitchParser.getGame(gameID)
         }
     }
-
-    val user: TwitchUserInfo by lazy {
-        runBlocking {
-            TwitchParser.getUser(userID).unwrap()
-        }
-    }
 }
 
 data class TwitchUserInfo(
@@ -33,7 +27,7 @@ data class TwitchUserInfo(
     val profileImage: String
 ) {
     val thumbnailUrl: String
-    get() = NettyFileServer.twitchThumbnail(userID)
+    get() = NettyFileServer.twitchThumbnail(username)
 
     val url: String = "https://twitch.tv/$username"
 }

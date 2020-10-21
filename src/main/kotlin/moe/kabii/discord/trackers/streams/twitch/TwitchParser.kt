@@ -36,7 +36,6 @@ object TwitchParser {
 
         for(attempt in 1..3) {
             try {
-                println("calling twitch: $request")
                 val response = OkHTTP.newCall(request).execute()
 
                 if (!response.isSuccessful) {
@@ -65,17 +64,19 @@ object TwitchParser {
                     continue
                 } else {
                     val body = response.body!!.string()
-                    try {
+                    return try {
                         val json = MOSHI.adapter(R::class.java).fromJson(body)
-                        return if (json != null) Ok(json) else Err(StreamErr.NotFound)
+                        if (json != null) Ok(json) else Err(StreamErr.NotFound)
                     } catch (e: Exception) {
                         LOG.error("Invalid JSON provided from Twitch: ${e.message} :: $body")
                         // api issue
-                        return Err(StreamErr.IO)
+                        Err(StreamErr.IO)
                     }
                 }
             } catch (e: Exception) {
                 // actual network issue, retry
+                LOG.warn("TwitchParser: Error reaching Twitch: ${e.message}")
+                LOG.trace(e.stackTraceString)
                 delay(2000L)
                 continue
             }
@@ -152,4 +153,6 @@ object TwitchParser {
         }
         return TwitchGameInfo("-1", "Unknown", NettyFileServer.glitch)
     }
+
+    fun getThumbnailUrl(username: String) = "https://static-cdn.jtvnw.net/previews-ttv/live_user_$username-1280x720.jpg"
 }

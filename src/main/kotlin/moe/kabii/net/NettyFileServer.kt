@@ -10,7 +10,6 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
-import moe.kabii.rusty.Ok
 import moe.kabii.util.RGB
 import okhttp3.Request
 import java.awt.Color
@@ -41,25 +40,18 @@ object NettyFileServer {
         val youtubeLogo = File(staticRoot, "youtube_social_circle_red.png")
 
         routing {
-            get("/thumbnails/twitch/{twitchid}/{...}") {
-                val twitchID = call.parameters["twitchid"]?.toLongOrNull()
-                if (twitchID != null) {
-                    val api = TwitchParser.getStream(twitchID)
-                    if (api is Ok) {
-                        val stream = api.value
-
-                        val thumbnailURL = stream.rawThumbnail.replace("{width}x{height}", "1280x720")
-                        val request = Request.Builder().get().url(thumbnailURL)
-                        val image = OkHTTP.make(request) { response ->
-                            response.body!!.bytes()
-                        }
-                        if(image is Ok) {
-                            call.respondBytes(image.value, ContentType.Image.PNG)
-                            return@get
-                        }
+            get("/thumbnails/twitch/{twitchname}/{...}") {
+                val twitchName = call.parameters["twitchname"]
+                if(twitchName != null) {
+                    val thumbnailUrl = TwitchParser.getThumbnailUrl(twitchName)
+                    val request = Request.Builder().get().url(thumbnailUrl).build()
+                    try {
+                        val response = OkHTTP.newCall(request).execute()
+                        call.respondBytes(response.body!!.bytes(), contentType = ContentType.Image.PNG)
+                    } catch(e: Exception) {
+                        call.respondFile(defaultThumbnail)
                     }
                 }
-                call.respondFile(File(staticRoot, "default_twitch_thumbnail.png"))
             }
 
             get("/color/{r}/{g}/{b}") {
@@ -104,7 +96,7 @@ object NettyFileServer {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"
     }
-    fun twitchThumbnail(id: Long) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}}"
+    fun twitchThumbnail(id: String) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
 }
