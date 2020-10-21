@@ -44,25 +44,30 @@ object RecoverQueue {
                 var fail = 0
                 with(audio.queue) {
                     activeQueue.take(5).forEach { track -> // arbitrary limit of 5 for optimization may change
-                        AudioManager.manager.loadItem(track.uri, object : AudioLoadResultHandler {
-                            private fun failed() { fail++ } // count tracks that we can not recover, tracks may no longer be accessible or playable. this is to be expected
-                            override fun noMatches() = failed()
-                            override fun loadFailed(exception: FriendlyException) = failed()
-                            override fun playlistLoaded(playlist: AudioPlaylist) = failed() // db stores tracks, should not encounter a playlist unless the source was changed
-                            override fun trackLoaded(loaded: AudioTrack) {
-                                loaded.userData = QueueData(
-                                    audio,
-                                    discord = guild.client,
-                                    author_name = track.author_name,
-                                    author = track.author.snowflake,
-                                    originChannel = track.originChannel.snowflake,
-                                    volume = config.musicBot.startingVolume
-                                )
-                                add(loaded)
-                            }
-                        }).get()
+                        try {
+                            AudioManager.manager.loadItem(track.uri, object : AudioLoadResultHandler {
+                                private fun failed() { fail++ } // count tracks that we can not recover, tracks may no longer be accessible or playable. this is to be expected
+                                override fun noMatches() = failed()
+                                override fun loadFailed(exception: FriendlyException) = failed()
+                                override fun playlistLoaded(playlist: AudioPlaylist) = failed() // db stores tracks, should not encounter a playlist unless the source was changed
+                                override fun trackLoaded(loaded: AudioTrack) {
+                                    loaded.userData = QueueData(
+                                        audio,
+                                        discord = guild.client,
+                                        author_name = track.author_name,
+                                        author = track.author.snowflake,
+                                        originChannel = track.originChannel.snowflake,
+                                        volume = config.musicBot.startingVolume
+                                    )
+                                    add(loaded)
+                                }
+                            }).get()
+                        } catch(e: Exception) {
+                            fail++
+                        }
                     }
                     config.musicBot.activeQueue = emptyList()
+                    config.save()
                     if(audio.queue.isNotEmpty()) {
                         val first = removeAt(0)
                         audio.player.playTrack(first)
