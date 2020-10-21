@@ -1,20 +1,17 @@
-package moe.kabii.discord.trackers.anime
+package moe.kabii.discord.trackers.anime.kitsu
 
-import com.squareup.moshi.JsonClass
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
+import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.rusty.Result
 import moe.kabii.structure.extensions.fromJsonSafe
 import okhttp3.Request
 import java.io.IOException
 
 object KitsuParser : MediaListParser() {
-    override val attempts = 3
-
-    val kitsuUserAdapter = MOSHI.adapter(KitsuUserResponse::class.java)
-    val kitsuResponseAdapter = MOSHI.adapter(KitsuResponse::class.java)
+    private val kitsuUserAdapter = MOSHI.adapter(KitsuMapping.KitsuUserResponse::class.java)
+    private val kitsuResponseAdapter = MOSHI.adapter(KitsuMapping.KitsuResponse::class.java)
 
     override fun getListID(input: String): String? {
         // url copied from site might provide id or slug, and a user will likely enter the slug. we always need the save an ID, however.
@@ -36,25 +33,28 @@ object KitsuParser : MediaListParser() {
         return userID?.toString()
     }
 
-    override suspend fun parse(id: String): Result<MediaList, MediaListErr> {
+    @Throws(MediaListDeletedException::class, MediaListIOException::class, IOException::class)
+    override suspend fun parse(id: String): MediaList? {
         var offset = 0
         var count = 0
         val allMedia = mutableListOf<Media>()
         val userID = id.toInt()
         while (offset <= count) {
             val request = "https://kitsu.io/api/edge/library-entries?filter[userId]=$userID&include=media&page[limit]=500&page[offset]=$offset"
-            val rawResponse = requestMediaList(request) { response ->
-                if(!response.isSuccessful) {
+            val responseBody = requestMediaList(request) { response ->
+                return@requestMediaList if(!response.isSuccessful) {
                     // kitsu doesn't seem to have actual rate limit specifications
-                    return@requestMediaList if(response.code >= 429) Err(MediaListRateLimit(2000L)) else
-                        Err(MediaListIOErr(IOException(response.toString())))
+                    if(response.code >= 429) Err(2000L)
+                    else throw MediaListIOException(response.message)
+                } else {
+                    Ok(response.body!!.string())
                 }
-                val body = response.body!!.string()
-                Ok(kitsuResponseAdapter.fromJson(body)!!)
             }
-            val mediaResponse = if(rawResponse is Ok) rawResponse.value else break
+
+            val mediaResponse = kitsuResponseAdapter.fromJson(responseBody)!!
+
             if(mediaResponse.data.isEmpty()) {
-                if(offset == 0) return Err(MediaListEmpty) // kitsu just returns empty list if invalid id
+                if(offset == 0) throw MediaListDeletedException("Kitsu: media list contained no items (invalid ID or actual empty list)") // kitsu just returns empty list if invalid id
                 else break
             }
             // create our general object
@@ -62,7 +62,7 @@ object KitsuParser : MediaListParser() {
             count = mediaResponse.meta.count
 
             mediaResponse.data.associateBy { libData ->
-                mediaResponse.included.asSequence().find { mediaInfo ->
+                mediaResponse.included.find { mediaInfo ->
                     libData.relationships.media.data.id == mediaInfo.id
                 }
             }.mapNotNullTo(allMedia) { (media, library) ->
@@ -97,8 +97,7 @@ object KitsuParser : MediaListParser() {
             }
             offset += 500
         }
-        if(allMedia.isEmpty()) return Err(MediaListEmpty)
-        return Ok(MediaList(allMedia))
+        return if(allMedia.isNotEmpty()) MediaList(allMedia) else null
     }
 
     private fun parseKitsuStatus(status: String) = when(status) {
@@ -108,85 +107,5 @@ object KitsuParser : MediaListParser() {
         "dropped" -> ConsumptionStatus.DROPPED
         "planned" -> ConsumptionStatus.PTW
         else -> error ("Invalid Kitsu Object.")
-    }
-
-    // Kitsu JSON response
-    @JsonClass(generateAdapter = true)
-    data class KitsuResponse(
-            val data: List<LibraryEntry> = emptyList(),
-            val included: List<MediaInfo> = emptyList(),
-            val meta: RequestMetadata
-    ) {
-
-        @JsonClass(generateAdapter = true)
-        data class LibraryEntry(
-                val attributes: LibraryEntryAttributes,
-                val relationships: LibraryEntryRelationships
-        ) {
-
-            @JsonClass(generateAdapter = true)
-            data class LibraryEntryAttributes(
-                    val status: String,
-                    val progress: Int,
-                    val reconsuming: Boolean,
-                    val rating: String
-            )
-
-            @JsonClass(generateAdapter = true)
-            data class LibraryEntryRelationships(
-                    val media: MediaRelationships
-            )
-
-            @JsonClass(generateAdapter = true)
-            data class MediaRelationships(
-                    val data: RelationshipData
-            )
-
-            @JsonClass(generateAdapter = true)
-            data class RelationshipData(
-                    val id: String
-            )
-        }
-
-        @JsonClass(generateAdapter = true)
-        data class MediaInfo(
-                val id: String,
-                val type: String,
-                val attributes: MediaAttributes
-        ) {
-            @JsonClass(generateAdapter = true)
-            data class MediaAttributes(
-                    val slug: String,
-                    val titles: MediaTitles,
-                    val posterImage: MediaImages,
-                    val episodeCount: Int? = 0,
-                    val chapterCount: Int? = 0,
-                    val volumeCount: Int? = 0
-            ) {
-                @JsonClass(generateAdapter = true)
-                data class MediaTitles(
-                        val en_jp: String = "An Anime"
-                )
-                @JsonClass(generateAdapter = true)
-                data class MediaImages(
-                        val original: String
-                )
-            }
-        }
-
-        @JsonClass(generateAdapter = true)
-        data class RequestMetadata(
-                val count: Int
-        )
-    }
-
-    @JsonClass(generateAdapter = true)
-    data class KitsuUserResponse(
-        val data: List<KitsuUser> = emptyList()
-    ) {
-        @JsonClass(generateAdapter = true)
-        data class KitsuUser(
-            val id: String
-        )
     }
 }
