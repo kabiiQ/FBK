@@ -12,6 +12,8 @@
     <logger name="discord4j.core.event" level="DEBUG"/>
     <logger name="com.github.twitch4j" level="INFO"/>
     <logger name="org.apache.http" level="INFO"/>
+    <logger name="org.asynchttpclient.netty" level="INFO"/>
+    <logger name="moe.kabii" level="TRACE"/>
     <logger name="Exposed" level="INFO"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -42,7 +44,7 @@
     </appender>
 
     <!-- Base logger level: ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF -->
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC"/>
     </root>

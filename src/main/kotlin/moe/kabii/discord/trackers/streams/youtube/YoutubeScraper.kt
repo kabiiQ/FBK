@@ -10,14 +10,13 @@ import org.openqa.selenium.By
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeDriverService
 import org.openqa.selenium.chrome.ChromeOptions
-import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class YoutubeChannelError(override val message: String, val ytText: String, cause: Throwable? = null) : IOException(cause)
+class YoutubeChannelError(override val message: String, val ytText: String, override val cause: Throwable? = null) : IOException()
 
 // instanced to re-use browser for single scraping 'session'
 class YoutubeScraper : AutoCloseable {
@@ -44,7 +43,10 @@ class YoutubeScraper : AutoCloseable {
             }
             chromeLog.createNewFile()
 
-            chromeOptions = ChromeOptions().setHeadless(headless)
+            chromeOptions = ChromeOptions()
+                .setHeadless(headless)
+                .addArguments("--log-level=3")
+                .addArguments("--silent")
             chromeService = ChromeDriverService.Builder().build()
 
             chromeService.sendOutputTo(FileOutputStream(chromeLog))
