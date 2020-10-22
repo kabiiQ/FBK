@@ -118,8 +118,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val dbMessage = notif.messageID
-                        val message = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
-                        message?.edit { spec -> spec.setEmbed { embed ->
+                        val discordMessage = getDiscordMessage(dbMessage, channel)
+                        discordMessage?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(TwitchParser.color)
                             embed.setFooter("Channel ID was $twitchId on ${channel.site.targetType.full}.", null)
@@ -132,7 +132,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
                     val messageID = notif.messageID
-                    val discordMessage = discord.getMessageById(messageID.channel.channelID.snowflake, messageID.messageID.snowflake).tryAwait().orNull()
+                    val discordMessage = getDiscordMessage(messageID, channel)
                     if(discordMessage != null) {
                         val guildId = discordMessage.guildId.orNull()
                         val features = if(guildId != null) {
@@ -233,11 +233,19 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     this.channelID = channel
                 }
             } else {
-                val existingNotif = discord.getMessageById(target.discordChannel.channelID.snowflake, existing.messageID.messageID.snowflake).tryAwait().orNull()
+                val existingNotif = getDiscordMessage(existing.messageID, channel)
                 if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait().orNull()
+                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
                 } else existing.delete()
             }
         }
+    }
+
+    @WithinExposedContext
+    private suspend fun getDiscordMessage(dbMessage: MessageHistory.Message, channel: TrackedStreams.StreamChannel) = try {
+        discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+    } catch(e: Exception) {
+        LOG.trace("Stream notification for Twitch/${channel.siteChannelID} has been deleted")
+        null
     }
 }
