@@ -115,32 +115,36 @@ object YoutubeParser {
         try {
             val response = OkHTTP.newCall(request).execute()
 
-            if (response.isSuccessful) {
-                // should receive relevant json
-                val body = response.body!!.string()
-                return MOSHI.adapter(R::class.java).fromJson(body)!!
+            try {
+                if (response.isSuccessful) {
+                    // should receive relevant json
+                    val body = response.body!!.string()
+                    return MOSHI.adapter(R::class.java).fromJson(body)!!
 
-            } else {
-                // should receive error json
-                val body = response.body!!.string()
-                val error = errorAdapter.fromJson(body)
-                    ?.error?.errors?.firstOrNull()
-                if (error == null) {
-                    LOG.debug("Youtube JSON unknown error: ${response.code} :: $body :: $response")
-                    throw YoutubeAPIException("Youtube JSON error parsing :: $body")
                 } else {
-
-                    if (error.reason == "quotaExceeded" || error.reason == "dailyLimitExceeded") {
-                        // if this triggers on video/channel calls, we will need to increase delay between calls
-                        // and hopefully request increased quota from YT. set a flag to stop requests for the day
-                        LOG.error("Youtube Quota exceeded : $error")
-                        // todo message meta-log
+                    // should receive error json
+                    val body = response.body!!.string()
+                    val error = errorAdapter.fromJson(body)
+                        ?.error?.errors?.firstOrNull()
+                    if (error == null) {
+                        LOG.debug("Youtube JSON unknown error: ${response.code} :: $body :: $response")
+                        throw YoutubeAPIException("Youtube JSON error parsing :: $body")
                     } else {
-                        LOG.warn("Youtube call returned an error: $error")
+
+                        if (error.reason == "quotaExceeded" || error.reason == "dailyLimitExceeded") {
+                            // if this triggers on video/channel calls, we will need to increase delay between calls
+                            // and hopefully request increased quota from YT. set a flag to stop requests for the day
+                            LOG.error("Youtube Quota exceeded : $error")
+                            // todo message meta-log
+                        } else {
+                            LOG.warn("Youtube call returned an error: $error")
+                        }
+                        LOG.trace(body)
+                        throw YoutubeAPIException(error.toString())
                     }
-                    LOG.trace(body)
-                    throw YoutubeAPIException(error.toString())
                 }
+            } finally {
+                response.close()
             }
         } catch (e: Exception) {
             // probable actual network error, youtube should always return json. let the loop try once more

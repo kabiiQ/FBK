@@ -1,11 +1,13 @@
 package moe.kabii.discord.trackers.anime.kitsu
 
+import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.fromJsonSafe
+import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
 
@@ -20,17 +22,25 @@ object KitsuParser : MediaListParser() {
             val userRequest = Request.Builder()
                 .get()
                 .url("https://kitsu.io/api/edge/users?filter[slug]=$input")
-            val call = OkHTTP.make(userRequest) { response ->
-                if(!response.isSuccessful) return@make null
+                .build()
+            val response = try {
+                OkHTTP.newCall(userRequest).execute()
+            } catch (e: Exception) {
+                LOG.warn("Error getting Kitsu ID: ${e.message}")
+                LOG.trace(e.stackTraceString)
+                return null
+            }
+
+            response.use { rs ->
+                if (!rs.isSuccessful) return null
                 val body = response.body!!.string()
                 val json = kitsuUserAdapter.fromJsonSafe(body).orNull()
                 json?.run { data.singleOrNull() } // get user id from call if possible
                     ?.id
                     ?.let(String::toIntOrNull)
             }
-            call.orNull()
         } else inputID
-        return userID?.toString()
+        return userID.toString()
     }
 
     @Throws(MediaListDeletedException::class, MediaListIOException::class, IOException::class)

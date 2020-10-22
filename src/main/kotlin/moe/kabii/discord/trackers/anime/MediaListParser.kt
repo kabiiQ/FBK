@@ -40,13 +40,13 @@ abstract class MediaListParser {
             val result = try {
                 // translator returns either the result value of type R? or the rate limit delay
                 // exception is thrown for other io issues
-                translator(response)
-            } catch(e: Exception) {
+                response.use(translator)
+            } catch (e: Exception) {
                 LOG.warn("Media list request IO error: $request :: ${e.message}")
                 LOG.debug(e.stackTraceString)
                 throw e
             }
-            when(result) {
+            when (result) {
                 is Ok -> return result.value
                 is Err -> {
                     delay(result.value)

@@ -38,8 +38,11 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
 
                     // work on single thread to call api - heavy rate limits
                     lists.forEach { trackedList ->
-                        val newList = try {
-                            trackedList.downloadCurrentList()!!
+                        try {
+                            val newList = trackedList.downloadCurrentList()!!
+
+                            compareAndUpdate(trackedList, newList)
+
                         } catch(delete: MediaListDeletedException) {
                             LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
                             trackedList.delete()
@@ -49,8 +52,6 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                             LOG.trace(e.stackTraceString)
                             return@forEach
                         }
-
-                        compareAndUpdate(trackedList, newList)
 
                         // arbitrary delay - heavy rate limits between calls on these platforms
                         delay(3500L)

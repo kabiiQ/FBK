@@ -65,7 +65,9 @@ object StreamTrackerCommand {
                     this.site = site
                     this.siteChannelID = streamId
                 }
+            }
         }
+
         transaction {
             TrackedStreams.Target.new { // record the track in db
                 this.streamChannel = dbChannel

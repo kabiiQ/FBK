@@ -26,52 +26,58 @@ object TwitchParser {
     private val oauth = Authorization()
 
     private suspend inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
-        val request = Request.Builder()
+        val builder = Request.Builder()
             .get()
             .url(requestStr)
             .header("Client-ID", clientID)
             .header("User-Agent", "srkmfbk/1.0")
-            .header("Authorization", "Bearer ${oauth.accessToken}")
-            .build()
 
         for(attempt in 1..3) {
             try {
+                val request = builder
+                    .header("Authorization", "Bearer ${oauth.accessToken}")
+                    .build()
+
                 val response = OkHTTP.newCall(request).execute()
 
-                if (!response.isSuccessful) {
-                    val timeout = if (response.code == 429) {
+                try {
+                    if (!response.isSuccessful) {
+                        val timeout = if (response.code == 429) {
 
-                        val reset = response.headers.get("Ratelimit-Reset")?.toLong()
-                        if (reset != null) {
-                            Duration.between(Instant.now(), Instant.ofEpochSecond(reset)).toMillis()
-                        } else 10_000L // retry after rate limit delay
-                    } else if (response.code == 401) {
-                        // require new api token
-                        delay(200L)
-                        val newToken = oauth.refreshOAuthToken()
-                        newToken.ifErr { e ->
-                            LOG.warn("Error refreshing Twitch OAuth token: ${e.message}")
-                            LOG.debug(e.stackTraceString)
+                            val reset = response.headers.get("Ratelimit-Reset")?.toLong()
+                            if (reset != null) {
+                                Duration.between(Instant.now(), Instant.ofEpochSecond(reset)).toMillis()
+                            } else 10_000L // retry after rate limit delay
+                        } else if (response.code == 401) {
+                            // require new api token
+                            delay(200L)
+                            val newToken = oauth.refreshOAuthToken()
+                            newToken.ifErr { e ->
+                                LOG.warn("Error refreshing Twitch OAuth token: ${e.message}")
+                                LOG.debug(e.stackTraceString)
+                            }
+                            // retry with new oauth token
+                            200L
+                        } else {
+                            LOG.error("Error calling Twitch API: $response")
+                            // retry call
+                            200L
                         }
-                        // retry with new oauth token
-                        200L
+                        delay(timeout)
+                        continue
                     } else {
-                        LOG.error("Error calling Twitch API: $response")
-                        // retry call
-                        200L
+                        val body = response.body!!.string()
+                        return try {
+                            val json = MOSHI.adapter(R::class.java).fromJson(body)
+                            if (json != null) Ok(json) else Err(StreamErr.NotFound)
+                        } catch (e: Exception) {
+                            LOG.error("Invalid JSON provided from Twitch: ${e.message} :: $body")
+                            // api issue
+                            Err(StreamErr.IO)
+                        }
                     }
-                    delay(timeout)
-                    continue
-                } else {
-                    val body = response.body!!.string()
-                    return try {
-                        val json = MOSHI.adapter(R::class.java).fromJson(body)
-                        if (json != null) Ok(json) else Err(StreamErr.NotFound)
-                    } catch (e: Exception) {
-                        LOG.error("Invalid JSON provided from Twitch: ${e.message} :: $body")
-                        // api issue
-                        Err(StreamErr.IO)
-                    }
+                } finally {
+                    response.close()
                 }
             } catch (e: Exception) {
                 // actual network issue, retry

@@ -46,8 +46,9 @@ object NettyFileServer {
                     val thumbnailUrl = TwitchParser.getThumbnailUrl(twitchName)
                     val request = Request.Builder().get().url(thumbnailUrl).build()
                     try {
-                        val response = OkHTTP.newCall(request).execute()
-                        call.respondBytes(response.body!!.bytes(), contentType = ContentType.Image.PNG)
+                        OkHTTP.newCall(request).execute().use { rs ->
+                            call.respondBytes(rs.body!!.bytes(), contentType = ContentType.Image.PNG)
+                        }
                     } catch(e: Exception) {
                         call.respondFile(defaultThumbnail)
                     }
