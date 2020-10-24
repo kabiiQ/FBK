@@ -5,8 +5,10 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.structure.extensions.s
 import moe.kabii.util.YoutubeUtil
+import org.apache.commons.lang3.StringUtils
 
 object QueueInfo : AudioCommandContainer {
     object CurrentQueue : Command("queue", "listqueue", "songs", "q") {
@@ -34,10 +36,11 @@ object QueueInfo : AudioCommandContainer {
                 val queueList = if(tracks.isEmpty()) {
                     "No additional songs in queue."
                 } else {
-                    val list = tracks.mapIndexed { queueIndex, queueTrack ->
+                    val listLong = tracks.mapIndexed { queueIndex, queueTrack ->
                         val index = queueIndex + starting + 1
                         "$index. ${trackString(queueTrack)}"
-                    }.joinToString("\n").take(1900)
+                    }.joinToString("\n")
+                    val list = StringUtils.abbreviate(listLong, MagicNumbers.Embed.DESC)
                     "In queue:\n$list"
                 }
 

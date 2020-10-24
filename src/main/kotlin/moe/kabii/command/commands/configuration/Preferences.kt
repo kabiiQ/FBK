@@ -7,8 +7,10 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.util.BotUtil
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Preferences : CommandContainer {
@@ -38,10 +40,11 @@ object Preferences : CommandContainer {
                         if (mutual.isNullOrEmpty()) null
                         else {
                             // embed to prompt user to select a server
-                            val servers = mutual.mapIndexed { guildIndex, guild ->
+                            val serversLong = mutual.mapIndexed { guildIndex, guild ->
                                 val index = guildIndex + 1
                                 "$index: ${guild.name}"
-                            }.joinToString("\n").take(1900)
+                            }.joinToString("\n")
+                            val servers = StringUtils.abbreviate(serversLong, MagicNumbers.Embed.DESC)
                             val botAvatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                             val prompt = embed {
                                 setAuthor("Mutual Servers with ${author.username}#${author.discriminator}:", null, botAvatar)

@@ -7,6 +7,7 @@ import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.commands.audio.ParseUtil
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.structure.extensions.tryAwait
 
 object SearchTracks : AudioCommandContainer {
@@ -38,7 +39,7 @@ object SearchTracks : AudioCommandContainer {
                     val track = search[index]
                     val author = if(track.info.author != null) " Uploaded by ${track.info.author}" else ""
                     val entry = "$id. ${trackString(track, includeAuthor = false)}$author\n"
-                    if(menu.length + entry.length > 1900) break
+                    if(menu.length + entry.length > MagicNumbers.Embed.DESC) break
                     menu.append(entry)
                 }
                 // technically should keep track of which ones aren't printed but it's not a big deal if the user queues something that isn't displayed. we just can't send the name.

@@ -4,15 +4,19 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.discord.conversation.Page
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.fromJsonSafe
+import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
+import org.apache.commons.lang3.StringUtils
 
 object Urban : Command("urbandictionary", "urban", "ud") {
     val udAdapter: JsonAdapter<Response> = MOSHI.adapter(Response::class.java)
@@ -23,16 +27,25 @@ object Urban : Command("urbandictionary", "urban", "ud") {
         discord {
             val lookup = if (args.isEmpty()) author.username else noCmd
             val message = embed("Searching for **$lookup**...").awaitSingle()
-            val request = Request.Builder().get().url("https://api.urbandictionary.com/v0/define?term=$lookup")
-            val response = OkHTTP.make(request) { response ->
-                val body = response.body!!.string()
-                udAdapter.fromJsonSafe(body)
-            }
-            if(response !is Ok) {
+            val request = Request.Builder()
+                .get()
+                .header("User-Agent", "DiscordBot-srkmfbk/1.0")
+                .url("https://api.urbandictionary.com/v0/define?term=$lookup")
+                .build()
+
+
+
+            val define = try {
+                OkHTTP.newCall(request).execute().use { response ->
+                    val body = response.body!!.string()
+                    udAdapter.fromJson(body)
+                }
+            } catch (e: Exception) {
                 error("Unable to reach UrbanDictionary.").awaitSingle()
+                LOG.trace(e.stackTraceString)
                 return@discord
             }
-            val define = response.value.orNull()
+
             if (define == null || define.list.isEmpty()) {
                 embed {
                     setAuthor("UrbanDictionary", "https://urbandictionary.com", null)
@@ -43,18 +56,19 @@ object Urban : Command("urbandictionary", "urban", "ud") {
             var page: Page? = Page(define.list.size, 0)
             var first = true
             while (page != null) {
+                val def = define.list[page.current]
+                val index = "${page.current + 1} / ${page.pageCount}"
+                val definition = StringUtils.abbreviate(def.definition, 700)
+                val example = StringUtils.abbreviate(def.example, 350)
+
                 message.edit { editSpec ->
-                    editSpec.setContent(null)
                     editSpec.setEmbed { spec ->
-                        val currentPage = page!!
-                        val def = define.list[currentPage.current]
-                        val index = "${currentPage.current + 1} / ${currentPage.pageCount}"
                         spec.apply {
                             fbkColor(this)
                             setAuthor("UrbanDictionary", "https://urbandictionary.com", NettyFileServer.urbanDictionary)
                             setDescription("Lookup: [${def.word}](${def.permalink})")
-                            addField("Definition $index:", def.definition, false)
-                            addField("Example:", def.example, false)
+                            addField("Definition $index:", definition, false)
+                            addField("Example:", example, false)
                             addField("Upvotes", def.up.toString(), true)
                             addField("Downvotes", def.down.toString(), true)
                         }
