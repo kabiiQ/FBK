@@ -1,14 +1,12 @@
-<h1 align="center">
+<h1 style="text-align: center;">
 <br> FBK (Fubuki) </br>
 </h1>
-
-[![Discord](https://img.shields.io/discord/581785820156002304?label=Discord&logo=discord&logoColor=ffffff&color=7289da&labelColor=6A7EC2)](https://discord.com/invite/ucVhtnh)
-![License](https://img.shields.io/github/license/kabiiQ/FBK)
-![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server. 
 
 FBK is currently in active development and will see a public release in 2020.
+
+[![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)A
 
 # Features
 FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
@@ -62,6 +60,10 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 
 # Development 
+![Kotlin](https://img.shields.io/badge/Kotlin-1.4.10-blue.svg?logo=Kotlin)
+![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
+
+
 ... and more to come! There is plenty planned for when I have time and motivation (university student + PT work + the hustle).
 
 Current feature/issue plans are tracked on my [Glo Board](https://app.gitkraken.com/glo/board/XRmi8OAM1wAPgyBv).
@@ -77,6 +79,8 @@ As an open-source project, KizunaAi can be compiled using her Gradle build scrip
 
 
 # Licensing / Liability
+
+![License](https://img.shields.io/github/license/kabiiQ/FBK)
 
 This Discord bot is named after, but has no association to the virtual YouTuber [Shirakami Fubuki](https://www.youtube.com/channel/UCdn5BQ06XqgXoAxIhbqw5Rg), a streamer with [Hololive](https://www.youtube.com/channel/UCJFZiqLMntJufDCHc6bQixg).
 
