@@ -3,7 +3,7 @@ package moe.kabii.command.commands.search
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
 import moe.kabii.discord.trackers.streams.twitch.TwitchParser
 
@@ -28,8 +28,8 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
                 return@discord
             }
             val settings = guild?.run {
-                GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.twitchSettings
-            } ?: TwitchSettings()
+                GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings
+            } ?: StreamSettings()
             val stream = TwitchEmbedBuilder(twitchUser, settings)
                 .stream(twitchStream)
                 .manual

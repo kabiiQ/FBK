@@ -7,7 +7,7 @@ import moe.kabii.discord.trackers.TwitchTarget
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 
-
+// channel-specific features/settings
 data class OptionalFeatures(
     val featureChannels: MutableMap<Long, FeatureChannel> = mutableMapOf(),
     var linkedTwitchChannel: TwitchConfig? = null)
@@ -22,7 +22,7 @@ data class FeatureChannel(
     var allowStarboarding: Boolean = true,
     var defaultTracker: TrackerTarget? = null,
     val logSettings: LogSettings = LogSettings(channelID),
-    val twitchSettings: TwitchSettings = TwitchSettings(),
+    val streamSettings: StreamSettings = StreamSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
     fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
@@ -51,7 +51,7 @@ data class FeatureChannel(
     }
 }
 
-data class TwitchSettings(
+data class StreamSettings(
     var summaries: Boolean = true,
     var thumbnails: Boolean = true,
     var peakViewers: Boolean = true,

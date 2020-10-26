@@ -7,7 +7,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
@@ -46,8 +46,8 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-        val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }
-            ?: TwitchSettings() // use default settings for pm notifications
+        val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
+            ?: StreamSettings() // use default settings for pm notifications
 
         // make sure 'stream' feature is enabled still todo
 

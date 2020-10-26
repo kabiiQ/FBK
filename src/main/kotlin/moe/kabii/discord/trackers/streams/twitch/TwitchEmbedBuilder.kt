@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.streams.twitch
 
 import discord4j.rest.util.Color
-import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.streams.DBTwitchStreams
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
@@ -11,7 +11,7 @@ import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.Instant
 
-class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: TwitchSettings) {
+class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings) {
     fun stream(liveStream: TwitchStreamInfo) =
         StreamEmbed(liveStream, this)
 

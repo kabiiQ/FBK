@@ -5,7 +5,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.streams.DBYoutubeStreams
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.youtube.YoutubeParser
@@ -152,9 +152,9 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                     val guildId = existingNotif.guildId.orNull()
                     val findFeatures = if(guildId != null) {
                         val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
-                        config.options.featureChannels[existingNotif.channelId.asLong()]?.twitchSettings
+                        config.options.featureChannels[existingNotif.channelId.asLong()]?.streamSettings
                     } else null
-                    val features = findFeatures ?: TwitchSettings()
+                    val features = findFeatures ?: StreamSettings()
 
                     if(features.summaries) {
                         existingNotif.edit { msg ->

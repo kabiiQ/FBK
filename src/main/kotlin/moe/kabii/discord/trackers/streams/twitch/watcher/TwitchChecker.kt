@@ -7,7 +7,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.TwitchSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.DBTwitchStreams
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -137,8 +137,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         val guildId = discordMessage.guildId.orNull()
                         val features = if(guildId != null) {
                             val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
-                            config.getOrCreateFeatures(messageID.channel.channelID).twitchSettings
-                        } else TwitchSettings() // use default settings for PM
+                            config.getOrCreateFeatures(messageID.channel.channelID).streamSettings
+                        } else StreamSettings() // use default settings for PM
                         if(features.summaries) {
                             val specEmbed = TwitchEmbedBuilder(
                                 user!!,
@@ -187,8 +187,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
             // get channel twitch settings
             val guildID = target.discordChannel.guild?.guildID
             val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitchSettings }
-                ?: TwitchSettings() // use default settings for pm notifications
+            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
+                ?: StreamSettings() // use default settings for pm notifications
 
             val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
             if (existing == null) { // post a new stream notification
