@@ -66,7 +66,9 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         }
                         taskScope.launch {
                             try {
-                                updateChannel(trackedChannel, data.orNull())
+                                newSuspendedTransaction {
+                                    updateChannel(trackedChannel, data.orNull())
+                                }
                             } catch(e: Exception) {
                                 LOG.warn("Error updating Twitch channel: $trackedChannel")
                                 LOG.debug(e.stackTraceString)
