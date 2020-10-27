@@ -11,7 +11,7 @@ import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 
-object AutoRename : Command("autorename", "autoname", "autochannelname") {
+object AutoRename : Command("rename", "autorename", "autoname", "autochannelname") {
     override val wikiPath: String?
         get() = TODO("Not yet implemented")
 
@@ -56,14 +56,14 @@ object AutoRename : Command("autorename", "autoname", "autochannelname") {
                 "enable" -> {
                     // enable the auto channel rename feature in this channel
                     if(features.streamSettings.renameChannel != null) {
-                        error("Channel renaming is already enabled in **#${guildChan.name}**. It can be configured by running the **autorename** command.").awaitSingle()
+                        error("Automatic channel renaming is already enabled in **#${guildChan.name}**. It can be configured by running the **rename** command.").awaitSingle()
                         return@discord
                     }
                     // create a new feature configuration for the channel rename feature, use current channel name as "not live" message
                     val new = RenameFeature(guildChan.name)
                     features.streamSettings.renameChannel = new
                     config.save()
-                    embed("**autorename** feature enabled. This Discord channel will be renamed when tracked streams are live. See the **autorename** command for further configuration.").awaitSingle()
+                    embed("**rename** feature enabled. This Discord channel will be renamed when tracked streams are live. See the **rename** command for further configuration.").awaitSingle()
                 }
                 "disable" -> {
                     // disable/reset the auto renamae feature
@@ -73,21 +73,21 @@ object AutoRename : Command("autorename", "autoname", "autochannelname") {
                     }
                     features.streamSettings.renameChannel = null
                     config.save()
-                    embed("The **autorename** feature has been disabled.")
+                    embed("The **rename** feature has been disabled.")
                 }
                 "set" -> {
                     val feature = features.streamSettings.renameChannel
                     if (feature == null) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **autorename enable**.").awaitSingle()
+                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **rename enable**.").awaitSingle()
                         return@discord
                     }
 
                     // set the character used in the channel name to represent a specific stream
-                    // autorename <set> (site) <identifier> <emoji/word>
+                    // rename <set> (site) <identifier> <emoji/word>
                     val inputArgs = args.drop(1).toMutableList() // drop guaranteed 'set' arg
 
-                    if (args.size < 2) {
-                        usage("**autorename set** is used to set a word or emoji displayed in the channel name when a specific stream goes live.", "autorename set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
+                    if (inputArgs.size < 2) {
+                        usage("**rename set** is used to set a word or emoji displayed in the channel name when a specific stream goes live.", "autorename set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
                         return@discord
                     }
 
@@ -95,13 +95,13 @@ object AutoRename : Command("autorename", "autoname", "autochannelname") {
                     val siteTarget = when (val findTarget = TargetArguments.parseFor(this, inputArgs)) {
                         is Ok -> findTarget.value
                         is Err -> {
-                            usage("Unable to find that livestream channel: ${findTarget.value}", "autorename set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
+                            usage("Unable to find that livestream channel: ${findTarget.value}", "rename set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
                             return@discord
                         }
                     }
 
                     if (siteTarget.site !is StreamingTarget) {
-                        error("The **autorename set** command is only supported for **livestream** sources.").awaitSingle()
+                        error("The **rename set** command is only supported for **livestream** sources.").awaitSingle()
                         return@discord
                     }
 
@@ -130,7 +130,7 @@ object AutoRename : Command("autorename", "autoname", "autochannelname") {
 
                     val feature = features.streamSettings.renameChannel
                     if(feature == null) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **autorename enable**.").awaitSingle()
+                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **rename enable**.").awaitSingle()
                         return@discord
                     }
 

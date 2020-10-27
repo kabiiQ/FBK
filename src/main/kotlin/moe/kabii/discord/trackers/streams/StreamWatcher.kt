@@ -129,7 +129,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             if(ce.status.code() == 403) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **autorename disable** to turn off the channel renaming feature.")
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **rename disable** to turn off the channel renaming feature.")
                 }.awaitSingle()
             } else throw ce
         }
