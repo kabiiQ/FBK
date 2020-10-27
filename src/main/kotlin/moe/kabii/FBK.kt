@@ -113,7 +113,7 @@ fun main() {
                 LOG.error("KClass provided with no static instance: $clazz")
                 return@map Mono.empty<Unit>()
             }
-            LOG.info("Registering EventHandler: ${instance.eventType} :: $clazz")
+            LOG.debug("Registering EventHandler: ${instance.eventType} :: $clazz")
             gateway.on(instance.eventType.java)
                 .flatMap(instance::wrapAndHandle)
         }

@@ -21,7 +21,7 @@ class CommandManager {
         if(command.executeDiscord != null) commandsDiscord.add(command)
         if(command.executeTwitch != null) commandsTwitch.add(command)
         if(command.executeTerminal != null) commandsTerminal.add(command)
-        LOG.info("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
+        LOG.debug("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
     }
 
     fun registerClass(clazz: Class<out Command>) {
