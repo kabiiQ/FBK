@@ -135,7 +135,9 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             origin.embed {
                 setTitle("Current ${module.name} configuration:")
                 module.elements.forEach { element ->
-                    addField(getName(element), getValue(element), true)
+                    val raw = getValue(element)
+                    val value = if(raw.isBlank()) "<NONE>" else raw
+                    addField(getName(element), value, true)
                 }
             }.awaitSingle()
             return false
