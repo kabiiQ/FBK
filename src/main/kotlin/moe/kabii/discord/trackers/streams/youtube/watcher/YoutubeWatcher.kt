@@ -49,8 +49,6 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
             ?: StreamSettings() // use default settings for pm notifications
 
-        // make sure 'stream' feature is enabled still todo
-
         // get mention role from db if one is registered
         val mentionRole = if(guildId != null) { 
             getMentionRoleFor(target.streamChannel, guildId, chan)
@@ -97,5 +95,43 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
             } else throw ce
         }
     }
+
+    suspend fun streamEnd(dbStream: DBYoutubeStreams.YoutubeStream, embedEdit: EmbedBlock) {
+        // edit/delete all notifications and remove stream from db when stream ends
+        dbStream.streamChannel.notifications.forEach { notification ->
+            try {
+                val dbMessage = notification.messageID
+                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+
+                // get channel settings so we can respect config to edit or delete
+                val guildId = existingNotif.guildId.orNull()
+                val findFeatures = if(guildId != null) {
+                    val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+                    config.options.featureChannels[existingNotif.channelId.asLong()]?.streamSettings
+                } else null
+                val features = findFeatures ?: StreamSettings()
+
+                if(features.summaries) {
+                    existingNotif.edit { msg ->
+                        msg.setEmbed(embedEdit)
+                    }
+                } else {
+                    existingNotif.delete()
+                }.then().success().awaitSingle()
+
                 checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = notification)
+            } catch(ce: ClientException) {
+                LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
+            } catch(e: Exception) {
+                LOG.info("Error in YouTube #streamEnd for stream $dbStream :: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            } finally {
+                // delete the notification from db either way, we are done with it
+                notification.delete()
+            }
+        }
+
+        // delete live stream event for this channel
+        dbStream.delete()
+    }
 }

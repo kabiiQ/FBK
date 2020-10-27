@@ -65,8 +65,11 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             return@mapNotNull null
                         }
                         taskScope.launch {
-                            newSuspendedTransaction {
+                            try {
                                 updateChannel(trackedChannel, data.orNull())
+                            } catch(e: Exception) {
+                                LOG.warn("Error updating Twitch channel: $trackedChannel")
+                                LOG.debug(e.stackTraceString)
                             }
                         }
                     }.joinAll()
@@ -117,36 +120,44 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
 
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
-                        val dbMessage = notif.messageID
-                        val discordMessage = getDiscordMessage(dbMessage, channel)
-                        discordMessage?.edit { spec -> spec.setEmbed { embed ->
-                            embed.setDescription("This stream has ended with no information recorded.")
-                            embed.setColor(TwitchParser.color)
+                        try {
+                            val dbMessage = notif.messageID
+                            val discordMessage = getDiscordMessage(dbMessage, channel)
+                            if (discordMessage != null) {
+                                discordMessage.delete().success().awaitSingle()
+
                                 // edit channel name if feature is enabled and stream ended
                                 checkAndRenameChannel(discordMessage.channel.awaitSingle())
-                        notif.delete()
+                            }
+                        } catch(e: Exception) {
+                            LOG.info("Error abandoning notification: $notif :: ${e.message}")
+                            LOG.trace(e.stackTraceString)
+                        } finally {
+                            notif.delete()
+                        }
                     }
                     return
                 }
                 val dbStream = streams.first()
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
-                    val messageID = notif.messageID
-                    val discordMessage = getDiscordMessage(messageID, channel)
-                    if(discordMessage != null) {
-                        val guildId = discordMessage.guildId.orNull()
-                        val features = if(guildId != null) {
-                            val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
-                            config.getOrCreateFeatures(messageID.channel.channelID).streamSettings
-                        } else StreamSettings() // use default settings for PM
-                        if(features.summaries) {
-                            val specEmbed = TwitchEmbedBuilder(
-                                user!!,
-                                features
-                            ).statistics(dbStream)
-                            discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
-                        } else {
-                            discordMessage.delete()
+                    try {
+                        val messageID = notif.messageID
+                        val discordMessage = getDiscordMessage(messageID, channel)
+                        if (discordMessage != null) {
+                            val guildId = discordMessage.guildId.orNull()
+                            val features = if (guildId != null) {
+                                val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+                                config.getOrCreateFeatures(messageID.channel.channelID).streamSettings
+                            } else StreamSettings() // use default settings for PM
+                            if (features.summaries) {
+                                val specEmbed = TwitchEmbedBuilder(
+                                    user!!,
+                                    features
+                                ).statistics(dbStream)
+                                discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
+                            } else {
+                                discordMessage.delete()
                             }.awaitSingle()
 
                             // edit channel name if feature is enabled and stream ended
@@ -154,8 +165,11 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         }
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
-                    notif.delete()
-                    dbStream.delete()
+                        LOG.trace(e.stackTraceString)
+                    } finally {
+                        notif.delete()
+                        dbStream.delete()
+                    }
                 }
             }
             return
@@ -187,62 +201,68 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
         val targets = channel.targets
         if(user == null) return
         targets.forEach { target ->
-            val existing = target.notifications.firstOrNull()
+            try {
+                val existing = target.notifications.firstOrNull()
 
-            // get channel twitch settings
-            val guildID = target.discordChannel.guild?.guildID
-            val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-            val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
-                ?: StreamSettings() // use default settings for pm notifications
+                // get channel twitch settings
+                val guildID = target.discordChannel.guild?.guildID
+                val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
+                val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
+                    ?: StreamSettings() // use default settings for pm notifications
 
-            val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
-            if (existing == null) { // post a new stream notification
-                // get target channel in discord, make sure it still exists
-                val chan = when (val disChan =
-                    discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java)
-                        .tryAwait()) {
-                    is Ok -> disChan.value
-                    is Err -> {
-                        val err = disChan.value
-                        if (err is ClientException && err.status.code() == 404) {
+                val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
+                if (existing == null) { // post a new stream notification
+                    // get target channel in discord, make sure it still exists
+                    val chan = try {
+                        discord.getChannelById(target.discordChannel.channelID.snowflake)
+                            .ofType(MessageChannel::class.java)
+                            .awaitSingle()
+                    } catch (ce: ClientException) {
+                        if (ce.status.code() == 404) {
                             // channel no longer exists, untrack
                             target.delete()
-                        } // else retry next tick
-                        return@forEach
+                            return@forEach
+                        } else throw ce
                     }
-                }
-                // get mention role from db
-                val mentionRole = if(guildID != null) {
-                    getMentionRoleFor(target.streamChannel, guildID, chan)
-                } else null
+                    // get mention role from db
+                    val mentionRole = if (guildID != null) {
+                        getMentionRoleFor(target.streamChannel, guildID, chan)
+                    } else null
 
-                val mention = mentionRole?.mention
-                val newNotification = try {
-                    chan.createMessage { spec ->
-                        if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
-                        spec.setEmbed(embed.automatic)
-                    }.awaitSingle()
-                } catch (ce: ClientException) {
-                    val err = ce.status.code()
-                    if(err == 404 || err == 403) {
-                        // notification channel has been deleted or we don't have perms to send. untrack this target :/
-                        LOG.info("Unable to send stream notification to channel '${chan.id.asString()}'. Untracking target :: $target")
-                        target.delete()
-                        return@forEach
-                    } else throw ce
-                }
+                    val mention = mentionRole?.mention
+                    val newNotification = try {
+                        chan.createMessage { spec ->
+                            if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
+                            spec.setEmbed(embed.automatic)
+                        }.awaitSingle()
+                    } catch (ce: ClientException) {
+                        val err = ce.status.code()
+                        if (err == 404 || err == 403) {
+                            // notification channel has been deleted or we don't have perms to send. untrack this target :/
+                            LOG.info("Unable to send stream notification to channel '${chan.id.asString()}'. Untracking target :: $target")
+                            target.delete()
+                            return@forEach
+                        } else throw ce
+                    }
 
-                TrackedStreams.Notification.new {
-                    this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                    this.targetID = target
-                    this.channelID = channel
-                }
+                    TrackedStreams.Notification.new {
+                        this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                        this.targetID = target
+                        this.channelID = channel
+                    }
+
+                    // edit channel name if feature is enabled and stream goes live
                     checkAndRenameChannel(chan)
-            } else {
-                val existingNotif = getDiscordMessage(existing.messageID, channel)
-                if(existingNotif != null) {
-                    existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
-                } else existing.delete()
+
+                } else {
+                    val existingNotif = getDiscordMessage(existing.messageID, channel)
+                    if (existingNotif != null) {
+                        existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
+                    } else existing.delete()
+                }
+            } catch(e: Exception) {
+                LOG.info("Error updating Twitch target: $target :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
         }
     }

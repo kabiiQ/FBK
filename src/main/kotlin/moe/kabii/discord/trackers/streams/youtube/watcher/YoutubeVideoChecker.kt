@@ -4,8 +4,6 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
-import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.streams.DBYoutubeStreams
 import moe.kabii.discord.trackers.streams.StreamErr
 import moe.kabii.discord.trackers.streams.youtube.YoutubeParser
@@ -15,7 +13,8 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.extensions.*
+import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.util.DurationFormatter
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
@@ -46,7 +45,12 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                                 videos.getValue(stream.youtubeVideoId)
                             }.entries
                         }.forEach { (yt, db) ->
-                            updateStream(yt, db)
+                            try {
+                                updateStream(yt, db)
+                            } catch(e: Exception) {
+                                LOG.info("Error updating YouTube stream: $yt :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
+                            }
                         }
                 }
 
@@ -77,21 +81,18 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                      (youtube does not provide information about the stream that would make it worth updating, such as current view count)
                      so if a stream is tracked in a different server/channel while live, it will not be posted
                      */
-                    newSuspendedTransaction {
-                        dbStream.streamChannel.targets.forEach { target ->
+                    dbStream.streamChannel.targets.forEach { target ->
 
-                            // check if target already has a notification
-                            if(target.notifications.empty()) {
-                                try {
-                                    createLiveNotification(youtube, target, new = false)
-                                } catch(e: Exception) {
-                                    LOG.error("Non-Discord error while creating live notification for channel: ${youtube.channel} :: ${e.message}")
-                                    LOG.debug(e.stackTraceString)
-                                }
+                        // check if target already has a notification
+                        if(target.notifications.empty()) {
+                            try {
+                                createLiveNotification(youtube, target, new = false)
+                            } catch(e: Exception) {
+                                LOG.warn("Error while creating live notification for channel: ${youtube.channel} :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
                             }
                         }
                     }
-
 
                 } else {
 
@@ -116,60 +117,23 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                     is StreamErr.NotFound -> {
 
                         // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
-                        newSuspendedTransaction {
-                            // here, we can only provide information from our database
-                            val channelName = dbStream.lastChannelName
-                            val videoLink = "https://youtube.com/watch?v=${dbStream.youtubeVideoId}"
-                            val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
-                            val lastTitle = dbStream.lastTitle
-                            val embedEdit: EmbedBlock = {
-                                setAuthor("$channelName was live.", channelLink, null)
-                                setUrl(videoLink)
-                                setColor(inactiveColor)
-                                setTitle("No VOD is available.")
-                                setThumbnail(dbStream.lastThumbnail)
-                                setDescription("Last video title: $lastTitle")
-                            }
-                            streamEnd(dbStream, embedEdit)
+                        // here, we can only provide information from our database
+                        val channelName = dbStream.lastChannelName
+                        val videoLink = "https://youtube.com/watch?v=${dbStream.youtubeVideoId}"
+                        val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
+                        val lastTitle = dbStream.lastTitle
+                        val embedEdit: EmbedBlock = {
+                            setAuthor("$channelName was live.", channelLink, null)
+                            setUrl(videoLink)
+                            setColor(inactiveColor)
+                            setTitle("No VOD is available.")
+                            setThumbnail(dbStream.lastThumbnail)
+                            setDescription("Last video title: $lastTitle")
                         }
+                        streamEnd(dbStream, embedEdit)
                     }
                 }
             }
-        }
-
-
-    }
-
-    private suspend fun streamEnd(dbStream: DBYoutubeStreams.YoutubeStream, embedEdit: EmbedBlock) {
-        // edit/delete all notifications and remove stream from db when stream ends
-        newSuspendedTransaction {
-            dbStream.streamChannel.notifications.forEach { notification ->
-                val dbMessage = notification.messageID
-                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).tryAwait().orNull()
-                if(existingNotif != null) {
-
-                    // get channel settings so we can respect config to edit or delete
-                    val guildId = existingNotif.guildId.orNull()
-                    val findFeatures = if(guildId != null) {
-                        val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
-                        config.options.featureChannels[existingNotif.channelId.asLong()]?.streamSettings
-                    } else null
-                    val features = findFeatures ?: StreamSettings()
-
-                    if(features.summaries) {
-                        existingNotif.edit { msg ->
-                            msg.setEmbed(embedEdit)
-                        }
-                    } else {
-                        existingNotif.delete()
-                    }.tryAwait().orNull()
-                }
-                // delete the notification from db either way, we are done with it
-                notification.delete()
-            }
-
-            // delete live stream event for this channel
-            dbStream.delete()
         }
     }
 }

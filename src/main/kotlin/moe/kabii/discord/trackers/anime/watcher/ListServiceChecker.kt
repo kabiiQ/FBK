@@ -140,55 +140,60 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
             }
             if (builder != null) {
                 trackedList.targets.forEach { target ->
-                    // send embed to all channels this user's mal is tracked in
-                    val userId = target.userTracked.userID
-                    val user = when (val userCall = discord.getUserById(userId.snowflake).tryAwait()) {
-                        is Ok -> userCall.value
-                        is Err -> {
-                            LOG.warn("Unable to get Discord user $userId in list checker :: ${userCall.value.message}")
-                            return@forEach
-                        }
-                    }
-                    builder.withUser(user)
-
-                    val channelId = target.discord.channelID
-                    val updateMessage = discord.getChannelById(channelId.snowflake)
-                        .ofType(MessageChannel::class.java)
-                        .filter { chan ->
-                            // check if channel is currently enabled (or pm channel)
-                            when (chan) {
-                                is TextChannel -> {
-                                    val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
-                                    val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
-                                    // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
-                                    when {
-                                        animeSettings == null -> false
-                                        animeSettings.postNewItem && newEntry -> true
-                                        animeSettings.postStatusChange && statusChange -> true
-                                        animeSettings.postUpdatedStatus && statusUpdate -> true
-                                        else -> false
-                                    }
-                                }
-                                is PrivateChannel -> true
-                                else -> false
-                            }
-                        }
-                        .flatMap { chan ->
-                            chan.createEmbed { spec ->
-                                builder.createEmbedConsumer(site, trackedList.siteListId)(spec)
-                            }
-                        }
-
                     try {
-                        updateMessage.awaitSingle()
-                    } catch (ce: ClientException) {
-                        val err = ce.status.code()
-                        if (err == 404 || err == 403) {
-                            // remove target if no longer valid
-                            LOG.info("Unable to send MediaList update to channel '$channelId'. Configuration target will be removed")
-                            LOG.debug(ce.stackTraceString)
-                            target.delete()
-                        } else throw ce
+                        // send embed to all channels this user's mal is tracked in
+                        val userId = target.userTracked.userID
+                        val user = when (val userCall = discord.getUserById(userId.snowflake).tryAwait()) {
+                            is Ok -> userCall.value
+                            is Err -> {
+                                LOG.warn("Unable to get Discord user $userId in list checker :: ${userCall.value.message}")
+                                return@forEach
+                            }
+                        }
+                        builder.withUser(user)
+
+                        val channelId = target.discord.channelID
+                        val updateMessage = discord.getChannelById(channelId.snowflake)
+                            .ofType(MessageChannel::class.java)
+                            .filter { chan ->
+                                // check if channel is currently enabled (or pm channel)
+                                when (chan) {
+                                    is TextChannel -> {
+                                        val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
+                                        val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
+                                        // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
+                                        when {
+                                            animeSettings == null -> false
+                                            animeSettings.postNewItem && newEntry -> true
+                                            animeSettings.postStatusChange && statusChange -> true
+                                            animeSettings.postUpdatedStatus && statusUpdate -> true
+                                            else -> false
+                                        }
+                                    }
+                                    is PrivateChannel -> true
+                                    else -> false
+                                }
+                            }
+                            .flatMap { chan ->
+                                chan.createEmbed { spec ->
+                                    builder.createEmbedConsumer(site, trackedList.siteListId)(spec)
+                                }
+                            }
+
+                        try {
+                            updateMessage.awaitSingle()
+                        } catch (ce: ClientException) {
+                            val err = ce.status.code()
+                            if (err == 404 || err == 403) {
+                                // remove target if no longer valid
+                                LOG.info("Unable to send MediaList update to channel '$channelId'. Configuration target will be removed")
+                                LOG.debug(ce.stackTraceString)
+                                target.delete()
+                            } else throw ce
+                        }
+                    } catch(e: Exception) {
+                        LOG.info("Error updating anime list target: $target :: ${e.message}")
+                        LOG.debug(e.stackTraceString)
                     }
                 }
             }

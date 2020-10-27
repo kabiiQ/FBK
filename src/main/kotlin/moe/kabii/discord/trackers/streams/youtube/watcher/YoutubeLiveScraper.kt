@@ -37,7 +37,12 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                 // for now, this is called in-place, blocking the current thread. we really want to be careful about page scraping
                 // too fast, so this is fine.
                 checkChannels.forEach { (id, channel) ->
-                    checkChannel(channel, id, browser)
+                    try {
+                        checkChannel(channel, id, browser)
+                    } catch(e: Exception) {
+                        LOG.warn("Error updating YouTube channel: '$id' :: ${e.message}")
+                        LOG.debug(e.stackTraceString)
+                    }
                     delay((1000..2000).random().toLong())
                 }
 
@@ -74,15 +79,13 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                     this.lastThumbnail = liveStream.thumbnail
                     this.lastChannelName = liveStream.channel.name
                 }
-            }
 
-            // post this live stream information to all targets
-            newSuspendedTransaction {
+                // post this live stream information to all targets
                 channel.targets.forEach { target ->
                     try {
                         createLiveNotification(liveStream, target, new = true)
                     } catch (e: Exception) {
-                        LOG.error("Non-Discord error while creating live notification for channel: ${liveStream.channel} :: ${e.message}")
+                        LOG.warn("Error while creating live notification for channel: ${liveStream.channel} :: ${e.message}")
                         LOG.debug(e.stackTraceString)
                     }
                 }
@@ -92,13 +95,9 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
             LOG.error("Problem checking YouTube stream '$channelId' :: ${e.message}")
 
             if(e is YoutubeChannelError && e.ytText.contains("This channel does not exist")) {
-
                 LOG.info("Untracking YouTube channel '$channelId' as it no longer exists.")
                 channel.delete()
-
-            } else {
-                LOG.debug(e.stackTraceString)
-            }
+            } else throw e
         }
     }
 }
