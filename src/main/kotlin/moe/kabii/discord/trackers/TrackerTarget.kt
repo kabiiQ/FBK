@@ -134,7 +134,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             .flatMap { c -> c.sealedSubclasses }
             .mapNotNull { c -> c.objectInstance }
 
-        fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
+        fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID
             // empty 'args' is handled by initial command call erroring and should never occur here
             require(inputArgs.isNotEmpty()) { "Can not parse empty track target" }
