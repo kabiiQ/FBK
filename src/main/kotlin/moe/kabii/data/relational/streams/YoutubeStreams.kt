@@ -17,6 +17,11 @@ object DBYoutubeStreams {
         val lastTitle = text("last_title")
         val lastThumbnail = text("thumbnail_url")
         val lastChannelName = text("last_channel_name")
+        val lastAvatar = text("last_user_avatar").nullable()
+
+        val peakViewers = integer("peak_viewers")
+        val uptimeTicks = integer("uptime_ticks")
+        val averageViewers = integer("average_viewers")
     }
 
     class YoutubeStream(id: EntityID<Int>) : IntEntity(id) {
@@ -25,6 +30,11 @@ object DBYoutubeStreams {
         var lastTitle by YoutubeStreams.lastTitle
         var lastThumbnail by YoutubeStreams.lastThumbnail
         var lastChannelName by YoutubeStreams.lastChannelName
+        var lastAvatar by YoutubeStreams.lastAvatar
+
+        var peakViewers by YoutubeStreams.peakViewers
+        var uptimeTicks by YoutubeStreams.uptimeTicks
+        var averageViewers by YoutubeStreams.averageViewers
 
         companion object : IntEntityClass<YoutubeStream>(YoutubeStreams) {
 
@@ -37,6 +47,11 @@ object DBYoutubeStreams {
                         }
                 )
             }
+        }
+
+        fun currentViewers(current: Int) {
+            if(current > peakViewers) peakViewers = current
+            averageViewers += (current - averageViewers) / ++uptimeTicks
         }
     }
 }

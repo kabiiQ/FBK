@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.rusty.Try
 import java.time.Duration
+import java.time.Instant
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoResponse(
@@ -14,7 +15,8 @@ data class YoutubeVideoResponse(
 data class YoutubeVideo(
     val id: String,
     val snippet: YoutubeVideoSnippet,
-    val contentDetails: YoutubeVideoContentDetails
+    val contentDetails: YoutubeVideoContentDetails,
+    val liveStreamingDetails: YoutubeVideoLiveDetails
 )
 
 @JsonClass(generateAdapter = true)
@@ -40,4 +42,13 @@ data class YoutubeVideoContentDetails(
         // shouldn't fail but we definitely do not want an exception here
         Duration.parse(_rawDuration)
     }.result.orNull()
+}
+
+@JsonClass(generateAdapter = true)
+data class YoutubeVideoLiveDetails(
+    @Json(name="concurrentViewers") val _concurrentViewers: String?,
+    @Json(name="actualEndTime") val _endTime: String?
+) {
+    @Transient val concurrentViewers = _concurrentViewers?.toIntOrNull()
+    @Transient val endTime = _endTime?.run(Instant::parse)
 }

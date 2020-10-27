@@ -78,6 +78,12 @@ class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatch
                     this.lastTitle = liveStream.title
                     this.lastThumbnail = liveStream.thumbnail
                     this.lastChannelName = liveStream.channel.name
+                    this.lastAvatar = liveStream.channel.avatar
+
+                    this.peakViewers = 0
+                    // start ticks at 0 for Youtube, we do not have 'initial' viewers when discovering streams
+                    this.uptimeTicks = 0
+                    this.averageViewers = 0
                 }
 
                 // post this live stream information to all targets

@@ -1,6 +1,7 @@
 package moe.kabii.discord.trackers.streams.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
@@ -13,6 +14,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.EmbedBlock
+import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.util.DurationFormatter
@@ -65,6 +67,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
         }
     }
 
+    @WithinExposedContext
     private suspend fun updateStream(dbStream: DBYoutubeStreams.YoutubeStream, ytStream: Result<YoutubeVideoInfo, StreamErr>) {
 
         // if this stream has no remaining targets, delete it from DB to prevent further work
@@ -78,7 +81,7 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                 if(youtube.live) {
                     /* stream is still live - iterate all targets and make sure they have a notification
                      this is necessary because unlike the Twitch tracker, we do not update/post for all targets on every tick
-                     (youtube does not provide information about the stream that would make it worth updating, such as current view count)
+                     (youtube does not provide information about the stream that would make it worth updating, such as a snapshot "thumbnail"
                      so if a stream is tracked in a different server/channel while live, it will not be posted
                      */
                     dbStream.streamChannel.targets.forEach { target ->
@@ -94,19 +97,23 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                         }
                     }
 
+                    // update viewer calculations
+                    if(youtube.liveInfo?.concurrent != null) {
+                        dbStream.currentViewers(youtube.liveInfo.concurrent)
+                    } else {
+                        LOG.warn("YouTube stream returned 'live' without details")
+                    }
+
                 } else {
 
                     // stream has ended and vod is available - edit notifications to reflect
                     val duration = youtube.duration?.run(::DurationFormatter)
-                    val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
+                    val endTime = youtube.liveInfo?.endTime
                     val embedEdit: EmbedBlock = {
-                        setAuthor("${youtube.channel.name} was live.", channelLink, youtube.channel.avatar)
+                        applyCommonFields(this, dbStream, endTime)
                         if(duration != null) setDescription("The video [${duration.colonTime}] is available.")
-                        setUrl(youtube.url)
-                        setColor(inactiveColor)
                         setTitle(youtube.title)
                         setThumbnail(youtube.thumbnail)
-                        setFooter("YouTube VOD", NettyFileServer.youtubeLogo)
                     }
                     streamEnd(dbStream, embedEdit)
                 }
@@ -118,14 +125,9 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
 
                         // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
                         // here, we can only provide information from our database
-                        val channelName = dbStream.lastChannelName
-                        val videoLink = "https://youtube.com/watch?v=${dbStream.youtubeVideoId}"
-                        val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
                         val lastTitle = dbStream.lastTitle
                         val embedEdit: EmbedBlock = {
-                            setAuthor("$channelName was live.", channelLink, null)
-                            setUrl(videoLink)
-                            setColor(inactiveColor)
+                            applyCommonFields(this, dbStream, null)
                             setTitle("No VOD is available.")
                             setThumbnail(dbStream.lastThumbnail)
                             setDescription("Last video title: $lastTitle")
@@ -135,5 +137,24 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
                 }
             }
         }
+    }
+
+    @WithinExposedContext
+    private fun applyCommonFields(spec: EmbedCreateSpec, dbStream: DBYoutubeStreams.YoutubeStream, endTime: Instant?) {
+        val channelName = dbStream.lastChannelName
+        val videoLink = "https://youtube.com/watch?v=${dbStream.youtubeVideoId}"
+        val channelLink = "https://youtube.com/channel/${dbStream.streamChannel.siteChannelID}"
+
+        spec.setAuthor("$channelName was live.", channelLink, dbStream.lastAvatar)
+        spec.setUrl(videoLink)
+        spec.setColor(inactiveColor)
+
+        spec.addField("Peak viewers", dbStream.peakViewers.toString(), true)
+        spec.addField("Average viewers", dbStream.averageViewers.toString(), true)
+
+        val footer = if(endTime != null) "Stream ended " else "Stream ended (approximate) "
+        val timestamp = endTime ?: Instant.now()
+        spec.setFooter(footer, NettyFileServer.youtubeLogo)
+        spec.setTimestamp(timestamp)
     }
 }

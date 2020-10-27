@@ -138,6 +138,7 @@ class YoutubeScraper : AutoCloseable {
                 thumbnail = thumbnailUrl,
                 live = true,
                 duration = null,
+                liveInfo = null,
                 YoutubeChannelInfo(
                     id = channelId,
                     name = channelName,

@@ -1,6 +1,7 @@
 package moe.kabii.discord.trackers.streams.youtube
 
 import java.time.Duration
+import java.time.Instant
 
 data class YoutubeChannelInfo(
     val id: String,
@@ -17,7 +18,13 @@ data class YoutubeVideoInfo(
     val thumbnail: String,
     val live: Boolean,
     val duration: Duration?,
+    val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
 ) {
     val url = "https://youtube.com/watch?v=$id"
 }
+
+data class YoutubeStreamInfo(
+    val concurrent: Int?,
+    val endTime: Instant?
+)
