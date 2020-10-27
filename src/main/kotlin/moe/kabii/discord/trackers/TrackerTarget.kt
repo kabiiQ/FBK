@@ -25,7 +25,7 @@ sealed class TrackerTarget(
 )
 
 // streaming targets
-data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String)
+data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String, val url: String)
 
 sealed class StreamingTarget(
     val serviceColor: Color,
@@ -55,8 +55,8 @@ object TwitchTarget : StreamingTarget(
     override val dbSite
         get() = TrackedStreams.DBSite.TWITCH
 
-    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
-    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName) }
+    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
+    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
 }
 
 object YoutubeTarget : StreamingTarget(
@@ -78,7 +78,7 @@ object YoutubeTarget : StreamingTarget(
     private fun getChannelByUnknown(identifier: String) = try {
         val channel = YoutubeParser.getChannelFromUnknown(identifier)
         if(channel != null) {
-            val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name)
+            val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name, channel.url)
             Ok(info)
         } else Err(StreamErr.NotFound)
     } catch(e: Exception) {
