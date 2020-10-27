@@ -149,12 +149,12 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
         spec.setUrl(videoLink)
         spec.setColor(inactiveColor)
 
-        spec.addField("Peak viewers", dbStream.peakViewers.toString(), true)
-        spec.addField("Average viewers", dbStream.averageViewers.toString(), true)
+        val viewers = "${dbStream.averageViewers}/${dbStream.peakViewers}"
+        spec.addField("Average/Peak Viewers", viewers, true)
 
-        val footer = if(endTime != null) "Stream ended " else "Stream ended (approximate) "
+        val approx = if(endTime != null) " " else " (approximate) "
         val timestamp = endTime ?: Instant.now()
-        spec.setFooter(footer, NettyFileServer.youtubeLogo)
+        spec.setFooter("Stream ended$approx", NettyFileServer.youtubeLogo)
         spec.setTimestamp(timestamp)
     }
 }

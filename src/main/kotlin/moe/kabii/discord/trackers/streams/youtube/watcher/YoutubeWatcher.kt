@@ -57,6 +57,8 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         val mention = mentionRole?.mention
         try {
             val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
+            val startTime = liveStream.liveInfo?.startTime
+            val sinceStr = if(startTime != null) " since " else " "
 
             val newNotification = chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
@@ -68,7 +70,10 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
                     setTitle(liveStream.title)
                     setDescription(shortDescription)
                     if(features.thumbnails) setImage(liveStream.thumbnail)
-                    setFooter("Live on YouTube", NettyFileServer.youtubeLogo)
+                    setFooter("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo)
+                    if(startTime != null) {
+                        setTimestamp(startTime)
+                    }
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()

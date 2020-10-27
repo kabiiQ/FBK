@@ -88,6 +88,7 @@ object YoutubeParser {
                         live = match.snippet.live,
                         duration = match.contentDetails.duration,
                         liveInfo = YoutubeStreamInfo(
+                            startTime = match.liveStreamingDetails.startTime,
                             concurrent = match.liveStreamingDetails.concurrentViewers,
                             endTime = match.liveStreamingDetails.endTime
                         ),

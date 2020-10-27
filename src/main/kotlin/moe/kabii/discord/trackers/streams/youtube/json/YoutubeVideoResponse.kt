@@ -46,9 +46,11 @@ data class YoutubeVideoContentDetails(
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoLiveDetails(
+    @Json(name="actualStartTime") val _startTime: String?,
     @Json(name="concurrentViewers") val _concurrentViewers: String?,
     @Json(name="actualEndTime") val _endTime: String?
 ) {
+    @Transient val startTime = _startTime?.run(Instant::parse)
     @Transient val concurrentViewers = _concurrentViewers?.toIntOrNull()
     @Transient val endTime = _endTime?.run(Instant::parse)
 }

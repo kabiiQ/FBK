@@ -25,6 +25,7 @@ data class YoutubeVideoInfo(
 }
 
 data class YoutubeStreamInfo(
+    val startTime: Instant?,
     val concurrent: Int?,
-    val endTime: Instant?
+    val endTime: Instant?,
 )
