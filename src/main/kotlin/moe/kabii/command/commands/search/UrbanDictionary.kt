@@ -9,11 +9,8 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.discord.conversation.Page
-import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
-import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.fromJsonSafe
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils

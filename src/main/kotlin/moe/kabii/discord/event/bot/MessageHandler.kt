@@ -131,7 +131,7 @@ class MessageHandler(val manager: CommandManager) {
                 val noCmd = args.joinToString(" ")
                 LOG.info("Executing command ${command.baseName} on ${Thread.currentThread().name}")
                 val chan = event.message.channel.awaitSingle()
-                val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, isPM, noCmd, args, command, cmdStr)
+                val param = DiscordParameters(this@MessageHandler, event, chan, guild, author, noCmd, args, command, cmdStr)
 
                 try {
 

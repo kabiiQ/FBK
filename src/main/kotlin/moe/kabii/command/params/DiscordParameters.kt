@@ -35,7 +35,6 @@ data class DiscordParameters (
     val chan: MessageChannel,
     val guild: Guild?,
     val author: User,
-    val isPM: Boolean,
     val noCmd: String,
     val args: List<String>,
     val command: Command,
@@ -57,6 +56,8 @@ data class DiscordParameters (
             }
         } else throw GuildTargetInvalidException("Guild context unknown.")
     }
+
+    val isPM = guild == null
 
     val member: Member by lazy {
         target.getMemberById(author.id).tryBlock().orNull() ?: throw GuildTargetInvalidException("**${author.username}** is not a member of **${target.name}**.")

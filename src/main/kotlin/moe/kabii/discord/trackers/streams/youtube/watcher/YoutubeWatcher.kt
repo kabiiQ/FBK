@@ -9,37 +9,37 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.DBYoutubeStreams
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.streams.StreamWatcher
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo
 import moe.kabii.net.NettyFileServer
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
+import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.success
 import org.apache.commons.lang3.StringUtils
 
 abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(discord) {
 
     @WithinExposedContext
+    @Throws(ClientException::class)
     suspend fun createLiveNotification(liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
-        val disChan = discord.getChannelById(target.discordChannel.channelID.snowflake)
-            .ofType(MessageChannel::class.java)
-            .tryAwait()
-        val chan = when(disChan) {
-            is Ok -> disChan.value
-            is Err -> {
-                val err = disChan.value
-                if(err is ClientException && err.status.code() == 404) {
-                    // channel no longer exists, untrack
-                    target.delete()
-                } // else retry next tick
+        val chan = try {
+            discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java).awaitSingle()
+        } catch(e: Exception) {
+            if(e is ClientException && e.status.code() == 404) {
+                // channel no longer exists, untrack
+                target.delete()
                 return null
+            } else {
+                LOG.warn("${Thread.currentThread().name} - YoutubeWatcher :: Unable to get Discord channel: ${e.message}")
+                throw e
             }
         }
 
