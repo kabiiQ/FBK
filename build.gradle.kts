@@ -63,7 +63,8 @@ dependencies {
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
+    //implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
+    implementation("com.github.Devoxin:lavaplayer:1.3.59")
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
     // webscraper
