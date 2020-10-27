@@ -122,8 +122,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         discordMessage?.edit { spec -> spec.setEmbed { embed ->
                             embed.setDescription("This stream has ended with no information recorded.")
                             embed.setColor(TwitchParser.color)
-                            embed.setFooter("Channel ID was $twitchId on ${channel.site.targetType.full}.", null)
-                        }}?.tryAwait()
+                                // edit channel name if feature is enabled and stream ended
+                                checkAndRenameChannel(discordMessage.channel.awaitSingle())
                         notif.delete()
                     }
                     return
@@ -147,8 +147,13 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                         } else {
                             discordMessage.delete()
-                        }.tryAwait()
-                    }
+                            }.awaitSingle()
+
+                            // edit channel name if feature is enabled and stream ended
+                            checkAndRenameChannel(discordMessage.channel.awaitSingle())
+                        }
+                    } catch(e: Exception) {
+                        LOG.info("Error ending stream notification $notif :: ${e.message}")
                     notif.delete()
                     dbStream.delete()
                 }
@@ -232,6 +237,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     this.targetID = target
                     this.channelID = channel
                 }
+                    checkAndRenameChannel(chan)
             } else {
                 val existingNotif = getDiscordMessage(existing.messageID, channel)
                 if(existingNotif != null) {

@@ -1,9 +1,7 @@
 package moe.kabii.data.mongodb.guilds
 
-import moe.kabii.discord.trackers.AnimeTarget
-import moe.kabii.discord.trackers.MALTarget
-import moe.kabii.discord.trackers.TrackerTarget
-import moe.kabii.discord.trackers.TwitchTarget
+import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.discord.trackers.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 
@@ -27,7 +25,7 @@ data class FeatureChannel(
 ) {
     fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
 
-    fun findDefaultTarget(type: KClass<TrackerTarget> = TrackerTarget::class): TrackerTarget? {
+    fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
         if(defaultTracker != null && type.isSuperclassOf(defaultTracker!!::class)) return defaultTracker
 
@@ -57,8 +55,36 @@ data class StreamSettings(
     var peakViewers: Boolean = true,
     var averageViewers: Boolean = true,
     var endTitle: Boolean = true,
-    var endGame: Boolean = true
+    var endGame: Boolean = true,
+    var renameChannel: RenameFeature? = null
 )
+
+data class RenameFeature(
+    // notLive is required - set to channel name when feature is enabled as default
+    var notLive: String
+) {
+    var livePrefix: String = "live-"
+    var liveSuffix: String = ""
+
+    val marks: MutableList<ChannelMark> = mutableListOf()
+}
+
+data class ChannelMark(
+    val channel: MongoStreamChannel,
+    val mark: String
+)
+
+data class MongoStreamChannel(
+    val site: TrackedStreams.DBSite,
+    val identifier: String
+) {
+    companion object {
+        fun of(stream: BasicStreamChannel) = MongoStreamChannel(stream.site.dbSite, stream.accountId)
+        fun of(stream: TrackedStreams.StreamChannel) = MongoStreamChannel(stream.site, stream.siteChannelID)
+    }
+}
+
+// unfortunately, our other db objects are not directly serializable
 
 data class AnimeSettings(
     var postNewItem: Boolean = true,

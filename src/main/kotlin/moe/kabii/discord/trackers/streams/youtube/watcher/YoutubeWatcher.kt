@@ -82,6 +82,9 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
                 this.channelID = target.streamChannel
             }
 
+            // edit channel name if feature is enabled and stream starts
+            checkAndRenameChannel(chan)
+
             return newNotification
 
         } catch (ce: ClientException) {
@@ -94,4 +97,5 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
             } else throw ce
         }
     }
+                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = notification)
 }
