@@ -27,6 +27,6 @@ class CommandManager {
     fun registerClass(clazz: Class<out Command>) {
         val instance = clazz.kotlin.objectInstance
         if(instance != null) registerInstance(instance)
-        else LOG.info("Skipping static registration of command: $clazz")
+        else LOG.debug("Skipping static registration of command: $clazz")
     }
 }
