@@ -14,6 +14,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.streams.StreamWatcher
 import moe.kabii.discord.trackers.streams.youtube.YoutubeVideoInfo
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
@@ -57,6 +58,7 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         val mention = mentionRole?.mention
         try {
             val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
+            val shortTitle = StringUtils.abbreviate(liveStream.title, MagicNumbers.Embed.TITLE)
             val startTime = liveStream.liveInfo?.startTime
             val sinceStr = if(startTime != null) " since " else " "
 
@@ -67,7 +69,7 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
                     setAuthor("${liveStream.channel.name}$liveMessage", liveStream.url, liveStream.channel.avatar)
                     setUrl(liveStream.url)
                     setColor(YoutubeTarget.serviceColor)
-                    setTitle(liveStream.title)
+                    setTitle(shortTitle)
                     setDescription(shortDescription)
                     if(features.thumbnails) setImage(liveStream.thumbnail)
                     setFooter("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo)
