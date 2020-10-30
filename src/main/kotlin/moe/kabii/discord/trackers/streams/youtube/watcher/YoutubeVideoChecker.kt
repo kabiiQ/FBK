@@ -149,8 +149,8 @@ class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatc
         spec.setUrl(videoLink)
         spec.setColor(inactiveColor)
 
-        val viewers = "${dbStream.averageViewers}/${dbStream.peakViewers}"
-        spec.addField("Average/Peak Viewers", viewers, true)
+        val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+        spec.addField("Viewers", viewers, true)
 
         val approx = if(endTime != null) " " else " (approximate) "
         val timestamp = endTime ?: Instant.now()

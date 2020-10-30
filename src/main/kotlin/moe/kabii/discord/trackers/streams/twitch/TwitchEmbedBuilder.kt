@@ -65,21 +65,17 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
                     .append(dbStream.lastGame)
                     .append('\n')
             }
-            if(builder.settings.peakViewers) {
-                description.append("Peak viewers: ")
-                    .append(dbStream.peakViewers)
-                    .append('\n')
-            }
-            if(builder.settings.averageViewers) {
-                description.append("Average viewers: ")
-                    .append(dbStream.averageViewers)
-                    .append('\n')
-            }
 
             setAuthor("${builder.user.displayName} was live for $uptime", builder.user.url, builder.user.profileImage)
             setColor(Color.of(3941986))
             val desc = description.toString()
             if(desc.isNotBlank()) setDescription(desc)
+
+            if(builder.settings.viewers) {
+                val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+                addField("Viewers", viewers, true)
+            }
+
             setFooter("Stream ended ", NettyFileServer.glitch)
             setTimestamp(Instant.now())
         }
