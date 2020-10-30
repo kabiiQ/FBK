@@ -82,7 +82,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         val features = config.options.featureChannels.getValue(guildChan.id.asLong())
 
         val feature = features.streamSettings.renameChannel
-        if(feature == null) return // feature not enabled in channel
+        if(feature?.enabled != true) return // feature not enabled in channel
 
         // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
         val live = TrackedStreams.Notification.wrapRows(
@@ -114,7 +114,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 }?.mark
             }.joinToString("")
             val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".take(MagicNumbers.Channel.NAME)
-            if(new.isBlank()) "now-live" else new
+            if(new.isBlank()) "\uD83D\uDD34-live" else new
         }
 
         // discord channel renaming is HEAVILY rate-limited - careful to not request same name
@@ -130,6 +130,11 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
                     spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **rename disable** to turn off the channel renaming feature.")
+                }.awaitSingle()
+            } else if(ce.status.code() == 400) {
+                guildChan.createEmbed { spec ->
+                    errorColor(spec)
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **rename disable** command to turn off this feature.")
                 }.awaitSingle()
             } else throw ce
         }

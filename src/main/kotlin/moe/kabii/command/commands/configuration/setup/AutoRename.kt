@@ -55,23 +55,28 @@ object AutoRename : Command("rename", "autorename", "autoname", "autochannelname
             when(action?.toLowerCase()) {
                 "enable" -> {
                     // enable the auto channel rename feature in this channel
-                    if(features.streamSettings.renameChannel != null) {
+                    if(features.streamSettings.renameChannel?.enabled == true) {
                         error("Automatic channel renaming is already enabled in **#${guildChan.name}**. It can be configured by running the **rename** command.").awaitSingle()
                         return@discord
                     }
-                    // create a new feature configuration for the channel rename feature, use current channel name as "not live" message
-                    val new = RenameFeature(guildChan.name)
-                    features.streamSettings.renameChannel = new
+
+                    if(features.streamSettings.renameChannel == null) {
+                        // create a new feature configuration for the channel rename feature, use current channel name as "not live" message
+                        val new = RenameFeature(guildChan.name)
+                        features.streamSettings.renameChannel = new
+                    } else {
+                        features.streamSettings.renameChannel!!.enabled = true
+                    }
                     config.save()
                     embed("**rename** feature enabled. This Discord channel will be renamed when tracked streams are live. See the **rename** command for further configuration.").awaitSingle()
                 }
                 "disable" -> {
                     // disable/reset the auto renamae feature
-                    if(features.streamSettings.renameChannel == null) {
+                    if(features.streamSettings.renameChannel?.enabled != true) {
                         error("Channel renaming is not enabled in **#${guildChan.name}**.").awaitSingle()
                         return@discord
                     }
-                    features.streamSettings.renameChannel = null
+                    features.streamSettings.renameChannel!!.enabled = false
                     config.save()
                     embed("The **rename** feature has been disabled.")
                 }
@@ -114,17 +119,48 @@ object AutoRename : Command("rename", "autorename", "autoname", "autochannelname
                     }
 
                     val dbChannel = MongoStreamChannel.of(streamInfo)
-                    val newMark = ChannelMark(dbChannel, mark)
-                    feature.marks.removeIf { existing ->
-                        existing.channel == dbChannel
-                    }
-                    feature.marks.add(newMark)
-                    config.save()
+                    if(mark.toLowerCase() == "none") {
 
-                    embed("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
-                            "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
-                            "Note that it is **impossible** to use uploaded/custom emojis in a channel name.").awaitSingle()
-                    return@discord
+                        val removed = feature.marks.removeIf { existing ->
+                            existing.channel == dbChannel
+                        }
+                        if(removed) {
+                            embed("The live mark for **${streamInfo.displayName}")
+                        }
+                    } else {
+                        val newMark = ChannelMark(dbChannel, mark)
+                        feature.marks.removeIf { existing ->
+                            existing.channel == dbChannel
+                        }
+                        feature.marks.add(newMark)
+
+                        embed("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
+                                "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
+                                "Note that it is **impossible** to use uploaded/custom emojis in a channel name.").awaitSingle()
+                    }
+                    config.save()
+                }
+                "marks" -> {
+                    // rename marks -> list configured channel marks
+                    val feature = features.streamSettings.renameChannel
+                    if (feature == null) {
+                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **rename enable**.").awaitSingle()
+                        return@discord
+                    }
+
+                    if(feature.marks.isEmpty()) {
+                        embed("There are no configured channel marks in **#${guildChan.name}**.")
+                    } else {
+
+                        val allMarks = feature.marks.joinToString("\n") { mark ->
+                            "${mark.channel.site.targetType.full}/${mark.channel.identifier}: ${mark.mark}"
+                        }
+                        embed {
+                            setTitle("Configured stream markers in **#${guildChan.name}**")
+                            setDescription(allMarks)
+                        }
+
+                    }.awaitSingle()
                 }
                 else -> { // other args, including null, are valid for configurator run
 

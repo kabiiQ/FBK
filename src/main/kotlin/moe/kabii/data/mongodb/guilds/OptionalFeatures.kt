@@ -52,18 +52,18 @@ data class FeatureChannel(
 data class StreamSettings(
     var summaries: Boolean = true,
     var thumbnails: Boolean = true,
-    var peakViewers: Boolean = true,
-    var averageViewers: Boolean = true,
+    var viewers: Boolean = true,
     var endTitle: Boolean = true,
     var endGame: Boolean = true,
     var renameChannel: RenameFeature? = null
 )
 
 data class RenameFeature(
-    // notLive is required - set to channel name when feature is enabled as default
-    var notLive: String
+    // notLive is required - set to channel name when feature is enabled as the default value
+    var notLive: String,
+    var enabled: Boolean = true // used to suspend the rename behavior without losing saved marks
 ) {
-    var livePrefix: String = "live-"
+    var livePrefix: String = "\uD83D\uDD34-live-"
     var liveSuffix: String = ""
 
     val marks: MutableList<ChannelMark> = mutableListOf()
