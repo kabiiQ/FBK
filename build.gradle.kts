@@ -64,7 +64,7 @@ dependencies {
 
     // music bot
     //implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
-    implementation("com.github.Devoxin:lavaplayer:1.3.59")
+    implementation("com.github.Devoxin:lavaplayer:1.3.60")
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
     // webscraper
