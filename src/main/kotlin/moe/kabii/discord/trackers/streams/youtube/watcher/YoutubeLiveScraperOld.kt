@@ -14,7 +14,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class YoutubeLiveScraper(discord: GatewayDiscordClient) : Runnable, YoutubeWatcher(discord) {
+class YoutubeLiveScraperOld(discord: GatewayDiscordClient) : Runnable, YoutubeWatcher(discord) {
     override fun run() {
         loop {
             val start = Instant.now()

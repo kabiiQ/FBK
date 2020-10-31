@@ -67,9 +67,6 @@ dependencies {
     implementation("com.github.Devoxin:lavaplayer:1.3.60")
     implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
 
-    // webscraper
-    implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.0.0-alpha-6")
-
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:4.8.1")
 
@@ -126,58 +123,6 @@ val updateVersion = task("updateVersion") {
     }
 }
 
-val getWebDriver = task("getWebDriver") {
-    // custom script to download latest chromedriver binaries
-    val webDriverRepo = "https://chromedriver.storage.googleapis.com"
-
-    val driverDir = File("chromedriver")
-    driverDir.mkdirs()
-
-    val currentVersionFile = File(driverDir, "VERSION")
-    val currentVersion = if(currentVersionFile.exists()) {
-        currentVersionFile.readText()
-    } else null
-
-    val webDriverVersion = URL("$webDriverRepo/LATEST_RELEASE").readText()
-    if(webDriverVersion == currentVersion) {
-        println("chromedriver up-to-date: $currentVersion")
-        return@task
-    }
-
-    val webDriverPath = "$webDriverRepo/$webDriverVersion"
-
-    arrayOf("chromedriver_win32.zip", "chromedriver_linux64.zip").forEach { target ->
-        // download each required distribution's driver
-        val driverLocation = URL("$webDriverPath/$target")
-        println("Updating driver: $target -> $webDriverVersion")
-
-        try {
-            ZipInputStream(driverLocation.openStream()).use { stream ->
-                val zipEntry = stream.nextEntry
-
-                val localTarget = File(driverDir, zipEntry.name)
-
-                println("Downloading driver '$target' from $driverLocation")
-                localTarget.outputStream().use { out ->
-                    var byte = stream.read()
-                    while (byte != -1) {
-                        out.write(byte)
-                        byte = stream.read()
-                    }
-                }
-                stream.closeEntry()
-            }
-
-        } catch (e: IOException) {
-            println("Unable to get driver '$target': ${e.message}")
-            return@task
-        }
-    }
-
-    // if successful, update current version file
-    currentVersionFile.writeText(webDriverVersion)
-}
-
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "14"
@@ -193,8 +138,6 @@ tasks {
         from(".") {
             include("build.version")
         }
-
-        dependsOn(getWebDriver)
     }
 
     // credit to https://github.com/gradle/gradle/issues/1989#issuecomment-550192866

@@ -4,8 +4,6 @@ import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.discord.trackers.streams.twitch.watcher.TwitchChecker
-import moe.kabii.discord.trackers.streams.youtube.watcher.YoutubeLiveScraper
-import moe.kabii.discord.trackers.streams.youtube.watcher.YoutubeVideoChecker
 
 class ServiceWatcherManager(val discord: GatewayDiscordClient) {
     // launch service watcher threads
@@ -17,15 +15,8 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             val twitch = TwitchChecker(discord)
             yield(Thread(twitch, "TwitchChecker"))
 
-            /* todo
-            val youtubeScraper = YoutubeLiveScraper(discord)
-            yield(Thread(youtubeScraper, "YoutubeLiveScraper"))
+            // todo youtube process
 
-            val youtubeChecker = YoutubeVideoChecker(discord)
-            yield(Thread(youtubeChecker, "YoutubeVideoChecker"))
-
-
-             */
             val mediaThreads = ListSite.values().map { site ->
                 // one thread per serivce, we never want to make simultaneous requests due to heavy rate limits to these services
                 val checker = ListServiceChecker(site, discord)

@@ -23,7 +23,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class YoutubeVideoChecker(discord: GatewayDiscordClient) : Runnable, YoutubeWatcher(discord) {
+class YoutubeVideoCheckerOld(discord: GatewayDiscordClient) : Runnable, YoutubeWatcher(discord) {
     companion object {
         private val inactiveColor = Color.of(8847360)
     }

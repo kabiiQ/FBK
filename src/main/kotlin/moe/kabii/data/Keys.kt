@@ -49,10 +49,6 @@ object Keys : ConfigSpec("") {
         val channels by required<List<Long>>("admin_channels")
         val logChannel by required<Long>("log_channel")
     }
-    object Selenium : ConfigSpec() {
-        val chromeDriver by required<String>("chrome_driver")
-        val headless by required<Boolean>("headless")
-    }
 
     fun saveConfigFile() {
         synchronized(lock) {

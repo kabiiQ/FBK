@@ -44,7 +44,3 @@ admin_channels = [
     582802415057633281
 ]
 log_channel = 0
-
-[selenium]
-chrome_driver = "chromedriver"
-headless = true
