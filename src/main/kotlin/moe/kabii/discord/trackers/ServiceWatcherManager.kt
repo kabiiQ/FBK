@@ -17,12 +17,15 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             val twitch = TwitchChecker(discord)
             yield(Thread(twitch, "TwitchChecker"))
 
+            /* todo
             val youtubeScraper = YoutubeLiveScraper(discord)
             yield(Thread(youtubeScraper, "YoutubeLiveScraper"))
 
             val youtubeChecker = YoutubeVideoChecker(discord)
             yield(Thread(youtubeChecker, "YoutubeVideoChecker"))
 
+
+             */
             val mediaThreads = ListSite.values().map { site ->
                 // one thread per serivce, we never want to make simultaneous requests due to heavy rate limits to these services
                 val checker = ListServiceChecker(site, discord)

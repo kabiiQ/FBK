@@ -6,9 +6,12 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.data.relational.discord.UserLog
-import moe.kabii.data.relational.streams.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.DBYoutubeStreams
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.youtube.YoutubeLiveEvents
+import moe.kabii.data.relational.streams.youtube.YoutubeScheduledEvents
+import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -33,7 +36,9 @@ internal object PostgresConnection {
                 TrackedStreams.Notifications,
                 TrackedStreams.Mentions,
                 DBTwitchStreams.TwitchStreams,
-                DBYoutubeStreams.YoutubeStreams,
+                YoutubeVideos,
+                YoutubeScheduledEvents,
+                YoutubeLiveEvents,
                 UserLog.GuildRelationships,
             )
         }

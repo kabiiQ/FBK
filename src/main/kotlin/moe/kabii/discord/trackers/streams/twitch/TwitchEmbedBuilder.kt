@@ -2,7 +2,7 @@ package moe.kabii.discord.trackers.streams.twitch
 
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.StreamSettings
-import moe.kabii.data.relational.streams.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext

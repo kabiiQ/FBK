@@ -1,5 +1,6 @@
-package moe.kabii.data.relational.streams
+package moe.kabii.data.relational.streams.twitch
 
+import moe.kabii.data.relational.streams.TrackedStreams
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

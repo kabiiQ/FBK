@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.select
 
 // representing a single livestream event on YT - with a video ID
 object DBYoutubeStreams {
-    object YoutubeStreams : IntIdTable() {
+    object YoutubeStreamsOld : IntIdTable() {
         // only one 'stream' per channel at a time - this can be unique constraint
         val streamChannel = reference("assoc_stream_channel_id", TrackedStreams.StreamChannels, ReferenceOption.CASCADE).uniqueIndex()
         val youtubeVideoId = varchar("youtube_id", 11)
@@ -25,22 +25,22 @@ object DBYoutubeStreams {
     }
 
     class YoutubeStream(id: EntityID<Int>) : IntEntity(id) {
-        var streamChannel by TrackedStreams.StreamChannel referencedOn YoutubeStreams.streamChannel
-        var youtubeVideoId by YoutubeStreams.youtubeVideoId
-        var lastTitle by YoutubeStreams.lastTitle
-        var lastThumbnail by YoutubeStreams.lastThumbnail
-        var lastChannelName by YoutubeStreams.lastChannelName
-        var lastAvatar by YoutubeStreams.lastAvatar
+        var streamChannel by TrackedStreams.StreamChannel referencedOn YoutubeStreamsOld.streamChannel
+        var youtubeVideoId by YoutubeStreamsOld.youtubeVideoId
+        var lastTitle by YoutubeStreamsOld.lastTitle
+        var lastThumbnail by YoutubeStreamsOld.lastThumbnail
+        var lastChannelName by YoutubeStreamsOld.lastChannelName
+        var lastAvatar by YoutubeStreamsOld.lastAvatar
 
-        var peakViewers by YoutubeStreams.peakViewers
-        var uptimeTicks by YoutubeStreams.uptimeTicks
-        var averageViewers by YoutubeStreams.averageViewers
+        var peakViewers by YoutubeStreamsOld.peakViewers
+        var uptimeTicks by YoutubeStreamsOld.uptimeTicks
+        var averageViewers by YoutubeStreamsOld.averageViewers
 
-        companion object : IntEntityClass<YoutubeStream>(YoutubeStreams) {
+        companion object : IntEntityClass<YoutubeStream>(YoutubeStreamsOld) {
 
             fun findStream(channelId: String): SizedIterable<YoutubeStream> {
                 return YoutubeStream.wrapRows(
-                    YoutubeStreams
+                    YoutubeStreamsOld
                         .innerJoin(TrackedStreams.StreamChannels)
                         .select {
                             TrackedStreams.StreamChannels.siteChannelID eq channelId

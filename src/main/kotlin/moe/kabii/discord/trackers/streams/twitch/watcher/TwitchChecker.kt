@@ -9,7 +9,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
-import moe.kabii.data.relational.streams.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.streams.StreamErr
