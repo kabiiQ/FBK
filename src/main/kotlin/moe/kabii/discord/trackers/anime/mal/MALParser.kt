@@ -24,8 +24,6 @@ object MALParser : MediaListParser() {
         do {
             val animeRequest = "http://127.0.0.1:8000/v3/user/$id/animelist/all/$page"
             val responseBody = requestMediaList(animeRequest) { response ->
-                LOG.trace("MAL RESPONSE: $response")
-                LOG.trace(response.message)
                 return@requestMediaList if (!response.isSuccessful) {
                     when (response.code) {
                         400 -> throw MediaListDeletedException("MAL: response code 400 for list '$id'") // currently 400 bad request from MAL means list does not exist
