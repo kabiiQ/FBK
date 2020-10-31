@@ -163,7 +163,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             }.awaitSingle()
 
                             // edit channel name if feature is enabled and stream ended
-                            checkAndRenameChannel(discordMessage.channel.awaitSingle())
+                            checkAndRenameChannel(discordMessage.channel.awaitSingle(), endingStream = notif)
                         }
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
