@@ -84,6 +84,7 @@ data class ChannelMark(
     val mark: String
 )
 
+// unfortunately, our other db objects are not directly serializable
 data class MongoStreamChannel(
     val site: TrackedStreams.DBSite,
     val identifier: String
@@ -93,8 +94,6 @@ data class MongoStreamChannel(
         fun of(stream: TrackedStreams.StreamChannel) = MongoStreamChannel(stream.site, stream.siteChannelID)
     }
 }
-
-// unfortunately, our other db objects are not directly serializable
 
 data class AnimeSettings(
     var postNewItem: Boolean = true,
