@@ -76,11 +76,14 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
 
+    // youtube xml parsing
+    implementation("org.dom4j:dom4j:2.1.3")
+
     // emote parsing
     implementation("com.kcthota:emoji4j:6.0")
 
     // thumbnail file server
-    val ktor = "1.4.0"
+    val ktor = "1.4.1"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
 

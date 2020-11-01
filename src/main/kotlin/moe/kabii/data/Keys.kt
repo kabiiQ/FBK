@@ -21,6 +21,9 @@ object Keys : ConfigSpec("") {
     object Youtube : ConfigSpec() {
         val key by required<String>("api_key")
         val name by required<String>("app_name")
+        val callbackAddress by required<String>("callback_address")
+        val callbackPort by required<Int>("callback_port")
+        val signingKey by required<String>("signing_key")
     }
     object Postgres : ConfigSpec() {
         val connectionString by required<String>("connection_string")
@@ -43,6 +46,7 @@ object Keys : ConfigSpec("") {
     object Netty : ConfigSpec() {
         val port by required<Int>()
         val host by required<Boolean>()
+        val domain by required<String>()
     }
     object Admin : ConfigSpec() {
         val users by required<List<Long>>("admin_user")

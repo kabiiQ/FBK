@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.jodatime.datetime
 
 object YoutubeScheduledEvents : LongIdTable() {
-    val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE)
+    val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE).uniqueIndex()
     val scheduledStart = datetime("scheduled_start_time")
     val dataExpiration = datetime("data_expiration_time")
 }

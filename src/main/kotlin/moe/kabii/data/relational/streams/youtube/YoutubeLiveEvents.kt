@@ -7,9 +7,10 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 
 object YoutubeLiveEvents : LongIdTable() {
-    val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE)
+    val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE).uniqueIndex()
     val lastTitle = text("last_title")
     val lastThumbnail = text("thumbnail_url")
+    val lastChannelName = text("channel_name")
 
     val peakViewers = integer("peak_viewers")
     val uptimeTicks = integer("uptime_ticks")
@@ -20,6 +21,7 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
     var ytVideo by YoutubeVideo referencedOn YoutubeLiveEvents.ytVideo
     var lastTitle by YoutubeLiveEvents.lastTitle
     var lastThumbnail by YoutubeLiveEvents.lastThumbnail
+    var lastChannelName by YoutubeLiveEvents.lastChannelName
 
     var peakViewers by YoutubeLiveEvents.peakViewers
     var uptimeTicks by YoutubeLiveEvents.uptimeTicks

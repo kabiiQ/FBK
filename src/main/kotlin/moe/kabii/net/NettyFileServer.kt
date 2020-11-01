@@ -20,9 +20,10 @@ import java.time.Instant
 import javax.imageio.ImageIO
 
 object NettyFileServer {
+    private val address = Keys.config[Keys.Netty.domain]
     private val port = Keys.config[Keys.Netty.port]
 
-    val domain = "http://content.kabii.moe:$port"
+    val domain = "$address:$port"
     val staticRoot = File("files/images/")
     val idRoot = File("files/ids/")
 

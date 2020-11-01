@@ -5,7 +5,9 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -25,28 +27,38 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
-    suspend fun untrackStaleEntity(channel: TrackedStreams.StreamChannel): Boolean {
-        return newSuspendedTransaction {
-            val targets = channel.targets
+    @WithinExposedContext
+    private suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target> {
+        val targets = channel.targets
+        return if(!targets.empty()) {
+            channel.targets
                 .filter { target ->
+                    // untrack target if channel deleted
+                    if(target.discordChannel.guild != null) {
+                        val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
+                            .getChannelById(target.discordChannel.channelID.snowflake)
+                            .awaitFirstOrNull()
+                        if(disChan == null) {
+                            LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                            target.delete()
+                            false
+                        } else true
+                    } else true
+                }
+                .filter { target ->
+                    // ignore, but do not untrack targets with feature disabled
                     val discordTarget = target.discordChannel
 
-                    // make sure targets are still enabled in channel
                     val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                    val enabled = GuildConfigurations.getOrCreateGuild(guildId)
+                    GuildConfigurations.getOrCreateGuild(guildId)
                         .options.featureChannels[discordTarget.channelID]?.twitchChannel == true
-                    if(!enabled) {
-                        target.delete()
-                        LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} as the 'streams' feature has been disabled in '${discordTarget.channelID}'.")
-                    }
-                    enabled
                 }
-
-            if(targets.isEmpty()) {
-                channel.delete()
-                LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
-                true
-            } else false
+        } else {
+            // delete streamchannels with no assocaiated targets
+            // this will also work later if we have a function to remove targets that are disabled
+            channel.delete()
+            LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
+            emptyList()
         }
     }
 

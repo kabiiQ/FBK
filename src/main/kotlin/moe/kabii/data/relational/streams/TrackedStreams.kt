@@ -36,7 +36,20 @@ object TrackedStreams {
         val notifications by Notification referrersOn Notifications.channelID
         val mentionRoles by Mention referrersOn Mentions.streamChannel
 
-        companion object : IntEntityClass<StreamChannel>(StreamChannels)
+        companion object : IntEntityClass<StreamChannel>(StreamChannels) {
+
+            fun getChannel(site: DBSite, channelId: String): StreamChannel? = find {
+                StreamChannels.site eq site and
+                        (StreamChannels.siteChannelID eq channelId)
+            }.firstOrNull()
+
+            fun getOrInsert(site: DBSite, channelId: String): StreamChannel {
+                return getChannel(site, channelId) ?: new {
+                    this.site = site
+                    this.siteChannelID = channelId
+                }
+            }
+        }
     }
 
     object Targets : IntIdTable() {

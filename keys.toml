@@ -8,6 +8,9 @@ token = ''
 [youtube]
 api_key = ''
 app_name = ''
+callback_address = 'http://public_path_to_server'
+callback_port = 8001
+signing_key = 'any_secret_string'
 
 [postgres]
 connection_string = 'jdbc:postgresql://127.0.0.1/database?user=username&password=password'
@@ -23,6 +26,7 @@ bot_db = 'kizunaai'
 [netty]
 port = 8000
 host = true
+domain = 'http://public_path_to_server'
 
 [twitch]
 client_id = ''

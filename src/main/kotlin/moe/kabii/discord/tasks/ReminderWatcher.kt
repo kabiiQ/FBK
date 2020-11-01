@@ -39,20 +39,22 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
             try {
-                val window = DateTime.now().plus(updateInterval)
-                val reminders = transaction { Reminder.find { Reminders.remind lessEq window }.toList() }
+                newSuspendedTransaction {
+                    val window = DateTime.now().plus(updateInterval)
+                    val reminders = Reminder.find { Reminders.remind lessEq window }.toList()
 
-                // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
-                val job = SupervisorJob()
-                val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
+                    // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
+                    val job = SupervisorJob()
+                    val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
 
-                reminders.map { reminder ->
-                    discordScope.launch {
-                        newSuspendedTransaction {
-                            scheduleReminder(reminder)
+                    reminders.map { reminder ->
+                        discordScope.launch {
+                            newSuspendedTransaction {
+                                scheduleReminder(reminder)
+                            }
                         }
-                    }
-                }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
+                    }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
+                }
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
                 LOG.debug(e.stackTraceString)
