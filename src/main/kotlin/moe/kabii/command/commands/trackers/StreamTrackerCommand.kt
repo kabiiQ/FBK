@@ -30,7 +30,7 @@ object StreamTrackerCommand {
         if(origin.guild != null) {
             val config = GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong())
             val features = config.options.featureChannels[origin.chan.id.asLong()]
-            if(features == null || !features.twitchChannel) throw FeatureDisabledException("streams", origin)
+            if(features == null || !features.isStreamChannel()) throw FeatureDisabledException("streams", origin)
         } // else this is PM, allow
 
         // validate stream is real and get service ID

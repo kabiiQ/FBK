@@ -62,7 +62,7 @@ object TwitchTarget : StreamingTarget(
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
-    FeatureChannel::twitchChannel,
+    FeatureChannel::youtubeChannel,
     listOf(
         Regex("([a-zA-Z0-9-_]{24})"),
         Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})")

@@ -2,6 +2,7 @@ package moe.kabii.data.mongodb.guilds
 
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.*
+import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 
@@ -13,6 +14,7 @@ data class OptionalFeatures(
 data class FeatureChannel(
     val channelID: Long,
     var twitchChannel: Boolean = false,
+    var youtubeChannel: Boolean = false,
     var animeChannel: Boolean = false,
     var logChannel: Boolean = false,
     var musicChannel: Boolean = false,
@@ -21,9 +23,12 @@ data class FeatureChannel(
     var defaultTracker: TrackerTarget? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
+    val youtubeSettings: YoutubeSettings = YoutubeSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
-    fun anyEnabled() = booleanArrayOf(twitchChannel, animeChannel, logChannel).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(twitchChannel, youtubeChannel, animeChannel, logChannel).any(true::equals)
+
+    fun isStreamChannel() = booleanArrayOf(twitchChannel, youtubeChannel).any(true::equals)
 
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
@@ -33,6 +38,7 @@ data class FeatureChannel(
         // twitch first, so if multiple are enabled, twitch will be the default
         return when {
             twitchChannel && type.isSuperclassOf(TwitchTarget::class) -> TwitchTarget
+            youtubeChannel && type.isSuperclassOf(YoutubeTarget::class) -> YoutubeTarget
             animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             else -> null
         }
@@ -55,19 +61,23 @@ data class StreamSettings(
     var viewers: Boolean = true,
     var endTitle: Boolean = true,
     var endGame: Boolean = true,
-    var renameChannel: RenameFeature? = null
+
+    var renameChannel: Boolean = false,
+    var notLive: String = "no-streams-live",
+    var livePrefix: String = "\uD83D\uDD34-live-",
+    var liveSuffix: String = "",
+    val marks: MutableList<ChannelMark> = mutableListOf()
 )
 
-data class RenameFeature(
-    // notLive is required - set to channel name when feature is enabled as the default value
-    var notLive: String,
-    var enabled: Boolean = true // used to suspend the rename behavior without losing saved marks
-) {
-    var livePrefix: String = "\uD83D\uDD34-live-"
-    var liveSuffix: String = ""
+data class YoutubeSettings(
+    var liveStreams: Boolean = true,
+    var uploads: Boolean = true,
+    var upcomingSummary: Duration? = null,
+    var upcomingNotice: Duration? = null,
+    var streamCreation: Boolean = false,
 
-    val marks: MutableList<ChannelMark> = mutableListOf()
-}
+    var upcomingChannel: Long? = null
+)
 
 data class ChannelMark(
     val channel: MongoStreamChannel,

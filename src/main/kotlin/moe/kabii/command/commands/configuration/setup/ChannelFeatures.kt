@@ -15,7 +15,8 @@ object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
         BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeChannel),
-        BooleanElement("Livestream tracking", listOf("stream", "streams", "twitch"), FeatureChannel::twitchChannel),
+        BooleanElement("Twitch stream tracking", listOf("twitch"), FeatureChannel::twitchChannel),
+        BooleanElement("YouTube channel tracking", listOf("youtube"), FeatureChannel::youtubeChannel),
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),
@@ -87,6 +88,7 @@ object ChannelFeatures : CommandContainer {
                         val codes = StringBuilder()
                         with(features) {
                             if(twitchChannel) codes.append("Twitch Stream Tracker (twitch)\n")
+                            if(youtubeChannel) codes.append("YouTube Channel Tracker (youtube)\n")
                             if(animeChannel) codes.append("Anime List Tracker (anime)\n")
                             if(logChannel) codes.append("Event Log Channel (log)")
                         }

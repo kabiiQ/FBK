@@ -28,7 +28,7 @@ import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     @WithinExposedContext
-    private suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target> {
+    private suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val targets = channel.targets
         return if(!targets.empty()) {
             channel.targets
@@ -50,8 +50,9 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                     val discordTarget = target.discordChannel
 
                     val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                    GuildConfigurations.getOrCreateGuild(guildId)
-                        .options.featureChannels[discordTarget.channelID]?.twitchChannel == true
+                    val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
+                        .options.featureChannels[discordTarget.channelID] ?: return@filter false // if no features, can not be enabled
+                    target.streamChannel.site.targetType.channelFeature.get(featureChannel)
                 }
         } else {
             // delete streamchannels with no assocaiated targets
@@ -93,8 +94,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
         val features = config.options.featureChannels.getValue(guildChan.id.asLong())
 
-        val feature = features.streamSettings.renameChannel
-        if(feature?.enabled != true) return // feature not enabled in channel
+        val feature = features.streamSettings
+        if(!feature.renameChannel) return // feature not enabled in channel
 
         // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
         val live = TrackedStreams.Notification.wrapRows(
@@ -141,12 +142,12 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             if(ce.status.code() == 403) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **rename disable** to turn off the channel renaming feature.")
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamconfig rename disable** to turn off the channel renaming feature.")
                 }.awaitSingle()
             } else if(ce.status.code() == 400) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **rename disable** command to turn off this feature.")
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamconfig rename disable** command to turn off this feature.")
                 }.awaitSingle()
             } else throw ce
         }
