@@ -38,6 +38,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
                     }.filter { streamChannel ->
+
                         // untrack stream and do not do any further work if it has no discord targets
                         !untrackStaleEntity(streamChannel)
                     }
@@ -215,17 +216,9 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
                 if (existing == null) { // post a new stream notification
                     // get target channel in discord, make sure it still exists
-                    val chan = try {
-                        discord.getChannelById(target.discordChannel.channelID.snowflake)
-                            .ofType(MessageChannel::class.java)
-                            .awaitSingle()
-                    } catch (ce: ClientException) {
-                        if (ce.status.code() == 404) {
-                            // channel no longer exists, untrack
-                            target.delete()
-                            return@forEach
-                        } else throw ce
-                    }
+                    val chan = discord.getChannelById(target.discordChannel.channelID.snowflake)
+                        .ofType(MessageChannel::class.java)
+                        .awaitSingle()
                     // get mention role from db
                     val mentionRole = if (guildID != null) {
                         getMentionRoleFor(target.streamChannel, guildID, chan)
@@ -239,10 +232,10 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         }.awaitSingle()
                     } catch (ce: ClientException) {
                         val err = ce.status.code()
-                        if (err == 404 || err == 403) {
-                            // notification channel has been deleted or we don't have perms to send. untrack this target :/
-                            LOG.info("Unable to send stream notification to channel '${chan.id.asString()}'. Untracking target :: $target")
-                            target.delete()
+                        if (err == 403) {
+                            // we don't have perms to send
+                            // todo disable feature in this channel
+                            LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. TwitchChecker.java")
                             return@forEach
                         } else throw ce
                     }

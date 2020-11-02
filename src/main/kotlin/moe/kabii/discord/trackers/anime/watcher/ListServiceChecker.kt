@@ -4,9 +4,11 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -15,6 +17,7 @@ import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
@@ -43,11 +46,11 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
 
                             compareAndUpdate(trackedList, newList)
 
-                        } catch(delete: MediaListDeletedException) {
+                        } catch (delete: MediaListDeletedException) {
                             LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
                             trackedList.delete()
                             return@forEach
-                        } catch(e: Exception) {
+                        } catch (e: Exception) {
                             LOG.warn("Exception parsing media item: ${trackedList.siteListId} :: ${e.message}")
                             LOG.trace(e.stackTraceString)
                             return@forEach
@@ -57,7 +60,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                         delay(3500L)
                     }
                 }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 // catch-all, we don't wan this thread to end
                 LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -80,7 +83,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
         var statusChange = false
         var statusUpdate = false
 
-        for(newMedia in newList) {
+        for (newMedia in newList) {
             // find same entry on old list (may not be present if it is a new addition to list)
             val oldMedia = oldList.find { oldItem ->
                 oldItem.mediaId == newMedia.mediaID && oldItem.type == newMedia.type
@@ -184,14 +187,13 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                             updateMessage.awaitSingle()
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
-                            if (err == 404 || err == 403) {
-                                // remove target if no longer valid
-                                LOG.info("Unable to send MediaList update to channel '$channelId'. Configuration target will be removed")
+                            if (err == 403) {
+                                // todo should disable feature if permission denied
+                                LOG.warn("Unable to send MediaList update to channel '$channelId' Should disable feature. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
-                                target.delete()
                             } else throw ce
                         }
-                    } catch(e: Exception) {
+                    } catch (e: Exception) {
                         LOG.info("Error updating anime list target: $target :: ${e.message}")
                         LOG.debug(e.stackTraceString)
                     }
@@ -206,26 +208,37 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
         }
     }
 
-    private fun untrackStaleList(list: TrackedMediaLists.MediaList): Boolean {
-        val targets = list.targets
+    @WithinExposedContext
+    private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
+        val existingTargets = list.targets
             .filter { target ->
-                val discordTarget = target.discord
-
-                // make sure target is enabled in discord channel
-                val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                val enabled = GuildConfigurations.getOrCreateGuild(guildId)
-                    .options.featureChannels[discordTarget.channelID]?.animeChannel == true
-                if(!enabled) {
-                    target.delete()
-                    LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} as the 'anime' feature has been disabled in '${discordTarget.channelID}'.")
+                // untrack target if discord channel is deleted
+                if (target.discord.guild != null) {
+                    val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
+                        .getChannelById(target.discord.channelID.snowflake)
+                        .awaitFirstOrNull()
+                    if (disChan == null) {
+                        LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
+                        target.delete()
+                        return@filter false
+                    }
                 }
-                enabled
+                true
             }
-
-        return if(targets.isEmpty()) {
+        return if (existingTargets.isNotEmpty()) {
+            existingTargets.filter { target ->
+                // ignore, but do not untrack targets with feature disabled
+                val guildId = target.discord.guild?.guildID ?: return@filter true // PM do not have channel features
+                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
+                    .options.featureChannels[target.discord.channelID]
+                    ?: return@filter false // if no features, can not be enabled
+                target.mediaList.site.targetType.channelFeature.get(featureChannel)
+            }
+        } else {
+            // delete media list if it has no targets at all
             list.delete()
-            LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} as it has no active targets.")
-            true
-        } else false
+            LOG.info("Untracking ${list.site.targetType.full} list: ${list.siteListId} as it has no targets.")
+            null
+        }
     }
 }

@@ -34,14 +34,8 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
         val chan = try {
             discord.getChannelById(target.discordChannel.channelID.snowflake).ofType(MessageChannel::class.java).awaitSingle()
         } catch(e: Exception) {
-            if(e is ClientException && e.status.code() == 404) {
-                // channel no longer exists, untrack
-                target.delete()
-                return null
-            } else {
-                LOG.warn("${Thread.currentThread().name} - YoutubeWatcher :: Unable to get Discord channel: ${e.message}")
-                throw e
-            }
+            LOG.warn("${Thread.currentThread().name} - YoutubeWatcher :: Unable to get Discord channel: ${e.message}")
+            throw e
         }
 
         // get channel stream embed settings
@@ -94,10 +88,9 @@ abstract class YoutubeWatcher(discord: GatewayDiscordClient) : StreamWatcher(dis
 
         } catch (ce: ClientException) {
             val err = ce.status.code()
-            if(err == 404 || err == 403) {
-                // notification has been deleted or we don't have perms to send. untrack to avoid further errors
-                LOG.info("Unable to send stream notification to channel '${chan.id.asString()}'. Untracking target :: $target")
-                target.delete()
+            if(err == 403) {
+                // todo disable feature in this channel
+                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeWatcher.java")
                 return null
             } else throw ce
         }

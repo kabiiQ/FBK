@@ -29,37 +29,37 @@ import reactor.kotlin.core.publisher.toMono
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     @WithinExposedContext
     private suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
-        val targets = channel.targets
-        return if(!targets.empty()) {
-            channel.targets
-                .filter { target ->
-                    // untrack target if channel deleted
-                    if(target.discordChannel.guild != null) {
-                        val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
-                            .getChannelById(target.discordChannel.channelID.snowflake)
-                            .awaitFirstOrNull()
-                        if(disChan == null) {
-                            LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                            target.delete()
-                            false
-                        } else true
-                    } else true
+        val existingTargets = channel.targets
+            .filter { target ->
+                // untrack target if channel deleted
+                if(target.discordChannel.guild != null) {
+                    val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
+                        .getChannelById(target.discordChannel.channelID.snowflake)
+                        .awaitFirstOrNull()
+                    if(disChan == null) {
+                        LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                        target.delete()
+                        return@filter false
+                    }
                 }
-                .filter { target ->
-                    // ignore, but do not untrack targets with feature disabled
-                    val discordTarget = target.discordChannel
+                true
+            }
+        return if(existingTargets.isNotEmpty()) {
+            existingTargets.filter { target ->
+                // ignore, but do not untrack targets with feature disabled
+                val discordTarget = target.discordChannel
 
-                    val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                    val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
-                        .options.featureChannels[discordTarget.channelID] ?: return@filter false // if no features, can not be enabled
-                    target.streamChannel.site.targetType.channelFeature.get(featureChannel)
-                }
+                val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
+                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
+                    .options.featureChannels[discordTarget.channelID] ?: return@filter false // if no features, can not be enabled
+                target.streamChannel.site.targetType.channelFeature.get(featureChannel)
+            }
         } else {
             // delete streamchannels with no assocaiated targets
-            // this will also work later if we have a function to remove targets that are disabled
+            // this will also work later and untrack if we have a function to remove targets that are disabled
             channel.delete()
             LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
-            emptyList()
+            null
         }
     }
 
