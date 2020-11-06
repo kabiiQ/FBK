@@ -16,26 +16,28 @@ class YoutubeFeedSubscriber {
         UNSUBSCRIBE("unsubscribe")
     }
 
-    fun subscribe(channelId: String) = request(channelId, Mode.SUBSCRIBE)
+    fun subscribe(channelId: String, call: Boolean) = request(channelId, Mode.SUBSCRIBE, call)
 
-    fun unsubscribe(channelId: String) = request(channelId, Mode.UNSUBSCRIBE)
+    fun unsubscribe(channelId: String, call: Boolean) = request(channelId, Mode.UNSUBSCRIBE, call)
 
-    private fun request(channelId: String,  mode: Mode): String {
+    private fun request(channelId: String,  mode: Mode, call: Boolean): String {
         val topic = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=$channelId"
 
-        val body = FormBody.Builder()
-            .add("hub.mode", mode.str)
-            .add("hub.topic", topic)
-            .add("hub.callback", "$callbackAddress:$callbackPort?channel=$channelId")
-            .add("hub.secret", signingKey)
-            .build()
+        if(call) {
+            val body = FormBody.Builder()
+                .add("hub.mode", mode.str)
+                .add("hub.topic", topic)
+                .add("hub.callback", "$callbackAddress:$callbackPort?channel=$channelId")
+                .add("hub.secret", signingKey)
+                .build()
 
-        val request = Request.Builder()
-            .url("https://pubsubhubbub.appspot.com")
-            .post(body)
-            .build()
+            val request = Request.Builder()
+                .url("https://pubsubhubbub.appspot.com")
+                .post(body)
+                .build()
 
-        OkHTTP.newCall(request).execute()
+            OkHTTP.newCall(request).execute()
+        }
         return topic
     }
 }

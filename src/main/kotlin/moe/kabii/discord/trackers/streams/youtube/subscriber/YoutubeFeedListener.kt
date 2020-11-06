@@ -73,7 +73,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 // always return 2xx code per hubbub spec to avoid re-sending
                 call.response.status(HttpStatusCode.OK)
 
-                val channelId = call.request.queryParameters["channel"]
+                call.request.queryParameters["channel"]
                     .also { LOG.trace("POST channel: $it") }
                     ?: return@post
 
