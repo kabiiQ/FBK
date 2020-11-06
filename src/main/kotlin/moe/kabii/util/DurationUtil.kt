@@ -91,31 +91,54 @@ class DurationFormatter(val duration: Duration) {
     get() = "$hours:${leading(minutesPart)}"
 
     val fullTime: String
-        get() {
-            fun plural(value: Long) = if(value != 1L) "s" else ""
-            val output = StringBuilder()
-            if(days > 0L) {
-                output.append(days)
-                    .append(" day")
-                    .append(plural(days))
-                    .append(", ")
-            }
-            if(hours > 0L) {
-                output.append(hoursPart)
-                    .append(" hour")
-                    .append(plural(hoursPart))
-                    .append(", ")
-            }
-            // always include either minutes or seconds
-            if(minutes > 0L) {
-                output.append(minutesPart)
-                    .append(" minute")
-                    .append(plural(minutesPart))
-            } else {
-                output.append(secondsPart)
-                    .append(" second")
-                    .append(plural(secondsPart))
-            }
-            return output.toString()
+    get() {
+        fun plural(value: Long) = if(value != 1L) "s" else ""
+        val output = StringBuilder()
+        if(days > 0L) {
+            output.append(days)
+                .append(" day")
+                .append(plural(days))
+                .append(", ")
         }
+        if(hours > 0L) {
+            output.append(hoursPart)
+                .append(" hour")
+                .append(plural(hoursPart))
+                .append(", ")
+        }
+        // always include either minutes or seconds (even if minutesPart = 0. this is a style choice)
+        if(minutes > 0L) {
+            output.append(minutesPart)
+                .append(" minute")
+                .append(plural(minutesPart))
+        } else {
+            output.append(secondsPart)
+                .append(" second")
+                .append(plural(secondsPart))
+        }
+        return output.toString()
+    }
+
+    val inputTime: String
+    get() {
+        // output in 'input' style - i.e. 1w2d3h
+        val output = StringBuilder()
+        if(days > 0L) {
+            output.append(days)
+                .append("d")
+        }
+        if(hoursPart > 0L) {
+            output.append(hoursPart)
+                .append("h")
+        }
+        if(minutesPart > 0L) {
+            output.append(minutesPart)
+                .append("m")
+        }
+        if(secondsPart > 0L) {
+            output.append(secondsPart)
+                .append("s")
+        }
+        return output.toString().ifEmpty { "0s" }
+    }
 }
