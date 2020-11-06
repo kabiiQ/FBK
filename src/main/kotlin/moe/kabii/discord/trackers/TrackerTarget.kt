@@ -91,10 +91,9 @@ object YoutubeTarget : StreamingTarget(
 // anime targets
 sealed class AnimeTarget(
     full: String,
-    channelFeature: KProperty1<FeatureChannel, Boolean>,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, channelFeature, url, *alias) {
+) : TrackerTarget(full, FeatureChannel::animeChannel, url, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: ListSite
@@ -102,7 +101,6 @@ sealed class AnimeTarget(
 
 object MALTarget : AnimeTarget(
     "MyAnimeList",
-    FeatureChannel::animeChannel,
     listOf(
         Regex("myanimelist.net/(animelist|mangalist|profile)/[a-zA-Z0-9_]{2,16}")
     ),
@@ -114,7 +112,6 @@ object MALTarget : AnimeTarget(
 
 object KitsuTarget : AnimeTarget(
     "Kitsu",
-    FeatureChannel::animeChannel,
     listOf(
         Regex("kitsu.io/users/[a-zA-Z0-9_]{3,20}")
     ),

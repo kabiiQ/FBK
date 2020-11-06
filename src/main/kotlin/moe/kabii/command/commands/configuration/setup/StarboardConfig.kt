@@ -17,11 +17,10 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
 
     object StarboardModule : ConfigurationModule<StarboardSetup>(
         "starboard",
-        LongElement("Starboard channel ID",
-            listOf("channel", "channelid", "id"),
+        ViewElement("Starboard channel ID",
+            listOf("channel", "channelID", "ID"),
             StarboardSetup::channel,
-            range = 70000000000000000L..1000000000000000000L,
-            prompt = "Manually specify the channel ID for this server's starboard. To more easily set the starboard to the current channel, use the **starboard set** command instead."
+            redirection = "To set the starboard channel, use the **starboard set** command in the desired channel."
         ),
         LongElement("Stars required for a message to be put on the starboard",
             listOf("stars", "min", "starsToAdd", "starsAdd", "minstars", "addstars", "minimumstars"),

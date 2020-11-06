@@ -163,7 +163,6 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                 }
                 else -> { // other args, including null, are valid for configurator run
 
-
                     val configurator = Configurator(
                         "Livestream tracker settings for #${guildChan.name}",
                         StreamTrackerModule,

@@ -4,6 +4,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.EmbedBlock
+import moe.kabii.util.DurationFormatter
+import moe.kabii.util.DurationParser
+import java.time.Duration
 import kotlin.reflect.KMutableProperty1
 
 sealed class ConfigurationElement<T>(val fullName: String, val aliases: List<String>)
@@ -37,14 +40,39 @@ class LongElement<T>(
     val prompt: String
 ) : ConfigurationElement<T>(fullName, aliases)
 
+class DurationElement<T>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, Duration?>,
+    val prompt: String,
+    val default: Duration?
+) : ConfigurationElement<T>(fullName, aliases)
+
+class ViewElement<T, ANY : Any?>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, ANY>,
+    val redirection: String,
+) : ConfigurationElement<T>(fullName, aliases)
+
 open class ConfigurationModule<T>(val name: String, vararg val elements: ConfigurationElement<T>)
 
 class Configurator<T>(private val name: String, private val module: ConfigurationModule<T>, private val instance: T) {
+    companion object {
+        const val embedTimeout = 120_000L
+    }
+
     fun getValue(element: ConfigurationElement<T>) = when(element) {
         is StringElement -> element.prop.get(instance)
         is BooleanElement -> if(element.prop.get(instance)) "enabled" else "disabled"
         is DoubleElement -> element.prop.get(instance).toString()
         is LongElement -> element.prop.get(instance).toString()
+        is DurationElement -> {
+            val duration = element.prop.get(instance)
+            if(duration != null) DurationFormatter(duration).inputTime
+            else "disabled"
+        }
+        is ViewElement<T, *> -> element.prop.get(instance).toString()
     }
     private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.aliases.first()})**"
 
@@ -88,7 +116,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
             val menu = origin.embedBlock(configEmbed).awaitSingle()
             while(true) {
-                val inputStr = origin.getString(timeout = 120000L) ?: break
+                val inputStr = origin.getString(timeout = embedTimeout) ?: break
                 val input = inputStr.toIntOrNull() ?: continue
                 if(input !in 1..module.elements.size) break
                 when(val element = module.elements[input-1]) {
@@ -108,15 +136,25 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     }
                     is DoubleElement -> {
                         val prompt = origin.embed(element.prompt).awaitSingle()
-                        val response = origin.getDouble(element.range, timeout = 120000L)
+                        val response = origin.getDouble(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is LongElement -> {
                         val prompt = origin.embed(element.prompt).awaitSingle()
-                        val response = origin.getLong(element.range, timeout = 120000L)
+                        val response = origin.getLong(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
+                    }
+                    is DurationElement -> {
+                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val response = origin.getDuration(timeout = embedTimeout)
+                        if(response != null) element.prop.set(instance, response)
+                        prompt.delete().subscribe()
+                    }
+                    is ViewElement<*, *> -> {
+                        origin.error(element.redirection).awaitSingle()
+                        continue
                     }
                 }
                 menu.edit { message ->
@@ -172,13 +210,16 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     return true
                 }
                 "reset" -> {
-                    if(element !is StringElement)  {
-                        origin.error("The setting **$tag** is not a resettable custom string.").awaitSingle()
-                        return false
+                    when(element) {
+                        is StringElement -> element.prop.set(instance, element.default)
+                        is DurationElement -> element.prop.set(instance, element.default)
+                        else -> {
+                            origin.error("The setting **$tag** is not a resettable custom value.").awaitSingle()
+                            return false
+                        }
                     }
-                    val new = element.default
-                    element.prop.set(instance, new)
-                    updatedEmbed(element, new).subscribe()
+                    val value = getValue(element)
+                    updatedEmbed(element, value).subscribe()
                     return true
                 }
             }
@@ -236,6 +277,20 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 element.prop.set(instance, input)
                 updatedEmbed(element, input).subscribe()
                 return true
+            }
+            is DurationElement -> {
+                val input = origin.args.drop(1).joinToString(" ").run(DurationParser::tryParse)
+                if(input == null) {
+                    origin.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h").awaitSingle()
+                    return false
+                }
+                element.prop.set(instance, input)
+                updatedEmbed(element, input).subscribe()
+                return true
+            }
+            is ViewElement<*, *> -> {
+                origin.error(element.redirection).awaitSingle()
+                return false
             }
         }
     }

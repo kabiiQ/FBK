@@ -4,6 +4,8 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.structure.extensions.mod
+import moe.kabii.util.DurationParser
+import java.time.Duration
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
@@ -92,6 +94,14 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
                     }
                 }
             }
+            ResponseType.DURATION -> {
+                val duration = DurationParser.tryParse(message)
+                if(duration != null) {
+                    coroutine as CancellableContinuation<Duration>
+                    coroutine.resume(duration)
+                    cancel()
+                }
+            }
         }
     }
 
@@ -149,7 +159,7 @@ internal class BoolResponseCriteria(user: Long, channel: Long, message: Long?) :
 
 internal class PageResponseCriteria(user: Long, channel: Long, message: Long, val page: Page) : ResponseCriteria(user, channel, ResponseType.PAGE, message)
 
-enum class ResponseType { STR, LINE, BOOL, LONG, PAGE, DOUBLE }
+enum class ResponseType { STR, LINE, BOOL, LONG, PAGE, DOUBLE, DURATION }
 
 enum class Direction(val unicode: String, val identity: String) {
     LEFT("\u25C0", "back"),

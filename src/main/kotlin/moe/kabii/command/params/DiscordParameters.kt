@@ -28,6 +28,7 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryBlock
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Duration
 
 data class DiscordParameters (
     val handler: MessageHandler,
@@ -183,5 +184,11 @@ data class DiscordParameters (
             }.apply { create(reactOn, add) }
         }
         Conversation.register(responseCriteria, event.client, coroutine, reactionListener, 30000)
+    }
+
+    suspend fun getDuration(timeout: Long? = 40000) = suspendCancellableCoroutine<Duration?> {
+        val (user, channel) = Criteria defaultFor this
+        val responseCriteria = ResponseCriteria(user, channel, ResponseType.DURATION)
+        Conversation.register(responseCriteria, event.client, it, timeout = timeout)
     }
 }
