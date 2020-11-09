@@ -1,5 +1,6 @@
-package moe.kabii.discord.trackers.streams.youtube.subscriber
+package moe.kabii.discord.trackers.videos.youtube.subscriber
 
+import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import okhttp3.FormBody
@@ -35,6 +36,8 @@ class YoutubeFeedSubscriber {
                 .url("https://pubsubhubbub.appspot.com")
                 .post(body)
                 .build()
+
+            LOG.info("Requesting YT Feed: $request")
 
             OkHTTP.newCall(request).execute()
         }

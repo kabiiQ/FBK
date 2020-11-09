@@ -1,7 +1,6 @@
 package moe.kabii.discord.trackers.anime.mal
 
 import kotlinx.coroutines.delay
-import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err

@@ -11,7 +11,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake

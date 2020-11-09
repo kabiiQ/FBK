@@ -1,10 +1,11 @@
-package moe.kabii.discord.trackers.streams.youtube.subscriber
+package moe.kabii.discord.trackers.videos.youtube.subscriber
 
 import discord4j.core.GatewayDiscordClient
+import kotlinx.coroutines.delay
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.FeedSubscription
 import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
-import moe.kabii.discord.trackers.streams.StreamWatcher
+import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.structure.extensions.loop
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
@@ -13,7 +14,7 @@ import org.joda.time.Instant
 
 class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, StreamWatcher(discord) {
 
-    private val subscriber = YoutubeFeedSubscriber()
+    val subscriber = YoutubeFeedSubscriber()
     private val listener = YoutubeFeedListener(this)
 
     var currentSubscriptions = setOf<String>()
@@ -54,9 +55,10 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
                     }
                 }
                 // todo unsubscribe to entries in currentSubscriptions without active targets or at least ignore
-
             }
+
+            // no un-necessary calls are made here, we can run this on a fairly low interval
+            delay(30_000L)
         }
     }
-
 }

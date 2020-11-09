@@ -1,14 +1,14 @@
-package moe.kabii.discord.trackers.streams.youtube
+package moe.kabii.discord.trackers.videos.youtube
 
 import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.trackers.streams.StreamErr
-import moe.kabii.discord.trackers.streams.youtube.json.YoutubeChannelResponse
-import moe.kabii.discord.trackers.streams.youtube.json.YoutubeErrorResponse
-import moe.kabii.discord.trackers.streams.youtube.json.YoutubeVideoResponse
+import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.trackers.videos.youtube.json.YoutubeChannelResponse
+import moe.kabii.discord.trackers.videos.youtube.json.YoutubeErrorResponse
+import moe.kabii.discord.trackers.videos.youtube.json.YoutubeVideoResponse
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -86,11 +86,13 @@ object YoutubeParser {
                         description = match.snippet.description,
                         thumbnail = thumbnail.url,
                         live = match.snippet.live,
+                        upcoming = match.snippet.upcoming,
                         duration = match.contentDetails.duration,
                         liveInfo = YoutubeStreamInfo(
                             startTime = match.liveStreamingDetails.startTime,
                             concurrent = match.liveStreamingDetails.concurrentViewers,
-                            endTime = match.liveStreamingDetails.endTime
+                            endTime = match.liveStreamingDetails.endTime,
+                            scheduledStart = match.liveStreamingDetails.scheduledStartTime
                         ),
                         channel = YoutubeChannelInfo(
                             id = match.snippet.channelId,

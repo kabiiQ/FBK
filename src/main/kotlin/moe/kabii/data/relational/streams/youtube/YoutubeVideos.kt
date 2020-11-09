@@ -6,23 +6,26 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.jodatime.datetime
 
 object YoutubeVideos : LongIdTable() {
     val videoId = char("video_id", 11).uniqueIndex()
     val ytChannel = reference("yt_channel", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
     val lastAPICall = datetime("last_api_call").nullable()
+    val lastTitle = text("last_title").nullable()
     val liveEvent = reference("live_event", YoutubeLiveEvents, ReferenceOption.SET_NULL).nullable()
     val scheduledEvent = reference("scheduled_event", YoutubeScheduledEvents, ReferenceOption.SET_NULL).nullable()
+    val creationNotified = bool("creation_notified")
 }
 
 class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     var videoId by YoutubeVideos.videoId
     var ytChannel by TrackedStreams.StreamChannel referencedOn YoutubeVideos.ytChannel
     var lastAPICall by YoutubeVideos.lastAPICall
+    var lastTitle by YoutubeVideos.lastTitle
     var liveEvent by YoutubeLiveEvent optionalReferencedOn YoutubeVideos.liveEvent
     var scheduledEvent by YoutubeScheduledEvent optionalReferencedOn YoutubeVideos.scheduledEvent
+    var creationNotified by YoutubeVideos.creationNotified
 
     companion object : LongEntityClass<YoutubeVideo>(YoutubeVideos) {
         fun getVideo(videoId: String): YoutubeVideo? = find {
@@ -38,6 +41,7 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
                 this.lastAPICall = null
                 this.liveEvent = null
                 this.scheduledEvent = null
+                this.creationNotified = false
             }
         }
     }

@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.twitch
+package moe.kabii.discord.trackers.videos.twitch
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.net.NettyFileServer

@@ -13,7 +13,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.BasicStreamChannel
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.streams.StreamErr
+import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

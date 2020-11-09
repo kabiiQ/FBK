@@ -35,16 +35,17 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                     // get all tracked lists for this site
                     val lists = TrackedMediaLists.MediaList.find {
                         TrackedMediaLists.MediaLists.site eq site
-                    }.filter { mediaList ->
-                        !untrackStaleList(mediaList)
                     }
 
                     // work on single thread to call api - heavy rate limits
                     lists.forEach { trackedList ->
                         try {
+                            val filteredTargets = getActiveTargets(trackedList)
+                            if(filteredTargets == null) return@forEach // list has been untracked entirely
+
                             val newList = trackedList.downloadCurrentList()!!
 
-                            compareAndUpdate(trackedList, newList)
+                            compareAndUpdate(trackedList, newList, filteredTargets)
 
                         } catch (delete: MediaListDeletedException) {
                             LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
@@ -72,7 +73,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
         }
     }
 
-    private suspend fun compareAndUpdate(trackedList: TrackedMediaLists.MediaList, newMediaList: MediaList) {
+    private suspend fun compareAndUpdate(trackedList: TrackedMediaLists.MediaList, newMediaList: MediaList, filteredTargets: List<TrackedMediaLists.ListTarget>) {
 
         val oldList = trackedList.extractMedia()
         val newList = newMediaList.media
@@ -142,7 +143,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                 }
             }
             if (builder != null) {
-                trackedList.targets.forEach { target ->
+                filteredTargets.forEach { target ->
                     try {
                         // send embed to all channels this user's mal is tracked in
                         val userId = target.userTracked.userID

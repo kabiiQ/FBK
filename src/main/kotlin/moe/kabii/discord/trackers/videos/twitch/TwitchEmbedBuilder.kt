@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.twitch
+package moe.kabii.discord.trackers.videos.twitch
 
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.StreamSettings

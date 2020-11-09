@@ -9,7 +9,7 @@ import io.ktor.server.netty.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.TwitchParser
 import moe.kabii.util.RGB
 import okhttp3.Request
 import java.awt.Color

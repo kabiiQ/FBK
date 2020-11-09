@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.twitch.watcher
+package moe.kabii.discord.trackers.videos.twitch.watcher
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -9,14 +9,14 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.streams.StreamErr
-import moe.kabii.discord.trackers.streams.StreamWatcher
-import moe.kabii.discord.trackers.streams.twitch.TwitchEmbedBuilder
-import moe.kabii.discord.trackers.streams.twitch.TwitchParser
-import moe.kabii.discord.trackers.streams.twitch.TwitchStreamInfo
+import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.trackers.videos.StreamWatcher
+import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
+import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
@@ -37,10 +37,6 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
-                    }.filter { streamChannel ->
-
-                        // untrack stream and do not do any further work if it has no discord targets
-                        !untrackStaleEntity(streamChannel)
                     }
 
                     // get all the IDs to make bulk requests to the service.
@@ -68,12 +64,16 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         taskScope.launch {
                             try {
                                 newSuspendedTransaction {
-                                    updateChannel(trackedChannel, data.orNull())
+                                    val filteredTargets = getActiveTargets(trackedChannel)
+                                    if(filteredTargets != null) {
+                                        updateChannel(trackedChannel, data.orNull(), filteredTargets)
+                                    } // else channel has been untracked entirely
                                 }
                             } catch(e: Exception) {
                                 LOG.warn("Error updating Twitch channel: $trackedChannel")
                                 LOG.debug(e.stackTraceString)
                             }
+                            Unit
                         }
                     }.joinAll()
                 }
@@ -89,7 +89,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
     }
 
     @WithinExposedContext
-    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?) {
+    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?, filteredTargets: List<TrackedStreams.Target>) {
         val twitchId = channel.siteChannelID.toLong()
 
         // get streaming site user object when needed
@@ -179,12 +179,15 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
         }
         // stream is live, edit or post a notification in each target channel
         val find = streams.firstOrNull()
-        if(find != null) {
-            find.apply {
+        val changed = if(find != null) {
+            find.run {
                 // update stream stats
                 updateViewers(stream.viewers)
-                lastTitle = stream.title
-                lastGame = stream.game.name
+                if(stream.title != lastTitle || stream.game.name != lastGame) {
+                    lastTitle = stream.title
+                    lastGame = stream.game.name
+                    true
+                } else false
             }
         } else {
             // create stream stats
@@ -199,11 +202,11 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     this.lastGame = stream.game.name
                 }
             }
+            false
         }
 
-        val targets = channel.targets
         if(user == null) return
-        targets.forEach { target ->
+        filteredTargets.forEach { target ->
             try {
                 val existing = target.notifications.firstOrNull()
 
@@ -252,7 +255,9 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 } else {
                     val existingNotif = getDiscordMessage(existing.messageID, channel)
                     if (existingNotif != null) {
-                        existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
+                        if(changed) {
+                            existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
+                        }
                     } else existing.delete()
                 }
             } catch(e: Exception) {

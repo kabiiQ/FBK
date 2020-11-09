@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.youtube.json
+package moe.kabii.discord.trackers.videos.youtube.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -31,6 +31,7 @@ data class YoutubeVideoSnippet(
 
     // "live", "none" , or "upcoming"
     @Transient val live: Boolean = _liveBroadcastContent == "live"
+    @Transient val upcoming: Boolean = _liveBroadcastContent == "upcoming"
 }
 
 @JsonClass(generateAdapter = true)
@@ -48,9 +49,11 @@ data class YoutubeVideoContentDetails(
 data class YoutubeVideoLiveDetails(
     @Json(name="actualStartTime") val _startTime: String?,
     @Json(name="concurrentViewers") val _concurrentViewers: String?,
-    @Json(name="actualEndTime") val _endTime: String?
+    @Json(name="actualEndTime") val _endTime: String?,
+    @Json(name="scheduledStartTime") val _scheduledStartTime: String?
 ) {
     @Transient val startTime = _startTime?.run(Instant::parse)
     @Transient val concurrentViewers = _concurrentViewers?.toIntOrNull()
     @Transient val endTime = _endTime?.run(Instant::parse)
+    @Transient val scheduledStartTime = _scheduledStartTime?.run(Instant::parse)
 }

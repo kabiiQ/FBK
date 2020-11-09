@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams
+package moe.kabii.discord.trackers.videos
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Role
@@ -23,12 +23,11 @@ import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     @WithinExposedContext
-    private suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
+    suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val existingTargets = channel.targets
             .filter { target ->
                 // untrack target if channel deleted

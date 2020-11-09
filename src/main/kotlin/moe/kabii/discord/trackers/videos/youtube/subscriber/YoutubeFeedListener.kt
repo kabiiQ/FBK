@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.youtube.subscriber
+package moe.kabii.discord.trackers.videos.youtube.subscriber
 
 import io.ktor.application.*
 import io.ktor.features.*

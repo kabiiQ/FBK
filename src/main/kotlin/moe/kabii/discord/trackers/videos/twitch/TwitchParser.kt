@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.twitch
+package moe.kabii.discord.trackers.videos.twitch
 
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
@@ -6,10 +6,10 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.trackers.streams.StreamErr
-import moe.kabii.discord.trackers.streams.twitch.json.Helix
-import moe.kabii.discord.trackers.streams.twitch.json.TwitchGameResponse
-import moe.kabii.discord.trackers.streams.twitch.json.TwitchStreamRequest
+import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.trackers.videos.twitch.json.Helix
+import moe.kabii.discord.trackers.videos.twitch.json.TwitchGameResponse
+import moe.kabii.discord.trackers.videos.twitch.json.TwitchStreamRequest
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.youtube
+package moe.kabii.discord.trackers.videos.youtube
 
 import java.time.Duration
 import java.time.Instant
@@ -17,6 +17,7 @@ data class YoutubeVideoInfo(
     val description: String,
     val thumbnail: String,
     val live: Boolean,
+    val upcoming: Boolean,
     val duration: Duration?,
     val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
@@ -28,4 +29,5 @@ data class YoutubeStreamInfo(
     val startTime: Instant?,
     val concurrent: Int?,
     val endTime: Instant?,
+    val scheduledStart: Instant?
 )

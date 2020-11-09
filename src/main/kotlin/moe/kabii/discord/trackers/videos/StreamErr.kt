@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams
+package moe.kabii.discord.trackers.videos
 
 sealed class StreamErr {
     object NotFound : StreamErr()

@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.streams.youtube.subscriber
+package moe.kabii.discord.trackers.videos.youtube.subscriber
 
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo

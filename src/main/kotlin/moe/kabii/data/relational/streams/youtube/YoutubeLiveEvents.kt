@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object YoutubeLiveEvents : LongIdTable() {
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE).uniqueIndex()
-    val lastTitle = text("last_title")
     val lastThumbnail = text("thumbnail_url")
     val lastChannelName = text("channel_name")
 
@@ -19,7 +18,6 @@ object YoutubeLiveEvents : LongIdTable() {
 
 class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
     var ytVideo by YoutubeVideo referencedOn YoutubeLiveEvents.ytVideo
-    var lastTitle by YoutubeLiveEvents.lastTitle
     var lastThumbnail by YoutubeLiveEvents.lastThumbnail
     var lastChannelName by YoutubeLiveEvents.lastChannelName
 
@@ -32,5 +30,9 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
         averageViewers += (current - averageViewers) / ++uptimeTicks
     }
 
-    companion object : LongEntityClass<YoutubeLiveEvent>(YoutubeLiveEvents)
+    companion object : LongEntityClass<YoutubeLiveEvent>(YoutubeLiveEvents) {
+        fun liveEventFor(video: YoutubeVideo): YoutubeLiveEvent? = find {
+            YoutubeLiveEvents.ytVideo eq video.id
+        }.firstOrNull()
+    }
 }
