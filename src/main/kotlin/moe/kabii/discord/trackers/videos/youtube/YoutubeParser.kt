@@ -67,6 +67,8 @@ object YoutubeParser {
             val request = try {
                 requestJson<YoutubeVideoResponse>("videos?part=snippet,contentDetails,liveStreamingDetails&id=$idsPart")
             } catch(e: Exception) {
+                LOG.warn("Error making YouTube request: ${e.message}")
+                LOG.debug(e.stackTraceString)
                 return@map idChunk.map { it to Err(StreamErr.IO) }
             }
 
@@ -89,10 +91,10 @@ object YoutubeParser {
                         upcoming = match.snippet.upcoming,
                         duration = match.contentDetails.duration,
                         liveInfo = YoutubeStreamInfo(
-                            startTime = match.liveStreamingDetails.startTime,
-                            concurrent = match.liveStreamingDetails.concurrentViewers,
-                            endTime = match.liveStreamingDetails.endTime,
-                            scheduledStart = match.liveStreamingDetails.scheduledStartTime
+                            startTime = match.liveStreamingDetails?.startTime,
+                            concurrent = match.liveStreamingDetails?.concurrentViewers,
+                            endTime = match.liveStreamingDetails?.endTime,
+                            scheduledStart = match.liveStreamingDetails?.scheduledStartTime
                         ),
                         channel = YoutubeChannelInfo(
                             id = match.snippet.channelId,
@@ -146,7 +148,7 @@ object YoutubeParser {
                         } else {
                             LOG.warn("Youtube call returned an error: $error")
                         }
-                        LOG.trace(body)
+                        LOG.trace("youtube error response body: $body")
                         throw YoutubeAPIException(error.toString())
                     }
                 }

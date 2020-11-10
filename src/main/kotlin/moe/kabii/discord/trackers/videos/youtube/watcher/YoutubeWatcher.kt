@@ -28,6 +28,7 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
 import moe.kabii.util.DurationFormatter
+import moe.kabii.util.EmojiCharacters
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import java.time.Instant
@@ -57,7 +58,8 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
         }
 
         // post notifications to all enabled targets
-        filteredTargets(dbVideo.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
+
+        filteredTargets(dbVideo.ytChannel) { yt -> yt.liveStreams }.forEach { target ->
             try {
                 createLiveNotification(video, target, new = true)
             } catch(e: Exception) {
@@ -186,7 +188,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
     @WithinExposedContext
     suspend fun videoUploaded(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
         // check if any targets would like notification for this video upload
-        filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
+        filteredTargets(dbVideo.ytChannel) { yt -> yt.uploads }
             .forEach { target ->
                 try {
                     createVideoNotification(ytVideo, target)
@@ -196,6 +198,8 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 }
             }
     }
+
+    //       ----------------
 
     @WithinExposedContext
     suspend fun filteredTargets(channel: TrackedStreams.StreamChannel, filter: (YoutubeSettings) -> Boolean): List<TrackedStreams.Target> {
@@ -240,6 +244,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             chan.createEmbed { embed ->
                 embed.setColor(Color.of(16748800))
                 embed.setAuthor("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar)
+                embed.setUrl(video.url)
                 embed.setTitle(shortTitle)
                 embed.setThumbnail(video.thumbnail)
                 embed.setFooter("Scheduled start time ", NettyFileServer.youtubeLogo)
@@ -255,6 +260,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
         }
     }
 
+    @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
         val chan = getChannel(target)
@@ -279,6 +285,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 val embed: EmbedBlock = {
                     setColor(YoutubeTarget.serviceColor)
                     setAuthor("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar)
+                    setUrl(video.url)
                     setTitle(shortTitle)
                     setDescription("Video description: $shortDescription")
                     if(features.thumbnails) setImage(video.thumbnail) else setThumbnail(video.thumbnail)
@@ -329,7 +336,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     val liveMessage = if(new) " went live!" else " is live."
-                    setAuthor("${liveStream.channel.name}$liveMessage", liveStream.url, liveStream.channel.avatar)
+                    setAuthor("${liveStream.channel.name}$liveMessage${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar)
                     setUrl(liveStream.url)
                     setColor(YoutubeTarget.serviceColor)
                     setTitle(shortTitle)

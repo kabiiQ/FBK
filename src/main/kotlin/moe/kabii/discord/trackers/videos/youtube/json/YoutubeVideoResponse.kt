@@ -16,7 +16,7 @@ data class YoutubeVideo(
     val id: String,
     val snippet: YoutubeVideoSnippet,
     val contentDetails: YoutubeVideoContentDetails,
-    val liveStreamingDetails: YoutubeVideoLiveDetails
+    val liveStreamingDetails: YoutubeVideoLiveDetails?
 )
 
 @JsonClass(generateAdapter = true)

@@ -68,10 +68,11 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                 }
 
                 // main IO call, process as we go
-                targetLookup.keys
+                 targetLookup.keys
                     .asSequence()
                     .chunked(50)
                     .flatMap { chunk ->
+                        LOG.info("yt api call: $chunk")
                         YoutubeParser.getVideos(chunk).entries
                     }.forEach { (videoId, ytVideo) ->
                         try {
@@ -108,7 +109,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                     }
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 90_000L - runDuration.toMillis()
+            val delay = 60_000L - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }
@@ -158,8 +159,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                 streamStart(ytVideo, call.video)
                 dbEvent.delete()
             }
-            else -> {
-                // event still exists and is not live
+            ytVideo.upcoming -> {
+                // event still exists and is not live yet
                 val scheduled = ytVideo.liveInfo?.scheduledStart
                 if(scheduled != null) {
                     dbEvent.scheduledStart = scheduled.jodaDateTime
@@ -176,7 +177,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                 } else {
                     LOG.warn("YouTube returned SCHEDULED stream with no start time: $ytVideo")
                 }
-
+            }
+            else -> {
+                // video exists, never went live ?
+                dbEvent.delete()
             }
         }
     }

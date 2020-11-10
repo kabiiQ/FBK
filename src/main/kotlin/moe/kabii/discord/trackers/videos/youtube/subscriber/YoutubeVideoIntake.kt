@@ -22,6 +22,7 @@ object YoutubeVideoIntake {
 
                 val videoId = entry.elements("videoId").first().text
                 val channelId = entry.elements("channelId").first().text
+                LOG.info("debug: $videoId : $channelId")
 
                 newSuspendedTransaction {
                     YoutubeVideo.getOrInsert(videoId, channelId)

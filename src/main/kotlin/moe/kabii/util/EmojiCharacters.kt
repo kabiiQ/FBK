@@ -11,6 +11,8 @@ object EmojiCharacters {
     const val alarm = "\u23F0"
     const val star = "\u2B50"
 
+    const val liveCircle = "\uD83D\uDD34"
+
     const val blueSquare = "\uD83D\uDFE6"
     const val redSquare = "\uD83D\uDFE5"
 }

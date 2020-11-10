@@ -2,6 +2,7 @@ package moe.kabii.data.mongodb.guilds
 
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.*
+import moe.kabii.util.EmojiCharacters
 import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
@@ -62,9 +63,9 @@ data class StreamSettings(
     var endTitle: Boolean = true,
     var endGame: Boolean = true,
 
-    var renameChannel: Boolean = false,
+    var renameEnabled: Boolean = false,
     var notLive: String = "no-streams-live",
-    var livePrefix: String = "\uD83D\uDD34-live-",
+    var livePrefix: String = "${EmojiCharacters.liveCircle}-live-",
     var liveSuffix: String = "",
     val marks: MutableList<ChannelMark> = mutableListOf()
 )
