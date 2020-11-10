@@ -41,7 +41,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
         ),
         BooleanElement("Rename this channel based on live channels",
             listOf("rename", "renamechannel", "renaming", "renam"),
-            StreamSettings::renameChannel
+            StreamSettings::renameEnabled
         ),
         StringElement(
             "Channel name when no streams are live",
@@ -81,7 +81,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
             when(action?.toLowerCase()) {
                 "set" -> {
                     val feature = features.streamSettings
-                    if (!feature.renameChannel) {
+                    if (!feature.renameEnabled) {
                         error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamconfig rename enable**.").awaitSingle()
                         return@discord
                     }
@@ -142,7 +142,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                 "marks" -> {
                     // rename marks -> list configured channel marks
                     val feature = features.streamSettings
-                    if (!feature.renameChannel) {
+                    if (!feature.renameEnabled) {
                         error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamconfig rename enable**.").awaitSingle()
                         return@discord
                     }

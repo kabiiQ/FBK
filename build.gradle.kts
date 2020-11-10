@@ -1,7 +1,3 @@
-import java.io.IOException
-import java.net.URL
-import java.util.zip.ZipInputStream
-
 group = "moe.kabii"
 version = "deploy"
 
