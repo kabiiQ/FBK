@@ -231,7 +231,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     val newNotification = try {
                         chan.createMessage { spec ->
                             if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
-                            spec.setEmbed(embed.automatic)
+                            spec.setEmbed(embed.block)
                         }.awaitSingle()
                     } catch (ce: ClientException) {
                         val err = ce.status.code()
@@ -256,7 +256,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     val existingNotif = getDiscordMessage(existing.messageID, channel)
                     if (existingNotif != null) {
                         if(changed) {
-                            existingNotif.edit { msg -> msg.setEmbed(embed.automatic) }.tryAwait()
+                            existingNotif.edit { msg -> msg.setEmbed(embed.block) }.tryAwait()
                         }
                     } else existing.delete()
                 }

@@ -20,11 +20,11 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
         StatisticsEmbed(dbStream, this)
 
     class StreamEmbed internal constructor(stream: TwitchStreamInfo, builder: TwitchEmbedBuilder) {
-        val title = "${stream.username} playing ${stream.game.name} for ${stream.viewers} viewers"
+        val title = "${stream.username} playing ${stream.game.name}"
         val url = builder.user.url
         val description = "[${stream.title}]($url)"
 
-        private val applyBase: EmbedBlock = {
+        val block: EmbedBlock = {
             setAuthor(title, url, builder.user.profileImage)
             setDescription(description)
             setThumbnail(stream.game.artURL)
@@ -32,21 +32,10 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
             if(builder.settings.thumbnails) {
                 setImage(builder.user.thumbnailUrl)
             }
-        }
-
-        val automatic: EmbedBlock = {
-            applyBase(this)
             val time = Duration.between(stream.startedAt, Instant.now())
-            val uptime = DurationFormatter(time).asUptime
-            setFooter("Uptime: $uptime - Live since ", NettyFileServer.glitch)
+            setFooter("Live since ", NettyFileServer.glitch)
             setTimestamp(stream.startedAt)
-        }
 
-        val manual: EmbedBlock = {
-            applyBase(this)
-            val time = Duration.between(stream.startedAt, Instant.now())
-            val uptime = DurationFormatter(time).asUptime
-            setFooter("Uptime: $uptime", NettyFileServer.glitch)
         }
     }
 

@@ -94,7 +94,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         val features = config.options.featureChannels.getValue(guildChan.id.asLong())
 
         val feature = features.streamSettings
-        if(!feature.renameChannel) return // feature not enabled in channel
+        if(!feature.renameEnabled) return // feature not enabled in channel
 
         // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
         val live = TrackedStreams.Notification.wrapRows(

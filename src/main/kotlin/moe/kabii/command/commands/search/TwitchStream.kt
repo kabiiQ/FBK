@@ -32,7 +32,7 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
             } ?: StreamSettings()
             val stream = TwitchEmbedBuilder(twitchUser, settings)
                 .stream(twitchStream)
-                .manual
+                .block
             embedBlock(stream).awaitSingle()
         }
     }
