@@ -8,6 +8,7 @@ import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.structure.extensions.loop
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
@@ -27,6 +28,15 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
         // start callback server
         listener.server.start()
 
+        val cutOff = DateTime.now().minus(maxSubscriptionInterval)
+        currentSubscriptions = transaction {
+            FeedSubscription.find {
+                FeedSubscriptions.lastSubscription greaterEq cutOff
+            }.map { feed ->
+                feed.ytChannel.siteChannelID
+            }.toSet()
+        }
+
         loop {
             newSuspendedTransaction {
                 // subscribe to updates for all channels with active targets
@@ -40,21 +50,25 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
                         }.firstOrNull()
 
                         // only make actual call to google if last call is old - but still maintain current list in memory
-                        val topic = if(subscription == null) {
-                            FeedSubscription.new {
-                                this.ytChannel = channel
-                                this.lastSubscription = DateTime.now()
+                        if(subscription == null) {
+                            val callTopic = subscriber.subscribe(channel.siteChannelID, call = true)
+                            if(callTopic != null) {
+                                FeedSubscription.new {
+                                    this.ytChannel = channel
+                                    this.lastSubscription = DateTime.now()
+                                }
                             }
-                            subscriber.subscribe(channel.siteChannelID, call = true)
                         } else {
                             val lastSub = subscription.lastSubscription
-                            val expired = Duration(lastSub, Instant.now()) >= maxSubscriptionInterval
-                            subscriber.subscribe(channel.siteChannelID, expired)
+                            val expired = !currentSubscriptions.contains(channel.siteChannelID) || Duration(lastSub, Instant.now()) >= maxSubscriptionInterval
+                            val callTopic = subscriber.subscribe(channel.siteChannelID, expired)
+                            if(callTopic != null) {
+                                subscription.lastSubscription = DateTime.now()
+                            }
                         }
-                        currentSubscriptions = currentSubscriptions + topic
+                        currentSubscriptions = currentSubscriptions + channel.siteChannelID
                     }
                 }
-                // todo unsubscribe to entries in currentSubscriptions without active targets or at least ignore
             }
 
             // no un-necessary calls are made here, we can run this on a fairly low interval

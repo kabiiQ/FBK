@@ -35,14 +35,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 val mode = call.parameters["hub.mode"]
                 val channelTopic = call.parameters["hub.topic"]
                 when(mode) {
-                    "subscribe" -> {
-                        if(!manager.currentSubscriptions.contains(channelTopic)) {
-                            call.response.status(HttpStatusCode.NotFound) // return 404 per hubbub spec
-                            LOG.debug("Subscription rejected: $channelTopic")
-                            return@get
-                        } // else continue verification
-                    }
-                    "unsubscribe" -> {} // allow unsubscription without validation
+                    "subscribe", "unsubscribe" -> {} // allow unsubscription without validation
                     "denied" -> {
                         LOG.warn("Subscription denied: ${call.parameters}")
                         return@get // return 500
@@ -90,7 +83,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 if(signature != "sha1=$bodySignature") {
                     LOG.warn("Unable to verify payload signature: $body\nX-Hub-Signature: $signature\nCalculated signature: $signature")
                     return@post
-                }
+                } else LOG.debug("verified sign")
 
                 // successfully acquired information on an updated video.
                 // let youtubevideointake decide what to do with this information
@@ -100,6 +93,6 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
     }
 
     private fun log(ctx: PipelineContext<Unit, ApplicationCall>) {
-        LOG.trace(":$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
+        LOG.info(":$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
     }
 }
