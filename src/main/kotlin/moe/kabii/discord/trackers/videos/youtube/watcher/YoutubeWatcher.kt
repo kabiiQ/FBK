@@ -187,6 +187,9 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
     @WithinExposedContext
     suspend fun videoUploaded(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
+        if(ytVideo.liveInfo != null) return // do not post 'uploaded a video' if this was a VOD
+        if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(6L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
+
         // check if any targets would like notification for this video upload
         filteredTargets(dbVideo.ytChannel) { yt -> yt.uploads }
             .forEach { target ->

@@ -90,12 +90,13 @@ object YoutubeParser {
                         live = match.snippet.live,
                         upcoming = match.snippet.upcoming,
                         duration = match.contentDetails.duration,
-                        liveInfo = YoutubeStreamInfo(
-                            startTime = match.liveStreamingDetails?.startTime,
-                            concurrent = match.liveStreamingDetails?.concurrentViewers,
-                            endTime = match.liveStreamingDetails?.endTime,
-                            scheduledStart = match.liveStreamingDetails?.scheduledStartTime
-                        ),
+                        published = match.snippet.publishedAt,
+                        liveInfo = if(match.liveStreamingDetails != null) YoutubeStreamInfo(
+                            startTime = match.liveStreamingDetails.startTime,
+                            concurrent = match.liveStreamingDetails.concurrentViewers,
+                            endTime = match.liveStreamingDetails.endTime,
+                            scheduledStart = match.liveStreamingDetails.scheduledStartTime
+                        ) else null,
                         channel = YoutubeChannelInfo(
                             id = match.snippet.channelId,
                             name = match.snippet.channelTitle,

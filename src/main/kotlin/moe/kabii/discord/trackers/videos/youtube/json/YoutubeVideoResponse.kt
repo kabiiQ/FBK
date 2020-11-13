@@ -21,6 +21,7 @@ data class YoutubeVideo(
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoSnippet(
+    @Json(name="publishedAt") val _publishedAt: String,
     val channelId: String,
     val title: String,
     val description: String,
@@ -28,6 +29,7 @@ data class YoutubeVideoSnippet(
     val channelTitle: String,
     @Json(name="liveBroadcastContent") val _liveBroadcastContent: String
 ) {
+    @Transient val publishedAt = Instant.parse(_publishedAt)
 
     // "live", "none" , or "upcoming"
     @Transient val live: Boolean = _liveBroadcastContent == "live"

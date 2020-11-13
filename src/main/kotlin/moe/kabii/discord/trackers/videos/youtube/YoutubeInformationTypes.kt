@@ -19,6 +19,7 @@ data class YoutubeVideoInfo(
     val live: Boolean,
     val upcoming: Boolean,
     val duration: Duration?,
+    val published: Instant,
     val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
 ) {
