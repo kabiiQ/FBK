@@ -215,8 +215,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
             .filter { target ->
                 // untrack target if discord channel is deleted
                 if (target.discord.guild != null) {
-                    val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
-                        .getChannelById(target.discord.channelID.snowflake)
+                    val disChan = discord.getChannelById(target.discord.channelID.snowflake)
                         .awaitFirstOrNull()
                     if (disChan == null) {
                         LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
