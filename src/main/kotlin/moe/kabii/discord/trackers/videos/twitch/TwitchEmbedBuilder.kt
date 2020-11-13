@@ -32,7 +32,6 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
             if(builder.settings.thumbnails) {
                 setImage(builder.user.thumbnailUrl)
             }
-            val time = Duration.between(stream.startedAt, Instant.now())
             setFooter("Live since ", NettyFileServer.glitch)
             setTimestamp(stream.startedAt)
 

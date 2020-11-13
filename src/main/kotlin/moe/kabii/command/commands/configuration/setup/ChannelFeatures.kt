@@ -16,7 +16,7 @@ object ChannelFeatures : CommandContainer {
         "channel",
         BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeChannel),
         BooleanElement("Twitch stream tracking", listOf("twitch"), FeatureChannel::twitchChannel),
-        BooleanElement("YouTube channel tracking", listOf("youtube"), FeatureChannel::youtubeChannel),
+        BooleanElement("YouTube channel tracking", listOf("yt", "youtube"), FeatureChannel::youtubeChannel),
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),

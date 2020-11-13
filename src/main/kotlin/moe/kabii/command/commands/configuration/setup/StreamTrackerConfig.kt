@@ -11,7 +11,7 @@ import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 
-object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
+object StreamTrackerConfig : Command("ytcfg", "ytconfig", "youtubecfg", "streamcfg", "streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     override val wikiPath = "Livestream-Tracker#configuration"
 
     object StreamTrackerModule : ConfigurationModule<StreamSettings>(
@@ -28,7 +28,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
         ),
         BooleanElement(
             "Include viewer counts in summary (twitch)",
-            listOf("peak", "peakviews", "peakviewers", "viewers"),
+            listOf("viewers", "peakviews", "peakviewers", "peak"),
             StreamSettings::viewers
         ),
         BooleanElement("Include stream ending title in summary (twitch)",
@@ -82,7 +82,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                 "set" -> {
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamconfig rename enable**.").awaitSingle()
+                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.").awaitSingle()
                         return@discord
                     }
 
@@ -91,7 +91,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                     val inputArgs = args.drop(1).toMutableList() // drop guaranteed 'set' arg
 
                     if (inputArgs.size < 2) {
-                        usage("**streamconfig set** is used to set a word or emoji displayed in the channel name when a specific stream goes live.", "autorename set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
+                        usage("**streamcfg set** is used to set a word or emoji displayed in the channel name when a specific stream goes live.", "streamcfg set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
                         return@discord
                     }
 
@@ -99,13 +99,13 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                     val siteTarget = when (val findTarget = TargetArguments.parseFor(this, inputArgs)) {
                         is Ok -> findTarget.value
                         is Err -> {
-                            usage("Unable to find that livestream channel: ${findTarget.value}", "streamconfig set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
+                            usage("Unable to find that livestream channel: ${findTarget.value}", "streamcfg set <yt channel ID/twitch channel name> <emoji/word>").awaitSingle()
                             return@discord
                         }
                     }
 
                     if (siteTarget.site !is StreamingTarget) {
-                        error("The **streamconfig set** command is only supported for **livestream** sources.").awaitSingle()
+                        error("The **streamcfg set** command is only supported for **livestream** sources.").awaitSingle()
                         return@discord
                     }
 
@@ -143,7 +143,7 @@ object StreamTrackerConfig : Command("streamconfig", "twitchconfig", "streamtrac
                     // rename marks -> list configured channel marks
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamconfig rename enable**.").awaitSingle()
+                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.").awaitSingle()
                         return@discord
                     }
 

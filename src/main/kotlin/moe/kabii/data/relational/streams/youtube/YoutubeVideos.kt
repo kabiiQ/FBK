@@ -15,7 +15,6 @@ object YoutubeVideos : LongIdTable() {
     val lastTitle = text("last_title").nullable()
     val liveEvent = reference("live_event", YoutubeLiveEvents, ReferenceOption.SET_NULL).nullable()
     val scheduledEvent = reference("scheduled_event", YoutubeScheduledEvents, ReferenceOption.SET_NULL).nullable()
-    val creationNotified = bool("creation_notified")
 }
 
 class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
@@ -25,14 +24,13 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     var lastTitle by YoutubeVideos.lastTitle
     var liveEvent by YoutubeLiveEvent optionalReferencedOn YoutubeVideos.liveEvent
     var scheduledEvent by YoutubeScheduledEvent optionalReferencedOn YoutubeVideos.scheduledEvent
-    var creationNotified by YoutubeVideos.creationNotified
 
     companion object : LongEntityClass<YoutubeVideo>(YoutubeVideos) {
         fun getVideo(videoId: String): YoutubeVideo? = find {
             YoutubeVideos.videoId eq videoId
         }.firstOrNull()
 
-        fun getOrInsert(videoId: String, channelId: String): YoutubeVideo {
+        suspend fun getOrInsert(videoId: String, channelId: String): YoutubeVideo {
             val channel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, channelId)
 
             return getVideo(videoId) ?: new {
@@ -41,7 +39,6 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
                 this.lastAPICall = null
                 this.liveEvent = null
                 this.scheduledEvent = null
-                this.creationNotified = false
             }
         }
     }
