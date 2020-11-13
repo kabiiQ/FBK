@@ -46,7 +46,7 @@ object MediaTrackerCommand {
         // check if this list is already tracked in this channel, before we download the entire list (can be slow)
         val channelId = origin.chan.id.asLong()
         val existingTrack = newSuspendedTransaction {
-            TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId, channelId)
+            TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.toLowerCase(), channelId)
         }
 
         if(existingTrack != null) {
@@ -135,7 +135,7 @@ object MediaTrackerCommand {
         val channelId = origin.chan.id.asLong()
 
         newSuspendedTransaction {
-            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId, channelId)
+            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.toLowerCase(), channelId)
             if (existingTrack == null) {
                 origin.error("**$inputId** is not currently being tracked on $siteName.").awaitSingle()
                 return@newSuspendedTransaction

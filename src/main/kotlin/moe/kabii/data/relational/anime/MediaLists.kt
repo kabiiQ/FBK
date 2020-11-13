@@ -12,6 +12,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -57,13 +58,13 @@ object TrackedMediaLists {
 
         companion object : IntEntityClass<ListTarget>(ListTargets) {
             @WithinExposedContext
-            fun getExistingTarget(site: ListSite, listId: String, channelId: Long) = ListTarget.wrapRows(
+            fun getExistingTarget(site: ListSite, listIdLower: String, channelId: Long) = ListTarget.wrapRows(
                 ListTargets
                     .innerJoin(MediaLists)
                     .innerJoin(DiscordObjects.Channels)
                     .select {
                         MediaLists.site eq site and
-                                (MediaLists.siteChannelId eq listId) and
+                                (LowerCase(MediaLists.siteChannelId) eq listIdLower) and
                                 (DiscordObjects.Channels.channelID eq channelId)
                     }
             ).firstOrNull()
