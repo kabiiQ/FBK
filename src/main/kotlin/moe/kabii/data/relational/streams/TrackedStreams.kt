@@ -1,11 +1,16 @@
 package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitchTarget
 import moe.kabii.discord.trackers.YoutubeTarget
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.structure.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -43,10 +48,17 @@ object TrackedStreams {
                         (StreamChannels.siteChannelID eq channelId)
             }.firstOrNull()
 
-            fun getOrInsert(site: DBSite, channelId: String): StreamChannel {
-                return getChannel(site, channelId) ?: new {
-                    this.site = site
-                    this.siteChannelID = channelId
+            suspend fun getOrInsert(site: DBSite, channelId: String): StreamChannel {
+                val existing = getChannel(site, channelId)
+                return if(existing != null) existing else {
+                    val new = new {
+                        this.site = site
+                        this.siteChannelID = channelId
+                    }
+                    if(site == DBSite.YOUTUBE) {
+                        YoutubeVideoIntake.intakeExisting(channelId)
+                    }
+                    new
                 }
             }
         }
