@@ -336,7 +336,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     val liveMessage = if(new) " went live!" else " is live."
-                    setAuthor("${liveStream.channel.name}$liveMessage${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar)
+                    setAuthor("${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar)
                     setUrl(liveStream.url)
                     setColor(YoutubeTarget.serviceColor)
                     setTitle(shortTitle)

@@ -32,7 +32,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             .filter { target ->
                 // untrack target if channel deleted
                 if(target.discordChannel.guild != null) {
-                    val disChan = discord.withRetrievalStrategy(EntityRetrievalStrategy.STORE)
+                    val disChan = discord
                         .getChannelById(target.discordChannel.channelID.snowflake)
                         .awaitFirstOrNull()
                     if(disChan == null) {
@@ -141,12 +141,12 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             if(ce.status.code() == 403) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamconfig rename disable** to turn off the channel renaming feature.")
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
                 }.awaitSingle()
             } else if(ce.status.code() == 400) {
                 guildChan.createEmbed { spec ->
                     errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamconfig rename disable** command to turn off this feature.")
+                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
                 }.awaitSingle()
             } else throw ce
         }

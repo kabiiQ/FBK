@@ -20,6 +20,7 @@ import kotlin.reflect.KProperty1
 sealed class TrackerTarget(
     val full: String,
     val channelFeature: KProperty1<FeatureChannel, Boolean>,
+    val featureName: String,
     val url: List<Regex>,
     vararg val alias: String
 )
@@ -31,9 +32,10 @@ sealed class StreamingTarget(
     val serviceColor: Color,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
+    featureName: String,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, channelFeature, url, *alias) {
+) : TrackerTarget(full, channelFeature, featureName, url, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: TrackedStreams.DBSite
@@ -47,6 +49,7 @@ object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     "Twitch",
     FeatureChannel::twitchChannel,
+    "twitch",
     listOf(
         Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
     ),
@@ -63,6 +66,7 @@ object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::youtubeChannel,
+    "yt",
     listOf(
         Regex("([a-zA-Z0-9-_]{24})"),
         Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})")
@@ -93,7 +97,7 @@ sealed class AnimeTarget(
     full: String,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, FeatureChannel::animeChannel, url, *alias) {
+) : TrackerTarget(full, FeatureChannel::animeChannel, "anime", url, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: ListSite

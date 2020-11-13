@@ -19,6 +19,7 @@ import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object StreamTrackerCommand {
@@ -30,7 +31,7 @@ object StreamTrackerCommand {
         if(origin.guild != null) {
             val config = GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong())
             val features = config.options.featureChannels[origin.chan.id.asLong()]
-            if(features == null || !features.isStreamChannel()) throw FeatureDisabledException("streams", origin)
+            if(features == null || !streamTarget.channelFeature.get(features)) throw FeatureDisabledException(streamTarget.featureName, origin)
         } // else this is PM, allow
 
         // validate stream is real and get service ID
@@ -57,11 +58,11 @@ object StreamTrackerCommand {
         }
 
         // get the db 'channel' object or create if this is a new stream channel
-        val dbChannel = transaction {
+        val dbChannel = newSuspendedTransaction {
             TrackedStreams.StreamChannel.getOrInsert(site, streamId)
         }
 
-        transaction {
+        newSuspendedTransaction {
             TrackedStreams.Target.new { // record the track in db
                 this.streamChannel = dbChannel
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
