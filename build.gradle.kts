@@ -72,9 +72,6 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
 
-    // youtube xml parsing
-    implementation("org.dom4j:dom4j:2.1.3")
-
     // emote parsing
     implementation("com.kcthota:emoji4j:6.0")
 
@@ -96,7 +93,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.2.16")
 
     // .toml token configuration
-    implementation("com.uchuhimo:konf:0.22.1")
+    implementation("com.uchuhimo:konf:0.23.0")
 
     // logging
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
@@ -104,6 +101,15 @@ dependencies {
     // other
     implementation("commons-validator:commons-validator:1.6")
     implementation("org.reflections:reflections:0.9.12") // command detection and registration
+
+    // youtube xml parsing
+    // https://github.com/gradle/gradle/issues/13656#issuecomment-658873625
+    implementation("org.dom4j:dom4j:2.1.3")
+    components {
+        withModule("org.dom4j:dom4j") {
+            allVariants { withDependencies { clear() } }
+        }
+    }
 }
 
 val updateVersion = task("updateVersion") {
