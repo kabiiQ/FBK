@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.videos.youtube.watcher
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
+import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
@@ -129,7 +130,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             }
 
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
-            call.video.ytChannel.targets.forEach { target ->
+            filteredTargets(call.video.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
                 // verify target already has a notification
                 if(target.notifications.empty()) {
                     try {

@@ -1,12 +1,8 @@
 package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
-import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitchTarget
 import moe.kabii.discord.trackers.YoutubeTarget

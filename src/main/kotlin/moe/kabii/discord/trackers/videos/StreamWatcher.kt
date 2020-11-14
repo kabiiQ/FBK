@@ -5,7 +5,6 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
-import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle

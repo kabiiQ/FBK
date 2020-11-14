@@ -8,7 +8,7 @@ import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.discord.util.Search
 
 object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "youtubeconfig") {
-    override val wikiPath: String? = null // todo
+    override val wikiPath = "Livestream-Tracker#-youtube-tracker-configuration-with-youtube"
 
     object YoutubeConfigModule : ConfigurationModule<YoutubeSettings>(
         "youtube tracker",

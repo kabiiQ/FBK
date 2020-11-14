@@ -59,7 +59,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
         // post notifications to all enabled targets
 
-        filteredTargets(dbVideo.ytChannel) { yt -> yt.liveStreams }.forEach { target ->
+        filteredTargets(dbVideo.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
             try {
                 createLiveNotification(video, target, new = true)
             } catch(e: Exception) {
@@ -191,7 +191,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
         if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(6L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
 
         // check if any targets would like notification for this video upload
-        filteredTargets(dbVideo.ytChannel) { yt -> yt.uploads }
+        filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
             .forEach { target ->
                 try {
                     createVideoNotification(ytVideo, target)

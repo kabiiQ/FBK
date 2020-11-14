@@ -30,8 +30,6 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                 .url("https://api.urbandictionary.com/v0/define?term=$lookup")
                 .build()
 
-
-
             val define = try {
                 OkHTTP.newCall(request).execute().use { response ->
                     val body = response.body!!.string()

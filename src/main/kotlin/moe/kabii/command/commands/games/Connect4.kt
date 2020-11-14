@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
 object Connect4 : Command("c4", "connect4", "1v1") {
-    override val wikiPath: String? = null // todo
+    override val wikiPath = "Games-(Connect-4)#connect-4"
 
     init {
         discord {
