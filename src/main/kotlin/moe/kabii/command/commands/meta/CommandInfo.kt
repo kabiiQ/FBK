@@ -5,19 +5,19 @@ import moe.kabii.command.Command
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.SourcePaths
 
-object CommandInfo : Command("command", "cmd", "commandinfo") {
+object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
     override val wikiPath = "Bot-Meta-Commands#command-information"
 
     init {
         discord {
             if(args.isEmpty()) {
-                error("**command** pulls up information on a bot command. Example usage: **command modlog**").awaitSingle()
+                embed("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **help <command name>**").awaitSingle()
                 return@discord
             }
             // try to match command
             val match = Search.commandByAlias(handler, args[0], bypassExempt = true)
             if(match == null) {
-                error("Can't find the command named **${args[0]}**.").awaitSingle()
+                error("Can't find the command named **${args[0]}**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).").awaitSingle()
                 return@discord
             }
 
@@ -45,16 +45,6 @@ object CommandInfo : Command("command", "cmd", "commandinfo") {
 //                addField("Twitch Command:", (match.executeTwitch != null).toString(), true)
                 addField("Location in Source Code:", "[$pack]($sourcePath)", false)
             }.awaitSingle()
-        }
-    }
-}
-
-object DocumentationLink : Command("help", "commands", "info") {
-    override val wikiPath: String? = null // intentionally undocumented command
-
-    init {
-        discord {
-            embed("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki)").awaitSingle()
         }
     }
 }
