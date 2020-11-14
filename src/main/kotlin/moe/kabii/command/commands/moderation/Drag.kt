@@ -4,9 +4,11 @@ import discord4j.core.`object`.VoiceState
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.verify
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.conversation.ReactionInfo
 import moe.kabii.discord.conversation.ReactionListener
 import moe.kabii.util.EmojiCharacters
@@ -45,6 +47,14 @@ object Drag : Command("drag", "move", "pull") {
                             remove(target.id)
                             embed("Drag operation cancelled.").awaitSingle()
                         } else {
+                            val audio = AudioManager.getGuildAudio(target.id.asLong())
+                            val vc = AudioStateUtil.checkAndJoinVoice(this@discord)
+                            if(vc is AudioStateUtil.VoiceValidation.Failure) {
+                                error(vc.error).awaitSingle()
+                                return@discord
+                            }
+                            audio.discord.startTimeout()
+
                             add(target.id)
                             val message = embed("Ready! Move me to drag any users in my voice channel along with me.").awaitSingle()
                             ReactionListener(
