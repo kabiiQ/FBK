@@ -66,7 +66,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val addedDuration = track.duration - track.position
             val trackPosition = position ?: audio.queue.size
             val untilPlaying = audio.duration?.minus(addedDuration)
-            val eta = if(untilPlaying != null) {
+            val eta = if(untilPlaying != null && position == null) {
                 val formatted = DurationFormatter(untilPlaying).colonTime
                 " Estimated time until playing: $formatted. "
             } else " Unknown queue length with a stream in queue. "
