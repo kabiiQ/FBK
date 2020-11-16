@@ -1,14 +1,11 @@
 package moe.kabii.structure.extensions
 
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import org.joda.time.DateTime
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Instant
 import java.util.*
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 // Java Optional -> toNull = Kotlin nullable
 fun <T> Optional<T>.orNull(): T? = orElse(null)

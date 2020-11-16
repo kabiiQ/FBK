@@ -11,7 +11,6 @@ import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import org.dom4j.io.SAXReader
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.xml.sax.InputSource
 import java.io.StringReader
 

@@ -79,7 +79,6 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
                     LOG.warn(e.stackTraceString)
                 }
             }
-            println("currentSubscriptions: $currentSubscriptions")
 
             // no un-necessary calls are made here, we can run this on a fairly low interval
             delay(30_000L)

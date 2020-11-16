@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.streams.youtube.*
@@ -12,16 +12,14 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.*
+import moe.kabii.structure.extensions.jodaDateTime
+import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.propagateTransaction
+import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import java.io.IOException
-import java.lang.Runnable
 import java.time.Duration
 import java.time.Instant
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 import kotlin.math.max
 
 sealed class YoutubeCall(val video: YoutubeVideo) {
