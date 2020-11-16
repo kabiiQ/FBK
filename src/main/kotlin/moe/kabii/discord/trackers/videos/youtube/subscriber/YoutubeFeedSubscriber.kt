@@ -17,32 +17,30 @@ class YoutubeFeedSubscriber {
         UNSUBSCRIBE("unsubscribe")
     }
 
-    fun subscribe(channelId: String, call: Boolean) = request(channelId, Mode.SUBSCRIBE, call)
+    fun subscribe(channelId: String) = request(channelId, Mode.SUBSCRIBE)
 
-    fun unsubscribe(channelId: String, call: Boolean) = request(channelId, Mode.UNSUBSCRIBE, call)
+    fun unsubscribe(channelId: String) = request(channelId, Mode.UNSUBSCRIBE)
 
-    private fun request(channelId: String,  mode: Mode, call: Boolean): String? {
+    private fun request(channelId: String,  mode: Mode): String? {
         val topic = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=$channelId"
 
-        return if(call) {
-            val body = FormBody.Builder()
-                .add("hub.mode", mode.str)
-                .add("hub.topic", topic)
-                .add("hub.callback", "http://$callbackAddress:$callbackPort?channel=$channelId")
-                .add("hub.secret", signingKey)
-                .build()
+        val body = FormBody.Builder()
+            .add("hub.mode", mode.str)
+            .add("hub.topic", topic)
+            .add("hub.callback", "http://$callbackAddress:$callbackPort?channel=$channelId")
+            .add("hub.secret", signingKey)
+            .build()
 
-            val request = Request.Builder()
-                .url("https://pubsubhubbub.appspot.com")
-                .post(body)
-                .build()
+        val request = Request.Builder()
+            .url("https://pubsubhubbub.appspot.com")
+            .post(body)
+            .build()
 
-            LOG.info("Requesting YT Feed: $topic")
+        LOG.info("Requesting YT Feed: $topic")
 
-            val response = OkHTTP.newCall(request).execute()
-            LOG.debug(response.code.toString())
-            if(response.isSuccessful) topic
-            else null
-        } else topic
+        val response = OkHTTP.newCall(request).execute()
+        LOG.debug(response.code.toString())
+        return if(response.isSuccessful) topic
+        else null
     }
 }

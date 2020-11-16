@@ -210,7 +210,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
         val activeTargets = getActiveTargets(channel)
         return if(activeTargets == null) {
             // channel has been untracked entirely
-            subscriptions.subscriber.unsubscribe(channelId, call = true)
+            subscriptions.subscriber.unsubscribe(channelId)
             emptyList()
         } else activeTargets
             .filter { target ->
