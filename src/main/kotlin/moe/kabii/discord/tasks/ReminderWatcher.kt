@@ -37,8 +37,8 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
         loop {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
-            try {
-                newSuspendedTransaction {
+            newSuspendedTransaction {
+                try {
                     val window = DateTime.now().plus(updateInterval)
                     val reminders = Reminder.find { Reminders.remind lessEq window }.toList()
 
@@ -53,11 +53,11 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
                             }
                         }
                     }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
-                }
-            } catch(e: Exception) {
-                LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            } // don't let this thread die
+                } catch(e: Exception) {
+                    LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                } // don't let this thread die
+            }
             val runtime = Duration.between(start, Instant.now())
             val delay = updateInterval - runtime.toMillis()
             delay(max(delay, 0L)) // don't sleep negative - not sure how this was happening though

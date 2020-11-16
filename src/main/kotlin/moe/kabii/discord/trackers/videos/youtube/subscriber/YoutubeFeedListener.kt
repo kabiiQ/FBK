@@ -50,7 +50,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 val challenge = call.parameters["hub.challenge"]
                 if(challenge != null) {
                     call.respondText(challenge, status = HttpStatusCode.OK)
-                    LOG.debug("$mode validated: $channelTopic")
+                    LOG.info("$mode validated: $channelTopic")
                 }
             }
 

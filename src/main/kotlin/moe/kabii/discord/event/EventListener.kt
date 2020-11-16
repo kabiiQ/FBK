@@ -1,6 +1,7 @@
 package moe.kabii.discord.event
 
 import discord4j.core.event.domain.Event
+import kotlinx.coroutines.*
 import kotlinx.coroutines.reactor.mono
 import reactor.core.publisher.Mono
 import kotlin.reflect.KClass
@@ -13,7 +14,10 @@ abstract class EventListener <E: Event> (val eventType: KClass<E>) {
         return mono {
             @Suppress("UNCHECKED_CAST")
             val casted = requireNotNull(event as? E) { "Handler ${event::class.jvmName} recieved an incorrect event :: $event" }
-            handle(casted)
+            val scope = CoroutineScope(SupervisorJob())
+            withContext(scope.coroutineContext) {
+                handle(casted)
+            }
         }
     }
 }

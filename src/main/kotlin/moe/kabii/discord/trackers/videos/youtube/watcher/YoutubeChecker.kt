@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.streams.youtube.*
@@ -12,13 +12,16 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.jodaDateTime
-import moe.kabii.structure.extensions.loop
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import java.io.IOException
+import java.lang.Runnable
 import java.time.Duration
 import java.time.Instant
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.math.max
 
 sealed class YoutubeCall(val video: YoutubeVideo) {
@@ -32,82 +35,86 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
     override fun run() {
         loop {
             val start = Instant.now()
-
             newSuspendedTransaction {
-                // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
-                // gather all youtube IDs that need to be checked in the API
+                try {
+                    // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
+                    // gather all youtube IDs that need to be checked in the API
 
-                // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
-                // <video id, target list>
-                val targetLookup = mutableMapOf<String, YoutubeCall>()
+                    // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
+                    // <video id, target list>
+                    val targetLookup = mutableMapOf<String, YoutubeCall>()
 
-                // 1: collect all videos we have as 'currently live'
-                val dbLiveVideos = YoutubeLiveEvent.all()
-                dbLiveVideos.forEach { live ->
-                    val callReason = YoutubeCall.Live(live)
-                    targetLookup[callReason.video.videoId] = callReason
-                }
-
-                // 2: collect all 'scheduled' videos with 'expire' update timer due
-                val currentTime = DateTime.now()
-                val dbScheduledVideos =
-                    YoutubeScheduledEvent.find {
-                        YoutubeScheduledEvents.dataExpiration lessEq currentTime
+                    // 1: collect all videos we have as 'currently live'
+                    val dbLiveVideos = YoutubeLiveEvent.all()
+                    dbLiveVideos.forEach { live ->
+                        val callReason = YoutubeCall.Live(live)
+                        targetLookup[callReason.video.videoId] = callReason
                     }
-                dbScheduledVideos.forEach { scheduled ->
-                    val callReason = YoutubeCall.Scheduled(scheduled)
-                    targetLookup[callReason.video.videoId] = callReason
-                }
 
-                // 3: collect all videos that are 'new' and we have no data on
-                val dbNewVideos = YoutubeVideo.find {
-                    YoutubeVideos.lastAPICall eq null
-                }
-                dbNewVideos.forEach { new ->
-                    val callReason = YoutubeCall.New(new)
-                    targetLookup[callReason.video.videoId] = callReason
-                }
-
-                // main IO call, process as we go
-                 targetLookup.keys
-                    .asSequence()
-                    .chunked(50)
-                    .flatMap { chunk ->
-                        LOG.info("yt api call: $chunk")
-                        YoutubeParser.getVideos(chunk).entries
-                    }.forEach { (videoId, ytVideo) ->
-                        try {
-                            val callReason = targetLookup.getValue(videoId)
-
-                            val ytVideoInfo = when (ytVideo) {
-                                is Ok -> {
-                                    // if youtube call succeeded, reflect this in db
-                                    with(callReason.video) {
-                                        lastAPICall = DateTime.now()
-                                        lastTitle = ytVideo.value.title
-                                    }
-                                    ytVideo.value
-                                }
-                                is Err -> {
-                                    when (ytVideo.value) {
-                                        // do not process video if this was an IO issue on our end
-                                        is StreamErr.IO -> return@forEach
-                                        is StreamErr.NotFound -> null
-                                    }
-                                }
-                            }
-
-                            // call specific handlers for each type of content
-                            when (callReason) {
-                                is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                            }
-                        } catch(e: Exception) {
-                            LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
-                            LOG.debug(e.stackTraceString)
+                    // 2: collect all 'scheduled' videos with 'expire' update timer due
+                    val currentTime = DateTime.now()
+                    val dbScheduledVideos =
+                        YoutubeScheduledEvent.find {
+                            YoutubeScheduledEvents.dataExpiration lessEq currentTime
                         }
+                    dbScheduledVideos.forEach { scheduled ->
+                        val callReason = YoutubeCall.Scheduled(scheduled)
+                        targetLookup[callReason.video.videoId] = callReason
                     }
+
+                    // 3: collect all videos that are 'new' and we have no data on
+                    val dbNewVideos = YoutubeVideo.find {
+                        YoutubeVideos.lastAPICall eq null
+                    }
+                    dbNewVideos.forEach { new ->
+                        val callReason = YoutubeCall.New(new)
+                        targetLookup[callReason.video.videoId] = callReason
+                    }
+
+                    // main IO call, process as we go
+                    targetLookup.keys
+                        .asSequence()
+                        .chunked(50)
+                        .flatMap { chunk ->
+                            LOG.info("yt api call: $chunk")
+                            YoutubeParser.getVideos(chunk).entries
+                        }.forEach { (videoId, ytVideo) ->
+                            try {
+                                val callReason = targetLookup.getValue(videoId)
+
+                                val ytVideoInfo = when (ytVideo) {
+                                    is Ok -> {
+                                        // if youtube call succeeded, reflect this in db
+                                        with(callReason.video) {
+                                            lastAPICall = DateTime.now()
+                                            lastTitle = ytVideo.value.title
+                                        }
+                                        ytVideo.value
+                                    }
+                                    is Err -> {
+                                        when (ytVideo.value) {
+                                            // do not process video if this was an IO issue on our end
+                                            is StreamErr.IO -> return@forEach
+                                            is StreamErr.NotFound -> null
+                                        }
+                                    }
+                                }
+
+                                // call specific handlers for each type of content
+                                when (callReason) {
+                                    is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                }
+                            } catch (e: Exception) {
+                                LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
+                            }
+                        }
+                } catch (e: Exception) {
+                    LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                }
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = 60_000L - runDuration.toMillis()
@@ -197,7 +204,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             ytVideo.upcoming -> {
                 val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) { "YouTube provided UPCOMING video with no start time" }
                 // assign video 'scheduled' status
-                val dbScheduled = newSuspendedTransaction {
+                val dbScheduled = propagateTransaction {
                     val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
                         ?: YoutubeScheduledEvent.new {
                             this.ytVideo = dbVideo

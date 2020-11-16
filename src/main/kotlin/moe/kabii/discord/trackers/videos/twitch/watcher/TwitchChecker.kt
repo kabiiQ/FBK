@@ -32,8 +32,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
         loop {
             val start = Instant.now()
             // get all tracked sites for this service
-            try {
-                newSuspendedTransaction {
+            newSuspendedTransaction {
+                try {
                     // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
@@ -62,24 +62,24 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             return@mapNotNull null
                         }
                         taskScope.launch {
-                            try {
-                                newSuspendedTransaction {
+                            newSuspendedTransaction {
+                                try {
                                     val filteredTargets = getActiveTargets(trackedChannel)
-                                    if(filteredTargets != null) {
+                                    if (filteredTargets != null) {
                                         updateChannel(trackedChannel, data.orNull(), filteredTargets)
                                     } // else channel has been untracked entirely
+                                } catch (e: Exception) {
+                                    LOG.warn("Error updating Twitch channel: $trackedChannel")
+                                    LOG.debug(e.stackTraceString)
                                 }
-                            } catch(e: Exception) {
-                                LOG.warn("Error updating Twitch channel: $trackedChannel")
-                                LOG.debug(e.stackTraceString)
                             }
                             Unit
                         }
                     }.joinAll()
+                } catch(e: Exception) {
+                    LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
                 }
-            } catch(e: Exception) {
-                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                LOG.debug(e.stackTraceString)
             }
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())

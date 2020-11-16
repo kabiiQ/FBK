@@ -28,8 +28,8 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
         loop {
 
             val start = Instant.now()
-            try {
-                newSuspendedTransaction {
+            newSuspendedTransaction {
+                try {
 
                     // get all tracked lists for this site
                     val lists = TrackedMediaLists.MediaList.find {
@@ -40,7 +40,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                     lists.forEach { trackedList ->
                         try {
                             val filteredTargets = getActiveTargets(trackedList)
-                            if(filteredTargets == null) return@forEach // list has been untracked entirely
+                            if (filteredTargets == null) return@forEach // list has been untracked entirely
 
                             val newList = trackedList.downloadCurrentList()!!
 
@@ -59,11 +59,11 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                         // arbitrary delay - heavy rate limits between calls on these platforms
                         delay(3500L)
                     }
+                } catch (e: Exception) {
+                    // catch-all, we don't want this thread to end
+                    LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
                 }
-            } catch (e: Exception) {
-                // catch-all, we don't wan this thread to end
-                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                LOG.debug(e.stackTraceString)
             }
             // only run every few minutes at max
             val runDuration = Duration.between(start, Instant.now())

@@ -39,6 +39,7 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
 
         loop {
             newSuspendedTransaction {
+                try {
                 // subscribe to updates for all channels with active targets
                 val ytChannels = TrackedStreams.StreamChannel.find {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
@@ -69,7 +70,10 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
                         currentSubscriptions = currentSubscriptions + channel.siteChannelID
                     }
                 }
-            }
+                } catch (e: Exception) {
+                    LOG.error("Uncaught error in YoutubeSubscriptionManager: ${e.message}")
+                    LOG.warn(e.stackTraceString)
+                }
 
             // no un-necessary calls are made here, we can run this on a fairly low interval
             delay(30_000L)

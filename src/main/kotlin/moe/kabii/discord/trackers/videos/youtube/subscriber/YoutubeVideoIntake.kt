@@ -7,6 +7,7 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import org.dom4j.io.SAXReader
@@ -55,15 +56,14 @@ object YoutubeVideoIntake {
                 val channelId = entry.elements("channelId").first().text
                 LOG.info("debug: $videoId : $channelId")
 
-                newSuspendedTransaction {
-                    System.out.println("taking video: $videoId")
+                propagateTransaction {
+                    LOG.info("taking video: $videoId")
                     YoutubeVideo.getOrInsert(videoId, channelId)
                 }
-
             }
         } catch(e: Exception) {
             LOG.warn("Error in YouTube XML intake: ${e.message}")
-            LOG.warn(e.stackTraceString)
+            LOG.info(e.stackTraceString)
         }
     }
 }
