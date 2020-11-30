@@ -43,7 +43,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
     suspend fun streamStart(video: YoutubeVideoInfo, dbVideo: YoutubeVideo) {
         // video will have live info if this function is called
         val liveInfo = checkNotNull(video.liveInfo)
-        val viewers = checkNotNull(liveInfo.concurrent)
+        val viewers = liveInfo.concurrent ?: 0
 
         // create live stats object for video
         // should not already exist

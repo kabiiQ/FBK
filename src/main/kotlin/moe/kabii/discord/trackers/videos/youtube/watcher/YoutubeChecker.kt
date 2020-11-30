@@ -33,7 +33,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
     override fun run() {
         loop {
             val start = Instant.now()
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
                     // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
                     // gather all youtube IDs that need to be checked in the API
