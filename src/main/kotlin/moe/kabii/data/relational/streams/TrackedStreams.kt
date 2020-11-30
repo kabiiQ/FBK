@@ -103,7 +103,7 @@ object TrackedStreams {
     }
 
     object Notifications : IntIdTable() {
-        val targetID = reference("assoc_target_id", Targets, ReferenceOption.CASCADE).uniqueIndex()
+        val targetID = reference("assoc_target_id", Targets, ReferenceOption.CASCADE)
         val channelID = reference("channel_id", StreamChannels, ReferenceOption.CASCADE)
         val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
     }
