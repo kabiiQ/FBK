@@ -5,6 +5,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
+import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
@@ -89,8 +90,10 @@ object RoleReactions : CommandContainer {
                 // attempt to react - we may be missing reaction permissions or visibility for the chosen emoji
                 val reactionAdd = message.addReaction(reactEmoji.toReactionEmoji()).thenReturn(Unit).tryAwait()
                 if(reactionAdd is Err) {
-                    val err = reactionAdd.value as? ClientException
-                    println(err)
+                    val ex = reactionAdd.value
+                    val err = ex as? ClientException
+                    LOG.info("Adding reaction for reaction role failed: ${ex.message}")
+                    LOG.debug(ex.stackTraceString)
                     val errMessage = if(err?.status?.code() == 403) "I am missing permissions to add reactions to that message." else "I am unable to add that reaction."
                     error(errMessage).awaitSingle()
                     return@discord
