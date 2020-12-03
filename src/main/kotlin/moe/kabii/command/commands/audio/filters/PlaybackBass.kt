@@ -43,7 +43,6 @@ object PlaybackBass : AudioCommandContainer {
                     return@discord
                 }
                 val data = track.userData as QueueData
-                data.audioFilters.reset()
                 data.audioFilters.addExclusiveFilter(FilterType.Bass(targetBass))
                 data.apply = true
                 audio.player.stopTrack()
