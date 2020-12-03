@@ -4,9 +4,17 @@
 
 FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server. 
 
-FBK is currently in active development and will see a public release in 2020.
+# Add FBK to your Discord server
 
-[![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)A
+FBK is now available for invite and public use as of December 2020. I have not done any sort of advertising yet, but feel free to use it or share it.
+
+[Invite link granting default permissions](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=288681168&scope=bot)
+
+[Invite link granting Administrator (all permissions)](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=8&scope=bot)
+
+# Join 
+
+[![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
 # Features
 FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
@@ -24,6 +32,9 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [**Fast forward/rewind/skip** to timestamp in songs at will](https://github.com/kabiiQ/FBK/wiki/Music-Player#playback-manipulation)
   - [**Speed up songs**, change their pitch, or apply a bass boost](https://github.com/kabiiQ/FBK/wiki/Music-Player#audio-manipulationfilters)
 
+- Games
+  - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games-(Connect-4))
+
 - Automatic role assignment/removal on (each only if configured):
   - [User joining server (per invite code if needed)](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-joining-your-server)
   - [User joining/leaving voice channels](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-in-a-voice-channel)
@@ -32,10 +43,10 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
 - Service Integration
-  - [Livestream integration](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
+  - [Livestream/Video integration](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
     - Post information on specific streams while they are live
     - Optionally mention a role when they become live
-    - Currently supports **Twitch** and **YouTube** live streams
+    - Currently supports **Twitch** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list integration](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList and Kitsu**
@@ -75,7 +86,7 @@ This bot is written in [Kotlin](https://kotlinlang.org/).
 The big libraries making my work on KizunaAi doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L42) file.
 
 ## Self-Hosting:
-As an open-source project, KizunaAi can be compiled using her Gradle build script, and ran independently. To run a custom version of the bot will require editing keys.toml with your own API keys. As provided, she will require access to a [MongoDB](https://www.mongodb.com/try/download/community) and a [PostgreSQL](https://www.postgresql.org/download/) server. Detailed instructions or support should not be expected for this use case. You are free to do so, but I would still appreciate your feedback for the public version or your membership in the community Discord server.
+As an open-source project, KizunaAi can be compiled using her Gradle build script, and ran independently. To run a custom version of the bot will require editing keys.toml with your own API keys. As provided, she will require access to a [MongoDB](https://www.mongodb.com/try/download/community) and a [PostgreSQL](https://www.postgresql.org/download/) server. Database logins, required API keys, and ports that are opened for use must be placed in `keys.toml`. Detailed instructions or support should not be expected for this use case. You are free to do so, but I would still appreciate your feedback for the public version or your membership in the community Discord server.
 
 
 # Licensing / Liability
