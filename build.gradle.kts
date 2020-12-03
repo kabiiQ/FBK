@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.4.10"
+    val kotlinVer = "1.4.20"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -21,10 +21,6 @@ repositories {
         url = uri("https://jitpack.io")
     }
     maven {
-        name = "exposed-repo"
-        url = uri("https://dl.bintray.com/kotlin/exposed")
-    }
-    maven {
         name = "sonatype-snapshots"
         url = uri("https://oss.sonatype.org/content/repositories/snapshots")
     }
@@ -32,6 +28,14 @@ repositories {
     maven {
         name = "spring.io-snapshots"
         url = uri("https://repo.spring.io/snapshot")
+    }
+    maven {
+        name = "exposed-bintray"
+        url = uri("https://dl.bintray.com/kotlin/exposed")
+    }
+    maven {
+        name = "kotlinx-bintray"
+        url = uri("https://kotlin.bintray.com/kotlinx")
     }
 }
 
@@ -41,33 +45,32 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.3.9"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
+    val coroutinesVer = "1.4.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.0-M1-1.4.0-rc")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0-SNAPSHOT") // can update once d4j 3.2 is available
+    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0") // can update once d4j 3.2 is available
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE") // reactor kotlin coroutine compat
-    implementation("io.projectreactor:reactor-core")
+    //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.1.1") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.1.2") // discord websocket and api
 
     // twitch irc
-    implementation("com.github.twitch4j:twitch4j:1.1.1")
+    implementation("com.github.twitch4j:twitch4j:1.1.3")
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    //implementation("com.sedmelluq:lavaplayer:1.3.50") // discord audio library
-    implementation("com.github.Devoxin:lavaplayer:1.3.60")
-    implementation("com.github.natanbc:lavadsp:0.5.2") // some lavaplayer audio filters
+    implementation("com.sedmelluq:lavaplayer:1.3.63") // discord audio library
+    implementation("com.github.natanbc:lavadsp:0.7.5") // some lavaplayer audio filters
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:4.8.1")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
 
     // other api - json response parsing
-    val moshiVer = "1.9.3"
+    val moshiVer = "1.11.0"
     implementation("com.squareup.moshi:moshi:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
@@ -82,15 +85,15 @@ dependencies {
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.1.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.2.2")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.27.1"
+    val exposedVer = "0.28.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.2.16")
+    implementation("org.postgresql:postgresql:42.2.18")
 
     // .toml token configuration
     implementation("com.uchuhimo:konf:0.23.0")
@@ -130,9 +133,9 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "15"
     }
-    java.targetCompatibility = JavaVersion.VERSION_14
+    java.targetCompatibility = JavaVersion.VERSION_15
 
     build {
         dependsOn(updateVersion)

@@ -16,7 +16,6 @@ import moe.kabii.structure.extensions.jodaDateTime
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
