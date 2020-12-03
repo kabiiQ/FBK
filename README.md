@@ -12,7 +12,7 @@ FBK is now available for invite and public use as of December 2020. I have not d
 
 [Invite link granting Administrator (all permissions)](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=8&scope=bot)
 
-# Join 
+# Join our Discord server
 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
