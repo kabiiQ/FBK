@@ -24,7 +24,7 @@ class Metadata private constructor(
         }
 
         val buildInfo: String = if(current == null) "Development Build" else {
-            val currentFlag = if(current.flag.isNullOrBlank()) "-${current.flag}" else ""
+            val currentFlag = if(!current.flag.isNullOrBlank()) "-${current.flag}" else ""
             "Release ${current.major}.${current.minor}$currentFlag build #${current.build}"
         }
     }
