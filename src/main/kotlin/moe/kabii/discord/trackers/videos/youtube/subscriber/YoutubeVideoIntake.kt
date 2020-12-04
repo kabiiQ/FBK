@@ -53,10 +53,10 @@ object YoutubeVideoIntake {
 
                 val videoId = entry.elements("videoId").first().text
                 val channelId = entry.elements("channelId").first().text
-                LOG.info("debug: $videoId : $channelId")
+                LOG.trace("debug: $videoId : $channelId")
 
                 propagateTransaction {
-                    LOG.info("taking video: $videoId")
+                    LOG.trace("taking video: $videoId")
                     YoutubeVideo.getOrInsert(videoId, channelId)
                 }
             }

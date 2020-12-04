@@ -73,7 +73,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                         .asSequence()
                         .chunked(50)
                         .flatMap { chunk ->
-                            LOG.info("yt api call: $chunk")
+                            LOG.debug("yt api call: $chunk")
                             YoutubeParser.getVideos(chunk).entries
                         }.forEach { (videoId, ytVideo) ->
                             try {
@@ -129,9 +129,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             val viewers = ytVideo.liveInfo?.concurrent
             if(viewers != null) {
                 dbLive.updateViewers(viewers)
-            } else {
-                LOG.warn("YouTube returned LIVE stream with no viewer information: $ytVideo")
-            }
+            } // else case seems to happen with membership streams that weren't initially private ? or similar cases
 
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
             filteredTargets(call.video.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
