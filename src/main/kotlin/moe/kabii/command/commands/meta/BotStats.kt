@@ -45,7 +45,7 @@ object BotStats : CommandContainer {
     }
 
     private val uptimeFormat = "dddd'd'HH'h'mm'm'"
-    object BotInfo : Command("bot", "botinfo", "botstats", "uptime") {
+    object BotInfo : Command("bot", "botinfo", "botstats", "uptime", "version") {
         override val wikiPath = "Bot-Meta-Commands#bot-info-command"
 
         init {
