@@ -124,8 +124,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         try {
-                            val dbMessage = notif.messageID
-                            val discordMessage = getDiscordMessage(dbMessage, channel)
+                            val discordMessage = getDiscordMessage(notif, channel)
                             if (discordMessage != null) {
                                 discordMessage.delete().success().awaitSingle()
 
@@ -146,7 +145,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                 notifications.forEach { notif ->
                     try {
                         val messageID = notif.messageID
-                        val discordMessage = getDiscordMessage(messageID, channel)
+                        val discordMessage = getDiscordMessage(notif, channel)
                         if (discordMessage != null) {
                             val guildId = discordMessage.guildId.orNull()
                             val features = if (guildId != null) {
@@ -162,10 +161,15 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             } else {
                                 discordMessage.delete()
                             }.awaitSingle()
-
-                            // edit channel name if feature is enabled and stream ended
-                            checkAndRenameChannel(discordMessage.channel.awaitSingle(), endingStream = notif)
                         }
+
+                        // edit channel name if feature is enabled and stream ended
+                        val disChan = discord.getChannelById(messageID.channel.channelID.snowflake)
+                            .ofType(MessageChannel::class.java)
+                            .awaitSingle()
+
+                        checkAndRenameChannel(disChan, endingStream = notif)
+
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
                         LOG.trace(e.stackTraceString)
@@ -247,18 +251,17 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                         this.targetID = target
                         this.channelID = channel
+                        this.deleted = false
                     }
 
                     // edit channel name if feature is enabled and stream goes live
                     checkAndRenameChannel(chan)
 
                 } else {
-                    val existingNotif = getDiscordMessage(existing.messageID, channel)
-                    if (existingNotif != null) {
-                        if(changed) {
-                            existingNotif.edit { msg -> msg.setEmbed(embed.block) }.tryAwait()
-                        }
-                    } else existing.delete()
+                    val existingNotif = getDiscordMessage(existing, channel)
+                    if (existingNotif != null && changed) {
+                        existingNotif.edit { msg -> msg.setEmbed(embed.block) }.tryAwait()
+                    }
                 }
             } catch(e: Exception) {
                 LOG.info("Error updating Twitch target: $target :: ${e.message}")
@@ -268,10 +271,16 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
     }
 
     @WithinExposedContext
-    private suspend fun getDiscordMessage(dbMessage: MessageHistory.Message, channel: TrackedStreams.StreamChannel) = try {
-        discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+    private suspend fun getDiscordMessage(dbNotif: TrackedStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
+        if(dbNotif.deleted) null else {
+            val dbMessage = dbNotif.messageID
+            discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+        }
     } catch(e: Exception) {
-        LOG.trace("Stream notification for Twitch/${channel.siteChannelID} has been deleted")
+        if(e is ClientException && e.status.code() == 404) {
+            dbNotif.deleted = true
+        }
+        LOG.trace("Stream notification for Twitch/${channel.siteChannelID} not found :: ${e.message}")
         null
     }
 }

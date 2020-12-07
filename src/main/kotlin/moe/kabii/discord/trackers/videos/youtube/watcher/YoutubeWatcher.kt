@@ -358,6 +358,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                 this.targetID = target
                 this.channelID = target.streamChannel
+                this.deleted = false
             }
 
             // edit channel name if feature is enabled and stream starts

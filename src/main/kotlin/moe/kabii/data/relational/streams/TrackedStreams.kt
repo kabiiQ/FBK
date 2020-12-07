@@ -106,12 +106,15 @@ object TrackedStreams {
         val targetID = reference("assoc_target_id", Targets, ReferenceOption.CASCADE)
         val channelID = reference("channel_id", StreamChannels, ReferenceOption.CASCADE)
         val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
+        val deleted = bool("notif_deleted").default(false)
     }
 
     class Notification(id: EntityID<Int>) : IntEntity(id) {
         var targetID by Target referencedOn Notifications.targetID
         var channelID by StreamChannel referencedOn Notifications.channelID
         var messageID by MessageHistory.Message referencedOn Notifications.message
+        // if the discord message is deleted, we don't need to keep requesting it from Discord. however, we should not re-post this exact notification.
+        var deleted by Notifications.deleted
 
         companion object : IntEntityClass<Notification>(Notifications)
     }
