@@ -48,3 +48,8 @@ admin_channels = [
     582802415057633281
 ]
 log_channel = 0
+
+[twitter]
+api_key = ''
+api_key_secret = ''
+bearer_token = ''
