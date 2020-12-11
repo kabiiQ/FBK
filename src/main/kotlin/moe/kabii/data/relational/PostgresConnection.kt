@@ -12,6 +12,8 @@ import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
 import moe.kabii.data.relational.streams.youtube.YoutubeLiveEvents
 import moe.kabii.data.relational.streams.youtube.YoutubeScheduledEvents
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
+import moe.kabii.data.relational.twitter.TwitterFeeds
+import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -41,6 +43,8 @@ internal object PostgresConnection {
                 YoutubeScheduledEvents,
                 YoutubeLiveEvents,
                 UserLog.GuildRelationships,
+                TwitterFeeds,
+                TwitterTargets
             )
         }
     }

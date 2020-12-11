@@ -53,6 +53,11 @@ object Keys : ConfigSpec("") {
         val channels by required<List<Long>>("admin_channels")
         val logChannel by required<Long>("log_channel")
     }
+    object Twitter : ConfigSpec() {
+        val apiKey by required<String>("api_key")
+        val apiSecret by required<String>("api_key_secret")
+        val token by required<String>("bearer_token")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

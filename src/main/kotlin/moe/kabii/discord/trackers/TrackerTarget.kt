@@ -106,7 +106,7 @@ sealed class AnimeTarget(
 object MALTarget : AnimeTarget(
     "MyAnimeList",
     listOf(
-        Regex("myanimelist.net/(animelist|mangalist|profile)/[a-zA-Z0-9_]{2,16}")
+        Regex("myanimelist\\.net/(?:animelist|mangalist|profile)/([a-zA-Z0-9_]{2,16})")
     ),
     "mal", "myanimelist", "myanimelist.net", "animelist", "mangalist"
 ) {
@@ -117,13 +117,24 @@ object MALTarget : AnimeTarget(
 object KitsuTarget : AnimeTarget(
     "Kitsu",
     listOf(
-        Regex("kitsu.io/users/[a-zA-Z0-9_]{3,20}")
+        Regex("kitsu.io/users/([a-zA-Z0-9_]{3,20})")
     ),
     "kitsu", "kitsu.io"
 ) {
     override val dbSite: ListSite
         get() = ListSite.KITSU
 }
+
+object TwitterTarget : TrackerTarget(
+    "Twitter",
+    FeatureChannel::twitterChannel,
+    "twitter",
+    listOf(
+        Regex("twitter.com/([a-zA-Z0-9_]{4,15})"),
+        Regex("@([a-zA-Z0-9]{4,15})")
+    ),
+    "twitter", "tweets", "twit", "twitr", "tr"
+)
 
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
@@ -134,6 +145,10 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
         val declaredTargets = TrackerTarget::class.sealedSubclasses
             .flatMap { c -> c.sealedSubclasses }
             .mapNotNull { c -> c.objectInstance }
+            .plus(
+                TrackerTarget::class.sealedSubclasses
+                    .mapNotNull { c -> c.objectInstance }
+            )
 
         fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID

@@ -9,6 +9,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.trackers.AnimeTarget
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.trackers.TwitterTarget
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 
@@ -62,6 +63,10 @@ object TrackerCommandBase : CommandContainer {
                     is AnimeTarget -> when(action) {
                         Action.TRACK -> MediaTrackerCommand.track(this, targetArgs)
                         Action.UNTRACK -> MediaTrackerCommand.untrack(this, targetArgs)
+                    }
+                    is TwitterTarget -> when(action) {
+                        Action.TRACK -> TwitterTrackerCommand.track(this, targetArgs)
+                        Action.UNTRACK -> TwitterTrackerCommand.untrack(this, targetArgs)
                     }
                 }
             }

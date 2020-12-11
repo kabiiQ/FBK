@@ -7,6 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.Page
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
@@ -48,6 +50,14 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.mapTo(tracks) { target ->
                     val list = target.mediaList
                     "${list.site.targetType.full}/${list.siteListId}: by <@${target.userTracked.userID}>"
+                }
+
+                // get tracked twitter feeds in this channel
+                TwitterTarget.find {
+                    TwitterTargets.discordChannel eq dbChannel.id
+                }.mapTo(tracks) { target ->
+                    val feed = target.twitterFeed
+                    "Twitter/${feed.userId} by <@${target.tracker.userID}>"
                 }
             }
 

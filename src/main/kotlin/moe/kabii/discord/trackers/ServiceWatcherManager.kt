@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
+import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
@@ -29,6 +30,9 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
                 Thread(checker, "ListWatcher-${site.name}")
             }
             yieldAll(mediaThreads)
+
+            val twitter = TwitterChecker(discord)
+            yield(Thread(twitter, "TwitterChecker"))
 
         }.toList()
     }

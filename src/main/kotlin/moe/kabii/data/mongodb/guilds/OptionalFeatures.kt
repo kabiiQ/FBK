@@ -16,6 +16,7 @@ data class FeatureChannel(
     val channelID: Long,
     var twitchChannel: Boolean = false,
     var youtubeChannel: Boolean = false,
+    var twitterChannel: Boolean = false,
     var animeChannel: Boolean = false,
     var logChannel: Boolean = false,
     var musicChannel: Boolean = false,
@@ -25,9 +26,10 @@ data class FeatureChannel(
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
     val youtubeSettings: YoutubeSettings = YoutubeSettings(),
+    val twitterSettings: TwitterSettings = TwitterSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
-    fun anyEnabled() = booleanArrayOf(twitchChannel, youtubeChannel, animeChannel, logChannel).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(twitchChannel, youtubeChannel, twitterChannel, animeChannel, logChannel).any(true::equals)
 
     fun isStreamChannel() = booleanArrayOf(twitchChannel, youtubeChannel).any(true::equals)
 
@@ -36,9 +38,10 @@ data class FeatureChannel(
         if(defaultTracker != null && type.isSuperclassOf(defaultTracker!!::class)) return defaultTracker
 
         // fallback to enabled tracker of specified type
-        // twitch first, so if multiple are enabled, twitch will be the default
+        // if multiple are enabled, it will default in this order
         return when {
             twitchChannel && type.isSuperclassOf(TwitchTarget::class) -> TwitchTarget
+            twitterChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
             youtubeChannel && type.isSuperclassOf(YoutubeTarget::class) -> YoutubeTarget
             animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             else -> null
@@ -78,6 +81,13 @@ data class YoutubeSettings(
     var streamCreation: Boolean = false,
 
     var upcomingChannel: Long? = null
+)
+
+data class TwitterSettings(
+    var displayNormalTweet: Boolean = true,
+    var displayReplies: Boolean = true,
+    var displayQuote: Boolean = true,
+    var displayRetweet: Boolean = false
 )
 
 data class ChannelMark(
