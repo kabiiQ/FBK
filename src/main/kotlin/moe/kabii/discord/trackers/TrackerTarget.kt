@@ -66,7 +66,7 @@ object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::youtubeChannel,
-    "yt",
+    "youtube",
     listOf(
         Regex("([a-zA-Z0-9-_]{24})"),
         Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})")
@@ -131,7 +131,7 @@ object TwitterTarget : TrackerTarget(
     "twitter",
     listOf(
         Regex("twitter.com/([a-zA-Z0-9_]{4,15})"),
-        Regex("@([a-zA-Z0-9]{4,15})")
+        Regex("@([a-zA-Z0-9_]{4,15})")
     ),
     "twitter", "tweets", "twit", "twitr", "tr"
 )

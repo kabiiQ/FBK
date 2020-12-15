@@ -6,8 +6,7 @@ import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 
 object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
-    override val wikiPath: String?
-        get() = TODO("Not yet implemented")
+    override val wikiPath = "Twitter-Tracker"
 
     object TwitterConfigModule : ConfigurationModule<TwitterSettings>(
         "twitter tracker",
