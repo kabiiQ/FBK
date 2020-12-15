@@ -19,18 +19,30 @@ import reactor.core.publisher.Mono
 
 object ReactionRoleHandler {
     object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
-        override suspend fun handle(event: ReactionAddEvent) = handleReactionRole(event.messageId, event.guildId.orNull(), event.guild, event.userId, event.emoji)
+        override suspend fun handle(event: ReactionAddEvent) {
+            val guildId = event.guildId.orNull() ?: return
+            val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+            val clean = config.options.featureChannels[event.channelId.asLong()]?.cleanReactionRoles
+
+            handleReactionRole(event.messageId, event.guild, event.message, config, event.userId, event.emoji, clean)
+        }
     }
 
     object ReactionRemoveListener : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
-        override suspend fun handle(event: ReactionRemoveEvent) = handleReactionRole(event.messageId, event.guildId.orNull(), event.guild, event.userId, event.emoji)
+        override suspend fun handle(event: ReactionRemoveEvent) {
+            val guildId = event.guildId.orNull() ?: return
+            val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+
+            // if this channel is set up with "clean" reaction roles, ignore reaction "remove" events. if this feature is not enabled, they are handled the same as "add" events.
+            val clean = config.options.featureChannels[event.channelId.asLong()]?.cleanReactionRoles
+            if(clean == true) return
+
+            handleReactionRole(event.messageId, event.guild, event.message, config, event.userId, event.emoji, clean)
+        }
     }
 
     // handle add and removes the same - they are a toggle depending on the user having the role, not
-    suspend fun handleReactionRole(messageId: Snowflake, guildId: Snowflake?, guild: Mono<Guild>, userId: Snowflake, emoji: ReactionEmoji) {
-        val guildID = guildId ?: return
-        val config = GuildConfigurations.getOrCreateGuild(guildID.asLong())
-
+    suspend fun handleReactionRole(messageId: Snowflake, guild: Mono<Guild>, message: Mono<Message>, config: GuildConfiguration, userId: Snowflake, emoji: ReactionEmoji, clean: Boolean?) {
         // check if this is a registered reaction role message
         val reactionRole = config.selfRoles.reactionRoles
             .filter { cfg -> cfg.message.messageID == messageId.asLong() }
@@ -43,17 +55,25 @@ object ReactionRoleHandler {
 
         if(member.isBot) return
 
-        val hasRole = member.roles
-            .filter { role -> role.id.asLong() == reactionRole.role }
-            .hasElements().awaitSingle()
+        val reactionRoleId = reactionRole.role.snowflake
+        val hasRole = member.roleIds.contains(reactionRoleId)
 
         val action = if(hasRole) member.removeRole(reactionRole.role.snowflake, info)
         else member.addRole(reactionRole.role.snowflake, info)
 
-        val roleReq = action.thenReturn(Unit).tryAwait()
+        try {
+            action.thenReturn(Unit).awaitSingle()
 
-        if(roleReq is Err) {
-            LOG.debug("Reaction role error: ${roleReq.value.message}")
+            // if "clean" reaction-role config is enabled, remove user reaction here
+            if(clean == true) {
+                message.flatMap { m -> m.removeReaction(emoji, userId) }
+                    .thenReturn(Unit)
+                    .tryAwait()
+            }
+
+        } catch(e: Exception) {
+            LOG.debug("Reaction role error: ${e.message}")
+
         }
     }
 }

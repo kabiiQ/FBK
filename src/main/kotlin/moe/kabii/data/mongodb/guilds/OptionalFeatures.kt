@@ -22,6 +22,7 @@ data class FeatureChannel(
     var musicChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
     var allowStarboarding: Boolean = true,
+    var cleanReactionRoles: Boolean = false,
     var defaultTracker: TrackerTarget? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
