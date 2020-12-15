@@ -25,6 +25,8 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     var liveEvent by YoutubeLiveEvent optionalReferencedOn YoutubeVideos.liveEvent
     var scheduledEvent by YoutubeScheduledEvent optionalReferencedOn YoutubeVideos.scheduledEvent
 
+    val notifications by YoutubeNotification referrersOn YoutubeNotifications.videoID
+
     companion object : LongEntityClass<YoutubeVideo>(YoutubeVideos) {
         fun getVideo(videoId: String): YoutubeVideo? = find {
             YoutubeVideos.videoId eq videoId

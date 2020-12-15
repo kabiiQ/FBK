@@ -90,7 +90,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     }
 
     @WithinExposedContext
-    suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.Notification? = null) {
+    suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
         // if this is a guild channel with the rename feature enabled, execute this functionality
         val guildChan = channel as? TextChannel ?: return // can not use feature for dms
         val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
@@ -99,9 +99,13 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         val feature = features.streamSettings
         if(!feature.renameEnabled) return // feature not enabled in channel
 
+        // get all live streams in this channel
+        val liveChannels = mutableListOf<TrackedStreams.StreamChannel>()
+
         // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
-        val live = TrackedStreams.Notification.wrapRows(
-            TrackedStreams.Notifications
+        // twitch notifs
+        DBTwitchStreams.Notification.wrapRows(
+            DBTwitchStreams.Notifications
                 .innerJoin(MessageHistory.Messages
                     .innerJoin(DiscordObjects.Channels))
                 .select {
@@ -109,25 +113,43 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 })
             .filter { notif ->
                 if(endingStream != null) {
-                    notif.id != endingStream.id
+                    notif.channelID.id != endingStream.id
                 } else true
             }
-            .toList().sortedBy(TrackedStreams.Notification::id)
+            .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
+
+        // yt notifs
+        YoutubeNotification.wrapRows(
+            YoutubeNotifications
+                .innerJoin(MessageHistory.Messages
+                    .innerJoin(DiscordObjects.Channels))
+                .select {
+                    DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                })
+            .filter { notif ->
+                if(endingStream != null) {
+                    notif.videoID.ytChannel.id != endingStream.id
+                } else true
+            }
+            .mapTo(liveChannels) { it.videoID.ytChannel }
+
 
         // copy marks for safety (this thread can run at any time)
         val marks = feature.marks.toList()
         val currentName = guildChan.name
 
         // generate new channel name
-        val newName = if(live.isEmpty()) {
+        val newName = if(liveChannels.isEmpty()) {
             if(feature.notLive.isBlank()) "not-live" else feature.notLive
         } else {
-            val liveMarks = live.mapNotNull { liveNotif ->
-                val dbChannel = MongoStreamChannel.of(liveNotif.channelID)
-                marks.find { existing ->
-                    existing.channel == dbChannel
-                }?.mark
-            }.joinToString("")
+            val liveMarks = liveChannels
+                .sortedBy(TrackedStreams.StreamChannel::id)
+                .mapNotNull { liveChannel ->
+                    val dbChannel = MongoStreamChannel.of(liveChannel)
+                    marks.find { existing ->
+                        existing.channel == dbChannel
+                    }?.mark
+                }.joinToString("")
             val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".take(MagicNumbers.Channel.NAME)
             if(new.isBlank()) "\uD83D\uDD34-live" else new
         }

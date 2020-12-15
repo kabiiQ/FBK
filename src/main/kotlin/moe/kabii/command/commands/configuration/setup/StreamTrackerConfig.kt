@@ -27,7 +27,7 @@ object StreamTrackerConfig : Command("ytcfg", "ytconfig", "youtubecfg", "streamc
             StreamSettings::thumbnails
         ),
         BooleanElement(
-            "Include viewer counts in summary (twitch)",
+            "Include viewer counts in summary",
             listOf("viewers", "peakviews", "peakviewers", "peak"),
             StreamSettings::viewers
         ),

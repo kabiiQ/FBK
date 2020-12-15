@@ -50,4 +50,29 @@ object DBTwitchStreams {
             averageViewers += (current - averageViewers) / ++uptimeTicks
         }
     }
+
+    object Notifications : IntIdTable() {
+        val targetID = reference("assoc_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE).uniqueIndex()
+        val channelID = reference("channel_id", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
+        val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
+        val deleted = bool("notif_deleted").default(false)
+    }
+
+    class Notification(id: EntityID<Int>) : IntEntity(id) {
+        var targetID by TrackedStreams.Target referencedOn Notifications.targetID
+        var channelID by TrackedStreams.StreamChannel referencedOn Notifications.channelID
+        var messageID by MessageHistory.Message referencedOn Notifications.message
+        // if the discord message is deleted, we don't need to keep requesting it from Discord, and we should not re-post this exact notification.
+        var deleted by Notifications.deleted
+
+        companion object : IntEntityClass<Notification>(Notifications) {
+            fun getForChannel(dbChannel: TrackedStreams.StreamChannel) = find {
+                Notifications.channelID eq dbChannel.id
+            }
+
+            fun getForTarget(dbTarget: TrackedStreams.Target) = find {
+                Notifications.targetID eq dbTarget.id
+            }
+        }
+    }
 }

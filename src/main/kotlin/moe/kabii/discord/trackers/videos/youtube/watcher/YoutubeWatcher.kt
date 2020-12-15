@@ -62,7 +62,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
             try {
-                createLiveNotification(video, target, new = true)
+                createLiveNotification(dbVideo, video, target, new = true)
             } catch(e: Exception) {
                 // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                 LOG.warn("Error while creating live notification for channel: ${dbVideo.ytChannel} :: ${e.message}")
@@ -74,7 +74,8 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
     @WithinExposedContext
     suspend fun streamEnd(video: YoutubeVideoInfo?, dbStream: YoutubeLiveEvent) {
         // edit/delete all notifications and remove stream from db when stream ends
-        dbStream.ytVideo.ytChannel.notifications.forEach { notification ->
+
+        dbStream.ytVideo.notifications.forEach { notification ->
             try {
 
                 val dbMessage = notification.messageID
@@ -88,7 +89,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                         edit.setEmbed { spec ->
                             spec.setColor(inactiveColor)
                             val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                            spec.addField("Viewers", viewers, true)
+                            if(features.viewers) spec.addField("Viewers", viewers, true)
 
                             if (video != null) {
                                 // stream has ended and vod is available - edit notifications to reflect
@@ -131,7 +132,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
                 }.then().success().awaitSingle()
 
-                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = notification)
+                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
@@ -314,7 +315,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
     @WithinExposedContext
     @Throws(ClientException::class)
-    suspend fun createLiveNotification(liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
+    suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
         val chan = getChannel(target)
@@ -355,10 +356,10 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             }.awaitSingle()
 
             // log message in db
-            TrackedStreams.Notification.new {
+            YoutubeNotification.new {
                 this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                 this.targetID = target
-                this.channelID = target.streamChannel
+                this.videoID = dbVideo
                 this.deleted = false
             }
 

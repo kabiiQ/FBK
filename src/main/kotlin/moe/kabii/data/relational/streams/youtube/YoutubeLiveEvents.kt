@@ -43,3 +43,31 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
         }.firstOrNull()
     }
 }
+
+object YoutubeNotifications : IntIdTable() {
+    val targetID = reference("assoc_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE)
+    val videoID = reference("yt_video_id", YoutubeVideos, ReferenceOption.CASCADE)
+    val message = reference("message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
+    val deleted = bool("notif_deleted").default(false)
+
+    override val primaryKey = PrimaryKey(targetID, videoID)
+}
+
+class YoutubeNotification(id: EntityID<Int>) : IntEntity(id) {
+    var targetID by TrackedStreams.Target referencedOn YoutubeNotifications.targetID
+    var videoID by YoutubeVideo referencedOn YoutubeNotifications.videoID
+    var messageID by MessageHistory.Message referencedOn YoutubeNotifications.message
+    // if the discord message is deleted, we don't need to keep requesting it from Discord, and we should not re-post this exact notification.
+    var deleted by YoutubeNotifications.deleted
+
+    companion object : IntEntityClass<YoutubeNotification>(YoutubeNotifications) {
+        fun getForTarget(dbTarget: TrackedStreams.Target) = find {
+            YoutubeNotifications.targetID eq dbTarget.id
+        }
+
+        fun getCompound(dbTarget: TrackedStreams.Target, dbVideo: YoutubeVideo) = find {
+            YoutubeNotifications.targetID eq dbTarget.id and
+                    (YoutubeNotifications.videoID eq dbVideo.id)
+        }
+    }
+}

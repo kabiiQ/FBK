@@ -134,9 +134,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
             filteredTargets(call.video.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
                 // verify target already has a notification
-                if(target.notifications.empty()) {
+                if(YoutubeNotification.getCompound(target, call.video).empty()) {
                     try {
-                        createLiveNotification(ytVideo, target, new = false)
+                        createLiveNotification(call.video, ytVideo, target, new = false)
                     } catch(e: Exception) {
                         // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                         LOG.warn("Error while creating live notification for channel: ${ytVideo.channel} :: ${e.message}")

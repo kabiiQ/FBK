@@ -17,7 +17,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
             YoutubeSettings::liveStreams
         ),
         BooleanElement("Post on video upload",
-            listOf("upload", "video", "newvideo"),
+            listOf("upload", "uploads", "video", "newvideo"),
             YoutubeSettings::uploads
         ),
         BooleanElement("Post on initial stream creation",

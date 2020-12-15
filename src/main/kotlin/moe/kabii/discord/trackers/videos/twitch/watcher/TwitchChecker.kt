@@ -118,7 +118,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
 
         if(stream == null) {
             // stream is not live, check if there are any existing notifications to remove
-            val notifications = channel.notifications
+            val notifications = DBTwitchStreams.Notification.getForChannel(channel)
             if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
                 if(streams.empty()) { // abandon notification if downtime causes missing information
@@ -168,7 +168,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             .ofType(MessageChannel::class.java)
                             .awaitSingle()
 
-                        checkAndRenameChannel(disChan, endingStream = notif)
+                        checkAndRenameChannel(disChan, endingStream = notif.channelID)
 
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
@@ -212,7 +212,9 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
         if(user == null) return
         filteredTargets.forEach { target ->
             try {
-                val existing = target.notifications.firstOrNull()
+                val existing = DBTwitchStreams.Notification
+                    .getForTarget(target)
+                    .firstOrNull()
 
                 // get channel twitch settings
                 val guildID = target.discordChannel.guild?.guildID
@@ -246,8 +248,8 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             return@forEach
                         } else throw ce
                     }
-
-                    TrackedStreams.Notification.new {
+                    
+                    DBTwitchStreams.Notification.new {
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                         this.targetID = target
                         this.channelID = channel
@@ -271,7 +273,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
     }
 
     @WithinExposedContext
-    private suspend fun getDiscordMessage(dbNotif: TrackedStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
+    private suspend fun getDiscordMessage(dbNotif: DBTwitchStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
         if(dbNotif.deleted) null else {
             val dbMessage = dbNotif.messageID
             discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
