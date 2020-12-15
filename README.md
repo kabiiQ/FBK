@@ -33,6 +33,8 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList and Kitsu**
+  - [Twitter feed update notifications](https://github.com/kabiiQ/FBK/wiki/Twitter-Tracker)
+    - Post information when specific users post a Tweet!
 
 - ## **[Music Player](https://github.com/kabiiQ/FBK/wiki/Music-Player)**
   - [Play songs from multiple locations](https://github.com/kabiiQ/FBK/wiki/Music-Player#playing-audio)
