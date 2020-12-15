@@ -8,10 +8,7 @@ import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
-import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
-import moe.kabii.data.relational.streams.youtube.YoutubeLiveEvents
-import moe.kabii.data.relational.streams.youtube.YoutubeScheduledEvents
-import moe.kabii.data.relational.streams.youtube.YoutubeVideos
+import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database

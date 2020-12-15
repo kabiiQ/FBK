@@ -38,7 +38,7 @@ object AutoRole : Command("autorole", "auto-role")  {
                 else -> null
             }
             if(target == null) {
-                usage("Unknown autorole task **${args[1]}**", "autorole <category> <action> (parameters)").awaitSingle()
+                usage("Unknown autorole task **${args[1]}**", "autorole <join/voice/reaction/command> <add/remove> (parameters)").awaitSingle()
                 return@discord
             }
             // redirect to full commands, drop direction args

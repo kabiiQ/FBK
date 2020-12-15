@@ -14,6 +14,9 @@ import moe.kabii.data.mongodb.guilds.MongoStreamChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.youtube.YoutubeNotification
+import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.errorColor
 import moe.kabii.rusty.Err
@@ -21,6 +24,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
 

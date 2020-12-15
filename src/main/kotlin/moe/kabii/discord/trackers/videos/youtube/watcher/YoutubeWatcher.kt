@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeLiveEvent
+import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeScheduledEvent
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.discord.trackers.YoutubeTarget
