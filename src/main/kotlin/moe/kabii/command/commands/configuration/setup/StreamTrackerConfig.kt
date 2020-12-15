@@ -31,10 +31,6 @@ object StreamTrackerConfig : Command("ytcfg", "ytconfig", "youtubecfg", "streamc
             listOf("viewers", "peakviews", "peakviewers", "peak"),
             StreamSettings::viewers
         ),
-        BooleanElement("Include stream ending title in summary (twitch)",
-            listOf("title", "endtitle"),
-            StreamSettings::endTitle
-        ),
         BooleanElement("Include stream ending game in summary (twitch)",
             listOf("game", "endgame"),
             StreamSettings::endGame

@@ -64,7 +64,6 @@ data class StreamSettings(
     var summaries: Boolean = true,
     var thumbnails: Boolean = true,
     var viewers: Boolean = true,
-    var endTitle: Boolean = true,
     var endGame: Boolean = true,
 
     var renameEnabled: Boolean = false,

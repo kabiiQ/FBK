@@ -43,7 +43,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
             val recordedUptime = Duration.between(dbStream.startTime.javaInstant, Instant.now())
             val uptime = DurationFormatter(recordedUptime).fullTime
             val description = StringBuilder()
-            if(builder.settings.endTitle && dbStream.lastTitle.isNotBlank()) {
+            if(dbStream.lastTitle.isNotBlank()) {
                 description.append("Last stream title: ")
                     .append(dbStream.lastTitle)
                     .append('\n')
