@@ -100,6 +100,8 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                 }
                             }
                         }
+                        //delay(2100L) todo - not required until approaching 4500 feeds tracked @ 10 chunk size
+                        delay(50L)
                     }
                 } catch(e: Exception) {
                     LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")

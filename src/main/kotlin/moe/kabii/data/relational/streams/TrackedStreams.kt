@@ -2,8 +2,6 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.discord.MessageHistory
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitchTarget
 import moe.kabii.discord.trackers.YoutubeTarget

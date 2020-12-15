@@ -2,7 +2,6 @@ package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity
