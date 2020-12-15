@@ -29,6 +29,7 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
                     .orElse(0L)
             }
             .distinct()
+            .count()
         val messageCount = event.messages.size
 
         deleteLogs

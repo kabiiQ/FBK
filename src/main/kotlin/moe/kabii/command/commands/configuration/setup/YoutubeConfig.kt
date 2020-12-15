@@ -86,7 +86,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
                 }
                 else -> {
                     val configurator = Configurator(
-                        "YouTube tracker settings for **#${guildChan.name}**",
+                        "YouTube tracker settings for #${guildChan.name}",
                         YoutubeConfigModule,
                         youtube
                     )
