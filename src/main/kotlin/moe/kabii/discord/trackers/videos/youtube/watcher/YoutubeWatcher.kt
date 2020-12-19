@@ -13,10 +13,7 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.youtube.YoutubeLiveEvent
-import moe.kabii.data.relational.streams.youtube.YoutubeNotification
-import moe.kabii.data.relational.streams.youtube.YoutubeScheduledEvent
-import moe.kabii.data.relational.streams.youtube.YoutubeVideo
+import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -156,19 +153,19 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
         // check if any targets would like notification for this upcoming stream
         filteredTargets(dbEvent.ytVideo.ytChannel) { yt ->
-            if(yt.upcomingNotice != null) {
+            if (yt.upcomingNotice != null) {
                 // check upcoming stream is within this target's notice 'range'
                 yt.upcomingNotice!! >= untilStart
 
             } else false
+        }.filter { target ->
+            !YoutubeScheduledNotification[dbEvent, target].empty().not()
         }.forEach { target ->
             try {
-                createUpcomingNotification(ytVideo, target, scheduled)
+                createUpcomingNotification(dbEvent, ytVideo, target, scheduled)
             } catch(e: Exception) {
                 // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                 LOG.warn("Error while creating upcoming notification for stream: $ytVideo :: ${e.message}")
-            } finally {
-                dbEvent.notified = true
             }
         }
     }
@@ -255,6 +252,8 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
                 return null
             } else throw ce
         }
+        YoutubeScheduledNotification.create(event, target)
+        return message
     }
 
     @WithinExposedContext

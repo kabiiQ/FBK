@@ -31,7 +31,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
             default = null
         ),
         DurationElement("Post when a stream is starting soon",
-            listOf("notice", "upcomingNotice", "startingSoon", "soon"),
+            listOf("upcoming", "notice", "upcomingNotice", "startingSoon", "soon", "warning"),
             YoutubeSettings::upcomingNotice,
             prompt = "To enable the upcoming stream notification, enter a duration representing how far into the future streams should be notified.\nFor example, enter **1h** to include any streams going live in the next hour.\nEnter **reset** to disable the upcoming notifications.",
             default = null

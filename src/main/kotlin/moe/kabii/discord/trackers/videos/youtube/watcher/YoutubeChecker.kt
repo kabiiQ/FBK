@@ -205,7 +205,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                             this.ytVideo = dbVideo
                             this.scheduledStart = scheduled.jodaDateTime
                             this.dataExpiration = DateTime.now() // todo move calculation to function ?
-                            this.notified = false
                         }
                     dbVideo.scheduledEvent = dbScheduled
                     dbScheduled
