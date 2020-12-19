@@ -111,7 +111,7 @@ class MessageHandler(val manager: CommandManager) {
                 }
             }
 
-            val command = manager.commandsDiscord.find { it.aliases.contains(cmdStr.toLowerCase()) }
+            val command = manager.commandsDiscord[cmdStr.toLowerCase()]
             if (command != null) {
                 val isPM = !event.guildId.isPresent
                 // command parameters

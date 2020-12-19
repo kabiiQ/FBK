@@ -29,7 +29,7 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
                     .filter(String::isNotBlank)
                 val cmdStr = msgArgs[0]
 
-                val command = manager.commandsTerminal.find { it.aliases.contains(cmdStr.toLowerCase()) }
+                val command = manager.commandsTerminal[cmdStr.toLowerCase()]
 
                 if(command == null) {
                     if(manager.commands.find { it.aliases.contains(cmdStr.toLowerCase()) } != null) {

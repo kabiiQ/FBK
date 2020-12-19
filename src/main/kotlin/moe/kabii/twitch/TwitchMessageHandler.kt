@@ -57,7 +57,7 @@ class TwitchMessageHandler(val manager: CommandManager) {
                 msgArgs[0].substring(prefix.length)
             } else null
             if (cmdStr != null) {
-                val command = manager.commandsTwitch.find { it.aliases.contains(cmdStr.toLowerCase()) }
+                val command = manager.commandsTwitch[cmdStr.toLowerCase()]
                 if (command != null) {
                     val noCmd = event.message.substring(msgArgs[0].length).trim()
                     val args = noCmd.split(" ").filter { it.isNotBlank() }

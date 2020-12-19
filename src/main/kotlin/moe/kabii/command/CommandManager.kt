@@ -8,19 +8,25 @@ import moe.kabii.LOG
 import java.util.concurrent.Executors
 
 class CommandManager {
-    internal val commandsDiscord = mutableListOf<Command>()
-    internal val commandsTwitch = mutableListOf<Command>()
-    internal val commandsTerminal = mutableListOf<Command>()
+    internal val commandsDiscord = mutableMapOf<String, Command>()
+    internal val commandsTwitch = mutableMapOf<String, Command>()
+    internal val commandsTerminal = mutableMapOf<String, Command>()
 
-    internal val commands: List<Command> by lazy { commandsDiscord + commandsTwitch + commandsTerminal }
+    internal val commands: List<Command> by lazy { commandsDiscord.values + commandsTwitch.values + commandsTerminal.values }
 
     internal val commandPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
     internal val context = CoroutineScope(commandPool + CoroutineName("CommandHandler") + SupervisorJob())
 
     fun registerInstance(command: Command) {
-        if(command.executeDiscord != null) commandsDiscord.add(command)
-        if(command.executeTwitch != null) commandsTwitch.add(command)
-        if(command.executeTerminal != null) commandsTerminal.add(command)
+        if(command.executeDiscord != null) {
+            command.aliases.associateWithTo(commandsDiscord) { command }
+        }
+        if(command.executeTwitch != null) {
+            command.aliases.associateWithTo(commandsTwitch) { command }
+        }
+        if(command.executeTerminal != null) {
+            command.aliases.associateWithTo(commandsTerminal) { command }
+        }
         LOG.debug("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
     }
 
