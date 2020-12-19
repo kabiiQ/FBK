@@ -29,7 +29,7 @@ object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
                 setTitle("Command information: ${match.baseName}")
                 val wikiPage = match.getHelpURL()
                 if(wikiPage != null) {
-                    setDescription("[Command Page]($wikiPage)")
+                    setDescription("[Command Wiki Page]($wikiPage)")
                 } else {
                     setDescription("Command wiki page not found.")
                 }

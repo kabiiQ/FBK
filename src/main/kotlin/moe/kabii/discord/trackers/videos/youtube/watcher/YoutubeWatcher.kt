@@ -8,7 +8,6 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory

@@ -17,7 +17,7 @@ private enum class Action { TRACK, UNTRACK }
 
 object TrackerCommandBase : CommandContainer {
     object TrackCommandBase : Command("track") {
-        override val wikiPath: String? = null // undocumented 'base' command
+        override val wikiPath = "Livestream-Tracker"
 
         init {
             discord {
