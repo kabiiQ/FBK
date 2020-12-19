@@ -32,7 +32,7 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
         discord {
             channelVerify(Permission.MANAGE_CHANNELS)
 
-            val features = config.getOrCreateFeatures(guildChan.id.asLong())
+            val features = features()
             if(!features.twitterChannel) {
                 error("**#${guildChan.name}** does not have Twitter tracking enabled.").awaitSingle()
                 return@discord

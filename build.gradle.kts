@@ -133,7 +133,7 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "15"
+        kotlinOptions.jvmTarget = "14"
     }
     java.targetCompatibility = JavaVersion.VERSION_15
 

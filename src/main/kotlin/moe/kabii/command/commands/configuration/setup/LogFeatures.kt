@@ -72,7 +72,7 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
             // editlog #channel
             if(isPM) return@discord
             member.verify(Permission.MANAGE_GUILD)
-            val features = config.getOrCreateFeatures(chan.getId().asLong())
+            val features = features()
 
             val configurator = Configurator(
                 "Log configuration for #${guildChan.name}",

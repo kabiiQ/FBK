@@ -217,20 +217,20 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     .firstOrNull()
 
                 // get channel twitch settings
-                val guildID = target.discordChannel.guild?.guildID
-                val guildConfig = guildID?.run(GuildConfigurations::getOrCreateGuild)
-                val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
-                    ?: StreamSettings() // use default settings for pm notifications
+                val guildId = target.discordChannel.guild?.guildID
+                val (guildConfig, features) =
+                    GuildConfigurations.findFeatures(guildId, target.discordChannel.channelID)
+                val settings = features?.streamSettings ?: StreamSettings()
 
-                val embed = TwitchEmbedBuilder(user!!, features).stream(stream)
+                val embed = TwitchEmbedBuilder(user!!, settings).stream(stream)
                 if (existing == null) { // post a new stream notification
                     // get target channel in discord, make sure it still exists
                     val chan = discord.getChannelById(target.discordChannel.channelID.snowflake)
                         .ofType(MessageChannel::class.java)
                         .awaitSingle()
                     // get mention role from db
-                    val mentionRole = if (guildID != null) {
-                        getMentionRoleFor(target.streamChannel, guildID, chan)
+                    val mentionRole = if (guildId != null) {
+                        getMentionRoleFor(target.streamChannel, guildId, chan)
                     } else null
 
                     val mention = mentionRole?.mention

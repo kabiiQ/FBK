@@ -16,6 +16,7 @@ import moe.kabii.command.channelVerify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.bot.MessageHandler
@@ -67,6 +68,8 @@ data class DiscordParameters (
     val config: GuildConfiguration by lazy {
         GuildConfigurations.getOrCreateGuild(target.id.asLong())
     }
+
+    suspend fun features() = config.getOrCreateFeatures(guildChan.id.asLong())
 
     // error if we need to verify channel permissions for targeting specific channel, but this was executed in DMs
     val guildChan: GuildChannel

@@ -20,12 +20,11 @@ object ReactionConfig : Command("reactions", "reaction", "reactioncfg") {
         discord {
             if(isPM) return@discord
             channelVerify(Permission.MANAGE_CHANNELS)
-            val features = config.getOrCreateFeatures(chan.id.asLong())
 
             val configurator = Configurator(
                 "Reaction role settings for #${guildChan.name}",
                 ReactionConfigModule,
-                features
+                features()
             )
 
             if(configurator.run(this)) {

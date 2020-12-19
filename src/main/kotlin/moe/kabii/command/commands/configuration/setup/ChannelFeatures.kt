@@ -31,7 +31,7 @@ object ChannelFeatures : CommandContainer {
             discord {
                 if(isPM) return@discord
                 channelVerify(Permission.MANAGE_CHANNELS)
-                val features = config.getOrCreateFeatures(chan.getId().asLong())
+                val features = features()
 
                 val wasLog = features.logChannel
                 val configurator = Configurator(

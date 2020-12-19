@@ -47,7 +47,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
         discord {
             channelVerify(Permission.MANAGE_CHANNELS)
 
-            val features = config.getOrCreateFeatures(guildChan.id.asLong())
+            val features = features()
             if(!features.youtubeChannel) {
                 error("**#${guildChan.name}** does not have YouTube tracking enabled.").awaitSingle()
                 return@discord

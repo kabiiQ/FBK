@@ -216,35 +216,27 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             emptyList()
         } else activeTargets
             .filter { target ->
-                val config = getFeatures(target)
-                filter(config.youtubeSettings)
+                val (_, features) =
+                    GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+                val yt = features?.youtubeSettings ?: YoutubeSettings()
+                filter(yt)
             }
-    }
-
-    @WithinExposedContext
-    private suspend fun getFeatures(target: TrackedStreams.Target): FeatureChannel {
-        val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-        val channelId = target.discordChannel.channelID
-        return guildConfig?.run { getOrCreateFeatures(channelId) }
-            ?: FeatureChannel(channelId) // use default settings for pm notifications
     }
 
     @WithinExposedContext
     private suspend fun getStreamConfig(target: TrackedStreams.Target): StreamSettings {
         // get channel stream embed settings
-        val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-        return guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).streamSettings }
-            ?: StreamSettings() // use default settings for pm notifications
+        val (_, features) =
+            GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+        return features?.streamSettings ?: StreamSettings() // use default settings for pm notifications
     }
 
     @WithinExposedContext
-    suspend fun createUpcomingNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target, time: Instant): Message? {
+    suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedStreams.Target, time: Instant): Message? {
         // get target channel in discord
         val chan = getUpcomingChannel(target)
 
-        return try {
+        val message = try {
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
             chan.createEmbed { embed ->
                 embed.setColor(Color.of(16748800))
@@ -391,12 +383,8 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
     @WithinExposedContext
     private suspend fun getUpcomingChannel(target: TrackedStreams.Target): MessageChannel {
-
-        val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-        val channelId = target.discordChannel.channelID
-        val yt = guildConfig?.run { getOrCreateFeatures(channelId).youtubeSettings }
-            ?: YoutubeSettings() // use default settings for pm notifications
+        val (guildConfig, features) = GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+        val yt = features?.youtubeSettings ?: YoutubeSettings()
 
         val altChannel = if(yt.upcomingChannel != null) {
             try {

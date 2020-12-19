@@ -2,6 +2,7 @@ package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
+import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.structure.GuildID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
@@ -23,6 +24,19 @@ object GuildConfigurations {
 
     @Synchronized fun getOrCreateGuild(id: Long) = guildConfigurations.getOrPut(id) { GuildConfiguration(guildid = id) }
     @Synchronized fun getGuildForTwitch(twitchID: Long) = guildConfigurations.asSequence().find { it.value.options.linkedTwitchChannel?.twitchid == twitchID }?.value
+
+    @Synchronized suspend fun findFeatures(guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
+        if(guildId == null || channelId == null) return null to null
+        val guildConfig = getOrCreateGuild(guildId)
+        return guildConfig to guildConfig.getOrCreateFeatures(channelId)
+    }
+
+    @Synchronized suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
+        val guildId = target.discordChannel.guild?.guildID
+        if(guildId == null) return null
+        val guildConfig = getOrCreateGuild(guildId)
+        return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)
+    }
 }
 
 // per guild - guildconfiguration collection
