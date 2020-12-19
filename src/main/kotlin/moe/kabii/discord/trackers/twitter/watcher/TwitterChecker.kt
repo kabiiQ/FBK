@@ -28,79 +28,82 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                 try {
                     // get all tracked twitter feeds
                     val feeds = TwitterFeed.all()
-                        .filter { feed ->
-                            if(feed.targets.empty()) {
-                                LOG.info("Untracking Twitter Feed '${feed.userId} as it is not tracked in any channels.")
-                                feed.delete()
-                                false
-                            } else true
+
+                    feeds.forEach { feed ->
+                        val targets = feed.targets.toList()
+
+                        if(targets.isEmpty()) {
+                            LOG.info("Untracking Twitter Feed '${feed.userId} as it is not tracked in any channels.")
+                            feed.delete()
+                            return@forEach
                         }
 
-                    // request recent tweets - call can return up to 100, around 15 users per call max should be fine ?
-                    // do not expect that the 15 users will have > 100 new tweets
-                    // starting with chunk size 10
-                    feeds.chunked(10).toList().forEach { chunk ->
-                        // pull new tweets for these accounts
-                        val userIds = chunk.map(TwitterFeed::userId)
+                        // determine if any targets want RT or quote tweets
+                        var pullRetweets = false
+                        var pullQuotes = false
 
-                        // pull tweets since the oldest tweet in this chunk - reduce pulling some number of tweets we already know exist
-                        // (the efficiency of this depends on the users in the chunk)
-                        // if any are null - don't provide any snowflake, as we want any recent tweets from that user
-                        val new = chunk.any { feed -> feed.lastPulledTweet == null }
-                        val sinceId = if(new) null else chunk.mapNotNull(TwitterFeed::lastPulledTweet).minOrNull()
+                        targets.forEach { target ->
+                            val features = GuildConfigurations.findFeatures(target)
+                            val twitter = features?.twitterSettings ?: TwitterSettings()
 
-                        TwitterParser.getRecentTweets(userIds, sinceId).forEach tweets@{ (user, tweets) ->
-                            // match tweet back to feed from this chunk
-                            val tweetFeed = chunk.find { feed -> feed.userId == user.id } ?: return@tweets
-                            val latest = tweets.maxOf { tweet ->
+                            if(twitter.displayRetweet) pullRetweets = true
+                            if(twitter.displayQuote) pullQuotes = true
+                        }
 
-                                // if tweet is after last posted tweet and within 3 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                                val age = Duration.between(tweet.createdAt, Instant.now())
-                                if (tweetFeed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf 0L
+                        val limits = TwitterParser.TwitterQueryLimits(
+                            sinceId = feed.lastPulledTweet,
+                            includeRT = pullRetweets,
+                            includeQuote = pullQuotes
+                        )
+                        val recent = TwitterParser.getRecentTweets(feed.userId, limits)
+                        recent ?: return@forEach
+                        val (user, tweets) = recent
+                        val latest = tweets.maxOf { tweet ->
 
-                                // send discord notifs
-                                tweetFeed.targets.forEach { target ->
-                                    try {
-                                        // post a notif to this target
-                                        val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
-                                            .ofType(MessageChannel::class.java)
-                                            .awaitSingle()
-                                        val guildId = target.discordChannel.guild?.guildID
-                                        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
-                                        val features = guildConfig?.run { getOrCreateFeatures(target.discordChannel.channelID).twitterSettings }
-                                            ?: TwitterSettings()
+                            // if tweet is after last posted tweet and within 3 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                            val age = Duration.between(tweet.createdAt, Instant.now())
+                            LOG.debug("Twitter returned quantity ${tweets.size}")
+                            if (feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf 0L
 
-                                        if(tweet.notifyOption.get(features)) {
-                                            channel.createMessage { spec ->
-                                                // todo channel setting for custom message ?
+                            // send discord notifs - check if any channels request
+                            targets.forEach { target ->
+                                try {
+                                    // post a notif to this target
+                                    val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
+                                        .ofType(MessageChannel::class.java)
+                                        .awaitSingle()
+                                    val features = GuildConfigurations.findFeatures(target)
+                                    val twitter = features?.twitterSettings ?: TwitterSettings()
 
-                                                val action = when {
-                                                    tweet.retweet -> "retweeted \uD83D\uDD01"
-                                                    tweet.reply -> "replied to a Tweet \uD83D\uDCAC"
-                                                    tweet.quote -> "quoted a Tweet \uD83D\uDDE8"
-                                                    else -> "posted a new Tweet"
-                                                }
-                                                spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
-                                            }.awaitSingle()
-                                        }
-                                    } catch (e: Exception) {
-                                        if (e is ClientException && e.status.code() == 403) {
-                                            LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Should disable feature. TwitterChecker.java")
-                                        } else {
-                                            LOG.warn("Error sending stream notification to channel: ${e.message}")
-                                            LOG.debug(e.stackTraceString)
-                                        }
+                                    if(tweet.notifyOption.get(twitter)) {
+                                        channel.createMessage { spec ->
+                                            // todo channel setting for custom message ?
+
+                                            val action = when {
+                                                tweet.retweet -> "retweeted \uD83D\uDD01"
+                                                tweet.reply -> "replied to a Tweet \uD83D\uDCAC"
+                                                tweet.quote -> "quoted a Tweet \uD83D\uDDE8"
+                                                else -> "posted a new Tweet"
+                                            }
+                                            spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
+                                        }.awaitSingle()
+                                    }
+                                } catch (e: Exception) {
+                                    if (e is ClientException && e.status.code() == 403) {
+                                        LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Should disable feature. TwitterChecker.java")
+                                    } else {
+                                        LOG.warn("Error sending stream notification to channel: ${e.message}")
+                                        LOG.debug(e.stackTraceString)
                                     }
                                 }
-                                tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
                             }
-                            if(latest > tweetFeed.lastPulledTweet ?: 0L) {
-                                newSuspendedTransaction {
-                                    tweetFeed.lastPulledTweet = latest
-                                }
+                            tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
+                        }
+                        if(latest > feed.lastPulledTweet ?: 0L) {
+                            newSuspendedTransaction {
+                                feed.lastPulledTweet = latest
                             }
                         }
-                        //delay(2100L) todo - not required until approaching 4500 feeds tracked @ 10 chunk size
                         delay(50L)
                     }
                 } catch(e: Exception) {
@@ -109,7 +112,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                 }
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 30_000L - runDuration.toMillis()
+            val delay = 45_000L - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }

@@ -32,7 +32,7 @@ object TwitterParser {
                 if (!response.isSuccessful) {
                     if(response.code == 429) {
                         val reset = response.headers["x-rate-limit-reset"]?.toLongOrNull()
-                        throw TwitterRateLimitReachedException(reset ?: 90L, "HTTP response: ${response.message}")
+                        throw TwitterRateLimitReachedException(reset ?: 90L, "HTTP response: ${response.code}")
                     } else {
                         LOG.error("Error calling Twitter API: $response")
                         throw TwitterIOException(response.toString())
@@ -58,19 +58,27 @@ object TwitterParser {
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     fun getUser(username: String): TwitterUser? = request<TwitterUserResponse>("https://api.twitter.com/2/users/by/username/$username")?.data
 
+    data class TwitterRecentTweets(val user: TwitterUser, val tweets: List<TwitterTweet>)
+
+    data class TwitterQueryLimits(
+        val tweetLimit: Long = 15,
+        val sinceId: Long? = null,
+        val includeRT: Boolean = false,
+        val includeQuote: Boolean = false
+    )
+
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
-    fun getRecentTweets(userIds: List<Long>, sinceId: Long?): Map<TwitterUser, List<TwitterTweet>> {
-        val userQuery = userIds.map { user -> "from:$user" }.joinToString(" OR ")
-        val since = if(sinceId != null) "&since_id=$sinceId" else ""
-        val call = request<TwitterRecentTweetsResponse>("https://api.twitter.com/2/tweets/search/recent?query=$userQuery$since&tweet.fields=author_id,created_at,referenced_tweets&max_results=100&expansions=author_id")
-        return if(call?.data != null && call.includes != null) { // result can just be empty if we pre-filtered tweets properly and there have been no updates to the feeds
-            // twitter api returns user objects from this call in an 'expansion'
-            // here we match the expanded user objects back to the tweets for easy consumption outside
-            // 'includes' contains more users than we are concerned about (retweets, etc) - dont rely on those contents
-            call.data.groupBy(TwitterTweet::authorId)
-                .mapKeys { entry ->
-                    call.includes.users.find { user -> user.id == entry.key }!!
-                }
-        } else mapOf()
+    fun getRecentTweets(userId: Long, queryLimits: TwitterQueryLimits?): TwitterRecentTweets? {
+        val limits = queryLimits ?: TwitterQueryLimits()
+        val rt = if(limits.includeRT) "" else " -is:retweet"
+        val quote = if(limits.includeQuote) "" else " -is:quote"
+        val since = if(limits.sinceId != null) "&since_id=${limits.sinceId}" else ""
+        val call = request<TwitterRecentTweetsResponse>("https://api.twitter.com/2/tweets/search/recent?query=from:$userId$rt$quote$since&tweet.fields=author_id,created_at,referenced_tweets&max_results=${limits.tweetLimit}&expansions=author_id")
+        return if(call?.data != null && call.includes != null) {
+            TwitterRecentTweets(
+                user = call.includes.users.first(),
+                tweets = call.data
+            )
+        } else null
     }
 }
