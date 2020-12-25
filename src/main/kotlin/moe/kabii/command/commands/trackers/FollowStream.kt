@@ -42,7 +42,9 @@ object StreamFollow : CommandContainer {
                 }
                 val siteName = targetChannel.site.full
 
-                val dbTarget = StreamTrackerCommand.getDBTarget(chan.id, targetChannel.site.dbSite, targetChannel.accountId)
+                val dbTarget = newSuspendedTransaction {
+                    TrackedStreams.Target.getForChannel(chan.id, targetChannel.site.dbSite, targetChannel.accountId)
+                }
                 if(dbTarget == null) {
                     error("**${targetChannel.displayName}** is not a tracked stream in **${target.name}**.").awaitSingle()
                     return@discord

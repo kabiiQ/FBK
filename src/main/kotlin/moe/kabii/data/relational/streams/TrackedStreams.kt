@@ -69,7 +69,31 @@ object TrackedStreams {
         var discordChannel by DiscordObjects.Channel referencedOn Targets.discordChannel
         var tracker by DiscordObjects.User referencedOn Targets.tracker
 
-        companion object : IntEntityClass<Target>(Targets)
+        companion object : IntEntityClass<Target>(Targets) {
+
+            // get target with same discord channel and streaming channel id
+            @WithinExposedContext
+            fun getForChannel(discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
+                Targets
+                    .innerJoin(StreamChannels)
+                    .innerJoin(DiscordObjects.Channels).select {
+                        StreamChannels.site eq site and
+                                (StreamChannels.siteChannelID eq  channelId) and
+                                (DiscordObjects.Channels.channelID eq discordChan.asLong())
+                    }
+            ).firstOrNull()
+
+            @WithinExposedContext
+            fun getAllForGuild(guildId: Snowflake, stream: StreamChannel) = Target.wrapRows(
+                Targets
+                    .innerJoin(DiscordObjects.Channels
+                        .innerJoin(DiscordObjects.Guilds))
+                    .select {
+                        Targets.streamChannel eq stream.id and
+                                (DiscordObjects.Guilds.guildID eq guildId.asLong())
+                    }
+            )
+        }
     }
 
     object Mentions : IntIdTable() {
