@@ -22,7 +22,7 @@ abstract class Command(val baseName: String, vararg alias: String) {
     var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
     private set
 
-    fun getHelpURL(): String? = wikiPath?.let { "${SourcePaths.wikiURL}/$wikiPath}" }
+    fun getHelpURL(): String? = wikiPath?.let { "${SourcePaths.wikiURL}/$wikiPath" }
 
     var discordReqs: List<Permission> = listOf(
             Permission.SEND_MESSAGES,
