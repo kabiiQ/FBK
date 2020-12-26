@@ -28,6 +28,8 @@ object TwitchParser {
     private val clientID = Keys.config[Keys.Twitch.client]
     private val oauth = Authorization()
 
+    private val gameCache = mutableMapOf<Long, TwitchGameInfo>()
+
     private suspend inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
         val builder = Request.Builder()
             .get()
@@ -148,7 +150,10 @@ object TwitchParser {
 
     suspend fun getStream(id: Long): Result<TwitchStreamInfo, StreamErr> = getStreams(listOf(id)).values.single()
 
-    suspend fun getGame(id: Long): TwitchGameInfo {
+    suspend fun getGame(id: Long): TwitchGameInfo =
+        gameCache.getOrPut(id) { getGameInfo(id) }
+
+    private suspend fun getGameInfo(id: Long): TwitchGameInfo {
         if (id == 0L) return TwitchGameInfo(
             "0",
             "Nothing",

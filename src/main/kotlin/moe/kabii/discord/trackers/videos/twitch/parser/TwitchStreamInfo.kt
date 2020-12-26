@@ -14,10 +14,8 @@ data class TwitchStreamInfo( //statistics embed needs this info ..
     val rawThumbnail: String,
     val gameID: Long
 ) {
-    val game: TwitchGameInfo by lazy {
-        runBlocking {
-            TwitchParser.getGame(gameID)
-        }
+    val game = runBlocking {
+        TwitchParser.getGame(gameID)
     }
 }
 
