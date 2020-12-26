@@ -105,7 +105,7 @@ object StreamTrackerCommand {
                         .singleOrNull { mentionRole ->
                             // check that this stream is not tracked in this guild
                             TrackedStreams.Target
-                                .getAllForGuild(origin.guild.id, streamChannel)
+                                .getForGuild(origin.guild.id, streamChannel)
                                 .empty()
                         }
                     if (oldMentionRole != null) {

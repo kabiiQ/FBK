@@ -21,7 +21,7 @@ object YoutubeLiveEvents : LongIdTable() {
     val uptimeTicks = integer("uptime_ticks")
     val averageViewers = integer("average_viewers")
 
-    val premiere = bool("is_premiere")
+    val premiere = bool("is_premiere").default(false)
 }
 
 class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {

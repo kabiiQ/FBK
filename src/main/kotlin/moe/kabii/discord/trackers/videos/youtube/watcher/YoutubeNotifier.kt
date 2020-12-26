@@ -156,9 +156,9 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
         // check if any targets would like notification for this upcoming stream
         filteredTargets(dbEvent.ytVideo.ytChannel) { yt ->
-            if (yt.upcomingNotice != null) {
+            if (yt.upcomingNotifications != null) {
                 // check upcoming stream is within this target's notice 'range'
-                yt.upcomingNotice!! >= untilStart
+                yt.upcomingNotifications!! >= untilStart
 
             } else false
         }.filter { target ->

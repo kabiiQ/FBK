@@ -84,7 +84,7 @@ object TrackedStreams {
             ).firstOrNull()
 
             @WithinExposedContext
-            fun getAllForGuild(guildId: Snowflake, stream: StreamChannel) = Target.wrapRows(
+            fun getForGuild(guildId: Snowflake, stream: StreamChannel) = Target.wrapRows(
                 Targets
                     .innerJoin(DiscordObjects.Channels
                         .innerJoin(DiscordObjects.Guilds))
