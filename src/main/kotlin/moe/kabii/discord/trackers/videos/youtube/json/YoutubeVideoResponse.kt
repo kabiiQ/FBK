@@ -2,7 +2,6 @@ package moe.kabii.discord.trackers.videos.youtube.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import moe.kabii.rusty.Try
 import java.time.Duration
 import java.time.Instant
 
@@ -17,7 +16,9 @@ data class YoutubeVideo(
     val snippet: YoutubeVideoSnippet,
     val contentDetails: YoutubeVideoContentDetails,
     val liveStreamingDetails: YoutubeVideoLiveDetails?
-)
+) {
+    @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration.toMillis() > 0
+}
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoSnippet(

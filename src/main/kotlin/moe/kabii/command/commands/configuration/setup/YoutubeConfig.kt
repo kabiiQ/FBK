@@ -20,6 +20,10 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
             listOf("uploads", "upload", "video", "newvideo"),
             YoutubeSettings::uploads
         ),
+        BooleanElement("Post on premiere start",
+            listOf("premieres", "premiere"),
+            YoutubeSettings::premieres
+        ),
         BooleanElement("Post on initial stream creation",
             listOf("creation", "streamCreation", "initial", "scheduled"),
             YoutubeSettings::streamCreation

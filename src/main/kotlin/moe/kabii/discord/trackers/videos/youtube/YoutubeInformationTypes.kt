@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.videos.youtube
 
+import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import java.time.Duration
 import java.time.Instant
 
@@ -18,12 +19,19 @@ data class YoutubeVideoInfo(
     val thumbnail: String,
     val live: Boolean,
     val upcoming: Boolean,
-    val duration: Duration?,
+    val premiere: Boolean,
+    val duration: Duration,
     val published: Instant,
     val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
 ) {
     val url = "https://youtube.com/watch?v=$id"
+
+    fun shouldPostLiveNotice(settings: YoutubeSettings): Boolean = when {
+        premiere -> settings.premieres
+        live -> settings.liveStreams
+        else -> false
+    }
 }
 
 data class YoutubeStreamInfo(

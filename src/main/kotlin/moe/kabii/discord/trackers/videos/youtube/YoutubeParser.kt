@@ -89,6 +89,7 @@ object YoutubeParser {
                         thumbnail = thumbnail.url,
                         live = match.snippet.live,
                         upcoming = match.snippet.upcoming,
+                        premiere = match.premiere,
                         duration = match.contentDetails.duration,
                         published = match.snippet.publishedAt,
                         liveInfo = if(match.liveStreamingDetails != null) YoutubeStreamInfo(

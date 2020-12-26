@@ -76,6 +76,7 @@ data class StreamSettings(
 data class YoutubeSettings(
     var liveStreams: Boolean = true,
     var uploads: Boolean = true,
+    var premieres: Boolean = true,
     var upcomingSummary: Duration? = null,
     var upcomingNotice: Duration? = null,
     var streamCreation: Boolean = false,

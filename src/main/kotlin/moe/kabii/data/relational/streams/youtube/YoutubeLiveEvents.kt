@@ -20,6 +20,8 @@ object YoutubeLiveEvents : LongIdTable() {
     val peakViewers = integer("peak_viewers")
     val uptimeTicks = integer("uptime_ticks")
     val averageViewers = integer("average_viewers")
+
+    val premiere = bool("is_premiere")
 }
 
 class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
@@ -30,6 +32,8 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
     var peakViewers by YoutubeLiveEvents.peakViewers
     var uptimeTicks by YoutubeLiveEvents.uptimeTicks
     var averageViewers by YoutubeLiveEvents.averageViewers
+
+    var premiere by YoutubeLiveEvents.premiere
 
     fun updateViewers(current: Int) {
         if(current > peakViewers) peakViewers = current
