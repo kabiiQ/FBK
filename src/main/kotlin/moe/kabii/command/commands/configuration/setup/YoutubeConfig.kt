@@ -13,11 +13,11 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
     object YoutubeConfigModule : ConfigurationModule<YoutubeSettings>(
         "youtube tracker",
         BooleanElement("Post when tracked channels are live (yt)",
-            listOf("live", "livestreams", "streams", "nowlive", "stream"),
+            listOf("streams", "livestreams", "live", "nowlive", "stream"),
             YoutubeSettings::liveStreams
         ),
         BooleanElement("Post on video upload",
-            listOf("upload", "uploads", "video", "newvideo"),
+            listOf("uploads", "upload", "video", "newvideo"),
             YoutubeSettings::uploads
         ),
         BooleanElement("Post on initial stream creation",

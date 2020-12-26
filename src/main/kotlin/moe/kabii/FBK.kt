@@ -25,7 +25,7 @@ import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.ServiceWatcherManager
-import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime

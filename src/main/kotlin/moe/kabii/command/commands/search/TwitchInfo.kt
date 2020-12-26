@@ -3,7 +3,7 @@ package moe.kabii.command.commands.search
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.reply
 import moe.kabii.util.DurationFormatter

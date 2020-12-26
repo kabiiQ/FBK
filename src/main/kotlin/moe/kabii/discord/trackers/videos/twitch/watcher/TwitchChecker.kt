@@ -15,7 +15,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
-import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

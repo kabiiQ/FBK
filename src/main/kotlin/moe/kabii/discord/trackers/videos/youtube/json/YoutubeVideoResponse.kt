@@ -40,11 +40,7 @@ data class YoutubeVideoSnippet(
 data class YoutubeVideoContentDetails(
     @Json(name="duration") val _rawDuration: String
 ) {
-
-    @Transient val duration: Duration? = Try {
-        // shouldn't fail but we definitely do not want an exception here
-        Duration.parse(_rawDuration)
-    }.result.orNull()
+    @Transient val duration: Duration = Duration.parse(_rawDuration)
 }
 
 @JsonClass(generateAdapter = true)

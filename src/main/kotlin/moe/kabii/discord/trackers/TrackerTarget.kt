@@ -8,7 +8,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.StreamErr
-import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok

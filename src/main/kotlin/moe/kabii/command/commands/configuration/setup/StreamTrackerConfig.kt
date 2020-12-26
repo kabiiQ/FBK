@@ -11,7 +11,7 @@ import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 
-object StreamTrackerConfig : Command("ytcfg", "ytconfig", "youtubecfg", "streamcfg", "streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
+object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytcfg", "streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     override val wikiPath = "Livestream-Tracker#configuration"
 
     object StreamTrackerModule : ConfigurationModule<StreamSettings>(

@@ -5,7 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
-import moe.kabii.discord.trackers.videos.twitch.TwitchParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 
 object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
     override val wikiPath = "Lookup-Commands#twitch-stream-lookup"

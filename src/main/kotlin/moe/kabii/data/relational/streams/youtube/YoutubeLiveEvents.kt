@@ -64,7 +64,7 @@ class YoutubeNotification(id: EntityID<Int>) : IntEntity(id) {
             YoutubeNotifications.targetID eq dbTarget.id
         }
 
-        fun getCompound(dbTarget: TrackedStreams.Target, dbVideo: YoutubeVideo) = find {
+        fun getExisting(dbTarget: TrackedStreams.Target, dbVideo: YoutubeVideo) = find {
             YoutubeNotifications.targetID eq dbTarget.id and
                     (YoutubeNotifications.videoID eq dbVideo.id)
         }

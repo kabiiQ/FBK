@@ -3,7 +3,6 @@ package moe.kabii.discord.trackers.videos.youtube.watcher
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
-import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
@@ -27,7 +26,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
     class New(val new: YoutubeVideo) : YoutubeCall(new)
 }
 
-class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient): Runnable, YoutubeWatcher(subscriptions, discord) {
+class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient): Runnable, YoutubeNotifier(subscriptions, discord) {
 
     override fun run() {
         loop {
@@ -134,7 +133,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
             filteredTargets(call.video.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
                 // verify target already has a notification
-                if(YoutubeNotification.getCompound(target, call.video).empty()) {
+                if(YoutubeNotification.getExisting(target, call.video).empty()) {
                     try {
                         createLiveNotification(call.video, ytVideo, target, new = false)
                     } catch(e: Exception) {

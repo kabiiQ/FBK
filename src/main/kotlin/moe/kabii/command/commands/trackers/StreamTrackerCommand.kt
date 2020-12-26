@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.trackers
 
-import discord4j.common.util.Snowflake
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.FeatureDisabledException
@@ -18,10 +17,7 @@ import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object StreamTrackerCommand {
     suspend fun track(origin: DiscordParameters, target: TargetArguments) {

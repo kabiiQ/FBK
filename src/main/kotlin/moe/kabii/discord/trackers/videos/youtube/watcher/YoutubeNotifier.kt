@@ -13,8 +13,8 @@ import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
-import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.StreamWatcher
+import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.util.MagicNumbers
@@ -30,10 +30,13 @@ import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import java.time.Instant
 
-abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient) : StreamWatcher(discord) {
+abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient) : StreamWatcher(discord) {
 
     companion object {
+        private val liveColor = YoutubeParser.color
         private val inactiveColor = Color.of(8847360)
+        private val scheduledColor = Color.of(4270381)
+        private val uploadColor = Color.of(16748800)
     }
 
     @WithinExposedContext
@@ -52,11 +55,11 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             this.peakViewers = viewers
             this.uptimeTicks = 1
             this.averageViewers = viewers
+            this.premiere = video.premiere
         }
 
         // post notifications to all enabled targets
-
-        filteredTargets(dbVideo.ytChannel, YoutubeSettings::liveStreams).forEach { target ->
+        filteredTargets(dbVideo.ytChannel, video::shouldPostLiveNotice).forEach { target ->
             try {
                 createLiveNotification(dbVideo, video, target, new = true)
             } catch(e: Exception) {
@@ -83,23 +86,24 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
 
                     existingNotif.edit { edit ->
                         edit.setEmbed { spec ->
-                            spec.setColor(inactiveColor)
+                            spec.setColor(if(dbStream.premiere) uploadColor else inactiveColor)
                             val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
                             if(features.viewers) spec.addField("Viewers", viewers, true)
 
                             if (video != null) {
                                 // stream has ended and vod is available - edit notifications to reflect
-                                val duration = video.duration?.run(::DurationFormatter)
-                                val channelName = video.channel.name
-                                spec.setAuthor("$channelName was live.", video.channel.url, video.channel.avatar)
+                                val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!"
+                                else " was live."
+                                spec.setAuthor("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar)
+
                                 spec.setUrl(video.url)
 
                                 spec.setFooter("Stream ended", NettyFileServer.youtubeLogo)
                                 val timestamp = video.liveInfo?.endTime
                                 timestamp?.run(spec::setTimestamp)
 
-                                val durationStr = if(duration != null) "[${duration.colonTime}] " else ""
-                                if (duration != null) spec.setDescription("The video ${durationStr}is available.")
+                                val durationStr = DurationFormatter(video.duration).colonTime
+                                spec.setDescription("The video ${durationStr}is available.")
                                 spec.setTitle(video.title)
                                 spec.setThumbnail(video.thumbnail)
                             } else {
@@ -186,7 +190,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
     @WithinExposedContext
     suspend fun videoUploaded(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
         if(ytVideo.liveInfo != null) return // do not post 'uploaded a video' if this was a VOD
-        if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(6L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
+        if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(3L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
 
         // check if any targets would like notification for this video upload
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
@@ -235,7 +239,7 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
         val message = try {
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
             chan.createEmbed { embed ->
-                embed.setColor(Color.of(16748800))
+                embed.setColor(scheduledColor)
                 embed.setAuthor("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar)
                 embed.setUrl(video.url)
                 embed.setTitle(shortTitle)
@@ -278,18 +282,14 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
-                    setColor(YoutubeTarget.serviceColor)
+                    setColor(uploadColor)
                     setAuthor("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar)
                     setUrl(video.url)
                     setTitle(shortTitle)
                     setDescription("Video description: $shortDescription")
                     if(features.thumbnails) setImage(video.thumbnail) else setThumbnail(video.thumbnail)
-                    if(video.duration != null) {
-                        val videoLength = DurationFormatter(video.duration).colonTime
-                        setFooter(videoLength, NettyFileServer.youtubeLogo)
-                    } else {
-                        setFooter("YouTube Upload", NettyFileServer.youtubeLogo)
-                    }
+                    val videoLength = DurationFormatter(video.duration).colonTime
+                    setFooter("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo)
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
@@ -330,10 +330,18 @@ abstract class YoutubeWatcher(val subscriptions: YoutubeSubscriptionManager, dis
             val newNotification = chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
-                    val liveMessage = if(new) " went live!" else " is live."
+
+                    // only a slight output change if this is premiere vs. live stream
+                    val liveMessage = when {
+                        liveStream.premiere -> " is premiering a new video!"
+                        new -> " went live!"
+                        else -> " is live."
+                    }
+                    setColor(if(liveStream.premiere) uploadColor else liveColor)
+
                     setAuthor("${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar)
                     setUrl(liveStream.url)
-                    setColor(YoutubeTarget.serviceColor)
+                    setColor(liveColor)
                     setTitle(shortTitle)
                     setDescription(shortDescription)
                     if(features.thumbnails) setImage(liveStream.thumbnail) else setThumbnail(liveStream.thumbnail)
