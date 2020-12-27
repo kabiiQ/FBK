@@ -3,6 +3,8 @@ package moe.kabii.discord.trackers.videos.youtube.subscriber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
@@ -16,7 +18,7 @@ import java.io.StringReader
 
 object YoutubeVideoIntake {
 
-    private val reader = SAXReader.createDefault()
+    private val lock = Mutex()
 
     suspend fun intakeExisting(channelId: String) {
         // get recent video ids for intake
@@ -24,27 +26,30 @@ object YoutubeVideoIntake {
         val job = SupervisorJob()
         val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
         taskScope.launch {
-            val request = Request.Builder()
-                .get()
-                .header("User-Agent", "DiscordBot-srkmfbk/1.0")
-                .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
-                .build()
+            lock.withLock {
+                val request = Request.Builder()
+                    .get()
+                    .header("User-Agent", "DiscordBot-srkmfbk/1.0")
+                    .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
+                    .build()
 
-            try {
-                OkHTTP.newCall(request).execute().use { response ->
-                    val xml = response.body!!.string()
-                    intakeXml(xml)
+                try {
+                    OkHTTP.newCall(request).execute().use { response ->
+                        val xml = response.body!!.string()
+                        intakeXml(xml)
+                    }
+
+                } catch (e: Exception) {
+                    LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
                 }
-
-            } catch(e: Exception) {
-                LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
-                LOG.debug(e.stackTraceString)
             }
         }
     }
 
     suspend fun intakeXml(xml: String) {
         try {
+            val reader = SAXReader.createDefault()
             val source = InputSource(StringReader(xml))
             source.encoding = "UTF-8"
             val doc = reader.read(source)
