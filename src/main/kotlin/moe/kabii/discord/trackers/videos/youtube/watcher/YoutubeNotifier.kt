@@ -103,7 +103,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                                 timestamp?.run(spec::setTimestamp)
 
                                 val durationStr = DurationFormatter(video.duration).colonTime
-                                spec.setDescription("The video ${durationStr}is available.")
+                                spec.setDescription("The video [$durationStr] is available.")
                                 spec.setTitle(video.title)
                                 spec.setThumbnail(video.thumbnail)
                             } else {
