@@ -3,7 +3,10 @@ package moe.kabii.command.commands.trackers
 import discord4j.core.spec.RoleCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandAbortedException
@@ -18,11 +21,9 @@ import moe.kabii.discord.util.RoleUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.lang.NullPointerException
 
 object StreamFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {
@@ -43,7 +44,12 @@ object StreamFollow : CommandContainer {
                 val siteName = targetChannel.site.full
 
                 val dbTarget = newSuspendedTransaction {
-                    TrackedStreams.Target.getForChannel(chan.id, targetChannel.site.dbSite, targetChannel.accountId)
+                    val stream = TrackedStreams.StreamChannel.getChannel(targetChannel.site.dbSite, targetChannel.accountId)
+                    stream?.run {
+                        TrackedStreams.Target
+                            .getForGuild(target.id, this)
+                            .firstOrNull()
+                    }
                 }
                 if(dbTarget == null) {
                     error("**${targetChannel.displayName}** is not a tracked stream in **${target.name}**.").awaitSingle()
@@ -51,21 +57,24 @@ object StreamFollow : CommandContainer {
                 }
                 // get or create mention role for this stream
 
-                val mentionRole = newSuspendedTransaction {
-                    val mention = TrackedStreams.Mention.getMentionsFor(target.id, dbTarget.streamChannel.siteChannelID)
-                        .firstOrNull()
+                val mentionRole = propagateTransaction {
+                    val mentions = TrackedStreams.Mention.getMentionsFor(target.id, dbTarget.streamChannel.siteChannelID)
+                    val mention = mentions.firstOrNull()
                     val existingRole = if (mention != null) {
-                        when (val guildRole = target.getRoleById(mention.mentionRole.snowflake).tryAwait()) {
-                            is Ok -> guildRole.value
-                            is Err -> {
-                                val err = guildRole.value
-                                if (err !is ClientException || err.status.code() != 404) {
-                                    // this is an actual error. 404 would represent the role being deleted so that condition can just continue as if the role did not exist
-                                    LOG.info("follow command failed to get mention role: ${err.message}")
-                                    LOG.debug(err.stackTraceString)
-                                    error("There was an error getting the mention role in **${target.name}** for this stream. I may not have permission to do this.").awaitSingle()
-                                    throw CommandAbortedException()
-                                } else null
+                        try {
+                            target.getRoleById(mention.mentionRole.snowflake).awaitFirst()
+                        } catch(e: Exception) {
+                            // d4j seems to just be returning empty rather than 404
+                            if(e is NoSuchElementException || (e is ClientException && e.status.code() == 404)) {
+                                // represents the role being delete. the outside code can continue as if the role never existed
+                                mention.delete()
+                                null
+                            } else {
+                                // this is an actual error. 404 would represent the role being deleted so that condition can just continue as if the role did not exist
+                                LOG.info("follow command failed to get mention role: ${e.message}")
+                                LOG.debug(e.stackTraceString)
+                                error("There was an error getting the mention role in **${target.name}** for this stream. I may not have permission to do this.").awaitSingle()
+                                throw CommandAbortedException()
                             }
                         }
                     } else null
@@ -93,6 +102,7 @@ object StreamFollow : CommandContainer {
                         new
                     }
                 }
+                println("roles: " + member.roleIds)
                 if(member.roles.hasElement(mentionRole).awaitSingle()) {
                     embed("You already have the stream mention role **${mentionRole.name}** in **${target.name}**.").awaitSingle()
                     return@discord
