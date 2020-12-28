@@ -56,7 +56,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.1.2") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.1.3") // discord websocket and api
 
     // twitch irc
     implementation("com.github.twitch4j:twitch4j:1.1.3")
