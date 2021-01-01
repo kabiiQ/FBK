@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.4.20"
+    val kotlinVer = "1.4.21"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application

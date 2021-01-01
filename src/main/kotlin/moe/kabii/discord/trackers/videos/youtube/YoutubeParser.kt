@@ -24,14 +24,17 @@ object YoutubeParser {
 
     val color = Color.of(16711680)
 
-    val youtubeIdPattern = Regex("([a-zA-Z0-9-_]{24})")
+    val youtubeChannelPattern = Regex("([a-zA-Z0-9-_]{24})")
     val youtubeNamePattern = Regex("([a-zA-Z0-9)]{6,20})")
+
+    val youtubeVideoPattern = Regex("([a-zA-Z0-9-_]{11})")
+    val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/)|(?:(?:watch)?\\?v(?:i)?=|&v(?:i)?=))($youtubeVideoPattern)")
 
     @Throws(YoutubeAPIException::class)
     fun getChannelFromUnknown(identifier: String): YoutubeChannelInfo? {
         return when {
             identifier.length in 6..20 && identifier.matches(youtubeNamePattern) -> getChannelByName(identifier)
-            identifier.length == 24 && identifier.matches(youtubeIdPattern) -> getChannelById(identifier)
+            identifier.length == 24 && identifier.matches(youtubeChannelPattern) -> getChannelById(identifier)
             else -> null
         }
     }
@@ -53,6 +56,12 @@ object YoutubeParser {
                 avatar = channel.snippet.thumbnails.default.url
             )
         }
+    }
+
+    fun matchVideoId(input: String): String? {
+        // take possible youtube video ID or URL
+        return if(input.matches(youtubeVideoPattern)) input
+        else youtubeVideoUrlPattern.find(input)?.groups?.get(1)?.value
     }
 
     @Throws(YoutubeAPIException::class)

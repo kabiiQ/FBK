@@ -40,6 +40,7 @@ internal object PostgresConnection {
                 YoutubeScheduledEvents,
                 YoutubeLiveEvents,
                 YoutubeNotifications,
+                YoutubeVideoTracks,
                 UserLog.GuildRelationships,
                 TwitterFeeds,
                 TwitterTargets

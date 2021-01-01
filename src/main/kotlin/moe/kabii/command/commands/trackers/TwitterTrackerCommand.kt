@@ -17,6 +17,8 @@ import moe.kabii.structure.extensions.tryAwait
 
 object TwitterTrackerCommand {
 
+    private val twitterUsername = Regex("[a-zA-Z0-9_]{4,15}")
+
     suspend fun track(origin: DiscordParameters, target: TargetArguments) {
         // if this is in a guild make sure the twitter feature is enabled here
         val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
@@ -25,7 +27,7 @@ object TwitterTrackerCommand {
             if(features == null || !features.twitterChannel) throw FeatureDisabledException("twitter", origin)
         }
 
-        if(!target.identifier.matches(Regex("[a-zA-Z0-9_]{4,15}"))) {
+        if(!target.identifier.matches(twitterUsername)) {
             origin.error("Invalid Twitter username **${target.identifier}**.").awaitSingle()
             return
         }

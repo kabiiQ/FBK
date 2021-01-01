@@ -33,10 +33,8 @@ object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "yt
 
         newSuspendedTransaction {
             when (arg.toLowerCase()) {
-                "any", "all", "full" -> {
-                    TrackedStreams.StreamChannel.find {
-                        TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
-                    }
+                "any", "all", "full" -> TrackedStreams.StreamChannel.getActive {
+                    TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                 }
                 else -> {
                     val guildTarget = arg.toLongOrNull()

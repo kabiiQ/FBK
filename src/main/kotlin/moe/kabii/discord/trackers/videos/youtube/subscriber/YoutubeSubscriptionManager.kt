@@ -43,36 +43,34 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
             newSuspendedTransaction {
                 try {
                     // subscribe to updates for all channels with active targets
-                    val ytChannels = TrackedStreams.StreamChannel.find {
+                    val ytChannels = TrackedStreams.StreamChannel.getActive {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                     }
                     ytChannels.forEach { channel ->
-                        if (!channel.targets.empty()) {
-                            val subscription = FeedSubscription.find {
-                                FeedSubscriptions.ytChannel eq channel.id
-                            }.firstOrNull()
+                        val subscription = FeedSubscription.find {
+                            FeedSubscriptions.ytChannel eq channel.id
+                        }.firstOrNull()
 
-                            // only make actual call to google if last call is old - but still maintain current list in memory
-                            if (subscription == null) {
-                                LOG.info("new subscription: ${channel.siteChannelID}")
-                                val callTopic = subscriber.subscribe(channel.siteChannelID)
-                                if (callTopic != null) {
-                                    FeedSubscription.new {
-                                        this.ytChannel = channel
-                                        this.lastSubscription = DateTime.now()
-                                    }
-                                }
-                            } else {
-                                val lastSub = subscription.lastSubscription
-                                val expired = !currentSubscriptions.contains(channel.siteChannelID) || Duration(lastSub, Instant.now()) >= maxSubscriptionInterval
-                                if (expired) {
-                                    if (subscriber.subscribe(channel.siteChannelID) != null) {
-                                        subscription.lastSubscription = DateTime.now()
-                                    }
+                        // only make actual call to google if last call is old - but still maintain current list in memory
+                        if (subscription == null) {
+                            LOG.info("new subscription: ${channel.siteChannelID}")
+                            val callTopic = subscriber.subscribe(channel.siteChannelID)
+                            if (callTopic != null) {
+                                FeedSubscription.new {
+                                    this.ytChannel = channel
+                                    this.lastSubscription = DateTime.now()
                                 }
                             }
-                            currentSubscriptions = currentSubscriptions + channel.siteChannelID
+                        } else {
+                            val lastSub = subscription.lastSubscription
+                            val expired = !currentSubscriptions.contains(channel.siteChannelID) || Duration(lastSub, Instant.now()) >= maxSubscriptionInterval
+                            if (expired) {
+                                if (subscriber.subscribe(channel.siteChannelID) != null) {
+                                    subscription.lastSubscription = DateTime.now()
+                                }
+                            }
                         }
+                        currentSubscriptions = currentSubscriptions + channel.siteChannelID
                     }
                 } catch (e: Exception) {
                     LOG.error("Uncaught error in YoutubeSubscriptionManager: ${e.message}")

@@ -68,6 +68,17 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 LOG.debug(e.stackTraceString)
             }
         }
+
+        //  targets that specifically asked for this video and may not have the channel tracked at all are a little different
+        YoutubeVideoTrack.getForVideo(dbVideo).forEach { track ->
+            try {
+                sendLiveReminder(dbVideo, video, track)
+            } catch(e: Exception) {
+                LOG.warn("Error while sending live reminder for channel, dropping notification without sending: ${dbVideo.ytChannel} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            }
+            track.delete()
+        }
     }
 
     @WithinExposedContext
@@ -262,7 +273,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
-        val chan = getChannel(target)
+        val chan = getChannel(target.discordChannel.channelID)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -302,13 +313,23 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             } else throw ce
         }
     }
+    
+    @WithinExposedContext
+    suspend fun sendLiveReminder(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
+        // get target channel in Discord
+        val chan = getChannel(videoTrack.discordChannel.channelID)
+
+        val trackerId = videoTrack.tracker.userID
+        chan.createMessage("<@$trackerId> Livestream reminder: **${liveStream.channel.name}** is now live: ${liveStream.url}")
+            .awaitSingle()
+    }
 
     @WithinExposedContext
     @Throws(ClientException::class)
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
-        val chan = getChannel(target)
+        val chan = getChannel(target.discordChannel.channelID)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -376,9 +397,9 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         }
     }
 
-    private suspend fun getChannel(target: TrackedStreams.Target): MessageChannel {
+    private suspend fun getChannel(channel: Long): MessageChannel {
         return try {
-            discord.getChannelById(target.discordChannel.channelID.snowflake)
+            discord.getChannelById(channel.snowflake)
                 .ofType(MessageChannel::class.java)
                 .awaitSingle()
         } catch(e: Exception) {

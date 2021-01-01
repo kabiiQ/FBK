@@ -11,9 +11,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 
 // generic logic to handle tracking any stream source
 object TrackedStreams {
@@ -55,6 +53,9 @@ object TrackedStreams {
                     new
                 }
             }
+
+            fun getActive(op: SqlExpressionBuilder.()-> Op<Boolean>) = find(op)
+                .filter { chan -> !chan.targets.empty() }
         }
     }
 

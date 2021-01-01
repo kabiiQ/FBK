@@ -17,6 +17,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
+import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.errorColor
 import moe.kabii.rusty.Err
@@ -58,9 +59,13 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         } else {
             // delete streamchannels with no assocaiated targets
             // this will also work later and untrack if we have a function to remove targets that are disabled
-            channel.delete()
-            LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
-            null
+            if(channel.site != TrackedStreams.DBSite.YOUTUBE ||
+                    YoutubeVideoTrack.getForChannel(channel).empty()) {
+
+                channel.delete()
+                LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
+                null
+            } else emptyList()
         }
     }
 

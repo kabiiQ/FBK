@@ -4,9 +4,7 @@ import discord4j.core.spec.RoleCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandAbortedException
@@ -23,7 +21,6 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.lang.NullPointerException
 
 object StreamFollow : CommandContainer {
     object FollowStream : Command("follow", "followrole") {

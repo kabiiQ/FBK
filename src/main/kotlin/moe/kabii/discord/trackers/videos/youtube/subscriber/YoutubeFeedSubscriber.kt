@@ -36,7 +36,7 @@ class YoutubeFeedSubscriber {
             .post(body)
             .build()
 
-        LOG.info("Requesting YT Feed: $topic")
+        LOG.info("Requesting $mode for YT Feed: $topic")
 
         val response = OkHTTP.newCall(request).execute()
         LOG.debug(response.code.toString())
