@@ -76,7 +76,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
             // embed spec consumer sets content to current 'page'
             fun applyPageContent(spec: EmbedCreateSpec) {
                 val currentPage = page!!
-                spec.setTitle("Tracked targets in <#${chan.id.asString()}")
+                spec.setTitle("Tracked targets in <#${chan.id.asString()}>")
                 val pageContent = trackPages[currentPage.current]
                 spec.setDescription(pageContent.joinToString("\n"))
                 spec.setFooter("Target page ${currentPage.current + 1}/${currentPage.pageCount}", null)

@@ -36,6 +36,8 @@ data class CustomEmoji(
         return result
     }
 
+
+
 }
 
 data class UnicodeEmoji(

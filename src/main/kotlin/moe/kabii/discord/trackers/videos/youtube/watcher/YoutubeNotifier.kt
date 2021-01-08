@@ -48,7 +48,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         // create live stats object for video
         // should not already exist
         if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        YoutubeLiveEvent.new {
+        val dbLive = YoutubeLiveEvent.new {
             this.ytVideo = dbVideo
             this.lastThumbnail = video.thumbnail
             this.lastChannelName = video.channel.name
