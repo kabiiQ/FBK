@@ -13,6 +13,7 @@ import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.discord.trackers.TrackerPublishUtil
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -21,6 +22,7 @@ import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
+import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
@@ -48,7 +50,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         // create live stats object for video
         // should not already exist
         if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        val dbLive = YoutubeLiveEvent.new {
+        dbVideo.liveEvent = YoutubeLiveEvent.new {
             this.ytVideo = dbVideo
             this.lastThumbnail = video.thumbnail
             this.lastChannelName = video.channel.name
@@ -90,6 +92,9 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
                 val dbMessage = notification.messageID
                 val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+
+                // todo temp debug
+                LOG.info(existingNotif.embeds.firstOrNull()?.author?.orNull()?.name)
 
                 val features = getStreamConfig(notification.targetID)
 
@@ -291,7 +296,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val shortDescription = StringUtils.abbreviate(video.description, 200)
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-            chan.createMessage { spec ->
+            val new = chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     setColor(uploadColor)
