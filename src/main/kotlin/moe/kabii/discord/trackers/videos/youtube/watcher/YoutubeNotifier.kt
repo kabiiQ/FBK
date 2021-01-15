@@ -267,6 +267,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             } else throw ce
         }
         YoutubeScheduledNotification.create(event, target)
+        TrackerPublishUtil.checkAndPublish(message)
         return message
     }
 
@@ -304,6 +305,8 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
+            TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
+            new
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -320,8 +323,9 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         val chan = getChannel(videoTrack.discordChannel.channelID)
 
         val trackerId = videoTrack.tracker.userID
-        chan.createMessage("<@$trackerId> Livestream reminder: **${liveStream.channel.name}** is now live: ${liveStream.url}")
+        val new = chan.createMessage("<@$trackerId> Livestream reminder: **${liveStream.channel.name}** is now live: ${liveStream.url}")
             .awaitSingle()
+        TrackerPublishUtil.checkAndPublish(new)
     }
 
     @WithinExposedContext
@@ -373,6 +377,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
+            TrackerPublishUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log message in db
             YoutubeNotification.new {

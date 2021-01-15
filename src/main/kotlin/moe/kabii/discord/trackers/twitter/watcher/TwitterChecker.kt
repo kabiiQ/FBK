@@ -87,6 +87,8 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                             }
                                             spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
                                         }.awaitSingle()
+
+                                        TrackerPublishUtil.checkAndPublish(notif)
                                     }
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {

@@ -12,6 +12,7 @@ import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.discord.trackers.TrackerPublishUtil
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
@@ -248,7 +249,9 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             return@forEach
                         } else throw ce
                     }
-                    
+
+                    TrackerPublishUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+
                     DBTwitchStreams.Notification.new {
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                         this.targetID = target

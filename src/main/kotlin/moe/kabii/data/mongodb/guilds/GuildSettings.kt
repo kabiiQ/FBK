@@ -8,7 +8,8 @@ data class GuildSettings(
     var reassignRoles: Boolean = false,
     var defaultFollow: StreamInfo? = null,
     var twitchURLInfo: Boolean = false,
-    var utilizeInvites: Boolean = false
+    var utilizeInvites: Boolean = false,
+    var publishTrackerMessages: Boolean = false
 )
 
 data class StreamInfo(
