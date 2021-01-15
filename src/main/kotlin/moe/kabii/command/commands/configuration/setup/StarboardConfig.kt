@@ -1,6 +1,6 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -62,7 +62,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         // get channel target (starboard create #channel)
         val channelArg = args.getOrNull(1)
         val channelTarget = if(channelArg != null) {
-            val search = Search.channelByID<TextChannel>(this, channelArg)
+            val search = Search.channelByID<GuildChannel>(this, channelArg)
             if(search == null) {
                 error("Unable to find channel **$channelArg**.").awaitSingle()
                 return@with

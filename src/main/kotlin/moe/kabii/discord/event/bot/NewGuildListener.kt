@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.bot
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
@@ -22,7 +22,7 @@ object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::clas
             val metaChanId = Keys.config[Keys.Admin.logChannel]
             val avatarUrl = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
             event.client.getChannelById(metaChanId.snowflake)
-                .ofType(TextChannel::class.java)
+                .ofType(GuildMessageChannel::class.java)
                 .flatMap { metaChan ->
                     metaChan.createEmbed { spec ->
                         spec.setColor(Color.of(6750056))

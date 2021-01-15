@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
@@ -94,7 +94,7 @@ object JoinHandler {
                         .formatJoin(targetLog.joinFormat, invite)
 
                     val logChan = member.client.getChannelById(targetLog.channelID.snowflake)
-                        .ofType(TextChannel::class.java)
+                        .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
                     logChan.createEmbed { spec ->

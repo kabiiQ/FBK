@@ -1,6 +1,6 @@
 package moe.kabii.discord.event.user
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.PresenceUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -35,7 +35,7 @@ object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdat
                 .forEach { targetLog ->
                     val logMessage = event.client
                         .getChannelById(targetLog.channelID.snowflake)
-                        .ofType(TextChannel::class.java)
+                        .ofType(GuildMessageChannel::class.java)
                         .flatMap { logChan ->
                             logChan.createEmbed { spec ->
                                 spec.setAuthor("${user.username}#${user.discriminator}", null, null)
@@ -75,7 +75,7 @@ object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdat
 
                     val logMessage = event.client
                         .getChannelById(targetLog.channelID.snowflake)
-                        .ofType(TextChannel::class.java)
+                        .ofType(GuildMessageChannel::class.java)
                         .flatMap { logChan ->
                             logChan.createEmbed { spec ->
                                 spec.setAuthor("$oldUsername#$oldDiscrim", null, user.avatarUrl)

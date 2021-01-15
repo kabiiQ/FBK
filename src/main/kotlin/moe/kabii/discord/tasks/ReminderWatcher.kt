@@ -1,9 +1,9 @@
 package moe.kabii.discord.tasks
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
@@ -118,7 +118,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
         try {
             when (discordChannel) {
                 is PrivateChannel -> sendReminder(discordChannel)
-                is TextChannel -> {
+                is GuildMessageChannel -> {
                     val member = user.asMember(discordChannel.guildId).tryAwait().orNull()
                     if (member != null) {
                         try {

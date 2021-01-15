@@ -1,7 +1,8 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -47,7 +48,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
 
         // fall back to null if we can't get the author either
         val author = if(authorID != null) event.client.getUserById(authorID.snowflake).tryAwait().orNull() else null
-        val channelName = event.channel.ofType(TextChannel::class.java).awaitSingle().name
+        val channelName = event.channel.ofType(GuildChannel::class.java).awaitSingle().name
         val embedAuthor = if(author != null) {
             "A message by ${author.username}#${author.discriminator} was deleted in #$channelName:"
         } else "A message was deleted in $channelName but I did not have this message logged."
@@ -56,7 +57,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
             .forEach { targetLog ->
                 val logMessage = event.client
                     .getChannelById(targetLog.channelID.snowflake)
-                    .ofType(TextChannel::class.java)
+                    .ofType(GuildMessageChannel::class.java)
                     .flatMap { logChan ->
                         logChan.createEmbed { spec ->
                             fbkColor(spec)

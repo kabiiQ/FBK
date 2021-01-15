@@ -1,6 +1,6 @@
 package moe.kabii.discord.event.guild
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageBulkDeleteEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -20,7 +20,7 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
         if(deleteLogs.none()) return
 
         val eventChannel = event.channel
-            .ofType(TextChannel::class.java)
+            .ofType(GuildMessageChannel::class.java)
             .awaitSingle()
 
         val authorCount = event.messages
@@ -36,7 +36,7 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
             .forEach { targetLog ->
                 val logMessage = event.client
                     .getChannelById(targetLog.channelID.snowflake)
-                    .ofType(TextChannel::class.java)
+                    .ofType(GuildMessageChannel::class.java)
                     .flatMap { logChan ->
                         logChan.createEmbed { spec ->
                             logColor(null, spec)

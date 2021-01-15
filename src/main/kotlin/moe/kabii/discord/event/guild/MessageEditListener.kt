@@ -1,6 +1,6 @@
 package moe.kabii.discord.event.guild
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -51,7 +51,7 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
         editLogs.forEach { targetLog ->
             val logMessage = event.client
                 .getChannelById(targetLog.channelID.snowflake)
-                .ofType(TextChannel::class.java)
+                .ofType(GuildMessageChannel::class.java)
                 .flatMap { logChan ->
                     logChan.createEmbed { spec ->
                         fbkColor(spec)

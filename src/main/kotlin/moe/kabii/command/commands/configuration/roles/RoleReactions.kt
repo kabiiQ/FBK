@@ -1,6 +1,6 @@
 package moe.kabii.command.commands.configuration.roles
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -191,7 +191,7 @@ object RoleReactions : CommandContainer {
                     if(messages.isNotEmpty()) {
                         val message = messages.joinToString("\n") { (reactConfig, role) ->
                             val channelID = reactConfig.message.channelID.snowflake
-                            val channel = target.getChannelById(channelID).ofType(TextChannel::class.java).tryBlock().orNull()
+                            val channel = target.getChannelById(channelID).ofType(GuildMessageChannel::class.java).tryBlock().orNull()
                             if(channel == null) {
                                 configs.remove(reactConfig)
                                 runBlocking { config.save() }

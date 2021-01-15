@@ -1,9 +1,9 @@
 package moe.kabii.discord.trackers.anime.watcher
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
@@ -161,7 +161,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                             .filter { chan ->
                                 // check if channel is currently enabled (or pm channel)
                                 when (chan) {
-                                    is TextChannel -> {
+                                    is GuildMessageChannel -> {
                                         val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
                                         val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
                                         // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.

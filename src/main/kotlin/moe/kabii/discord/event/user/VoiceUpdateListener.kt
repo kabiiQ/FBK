@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.user
 
 import discord4j.core.`object`.VoiceState
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.rest.http.client.ClientException
@@ -61,7 +61,7 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
 
                 val logMessage = event.client
                     .getChannelById(targetLog.channelID.snowflake)
-                    .ofType(TextChannel::class.java)
+                    .ofType(MessageChannel::class.java)
                     .flatMap { logChan ->
                         logChan.createEmbed { spec ->
                             spec.userAsAuthor(user)

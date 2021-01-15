@@ -2,7 +2,7 @@ package moe.kabii.discord.event.user
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -57,7 +57,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                     try {
                         val logChan = event.client
                             .getChannelById(targetLog.channelID.snowflake)
-                            .ofType(TextChannel::class.java)
+                            .ofType(MessageChannel::class.java)
                             .awaitSingle()
 
                         val added = addedRoles.toFlux()

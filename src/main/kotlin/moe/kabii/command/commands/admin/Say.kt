@@ -1,6 +1,6 @@
 package moe.kabii.command.commands.admin
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import moe.kabii.command.Command
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
@@ -21,10 +21,10 @@ object Say : Command("botsay", "say") {
                 return@terminal
             }
             val channel = discord.getChannelById(channelID.snowflake)
-                .ofType(TextChannel::class.java)
+                .ofType(MessageChannel::class.java)
                 .tryAwait().orNull()
             if(channel == null) {
-                println("Unable to get TextChannel with ID \"$channelID\"")
+                println("Unable to get MessageChannel with ID \"$channelID\"")
                 return@terminal
             }
             val content = args.drop(1).joinToString(" ")

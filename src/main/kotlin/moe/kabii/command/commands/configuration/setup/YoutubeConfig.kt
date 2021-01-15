@@ -1,6 +1,6 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -76,7 +76,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
                         // set channel
                         val targetChannel = if(targetArg == "reset") chan.id
                         else {
-                            val matchChannel = Search.channelByID<TextChannel>(this, targetArg)
+                            val matchChannel = Search.channelByID<GuildMessageChannel>(this, targetArg)
                             if(matchChannel == null) {
                                 error("Unable to find the channel **$targetArg**.").awaitSingle()
                                 return@discord

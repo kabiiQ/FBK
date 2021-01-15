@@ -1,6 +1,6 @@
 package moe.kabii.discord.event.bot
 
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
@@ -163,7 +163,7 @@ class MessageHandler(val manager: CommandManager) {
                     when (ce.status.code()) {
                         403 -> {
                             LOG.debug("403: ${ce.message}")
-                            if (config == null || chan !is TextChannel) return@launch
+                            if (config == null || chan !is GuildChannel) return@launch
                             if (ce.errorResponse.orNull()?.fields?.get("message")?.equals("Missing Permissions") != true) return@launch
                             val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
                             val listMissing = command.discordReqs
@@ -173,7 +173,7 @@ class MessageHandler(val manager: CommandManager) {
                                     .flatMap { pm ->
                                         pm.createEmbed { spec ->
                                             errorColor(spec)
-                                            spec.setDescription("I tried to respond to your command **${command.baseName}** in channel ${chan.mention} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
+                                            spec.setDescription("I tried to respond to your command **${command.baseName}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
                                         }
                                     }.subscribe()
                         }

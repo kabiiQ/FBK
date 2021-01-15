@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import kotlinx.coroutines.runBlocking
 import moe.kabii.command.commands.audio.AudioCommandContainer
@@ -32,7 +32,7 @@ object AudioEventHandler : AudioEventAdapter() {
         player.setFilterFactory(data.audioFilters.export())
 
         val originChan = data.discord.getChannelById(data.originChannel)
-            .ofType(TextChannel::class.java)
+            .ofType(GuildMessageChannel::class.java)
 
         val guildID = data.audio.guildId
         val config = GuildConfigurations.getOrCreateGuild(guildID).musicBot
@@ -163,7 +163,7 @@ object AudioEventHandler : AudioEventAdapter() {
     override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException) {
         val data = track.userData as QueueData
         data.discord.getChannelById(data.originChannel)
-            .ofType(TextChannel::class.java)
+            .ofType(GuildMessageChannel::class.java)
             .flatMap { chan ->
                 chan.createEmbed { embed ->
                     val title = AudioCommandContainer.trackString(track)

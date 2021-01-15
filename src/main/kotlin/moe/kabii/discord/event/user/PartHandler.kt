@@ -3,7 +3,7 @@ package moe.kabii.discord.event.user
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
@@ -43,7 +43,7 @@ object PartHandler {
                         .formatPart(targetLog.partFormat, member)
 
                     val logChan = user.client.getChannelById(targetLog.channelID.snowflake)
-                        .ofType(TextChannel::class.java)
+                        .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
                     logChan.createEmbed { spec ->

@@ -1,6 +1,5 @@
 package moe.kabii.data.relational.streams.youtube
 
-import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import org.jetbrains.exposed.dao.IntEntity

@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.bot
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
@@ -20,7 +20,7 @@ object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::c
 
             val metaChanId = Keys.config[Keys.Admin.logChannel]
             event.client.getChannelById(metaChanId.snowflake)
-                .ofType(TextChannel::class.java)
+                .ofType(MessageChannel::class.java)
                 .flatMap { metaChan ->
                     metaChan.createEmbed { spec ->
                         spec.setColor(Color.of(16739688))

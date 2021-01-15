@@ -2,11 +2,8 @@ package moe.kabii.discord.trackers.videos
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.entity.channel.GuildChannel
-import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.*
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -18,6 +15,7 @@ import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.discord.util.EditableChannelWrapper
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.errorColor
 import moe.kabii.rusty.Err
@@ -37,7 +35,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 if(target.discordChannel.guild != null) {
                     val disChan = discord
                         .getChannelById(target.discordChannel.channelID.snowflake)
-                        .awaitFirstOrNull()
+                        .tryAwait().orNull()
                     if(disChan == null) {
                         LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
                         target.delete()
@@ -96,7 +94,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     @WithinExposedContext
     suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
         // if this is a guild channel with the rename feature enabled, execute this functionality
-        val guildChan = channel as? TextChannel ?: return // can not use feature for dms
+        val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms
+
         val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
         val features = config.options.featureChannels.getValue(guildChan.id.asLong())
 
@@ -163,9 +162,14 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 
         LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
         try {
-            guildChan.edit { spec ->
-                spec.setName(newName)
-            }.awaitSingle()
+            val wrapper = EditableChannelWrapper(
+                name = newName
+            )
+            when(guildChan) {
+                is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
+            }
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 guildChan.createEmbed { spec ->

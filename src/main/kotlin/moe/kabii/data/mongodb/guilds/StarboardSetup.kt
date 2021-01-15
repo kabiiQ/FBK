@@ -2,7 +2,7 @@ package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
@@ -43,9 +43,9 @@ class StarredMessage(
 }
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {
-    private suspend fun getStarboardChannel(): TextChannel {
+    private suspend fun getStarboardChannel(): GuildMessageChannel {
         return try {
-            guild.getChannelById(starboard.channel.snowflake).awaitSingle() as TextChannel
+            guild.getChannelById(starboard.channel.snowflake).awaitSingle() as GuildMessageChannel
         } catch(ce: ClientException) {
             if(ce.status.code() == 404) {
                 LOG.info("Starboard for guild ${guild.id.asString()} not found. Channel ${starboard.channel} does not exist. Removing configuration.")
@@ -56,7 +56,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         }
     }
 
-    private suspend fun getStarboardMessage(channel: TextChannel, message: StarredMessage): Message {
+    private suspend fun getStarboardMessage(channel: GuildMessageChannel, message: StarredMessage): Message {
         return try {
             channel.getMessageById(message.starboardMessageId.snowflake).awaitSingle()
         } catch(ce: ClientException) {
