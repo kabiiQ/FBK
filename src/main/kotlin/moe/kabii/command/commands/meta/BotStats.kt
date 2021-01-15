@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.meta
 
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -52,11 +53,12 @@ object BotStats : CommandContainer {
             discord {
                 val botUser = event.client.self.awaitSingle()
                 val guilds = event.client.guilds
-                    .collectMap({ guild -> guild }, { guild -> guild.memberCount })
+                    .map(Guild::getMemberCount)
+                    .collectList()
                     .awaitSingle()
                 val guildCount = guilds.count().toString()
                 val shards = event.client.gatewayClientGroup.shardCount
-                val users = guilds.values.sum().toString()
+                val users = guilds.sum().toString()
                 val build = Metadata.buildInfo
 
                 val now = Instant.now()

@@ -3,13 +3,15 @@ package moe.kabii.discord.trackers.twitter.watcher
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.discord.trackers.TrackerPublishUtil
 import moe.kabii.discord.trackers.twitter.TwitterParser
+import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
@@ -55,15 +57,26 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                             includeRT = pullRetweets,
                             includeQuote = pullQuotes
                         )
-                        val recent = TwitterParser.getRecentTweets(feed.userId, limits)
+                        val recent = try {
+                            TwitterParser.getRecentTweets(feed.userId, limits)
+                        } catch(rate: TwitterRateLimitReachedException) {
+                            val reset = rate.resetSeconds
+                            LOG.warn("Twitter rate limit reached: sleeping $reset seconds.")
+                            delay(Duration.ofSeconds(reset))
+                            null
+                        } catch(e: Exception) {
+                            LOG.warn("TwitterChecker: Error in Twitter call: ${e.message}")
+                            LOG.debug(e.stackTraceString)
+                            delay(Duration.ofMillis(100L))
+                            null
+                        }
                         recent ?: return@forEach
                         val (user, tweets) = recent
                         val latest = tweets.maxOf { tweet ->
 
-                            // if tweet is after last posted tweet and within 3 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                            // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
                             val age = Duration.between(tweet.createdAt, Instant.now())
-                            LOG.debug("Twitter returned quantity ${tweets.size}")
-                            if (feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf 0L
+                            if (feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf tweet.id // if already handled or too old, skip, but do not pull tweet ID again
 
                             // send discord notifs - check if any channels request
                             targets.forEach { target ->
@@ -76,7 +89,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                     val twitter = features?.twitterSettings ?: TwitterSettings()
 
                                     if(tweet.notifyOption.get(twitter)) {
-                                        channel.createMessage { spec ->
+                                        val notif = channel.createMessage { spec ->
                                             // todo channel setting for custom message ?
 
                                             val action = when {
@@ -106,7 +119,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                 feed.lastPulledTweet = latest
                             }
                         }
-                        delay(50L)
+                        delay(Duration.ofMillis(50L))
                     }
                 } catch(e: Exception) {
                     LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
@@ -115,7 +128,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = 45_000L - runDuration.toMillis()
-            delay(max(delay, 0L))
+            delay(Duration.ofMillis(max(delay, 0L)))
         }
     }
 }

@@ -30,7 +30,7 @@ object TwitterParser {
         try {
             OkHTTP.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    if(response.code == 429) {
+                    if (response.code == 429) {
                         val reset = response.headers["x-rate-limit-reset"]?.toLongOrNull()
                         throw TwitterRateLimitReachedException(reset ?: 90L, "HTTP response: ${response.code}")
                     } else {
@@ -41,7 +41,7 @@ object TwitterParser {
                 val body = response.body!!.string()
                 return try {
                     val json = MOSHI.adapter(R::class.java).fromJson(body)
-                    if(json != null) json else null
+                    if (json != null) json else null
                 } catch (e: Exception) {
                     LOG.error("Invalid JSON provided by Twitter: ${e.message} :: $body")
                     throw TwitterIOException(e)

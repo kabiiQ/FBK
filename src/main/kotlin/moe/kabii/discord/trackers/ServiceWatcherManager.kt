@@ -32,7 +32,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             yieldAll(mediaThreads)
 
             val twitter = TwitterChecker(discord)
-//            yield(Thread(twitter, "TwitterChecker"))
+            yield(Thread(twitter, "TwitterChecker"))
 
         }.toList()
     }

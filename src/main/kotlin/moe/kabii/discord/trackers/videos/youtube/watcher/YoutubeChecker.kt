@@ -107,6 +107,12 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                                 LOG.debug(e.stackTraceString)
                             }
                         }
+
+                    // clean up videos db
+//                    val old = DateTime.now().minusWeeks(1)
+//                    YoutubeVideos.deleteWhere {
+//                        YoutubeVideos.lastAPICall lessEq old
+//                    }
                 } catch (e: Exception) {
                     LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
                     LOG.debug(e.stackTraceString)
