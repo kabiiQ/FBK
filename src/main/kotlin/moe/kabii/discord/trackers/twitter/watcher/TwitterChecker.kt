@@ -24,6 +24,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
 
     override fun run() {
         loop {
+            LOG.info("Twitter loop start")
             val start = Instant.now()
 
             newSuspendedTransaction {
@@ -60,9 +61,9 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                         val recent = try {
                             TwitterParser.getRecentTweets(feed.userId, limits)
                         } catch(rate: TwitterRateLimitReachedException) {
-                            val reset = rate.resetSeconds
-                            LOG.warn("Twitter rate limit reached: sleeping $reset seconds.")
-                            delay(Duration.ofSeconds(reset))
+                            val reset = rate.reset
+                            LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
+                            delay(reset)
                             null
                         } catch(e: Exception) {
                             LOG.warn("TwitterChecker: Error in Twitter call: ${e.message}")
@@ -128,6 +129,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = 45_000L - runDuration.toMillis()
+            LOG.info("delaying: $delay millis")
             delay(Duration.ofMillis(max(delay, 0L)))
         }
     }

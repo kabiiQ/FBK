@@ -7,11 +7,13 @@ import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.twitter.json.*
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
+import java.time.Duration
+import java.time.Instant
 
 open class TwitterIOException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
     constructor(cause: Throwable) : this(cause.message.orEmpty(), cause)
 }
-class TwitterRateLimitReachedException(val resetSeconds: Long, message: String) : TwitterIOException(message)
+class TwitterRateLimitReachedException(val reset: Duration, message: String) : TwitterIOException(message)
 
 object TwitterParser {
 
@@ -31,8 +33,10 @@ object TwitterParser {
             OkHTTP.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
                     if (response.code == 429) {
-                        val reset = response.headers["x-rate-limit-reset"]?.toLongOrNull()
-                        throw TwitterRateLimitReachedException(reset ?: 90L, "HTTP response: ${response.code}")
+                        val reset = response.headers["x-rate-limit-reset"]?.toLongOrNull()?.let { resetTime ->
+                            Duration.between(Instant.now(), Instant.ofEpochSecond(resetTime))
+                        }
+                        throw TwitterRateLimitReachedException(reset ?: Duration.ofMillis(1000L), "HTTP response: ${response.code}")
                     } else {
                         LOG.error("Error calling Twitter API: $response")
                         throw TwitterIOException(response.toString())
