@@ -24,7 +24,6 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
 
     override fun run() {
         loop {
-            LOG.info("Twitter loop start")
             val start = Instant.now()
 
             newSuspendedTransaction {
@@ -129,7 +128,6 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = 45_000L - runDuration.toMillis()
-            LOG.info("delaying: $delay millis")
             delay(Duration.ofMillis(max(delay, 0L)))
         }
     }
