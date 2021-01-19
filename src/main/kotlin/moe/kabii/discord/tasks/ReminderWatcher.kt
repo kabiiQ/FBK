@@ -23,15 +23,7 @@ import java.time.Instant
 import kotlin.math.max
 
 class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
-    private var active = false
     private val updateInterval = 60_000L
-
-    fun launch() {
-        check(!active) { "ReminderWatcher thread already launched" }
-        val thread = Thread(this, "ReminderWatcher")
-        thread.start()
-        active = true
-    }
 
     override fun run() {
         loop {

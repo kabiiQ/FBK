@@ -6,7 +6,6 @@ import moe.kabii.OkHTTP
 import moe.kabii.discord.translation.azure.json.AzureLanguagesResponse
 import okhttp3.Request
 import java.io.IOException
-import kotlin.jvm.Throws
 
 data class SupportedLanguages(
     private val languages: Map<String, AzureLanguage>

@@ -23,9 +23,9 @@ import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
-import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.discord.translation.azure.Translator
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.Metadata
 import moe.kabii.structure.Uptime
@@ -75,6 +75,7 @@ fun main() {
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
+    Uptime
     val gateway = checkNotNull(discord.login().block())
 
     // begin listening for terminal commands
@@ -86,8 +87,6 @@ fun main() {
     }
 
     // start lifetime task threads
-    Uptime
-    ReminderWatcher(gateway).launch()
     ServiceWatcherManager(gateway).launch()
     val translator = Translator
 
@@ -104,7 +103,7 @@ fun main() {
 
     // primary message listener uses specific instance and is manually set up
     val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
-        .flatMap { event -> mono { discordHandler.handle(event) }}
+        .map { event -> discordHandler.handle(event) }
 
     // all other event handlers simply recieve the event
     val eventListeners = reflection.getSubTypesOf(EventListener::class.java)

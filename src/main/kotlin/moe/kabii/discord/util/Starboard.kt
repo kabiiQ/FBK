@@ -12,7 +12,6 @@ import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
-import moe.kabii.discord.util.starColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.extensions.*
 import moe.kabii.util.EmojiCharacters

@@ -2,6 +2,7 @@ package moe.kabii.discord.trackers
 
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
@@ -15,6 +16,9 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
     init {
         serviceThreads = sequence {
+            val reminders = ReminderWatcher(discord)
+            yield(Thread(reminders, "ReminderWatcher"))
+
             val twitch = TwitchChecker(discord)
             yield(Thread(twitch, "TwitchChecker"))
 

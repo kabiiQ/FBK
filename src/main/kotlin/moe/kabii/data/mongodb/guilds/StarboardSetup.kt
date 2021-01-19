@@ -1,21 +1,8 @@
 package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.Guild
-import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.spec.MessageCreateSpec
-import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.LOG
-import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.util.Starboard
-import moe.kabii.discord.util.starColor
-import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.extensions.*
-import moe.kabii.util.EmojiCharacters
-import java.net.URL
 
 data class StarboardSetup(
     var channel: Long,
