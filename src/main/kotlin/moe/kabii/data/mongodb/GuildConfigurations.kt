@@ -53,6 +53,7 @@ data class GuildConfiguration(
     val tempVoiceChannels: TempChannels = TempChannels(),
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
+    val translator: TranslatorSettings = TranslatorSettings(),
     var starboard: StarboardSetup? = null) {
 
     companion object {

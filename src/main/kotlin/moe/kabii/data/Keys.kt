@@ -58,6 +58,9 @@ object Keys : ConfigSpec("") {
         val apiSecret by required<String>("api_key_secret")
         val token by required<String>("bearer_token")
     }
+    object Microsoft : ConfigSpec() {
+        val translatorKey by required<String>("translator_key")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

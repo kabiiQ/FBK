@@ -89,6 +89,7 @@ fun main() {
     Uptime
     ReminderWatcher(gateway).launch()
     ServiceWatcherManager(gateway).launch()
+    val translator = Translator
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
