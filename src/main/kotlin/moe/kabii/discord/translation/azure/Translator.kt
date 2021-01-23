@@ -7,6 +7,7 @@ import moe.kabii.discord.translation.azure.json.AzureTranslationResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
 object Translator {
     private val azureKey = Keys.config[Keys.Microsoft.translatorKey]
@@ -34,8 +35,10 @@ object Translator {
 
         val response = OkHTTP.newCall(request).execute()
         val translation =  try {
-            val body = response.body!!.string()
-            AzureTranslationResponse.parseSingle(body)
+            if(response.isSuccessful) {
+                val body = response.body!!.string()
+                AzureTranslationResponse.parseSingle(body)
+            } else throw IOException("HTTP request returned response code ${response.code} :: Body: ${response.body}")
         } finally {
             response.close()
         }

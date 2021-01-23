@@ -61,9 +61,9 @@ data class SupportedLanguages(
                 val body = response.body!!.string()
                 val languages = adapter.fromJson(body)
                 if (languages != null) {
-                    val azureLanguages = languages.translation.mapValues { (tag, lang) ->
-                        AzureLanguage(tag.toLowerCase(), lang.name, lang.nativeName)
-                    }
+                    val azureLanguages = languages.translation.map { (tag, lang) ->
+                        tag.toLowerCase() to AzureLanguage(tag, lang.name, lang.nativeName)
+                    }.toMap()
                     SupportedLanguages(azureLanguages)
                 } else throw IOException("Invalid JSON provided from Azure response: $body")
             } finally {
