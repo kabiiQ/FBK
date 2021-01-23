@@ -10,6 +10,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.trackers.TrackerPublishUtil
+import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.structure.extensions.loop
@@ -30,6 +31,10 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                 try {
                     // get all tracked twitter feeds
                     val feeds = TwitterFeed.all()
+
+                    // feeds who are completely inactive and since_id has fallen out of the valid range
+                    val requireUpdate = mutableListOf<TwitterFeed>()
+                    var maxId = 0L
 
                     feeds.forEach { feed ->
                         val targets = feed.targets.toList()
@@ -59,6 +64,10 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                         )
                         val recent = try {
                             TwitterParser.getRecentTweets(feed.userId, limits)
+                        } catch(sinceId: TwitterDateTimeUpdateException) {
+                            LOG.info("Twitter feed '${feed.userId}' is far out of date and the Tweets since_id query was rejected")
+                            requireUpdate.add(feed)
+                            null
                         } catch(rate: TwitterRateLimitReachedException) {
                             val reset = rate.reset
                             LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
@@ -119,7 +128,14 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                 feed.lastPulledTweet = latest
                             }
                         }
+                        if(latest > maxId) maxId = latest
                         delay(Duration.ofMillis(50L))
+                    }
+
+                    requireUpdate.forEach { feed ->
+                        newSuspendedTransaction {
+                            feed.lastPulledTweet = maxId
+                        }
                     }
                 } catch(e: Exception) {
                     LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
