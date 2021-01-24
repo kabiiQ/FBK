@@ -26,11 +26,6 @@ data class YoutubeVideoInfo(
     val channel: YoutubeChannelInfo,
 ) {
     val url = "https://youtube.com/watch?v=$id"
-
-    fun shouldPostLiveNotice(settings: YoutubeSettings): Boolean = when {
-        this.premiere -> settings.premieres
-        else -> settings.liveStreams
-    }
 }
 
 data class YoutubeStreamInfo(

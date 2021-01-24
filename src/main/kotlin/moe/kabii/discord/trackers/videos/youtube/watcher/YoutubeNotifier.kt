@@ -50,7 +50,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         // create live stats object for video
         // should not already exist
         if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        dbVideo.liveEvent = YoutubeLiveEvent.new {
+        val liveEvent = YoutubeLiveEvent.new {
             this.ytVideo = dbVideo
             this.lastThumbnail = video.thumbnail
             this.lastChannelName = video.channel.name
@@ -59,9 +59,10 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             this.averageViewers = viewers
             this.premiere = video.premiere
         }
+        dbVideo.liveEvent = liveEvent
 
         // post notifications to all enabled targets
-        filteredTargets(dbVideo.ytChannel, video::shouldPostLiveNotice).forEach { target ->
+        filteredTargets(dbVideo.ytChannel, liveEvent::shouldPostLiveNotice).forEach { target ->
             try {
                 createLiveNotification(dbVideo, video, target, new = true)
             } catch(e: Exception) {

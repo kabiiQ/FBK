@@ -1,5 +1,6 @@
 package moe.kabii.data.relational.streams.youtube
 
+import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import org.jetbrains.exposed.dao.IntEntity
@@ -38,6 +39,11 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
     fun updateViewers(current: Int) {
         if(current > peakViewers) peakViewers = current
         averageViewers += (current - averageViewers) / ++uptimeTicks
+    }
+
+    fun shouldPostLiveNotice(settings: YoutubeSettings): Boolean = when {
+        this.premiere -> settings.premieres
+        else -> settings.liveStreams
     }
 
     companion object : LongEntityClass<YoutubeLiveEvent>(YoutubeLiveEvents) {
