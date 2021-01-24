@@ -23,8 +23,7 @@ object UserInfo : Command("user", "whoami", "jointime") {
             } else author
 
             val guildMember = guild?.run { targetUser.asMember(guild.id) }?.tryAwait()?.orNull()
-            embed {
-                setAuthor("${targetUser.username}#${targetUser.discriminator}", null, targetUser.avatarUrl)
+            embed(targetUser) {
                 val accountCreation = targetUser.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
                 addField("Account created", formatter.format(accountCreation), false)
 

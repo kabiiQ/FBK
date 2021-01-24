@@ -73,7 +73,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
         val embed: EmbedBlock = {
             reminderColor(this)
             val clock = EmojiCharacters.alarm
-            setAuthor("$clock Reminder for ${user.username}#${user.discriminator} $clock", null, user.avatarUrl)
+            setAuthor("$clock Reminder for ${user.userAddress()} $clock", null, user.avatarUrl)
             val created = "Reminder created $createdTime ago."
             val desc = if(reminder.originMessage != null) {
                 "[$created](${reminder.originMessage!!.jumpLink})"

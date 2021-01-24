@@ -35,16 +35,10 @@ object QueueSkip : AudioCommandContainer {
                     data.votes.count()
                 }
                 if(votes >= votesNeeded) {
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("Skipped **${track.info.title}**.")
-                    }.awaitSingle()
+                    embed(author, "Skipped **${track.info.title}**.").awaitSingle()
                     audio.player.stopTrack()
                 } else {
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("Voted to skip **${track.info.title}**. ($votes/$votesNeeded votes)")
-                    }.awaitSingle()
+                    embed(author, "Voted to skip **${track.info.title}**. ($votes/$votesNeeded votes)").awaitSingle()
                 }
             }
         }
@@ -64,16 +58,10 @@ object QueueSkip : AudioCommandContainer {
                 }
                 if(canFSkip(this, track)) {
                     audio.player.stopTrack()
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("Force-skipped **${track.info.title}**.")
-                    }.awaitSingle()
+                    embed(author, "Force-skipped **${track.info.title}**.")
                 } else {
-                    error {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("You can not force-skip **${track.info.title}**.")
-                    }.awaitSingle()
-                }
+                    embed(author, "You can not force-skip **${track.info.title}**.")
+                }.awaitSingle()
             }
         }
     }

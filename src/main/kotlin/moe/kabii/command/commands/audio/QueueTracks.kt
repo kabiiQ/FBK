@@ -89,10 +89,7 @@ object QueueTracks : AudioCommandContainer {
                 val add = audio.tryAdd(track, member)
                 if(!add) {
                     val maxTracksUser = config.musicBot.maxTracksUser
-                    error {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${target.name}.")
-                    }.awaitSingle()
+                    error(author, "You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${target.name}.")
                     return@discord
                 }
                 val position = audio.queue.size

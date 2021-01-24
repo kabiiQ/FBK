@@ -10,6 +10,7 @@ import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -97,7 +98,7 @@ object ReminderCommands : CommandContainer {
                 val reminderID = reminder.id
                 val embed: EmbedBlock = {
                     reminderColor(this)
-                    setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
+                    setAuthor(author.userAddress(), null, author.avatarUrl)
                     setDescription("Reminder created! You will be sent a $location in **$length**.")
                     setFooter("Reminder ID: $reminderID", null)
                 }

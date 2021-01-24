@@ -72,7 +72,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
 
                             logChan.createEmbed { spec ->
                                 fbkColor(spec)
-                                spec.userAsAuthor(member)
+                                spec.setAuthor(member.userAddress(), null, member.avatarUrl)
                                 spec.setDescription("Added to role **$addedStr**")
                                 spec.setFooter("User ID: ${member.id.asString()}", null)
                             }.awaitSingle()
@@ -89,7 +89,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
 
                             logChan.createEmbed { spec ->
                                 fbkColor(spec)
-                                spec.userAsAuthor(member)
+                                spec.setAuthor(member.userAddress(), null, member.avatarUrl)
                                 spec.setDescription("Removed from role **$removedStr**")
                                 spec.setFooter("User ID: ${member.id.asString()}", null)
 

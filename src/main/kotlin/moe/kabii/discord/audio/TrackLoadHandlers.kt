@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.QueueTracks
@@ -56,10 +57,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             if(silent) return // don't send any messages for this track
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
-                origin.error {
-                    setAuthor("${origin.author.username}#${origin.author.discriminator}", null, origin.author.avatarUrl)
-                    setDescription("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.")
-                }.block()
+                origin.error(origin.author, "Your track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.").block()
                 return
             }
 

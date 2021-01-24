@@ -10,6 +10,7 @@ import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -47,7 +48,7 @@ object Preferences : CommandContainer {
                             val servers = StringUtils.abbreviate(serversLong, MagicNumbers.Embed.DESC)
                             val botAvatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                             val prompt = embed {
-                                setAuthor("Mutual Servers with ${author.username}#${author.discriminator}:", null, botAvatar)
+                                setAuthor("Mutual Servers with ${author.userAddress()}:", null, botAvatar)
                                 setTitle("Select a server number to set as the target for DM commands or \"exit\" to cancel.")
                                 setDescription(servers)
                             }.awaitSingle()

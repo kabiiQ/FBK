@@ -10,10 +10,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.logColor
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.*
 
 object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
     override suspend fun handle(event: PresenceUpdateEvent) {
@@ -38,7 +35,7 @@ object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdat
                         .ofType(GuildMessageChannel::class.java)
                         .flatMap { logChan ->
                             logChan.createEmbed { spec ->
-                                spec.setAuthor("${user.username}#${user.discriminator}", null, null)
+                                spec.setAuthor(user.userAddress(), null, null)
                                 spec.setDescription("New avatar:")
                                 spec.setImage(user.avatarUrl)
                                 logColor(member, spec)

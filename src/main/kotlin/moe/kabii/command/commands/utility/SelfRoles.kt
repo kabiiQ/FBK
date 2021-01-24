@@ -9,7 +9,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAsAuthor
 
 
 object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "self", "selfrole", "toggle", "togglerole", "roletoggle") {
@@ -32,30 +31,20 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
                 config.selfRoles.enabledRoles.contains(role.id.asLong())
                         || PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)
 
-            fun userEmbed(desc: String) = embed {
-                userAsAuthor(member)
-                setDescription(desc)
-            }
-
-            fun userError(desc: String) = error {
-                userAsAuthor(member)
-                setDescription(desc)
-            }
-
             val response = if(selfAssignable) {
                 if(member.roleIds.contains(role.id)) {
                     when(member.removeRole(role.id).success().tryAwait()) {
-                        is Ok -> userEmbed("You have been removed from the **${role.name}** role.")
-                        is Err -> userError("I tried to remove the **${role.name}** role from you, but I can not manage that role.")
+                        is Ok -> embed(member,"You have been removed from the **${role.name}** role.")
+                        is Err -> error(member, "I tried to remove the **${role.name}** role from you, but I can not manage that role.")
                     }
                 } else {
                     when(member.addRole(role.id).success().tryAwait()) {
-                        is Ok -> userEmbed("You have been given the **${role.name}** role.")
-                        is Err -> userError("I tried to give you the **${role.name}** but I can not manage that role.")
+                        is Ok -> embed(member, "You have been given the **${role.name}** role.")
+                        is Err -> error(member, "I tried to give you the **${role.name}** but I can not manage that role.")
                     }
                 }
             } else {
-                userError("You can not give yourself the **${role.name}** role.")
+                error(member, "You can not give yourself the **${role.name}** role.")
             }
             response.awaitSingle()
         }

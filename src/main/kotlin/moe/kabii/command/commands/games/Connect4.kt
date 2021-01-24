@@ -11,6 +11,7 @@ import moe.kabii.discord.games.connect4.EmbedInfo
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
@@ -87,17 +88,17 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                         p2Target.privateChannel.tryAwait().orNull()
                     }
                     if (p2Channel == null) {
-                        error("I am unable to send a private message to **${p2Target.username}#${p2Target.discriminator}**. They may have their DMs closed.").awaitSingle()
+                        error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.").awaitSingle()
                         return@discord
                     }
                     val p2Existing = GameManager.matchGame(p2Target.id, p2Channel.id)
                     if (p2Existing != null) {
-                        error("**${p2Target.username}#${p2Target.discriminator}** has an ongoing game of **${p2Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.").awaitSingle()
+                        error("**${p2Target.userAddress()}** has an ongoing game of **${p2Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.").awaitSingle()
                         return@discord
                     }
 
                     // neither player is in a game, can issue the challenge
-                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.username}#${author.discriminator}**. Do you accept?")
+                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${p2Target.userAddress()}**. Do you accept?")
                         .awaitSingle()
 
                     val notice = if (guild == null) {
@@ -117,7 +118,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                                     targetChan.createMessage("Connect 4 game is starting!").awaitSingle()
                                 }
                             } catch (ce: ClientException) {
-                                error("I am unable to send a private message to **${p2Target.username}#${p2Target.discriminator}**. They may have their DMs closed.").awaitSingle()
+                                error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.").awaitSingle()
                                 return@discord
                             }
                             // challenge accepted, both users have successfully been messaged, the game can begin!

@@ -11,10 +11,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
@@ -50,7 +47,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
         val author = if(authorID != null) event.client.getUserById(authorID.snowflake).tryAwait().orNull() else null
         val channelName = event.channel.ofType(GuildChannel::class.java).awaitSingle().name
         val embedAuthor = if(author != null) {
-            "A message by ${author.username}#${author.discriminator} was deleted in #$channelName:"
+            "A message by ${author.userAddress()} was deleted in #$channelName:"
         } else "A message was deleted in $channelName but I did not have this message logged."
 
         deleteLogs

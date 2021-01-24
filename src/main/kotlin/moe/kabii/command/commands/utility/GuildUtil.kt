@@ -8,6 +8,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -36,7 +37,7 @@ object GuildUtil : CommandContainer {
                 val region = target.regionId
                 val boosts = target.premiumSubscriptionCount.orElse(0)
 
-                val owner = if(guildOwner != null) "${guildOwner.username}#${guildOwner.discriminator} (${guildOwner.id.asString()})" else "Unknown"
+                val owner = if(guildOwner != null) "${guildOwner.userAddress()}(${guildOwner.id.asString()})" else "Unknown"
 
                 val more = StringBuilder()
                 more.append("This guild was created $creation.")

@@ -7,6 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {
@@ -20,7 +21,7 @@ object AvatarUtil : CommandContainer {
                     return@discord
                 }
                 embed {
-                    setTitle("Avatar for **${targetUser.username}#${targetUser.discriminator}**")
+                    setTitle("Avatar for **${targetUser.userAddress()}**")
                     setImage(targetUser.avatarUrl)
                 }.awaitSingle()
             }

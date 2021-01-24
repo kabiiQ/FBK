@@ -26,6 +26,7 @@ import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryBlock
+import moe.kabii.structure.extensions.userAddress
 import moe.kabii.util.EmojiCharacters
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
@@ -83,11 +84,21 @@ data class DiscordParameters (
         }
     }
 
+    fun error(author: User, block: EmbedReceiver) = this.error {
+        block(this)
+        setAuthor(author.userAddress(), null, author.avatarUrl)
+    }
+
     fun embed(block: EmbedReceiver) = chan.createEmbed { embed ->
         fbkColor(embed)
         runBlocking {
             block(embed)
         }
+    }
+
+    fun embed(author: User, block: EmbedReceiver) = this.embed {
+        block(this)
+        setAuthor(author.userAddress(), null, author.avatarUrl)
     }
 
     fun embedBlock(block: EmbedBlock) = chan.createEmbed { embed ->
@@ -106,7 +117,9 @@ data class DiscordParameters (
     }
 
     fun error(error: String) = error { setDescription(error) }
+    fun error(user: User, error: String) = error(user) { setDescription(error) }
     fun embed(info: String) = embed { setDescription(info) }
+    fun embed(user: User, info: String) = embed(user) { setDescription(info) }
 
     suspend fun getString(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<String?> {
         var (user, channel) = Criteria defaultFor this

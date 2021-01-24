@@ -55,7 +55,7 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
                 .flatMap { logChan ->
                     logChan.createEmbed { spec ->
                         fbkColor(spec)
-                        spec.setAuthor("${author.username}#${author.discriminator} edited a message in #${logChan.name}:", jumpLink, author.avatarUrl)
+                        spec.setAuthor("${author.userAddress()} edited a message in #${logChan.name}:", jumpLink, author.avatarUrl)
                         spec.setDescription("$oldContent\n\nNew message: $new")
                         spec.setFooter("User ID: ${author.id.asString()} - Message ID: ${event.messageId.asString()} - Original message timestamp", null)
                         spec.setTimestamp(event.messageId.timestamp)

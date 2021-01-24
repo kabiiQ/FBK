@@ -111,10 +111,7 @@ object QueueEdit : AudioCommandContainer {
                     if (notRemoved.isNotEmpty()) {
                         outputMessage.append("You can not skip tracks: ${formatRanges(notRemoved)}")
                     }
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription(outputMessage.toString())
-                    }.awaitSingle()
+                    embed(author, outputMessage.toString()).awaitSingle()
                 }
             }
         }

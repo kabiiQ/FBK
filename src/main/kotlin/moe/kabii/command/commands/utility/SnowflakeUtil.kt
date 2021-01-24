@@ -114,10 +114,7 @@ object SnowflakeUtil : CommandContainer {
                     error("Unable to find user **$noCmd**.")
                     return@discord
                 }
-                embed {
-                    setAuthor("${targetUser.username}#${targetUser.discriminator}", null, targetUser.avatarUrl)
-                    setDescription("ID: ${targetUser.id.asString()}")
-                }.awaitSingle()
+                embed(targetUser, "ID: ${targetUser.id.asString()}").awaitSingle()
             }
         }
     }

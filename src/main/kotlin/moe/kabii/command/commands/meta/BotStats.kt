@@ -67,8 +67,7 @@ object BotStats : CommandContainer {
                 val connection = DurationFormatUtils.formatDuration(connect.toMillis(), uptimeFormat, false)
                 val reconnection = DurationFormatUtils.formatDuration(reconnect.toMillis(), uptimeFormat, false)
 
-                embed {
-                    setAuthor("${botUser.username}#${botUser.discriminator}", null, botUser.avatarUrl)
+                embed(botUser) {
                     addField("Process Uptime", connection, true)
                     addField("Connection Uptime", reconnection, true)
                     addField("Discord Shards", shards.toString(), false)

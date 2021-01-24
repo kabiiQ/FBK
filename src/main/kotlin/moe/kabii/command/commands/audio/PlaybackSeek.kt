@@ -8,6 +8,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.rusty.Try
 import moe.kabii.structure.EmbedReceiver
+import moe.kabii.structure.extensions.userAddress
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import java.time.Duration
@@ -56,17 +57,14 @@ object PlaybackSeek : AudioCommandContainer {
                 }
                 val targetPosition = DurationFormatter(seekTo).colonTime
                 if(trySeekCurrentTrack(this, track, seekTo)) {
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("The position in the currently playing track ${trackString(track)} has been set to **$targetPosition**.")
-                    }.awaitSingle()
+                    embed(author, "The position in the currently playing track ${trackString(track)} has been set to **$targetPosition**.").awaitSingle()
                 }
             }
         }
     }
 
     private fun timeSkipMessage(author: User, time: Duration, backwards: Boolean, newPosition: Duration, track: AudioTrack): EmbedReceiver = {
-        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
+        setAuthor(author.userAddress(), null, author.avatarUrl)
         val direction = if(backwards) "backwards" else "forwards"
         val positiveTime = DurationFormatter(time).colonTime
         val new = DurationFormatter(newPosition).colonTime

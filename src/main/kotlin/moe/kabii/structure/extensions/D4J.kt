@@ -1,10 +1,12 @@
 package moe.kabii.structure.extensions
 
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingleOrNull
 
 suspend fun Message.createJumpLink(): String {
     val guild = guild.awaitFirstOrNull()
@@ -17,4 +19,14 @@ get() = Snowflake.of(this)
 val Snowflake.long: Long
 get() = asLong()
 
-fun EmbedCreateSpec.userAsAuthor(user: User): EmbedCreateSpec = setAuthor("${user.username}#${user.discriminator}", null, user.avatarUrl)
+suspend fun User.userAddress(guild: Guild): String {
+    val nickname = try {
+        this.asMember(guild.id).awaitFirstOrNull()
+    } catch(e: Exception) {
+        null
+    }
+    val displayName = nickname?.displayName ?: this.username
+    return "$displayName#$discriminator"
+}
+
+fun User.userAddress(): String = "$username#$discriminator"

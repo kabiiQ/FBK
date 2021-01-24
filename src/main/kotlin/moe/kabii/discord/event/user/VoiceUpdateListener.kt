@@ -64,7 +64,7 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
                     .ofType(MessageChannel::class.java)
                     .flatMap { logChan ->
                         logChan.createEmbed { spec ->
-                            spec.userAsAuthor(user)
+                            spec.setAuthor(user.userAddress(), null, user.avatarUrl)
                             spec.setDescription(status)
                             logColor(member, spec)
                         }

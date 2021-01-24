@@ -76,10 +76,7 @@ object SearchTracks : AudioCommandContainer {
                 }
                 embed.delete().tryAwait()
                 if(silent) {
-                    embed {
-                        setAuthor("${author.username}#${author.discriminator}", null, author.avatarUrl)
-                        setDescription("Adding **${selected.size}** tracks to queue.")
-                    }.awaitSingle()
+                    embed(author, "Adding **${selected.size}** tracks to queue.").awaitSingle()
                 }
             }
         }

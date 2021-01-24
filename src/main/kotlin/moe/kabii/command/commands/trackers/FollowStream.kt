@@ -105,10 +105,7 @@ object StreamFollow : CommandContainer {
                     return@discord
                 }
                 member.addRole(mentionRole.id, "Self-assigned stream mention role").success().awaitSingle()
-                embed {
-                    setAuthor("${member.username}#${member.discriminator}", null, member.avatarUrl)
-                    setDescription("You have been given the role **${mentionRole.name}** which will be mentioned when **${targetChannel.displayName}** goes live on **$siteName**.")
-                }.awaitSingle()
+                embed(member, "You have been given the role **${mentionRole.name}** which will be mentioned when **${targetChannel.displayName}** goes live on **$siteName**.").awaitSingle()
             }
         }
     }

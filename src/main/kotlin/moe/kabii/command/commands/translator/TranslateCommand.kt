@@ -7,6 +7,7 @@ import moe.kabii.discord.translation.azure.AzureLanguage
 import moe.kabii.discord.translation.azure.Translator
 import moe.kabii.structure.extensions.createJumpLink
 import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.structure.extensions.userAddress
 
 object TranslateCommand : Command("translate", "tl", "tlate", "transl") {
     override val wikiPath: String? = null
@@ -53,7 +54,7 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl") {
             val detected = if(translation.detected) " (detected$confidence)" else ""
 
             embed {
-                setAuthor("Translation for ${author.username}#${author.discriminator}", event.message.createJumpLink(), author.avatarUrl)
+                setAuthor("Translation for ${author.userAddress()}", event.message.createJumpLink(), author.avatarUrl)
                 setDescription(translation.translatedText)
                 setFooter("Translation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null)
             }.awaitSingle()

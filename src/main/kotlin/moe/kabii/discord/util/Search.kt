@@ -12,6 +12,7 @@ import moe.kabii.discord.event.bot.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.structure.extensions.userAddress
 import java.util.*
 
 object Search {
@@ -128,7 +129,7 @@ object Search {
 
         suspend fun prompt(options: List<Member>): Member? {
             val members = options
-                .mapIndexed { id, member -> "${id + 1}: ${member.username}#${member.discriminator} (${member.id.asString()})" }
+                .mapIndexed { id, member -> "${id + 1}: ${member.userAddress()} (${member.id.asString()})" }
                 .joinToString("\n")
             val prompt = param.embed {
                 setTitle("Multiple members found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")

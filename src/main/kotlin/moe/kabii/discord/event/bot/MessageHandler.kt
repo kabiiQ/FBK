@@ -102,7 +102,7 @@ class MessageHandler(val manager: CommandManager) {
                                 event.message.channel.flatMap { chan ->
                                     chan.createEmbed { spec ->
                                         fbkColor(spec)
-                                        spec.userAsAuthor(member)
+                                        spec.setAuthor(member.userAddress(), null, member.avatarUrl)
                                         spec.setDescription("You have been given the **${guildRole.value.name}** role.")
                                     }
                                 }.awaitSingle()
