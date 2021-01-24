@@ -16,7 +16,7 @@ data class SupportedLanguages(
     fun search(query: String): Map<String, AzureLanguage> {
         // alias common tag errors here
         val tag = when(query.toLowerCase()) {
-            "zh" -> "zh-Hans"
+            "zh", "ch", "cn" -> "zh-Hans"
             "kr" -> "ko"
             "pt" -> "pt-br"
             "sr" -> "sr-Cyrl"
