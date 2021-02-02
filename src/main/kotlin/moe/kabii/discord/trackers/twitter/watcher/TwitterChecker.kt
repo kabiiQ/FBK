@@ -129,7 +129,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                             }
                         }
                         if(latest > maxId) maxId = latest
-                        delay(Duration.ofMillis(50L))
+                        delay(Duration.ofSeconds(1))
                     }
 
                     requireUpdate.forEach { feed ->

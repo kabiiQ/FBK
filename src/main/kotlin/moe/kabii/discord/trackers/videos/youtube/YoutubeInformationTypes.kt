@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.videos.youtube
 
-import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import java.time.Duration
 import java.time.Instant
 

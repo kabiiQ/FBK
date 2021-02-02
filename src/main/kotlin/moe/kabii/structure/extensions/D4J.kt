@@ -4,9 +4,7 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
-import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingleOrNull
 
 suspend fun Message.createJumpLink(): String {
     val guild = guild.awaitFirstOrNull()

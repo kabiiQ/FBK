@@ -7,7 +7,6 @@ import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.twitter.json.*
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
-import okhttp3.Response
 import java.time.Duration
 import java.time.Instant
 

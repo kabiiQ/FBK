@@ -161,6 +161,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         if(newName == currentName) return
 
         LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
+        LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
         try {
             val wrapper = EditableChannelWrapper(
                 name = newName
