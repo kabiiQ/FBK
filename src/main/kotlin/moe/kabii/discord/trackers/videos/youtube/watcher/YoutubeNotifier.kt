@@ -21,6 +21,7 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
+import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
@@ -39,6 +40,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         private val inactiveColor = Color.of(8847360)
         private val scheduledColor = Color.of(4270381)
         private val uploadColor = Color.of(16748800)
+        private val creationColor = Color.of(16749824)
     }
 
     @WithinExposedContext
@@ -93,9 +95,6 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
                 val dbMessage = notification.messageID
                 val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
-
-                // todo temp debug
-                LOG.info(existingNotif.embeds.firstOrNull()?.author?.orNull()?.name)
 
                 val features = getStreamConfig(notification.targetID)
 
@@ -196,7 +195,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::streamCreation)
             .forEach { target ->
                 try {
-                    createVideoNotification(ytVideo, target)
+                    createInitialNotification(ytVideo, target)
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                     LOG.warn("Error while creating 'creation' notification for stream: $ytVideo :: ${e.message}")
@@ -268,7 +267,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 // todo disable feature in this channel
-                LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeWatcher.java")
+                LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
                 return null
             } else throw ce
         }
@@ -293,11 +292,11 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } else null
 
         val mention = mentionRole?.mention
-        return try {
+        val new = try {
             val shortDescription = StringUtils.abbreviate(video.description, 200)
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-            val new = chan.createMessage { spec ->
+            chan.createMessage { spec ->
                 if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     setColor(uploadColor)
@@ -311,16 +310,55 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
-            TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
-            new
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
                 // todo disable feature in this channel
-                LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeWatcher.java")
+                LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
                 return null
             } else throw ce
         }
+        TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
+        return new
+    }
+
+    @WithinExposedContext
+    suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
+        val chan = getChannel(target.discordChannel.channelID)
+
+        // get channel stream embed settings
+        val guildId = target.discordChannel.guild?.guildID
+        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+
+        val startTime = video.liveInfo?.scheduledStart!!
+        val timeUntil = Duration.between(Instant.now(), startTime)
+        val eta = DurationFormatter(timeUntil).fullTime
+
+        val shortDescription = StringUtils.abbreviate(video.description, 200)
+        val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
+
+        val embed: EmbedBlock = {
+            setColor(creationColor)
+            setAuthor("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar)
+            setUrl(video.url)
+            setTitle(shortTitle)
+            setDescription("Stream scheduled to start in ~$eta\n\nVideo description: $shortDescription")
+            setThumbnail(video.thumbnail)
+            setFooter("Scheduled start time ", NettyFileServer.youtubeLogo)
+            setTimestamp(startTime)
+        }
+        val new = try {
+            chan.createEmbed(embed).awaitSingle()
+        } catch(ce: ClientException) {
+            val err = ce.status.code()
+            if(err == 403) {
+                // todo disable feature in this channel
+                LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
+                return null
+            } else throw ce
+        }
+        TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
+        return new
     }
     
     @WithinExposedContext
@@ -402,7 +440,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 // todo disable feature in this channel
-                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeWatcher.java")
+                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
                 return null
             } else throw ce
         }
@@ -414,7 +452,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 .ofType(MessageChannel::class.java)
                 .awaitSingle()
         } catch(e: Exception) {
-            LOG.warn("${Thread.currentThread().name} - YoutubeWatcher :: Unable to get Discord channel: ${e.message}")
+            LOG.warn("${Thread.currentThread().name} - YoutubeNotifier :: Unable to get Discord channel: ${e.message}")
             throw e
         }
     }
@@ -445,7 +483,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 .ofType(MessageChannel::class.java)
                 .awaitSingle()
         } catch(e: Exception) {
-            LOG.warn("${Thread.currentThread().name} - YoutubeWatcher-getUpcomingChannel :: Unable to get Discord channel: ${e.message}")
+            LOG.warn("${Thread.currentThread().name} - YoutubeNotifier-getUpcomingChannel :: Unable to get Discord channel: ${e.message}")
             throw e
         }
     }
