@@ -32,6 +32,7 @@ object RoleReactions : CommandContainer {
                     "add", "create", "insert", "+" -> AddReactionRole
                     "remove", "delete", "-" -> RemoveReactionRole
                     "list", "get", "all" -> ListReactionRoles
+                    "reapply", "react", "reset" -> ResetReactionRoles
                     else -> {
                         usage("Unknown task **${args[0]}**.", "autorole reaction <add/remove/list>").awaitSingle()
                         return@discord
@@ -126,7 +127,7 @@ object RoleReactions : CommandContainer {
                 }
                 val messageID = args[0].removePrefix("#").toLongOrNull()
                 if(messageID == null) {
-                    usage("Invalid message ID **${args[0]}**.", "autorole reaction remove **<message id>** (emoji)").awaitSingle()
+                    usage("Invalid message ID **${args[0]}**.", "autorole reaction remove <message id> (emoji)").awaitSingle()
                     return@discord
                 }
                 // filter potential configuration matches
@@ -207,6 +208,53 @@ object RoleReactions : CommandContainer {
                         setDescription("There are no reaction roles set up in ${target.name}.")
                     }
                 }.awaitSingle()
+            }
+        }
+    }
+
+    object ResetReactionRoles : Command("resetreactionrole") {
+        override val wikiPath = "Auto-Roles#resetting-the-reaction-counts"
+        init {
+            discord {
+                member.verify(Permission.MANAGE_ROLES)
+                // get all reaction configs in this channel
+                val configs = config.selfRoles.reactionRoles
+
+                if(configs.isEmpty()) {
+                    error("There are no reaction-role configs in **${guildChan.name}**.").awaitSingle()
+                    return@discord
+                }
+
+                embed("I am now resetting user reactions on reaction-roles in **#${guildChan.name}**.").awaitSingle()
+
+                configs.toList()
+                    .filter { roleCfg -> roleCfg.message.channelID == chan.id.asLong() }
+                    .groupBy(ReactionRoleConfig::message)
+                    .forEach { (messageInfo, roleCfgs) ->
+                        // get each reaction role message
+                        val message = try {
+                            chan.getMessageById(messageInfo.messageID.snowflake).awaitSingle()
+                        } catch (ce: ClientException) {
+                            if(ce.status.code() == 404) {
+                                roleCfgs.forEach(configs::remove)
+                                config.save()
+                            }
+                            return@forEach
+                        }
+
+                        if(!message.removeAllReactions().success().awaitSingle()) {
+                            return@forEach
+                        }
+
+                        // re-add the appropriate reaction-role emojis
+                        roleCfgs.forEach emojis@{ cfg ->
+                            try {
+                                message.addReaction(cfg.reaction.toReactionEmoji()).success().awaitSingle()
+                            } catch(ce: ClientException) {
+                                return@emojis
+                            }
+                        }
+                }
             }
         }
     }
