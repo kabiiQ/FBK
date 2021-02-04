@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
 import moe.kabii.command.commands.twitch.TwitchBridgeOptions
+import moe.kabii.data.GQLQueries
 import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
@@ -42,6 +43,7 @@ fun main() {
     val postgres = PostgresConnection
     LOG.info("FBK version: ${Metadata.buildInfo}")
 
+    val gqlQueries = GQLQueries
     val keys = Keys.config
     val audio = AudioManager
 

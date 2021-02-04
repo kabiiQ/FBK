@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import moe.kabii.rusty.Result
 import moe.kabii.rusty.Try
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -25,3 +26,5 @@ object OkHTTP : OkHttpClient() {
 val MOSHI: Moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
     .build()
+
+val JSON = "application/json; charset=UTF-8".toMediaType()

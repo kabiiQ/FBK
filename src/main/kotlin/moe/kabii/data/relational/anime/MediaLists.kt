@@ -1,10 +1,12 @@
 package moe.kabii.data.relational.anime
 
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.discord.trackers.AniListTarget
 import moe.kabii.discord.trackers.AnimeTarget
 import moe.kabii.discord.trackers.KitsuTarget
 import moe.kabii.discord.trackers.MALTarget
 import moe.kabii.discord.trackers.anime.MediaListParser
+import moe.kabii.discord.trackers.anime.anilist.AniListParser
 import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
 import moe.kabii.discord.trackers.anime.mal.MALParser
 import moe.kabii.structure.WithinExposedContext
@@ -19,7 +21,8 @@ import org.jetbrains.exposed.sql.select
 
 enum class ListSite(val targetType: AnimeTarget, val parser: MediaListParser) {
     MAL(MALTarget, MALParser),
-    KITSU(KitsuTarget, KitsuParser)
+    KITSU(KitsuTarget, KitsuParser),
+    ANILIST(AniListTarget, AniListParser)
 }
 
 object TrackedMediaLists {

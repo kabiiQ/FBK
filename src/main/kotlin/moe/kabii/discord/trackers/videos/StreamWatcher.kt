@@ -28,7 +28,6 @@ import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
-import reactor.core.scheduler.Schedulers
 import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {

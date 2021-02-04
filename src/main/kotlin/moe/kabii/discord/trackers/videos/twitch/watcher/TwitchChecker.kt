@@ -11,7 +11,6 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
-import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerPublishUtil
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.StreamWatcher

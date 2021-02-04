@@ -3,7 +3,6 @@ package moe.kabii.data.mongodb.guilds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.*
 import moe.kabii.util.EmojiCharacters
-import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 

@@ -27,6 +27,10 @@ class MediaEmbedBuilder(val media: Media) {
                 MediaType.ANIME -> "https://kitsu.io/users/$id/library?media=anime"
                 MediaType.MANGA -> "https://kitsu.io/users/$id/library?media=manga"
             }
+            ListSite.ANILIST -> when(media.type) {
+                MediaType.ANIME -> "https://anilist.co/user/$id/animelist"
+                MediaType.MANGA -> "https://anilist.co/user/$id/mangalist"
+            }
         }
 
         spec.setColor(media.status.color)

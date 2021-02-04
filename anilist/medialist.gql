@@ -1,0 +1,32 @@
+query ($userId: Int, $mediaType: MediaType, $pageNumber: Int) {
+    MediaListCollection (
+        userId: $userId,
+        type: $mediaType,
+        forceSingleCompletedList: true,
+        perChunk: 500,
+        chunk: $pageNumber,
+        sort: MEDIA_ID) {
+        lists {
+            entries {
+                status
+                score(format: POINT_10_DECIMAL)
+                progress
+                progressVolumes
+                media {
+                    id
+                    title {
+                        romaji
+                    }
+                    episodes
+                    chapters
+                    volumes
+                    coverImage {
+                        large
+                    }
+                    siteUrl
+                }
+            }
+        }
+        hasNextChunk
+    }
+}

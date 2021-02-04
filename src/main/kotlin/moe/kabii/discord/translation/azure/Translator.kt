@@ -1,10 +1,10 @@
 package moe.kabii.discord.translation.azure
 
+import moe.kabii.JSON
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.translation.azure.json.AzureTranslationRequest
 import moe.kabii.discord.translation.azure.json.AzureTranslationResponse
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
@@ -24,7 +24,7 @@ object Translator {
         val paramFrom = if(from != null) "&from=${from.tag}" else ""
 
         val textPart = AzureTranslationRequest(text).toJson()
-        val body = "[$textPart]".toRequestBody("application/json; charset=UTF-8".toMediaType())
+        val body = "[$textPart]".toRequestBody(JSON)
 
         val request = Request.Builder()
             .header("User-Agent", "srkmfbk/1.0")

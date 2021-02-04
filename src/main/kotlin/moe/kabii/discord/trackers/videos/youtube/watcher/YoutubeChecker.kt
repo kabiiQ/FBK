@@ -4,7 +4,6 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
-import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -18,7 +17,6 @@ import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
-import java.lang.Runnable
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
