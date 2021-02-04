@@ -21,9 +21,7 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.EmbedReceiver
 import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.success
@@ -172,9 +170,10 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
         // check if any targets would like notification for this upcoming stream
         filteredTargets(dbEvent.ytVideo.ytChannel) { yt ->
-            if (yt.upcomingNotifications != null) {
+            if (yt.upcomingNotificationDuration != null) {
                 // check upcoming stream is within this target's notice 'range'
-                yt.upcomingNotifications!! >= untilStart
+                val range = Duration.parse(yt.upcomingNotificationDuration)
+                range >= untilStart
 
             } else false
         }.filter { target ->

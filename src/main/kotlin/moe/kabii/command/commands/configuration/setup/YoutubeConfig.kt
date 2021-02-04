@@ -30,13 +30,13 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
         ),
         DurationElement("Post a summary of upcoming livestreams",
             listOf("summary", "summarize", "upcomingSummary"),
-            YoutubeSettings::upcomingSummary,
+            YoutubeSettings::upcomingSummaryDuration,
             prompt = "To enable the upcoming stream summary, enter a duration representing how far into the future streams should be included in the summary.\nFor example, enter **6h** to include any streams going live in the next 6 hours.\nEnter **reset** to disable the upcoming summary.",
             default = null
         ),
         DurationElement("Post when a stream is starting soon",
             listOf("upcoming", "notice", "upcomingNotice", "startingSoon", "soon", "warning"),
-            YoutubeSettings::upcomingNotifications,
+            YoutubeSettings::upcomingNotificationDuration,
             prompt = "To enable the upcoming stream notification, enter a duration representing how far into the future streams should be notified.\nFor example, enter **1h** to include any streams going live in the next hour.\nEnter **reset** to disable the upcoming notifications.",
             default = null
         ),

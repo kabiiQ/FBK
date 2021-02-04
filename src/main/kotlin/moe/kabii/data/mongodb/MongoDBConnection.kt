@@ -1,5 +1,6 @@
 package moe.kabii.data.mongodb
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
@@ -10,6 +11,7 @@ import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
+import org.litote.kmongo.util.KMongoConfiguration
 
 val upsert: UpdateOptions = UpdateOptions().upsert(true)
 
@@ -19,6 +21,8 @@ object MongoDBConnection {
     val mongoDB: CoroutineDatabase
 
     init {
+        KMongoConfiguration.registerBsonModule(JavaTimeModule())
+
         val username = Keys.config[Keys.MongoDB.username]
         val clientSettings = MongoClientSettings
             .builder()

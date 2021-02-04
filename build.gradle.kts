@@ -86,6 +86,7 @@ dependencies {
     // database i/o
     // mongodb per-guild configurations
     implementation("org.litote.kmongo:kmongo-coroutine:4.2.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
     val exposedVer = "0.28.1"

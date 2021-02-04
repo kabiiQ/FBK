@@ -38,6 +38,7 @@ internal object PostgresConnection {
                 FeedSubscriptions,
                 YoutubeVideos,
                 YoutubeScheduledEvents,
+                YoutubeScheduledNotifications,
                 YoutubeLiveEvents,
                 YoutubeNotifications,
                 YoutubeVideoTracks,

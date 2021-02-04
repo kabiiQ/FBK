@@ -43,7 +43,7 @@ class LongElement<T>(
 class DurationElement<T>(
     fullName: String,
     aliases: List<String>,
-    val prop: KMutableProperty1<T, Duration?>,
+    val prop: KMutableProperty1<T, String?>,
     val prompt: String,
     val default: Duration?
 ) : ConfigurationElement<T>(fullName, aliases)
@@ -68,7 +68,8 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         is DoubleElement -> element.prop.get(instance).toString()
         is LongElement -> element.prop.get(instance).toString()
         is DurationElement -> {
-            val duration = element.prop.get(instance)
+            val field = element.prop.get(instance)
+            val duration = Duration.parse(field)
             if(duration != null) DurationFormatter(duration).inputTime
             else "disabled"
         }
@@ -149,7 +150,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     is DurationElement -> {
                         val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getDuration(timeout = embedTimeout)
-                        if(response != null) element.prop.set(instance, response)
+                        if(response != null) element.prop.set(instance, response.toString())
                         prompt.delete().subscribe()
                     }
                     is ViewElement<*, *> -> {
@@ -212,7 +213,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 "reset" -> {
                     when(element) {
                         is StringElement -> element.prop.set(instance, element.default)
-                        is DurationElement -> element.prop.set(instance, element.default)
+                        is DurationElement -> element.prop.set(instance, element.default.toString())
                         else -> {
                             origin.error("The setting **$tag** is not a resettable custom value.").awaitSingle()
                             return false
@@ -284,7 +285,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     origin.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h").awaitSingle()
                     return false
                 }
-                element.prop.set(instance, input)
+                element.prop.set(instance, input.toString())
                 updatedEmbed(element, input).subscribe()
                 return true
             }
