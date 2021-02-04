@@ -4,6 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
+import moe.kabii.discord.trackers.anime.watcher.MediaListCooldownSpec
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
@@ -28,12 +29,29 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             val ytChecker = YoutubeChecker(ytSubscriptions, discord)
             yield(Thread(ytChecker, "YoutubeChecker"))
 
-            val mediaThreads = ListSite.values().map { site ->
-                // one thread per serivce, we never want to make simultaneous requests due to heavy rate limits to these services
-                val checker = ListServiceChecker(site, discord)
-                Thread(checker, "ListWatcher-${site.name}")
-            }
-            yieldAll(mediaThreads)
+            val malDelay = MediaListCooldownSpec(
+                listDelay = 3500L,
+                minimumRepeatTime = 250_000L
+            )
+            val malChecker = ListServiceChecker(ListSite.MAL, discord, malDelay)
+            val malThread = Thread(malChecker, "MediaListWatcher-MAL")
+            yield(malThread)
+
+            val kitsuDelay = MediaListCooldownSpec(
+                listDelay = 2000L,
+                minimumRepeatTime = 180_000L
+            )
+            val kitsuChecker = ListServiceChecker(ListSite.KITSU, discord, kitsuDelay)
+            val kitsuThread = Thread(kitsuChecker, "MediaListWatcher-Kitsu")
+            yield(kitsuThread)
+
+            val aniListDelay = MediaListCooldownSpec(
+                listDelay = 800L,
+                minimumRepeatTime = 30_000L
+            )
+            val aniListChecker = ListServiceChecker(ListSite.ANILIST, discord, aniListDelay)
+            val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
+            yield(aniListThread)
 
             val twitter = TwitterChecker(discord)
             yield(Thread(twitter, "TwitterChecker"))

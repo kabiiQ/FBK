@@ -117,12 +117,23 @@ object MALTarget : AnimeTarget(
 object KitsuTarget : AnimeTarget(
     "Kitsu",
     listOf(
-        Regex("kitsu.io/users/([a-zA-Z0-9_]{3,20})")
+        Regex("kitsu\\.io/users/([a-zA-Z0-9_]{3,20})")
     ),
     "kitsu", "kitsu.io"
 ) {
     override val dbSite: ListSite
         get() = ListSite.KITSU
+}
+
+object AniListTarget : AnimeTarget(
+    "AniList",
+    listOf(
+        Regex("anilist\\.co/user/([a-zA-Z0-9]{2,20})")
+    ),
+    "anilist", "anlist", "anilist.co", "a.co"
+) {
+    override val dbSite: ListSite
+        get() = ListSite.ANILIST
 }
 
 object TwitterTarget : TrackerTarget(

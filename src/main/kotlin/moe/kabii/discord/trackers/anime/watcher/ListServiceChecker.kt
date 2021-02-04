@@ -23,7 +23,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) : Runnable {
+class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, val cooldowns: MediaListCooldownSpec) : Runnable {
     override fun run() {
         loop {
 
@@ -56,8 +56,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
                             return@forEach
                         }
 
-                        // arbitrary delay - heavy rate limits between calls on these platforms
-                        delay(3500L)
+                        delay(cooldowns.listDelay)
                     }
                 } catch (e: Exception) {
                     // catch-all, we don't want this thread to end
@@ -67,7 +66,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient) 
             }
             // only run every few minutes at max
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 300_000 - runDuration.toMillis()
+            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }
