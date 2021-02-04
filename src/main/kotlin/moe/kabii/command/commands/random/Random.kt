@@ -131,12 +131,12 @@ object Random : CommandContainer {
 
         private val flip = { user: String ->
             val flip = when ((0..1000).random()) {
-                0 -> "side!"
-                in 1..500 -> "head."
-                in 501..1000 -> "tail."
+                0 -> "its side!"
+                in 1..500 -> "heads."
+                in 501..1000 -> "tails."
                 else -> error("The planets have aligned")
             }
-            "$user flipped a coin and it landed on its **$flip**"
+            "$user flipped a coin and it landed on **$flip**"
         }
 
         init {
