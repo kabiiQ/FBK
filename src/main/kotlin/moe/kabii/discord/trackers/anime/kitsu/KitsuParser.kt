@@ -90,9 +90,8 @@ object KitsuParser : MediaListParser() {
                         image = media.attributes.posterImage.original,
                         score = when (library.attributes.rating) {
                             "0.0" -> null
-                            else -> library.attributes.rating.toFloat()
+                            else -> library.attributes.rating.toFloat() * 2 // base on max score 10
                         },
-                        scoreMax = 5.0f,
                         reconsume = library.attributes.reconsuming,
                         watched = library.attributes.progress.toShort(),
                         total = (if (mediaType == MediaType.MANGA) media.attributes.episodeCount else media.attributes.chapterCount)?.toShort()

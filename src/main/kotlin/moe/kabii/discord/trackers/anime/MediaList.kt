@@ -23,7 +23,6 @@ data class Media(
     val url: String,
     val image: String,
     val score: Float?,
-    val scoreMax: Float,
     val reconsume: Boolean,
     val watched: Short,
     val total: Short,
@@ -50,10 +49,7 @@ data class Media(
         yield(total)
     }.joinToString("")
 
-    fun scoreStr() = if(score == null || score == 0.0f) "unrated" else {
-        val max = "/${scoreMax.toInt()}"
-        "${score.toInt()}$max"
-    }
+    fun scoreStr() = if(score == null || score == 0.0f) "unrated" else "${"%.1f".format(score)}/10"
 }
 
 enum class ConsumptionStatus(val color: Color) {
