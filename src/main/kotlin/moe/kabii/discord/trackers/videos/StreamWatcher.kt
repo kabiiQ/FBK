@@ -4,6 +4,9 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.*
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -15,6 +18,7 @@ import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.EditableChannelWrapper
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.errorColor
@@ -24,9 +28,20 @@ import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
+import reactor.core.scheduler.Schedulers
 import reactor.kotlin.core.publisher.toMono
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
+
+    private val job = SupervisorJob()
+    protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
+
+    companion object {
+        // rename
+        private val job = SupervisorJob()
+        private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
+    }
+
     @WithinExposedContext
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val existingTargets = channel.targets
@@ -161,15 +176,16 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         if(newName == currentName) return
 
         LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
-        LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
         try {
             val wrapper = EditableChannelWrapper(
                 name = newName
             )
-            when(guildChan) {
-                is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
-                is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
-                else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
+            renameScope.launch {
+                when (guildChan) {
+                    is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                    is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                    else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
+                }
             }
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {

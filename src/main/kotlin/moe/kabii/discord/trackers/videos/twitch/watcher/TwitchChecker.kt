@@ -50,11 +50,6 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                     // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
                     val streamData = TwitchParser.getStreams(ids)
 
-                    // NOW we can split into coroutines for processing & sending messages to Discord.
-                    // we don't want tasks killing each other here
-                    val job = SupervisorJob()
-                    val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
-
                     // re-associate SQL data with stream API data
                     streamData.mapNotNull { (id, data) ->
                         val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
@@ -62,6 +57,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                             LOG.warn("Error contacting Twitch :: $trackedChannel")
                             return@mapNotNull null
                         }
+                        // now we can split into coroutines for processing & sending messages to Discord.
                         taskScope.launch {
                             newSuspendedTransaction {
                                 try {

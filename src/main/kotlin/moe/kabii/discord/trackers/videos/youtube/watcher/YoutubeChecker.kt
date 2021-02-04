@@ -1,9 +1,10 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -15,7 +16,9 @@ import moe.kabii.structure.extensions.jodaDateTime
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
+import java.lang.Runnable
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -27,7 +30,6 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 }
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient): Runnable, YoutubeNotifier(subscriptions, discord) {
-
     override fun run() {
         loop {
             val start = Instant.now()
@@ -74,39 +76,43 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                         .flatMap { chunk ->
                             LOG.debug("yt api call: $chunk")
                             YoutubeParser.getVideos(chunk).entries
-                        }.forEach { (videoId, ytVideo) ->
-                            try {
-                                val callReason = targetLookup.getValue(videoId)
+                        }.map { (videoId, ytVideo) ->
+                            taskScope.launch {
+                                newSuspendedTransaction {
+                                    try {
+                                        val callReason = targetLookup.getValue(videoId)
 
-                                val ytVideoInfo = when (ytVideo) {
-                                    is Ok -> {
-                                        // if youtube call succeeded, reflect this in db
-                                        with(callReason.video) {
-                                            lastAPICall = DateTime.now()
-                                            lastTitle = ytVideo.value.title
+                                        val ytVideoInfo = when (ytVideo) {
+                                            is Ok -> {
+                                                // if youtube call succeeded, reflect this in db
+                                                with(callReason.video) {
+                                                    lastAPICall = DateTime.now()
+                                                    lastTitle = ytVideo.value.title
+                                                }
+                                                ytVideo.value
+                                            }
+                                            is Err -> {
+                                                when (ytVideo.value) {
+                                                    // do not process video if this was an IO issue on our end
+                                                    is StreamErr.IO -> return@newSuspendedTransaction
+                                                    is StreamErr.NotFound -> null
+                                                }
+                                            }
                                         }
-                                        ytVideo.value
-                                    }
-                                    is Err -> {
-                                        when (ytVideo.value) {
-                                            // do not process video if this was an IO issue on our end
-                                            is StreamErr.IO -> return@forEach
-                                            is StreamErr.NotFound -> null
+
+                                        // call specific handlers for each type of content
+                                        when (callReason) {
+                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                         }
+                                    } catch (e: Exception) {
+                                        LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                        LOG.debug(e.stackTraceString)
                                     }
                                 }
-
-                                // call specific handlers for each type of content
-                                when (callReason) {
-                                    is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                    is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                    is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                }
-                            } catch (e: Exception) {
-                                LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
-                                LOG.debug(e.stackTraceString)
                             }
-                        }
+                        }.forEach { job -> job.join() }
 
                     // clean up videos db
 //                    val old = DateTime.now().minusWeeks(1)
@@ -200,31 +206,33 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             return
         }
         val dbVideo = call.video
-        when {
-            ytVideo.upcoming -> {
-                val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) { "YouTube provided UPCOMING video with no start time" }
-                // assign video 'scheduled' status
-                val dbScheduled = propagateTransaction {
-                    val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                        ?: YoutubeScheduledEvent.new {
-                            this.ytVideo = dbVideo
-                            this.scheduledStart = scheduled.jodaDateTime
-                            this.dataExpiration = DateTime.now() // todo move calculation to function ?
-                        }
-                    dbVideo.scheduledEvent = dbScheduled
-                    dbScheduled
-                }
+        propagateTransaction {
+            when {
+                ytVideo.upcoming -> {
+                    val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) { "YouTube provided UPCOMING video with no start time" }
+                    // assign video 'scheduled' status
+                    val dbScheduled = propagateTransaction {
+                        val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
+                            ?: YoutubeScheduledEvent.new {
+                                this.ytVideo = dbVideo
+                                this.scheduledStart = scheduled.jodaDateTime
+                                this.dataExpiration = DateTime.now() // todo move calculation to function ?
+                            }
+                        dbVideo.scheduledEvent = dbScheduled
+                        dbScheduled
+                    }
 
-                // send 'upcoming' and/or 'creation' messages to appropriate targets
-                streamUpcoming(dbScheduled, ytVideo, scheduled)
-                streamCreated(dbVideo, ytVideo)
-            }
-            ytVideo.live -> {
-                streamStart(ytVideo, dbVideo)
-            }
-            else -> {
-                // regular video upload
-                videoUploaded(dbVideo, ytVideo)
+                    // send 'upcoming' and/or 'creation' messages to appropriate targets
+                    streamUpcoming(dbScheduled, ytVideo, scheduled)
+                    streamCreated(dbVideo, ytVideo)
+                }
+                ytVideo.live -> {
+                    streamStart(ytVideo, dbVideo)
+                }
+                else -> {
+                    // regular video upload
+                    videoUploaded(dbVideo, ytVideo)
+                }
             }
         }
     }

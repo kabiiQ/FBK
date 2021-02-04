@@ -10,4 +10,5 @@ object DiscordTaskPool {
     val streamThreads = dispatchThreads
     val listThreads = dispatchThreads
     val reminderThreads = dispatchThreads
+    val renameThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 }
