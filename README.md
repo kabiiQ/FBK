@@ -32,7 +32,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
     - Currently supports **Twitch** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
-    - Currently supports **MyAnimeList and Kitsu**
+    - Currently supports **MyAnimeList, kitsu.io, anilist.co**
   - [Twitter feed update notifications](https://github.com/kabiiQ/FBK/wiki/Twitter-Tracker)
     - Post information when specific users post a Tweet!
 
@@ -44,9 +44,11 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [**Speed up songs**, change their pitch, or apply a bass boost](https://github.com/kabiiQ/FBK/wiki/Music-Player#audio-manipulationfilters)
 
 
+- ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
+- ## [**Set timed reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
+- ## [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
+
 - ## **General Utility**
-  - [**Set timed reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
-  - [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
   - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
   - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
   - [Access server voice channel screenshare](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
