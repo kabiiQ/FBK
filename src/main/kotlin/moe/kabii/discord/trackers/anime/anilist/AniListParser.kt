@@ -13,6 +13,8 @@ import java.io.IOException
 
 object AniListParser : MediaListParser() {
 
+    const val callCooldown = 1500L
+
     private val aniListUserAdapter = MOSHI.adapter(AniListUserResponse::class.java)
     private val aniListMediaListAdapter = MOSHI.adapter(AniListMediaListResponse::class.java)
     private const val endpoint = "https://graphql.anilist.co/"
@@ -62,17 +64,19 @@ object AniListParser : MediaListParser() {
                 throw e
             }
 
-            val raw = if(!response.isSuccessful) {
-                if(response.code == 404) {
-                    throw MediaListDeletedException("AniList returned 404 for list ID $id :: ${response.message}")
+            val raw = try {
+                if(!response.isSuccessful) {
+                    if(response.code == 404) {
+                        throw MediaListDeletedException("AniList returned 404 for list ID $id :: ${response.message}")
+                    } else {
+                        if(response.code == 429) delay(20_000L)
+                        throw MediaListIOException(response.message)
+                    }
                 } else {
-                    if(response.code == 429) delay(20_000L)
-                    throw MediaListIOException(response.message)
+                    response.body!!.string()
                 }
-            } else {
-                response.use { rs ->
-                    rs.body!!.string()
-                }
+            } finally {
+                response.close()
             }
             // response successful (200) at this point, parse data
             val json = aniListMediaListAdapter.fromJson(raw)!!
@@ -99,14 +103,14 @@ object AniListParser : MediaListParser() {
                 }
             if(collection.hasNextChunk) {
                 // same user id, same media type, get next 'chunk'/page
-                delay(800L)
+                delay(callCooldown)
                 pull(listPart.nextChunk())
             }
         }
 
         // pull medias
         pull(AniListMediaListRequest(userId, MediaType.ANIME))
-        delay(800L)
+        delay(callCooldown)
         pull(AniListMediaListRequest(userId, MediaType.MANGA))
         return MediaList(allMedia)
     }

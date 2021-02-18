@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
+import moe.kabii.discord.trackers.anime.anilist.AniListParser
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.discord.trackers.anime.watcher.MediaListCooldownSpec
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
@@ -46,7 +47,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             yield(kitsuThread)
 
             val aniListDelay = MediaListCooldownSpec(
-                listDelay = 800L,
+                listDelay = AniListParser.callCooldown,
                 minimumRepeatTime = 30_000L
             )
             val aniListChecker = ListServiceChecker(ListSite.ANILIST, discord, aniListDelay)
