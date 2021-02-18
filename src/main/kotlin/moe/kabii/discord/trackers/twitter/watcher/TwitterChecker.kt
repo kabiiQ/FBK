@@ -1,7 +1,9 @@
 package moe.kabii.discord.trackers.twitter.watcher
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
@@ -13,6 +15,7 @@ import moe.kabii.discord.trackers.TrackerPublishUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
+import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
@@ -88,30 +91,43 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                             if (feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf tweet.id // if already handled or too old, skip, but do not pull tweet ID again
 
                             // send discord notifs - check if any channels request
-                            targets.forEach { target ->
+                            targets.forEach target@{ target ->
                                 try {
                                     // post a notif to this target
                                     val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
                                         .ofType(MessageChannel::class.java)
                                         .awaitSingle()
+
                                     val features = GuildConfigurations.findFeatures(target)
                                     val twitter = features?.twitterSettings ?: TwitterSettings()
 
-                                    if(tweet.notifyOption.get(twitter)) {
-                                        val notif = channel.createMessage { spec ->
-                                            // todo channel setting for custom message ?
+                                    if(!tweet.notifyOption.get(twitter)) return@target
 
-                                            val action = when {
-                                                tweet.retweet -> "retweeted \uD83D\uDD01"
-                                                tweet.reply -> "replied to a Tweet \uD83D\uDCAC"
-                                                tweet.quote -> "quoted a Tweet \uD83D\uDDE8"
-                                                else -> "posted a new Tweet"
-                                            }
-                                            spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
-                                        }.awaitSingle()
-
-                                        TrackerPublishUtil.checkAndPublish(notif)
+                                    val action = when {
+                                        tweet.retweet -> "retweeted \uD83D\uDD01"
+                                        tweet.reply -> "replied to a Tweet \uD83D\uDCAC"
+                                        tweet.quote -> "quoted a Tweet \uD83D\uDDE8"
+                                        else -> "posted a new Tweet"
                                     }
+
+                                    if(tweet.sensitive == true && target.discordChannel.guild != null) {
+                                        // filter potentially nsfw tweets in guilds
+                                        val guildChan = channel as? TextChannel // will fail for news channels as they can not be marked nsfw
+                                        if(guildChan?.isNsfw != true) {
+                                            channel.createEmbed { embed ->
+                                                fbkColor(embed)
+                                                embed.setDescription("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
+                                            }.awaitSingle()
+                                            return@target
+                                        }
+                                    }
+
+                                    val notif = channel.createMessage { spec ->
+                                        // todo channel setting for custom message ?
+                                        spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
+                                    }.awaitSingle()
+
+                                    TrackerPublishUtil.checkAndPublish(notif)
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
                                         LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Should disable feature. TwitterChecker.java")
@@ -129,7 +145,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                             }
                         }
                         if(latest > maxId) maxId = latest
-                        delay(Duration.ofSeconds(1))
+                        delay(Duration.ofSeconds(2))
                     }
 
                     requireUpdate.forEach { feed ->
