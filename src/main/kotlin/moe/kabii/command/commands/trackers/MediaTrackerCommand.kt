@@ -8,6 +8,7 @@ import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.trackers.AnimeTarget
@@ -23,11 +24,9 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object MediaTrackerCommand {
-    suspend fun track(origin: DiscordParameters, target: TargetArguments) {
+    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the media list feature is enabled here
-        val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
-        if(config != null) {
-            val features = config.options.featureChannels[origin.chan.id.asLong()]
+        if(origin.guild != null) {
             if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
         }
 

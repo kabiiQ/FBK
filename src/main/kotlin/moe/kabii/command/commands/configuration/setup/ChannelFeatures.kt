@@ -21,7 +21,9 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),
-        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding)
+        BooleanElement("Limit track command usage to moderators", listOf("lock", "locked", "limit", "limited"), FeatureChannel::locked),
+        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding),
+
     )
 
     object ChannelFeatures : Command("feature", "features", "channelfeatures", "config", "channel") {
@@ -34,6 +36,7 @@ object ChannelFeatures : CommandContainer {
                 val features = features()
 
                 val wasLog = features.logChannel
+                val wasAnime = features.animeChannel
                 val configurator = Configurator(
                     "Feature configuration for #${guildChan.name}",
                     ChannelFeatureModule,
@@ -43,11 +46,17 @@ object ChannelFeatures : CommandContainer {
                     // validate default track target, if configured
                     features.validateDefaultTarget()
 
+
+                    if(!wasAnime && features.animeChannel) {
+                        features.locked = false
+                        embed("The **track** command has been unlocked for all users in ${chan.mention} as this is the typical use-case for the anime tracker. To lock the **track** command to channel moderators, you can run **feature lock enable**.").awaitSingle()
+                    }
+
                     config.save()
+
                     if(!wasLog && features.logChannel) {
                         embed("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.").subscribe()
                     }
-
                 }
             }
         }

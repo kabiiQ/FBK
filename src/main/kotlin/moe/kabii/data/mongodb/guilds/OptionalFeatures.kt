@@ -13,6 +13,7 @@ data class OptionalFeatures(
 
 data class FeatureChannel(
     val channelID: Long,
+    var locked: Boolean = true,
     var twitchChannel: Boolean = false,
     var youtubeChannel: Boolean = false,
     var twitterChannel: Boolean = false,

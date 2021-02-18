@@ -6,6 +6,7 @@ import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
@@ -20,14 +21,12 @@ import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object StreamTrackerCommand {
-    suspend fun track(origin: DiscordParameters, target: TargetArguments) {
+    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
         val site = streamTarget.dbSite
 
         // make sure feature is enabled or this channel is private
         if(origin.guild != null) {
-            val config = GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong())
-            val features = config.options.featureChannels[origin.chan.id.asLong()]
             if(features == null || !streamTarget.channelFeature.get(features)) throw FeatureDisabledException(streamTarget.featureName, origin)
         } // else this is PM, allow
 

@@ -6,6 +6,7 @@ import moe.kabii.command.FeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
@@ -19,11 +20,9 @@ object TwitterTrackerCommand {
 
     private val twitterUsername = Regex("[a-zA-Z0-9_]{4,15}")
 
-    suspend fun track(origin: DiscordParameters, target: TargetArguments) {
+    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the twitter feature is enabled here
-        val config = origin.guild?.run { GuildConfigurations.getOrCreateGuild(id.asLong()) }
-        if(config != null) {
-            val features = config.options.featureChannels[origin.chan.id.asLong()]
+        if(origin.guild != null) {
             if(features == null || !features.twitterChannel) throw FeatureDisabledException("twitter", origin)
         }
 

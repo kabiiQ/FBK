@@ -50,22 +50,28 @@ object TrackerCommandBase : CommandContainer {
     }
 
     private suspend fun trackCommand(origin: DiscordParameters, action: Action) = with(origin) {
-        // args is known to be contain at least 1 arg here
+        val features = config.options.featureChannels[chan.id.asLong()]
 
+        // limit track command if this is a guild with 'locked' config
+        if(guild != null && features != null && features.locked) {
+            channelVerify(Permission.MANAGE_MESSAGES)
+        }
+
+        // args is known to be contain at least 1 arg here
         when(val trackTarget = TargetArguments.parseFor(this, args)) {
             is Ok -> {
                 val targetArgs = trackTarget.value
                 when(targetArgs.site) {
                     is StreamingTarget -> when(action) {
-                        Action.TRACK -> StreamTrackerCommand.track(this, targetArgs)
+                        Action.TRACK -> StreamTrackerCommand.track(this, targetArgs, features)
                         Action.UNTRACK -> StreamTrackerCommand.untrack(this, targetArgs)
                     }
                     is AnimeTarget -> when(action) {
-                        Action.TRACK -> MediaTrackerCommand.track(this, targetArgs)
+                        Action.TRACK -> MediaTrackerCommand.track(this, targetArgs, features)
                         Action.UNTRACK -> MediaTrackerCommand.untrack(this, targetArgs)
                     }
                     is TwitterTarget -> when(action) {
-                        Action.TRACK -> TwitterTrackerCommand.track(this, targetArgs)
+                        Action.TRACK -> TwitterTrackerCommand.track(this, targetArgs, features)
                         Action.UNTRACK -> TwitterTrackerCommand.untrack(this, targetArgs)
                     }
                 }
