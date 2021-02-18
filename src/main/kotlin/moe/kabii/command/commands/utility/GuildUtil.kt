@@ -7,6 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.orNull
+import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.structure.extensions.userAddress
 import java.time.ZoneOffset
@@ -20,36 +21,42 @@ object GuildUtil : CommandContainer {
 
         init {
             discord {
-                val createdDateTime = target.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
+                val targetGuild = args.getOrNull(0)
+                    ?.toLongOrNull()?.snowflake
+                    ?.run(event.client::getGuildById)
+                    ?.tryAwait()?.orNull()
+                    ?: target
+
+                val createdDateTime = targetGuild.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
                 val creation = formatter.format(createdDateTime)
-                val description = target.description.orNull()
-                val guildOwner = target.owner.tryAwait().orNull()
-                val memberCount = target.memberCount.toString()
-                val channelCount = target.channels.count().tryAwait().orNull()?.toString() ?: "Unavailable"
-                val emojiCount = target.emojiIds.count().toString()
-                val serverID = target.id.asString()
-                val mfa = target.mfaLevel
-                val notif = when(target.notificationLevel) {
+                val description = targetGuild.description.orNull()
+                val guildOwner = targetGuild.owner.tryAwait().orNull()
+                val memberCount = targetGuild.memberCount.toString()
+                val channelCount = targetGuild.channels.count().tryAwait().orNull()?.toString() ?: "Unavailable"
+                val emojiCount = targetGuild.emojiIds.count().toString()
+                val serverID = targetGuild.id.asString()
+                val mfa = targetGuild.mfaLevel
+                val notif = when(targetGuild.notificationLevel) {
                     Guild.NotificationLevel.ALL_MESSAGES -> "All Messages"
                     Guild.NotificationLevel.ONLY_MENTIONS -> "Mentions Only"
                     else -> "Error"
                 }
-                val region = target.regionId
-                val boosts = target.premiumSubscriptionCount.orElse(0)
+                val region = targetGuild.regionId
+                val boosts = targetGuild.premiumSubscriptionCount.orElse(0)
 
                 val owner = if(guildOwner != null) "${guildOwner.userAddress()}(${guildOwner.id.asString()})" else "Unknown"
 
                 val more = StringBuilder()
                 more.append("This guild was created $creation.")
 
-                val large = target.isLarge
+                val large = targetGuild.isLarge
                 if(large) more.append("\nThis guild is considered \"large\" by Discord.")
-                val features = target.features
+                val features = targetGuild.features
 
                 embed {
                     fbkColor(this)
                     setDescription(more.toString())
-                    setAuthor(target.name, null, target.getIconUrl(Image.Format.PNG).orNull())
+                    setAuthor(targetGuild.name, null, targetGuild.getIconUrl(Image.Format.PNG).orNull())
                     addField("Server Owner", owner, true)
                     addField("Member Count", memberCount, true)
                     addField("Channel Count", channelCount, true)
@@ -64,7 +71,7 @@ object GuildUtil : CommandContainer {
                     }
                     if(boosts > 0) {
                         addField("Server Boosters", boosts.toString(), true)
-                        addField("Boost Level", target.premiumTier.value.toString(), true)
+                        addField("Boost Level", targetGuild.premiumTier.value.toString(), true)
                     }
                     if(mfa == Guild.MfaLevel.ELEVATED) addField("Admin 2FA Required", "true", false)
                     if(description != null) addField("Description", description, false)
