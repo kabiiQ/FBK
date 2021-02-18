@@ -1,7 +1,6 @@
 package moe.kabii.discord.trackers.twitter.watcher
 
 import discord4j.core.GatewayDiscordClient
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
@@ -9,9 +8,10 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.discord.trackers.TrackerPublishUtil
+import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
@@ -127,10 +127,11 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                                         spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
                                     }.awaitSingle()
 
-                                    TrackerPublishUtil.checkAndPublish(notif)
+                                    TrackerUtil.checkAndPublish(notif)
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
-                                        LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Should disable feature. TwitterChecker.java")
+                                        TrackerUtil.permissionDenied(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterChannel, target::delete)
+                                        LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
                                     } else {
                                         LOG.warn("Error sending stream notification to channel: ${e.message}")
                                         LOG.debug(e.stackTraceString)

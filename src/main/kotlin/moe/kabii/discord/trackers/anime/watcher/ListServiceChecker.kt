@@ -11,8 +11,10 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.anime.TrackedMediaLists
+import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -187,8 +189,9 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
                             if (err == 403) {
-                                // todo should disable feature if permission denied
-                                LOG.warn("Unable to send MediaList update to channel '$channelId' Should disable feature. ListServiceChecker.java")
+                                // todo disable feature
+                                TrackerUtil.permissionDenied(target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeChannel, target::delete)
+                                LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
                             } else throw ce
                         }

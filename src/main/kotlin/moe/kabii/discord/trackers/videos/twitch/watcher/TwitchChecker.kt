@@ -7,11 +7,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
-import moe.kabii.discord.trackers.TrackerPublishUtil
+import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
@@ -79,7 +80,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
             }
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 90000L - runDuration.toMillis()
+            val delay = 60000L - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }
@@ -239,13 +240,13 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
                         val err = ce.status.code()
                         if (err == 403) {
                             // we don't have perms to send
-                            // todo disable feature in this channel
-                            LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. TwitchChecker.java")
+                            LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
+                            TrackerUtil.permissionDenied(chan, FeatureChannel::twitchChannel, target::delete)
                             return@forEach
                         } else throw ce
                     }
 
-                    TrackerPublishUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+                    TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
                     DBTwitchStreams.Notification.new {
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)

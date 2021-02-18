@@ -8,12 +8,13 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
-import moe.kabii.discord.trackers.TrackerPublishUtil
+import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -265,20 +266,20 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
-                // todo disable feature in this channel
-                LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
+                LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
                 return null
             } else throw ce
         }
         YoutubeScheduledNotification.create(event, target)
-        TrackerPublishUtil.checkAndPublish(message)
+        TrackerUtil.checkAndPublish(message)
         return message
     }
 
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
-        val chan = getChannel(target.discordChannel.channelID)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -312,18 +313,18 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
-                // todo disable feature in this channel
-                LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
+                LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
                 return null
             } else throw ce
         }
-        TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
+        TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
         return new
     }
 
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
-        val chan = getChannel(target.discordChannel.channelID)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -351,24 +352,24 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
-                // todo disable feature in this channel
-                LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
+                LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
                 return null
             } else throw ce
         }
-        TrackerPublishUtil.checkAndPublish(new, guildConfig?.guildSettings)
+        TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
         return new
     }
-    
+
     @WithinExposedContext
     suspend fun sendLiveReminder(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         // get target channel in Discord
-        val chan = getChannel(videoTrack.discordChannel.channelID)
+        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
 
         val trackerId = videoTrack.tracker.userID
         val new = chan.createMessage("<@$trackerId> Livestream reminder: **${liveStream.channel.name}** is now live: ${liveStream.url}")
             .awaitSingle()
-        TrackerPublishUtil.checkAndPublish(new)
+        TrackerUtil.checkAndPublish(new)
     }
 
     @WithinExposedContext
@@ -376,7 +377,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
-        val chan = getChannel(target.discordChannel.channelID)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -384,7 +385,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
-        val mentionRole = if(guildId != null) { 
+        val mentionRole = if(guildId != null) {
             getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
@@ -420,7 +421,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
-            TrackerPublishUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+            TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log message in db
             YoutubeNotification.new {
@@ -438,20 +439,25 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } catch (ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
-                // todo disable feature in this channel
-                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Should disable feature. YoutubeNotifier.java")
+                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
                 return null
             } else throw ce
         }
     }
 
-    private suspend fun getChannel(channel: Long): MessageChannel {
+    private suspend fun getChannel(guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
         return try {
             discord.getChannelById(channel.snowflake)
                 .ofType(MessageChannel::class.java)
                 .awaitSingle()
         } catch(e: Exception) {
-            LOG.warn("${Thread.currentThread().name} - YoutubeNotifier :: Unable to get Discord channel: ${e.message}")
+            if(e is ClientException && e.status.code() == 403) {
+                LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. YoutubeNotifier.java")
+                TrackerUtil.permissionDenied(guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
+            } else {
+                LOG.warn("${Thread.currentThread().name} - YoutubeNotifier :: Unable to get Discord channel: ${e.message}")
+            }
             throw e
         }
     }
