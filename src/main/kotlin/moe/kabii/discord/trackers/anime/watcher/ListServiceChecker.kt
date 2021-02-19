@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.anime.TrackedMediaLists
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
@@ -25,7 +26,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, val cooldowns: MediaListCooldownSpec) : Runnable {
+class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     override fun run() {
         loop {
 
@@ -58,7 +59,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                             return@forEach
                         }
 
-                        delay(cooldowns.listDelay)
+                        delay(cooldowns.callDelay)
                     }
                 } catch (e: Exception) {
                     // catch-all, we don't want this thread to end

@@ -9,7 +9,9 @@ import moe.kabii.structure.extensions.fromJsonSafe
 import java.io.IOException
 
 object MALParser : MediaListParser() {
-    override fun getListID(input: String): String? = input // mal does not have an offical api and thus no 'id' system. we just store name and can not track if a username changes.
+    const val callCooldown = 4_000L
+
+    override fun getListID(input: String): String = input // mal does not have an offical api and thus no 'id' system. we just store name and can not track if a username changes.
 
     private val animeListAdapter = MOSHI.adapter(MALMapping.MALAnimeList::class.java)
     private val mangaListAdapter = MOSHI.adapter(MALMapping.MALMangaList::class.java)
@@ -21,6 +23,7 @@ object MALParser : MediaListParser() {
         var page = 1
         val animes = mutableListOf<MALMapping.MALAnimeList.MALAnime>()
         do {
+            if(page > 1) delay(callCooldown)
             val animeRequest = "http://127.0.0.1:8000/v3/user/$id/animelist/all/$page"
             val responseBody = requestMediaList(animeRequest) { response ->
                 return@requestMediaList if (!response.isSuccessful) {
@@ -38,13 +41,12 @@ object MALParser : MediaListParser() {
                 animeListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break // break early if no more pages to avoid delay
             animes.addAll(animeListPage.anime)
             page++
-            delay(4000L)
         } while(animeListPage.anime.isNotEmpty()) // break if no more page
 
         page = 1
         val mangas = mutableListOf<MALMapping.MALMangaList.MALManga>()
         do {
-            delay(4000L)
+            delay(callCooldown)
             val mangaRequest = "http://127.0.0.1:8000/v3/user/$id/mangalist/all/$page"
             val responseBody = requestMediaList(mangaRequest) { response ->
                 if(!response.isSuccessful) {

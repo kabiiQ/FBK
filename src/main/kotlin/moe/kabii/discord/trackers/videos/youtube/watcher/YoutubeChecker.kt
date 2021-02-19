@@ -4,6 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
@@ -27,7 +28,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
     class New(val new: YoutubeVideo) : YoutubeCall(new)
 }
 
-class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient): Runnable, YoutubeNotifier(subscriptions, discord) {
+class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions, discord) {
     override fun run() {
         loop {
             val start = Instant.now()
@@ -123,7 +124,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                 }
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 60_000L - runDuration.toMillis()
+            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }

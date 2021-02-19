@@ -6,6 +6,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.FeedSubscription
 import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.structure.extensions.loop
 import moe.kabii.structure.extensions.stackTraceString
@@ -15,7 +16,7 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
 
-class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, StreamWatcher(discord) {
+class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
 
     val subscriber = YoutubeFeedSubscriber()
     private val listener = YoutubeFeedListener(this)
@@ -79,7 +80,7 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient) : Runnable, Stre
             }
 
             // no un-necessary calls are made here, we can run this on a fairly low interval
-            delay(30_000L)
+            delay(cooldowns.minimumRepeatTime)
         }
     }
 }

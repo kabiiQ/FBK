@@ -10,6 +10,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.relational.discord.Reminder
 import moe.kabii.data.relational.discord.Reminders
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.util.reminderColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.structure.WithinExposedContext
@@ -22,8 +23,8 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class ReminderWatcher(val discord: GatewayDiscordClient) : Runnable {
-    private val updateInterval = 60_000L
+class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceRequestCooldownSpec) : Runnable {
+    private val updateInterval = cooldown.minimumRepeatTime
 
     override fun run() {
         loop {

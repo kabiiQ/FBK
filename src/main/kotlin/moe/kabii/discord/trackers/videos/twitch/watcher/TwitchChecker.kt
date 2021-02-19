@@ -12,6 +12,7 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.StreamWatcher
@@ -28,7 +29,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(discord) {
+class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
     override fun run() {
         loop {
             val start = Instant.now()
@@ -80,7 +81,7 @@ class TwitchChecker(discord: GatewayDiscordClient) : Runnable, StreamWatcher(dis
             }
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 60000L - runDuration.toMillis()
+            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(max(delay, 0L))
         }
     }

@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.anime.kitsu
 
+import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
@@ -12,6 +13,8 @@ import okhttp3.Request
 import java.io.IOException
 
 object KitsuParser : MediaListParser() {
+    const val callCooldown = 4_000L
+
     private val kitsuUserAdapter = MOSHI.adapter(KitsuMapping.KitsuUserResponse::class.java)
     private val kitsuResponseAdapter = MOSHI.adapter(KitsuMapping.KitsuResponse::class.java)
 
@@ -50,6 +53,7 @@ object KitsuParser : MediaListParser() {
         val allMedia = mutableListOf<Media>()
         val userID = id.toInt()
         while (offset <= count) {
+            if(offset > 0) delay(callCooldown)
             val request = "https://kitsu.io/api/edge/library-entries?filter[userId]=$userID&include=media&page[limit]=500&page[offset]=$offset"
             val responseBody = requestMediaList(request) { response ->
                 return@requestMediaList if(!response.isSuccessful) {
