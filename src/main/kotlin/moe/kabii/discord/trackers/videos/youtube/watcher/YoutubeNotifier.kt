@@ -103,7 +103,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                         edit.setEmbed { spec ->
                             spec.setColor(if(dbStream.premiere) uploadColor else inactiveColor)
                             val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                            if(features.viewers) spec.addField("Viewers", viewers, true)
+                            if(features.viewers && dbStream.peakViewers > 0) spec.addField("Viewers", viewers, true)
 
                             if (video != null) {
                                 // stream has ended and vod is available - edit notifications to reflect
@@ -118,7 +118,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                                 timestamp?.run(spec::setTimestamp)
 
                                 val durationStr = DurationFormatter(video.duration).colonTime
-                                spec.setDescription("The video [$durationStr] is available.")
+                                spec.setDescription("Video available: [$durationStr]")
                                 spec.setTitle(video.title)
                                 spec.setThumbnail(video.thumbnail)
                             } else {
