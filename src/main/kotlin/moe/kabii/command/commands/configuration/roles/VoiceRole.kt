@@ -7,6 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.VoiceConfiguration
+import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake
@@ -122,25 +123,24 @@ object VoiceRole : CommandContainer {
                     embed("There are no voice role rules set for **${target.name}**.").awaitSingle()
                     return@discord
                 }
-                embed {
-                    setTitle("Voice role configuration for **${target.name}**")
-                    setDescription("Users joining the following voice channels will receive the corresponding role.")
-                    config.autoRoles.voiceConfigurations.forEach { cfg ->
-                        val channel = if(cfg.targetChannel != null) {
-                            target.getChannelById(cfg.targetChannel.snowflake).tryAwait().orNull()
-                        } else null
-                        val channelName =
-                            if(cfg.targetChannel != null)
-                                if(channel != null)
-                                    channel.name
-                                else "Channel deleted"
-                            else "Any Voice Channel"
-                        val channelID = if(cfg.targetChannel != null && channel != null) " (${channel.id.asString()})" else ""
-                        val role = target.getRoleById(cfg.role.snowflake).tryAwait()
-                        val roleName = if(role is Ok) role.value.name else "Role deleted"
-                        addField("$channelName$channelID", "Role: $roleName", true)
-                    }
-                }.awaitSingle()
+                val title = "Voice role configuration for **${target.name}**"
+                val header = "Users joining the following voice channels will receive the corresponding role."
+                val configs = config.autoRoles.voiceConfigurations.toList().map { cfg ->
+                    // create string describing each config
+                    val channel = if(cfg.targetChannel != null) {
+                        target.getChannelById(cfg.targetChannel.snowflake).tryAwait().orNull()
+                    } else null
+                    val channelName =
+                        if(cfg.targetChannel != null)
+                            if(channel != null)
+                                channel.name
+                            else "Channel deleted"
+                        else "<ANY>"
+                    val role = target.getRoleById(cfg.role.snowflake).tryAwait()
+                    val roleName = if(role is Ok) role.value.name else "Role deleted"
+                    "**Channel:** $channelName **-> Role:** $roleName"
+                }
+                PaginationUtil.paginateListAsDescription(this, title, configs, descHeader = header)
             }
         }
     }

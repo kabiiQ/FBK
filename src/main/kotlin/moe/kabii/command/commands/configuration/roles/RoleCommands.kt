@@ -7,9 +7,11 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
+import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
+import org.litote.kmongo.addFields
 
 object SelfRoleCommands : CommandContainer {
     object RoleCommands : Command("rolecommands", "rolecommand") {
@@ -94,17 +96,18 @@ object SelfRoleCommands : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val commands = config.selfRoles.roleCommands
-                embed {
-                    if(commands.isEmpty()) {
-                        setDescription("There are no role commands for **${target.name}**.")
-                    } else {
-                        commands.map { (command, role) ->
-                            val guildRole = target.getRoleById(role.snowflake).map(Role::getName).tryAwait().orNull() ?: "Deleted role"
-                            addField("Command: **$command**", "Role: $guildRole", false)
-                        }
-                    }
-                }.awaitSingle()
+                val commands = config.selfRoles.roleCommands.map { (command, role) ->
+                    val guildRole = target.getRoleById(role.snowflake).map(Role::getName).tryAwait().orNull() ?: "Deleted role"
+                    "**Command:** $command **-> Role:** $guildRole"
+                }
+
+                if(commands.isEmpty()) {
+                    embed("There are no role commands for **${target.name}**.").awaitSingle()
+                    return@discord
+                }
+
+                val title = "Command-role configurations for **${target.name}**."
+                PaginationUtil.paginateListAsDescription(this, title, commands)
             }
         }
     }

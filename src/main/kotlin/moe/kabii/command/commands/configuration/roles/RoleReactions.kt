@@ -12,6 +12,7 @@ import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
+import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -171,43 +172,31 @@ object RoleReactions : CommandContainer {
         init {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
-                val configs = config.selfRoles.reactionRoles
-                val messages = configs.toList()
-                    // list reaction role messages that still have valid roles
-                    .mapNotNull { reactRole ->
-                        val (_, _, roleID) = reactRole
-                        when(val role = target.getRoleById(roleID.snowflake).tryAwait()) {
-                            is Err -> {
-                                val error = role.value
-                                if((error as? ClientException)?.status?.code() == 404) {
-                                    configs.remove(reactRole)
-                                    config.save()
-                                }
-                                null
-                            }
-                            is Ok -> reactRole to role.value
+                val configs = config.selfRoles.reactionRoles.toList().map { cfg ->
+                    // generate string for each config that is still valid
+                    val (messageInfo, emoji, roleId) = cfg
+                    val channelId = cfg.message.channelID.snowflake
+                    try {
+                        val role = target.getRoleById(roleId.snowflake).awaitSingle()
+                        val channel = target.getChannelById(channelId).ofType(GuildMessageChannel::class.java).awaitSingle()
+                        val link = "https://discord.com/channels/${target.id.asString()}/${cfg.message.channelID}/${cfg.message.messageID}"
+                        "Message #[${cfg.message.messageID}]($link) in ${channel.name} for role **${role.name}**"
+                    } catch(e: Exception) {
+                        if(e is ClientException && e.status.code() == 404) {
+                            config.selfRoles.reactionRoles.remove(cfg)
+                            config.save()
                         }
+                        return@map "(Invalid configuration removed: Role:$roleId/Channel:$channelId"
                     }
-                embed {
-                    if(messages.isNotEmpty()) {
-                        val message = messages.joinToString("\n") { (reactConfig, role) ->
-                            val channelID = reactConfig.message.channelID.snowflake
-                            val channel = target.getChannelById(channelID).ofType(GuildMessageChannel::class.java).tryBlock().orNull()
-                            if(channel == null) {
-                                configs.remove(reactConfig)
-                                runBlocking { config.save() }
-                                "Removed config in invalid channel $channelID"
-                            } else {
-                                val link = "https://discord.com/channels/${target.id.asString()}/${reactConfig.message.channelID}/${reactConfig.message.messageID}"
-                                "Message #[${reactConfig.message.messageID}]($link) in ${channel.name} for role **${role.name}**";
-                            }
-                        }
-                        setTitle("Reaction Role Messages in ${target.name}:")
-                        setDescription(message)
-                    } else {
-                        setDescription("There are no reaction roles set up in ${target.name}.")
-                    }
-                }.awaitSingle()
+                }
+
+                if(configs.isEmpty()) {
+                    embed("There are no reaction roles configured in **${target.name}**.").awaitSingle()
+                    return@discord
+                }
+
+                val title = "Reaction-role messages in ${target.name}"
+                PaginationUtil.paginateListAsDescription(this, title, configs)
             }
         }
     }

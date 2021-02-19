@@ -3,7 +3,6 @@ package moe.kabii.discord.conversation
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.*
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.structure.extensions.mod
 import moe.kabii.util.DurationParser
 import java.time.Duration
 import java.util.concurrent.Executors
@@ -172,13 +171,4 @@ enum class Direction(val unicode: String, val identity: String) {
             return values().find { it.identity == name }
         }
     }
-}
-
-/**
- * @param pageCount - the actual number of pages
- * @param current - the page we are on 0 - (pageCount-1)
- */
-data class Page(val pageCount: Int, val current: Int) {
-    operator fun inc() = copy(current = (current + 1) mod pageCount)
-    operator fun dec() = copy(current = (current - 1) mod pageCount)
 }
