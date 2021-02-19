@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.trackers
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -10,6 +11,8 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.Page
+import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.util.MagicNumbers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
@@ -41,7 +44,8 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                     TrackedStreams.Targets.discordChannel eq dbChannel.id
                 }.mapTo(tracks) { target ->
                     val stream = target.streamChannel
-                    "${stream.site.targetType.full}/${stream.siteChannelID}: by <@${target.tracker.userID}>"
+                    val url = stream.site.targetType.feedById(stream.siteChannelID)
+                    "[${stream.site.targetType.full}/${stream.siteChannelID}]($url): by <@${target.tracker.userID}>"
                 }
 
                 // get all tracked anime lists in this channel
@@ -49,7 +53,8 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                     TrackedMediaLists.ListTargets.discord eq dbChannel.id
                 }.mapTo(tracks) { target ->
                     val list = target.mediaList
-                    "${list.site.targetType.full}/${list.siteListId}: by <@${target.userTracked.userID}>"
+                    val url = list.site.targetType.feedById(list.siteListId)
+                    "[${list.site.targetType.full}/${list.siteListId}]($url): by <@${target.userTracked.userID}>"
                 }
 
                 // get tracked twitter feeds in this channel
@@ -57,7 +62,8 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                     TwitterTargets.discordChannel eq dbChannel.id
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
-                    "Twitter/${feed.userId} by <@${target.tracker.userID}>"
+                    val url = moe.kabii.discord.trackers.TwitterTarget.feedById(feed.userId.toString())
+                    "[Twitter/${feed.userId}]($url) by <@${target.tracker.userID}>"
                 }
             }
 
@@ -66,35 +72,9 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 return@discord
             }
 
-            // display up to 20 of these track targets at a time
-            // discord character limit max would put us at about 34, choosing to display less
-            val trackPages = tracks.chunked(32)
-
-            var page: Page? = Page(trackPages.size, 0)
-            var first = true
-
-            // embed spec consumer sets content to current 'page'
-            fun applyPageContent(spec: EmbedCreateSpec) {
-                val currentPage = page!!
-                spec.setTitle("Tracked targets in <#${chan.id.asString()}>")
-                val pageContent = trackPages[currentPage.current]
-                spec.setDescription(pageContent.joinToString("\n"))
-                spec.setFooter("Target page ${currentPage.current + 1}/${currentPage.pageCount}", null)
-            }
-
-            val message = embed(::applyPageContent).awaitSingle()
-
-            if(page!!.pageCount > 1) {
-                while (page != null) {
-                    if (!first) {
-                        message.edit { spec ->
-                            spec.setEmbed(::applyPageContent)
-                        }.awaitSingle()
-                    }
-                    page = getPage(page, message, add = first)
-                    first = false
-                }
-            }
+            val channelName = if(guild != null) "#${guildChan.name}" else "this channel"
+            val title = "Tracked targets in $channelName"
+            PaginationUtil.paginateListAsDescription(this, title, tracks)
         }
     }
 }

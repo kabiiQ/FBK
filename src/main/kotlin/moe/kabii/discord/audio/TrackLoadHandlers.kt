@@ -12,7 +12,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.rusty.Try
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.util.DurationFormatter
-import moe.kabii.util.YoutubeUtil
+import moe.kabii.util.URLUtil
 import java.net.URL
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery) : AudioLoadResultHandler {
@@ -71,7 +71,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
             origin.embed {
-                if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
                 setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
             }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
             }.block()

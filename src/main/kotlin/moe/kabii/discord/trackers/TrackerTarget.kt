@@ -7,6 +7,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.discord.trackers.anime.MediaType
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
@@ -14,6 +15,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.URLUtil
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -23,7 +25,9 @@ sealed class TrackerTarget(
     val featureName: String,
     val url: List<Regex>,
     vararg val alias: String
-)
+) {
+    abstract fun feedById(id: String): String
+}
 
 // streaming targets
 data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String, val url: String)
@@ -60,6 +64,8 @@ object TwitchTarget : StreamingTarget(
 
     override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
     override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
+
+    override fun feedById(id: String): String = "" // unavailable without making requests. todo store in db ?
 }
 
 object YoutubeTarget : StreamingTarget(
@@ -90,6 +96,8 @@ object YoutubeTarget : StreamingTarget(
         LOG.trace(e.stackTraceString)
         Err(StreamErr.IO)
     }
+
+    override fun feedById(id: String): String = URLUtil.StreamingSites.Youtube.channel(id)
 }
 
 // anime targets
@@ -101,6 +109,8 @@ sealed class AnimeTarget(
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: ListSite
+
+    override fun feedById(id: String): String = URLUtil.MediaListSite.url(dbSite, id)
 }
 
 object MALTarget : AnimeTarget(
@@ -145,7 +155,9 @@ object TwitterTarget : TrackerTarget(
         Regex("@([a-zA-Z0-9_]{4,15})")
     ),
     "twitter", "tweets", "twit", "twitr", "tr"
-)
+) {
+    override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
+}
 
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {

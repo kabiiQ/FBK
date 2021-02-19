@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.twitter.json
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.util.URLUtil
 import java.time.Instant
 
 @JsonClass(generateAdapter = true)
@@ -13,7 +14,7 @@ data class TwitterUser(
 ) {
     @Transient val id: Long = requireNotNull(_id.toLongOrNull()) { "Invalid Twitter User ID returned: $_id" }
 
-    @Transient val url = "https://twitter.com/i/user/$id"
+    @Transient val url = URLUtil.Twitter.feed(id.toString())
 }
 
 @JsonClass(generateAdapter = true)
@@ -41,7 +42,7 @@ data class TwitterTweet(
         else -> TwitterSettings::displayNormalTweet
     }
 
-    @Transient val url = "https://twitter.com/FBK/status/$id"
+    @Transient val url = URLUtil.Twitter.tweet(id.toString())
 }
 
 @JsonClass(generateAdapter = true)

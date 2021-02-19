@@ -18,7 +18,7 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 import moe.kabii.structure.extensions.tryBlock
 import moe.kabii.util.EmojiCharacters
-import moe.kabii.util.YoutubeUtil
+import moe.kabii.util.URLUtil
 import reactor.kotlin.core.publisher.toFlux
 
 object AudioEventHandler : AudioEventAdapter() {
@@ -69,7 +69,7 @@ object AudioEventHandler : AudioEventAdapter() {
                         fbkColor(embed)
                         val now = if(track.position > 0) "Resuming" else "Now playing"
                         embed.setDescription("$now **$title**. $paused")
-                        if(track is YoutubeAudioTrack) embed.setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                        if(track is YoutubeAudioTrack) embed.setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
                     }
                 }.map { np ->
                     QueueData.BotMessage.NPEmbed(np.channelId, np.id)

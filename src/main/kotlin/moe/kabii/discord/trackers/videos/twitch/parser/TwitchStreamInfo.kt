@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.videos.twitch
 import kotlinx.coroutines.runBlocking
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.net.NettyFileServer
+import moe.kabii.util.URLUtil
 import java.time.Instant
 
 data class TwitchStreamInfo( //statistics embed needs this info ..
@@ -28,7 +29,7 @@ data class TwitchUserInfo(
     val thumbnailUrl: String
     get() = NettyFileServer.twitchThumbnail(username)
 
-    val url: String = "https://twitch.tv/$username"
+    val url: String = URLUtil.StreamingSites.Twitch.channelByName(username)
 }
 
 data class TwitchGameInfo(

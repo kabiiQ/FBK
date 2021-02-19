@@ -7,7 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.structure.extensions.s
-import moe.kabii.util.YoutubeUtil
+import moe.kabii.util.URLUtil
 import org.apache.commons.lang3.StringUtils
 
 object QueueInfo : AudioCommandContainer {
@@ -52,7 +52,7 @@ object QueueInfo : AudioCommandContainer {
                 val avatarUrl = event.client.self.map(User::getAvatarUrl).awaitSingle()
 
                 embed {
-                    if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                    if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
                     setAuthor("Current queue for ${target.name}", null, avatarUrl)
                     setDescription("$np\n\n$queueList$looping")
                     setFooter("$size track${size.s()} ($duration remaining) $paused", null)
@@ -79,7 +79,7 @@ object QueueInfo : AudioCommandContainer {
                     val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
                     val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
                     embed {
-                        if(track is YoutubeAudioTrack) setThumbnail(YoutubeUtil.thumbnailUrl(track.identifier))
+                        if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
                         setDescription("Currently playing track **${trackString(track)}**.$paused$looping")
                     }
                 }.awaitSingle()

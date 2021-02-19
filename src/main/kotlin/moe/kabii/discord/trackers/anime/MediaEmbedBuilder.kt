@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.anime
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.util.URLUtil
 
 class MediaEmbedBuilder(val media: Media) {
     // store message details until given a discord object to build on - don't store any discord objects
@@ -18,21 +19,7 @@ class MediaEmbedBuilder(val media: Media) {
     var descriptionFmt = ""
 
     fun createEmbedConsumer(site: ListSite, id: String) = fun(spec: EmbedCreateSpec) {
-        val url = when(site) {
-            ListSite.MAL -> when(media.type) {
-                MediaType.ANIME -> "https://myanimelist.net/animelist/$id"
-                MediaType.MANGA -> "https://myanimelist.net/mangalist/$id"
-            }
-            ListSite.KITSU -> when(media.type) {
-                MediaType.ANIME -> "https://kitsu.io/users/$id/library?media=anime"
-                MediaType.MANGA -> "https://kitsu.io/users/$id/library?media=manga"
-            }
-            ListSite.ANILIST -> when(media.type) {
-                MediaType.ANIME -> "https://anilist.co/user/$id/animelist"
-                MediaType.MANGA -> "https://anilist.co/user/$id/mangalist"
-            }
-        }
-
+        val url = URLUtil.MediaListSite.url(site, id, media.type)
         spec.setColor(media.status.color)
         spec.setThumbnail(media.image)
         spec.setAuthor(username, url, avatar)

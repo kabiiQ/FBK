@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.videos.youtube
 
+import moe.kabii.util.URLUtil
 import java.time.Duration
 import java.time.Instant
 
@@ -8,7 +9,7 @@ data class YoutubeChannelInfo(
     val name: String,
     val avatar: String?
 ) {
-    val url = "https://youtube.com/channel/$id"
+    val url = URLUtil.StreamingSites.Youtube.channel(id)
 }
 
 data class YoutubeVideoInfo(
