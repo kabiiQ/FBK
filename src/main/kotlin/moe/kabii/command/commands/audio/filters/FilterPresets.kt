@@ -1,10 +1,7 @@
 package moe.kabii.command.commands.audio.filters
 
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
-import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.audio.QueueData
 
 object FilterPresets : AudioCommandContainer {
     object DoubleTime : Command("dt", "doubletime") {
@@ -12,24 +9,10 @@ object FilterPresets : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val track = audio.player.playingTrack
-                if(track == null) {
-                    error("There is no track currently playing.").awaitSingle()
-                    return@discord
-                }
-                if(!canFSkip(this, track)) {
-                    error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
-                    return@discord
-                }
-                val data = track.userData as QueueData
-                with(data.audioFilters) {
+                validateAndAlterFilters(this) {
                     reset()
                     addExclusiveFilter(FilterType.Speed(1.25))
                 }
-                data.apply = true
-                audio.player.stopTrack()
             }
         }
     }
@@ -39,25 +22,11 @@ object FilterPresets : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val track = audio.player.playingTrack
-                if(track == null) {
-                    error("There is no track currently playing.").awaitSingle()
-                    return@discord
-                }
-                if(!canFSkip(this, track)) {
-                    error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
-                    return@discord
-                }
-                val data = track.userData as QueueData
-                with(data.audioFilters) {
+                validateAndAlterFilters(this) {
                     reset()
                     addExclusiveFilter(FilterType.Speed(1.25))
                     addExclusiveFilter(FilterType.Pitch(1.25))
                 }
-                data.apply = true
-                audio.player.stopTrack()
             }
         }
     }
@@ -67,21 +36,42 @@ object FilterPresets : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val track = audio.player.playingTrack
-                if(track == null) {
-                    error("There is no track currently playing.").awaitSingle()
-                    return@discord
-                }
-                val data = track.userData as QueueData
-                with(data.audioFilters) {
+                validateAndAlterFilters(this) {
                     reset()
                     addExclusiveFilter(FilterType.Speed(0.75))
                     addExclusiveFilter(FilterType.Pitch(0.75))
                 }
-                data.apply = true
-                audio.player.stopTrack()
+            }
+        }
+    }
+
+    object KaraokeFilter : Command("karaoke") {
+        override val wikiPath: String = "Music-Player#audio-manipulationfilters"
+
+        init {
+            discord {
+                validateAndAlterFilters(this) {
+                    addExclusiveFilter(FilterType.Karaoke)
+                }
+            }
+        }
+    }
+
+    object RotationFilter : Command("rotation", "rotate", "audiorotate") {
+        override val wikiPath: String = "Music-Player#audio-manipulationfilters"
+
+        init {
+            discord {
+                validateAndAlterFilters(this) {
+                    val arg = args.getOrNull(0)
+                    val default = .25f
+                    val targetSpeed = when(val speed = arg?.toFloatOrNull()) {
+                        null -> default
+                        in .01f..20f -> speed
+                        else -> default
+                    }
+                    addExclusiveFilter(FilterType.Rotation(targetSpeed))
+                }
             }
         }
     }
@@ -91,21 +81,9 @@ object FilterPresets : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val track = audio.player.playingTrack
-                if(track == null) {
-                    error("There is no track currently playing.").awaitSingle()
-                    return@discord
+                validateAndAlterFilters(this) {
+                    reset()
                 }
-                if(!canFSkip(this, track)) {
-                    error("You must be the DJ (track requester) or be a channel moderator to reset audio filters for this track.").awaitSingle()
-                    return@discord
-                }
-                val data = track.userData as QueueData
-                data.audioFilters.reset()
-                data.apply = true
-                audio.player.stopTrack()
             }
         }
     }

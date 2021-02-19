@@ -1,25 +1,37 @@
 package moe.kabii.command.commands.audio.filters
 
+import com.github.natanbc.lavadsp.karaoke.KaraokePcmAudioFilter
+import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import java.text.DecimalFormat
 
 sealed class FilterType {
     abstract fun asString(): String
 
-    class Speed(val rate: Double = 1.0) : FilterType() {
+    data class Speed(val rate: Double = 1.0) : FilterType() {
         override fun asString() = "Playback speed: ${(rate * 100).toInt()}%"
     }
 
-    class Pitch(val pitch: Double = 1.0) : FilterType() {
+    data class Pitch(val pitch: Double = 1.0) : FilterType() {
         override fun asString() = "Pitch: ${(pitch * 100).toInt()}%"
     }
 
-    class Bass(val bass: Double = 1.0) : FilterType() {
+    data class Bass(val bass: Double = 1.0) : FilterType() {
         override fun asString() = "Bass: ${(bass * 100).toInt()}%"
+    }
+
+    object Karaoke : FilterType() {
+        override fun asString() = "Karaoke Filter (experimental)"
+    }
+
+    data class Rotation(val speed: Float) : FilterType() {
+        private val format = DecimalFormat("0.##")
+        override fun asString(): String = "Rotation: ${format.format(speed)}Hz"
     }
 }
 
@@ -56,6 +68,14 @@ class FilterFactory {
                     eq.setGain(4, -0.1f * multi)
                     eq.setGain(5, -0.2f * multi)
                     eq
+                }
+                is FilterType.Karaoke -> {
+                    KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate)
+                }
+                is FilterType.Rotation -> {
+                    val rotation = RotationPcmAudioFilter(output, format.sampleRate)
+                    rotation.setRotationSpeed(0.25)
+                    rotation
                 }
             }
         }

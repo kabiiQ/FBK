@@ -6,10 +6,13 @@ import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.structure.extensions.filterNot
@@ -68,5 +71,23 @@ internal interface AudioCommandContainer : CommandContainer {
         val userChannel = origin.member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull() ?: return false
         val botChannel = BotUtil.getBotVoiceChannel(origin.target).tryAwait().orNull() ?: return false
         return botChannel.id == userChannel.id
+    }
+
+    suspend fun validateAndAlterFilters(origin: DiscordParameters, consumer: suspend FilterFactory.() -> Unit) {
+        validateChannel(origin)
+        val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
+        val track = audio.player.playingTrack
+        if(track == null) {
+            origin.error("There is no track currently playing.").awaitSingle()
+            return
+        }
+        if(!canFSkip(origin, track)) {
+            origin.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
+            return
+        }
+        val data = track.userData as QueueData
+        consumer(data.audioFilters)
+        data.apply = true
+        audio.player.stopTrack()
     }
 }
