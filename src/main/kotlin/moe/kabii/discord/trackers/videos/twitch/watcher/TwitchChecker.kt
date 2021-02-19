@@ -31,7 +31,7 @@ import kotlin.math.max
 
 class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
     override fun run() {
-        loop {
+        applicationLoop {
             val start = Instant.now()
             // get all tracked sites for this service
             newSuspendedTransaction {

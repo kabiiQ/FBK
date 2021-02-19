@@ -27,7 +27,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
     private val updateInterval = cooldown.minimumRepeatTime
 
     override fun run() {
-        loop {
+        applicationLoop {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
             newSuspendedTransaction {

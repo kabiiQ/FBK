@@ -11,12 +11,13 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -24,10 +25,10 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
+class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
 
     override fun run() {
-        loop {
+        applicationLoop {
             val start = Instant.now()
 
             newSuspendedTransaction {
@@ -146,7 +147,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                             }
                         }
                         if(latest > maxId) maxId = latest
-                        delay(Duration.ofSeconds(2))
+                        delay(Duration.ofMillis(cooldowns.callDelay))
                     }
 
                     requireUpdate.forEach { feed ->
@@ -160,7 +161,7 @@ class TwitterChecker(val discord: GatewayDiscordClient) : Runnable {
                 }
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = 45_000L - runDuration.toMillis()
+            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(Duration.ofMillis(max(delay, 0L)))
         }
     }

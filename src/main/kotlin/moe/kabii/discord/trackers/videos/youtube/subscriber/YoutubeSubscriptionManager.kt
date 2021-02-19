@@ -8,7 +8,7 @@ import moe.kabii.data.relational.streams.youtube.FeedSubscription
 import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
-import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -40,7 +40,7 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: S
             }.toSet()
         }
 
-        loop {
+        applicationLoop {
             newSuspendedTransaction {
                 try {
                     // subscribe to updates for all channels with active targets

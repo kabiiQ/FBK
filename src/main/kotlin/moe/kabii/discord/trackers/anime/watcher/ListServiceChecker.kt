@@ -28,7 +28,7 @@ import kotlin.math.max
 
 class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     override fun run() {
-        loop {
+        applicationLoop {
 
             val start = Instant.now()
             newSuspendedTransaction {

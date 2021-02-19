@@ -76,7 +76,11 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
             yield(aniListThread)
 
-            val twitter = TwitterChecker(discord)
+            val twitterDelay = ServiceRequestCooldownSpec(
+                callDelay = 8L,
+                minimumRepeatTime = 30_000L
+            )
+            val twitter = TwitterChecker(discord, twitterDelay)
             yield(Thread(twitter, "TwitterChecker"))
 
         }.toList()

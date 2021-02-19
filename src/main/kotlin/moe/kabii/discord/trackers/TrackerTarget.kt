@@ -7,7 +7,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.anime.MediaType
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser

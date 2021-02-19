@@ -13,7 +13,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.jodaDateTime
-import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -30,7 +30,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions, discord) {
     override fun run() {
-        loop {
+        applicationLoop {
             val start = Instant.now()
             propagateTransaction {
                 try {

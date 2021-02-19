@@ -5,7 +5,7 @@ import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
 import moe.kabii.command.params.TerminalParameters
-import moe.kabii.structure.extensions.loop
+import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.stackTraceString
 
 class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordClient) : Runnable {
@@ -19,7 +19,7 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
     }
 
     override fun run() {
-        loop {
+        applicationLoop {
             val line = checkNotNull(readLine()) { "Terminal input ending" }
             manager.context.launch {
                 if(line.isBlank()) return@launch

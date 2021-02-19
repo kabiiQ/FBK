@@ -1,6 +1,7 @@
 package moe.kabii.structure.extensions
 
 import kotlinx.coroutines.runBlocking
+import moe.kabii.LOG
 import org.joda.time.DateTime
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -30,10 +31,15 @@ get() {
     }
 }
 
-fun loop(process: suspend () -> Unit) {
+fun applicationLoop(process: suspend () -> Unit) {
     while(true) {
         runBlocking {
-            process()
+            try {
+                process()
+            } catch(e: Exception) {
+                LOG.error("UNCAUGHT exception in application loop: ${e.message} :: ${e.cause}")
+                LOG.error(e.stackTraceString)
+            }
         }
     }
 }

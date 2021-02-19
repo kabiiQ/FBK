@@ -11,7 +11,6 @@ import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
-import org.litote.kmongo.addFields
 
 object SelfRoleCommands : CommandContainer {
     object RoleCommands : Command("rolecommands", "rolecommand") {

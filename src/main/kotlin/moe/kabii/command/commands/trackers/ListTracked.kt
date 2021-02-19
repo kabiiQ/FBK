@@ -1,7 +1,5 @@
 package moe.kabii.command.commands.trackers
 
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -10,9 +8,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
-import moe.kabii.discord.conversation.Page
 import moe.kabii.discord.conversation.PaginationUtil
-import moe.kabii.discord.util.MagicNumbers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
