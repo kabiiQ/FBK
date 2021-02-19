@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.4.21"
+    val kotlinVer = "1.4.30"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -50,7 +50,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.0") // can update once d4j 3.2 is available
+    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.2") // can update once d4j 3.2 is available
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE") // reactor kotlin coroutine compat
     //implementation("io.projectreactor:reactor-core")
 
@@ -59,12 +59,12 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.1.3") // discord websocket and api
 
     // twitch irc
-    implementation("com.github.twitch4j:twitch4j:1.1.3")
+    implementation("com.github.twitch4j:twitch4j:1.2.0")
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.63") // discord audio library
-    implementation("com.github.natanbc:lavadsp:0.7.5") // some lavaplayer audio filters
+    implementation("com.sedmelluq:lavaplayer:1.3.71") // discord audio library
+    implementation("com.github.natanbc:lavadsp:0.7.6") // some lavaplayer audio filters
 
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
@@ -85,25 +85,26 @@ dependencies {
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.2.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.2.4")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.28.1"
+    val exposedVer = "0.29.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.2.18")
+    implementation("org.postgresql:postgresql:42.2.19")
 
     // .toml token configuration
-    implementation("com.uchuhimo:konf:0.23.0")
+    implementation("com.uchuhimo:konf:1.0.0")
 
     // logging
+    // HOLD VERSION - alpha5 breaks file output (and has for over a year)
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
 
     // other
-    implementation("commons-validator:commons-validator:1.6")
+    implementation("commons-validator:commons-validator:1.7")
     implementation("org.reflections:reflections:0.9.12") // command detection and registration
 
     // youtube xml parsing
