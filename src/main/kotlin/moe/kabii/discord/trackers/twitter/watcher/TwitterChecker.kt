@@ -40,7 +40,12 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     val requireUpdate = mutableListOf<TwitterFeed>()
                     var maxId = 0L
 
+                    var first = true
                     feeds.forEach { feed ->
+                        if(!first) {
+                            delay(Duration.ofMillis(cooldowns.callDelay))
+                        } else first = false
+
                         val targets = feed.targets.toList()
 
                         if(targets.isEmpty()) {
@@ -147,7 +152,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             }
                         }
                         if(latest > maxId) maxId = latest
-                        delay(Duration.ofMillis(cooldowns.callDelay))
                     }
 
                     requireUpdate.forEach { feed ->

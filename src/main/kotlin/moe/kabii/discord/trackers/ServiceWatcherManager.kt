@@ -77,7 +77,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             yield(aniListThread)
 
             val twitterDelay = ServiceRequestCooldownSpec(
-                callDelay = 8L,
+                callDelay = 3_000L,
                 minimumRepeatTime = 30_000L
             )
             val twitter = TwitterChecker(discord, twitterDelay)
