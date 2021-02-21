@@ -9,7 +9,7 @@ import moe.kabii.structure.extensions.createJumpLink
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.userAddress
 
-object TranslateCommand : Command("translate", "tl", "tlate", "transl") {
+object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
     override val wikiPath: String? = null
     private val langRegex = Regex("(![^,<#]{2,25})?([,<#].{2,25})?")
 
