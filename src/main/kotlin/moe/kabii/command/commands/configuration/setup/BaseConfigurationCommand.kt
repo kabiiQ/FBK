@@ -118,9 +118,16 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             val menu = origin.embedBlock(configEmbed).awaitSingle()
             while(true) {
                 val inputStr = origin.getString(timeout = embedTimeout) ?: break
-                val input = inputStr.toIntOrNull() ?: continue
-                if(input !in 1..module.elements.size) break
-                when(val element = module.elements[input-1]) {
+
+                val inputNum = inputStr.toIntOrNull()
+                val element = if(inputNum != null) {
+                    if(inputNum !in 1..module.elements.size) break
+                    module.elements[inputNum-1]
+                } else {
+                    module.elements.find { element -> element.aliases.any { alias -> alias.equals(inputStr, ignoreCase = true) } } ?: continue
+                }
+
+                when(element) {
                     is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
                     is StringElement -> {
                         // prompt user for new value
