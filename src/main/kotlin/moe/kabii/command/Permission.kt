@@ -42,7 +42,7 @@ suspend fun Member.verify(vararg permissions: Permission) {
     throw MemberPermissionsException(*permissions)
 }
 
-suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Permission): Boolean = channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
+suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Permission): Boolean = BotAdmin.check(userID = id.asLong()) || channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
 
 @Throws(MemberPermissionsException::class)
 suspend fun Member.channelVerify(channel: GuildChannel, vararg permissions: Permission) {

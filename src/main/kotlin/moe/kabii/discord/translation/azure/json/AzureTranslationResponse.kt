@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import moe.kabii.MOSHI
-import moe.kabii.discord.translation.azure.Translator
+import moe.kabii.discord.translation.azure.AzureTranslator
 import java.io.IOException
 
 @JsonClass(generateAdapter = true)
@@ -30,7 +30,7 @@ data class AzureDetectedLanguage(
     @Json(name = "language") val _language: String,
     val score: Double
 ) {
-    @Transient val lang = Translator.languages[_language]!!
+    @Transient val lang = AzureTranslator.supportedLanguages[_language]!!
 }
 
 @JsonClass(generateAdapter = true)
@@ -38,5 +38,5 @@ data class AzureTranslation(
     val text: String,
     @Json(name = "to") val _to: String
 ) {
-    @Transient val lang = Translator.languages[_to]!!
+    @Transient val lang = AzureTranslator.supportedLanguages[_to]!!
 }

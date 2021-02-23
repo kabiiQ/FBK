@@ -56,3 +56,6 @@ bearer_token = ''
 
 [microsoft]
 translator_key = ''
+
+[google]
+gtranslator_key = ''

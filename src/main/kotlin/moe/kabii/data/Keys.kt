@@ -61,6 +61,9 @@ object Keys : ConfigSpec("") {
     object Microsoft : ConfigSpec() {
         val translatorKey by required<String>("translator_key")
     }
+    object Google : ConfigSpec() {
+        val gTranslatorKey by required<String>("gtranslator_key")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

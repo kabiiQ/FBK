@@ -12,8 +12,8 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.jodaDateTime
 import moe.kabii.structure.extensions.applicationLoop
+import moe.kabii.structure.extensions.jodaDateTime
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
