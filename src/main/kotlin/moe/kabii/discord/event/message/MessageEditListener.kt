@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.guild
+package moe.kabii.discord.event.message
 
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent

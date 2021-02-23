@@ -20,7 +20,7 @@ import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.event.bot.MessageHandler
+import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue

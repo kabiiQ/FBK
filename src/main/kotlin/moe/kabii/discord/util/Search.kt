@@ -8,7 +8,7 @@ import discord4j.core.`object`.entity.channel.GuildChannel
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.event.bot.MessageHandler
+import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait

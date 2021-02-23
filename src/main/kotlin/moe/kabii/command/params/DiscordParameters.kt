@@ -18,7 +18,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
-import moe.kabii.discord.event.bot.MessageHandler
+import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.discord.util.specColor

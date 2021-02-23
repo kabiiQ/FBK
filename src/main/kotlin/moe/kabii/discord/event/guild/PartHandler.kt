@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.user
+package moe.kabii.discord.event.guild
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Member
@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.structure.extensions.long
 import moe.kabii.structure.extensions.orNull
 import moe.kabii.structure.extensions.snowflake

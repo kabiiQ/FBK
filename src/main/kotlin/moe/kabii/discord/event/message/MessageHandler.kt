@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.bot
+package moe.kabii.discord.event.message
 
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
