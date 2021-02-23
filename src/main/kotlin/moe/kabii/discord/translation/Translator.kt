@@ -1,11 +1,8 @@
 package moe.kabii.discord.translation
 
-import moe.kabii.LOG
 import moe.kabii.discord.translation.azure.AzureTranslator
 import moe.kabii.discord.translation.google.GoogleTranslator
-import moe.kabii.structure.extensions.stackTraceString
 import java.io.IOException
-import kotlin.jvm.Throws
 
 abstract class TranslationService(val fullName: String, val languageHelp: String) {
     open var available = true

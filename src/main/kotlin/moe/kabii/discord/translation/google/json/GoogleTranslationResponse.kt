@@ -1,9 +1,6 @@
 package moe.kabii.discord.translation.google.json
 
 import com.squareup.moshi.JsonClass
-import moe.kabii.MOSHI
-import java.io.IOException
-import kotlin.jvm.Throws
 
 @JsonClass(generateAdapter = true)
 data class GoogleTranslationResponse(

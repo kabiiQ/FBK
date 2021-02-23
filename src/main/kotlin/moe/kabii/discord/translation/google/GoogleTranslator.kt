@@ -1,6 +1,5 @@
 package moe.kabii.discord.translation.google
 
-import moe.kabii.JSON
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
@@ -13,7 +12,6 @@ import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 object GoogleTranslator : TranslationService(

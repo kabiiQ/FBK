@@ -1,7 +1,5 @@
 package moe.kabii.discord.translation
 
-import moe.kabii.discord.translation.azure.AzureTranslator
-
 data class SupportedLanguages(
     private val languages: Map<String, TranslationLanguage>
 ) {
