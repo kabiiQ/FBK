@@ -50,32 +50,24 @@ class FilterFactory {
 
         val filteredOutput = filters.fold(rawOutput) { output, filter ->
             when(filter) {
-                is FilterType.Speed -> {
+                is FilterType.Speed -> output.also {
                     speed = filter.rate
-                    output
                 }
-                is FilterType.Pitch -> {
+                is FilterType.Pitch -> output.also {
                     pitch = filter.pitch
-                    output
                 }
-                is FilterType.Bass -> {
-                    val eq = Equalizer(format.channelCount, output)
+                is FilterType.Bass -> Equalizer(format.channelCount, output).apply {
                     val multi = filter.bass.toFloat()
-                    eq.setGain(0, 0.3f * multi)
-                    eq.setGain(1, 0.9f * multi)
-                    eq.setGain(2, 1f * multi)
-                    eq.setGain(3, 0.85f * multi)
-                    eq.setGain(4, -0.1f * multi)
-                    eq.setGain(5, -0.2f * multi)
-                    eq
+                    setGain(0, 0.3f * multi)
+                    setGain(1, 0.9f * multi)
+                    setGain(2, 1f * multi)
+                    setGain(3, 0.85f * multi)
+                    setGain(4, -0.1f * multi)
+                    setGain(5, -0.2f * multi)
                 }
-                is FilterType.Karaoke -> {
-                    KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate)
-                }
-                is FilterType.Rotation -> {
-                    val rotation = RotationPcmAudioFilter(output, format.sampleRate)
-                    rotation.setRotationSpeed(0.25)
-                    rotation
+                is FilterType.Karaoke -> KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate)
+                is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
+                    setRotationSpeed(filter.speed.toDouble())
                 }
             }
         }
@@ -89,9 +81,7 @@ class FilterFactory {
         return listOf(final)
     }
 
-    fun reset() {
-        filters.clear()
-    }
+    fun reset() = filters.clear()
 
     fun asString(): String = filters.joinToString("\n", transform = FilterType::asString)
 }

@@ -20,6 +20,15 @@ object Translator {
     )
 
     fun getService() = services.first(TranslationService::available)
+
+    init {
+        // test google translator quota
+        GoogleTranslator.translateText(
+            from = null,
+            to = GoogleTranslator.supportedLanguages["en"]!!,
+            rawText = "test"
+        )
+    }
 }
 
 data class TranslationResult(

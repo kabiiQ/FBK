@@ -45,7 +45,7 @@ object FilterPresets : AudioCommandContainer {
         }
     }
 
-    object KaraokeFilter : Command("karaoke") {
+    object KaraokeFilter : Command("karaoke", "kareoke", "karoke", "karyoke") {
         override val wikiPath: String = "Music-Player#audio-manipulationfilters"
 
         init {
