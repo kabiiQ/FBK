@@ -73,7 +73,6 @@ object GoogleTranslator : TranslationService(
             .build()
 
         LOG.info("Requesting supported languages from Google.")
-        LOG.error("KEY: $googleKey")
 
         val response = OkHTTP.newCall(request).execute()
         return try {

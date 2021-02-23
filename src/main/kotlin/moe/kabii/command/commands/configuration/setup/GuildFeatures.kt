@@ -4,6 +4,7 @@ import discord4j.rest.util.Permission
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.util.EmojiCharacters
 
 object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "configureguild", "configureserver", "guildsettings", "guildfeatures") {
     override val wikiPath = "Configuration-Commands#the-serverconfig-command"
@@ -15,7 +16,8 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
         //BooleanElement("Post information in linked Twitch chat when URLs are linked.", listOf("url", "urlinfo", "twitchurls"), GuildSettings::twitchURLInfo),
         BooleanElement("Use this server's invite info (required for invite-specific roles, bot requires Manage Server permission)", listOf("invite", "invites", "useinvites", "inviteperm"), GuildSettings::utilizeInvites),
         BooleanElement("Give users their roles back when they rejoin the server", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles),
-        BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", listOf("publish"), GuildSettings::publishTrackerMessages)
+        BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", listOf("publish"), GuildSettings::publishTrackerMessages),
+        BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl"), GuildSettings::reactionTranslations)
     )
 
     init {

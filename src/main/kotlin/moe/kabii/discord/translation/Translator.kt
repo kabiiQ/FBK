@@ -1,5 +1,6 @@
 package moe.kabii.discord.translation
 
+import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.translation.azure.AzureTranslator
 import moe.kabii.discord.translation.google.GoogleTranslator
 import java.io.IOException
@@ -10,6 +11,8 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
     @Throws(IOException::class)
     abstract fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
+
+    fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 }
 
 object Translator {
@@ -23,9 +26,10 @@ object Translator {
 
     init {
         // test google translator quota
-        GoogleTranslator.translateText(
+        val google = GoogleTranslator
+        google.translateText(
             from = null,
-            to = GoogleTranslator.supportedLanguages["en"]!!,
+            to = google.defaultLanguage(),
             rawText = "test"
         )
     }

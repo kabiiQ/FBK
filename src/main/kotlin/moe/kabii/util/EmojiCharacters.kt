@@ -15,4 +15,6 @@ object EmojiCharacters {
 
     const val blueSquare = "\uD83D\uDFE6"
     const val redSquare = "\uD83D\uDFE5"
+
+    const val translation = "🗣️"
 }
