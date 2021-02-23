@@ -10,7 +10,8 @@ import java.time.Instant
 data class TwitterUser(
     @Json(name = "id") val _id: String,
     val name: String,
-    val username: String
+    val username: String,
+    @Json(name = "profile_image_url") val profileImage: String?
 ) {
     @Transient val id: Long = requireNotNull(_id.toLongOrNull()) { "Invalid Twitter User ID returned: $_id" }
 
@@ -23,7 +24,8 @@ data class TwitterTweet(
     @Json(name = "author_id") val _authorRaw: String?,
     @Json(name = "created_at") val _created: String?,
     @Json(name = "referenced_tweets") val _references: List<TwitterReferences>?,
-    @Json(name = "possibly_sensitive") val sensitive: Boolean?
+    @Json(name = "possibly_sensitive") val sensitive: Boolean?,
+    val text: String?
 ) {
 
     @Transient val id: Long = requireNotNull(_id.toLongOrNull()) { "Invalid Twitter Tweet ID returned: $_id" }

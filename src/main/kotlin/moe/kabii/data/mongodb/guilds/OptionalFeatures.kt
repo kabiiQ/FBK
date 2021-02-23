@@ -88,7 +88,8 @@ data class TwitterSettings(
     var displayNormalTweet: Boolean = true,
     var displayReplies: Boolean = false,
     var displayQuote: Boolean = true,
-    var displayRetweet: Boolean = false
+    var displayRetweet: Boolean = false,
+    var autoTranslate: Boolean = true
 )
 
 data class ChannelMark(

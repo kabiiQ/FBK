@@ -6,7 +6,7 @@ import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.util.EmojiCharacters
 
-object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "configureguild", "configureserver", "guildsettings", "guildfeatures") {
+object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "configureguild", "configureserver", "guildsettings", "guildfeatures", "guildcfg", "servercfg") {
     override val wikiPath = "Configuration-Commands#the-serverconfig-command"
 
     object GuildFeatureModule : ConfigurationModule<GuildSettings>(

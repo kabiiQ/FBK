@@ -25,6 +25,10 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
         BooleanElement("Post when tracked feeds reply to other users",
             listOf("reply", "replies", "directreply"),
             TwitterSettings::displayReplies
+        ),
+        BooleanElement("Automatically request a translation for posted tweets",
+            listOf("translate", "translations", "tl", "t"),
+            TwitterSettings::autoTranslate
         )
     )
 

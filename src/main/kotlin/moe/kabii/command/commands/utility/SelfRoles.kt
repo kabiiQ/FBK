@@ -11,7 +11,7 @@ import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 
 
-object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "self", "selfrole", "toggle", "togglerole", "roletoggle") {
+object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "self", "selfrole", "togglerole", "roletoggle") {
     override val wikiPath = "Command-Roles#allowing-users-to-self-assign-roles"
 
     init {

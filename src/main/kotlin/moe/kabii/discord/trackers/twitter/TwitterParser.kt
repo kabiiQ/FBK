@@ -94,7 +94,7 @@ object TwitterParser {
         val quote = if(limits.includeQuote) "" else " -is:quote "
         val since = if(limits.sinceId != null) "&since_id=${limits.sinceId}" else ""
         val query = "from:$userId$rt$quote"
-        val call = request<TwitterRecentTweetsResponse>("https://api.twitter.com/2/tweets/search/recent?query=$query$since&tweet.fields=author_id,created_at,referenced_tweets,possibly_sensitive&max_results=${limits.tweetLimit}&expansions=author_id")
+        val call = request<TwitterRecentTweetsResponse>("https://api.twitter.com/2/tweets/search/recent?query=$query$since&tweet.fields=author_id,created_at,referenced_tweets,possibly_sensitive,text&max_results=${limits.tweetLimit}&expansions=author_id&user.fields=profile_image_url")
         return if(call?.data != null && call.includes != null) {
             TwitterRecentTweets(
                 user = call.includes.users.first(),

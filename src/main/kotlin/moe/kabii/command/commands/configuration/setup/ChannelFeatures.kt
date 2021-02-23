@@ -22,8 +22,7 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),
         BooleanElement("Limit track command usage to moderators", listOf("lock", "locked", "limit", "limited"), FeatureChannel::locked),
-        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding),
-
+        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding)
     )
 
     object ChannelFeatures : Command("feature", "features", "channelfeatures", "config", "channel") {

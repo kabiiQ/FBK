@@ -16,10 +16,13 @@ import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
+import moe.kabii.discord.translation.Translator
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
+import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant
@@ -131,9 +134,30 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                     val notif = channel.createMessage { spec ->
                                         // todo channel setting for custom message ?
                                         spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
+
                                     }.awaitSingle()
 
                                     TrackerUtil.checkAndPublish(notif)
+
+                                    if(twitter.autoTranslate && !tweet.retweet && tweet.text?.isBlank() == false) {
+
+                                        val service = Translator.getService()
+                                        val defaultLang = GuildConfigurations
+                                            .getOrCreateGuild(target.discordChannel.guild!!.guildID)
+                                            .translator.defaultTargetLanguage
+                                            .run(service.supportedLanguages::get) ?: service.defaultLanguage()
+                                        val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
+
+                                        if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) {
+                                            channel.createEmbed { embed ->
+                                                fbkColor(embed)
+                                                embed.setAuthor("@${user.username} Tweet Translation", tweet.url, user.profileImage)
+                                                embed.setDescription(StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC))
+
+                                                embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+                                            }.awaitSingle()
+                                        }
+                                    }
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
                                         TrackerUtil.permissionDenied(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterChannel, target::delete)

@@ -2,9 +2,12 @@ package moe.kabii.discord.event.message
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.Embed
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.ReactionAddEvent
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.discord.conversation.ReactionInfo
@@ -22,7 +25,7 @@ import org.apache.commons.lang3.StringUtils
 object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
 
     override suspend fun handle(event: ReactionAddEvent) {
-        val user = event.user.awaitSingle()
+        val user  = event.user.awaitSingle()
         if(user.isBot) return
 
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
@@ -32,6 +35,12 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
 
         val message = event.message.awaitSingle()
         val service = Translator.getService()
+
+        val channel = event.channel.awaitSingle()
+        if(config != null) {
+            val member = event.member.orNull() ?: return
+            if(!member.hasPermissions(channel as GuildMessageChannel, Permission.SEND_MESSAGES)) return
+        }
 
         // form a flat representation of any contents in this discord message
         // pull contents of embeds in their client display order
@@ -51,7 +60,7 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
         val translation = service.translateText(from = null, to = defaultLang, rawText = contents)
         val jumpLink = message.createJumpLink()
-        event.channel.flatMap { it.createEmbed { embed ->
+        channel.createEmbed { embed ->
             fbkColor(embed)
             embed.setAuthor("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl)
 
@@ -59,9 +68,8 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
             else "<No translation performed>"
             embed.setDescription(text)
 
-            val detected = if(translation.detected) " (detected)" else ""
-            embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null)
-        } }.awaitSingle()
+            embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+        }.awaitSingle()
 
         /*ReactionListener(
             MessageInfo.of(notice),
