@@ -12,6 +12,7 @@ import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
 import okhttp3.Request
+import org.apache.commons.lang.StringEscapeUtils
 import java.io.IOException
 
 object GoogleTranslator : TranslationService(
@@ -57,10 +58,11 @@ object GoogleTranslator : TranslationService(
             response.close()
         }
         val detectedSourceLanguage = translation.detectedSourceLanguage?.run(supportedLanguages::byTag)
+        val text = StringEscapeUtils.unescapeHtml(translation.translatedText)
         return TranslationResult(
             originalLanguage = detectedSourceLanguage ?: from!!,
             targetLanguage = to,
-            translatedText = translation.translatedText,
+            translatedText = text,
             detected = translation.detectedSourceLanguage != null
         )
     }

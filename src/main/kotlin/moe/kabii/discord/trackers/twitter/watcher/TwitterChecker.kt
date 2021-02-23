@@ -24,6 +24,7 @@ import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -146,16 +147,20 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                             .getOrCreateGuild(target.discordChannel.guild!!.guildID)
                                             .translator.defaultTargetLanguage
                                             .run(service.supportedLanguages::get) ?: service.defaultLanguage()
-                                        val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
+                                        try {
+                                            val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
 
-                                        if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) {
-                                            channel.createEmbed { embed ->
-                                                fbkColor(embed)
-                                                embed.setAuthor("@${user.username} Tweet Translation", tweet.url, user.profileImage)
-                                                embed.setDescription(StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC))
+                                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) {
+                                                channel.createEmbed { embed ->
+                                                    fbkColor(embed)
+                                                    embed.setAuthor("@${user.username} Tweet Translation", tweet.url, user.profileImage)
+                                                    embed.setDescription(StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC))
 
-                                                embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
-                                            }.awaitSingle()
+                                                    embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+                                                }.awaitSingle()
+                                            }
+                                        } catch(e: IOException) {
+                                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
                                         }
                                     }
                                 } catch (e: Exception) {

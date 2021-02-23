@@ -1,17 +1,11 @@
 package moe.kabii.discord.event.message
 
-import discord4j.common.util.Snowflake
-import discord4j.core.`object`.Embed
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.discord.conversation.ReactionInfo
-import moe.kabii.discord.conversation.ReactionListener
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.MagicNumbers
