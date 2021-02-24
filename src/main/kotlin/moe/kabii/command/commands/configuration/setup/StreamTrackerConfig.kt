@@ -43,7 +43,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             "Channel name when no streams are live",
             listOf("notlive", "nolive", "nonelive", "not-live"),
             StreamSettings::notLive,
-            prompt = "Enter the name this channel should have when none of its tracked streams are live. Use **reset** to set to the current channel name.",
+            prompt = "Enter the name this channel should have when none of its tracked streams are live.",
             default = "no-streams-live"
         ),
         StringElement(
@@ -159,6 +159,8 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                 }
                 else -> { // other args, including null, are valid for configurator run
 
+                    val wasRename = features.streamSettings.renameEnabled
+
                     val configurator = Configurator(
                         "Livestream tracker settings for #${guildChan.name}",
                         StreamTrackerModule,
@@ -169,6 +171,9 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         config.save()
                     }
 
+                    if(!wasRename && features.streamSettings.renameEnabled) {
+                        features.streamSettings.notLive = guildChan.name
+                    }
                 }
             }
         }

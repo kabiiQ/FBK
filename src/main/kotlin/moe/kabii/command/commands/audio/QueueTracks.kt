@@ -6,7 +6,7 @@ import moe.kabii.command.Command
 import moe.kabii.discord.audio.*
 
 object QueueTracks : AudioCommandContainer {
-    object PlaySong : Command("play", "addsong", "queuesong") {
+    object PlaySong : Command("play", "addsong", "queuesong", "p") {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {

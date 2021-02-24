@@ -96,7 +96,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 setAuthor(name, null, null)
                 // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
                 if(module.elements.any { element -> element is BooleanElement }) {
-                    setTitle("Select the feature to be toggled/edited using its ID.")
+                    setTitle("Select the feature to be toggled/edited using its ID or bolded name.")
                     // feature toggles - these can be made into FeatureElements if we have other toggles later on
                     val enabled = module.elements.mapIndexedNotNull { id, element ->
                         if(element is BooleanElement && element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
