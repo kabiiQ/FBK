@@ -3,7 +3,7 @@ package moe.kabii.discord.translation
 data class SupportedLanguages(
     private val languages: Map<String, TranslationLanguage>
 ) {
-    fun byTag(tag: String) = languages[tag]
+    fun byTag(tag: String) = languages[tag.toLowerCase()]
     operator fun get(tag: String) = byTag(tag)
 
     fun search(query: String): Map<String, TranslationLanguage> {
