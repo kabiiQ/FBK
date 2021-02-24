@@ -69,7 +69,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         is LongElement -> element.prop.get(instance).toString()
         is DurationElement -> {
             val field = element.prop.get(instance)
-            val duration = Duration.parse(field)
+            val duration = field?.run(Duration::parse)
             if(duration != null) DurationFormatter(duration).inputTime
             else "disabled"
         }
@@ -220,7 +220,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 "reset" -> {
                     when(element) {
                         is StringElement -> element.prop.set(instance, element.default)
-                        is DurationElement -> element.prop.set(instance, element.default.toString())
+                        is DurationElement -> element.prop.set(instance, element.default?.toString())
                         else -> {
                             origin.error("The setting **$tag** is not a resettable custom value.").awaitSingle()
                             return false
