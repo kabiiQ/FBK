@@ -57,7 +57,6 @@ class MessageHandler(val manager: CommandManager) {
         // DISCORD COMMAND HANDLER
         // this sets the prefix for PMs, as long as the guild is legitimate the default prefix is set in GuildConfiguration
         val prefix = config?.prefix ?: GuildConfiguration.defaultPrefix
-        val suffix = config?.suffix ?: GuildConfiguration.defaultSuffix
         val cmdStr = when {
             msgArgs[msgArgs.size - 1].equals(suffix, ignoreCase = true) -> {
                 content = content.substring(0, content.length - suffix.length)
