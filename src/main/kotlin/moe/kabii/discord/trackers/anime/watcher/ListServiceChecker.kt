@@ -213,15 +213,17 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
 
     @WithinExposedContext
     private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
-        val existingTargets = list.targets
+        val existingTargets = list.targets.toList()
             .filter { target ->
                 // untrack target if discord channel is deleted
                 if (target.discord.guild != null) {
-                    val disChan = discord.getChannelById(target.discord.channelID.snowflake)
-                        .awaitFirstOrNull()
-                    if (disChan == null) {
-                        LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
-                        target.delete()
+                    try {
+                        discord.getChannelById(target.discord.channelID.snowflake).awaitSingle()
+                    } catch(e: Exception) {
+                        if(e is ClientException && e.status.code() == 404) {
+                            LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
+                            target.delete()
+                        }
                         return@filter false
                     }
                 }

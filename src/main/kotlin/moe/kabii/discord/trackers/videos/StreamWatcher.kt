@@ -47,12 +47,13 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             .filter { target ->
                 // untrack target if channel deleted
                 if(target.discordChannel.guild != null) {
-                    val disChan = discord
-                        .getChannelById(target.discordChannel.channelID.snowflake)
-                        .tryAwait().orNull()
-                    if(disChan == null) {
-                        LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                        target.delete()
+                    try {
+                        discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
+                    } catch(e: Exception) {
+                        if(e is ClientException && e.status.code() == 404) {
+                            LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                            target.delete()
+                        }
                         return@filter false
                     }
                 }

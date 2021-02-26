@@ -11,6 +11,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
@@ -19,6 +20,7 @@ import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
+import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
@@ -50,7 +52,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
-                        val targets = feed.targets.toList()
+                        val targets = getActiveTargets(feed) ?: return@forEach // feed untracked entirely
 
                         if(targets.isEmpty()) {
                             LOG.info("Untracking Twitter Feed '${feed.userId} as it is not tracked in any channels.")
@@ -166,9 +168,9 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
                                         TrackerUtil.permissionDenied(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterChannel, target::delete)
-                                        LOG.warn("Unable to send stream notification to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
+                                        LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
                                     } else {
-                                        LOG.warn("Error sending stream notification to channel: ${e.message}")
+                                        LOG.warn("Error sending Tweet to channel: ${e.message}")
                                         LOG.debug(e.stackTraceString)
                                     }
                                 }
@@ -196,6 +198,37 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(Duration.ofMillis(max(delay, 0L)))
+        }
+    }
+
+    @WithinExposedContext
+    private suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
+        val existingTargets = feed.targets.toList()
+            .filter { target ->
+                // untrack target if discord channel is deleted
+                if (target.discordChannel.guild != null) {
+                    try {
+                        discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
+                    } catch (e: Exception) {
+                        if (e is ClientException && e.status.code() == 404) {
+                            LOG.info("Untracking Twitter feed '${feed.userId}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                            target.delete()
+                        }
+                        return@filter false
+                    }
+                }
+                true
+            }
+        return if (existingTargets.isNotEmpty()) {
+            existingTargets.filter { target ->
+                // ignore, but do not untrack targets with feature disabled
+                val guildId = target.discordChannel.guild?.guildID ?: return@filter true
+                GuildConfigurations.findFeatures(target)?.twitterChannel == true
+            }
+        } else {
+            feed.delete()
+            LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
+            null
         }
     }
 }
