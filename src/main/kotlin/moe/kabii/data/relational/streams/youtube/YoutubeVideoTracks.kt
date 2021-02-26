@@ -15,6 +15,7 @@ object YoutubeVideoTracks : IntIdTable() {
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
+    val mentionRole = long("role_mention").nullable()
 
     override val primaryKey = PrimaryKey(ytVideo, discordChannel)
 }
@@ -23,17 +24,22 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
     var ytVideo by YoutubeVideo referencedOn YoutubeVideoTracks.ytVideo
     var discordChannel by DiscordObjects.Channel referencedOn YoutubeVideoTracks.discordChannel
     var tracker by DiscordObjects.User referencedOn YoutubeVideoTracks.tracker
+    var mentionRole by YoutubeVideoTracks.mentionRole
 
     companion object : IntEntityClass<YoutubeVideoTrack>(YoutubeVideoTracks) {
         @WithinExposedContext
-        fun getOrInsert(ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User) = find {
-            YoutubeVideoTracks.ytVideo eq ytVideo.id and
-                    (YoutubeVideoTracks.discordChannel eq discordChannel.id)
-        }.elementAtOrElse(0) { _ ->
-            new {
+        fun insertOrUpdate(ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, mentionRoleId: Long?): YoutubeVideoTrack {
+            val existing = find {
+                YoutubeVideoTracks.ytVideo eq ytVideo.id and
+                        (YoutubeVideoTracks.discordChannel eq discordChannel.id)
+            }.firstOrNull()
+            return existing?.apply {
+                this.mentionRole = mentionRoleId
+            } ?: new {
                 this.ytVideo = ytVideo
                 this.discordChannel = discordChannel
                 this.tracker = tracker
+                this.mentionRole = mentionRoleId
             }
         }
 

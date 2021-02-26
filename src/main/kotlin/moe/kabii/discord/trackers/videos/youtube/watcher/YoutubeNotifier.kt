@@ -366,8 +366,9 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         // get target channel in Discord
         val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
 
-        val trackerId = videoTrack.tracker.userID
-        val new = chan.createMessage("<@$trackerId> Livestream reminder: **${liveStream.channel.name}** is now live: ${liveStream.url}")
+        val mention = if(videoTrack.mentionRole != null) "<@&${videoTrack.mentionRole}> " else "<@${videoTrack.tracker.userID}> Livestream reminder: "
+        val new = chan
+            .createMessage("$mention**${liveStream.channel.name}** is now live: ${liveStream.url}")
             .awaitSingle()
         TrackerUtil.checkAndPublish(new)
     }

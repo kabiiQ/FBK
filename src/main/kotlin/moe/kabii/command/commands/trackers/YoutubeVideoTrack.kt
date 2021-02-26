@@ -65,13 +65,22 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
                 return@discord
             }
 
+            // trackvid <id> (role...)
+            val mentionRole = args
+                .drop(1)
+                .joinToString(" ")
+                .ifBlank { null }
+                ?.let { arg -> Search.roleByNameOrID(this, arg) }
+
             propagateTransaction {
                 val dbVideo = YoutubeVideo.getOrInsert(ytVideo.id, ytVideo.channel.id)
                 val discordChannel = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), guild?.id?.asLong())
                 val dbUser = DiscordObjects.User.getOrInsert(author.id.asLong())
-                YoutubeVideoTrack.getOrInsert(dbVideo, discordChannel, dbUser)
+                YoutubeVideoTrack.insertOrUpdate(dbVideo, discordChannel, dbUser, mentionRole?.id?.asLong())
             }
-            embed("A reminder will be sent when '$videoId' goes live.").awaitSingle()
+
+            val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."
+            embed("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning").awaitSingle()
         }
     }
 }
