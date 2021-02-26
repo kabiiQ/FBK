@@ -1,15 +1,18 @@
 package moe.kabii.command.commands.trackers
 
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
+import moe.kabii.discord.util.Search
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 import java.io.IOException
@@ -23,12 +26,20 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             if(guild != null) {
                 val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
                 val features = config.options.featureChannels[chan.id.asLong()]
-                if(features == null || !features.youtubeChannel) throw FeatureDisabledException(YoutubeTarget.featureName, this)
+                if(features == null || !features.youtubeChannel) {
+                    // feature not enabled, allow moderators to bypass
+                    if(!member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)) throw FeatureDisabledException(YoutubeTarget.featureName, this)
+                } else {
+                    // feature is enabled, but restrict if guild has 'locked' config
+                    if(features.locked) {
+                        channelVerify(Permission.MANAGE_MESSAGES)
+                    } // else feature enabled, unlocked
+                }
             } // else this is PM, always allow
 
-            // trackvideo <id>
+            // trackvideo <id> (role)
             if(args.isEmpty()) {
-                usage("**trackvideo** is used to track a single upcoming YouTube stream.", "trackvideo <YouTube video ID>").awaitSingle()
+                usage("**trackvideo** is used to track a single upcoming YouTube stream.", "trackvideo <YouTube video ID> (optional: name or ID of role to ping when live)").awaitSingle()
                 return@discord
             }
 

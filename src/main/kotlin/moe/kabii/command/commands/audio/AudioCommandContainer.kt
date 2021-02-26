@@ -44,9 +44,11 @@ internal interface AudioCommandContainer : CommandContainer {
     fun trackString(track: AudioTrack, includeAuthor: Boolean = true): String = Companion.trackString(track, includeAuthor)
 
     suspend fun validateChannel(origin: DiscordParameters) {
-        if(origin.run { member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS) }) return
         val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
-        if(musicChan != true) throw FeatureDisabledException("music", origin)
+        if(musicChan != true) {
+            if(origin.run { member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS) }) return
+            else throw FeatureDisabledException("music", origin)
+        }
     }
 
     suspend fun getSkipsNeeded(origin: DiscordParameters): Int {
