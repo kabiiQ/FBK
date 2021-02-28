@@ -9,6 +9,7 @@ import moe.kabii.discord.trackers.anime.mal.MALParser
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeFeedPuller
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
 
@@ -51,6 +52,15 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             )
             val ytChecker = YoutubeChecker(ytSubscriptions, discord, ytDelay)
             yield(Thread(ytChecker, "YoutubeChecker"))
+
+            /*
+            val pullDelay = ServiceRequestCooldownSpec(
+                callDelay = 5_000L,
+                minimumRepeatTime = 120_000L
+            )
+            val ytManualPuller = YoutubeFeedPuller(pullDelay)
+            yield(Thread(ytManualPuller, "YT-ManualFeedPull"))
+            */
 
             val malDelay = ServiceRequestCooldownSpec(
                 callDelay = MALParser.callCooldown,
