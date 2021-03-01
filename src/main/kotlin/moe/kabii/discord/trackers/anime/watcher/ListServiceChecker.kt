@@ -7,7 +7,6 @@ import discord4j.core.`object`.entity.channel.PrivateChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations

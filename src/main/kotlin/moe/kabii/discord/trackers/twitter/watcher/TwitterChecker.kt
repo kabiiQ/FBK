@@ -4,6 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
+import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
@@ -17,16 +18,17 @@ import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
+import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
+import moe.kabii.net.NettyFileServer
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -115,10 +117,11 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
                                     if(!tweet.notifyOption.get(twitter)) return@target
 
+                                    val referenceUser = tweet.references.firstOrNull()?.author
                                     val action = when {
                                         tweet.retweet -> "retweeted \uD83D\uDD01"
-                                        tweet.reply -> "replied to a Tweet \uD83D\uDCAC"
-                                        tweet.quote -> "quoted a Tweet \uD83D\uDDE8"
+                                        tweet.reply -> "replied to a Tweet from **@${referenceUser?.username}** \uD83D\uDCAC"
+                                        tweet.quote -> "quoted a Tweet from **@${referenceUser?.username}** \uD83D\uDDE8"
                                         else -> "posted a new Tweet"
                                     }
 
@@ -134,37 +137,51 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                         }
                                     }
 
+                                    val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
+                                        try {
+                                            val service = Translator.getService()
+                                            val defaultLang = GuildConfigurations
+                                                .getOrCreateGuild(target.discordChannel.guild!!.guildID)
+                                                .translator.defaultTargetLanguage
+                                                .run(service.supportedLanguages::get) ?: service.defaultLanguage()
+                                            val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
+                                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
+                                            else null
+                                        } catch(e: Exception) {
+                                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
+                                            null
+                                        }
+                                    } else null
+
                                     val notif = channel.createMessage { spec ->
                                         // todo channel setting for custom message ?
                                         spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
 
+                                        spec.setEmbed { embed ->
+                                            embed.setColor(Color.of(1942002))
+                                            val author = (if(tweet.retweet) referenceUser else user) ?: user
+                                            embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
+
+                                            embed.setDescription(tweet.text)
+
+                                            val tlDetail = if(translation != null) {
+                                                embed.addField("**Tweet Translation**", StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.FIELD.VALUE), false)
+                                                "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
+                                            } else ""
+
+                                            tweet.attachments.firstOrNull()?.url?.run(embed::setImage)
+                                            val attachInfo = when {
+                                                tweet.attachments.firstOrNull()?.type == TwitterMediaType.VID -> "(Open on Twitter to view video)\n"
+                                                tweet.attachments.size > 1 -> "(Open on Twitter to view ${tweet.attachments.size} images)\n"
+                                                else -> ""
+                                            }
+
+                                            embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
+                                            embed.setTimestamp(tweet.createdAt)
+                                        }
                                     }.awaitSingle()
 
                                     TrackerUtil.checkAndPublish(notif)
-
-                                    if(twitter.autoTranslate && !tweet.retweet && tweet.text?.isBlank() == false) {
-
-                                        val service = Translator.getService()
-                                        val defaultLang = GuildConfigurations
-                                            .getOrCreateGuild(target.discordChannel.guild!!.guildID)
-                                            .translator.defaultTargetLanguage
-                                            .run(service.supportedLanguages::get) ?: service.defaultLanguage()
-                                        try {
-                                            val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
-
-                                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) {
-                                                channel.createEmbed { embed ->
-                                                    fbkColor(embed)
-                                                    embed.setAuthor("@${user.username} Tweet Translation", tweet.url, user.profileImage)
-                                                    embed.setDescription(StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC))
-
-                                                    embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
-                                                }.awaitSingle()
-                                            }
-                                        } catch(e: IOException) {
-                                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
-                                        }
-                                    }
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
                                         TrackerUtil.permissionDenied(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterChannel, target::delete)

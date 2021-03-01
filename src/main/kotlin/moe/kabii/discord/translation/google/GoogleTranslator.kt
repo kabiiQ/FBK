@@ -31,7 +31,7 @@ object GoogleTranslator : TranslationService(
 
     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         if(from == to) {
-            return TranslationResult(from, to, rawText)
+            return TranslationResult(this, from, to, rawText)
         }
 
         val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
@@ -60,6 +60,7 @@ object GoogleTranslator : TranslationService(
         val detectedSourceLanguage = translation.detectedSourceLanguage?.run(supportedLanguages::byTag)
         val text = StringEscapeUtils.unescapeHtml(translation.translatedText)
         return TranslationResult(
+            service = this,
             originalLanguage = detectedSourceLanguage ?: from!!,
             targetLanguage = to,
             translatedText = text,

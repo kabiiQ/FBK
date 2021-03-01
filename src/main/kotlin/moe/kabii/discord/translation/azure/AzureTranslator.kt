@@ -30,7 +30,7 @@ object AzureTranslator : TranslationService(
 
     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         if(from == to) {
-            return TranslationResult(from, to, rawText)
+            return TranslationResult(this, from, to, rawText)
         }
 
         require(rawText.length <= 10_000) { "Text > 10,000 chars is not supported" }
@@ -61,6 +61,7 @@ object AzureTranslator : TranslationService(
             response.close()
         }
         return TranslationResult(
+            service = this,
             originalLanguage = translation.detectedLanguage?.lang ?: from!!,
             targetLanguage = to,
             translatedText = translation.translations.single().text,

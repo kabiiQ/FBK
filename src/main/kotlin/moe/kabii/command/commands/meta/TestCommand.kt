@@ -6,7 +6,6 @@ object TestCommand : Command("testcommand") {
      override val wikiPath: String? = null
     init {
         discord {
-
         }
     }
 }

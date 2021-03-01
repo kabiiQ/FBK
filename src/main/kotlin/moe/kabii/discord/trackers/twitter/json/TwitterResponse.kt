@@ -13,11 +13,13 @@ data class TwitterUserResponse(
 @JsonClass(generateAdapter = true)
 data class TwitterRecentTweetsResponse(
     val data: List<TwitterTweet>?,
-    val includes: TwitterExpandedUserResponse?,
+    val includes: TwitterExpandedResponse?,
     val errors: List<TwitterError>?
 ) : TwitterResponse
 
 @JsonClass(generateAdapter = true)
-data class TwitterExpandedUserResponse(
-    val users: List<TwitterUser>
+data class TwitterExpandedResponse(
+    val users: List<TwitterUser>,
+    val media: List<TwitterMediaObject>?,
+    val tweets: List<TwitterTweet>?
 )

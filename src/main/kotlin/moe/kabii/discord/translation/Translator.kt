@@ -30,12 +30,13 @@ object Translator {
         google.translateText(
             from = null,
             to = google.defaultLanguage(),
-            rawText = "test"
+            rawText = "t"
         )
     }
 }
 
 data class TranslationResult(
+    val service: TranslationService,
     val originalLanguage: TranslationLanguage,
     val targetLanguage: TranslationLanguage,
     val translatedText: String,

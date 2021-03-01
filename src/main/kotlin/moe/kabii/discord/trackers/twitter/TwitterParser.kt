@@ -21,6 +21,7 @@ object TwitterParser {
     private val token = Keys.config[Keys.Twitter.token]
 
     val sinceIdError = Regex("Please use a 'since_id' that is larger than (\\d{19,})")
+    val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
 
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     private inline fun <reified R: TwitterResponse> request(requestStr: String): R? {
@@ -90,16 +91,34 @@ object TwitterParser {
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     fun getRecentTweets(userId: Long, queryLimits: TwitterQueryLimits?): TwitterRecentTweets? {
         val limits = queryLimits ?: TwitterQueryLimits()
-        val rt = if(limits.includeRT) "" else " -is:retweet "
-        val quote = if(limits.includeQuote) "" else " -is:quote "
-        val since = if(limits.sinceId != null) "&since_id=${limits.sinceId}" else ""
-        val query = "from:$userId$rt$quote"
-        val call = request<TwitterRecentTweetsResponse>("https://api.twitter.com/2/tweets/search/recent?query=$query$since&tweet.fields=author_id,created_at,referenced_tweets,possibly_sensitive,text&max_results=${limits.tweetLimit}&expansions=author_id&user.fields=profile_image_url")
+        val query = StringBuilder("https://api.twitter.com/2/tweets/search/recent?query=")
+            .append("from:$userId")
+        if(!limits.includeRT) query.append(" -is:retweet ")
+        if(!limits.includeQuote) query.append(" -is:quote ")
+        if(limits.sinceId != null) query.append("&since_id=${limits.sinceId}")
+        query.append("&tweet.fields=created_at,referenced_tweets,possibly_sensitive,text")
+        query.append("&max_results=${limits.tweetLimit}")
+        query.append("&expansions=author_id,attachments.media_keys,referenced_tweets.id.author_id")
+        query.append("&user.fields=profile_image_url")
+        query.append("&media.fields=preview_image_url,url")
+        val call = request<TwitterRecentTweetsResponse>(query.toString())
         return if(call?.data != null && call.includes != null) {
-            TwitterRecentTweets(
-                user = call.includes.users.first(),
-                tweets = call.data
-            )
+            val tweets = call.data.onEach { tweet -> mapTweetIncludes(tweet, call.includes) }
+            TwitterRecentTweets(user = call.includes.users.first(), tweets = tweets)
         } else null
+    }
+
+    private fun mapTweetIncludes(tweet: TwitterTweet, includes: TwitterExpandedResponse) {
+        tweet.attachments = mutableListOf()
+        tweet._attachments?.mediaKeys?.mapNotNullTo(tweet.attachments) { key ->
+            includes.media?.find { media -> media.key == key }
+        }
+        tweet.references = mutableListOf()
+        tweet._references?.mapNotNullTo(tweet.references) { reference ->
+            includes.tweets?.find { included -> reference.referencedTweetId == included.id }
+        }
+        includes.tweets.orEmpty().plus(tweet).forEach { tw ->
+            tw.author = includes.users.firstOrNull { includedUser -> tw.authorId == includedUser.id }
+        }
     }
 }

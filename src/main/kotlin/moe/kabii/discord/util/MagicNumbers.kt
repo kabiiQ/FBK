@@ -14,7 +14,7 @@ object MagicNumbers {
         const val FIELDS = 25
         object FIELD {
             const val NAME = 256
-            const val value = 1024
+            const val VALUE = 1024
         }
     }
 }
