@@ -6,7 +6,6 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max

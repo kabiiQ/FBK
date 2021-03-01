@@ -62,7 +62,7 @@ object AudioManager {
 
 class Timeouts {
     companion object {
-        const val TIMEOUT_DELAY = 120_000L
+        const val TIMEOUT_DELAY = 180_000L
     }
 
     private val timeoutThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
