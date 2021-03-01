@@ -16,6 +16,7 @@ import moe.kabii.structure.extensions.applicationLoop
 import moe.kabii.structure.extensions.jodaDateTime
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -41,15 +42,23 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                     // <video id, target list>
                     val targetLookup = mutableMapOf<String, YoutubeCall>()
 
-                    // 1: collect all videos we have as 'currently live'
-                    val dbLiveVideos = YoutubeLiveEvent.all()
+                    val currentTime = DateTime.now()
+
+                    // 1: collect all videos we have as 'currently live' - don't need to recheck within 2 minutes
+                    val reCheck = currentTime - 118_000L
+                    val dbLiveVideos = YoutubeLiveEvent.wrapRows(
+                        YoutubeLiveEvents
+                            .innerJoin(YoutubeVideos)
+                            .select {
+                                YoutubeVideos.lastAPICall lessEq reCheck
+                            }
+                    )
                     dbLiveVideos.forEach { live ->
                         val callReason = YoutubeCall.Live(live)
                         targetLookup[callReason.video.videoId] = callReason
                     }
 
                     // 2: collect all 'scheduled' videos with 'expire' update timer due
-                    val currentTime = DateTime.now()
                     val dbScheduledVideos =
                         YoutubeScheduledEvent.find {
                             YoutubeScheduledEvents.dataExpiration lessEq currentTime
