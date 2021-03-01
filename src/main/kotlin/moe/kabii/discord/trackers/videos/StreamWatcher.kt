@@ -35,6 +35,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     private val job = SupervisorJob()
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
 
+    private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
+
     companion object {
         // rename
         private val job = SupervisorJob()
@@ -168,7 +170,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                         existing.channel == dbChannel
                     }?.mark
                 }.joinToString("")
-            val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".take(MagicNumbers.Channel.NAME)
+            val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".take(MagicNumbers.Channel.NAME).replace(disallowedChara, "")
             if(new.isBlank()) "\uD83D\uDD34-live" else new
         }
 

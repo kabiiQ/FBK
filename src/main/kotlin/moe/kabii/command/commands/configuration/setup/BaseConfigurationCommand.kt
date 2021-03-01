@@ -293,7 +293,8 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     return false
                 }
                 element.prop.set(instance, input.toString())
-                updatedEmbed(element, input).subscribe()
+                val output = DurationFormatter(input).inputTime
+                updatedEmbed(element, output).subscribe()
                 return true
             }
             is ViewElement<*, *> -> {

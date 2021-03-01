@@ -114,14 +114,12 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     }
 
                     val dbChannel = MongoStreamChannel.of(streamInfo)
-                    if(mark.toLowerCase() == "none") {
+                    if(arrayOf("none", "reset", "remove").any(mark.toLowerCase()::equals)) {
 
-                        val removed = feature.marks.removeIf { existing ->
+                        feature.marks.removeIf { existing ->
                             existing.channel == dbChannel
                         }
-                        if(removed) {
-                            embed("The live mark for **${streamInfo.displayName}")
-                        }
+                        embed("The live mark for **${streamInfo.displayName}** has been removed.").awaitSingle()
                     } else {
                         val newMark = ChannelMark(dbChannel, mark)
                         feature.marks.removeIf { existing ->

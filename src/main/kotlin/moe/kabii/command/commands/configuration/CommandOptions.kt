@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
+import moe.kabii.structure.DiscordBot
 
 object CommandOptions : CommandContainer {
     object Prefix : Command("prefix", "setprefix", "prefix-set", "set-prefix", "changeprefix") {
@@ -22,7 +23,7 @@ object CommandOptions : CommandContainer {
                 member.verify(Permission.MANAGE_GUILD)
                 config.prefix = args[0]
                 config.save()
-                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible using the global bot prefix (;;)").awaitSingle()
+                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible by using a mention as the prefix: <@${DiscordBot.selfId.asString()}>").awaitSingle()
             }
         }
     }
