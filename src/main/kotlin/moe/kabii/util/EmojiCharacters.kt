@@ -17,4 +17,13 @@ object EmojiCharacters {
     const val redSquare = "\uD83D\uDFE5"
 
     const val translation = "🗣️"
+
+    const val spacer = "<:BG:816785362625495072>"
+
+    object PS2 {
+        const val vs = "<:VS:816636017288806431>"
+        const val nc = "<:NC:816636016982097980>"
+        const val tr = "<:TR:816636016978034778>"
+        const val ns = "NS"
+    }
 }

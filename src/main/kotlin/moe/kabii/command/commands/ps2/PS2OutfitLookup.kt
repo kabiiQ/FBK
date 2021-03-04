@@ -1,0 +1,70 @@
+package moe.kabii.command.commands.ps2
+
+import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.Command
+import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.ps2.PS2Parser
+import moe.kabii.ps2.json.PS2Outfit
+import moe.kabii.ps2.json.PS2OutfitMember
+
+object PS2OutfitLookupCommands : CommandContainer {
+
+    object PS2OutfitLookupByTag : Command("ps2outfit", "ps2outfit:tag") {
+        override val wikiPath: String? = null // todo
+
+        init {
+            discord {
+                if(args.isEmpty()) {
+                    usage("**ps2outfit** is used to look up and outfit by their tag. **ps2outfit:name** can be used to look up by name.", "ps2outfit <TAG>")
+                    return@discord
+                }
+                wrapLookup(this, args[0], PS2Parser::searchOutfitByTag)
+            }
+        }
+    }
+
+    object PS2OutfitLookupByName : Command("ps2outfit:name") {
+        override val wikiPath: String? = null // todo
+
+        init {
+            discord {
+                if(args.isEmpty()) {
+                    usage("**ps2outfit:name is used to look up an outfit by their full name, in the event they have no tag.", "ps2outfit:name <outfit name>").awaitSingle()
+                    return@discord
+                }
+                wrapLookup(this, noCmd, PS2Parser::searchOutfitByName)
+            }
+        }
+    }
+
+    private suspend fun wrapLookup(origin: DiscordParameters, query: String, search: (String) -> PS2Outfit?) {
+        val outfit = try {
+            search(query)
+        } catch(e: Exception) {
+            origin.error("Unable to reach PS2 API.").awaitSingle()
+            return
+        }
+        if(outfit != null) displayOutfit(origin, outfit)
+        else origin.error("Unable to find PS2 outfit **'$query'**.").awaitSingle()
+    }
+
+    private suspend fun displayOutfit(origin: DiscordParameters, outfit: PS2Outfit) {
+        val leader = outfit.members.first { member -> member.name == outfit.leader.name }
+        val onlineMembers = outfit.members
+            .minus(leader)
+            .filter(PS2OutfitMember::online)
+            .mapNotNull { member -> member.name?.first }
+
+        val status = if(leader.online) "ONLINE" else "offline"
+        val count = "${onlineMembers.count()}/${outfit.memberCount}"
+        val header = "Outfit leader: ${leader.name?.first} - $status\n\nOnline members ($count):"
+
+        PaginationUtil.paginateListAsDescription(origin, onlineMembers, descHeader = header) { spec ->
+            spec.setColor(outfit.leader.faction.color)
+            spec.setAuthor("[${outfit.tag.orEmpty()}] ${outfit.name}", null, outfit.leader.faction.image)
+
+        }
+    }
+}

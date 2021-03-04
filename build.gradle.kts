@@ -82,6 +82,7 @@ dependencies {
     val ktor = "1.4.1"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
+    implementation("io.ktor:ktor-client-websockets:$ktor")
 
     // database i/o
     // mongodb per-guild configurations

@@ -64,6 +64,9 @@ object Keys : ConfigSpec("") {
     object Google : ConfigSpec() {
         val gTranslatorKey by required<String>("gtranslator_key")
     }
+    object Planetside : ConfigSpec("ps2") {
+        val censusId by required<String>("census_id")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {
