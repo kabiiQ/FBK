@@ -70,7 +70,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
 
             val channelName = if(guild != null) "#${guildChan.name}" else "this channel"
             val title = "Tracked targets in $channelName"
-            PaginationUtil.paginateListAsDescription(this, title, tracks)
+            PaginationUtil.paginateListAsDescription(this, tracks, title)
         }
     }
 }

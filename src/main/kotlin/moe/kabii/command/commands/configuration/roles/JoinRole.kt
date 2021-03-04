@@ -147,7 +147,7 @@ object JoinRole : CommandContainer {
                 }
 
                 val title = "Join auto-roles in ${target.name}"
-                PaginationUtil.paginateListAsDescription(this, title, validConfig)
+                PaginationUtil.paginateListAsDescription(this, validConfig, title)
             }
         }
     }

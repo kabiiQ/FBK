@@ -194,7 +194,7 @@ object RoleReactions : CommandContainer {
                 }
 
                 val title = "Reaction-role messages in ${target.name}"
-                PaginationUtil.paginateListAsDescription(this, title, configs)
+                PaginationUtil.paginateListAsDescription(this, configs, title)
             }
         }
     }

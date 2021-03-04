@@ -28,16 +28,19 @@ object PaginationUtil {
         yield(page.toString().dropLast(1))
     }.toList()
 
-    suspend fun paginateListAsDescription(origin: DiscordParameters, embedTitle: String, elements: List<String>, descHeader: String? = "") {
+    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: ((EmbedCreateSpec) -> Unit)? = null) {
         val pages = partition(MagicNumbers.Embed.DESC, elements)
         var page: Page? = Page(pages.size, 0)
         var first = true
 
         fun applyPageContent(spec: EmbedCreateSpec) {
             val thisPage = page!!
-            spec.setTitle(embedTitle)
+            if(embedTitle != null) spec.setTitle(embedTitle)
             spec.setDescription("$descHeader\n\n${pages[thisPage.current]}")
             spec.setFooter("Page ${thisPage.current + 1}/${thisPage.pageCount}", null)
+            if(detail != null) {
+                detail(spec)
+            }
         }
 
         val message = origin.embed(::applyPageContent).awaitSingle()

@@ -106,7 +106,7 @@ object SelfRoleCommands : CommandContainer {
                 }
 
                 val title = "Command-role configurations for **${target.name}**."
-                PaginationUtil.paginateListAsDescription(this, title, commands)
+                PaginationUtil.paginateListAsDescription(this, commands, title)
             }
         }
     }

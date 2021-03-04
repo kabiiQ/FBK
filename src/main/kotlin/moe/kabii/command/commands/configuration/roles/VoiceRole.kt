@@ -140,7 +140,7 @@ object VoiceRole : CommandContainer {
                     val roleName = if(role is Ok) role.value.name else "Role deleted"
                     "**Channel:** $channelName **-> Role:** $roleName"
                 }
-                PaginationUtil.paginateListAsDescription(this, title, configs, descHeader = header)
+                PaginationUtil.paginateListAsDescription(this, configs, title, header)
             }
         }
     }
