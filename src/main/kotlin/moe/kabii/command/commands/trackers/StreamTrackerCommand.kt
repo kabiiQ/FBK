@@ -10,6 +10,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -34,7 +35,10 @@ object StreamTrackerCommand {
             is Ok -> lookup.value
             is Err -> {
                 val error = when (lookup.value) {
-                    is StreamErr.NotFound -> "Unable to find **${streamTarget.full}** stream **${target.identifier}**."
+                    is StreamErr.NotFound -> {
+                        val ytErr = if(streamTarget is YoutubeTarget) " For YouTube channels, ensure that you are using the 24-digit channnel ID." else ""
+                        "Unable to find **${streamTarget.full}** stream **${target.identifier}**.$ytErr"
+                    }
                     is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
                 origin.error(error).awaitSingle()
