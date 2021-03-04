@@ -17,7 +17,7 @@ object PS2Parser {
     private inline fun <reified R: Any> censusRequest(substr: String): R {
         val request = Request.Builder()
             .get()
-            .url("http://census.daybreakgames.com/s:FBK/get/ps2:v2/$substr")
+            .url("http://census.daybreakgames.com/s:$serviceId/get/ps2:v2/$substr")
             .header("User-Agent", "srkmfbk/1.0")
             .build()
         try {
@@ -55,4 +55,7 @@ object PS2Parser {
 
     fun getServers(): List<PS2Server>
         = censusRequest<PS2ServerResponse>("world?c:limit=20").worlds
+
+    fun searchServerByName(name: String): PS2Server?
+        = this.getServers().find { server -> server.name.toLowerCase() == name }
 }

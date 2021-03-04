@@ -16,14 +16,15 @@ import moe.kabii.discord.trackers.anime.MediaListDeletedException
 import moe.kabii.discord.trackers.anime.MediaListIOException
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
+import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-object MediaTrackerCommand {
-    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
+object MediaTrackerCommand : TrackerCommand {
+    override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the media list feature is enabled here
         if(origin.guild != null) {
             if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
@@ -89,7 +90,7 @@ object MediaTrackerCommand {
             return
         }
 
-        newSuspendedTransaction {
+        propagateTransaction {
 
             // track the list if it's not tracked at all, providing downloaded medialist as a base
             val dbList = TrackedMediaLists.MediaList.find {
@@ -118,7 +119,7 @@ object MediaTrackerCommand {
         }
     }
 
-    suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
         val siteName = site.targetType.full
         val parser = site.parser
@@ -132,11 +133,11 @@ object MediaTrackerCommand {
 
         val channelId = origin.chan.id.asLong()
 
-        newSuspendedTransaction {
+        propagateTransaction {
             val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.toLowerCase(), channelId)
             if (existingTrack == null) {
                 origin.error("**$inputId** is not currently being tracked on $siteName.").awaitSingle()
-                return@newSuspendedTransaction
+                return@propagateTransaction
             }
 
             if(origin.isPM // always allow untrack in pm

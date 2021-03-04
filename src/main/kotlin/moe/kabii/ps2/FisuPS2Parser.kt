@@ -10,8 +10,6 @@ import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
 import java.util.*
-import kotlin.Comparator
-import kotlin.collections.LinkedHashMap
 
 object FisuPS2Parser {
 

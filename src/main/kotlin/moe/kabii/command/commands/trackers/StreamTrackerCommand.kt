@@ -20,8 +20,8 @@ import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-object StreamTrackerCommand {
-    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
+object StreamTrackerCommand : TrackerCommand {
+    override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
         val site = streamTarget.dbSite
 
@@ -73,7 +73,7 @@ object StreamTrackerCommand {
         origin.embed("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!").awaitSingle()
     }
 
-    suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
         // get stream info from username the user provides
         val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
         val site = streamTarget.dbSite

@@ -10,6 +10,7 @@ data class PS2OutfitResponse(
 
 @JsonClass(generateAdapter = true)
 data class PS2Outfit(
+    @Json(name = "outfit_id") val outfitId: String,
     val name: String,
     @Json(name = "alias") val tag: String?,
     @Json(name = "member_count") val _memberCount: String,

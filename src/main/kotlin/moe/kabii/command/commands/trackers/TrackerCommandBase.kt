@@ -6,14 +6,18 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.trackers.AnimeTarget
-import moe.kabii.discord.trackers.StreamingTarget
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.TwitterTarget
+import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.discord.trackers.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 
 private enum class Action { TRACK, UNTRACK }
+
+interface TrackerCommand {
+    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?)
+    suspend fun untrack(origin: DiscordParameters, target: TargetArguments)
+}
 
 object TrackerCommandBase : CommandContainer {
     object TrackCommandBase : Command("track") {
@@ -50,7 +54,7 @@ object TrackerCommandBase : CommandContainer {
     }
 
     private suspend fun trackCommand(origin: DiscordParameters, action: Action) = with(origin) {
-        val features = config.options.featureChannels[chan.id.asLong()]
+        val features = guild?.id?.asLong()?.run(GuildConfigurations.guildConfigurations::get)?.options?.featureChannels?.get(chan.id.asLong())
 
         // limit track command if this is a guild with 'locked' config
         if(guild != null && features != null && features.locked) {
@@ -61,19 +65,15 @@ object TrackerCommandBase : CommandContainer {
         when(val trackTarget = TargetArguments.parseFor(this, args)) {
             is Ok -> {
                 val targetArgs = trackTarget.value
-                when(targetArgs.site) {
-                    is StreamingTarget -> when(action) {
-                        Action.TRACK -> StreamTrackerCommand.track(this, targetArgs, features)
-                        Action.UNTRACK -> StreamTrackerCommand.untrack(this, targetArgs)
-                    }
-                    is AnimeTarget -> when(action) {
-                        Action.TRACK -> MediaTrackerCommand.track(this, targetArgs, features)
-                        Action.UNTRACK -> MediaTrackerCommand.untrack(this, targetArgs)
-                    }
-                    is TwitterTarget -> when(action) {
-                        Action.TRACK -> TwitterTrackerCommand.track(this, targetArgs, features)
-                        Action.UNTRACK -> TwitterTrackerCommand.untrack(this, targetArgs)
-                    }
+                val tracker = when(targetArgs.site) {
+                    is StreamingTarget -> StreamTrackerCommand
+                    is AnimeTarget -> MediaTrackerCommand
+                    is TwitterTarget -> TwitterTrackerCommand
+                    is PS2Target -> PS2TrackerCommand
+                }
+                when(action) {
+                    Action.TRACK -> tracker.track(this, targetArgs, features)
+                    Action.UNTRACK -> tracker.untrack(this, targetArgs)
                 }
             }
             is Err -> {

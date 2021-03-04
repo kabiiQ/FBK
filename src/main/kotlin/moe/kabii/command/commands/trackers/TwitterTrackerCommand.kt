@@ -15,9 +15,9 @@ import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.tryAwait
 
-object TwitterTrackerCommand {
+object TwitterTrackerCommand : TrackerCommand {
 
-    suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
+    override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the twitter feature is enabled here
         if(origin.guild != null) {
             if(features == null || !features.twitterChannel) throw FeatureDisabledException("twitter", origin)
@@ -58,7 +58,7 @@ object TwitterTrackerCommand {
         }
     }
 
-    suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
             origin.error("Invalid Twitter username **${target.identifier}**.").awaitSingle()
             return

@@ -20,6 +20,7 @@ data class FeatureChannel(
     var animeChannel: Boolean = false,
     var logChannel: Boolean = false,
     var musicChannel: Boolean = false,
+    var ps2Channel: Boolean = false,
     var tempChannelCreation: Boolean = false,
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,
@@ -45,6 +46,7 @@ data class FeatureChannel(
             twitterChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
             youtubeChannel && type.isSuperclassOf(YoutubeTarget::class) -> YoutubeTarget
             animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
+            ps2Channel && type.isSuperclassOf(PS2Target::class) -> PS2Target.Player
             else -> null
         }
     }
