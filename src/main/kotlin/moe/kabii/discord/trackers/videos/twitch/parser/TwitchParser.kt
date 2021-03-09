@@ -56,11 +56,7 @@ object TwitchParser {
                         } else if (response.code == 401) {
                             // require new api token
                             delay(200L)
-                            val newToken = oauth.refreshOAuthToken()
-                            newToken.ifErr { e ->
-                                LOG.warn("Error refreshing Twitch OAuth token: ${e.message}")
-                                LOG.debug(e.stackTraceString)
-                            }
+                            oauth.refreshOAuthToken()
                             // retry with new oauth token
                             200L
                         } else {

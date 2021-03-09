@@ -2,13 +2,11 @@ package moe.kabii.discord.trackers.videos.twitch.parser
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
-import moe.kabii.rusty.Result
-import moe.kabii.structure.extensions.fromJsonSafe
+import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
@@ -20,35 +18,32 @@ class Authorization {
 
     private val tokenAdapter = MOSHI.adapter(TwitchTokenResponse::class.java)
 
-    fun refreshOAuthToken(): Result<Unit, Throwable> {
+    fun refreshOAuthToken() {
         val empty = "".toRequestBody()
 
         val tokenURL = "https://id.twitch.tv/oauth2/token?client_id=$clientID&client_secret=$clientSecret&grant_type=client_credentials"
         val request = Request.Builder()
+            .header("User-Agent", "srkmfbk/1.0")
             .post(empty)
             .url(tokenURL)
+            .build()
 
-        val response = OkHTTP.make(request) { response ->
+        val response = OkHTTP.newCall(request).execute()
+        try {
+            val body = response.body!!.string()
+
             if(response.isSuccessful) {
-                response.body!!.string()
-            } else null
-        }.mapOk { response ->
-            // only will return token if response 1) io completed 2) successful http code 3) correct format
-            response?.let(tokenAdapter::fromJsonSafe)?.orNull()
-        }
-
-        return when(response) {
-            is Ok -> {
-                val tokenResponse = response.value
-                if(tokenResponse != null) {
-                    this.accessToken = tokenResponse.accessToken
-                    Keys.config[Keys.Twitch.token] = tokenResponse.accessToken
-                    Keys.saveConfigFile()
-                    Ok(Unit)
-
-                } else Err(IOException())
+                val token = tokenAdapter.fromJson(body) ?: throw IOException("Twitch OAuth JSON problem :: $body")
+                this.accessToken = token.accessToken
+                Keys.config[Keys.Twitch.token] = token.accessToken
+                Keys.saveConfigFile()
             }
-            is Err -> return Err(response.value)
+        } catch(e: Exception) {
+            LOG.warn("Error refreshing Twitch OAuth token: ${e.message}")
+            LOG.debug(e.stackTraceString)
+            throw e
+        } finally {
+            response.close()
         }
     }
 
