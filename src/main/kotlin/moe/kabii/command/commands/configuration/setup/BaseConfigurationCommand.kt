@@ -257,13 +257,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     return false
                 }
                 element.prop.set(instance, bool)
-                updatedEmbed(element, bool).subscribe()
+                updatedEmbed(element, bool).awaitSingle()
                 return true
             }
             is StringElement -> {
                 val input = origin.args.drop(1).joinToString(" ")
                 element.prop.set(instance, input)
-                updatedEmbed(element, input).subscribe()
+                updatedEmbed(element, input).awaitSingle()
                 return true
             }
             is DoubleElement -> {
@@ -273,7 +273,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     return false
                 }
                 element.prop.set(instance, input)
-                updatedEmbed(element, input).subscribe()
+                updatedEmbed(element, input).awaitSingle()
                 return true
             }
             is LongElement -> {
@@ -283,7 +283,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     return false
                 }
                 element.prop.set(instance, input)
-                updatedEmbed(element, input).subscribe()
+                updatedEmbed(element, input).awaitSingle()
                 return true
             }
             is DurationElement -> {
@@ -294,7 +294,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 }
                 element.prop.set(instance, input.toString())
                 val output = DurationFormatter(input).inputTime
-                updatedEmbed(element, output).subscribe()
+                updatedEmbed(element, output).awaitSingle()
                 return true
             }
             is ViewElement<*, *> -> {

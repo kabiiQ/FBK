@@ -455,7 +455,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         } catch(e: Exception) {
             if(e is ClientException && e.status.code() == 403) {
                 LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
+                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
             } else {
                 LOG.warn("${Thread.currentThread().name} - YoutubeNotifier :: Unable to get Discord channel: ${e.message}")
             }

@@ -189,8 +189,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
                             if (err == 403) {
-                                // todo disable feature
-                                TrackerUtil.permissionDenied(target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeChannel, target::delete)
+                                TrackerUtil.permissionDenied(discord, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeChannel, target::delete)
                                 LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
                             } else throw ce
