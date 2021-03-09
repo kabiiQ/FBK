@@ -9,7 +9,9 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.discord.trackers.PS2Target
 import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.ps2.PS2Parser
+import moe.kabii.discord.util.errorColor
+import moe.kabii.discord.util.fbkColor
+import moe.kabii.ps2.polling.PS2Parser
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.stackTraceString
 
@@ -26,6 +28,7 @@ object PS2TrackerCommand : TrackerCommand {
         val input = target.identifier
         val typeName = target.site.alias.firstOrNull()
 
+        val notice = origin.embed("Searching for $typeName **$input**.").awaitSingle()
         val censusId = try {
             getCensusId(ps2Target, input)
         } catch(e: Exception) {
@@ -34,7 +37,10 @@ object PS2TrackerCommand : TrackerCommand {
             return
         }
         if(censusId == null) {
-            origin.error("Unable to find PS2 $typeName **$input**.").awaitSingle()
+            notice.edit { spec -> spec.setEmbed { embed ->
+                errorColor(embed)
+                embed.setDescription("Unable to find PS2 $typeName **$input**.")
+            } }
             return
         }
 
@@ -43,7 +49,10 @@ object PS2TrackerCommand : TrackerCommand {
             // track if not already
             val existing = PS2Tracks.TrackTarget.getExisting(censusId, origin.chan.id.asLong())
             if(existing != null) {
-                origin.error("$typeName/$input is already tracked in this channel.").awaitSingle()
+                notice.edit { spec -> spec.setEmbed {embed ->
+                    errorColor(embed)
+                    embed.setDescription("$typeName/$input is already tracked in this channel.")
+                } }.awaitSingle()
                 return@propagateTransaction
             }
             PS2Tracks.TrackTarget.new {
@@ -51,8 +60,11 @@ object PS2TrackerCommand : TrackerCommand {
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.type = ps2Target.dbType
             }
+            notice.edit { spec -> spec.setEmbed { embed ->
+                fbkColor(embed)
+                embed.setDescription("Now tracking $typeName **$input**.")
+            } }.awaitSingle()
         }
-        origin.embed("Now tracking $typeName **$input**.").awaitSingle()
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
@@ -60,6 +72,7 @@ object PS2TrackerCommand : TrackerCommand {
         val typeName = target.site.alias.firstOrNull()
         val input = target.identifier
 
+        val notice = origin.embed("Searching for $typeName **$input**.").awaitSingle()
         val censusId = try {
             getCensusId(ps2Target, input)
         } catch(e: Exception) {
@@ -68,23 +81,32 @@ object PS2TrackerCommand : TrackerCommand {
             return
         }
         if(censusId == null) {
-            origin.error("Unable to find PS2 $typeName **$input**.").awaitSingle()
+            notice.edit { spec -> spec.setEmbed { embed ->
+                errorColor(embed)
+                embed.setDescription("Unable to find PS2 $typeName **$input**.")
+            } }.awaitSingle()
             return
         }
 
         propagateTransaction {
             val existing = PS2Tracks.TrackTarget.getExisting(censusId, origin.chan.id.asLong())
             if(existing == null) {
-                origin.error("$typeName **$input** is not tracked in this channel.").awaitSingle()
+                notice.edit { spec -> spec.setEmbed { embed ->
+                    errorColor(embed)
+                    embed.setDescription("$typeName **$input** is not tracked in this channel.")
+                } }.awaitSingle()
                 return@propagateTransaction
             }
 
             existing.delete()
-            origin.embed("No longer tracking $typeName **$input**.").awaitSingle()
+            notice.edit { spec -> spec.setEmbed { embed ->
+                fbkColor(embed)
+                embed.setDescription("No longer tracking $typeName **$input**.")
+            } }.awaitSingle()
         }
     }
 
-    private fun getCensusId(target: PS2Target, id: String): Long? {
+    private suspend fun getCensusId(target: PS2Target, id: String): String? {
         return when (target) {
             is PS2Target.Outfit -> when (target) {
                 is PS2Target.Outfit.OutfitByName -> PS2Parser.searchOutfitByName(id)?.outfitId
@@ -94,6 +116,6 @@ object PS2TrackerCommand : TrackerCommand {
             is PS2Target.OutfitCaptures -> PS2Parser.searchOutfitByTag(id)?.outfitId
             is PS2Target.ContinentEvent -> PS2Parser.searchServerByName(id)?.worldIdStr
             is PS2Target.Player -> PS2Parser.searchPlayerByName(id)?.characterId
-        }?.toLong()
+        }
     }
 }

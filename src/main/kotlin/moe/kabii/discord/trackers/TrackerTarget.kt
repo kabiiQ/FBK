@@ -170,20 +170,22 @@ sealed class PS2Target(
     sealed class Outfit(vararg alias: String) : PS2Target("Outfit member logins", *alias) {
         object OutfitById : Outfit()
         object OutfitByName : Outfit("ps2outfit:name")
-        object OutfitByTag : Outfit("ps2outfit:tag", "ps2outfit")
+        object OutfitByTag : Outfit("ps2outfit:tag", "ps2outfit", "psoutfit")
 
         override val dbType: PS2Tracks.PS2EventType
             get() = PS2Tracks.PS2EventType.OUTFIT
     }
-    object Player : PS2Target("Player logins", "ps2player", "ps2players") {
+    object Player : PS2Target("Player logins", "ps2player", "ps2players", "psplayer", "psplayers") {
         override val dbType: PS2Tracks.PS2EventType
             get() = PS2Tracks.PS2EventType.PLAYER
+
+        override fun feedById(id: String): String = "https://www.planetside2.com/players/#!/$id"
     }
-    object ContinentEvent : PS2Target("Continent events", "ps2continent", "ps2cont", "ps2continents") {
+    object ContinentEvent : PS2Target("Continent events", "ps2continent", "ps2cont", "ps2continents", "pscontinent", "pscontinents", "pscont") {
         override val dbType: PS2Tracks.PS2EventType
             get() = PS2Tracks.PS2EventType.CONTINENT
     }
-    object OutfitCaptures : PS2Target("Outfit base captures", "ps2outfitcap", "ps2outfitbasecap", "ps2outfitbase", "ps2basecap") {
+    object OutfitCaptures : PS2Target("Outfit base captures", "ps2caps", "ps2outfitcap", "ps2outfitbasecap", "ps2outfitbase", "ps2basecap", "pscap", "psoutfitcap", "psoutfitbasecap", "psoutfitbase", "psbasecap") {
         override val dbType: PS2Tracks.PS2EventType
             get() = PS2Tracks.PS2EventType.OUTFITCAP
     }
@@ -195,11 +197,17 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
     companion object {
         // a bit rigid design-wise - enforces the current structure of the tracker classes to be nested.
         // however, simple and better than manually adding targets
+        // todo refactor, do less manually/rigidly
         val declaredTargets = TrackerTarget::class.sealedSubclasses
             .flatMap { c -> c.sealedSubclasses }
             .mapNotNull { c -> c.objectInstance }
             .plus(
                 TrackerTarget::class.sealedSubclasses
+                    .mapNotNull { c -> c.objectInstance }
+            ).plus(
+                TrackerTarget::class.sealedSubclasses
+                    .flatMap { c -> c.sealedSubclasses }
+                    .flatMap { c -> c.sealedSubclasses }
                     .mapNotNull { c -> c.objectInstance }
             )
 

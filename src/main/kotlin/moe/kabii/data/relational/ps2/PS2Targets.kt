@@ -22,7 +22,7 @@ object PS2Tracks {
 
     object TrackTargets : IntIdTable() {
         val type = enumeration("event_type", PS2EventType::class)
-        val censusId = long("census_entity_id")
+        val censusId = text("census_entity_id")
         val discordChannel = reference("push_discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
 
         override val primaryKey: PrimaryKey = PrimaryKey(censusId, discordChannel)
@@ -35,7 +35,7 @@ object PS2Tracks {
 
         companion object : IntEntityClass<TrackTarget>(TrackTargets) {
             @WithinExposedContext
-            fun getExisting(censusId: Long, channelId: Long) = TrackTarget.wrapRows(
+            fun getExisting(censusId: String, channelId: Long) = TrackTarget.wrapRows(
                 TrackTargets
                     .innerJoin(DiscordObjects.Channels)
                     .select {

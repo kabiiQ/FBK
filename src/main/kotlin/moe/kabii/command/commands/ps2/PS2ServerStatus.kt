@@ -2,13 +2,13 @@ package moe.kabii.command.commands.ps2
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.ps2.FisuPS2Parser
-import moe.kabii.ps2.PS2Parser
-import moe.kabii.ps2.json.PS2Faction
-import moe.kabii.ps2.json.PS2FisuPopulation
+import moe.kabii.ps2.polling.FisuPS2Parser
+import moe.kabii.ps2.polling.PS2Parser
+import moe.kabii.ps2.polling.json.PS2FisuPopulation
+import moe.kabii.ps2.store.PS2Faction
 import moe.kabii.util.EmojiCharacters
 
-object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status") {
+object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psservers", "pservers", "psstatus", "psserver") {
     override val wikiPath: String? = null
 
     init {

@@ -11,6 +11,7 @@ import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
+import moe.kabii.ps2.wss.PS2EventStream
 
 data class ServiceRequestCooldownSpec(
     val callDelay: Long,
@@ -91,6 +92,9 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             )
             val twitter = TwitterChecker(discord, twitterDelay)
             yield(Thread(twitter, "TwitterChecker"))
+
+            val ps2Websocket = PS2EventStream(discord)
+            yield(Thread(ps2Websocket, "PS2EventStream"))
 
         }.toList()
     }

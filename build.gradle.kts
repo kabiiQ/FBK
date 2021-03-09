@@ -85,6 +85,7 @@ dependencies {
 
     // ps2 websocket
     implementation("org.java-websocket:Java-WebSocket:1.5.1")
+    implementation("com.googlecode.json-simple:json-simple:1.1.1")
 
     // database i/o
     // mongodb per-guild configurations

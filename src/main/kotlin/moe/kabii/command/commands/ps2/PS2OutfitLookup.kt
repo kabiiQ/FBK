@@ -5,9 +5,9 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.conversation.PaginationUtil
-import moe.kabii.ps2.PS2Parser
-import moe.kabii.ps2.json.PS2Outfit
-import moe.kabii.ps2.json.PS2OutfitMember
+import moe.kabii.ps2.polling.PS2Parser
+import moe.kabii.ps2.polling.json.PS2Outfit
+import moe.kabii.ps2.polling.json.PS2OutfitMember
 
 object PS2OutfitLookupCommands : CommandContainer {
 
@@ -39,7 +39,7 @@ object PS2OutfitLookupCommands : CommandContainer {
         }
     }
 
-    private suspend fun wrapLookup(origin: DiscordParameters, query: String, search: (String) -> PS2Outfit?) {
+    private suspend fun wrapLookup(origin: DiscordParameters, query: String, search: suspend (String) -> PS2Outfit?) {
         val outfit = try {
             search(query)
         } catch(e: Exception) {

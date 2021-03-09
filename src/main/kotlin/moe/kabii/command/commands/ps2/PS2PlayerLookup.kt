@@ -2,14 +2,14 @@ package moe.kabii.command.commands.ps2
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.ps2.PS2Parser
+import moe.kabii.ps2.polling.PS2Parser
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois") {
+object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "psplayer", "pswho") {
     override val wikiPath: String? = null
 
     init {

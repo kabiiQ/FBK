@@ -1,7 +1,11 @@
-package moe.kabii.ps2.json
+package moe.kabii.ps2.polling.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.coroutines.launch
+import moe.kabii.ps2.store.PS2DataCache
+import moe.kabii.ps2.store.PS2Faction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 @JsonClass(generateAdapter = true)
 data class PS2OutfitResponse(
@@ -18,6 +22,14 @@ data class PS2Outfit(
     val members: List<PS2OutfitMember>
 ) {
     @Transient val memberCount = _memberCount.toLong()
+
+    init {
+        PS2DataCache.async.launch {
+            newSuspendedTransaction {
+                PS2DataCache.updateOutfit(this@PS2Outfit)
+            }
+        }
+    }
 }
 
 @JsonClass(generateAdapter = true)
@@ -30,10 +42,10 @@ data class PS2OutfitLeader(
 
 @JsonClass(generateAdapter = true)
 data class PS2OutfitMember(
+    @Json(name = "character_id") val characterId: String,
     @Json(name = "member_since_date") val memberSinceDate: String,
     val name: PS2CharacterName?,
-    @Json(name = "online_status") val _onlineStatus: String?,
-    val alias: String?
+    @Json(name = "online_status") val _onlineStatus: String?
 ) {
     @Transient val online = _onlineStatus != "0"
 }

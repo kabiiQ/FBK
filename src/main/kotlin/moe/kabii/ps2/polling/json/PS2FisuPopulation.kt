@@ -1,4 +1,4 @@
-package moe.kabii.ps2.json
+package moe.kabii.ps2.polling.json
 
 import com.squareup.moshi.JsonClass
 

@@ -6,6 +6,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.data.relational.discord.UserLog
+import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
@@ -46,7 +47,9 @@ internal object PostgresConnection {
                 UserLog.GuildRelationships,
                 TwitterFeeds,
                 TwitterTargets,
-                PS2Tracks.TrackTargets
+                PS2Tracks.TrackTargets,
+                PS2Internal.Characters,
+                PS2Internal.Outfits
             )
         }
     }

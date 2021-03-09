@@ -1,4 +1,4 @@
-package moe.kabii.ps2.json
+package moe.kabii.ps2.polling.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -11,9 +11,14 @@ data class PS2ServerResponse(
 @JsonClass(generateAdapter = true)
 data class PS2Server(
     @Json(name = "world_id") val worldIdStr: String,
-    val state: String,
-    @Json(name = "name") val _name: PS2ObjectName
+    val state: String?,
+    @Json(name = "name") val _name: PS2ServerName
 ) {
     @Transient val name = _name.en
     @Transient val worldId = worldIdStr.toInt()
 }
+
+@JsonClass(generateAdapter = true)
+data class PS2ServerName(
+    val en: String
+)

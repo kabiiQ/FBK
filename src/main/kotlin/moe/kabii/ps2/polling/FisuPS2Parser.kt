@@ -1,11 +1,11 @@
-package moe.kabii.ps2
+package moe.kabii.ps2.polling
 
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.ps2.json.PS2FisuPopulation
-import moe.kabii.ps2.json.PS2FisuPopulationResponse
-import moe.kabii.ps2.json.PS2Server
+import moe.kabii.ps2.polling.json.PS2FisuPopulation
+import moe.kabii.ps2.polling.json.PS2FisuPopulationResponse
+import moe.kabii.ps2.polling.json.PS2Server
 import moe.kabii.structure.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
