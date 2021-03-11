@@ -170,7 +170,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                         existing.channel == dbChannel
                     }?.mark
                 }.joinToString("")
-            val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".take(MagicNumbers.Channel.NAME).replace(disallowedChara, "")
+            val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".replace(disallowedChara, "").take(MagicNumbers.Channel.NAME)
             if(new.isBlank()) "\uD83D\uDD34-live" else new
         }
 
@@ -178,29 +178,29 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         if(newName == currentName) return
 
         LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
-        try {
-            val wrapper = EditableChannelWrapper(
-                name = newName
-            )
-            renameScope.launch {
+        val wrapper = EditableChannelWrapper(
+            name = newName
+        )
+        renameScope.launch {
+            try {
                 when (guildChan) {
                     is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
                     is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
                     else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
                 }
+            } catch(ce: ClientException) {
+                if(ce.status.code() == 403) {
+                    guildChan.createEmbed { spec ->
+                        errorColor(spec)
+                        spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
+                    }.awaitSingle()
+                } else if(ce.status.code() == 400) {
+                    guildChan.createEmbed { spec ->
+                        errorColor(spec)
+                        spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
+                    }.awaitSingle()
+                } else throw ce
             }
-        } catch(ce: ClientException) {
-            if(ce.status.code() == 403) {
-                guildChan.createEmbed { spec ->
-                    errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
-                }.awaitSingle()
-            } else if(ce.status.code() == 400) {
-                guildChan.createEmbed { spec ->
-                    errorColor(spec)
-                    spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
-                }.awaitSingle()
-            } else throw ce
         }
     }
 }

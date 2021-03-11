@@ -2,10 +2,12 @@ package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.util.MagicNumbers
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.structure.EmbedBlock
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
+import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import kotlin.reflect.KMutableProperty1
 
@@ -110,7 +112,12 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 module.elements.mapIndexedNotNull { id, element ->
                     if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${getValue(element)}" else null
                 }.run {
-                    if(isNotEmpty()) addField("Custom Settings:", joinToString("\n"), false)
+                    if(isNotEmpty())
+                        addField(
+                            "Custom Settings:",
+                            StringUtils.abbreviate(joinToString("\n"), MagicNumbers.Embed.FIELD.VALUE),
+                            false
+                        )
                 }
                 setFooter("\"exit\" to save and exit immediately.", null)
             }
@@ -182,7 +189,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 setTitle("Current ${module.name} configuration:")
                 module.elements.forEach { element ->
                     val raw = getValue(element)
-                    val value = if(raw.isBlank()) "<NONE>" else raw
+                    val value = if(raw.isBlank()) "<NONE>" else StringUtils.abbreviate(raw, MagicNumbers.Embed.FIELD.VALUE)
                     addField(getName(element), value, true)
                 }
             }.awaitSingle()
