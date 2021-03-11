@@ -234,7 +234,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                     val mention = mentionRole?.mention
                     val newNotification = try {
                         chan.createMessage { spec ->
-                            if (mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
+                            if (mention != null) spec.setContent(mention)
                             spec.setEmbed(embed.block)
                         }.awaitSingle()
                     } catch (ce: ClientException) {

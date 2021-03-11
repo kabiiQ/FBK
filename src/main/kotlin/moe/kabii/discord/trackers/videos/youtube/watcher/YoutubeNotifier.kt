@@ -297,7 +297,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
             chan.createMessage { spec ->
-                if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
+                if(mention != null) spec.setContent(mention)
                 val embed: EmbedBlock = {
                     setColor(uploadColor)
                     setAuthor("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar)
@@ -398,7 +398,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val sinceStr = if(startTime != null) " since " else " "
 
             val newNotification = chan.createMessage { spec ->
-                if(mention != null && guildConfig!!.guildSettings.followRoles) spec.setContent(mention)
+                if(mention != null) spec.setContent(mention)
                 val embed: EmbedBlock = {
 
                     // only a slight output change if this is premiere vs. live stream

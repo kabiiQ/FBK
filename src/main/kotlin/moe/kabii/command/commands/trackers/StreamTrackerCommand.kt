@@ -16,7 +16,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.success
 import moe.kabii.structure.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
@@ -98,25 +97,6 @@ object StreamTrackerCommand : TrackerCommand {
                         || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
                         || origin.author.id.asLong() == newSuspendedTransaction { dbTarget.tracker.userID }
             ) {
-
-                if (origin.guild != null) {
-                    val streamChannel = dbTarget.streamChannel
-                    // check that this stream is not tracked in this guild
-                    val oldMentionRole = TrackedStreams.Mention.getMentionsFor(origin.guild.id, streamChannel.siteChannelID)
-                        .filter(TrackedStreams.Mention::isAutomaticSet)
-                        .singleOrNull { mentionRole ->
-                            // check that this stream is not tracked in this guild
-                            TrackedStreams.Target
-                                .getForGuild(origin.guild.id, streamChannel)
-                                .empty()
-                        }
-                    if (oldMentionRole != null) {
-                        // we can delete role if this stream had one and it is not in use and we created it (automatic)
-                        origin.guild.getRoleById(oldMentionRole.mentionRole.snowflake)
-                            .flatMap { role -> role.delete("Stream untracked.") }
-                            .success().awaitSingle()
-                    }
-                }
                 dbTarget.delete()
                 origin.embed("No longer tracking **${streamInfo.displayName}**.").awaitSingle()
             } else {

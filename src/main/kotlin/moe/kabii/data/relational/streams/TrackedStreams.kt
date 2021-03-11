@@ -101,7 +101,6 @@ object TrackedStreams {
         val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id").uniqueIndex()
-        val isAutomaticSet = bool("is_automatic")
 
         override val primaryKey = PrimaryKey(streamChannel, guild)
     }
@@ -110,7 +109,6 @@ object TrackedStreams {
         var stream by StreamChannel referencedOn Mentions.streamChannel
         var guild by DiscordObjects.Guild referencedOn Mentions.guild
         var mentionRole by Mentions.mentionRole
-        var isAutomaticSet by Mentions.isAutomaticSet
 
         companion object : IntEntityClass<Mention>(Mentions) {
             @WithinExposedContext

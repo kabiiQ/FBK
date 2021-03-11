@@ -4,7 +4,6 @@ import moe.kabii.data.relational.streams.TrackedStreams
 
 data class GuildSettings(
     var embedMessages: Boolean = true,
-    var followRoles: Boolean = true,
     var reassignRoles: Boolean = false,
     var defaultFollow: StreamInfo? = null,
     var twitchURLInfo: Boolean = false,

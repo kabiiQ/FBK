@@ -22,7 +22,6 @@ import moe.kabii.ps2.store.PS2DataCache
 import moe.kabii.ps2.store.PS2Faction
 import moe.kabii.structure.WithinExposedContext
 import moe.kabii.structure.extensions.applicationLoop
-import moe.kabii.structure.extensions.propagateTransaction
 import moe.kabii.structure.extensions.snowflake
 import moe.kabii.structure.extensions.stackTraceString
 import org.jetbrains.exposed.sql.and
