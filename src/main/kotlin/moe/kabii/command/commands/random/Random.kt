@@ -3,9 +3,9 @@ package moe.kabii.command.commands.random
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.structure.extensions.mapNotNull
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.reply
+import moe.kabii.util.extensions.mapNotNull
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.reply
 
 object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {

@@ -1,4 +1,4 @@
-package moe.kabii.discord.util
+package moe.kabii.util.constants
 
 object MagicNumbers {
     object Channel {

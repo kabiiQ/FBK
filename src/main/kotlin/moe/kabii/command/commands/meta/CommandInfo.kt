@@ -3,7 +3,7 @@ package moe.kabii.command.commands.meta
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.SourcePaths
+import moe.kabii.discord.util.SourcePaths
 
 object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
     override val wikiPath = "Bot-Meta-Commands#command-information"

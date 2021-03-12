@@ -13,8 +13,8 @@ import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.extensions.propagateTransaction
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
 object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidtrack", "youtubevid", "youtubevideo") {

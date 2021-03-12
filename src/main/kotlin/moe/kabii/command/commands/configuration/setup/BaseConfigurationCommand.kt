@@ -2,9 +2,9 @@ package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.util.MagicNumbers
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.EmbedBlock
+import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import org.apache.commons.lang3.StringUtils

@@ -8,8 +8,8 @@ import moe.kabii.data.relational.streams.youtube.FeedSubscription
 import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
-import moe.kabii.structure.extensions.applicationLoop
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.applicationLoop
+import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime

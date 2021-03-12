@@ -3,8 +3,8 @@ package moe.kabii.discord.conversation
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.util.MagicNumbers
-import moe.kabii.structure.extensions.mod
+import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.mod
 
 /**
  * @param pageCount - the actual number of pages

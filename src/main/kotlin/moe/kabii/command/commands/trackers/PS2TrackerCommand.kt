@@ -12,8 +12,8 @@ import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.ps2.polling.PS2Parser
-import moe.kabii.structure.extensions.propagateTransaction
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.stackTraceString
 
 object PS2TrackerCommand : TrackerCommand {
 

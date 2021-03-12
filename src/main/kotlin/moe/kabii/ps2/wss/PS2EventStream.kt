@@ -20,10 +20,10 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.ps2.store.PS2DataCache
 import moe.kabii.ps2.store.PS2Faction
-import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.applicationLoop
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.applicationLoop
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.net.URI

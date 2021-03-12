@@ -16,10 +16,10 @@ import moe.kabii.discord.trackers.anime.MediaListDeletedException
 import moe.kabii.discord.trackers.anime.MediaListIOException
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.propagateTransaction
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 

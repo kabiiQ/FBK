@@ -10,7 +10,7 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
-import moe.kabii.util.RGB
+import moe.kabii.discord.util.RGB
 import okhttp3.Request
 import java.awt.Color
 import java.awt.image.BufferedImage

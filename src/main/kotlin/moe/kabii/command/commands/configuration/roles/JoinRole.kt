@@ -9,8 +9,8 @@ import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 
 object JoinRole : CommandContainer {
     private val inviteCode = Regex("(?:i:)([a-zA-Z0-9]{4,8})")

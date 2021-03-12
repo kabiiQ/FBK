@@ -1,4 +1,4 @@
-package moe.kabii.util
+package moe.kabii.util.formatting
 
 object NumberUtil {
     fun getRanges(values: Collection<Int>): List<IntRange> {

@@ -1,4 +1,4 @@
-package moe.kabii.structure.extensions
+package moe.kabii.util.extensions
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.squareup.moshi.JsonAdapter

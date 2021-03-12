@@ -7,8 +7,8 @@ import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.fromJsonSafe
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.fromJsonSafe
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
 

@@ -11,7 +11,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.games.GameManager
 import moe.kabii.discord.games.connect4.Connect4Game
-import moe.kabii.structure.extensions.orNull
+import moe.kabii.util.extensions.orNull
 import reactor.core.publisher.Mono
 
 object GameResponseHandler {

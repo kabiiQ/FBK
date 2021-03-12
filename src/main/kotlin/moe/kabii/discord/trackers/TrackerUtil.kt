@@ -14,9 +14,9 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.util.errorColor
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
 import kotlin.reflect.KMutableProperty1
 
 object TrackerUtil {

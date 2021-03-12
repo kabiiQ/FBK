@@ -5,7 +5,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.twitter.json.*
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.time.Duration
 import java.time.Instant

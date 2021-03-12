@@ -6,8 +6,8 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.tryAwait
 
 object InviteWatcher {
     private val invites: MutableMap<Long, MutableMap<String, Int>> = mutableMapOf()

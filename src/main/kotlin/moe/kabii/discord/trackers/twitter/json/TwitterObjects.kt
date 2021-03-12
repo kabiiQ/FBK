@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.discord.trackers.twitter.TwitterParser
-import moe.kabii.util.URLUtil
+import moe.kabii.util.constants.URLUtil
 import java.time.Instant
 
 @JsonClass(generateAdapter = true)

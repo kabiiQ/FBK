@@ -5,7 +5,7 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.tryAwait
 
 object BotState : AudioCommandContainer {
     object AudioReset : Command("restart", "reconnect") {

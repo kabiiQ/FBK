@@ -5,7 +5,7 @@ import discord4j.core.`object`.audit.ActionType
 import discord4j.core.`object`.audit.AuditLogEntry
 import discord4j.core.`object`.audit.ChangeKey
 import moe.kabii.discord.auditlog.AuditableEvent
-import moe.kabii.structure.extensions.orNull
+import moe.kabii.util.extensions.orNull
 
 class AuditRoleUpdate(logChannel: Long, logMessage: Long, guild: Long, val direction: RoleDirection, val roleID: Snowflake, val userID: Snowflake)
     : AuditableEvent(logChannel, logMessage, guild) {

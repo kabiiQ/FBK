@@ -6,9 +6,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.hasPermissions
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.tryAwait
 
 object UserModeration : CommandContainer {
     object SetSlowmode : Command("slowmode", "setslowmode", "set-slowmode") {

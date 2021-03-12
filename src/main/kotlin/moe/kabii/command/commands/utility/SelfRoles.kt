@@ -7,8 +7,8 @@ import moe.kabii.command.PermissionUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.tryAwait
 
 
 object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "self", "selfrole", "togglerole", "roletoggle") {

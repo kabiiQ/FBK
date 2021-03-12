@@ -5,7 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
-import moe.kabii.structure.DiscordBot
+import moe.kabii.discord.util.DiscordBot
 
 object CommandOptions : CommandContainer {
     object Prefix : Command("prefix", "setprefix", "prefix-set", "set-prefix", "changeprefix") {

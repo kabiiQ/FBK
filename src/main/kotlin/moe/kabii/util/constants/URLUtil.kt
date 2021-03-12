@@ -1,4 +1,4 @@
-package moe.kabii.util
+package moe.kabii.util.constants
 
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.trackers.anime.MediaType

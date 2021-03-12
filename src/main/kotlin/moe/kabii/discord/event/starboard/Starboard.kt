@@ -1,4 +1,4 @@
-package moe.kabii.discord.util
+package moe.kabii.discord.event.starboard
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
@@ -12,9 +12,9 @@ import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
-import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.extensions.*
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.discord.util.starColor
+import moe.kabii.util.extensions.*
+import moe.kabii.util.constants.EmojiCharacters
 import java.net.URL
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {

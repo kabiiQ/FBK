@@ -10,7 +10,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.tryAwait
 
 object AudioStateUtil {
     sealed class VoiceValidation {

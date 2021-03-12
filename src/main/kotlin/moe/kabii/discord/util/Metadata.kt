@@ -1,9 +1,9 @@
-package moe.kabii.structure
+package moe.kabii.discord.util
 
 import discord4j.common.util.Snowflake
 import discord4j.common.util.TokenUtil
 import moe.kabii.data.Keys
-import moe.kabii.structure.extensions.snowflake
+import moe.kabii.util.extensions.snowflake
 import java.time.Instant
 
 class Metadata private constructor(

@@ -3,7 +3,7 @@ package moe.kabii.discord.trackers.anime
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import moe.kabii.data.relational.anime.ListSite
-import moe.kabii.util.URLUtil
+import moe.kabii.util.constants.URLUtil
 
 class MediaEmbedBuilder(val media: Media) {
     // store message details until given a discord object to build on - don't store any discord objects

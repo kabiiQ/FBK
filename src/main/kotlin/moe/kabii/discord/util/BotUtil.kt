@@ -5,7 +5,6 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.VoiceChannel
-import moe.kabii.structure.DiscordBot
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 

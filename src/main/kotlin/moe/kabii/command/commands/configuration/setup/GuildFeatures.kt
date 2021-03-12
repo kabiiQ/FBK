@@ -4,7 +4,7 @@ import discord4j.rest.util.Permission
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.GuildSettings
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.constants.EmojiCharacters
 
 object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "configureguild", "configureserver", "guildsettings", "guildfeatures", "guildcfg", "servercfg") {
     override val wikiPath = "Configuration-Commands#the-serverconfig-command"

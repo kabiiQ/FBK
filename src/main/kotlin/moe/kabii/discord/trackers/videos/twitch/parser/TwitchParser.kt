@@ -17,7 +17,7 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.time.Duration
 import java.time.Instant

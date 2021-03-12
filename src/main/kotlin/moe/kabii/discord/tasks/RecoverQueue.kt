@@ -11,8 +11,8 @@ import kotlinx.coroutines.reactor.mono
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 import java.util.concurrent.Executors
 
 object RecoverQueue {

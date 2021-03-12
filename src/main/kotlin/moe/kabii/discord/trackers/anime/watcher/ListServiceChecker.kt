@@ -18,8 +18,8 @@ import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant

@@ -4,21 +4,14 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.util.RoleUtil
-import moe.kabii.structure.extensions.long
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.withEach
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.withEach
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
     suspend fun runChecks(guild: Guild) {
         val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
-
-         // check for empty twitch follower roles
-        guild.roleIds.forEach { roleId ->
-            RoleUtil.removeIfEmptyStreamRole(guild, roleId.long)
-        }
 
         // sync all temporary voice channel states
         val tempChannels = config.tempVoiceChannels.tempChannels

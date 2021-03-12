@@ -5,7 +5,7 @@ import moe.kabii.MOSHI
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.fromJsonSafe
+import moe.kabii.util.extensions.fromJsonSafe
 import java.io.IOException
 
 object MALParser : MediaListParser() {

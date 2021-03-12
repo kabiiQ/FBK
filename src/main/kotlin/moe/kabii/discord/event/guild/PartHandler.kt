@@ -10,15 +10,14 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
-import moe.kabii.structure.extensions.long
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.long
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object PartHandler {
@@ -36,7 +35,6 @@ object PartHandler {
         }
 
         config.logChannels()
-            .map(FeatureChannel::logSettings)
             .filter(LogSettings::partLog)
             .forEach { targetLog ->
                 try {

@@ -8,8 +8,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.structure.extensions.filterNot
-import moe.kabii.structure.extensions.snowflake
+import moe.kabii.util.extensions.filterNot
+import moe.kabii.util.extensions.snowflake
 import reactor.core.publisher.Flux
 
 object Purge : CommandContainer {

@@ -1,4 +1,4 @@
-package moe.kabii.util
+package moe.kabii.util.constants
 
 object EmojiCharacters {
     const val cancel = "\u274C"

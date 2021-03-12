@@ -7,8 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.rusty.Try
-import moe.kabii.structure.EmbedReceiver
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.EmbedReceiver
+import moe.kabii.util.extensions.userAddress
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import java.time.Duration

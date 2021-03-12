@@ -7,7 +7,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.ps2.polling.PS2Parser
 import moe.kabii.ps2.polling.json.PS2Outfit
 import moe.kabii.ps2.polling.json.PS2Player
-import moe.kabii.structure.WithinExposedContext
+import moe.kabii.util.extensions.WithinExposedContext
 import org.joda.time.DateTime
 import org.joda.time.Duration
 

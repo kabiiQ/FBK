@@ -14,10 +14,10 @@ import moe.kabii.LOG
 import moe.kabii.discord.games.DiscordGame
 import moe.kabii.discord.games.GameManager
 import moe.kabii.discord.util.errorColor
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.constants.EmojiCharacters
 import reactor.core.publisher.Mono
 
 data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake) {

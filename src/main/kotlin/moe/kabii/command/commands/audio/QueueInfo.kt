@@ -5,9 +5,9 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.util.MagicNumbers
-import moe.kabii.structure.extensions.s
-import moe.kabii.util.URLUtil
+import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.s
+import moe.kabii.util.constants.URLUtil
 import org.apache.commons.lang3.StringUtils
 
 object QueueInfo : AudioCommandContainer {

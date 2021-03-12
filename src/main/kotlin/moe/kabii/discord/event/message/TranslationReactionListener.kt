@@ -8,12 +8,12 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.translation.Translator
-import moe.kabii.discord.util.MagicNumbers
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.createJumpLink
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.userAddress
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.extensions.createJumpLink
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.constants.EmojiCharacters
 import org.apache.commons.lang3.StringUtils
 
 object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {

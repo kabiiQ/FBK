@@ -12,15 +12,14 @@ import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.DiscordBot
-import moe.kabii.structure.extensions.*
+import moe.kabii.discord.util.DiscordBot
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class MessageHandler(val manager: CommandManager) {
@@ -44,7 +43,6 @@ class MessageHandler(val manager: CommandManager) {
         if (config != null) {
             // log messages if this server has an edit/delete log
             val log = config.logChannels()
-                .map(FeatureChannel::logSettings)
                 .filter { chan -> chan.editLog || chan.deleteLog }
                 .any()
             if(log) {

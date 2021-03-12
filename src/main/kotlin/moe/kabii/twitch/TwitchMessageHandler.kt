@@ -9,8 +9,8 @@ import moe.kabii.command.params.TwitchParameters
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TwitchConfig
-import moe.kabii.structure.extensions.reply
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.reply
+import moe.kabii.util.extensions.stackTraceString
 
 class TwitchMessageHandler(val manager: CommandManager) {
     fun handle(event: ChannelMessageEvent) {

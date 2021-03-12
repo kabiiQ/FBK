@@ -9,7 +9,7 @@ import moe.kabii.ps2.polling.json.PS2Facility
 import moe.kabii.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.ps2.polling.json.PS2Server
 import moe.kabii.ps2.polling.json.PS2Zone
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.constants.EmojiCharacters
 import kotlin.reflect.KProperty1
 
 /*

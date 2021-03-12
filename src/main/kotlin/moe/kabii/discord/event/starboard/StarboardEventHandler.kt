@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.message
+package moe.kabii.discord.event.starboard
 
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
@@ -7,9 +7,9 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.structure.DiscordBot
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.discord.util.DiscordBot
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.constants.EmojiCharacters
 
 object StarboardEventHandler {
     object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {

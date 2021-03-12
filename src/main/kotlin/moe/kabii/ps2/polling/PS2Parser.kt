@@ -5,7 +5,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.Keys
 import moe.kabii.ps2.polling.json.*
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.apache.commons.lang.StringEscapeUtils

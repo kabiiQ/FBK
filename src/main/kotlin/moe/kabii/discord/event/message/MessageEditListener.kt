@@ -6,12 +6,11 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEvent::class) {
@@ -22,7 +21,6 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
 
         val config = GuildConfigurations.getOrCreateGuild(guildID.asLong())
         val logs = config.logChannels()
-            .map(FeatureChannel::logSettings)
             .filter { channel -> channel.editLog || channel.deleteLog }
 
         val oldMessage = transaction {

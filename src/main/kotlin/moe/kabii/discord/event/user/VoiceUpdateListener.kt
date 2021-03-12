@@ -10,15 +10,14 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.logColor
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.DiscordBot
-import moe.kabii.structure.extensions.*
+import moe.kabii.discord.util.DiscordBot
+import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
@@ -48,7 +47,6 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
 
         // voice logs
         config.logChannels()
-            .map(FeatureChannel::logSettings)
             .filter(LogSettings::voiceLog)
             .filter { log -> log.shouldInclude(user) }
             .forEach { targetLog ->

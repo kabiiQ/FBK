@@ -2,7 +2,7 @@ package moe.kabii.command.commands.utility
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.constants.EmojiCharacters
 
 object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojiletters", "emojiletter", "regionalindicator", "emojitext", "textemoji", "textemojis", "textmoji", "textmojis") {
     override val wikiPath = "Other-Commands#text-to-regional-indicator-emoji-"

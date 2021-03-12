@@ -2,8 +2,8 @@ package moe.kabii.command.commands.admin
 
 import discord4j.core.`object`.entity.channel.MessageChannel
 import moe.kabii.command.Command
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 
 object Say : Command("botsay", "say") {
     override val wikiPath: String? = null

@@ -6,7 +6,7 @@ import moe.kabii.ps2.polling.json.PS2Server
 import moe.kabii.ps2.polling.json.PS2Zone
 import moe.kabii.ps2.store.PS2Faction
 import moe.kabii.ps2.store.PS2StaticData
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import org.json.simple.JSONObject
 import org.json.simple.JSONValue
 

@@ -10,9 +10,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 import reactor.core.publisher.Mono
 import java.time.Duration
 

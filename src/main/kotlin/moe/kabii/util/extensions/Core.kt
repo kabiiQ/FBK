@@ -1,4 +1,4 @@
-package moe.kabii.structure.extensions
+package moe.kabii.util.extensions
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG

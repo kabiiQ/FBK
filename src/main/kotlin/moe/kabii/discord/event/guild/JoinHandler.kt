@@ -9,16 +9,15 @@ import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.discord.invite.InviteWatcher
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.success
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.success
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object JoinHandler {
@@ -87,7 +86,6 @@ object JoinHandler {
         // send log message
 
         config.logChannels()
-            .map(FeatureChannel::logSettings)
             .filter(LogSettings::joinLog)
             .forEach { targetLog ->
                 try {

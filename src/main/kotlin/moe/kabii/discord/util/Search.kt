@@ -10,9 +10,9 @@ import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.userAddress
 import java.util.*
 
 object Search {

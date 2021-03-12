@@ -2,7 +2,7 @@ package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity

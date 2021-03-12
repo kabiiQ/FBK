@@ -2,7 +2,7 @@ package moe.kabii.command.commands.random
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.structure.extensions.reply
+import moe.kabii.util.extensions.reply
 
 
 object Vinglish : Command("vinglish", "garble", "pepega") {

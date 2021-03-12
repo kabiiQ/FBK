@@ -11,7 +11,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
@@ -20,7 +20,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
         val config = GuildConfigurations.guildConfigurations[guildId] ?: return
 
         val deleteLogs = config.logChannels()
-            .filter { channel -> channel.logSettings.deleteLog }
+            .filter { channel -> channel.deleteLog }
 
         if(deleteLogs.none()) return
 
@@ -74,7 +74,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
                         // channel is deleted or we don't have send message perms. remove log configuration
                         LOG.info("Unable to send message delete log for channel '${targetLog.channelID}'. Disabling message deletion log")
                         LOG.debug(ce.stackTraceString)
-                        targetLog.logSettings.deleteLog = false
+                        targetLog.deleteLog = false
                         config.save()
                     } else throw ce
                 }

@@ -1,4 +1,4 @@
-package moe.kabii.structure.extensions
+package moe.kabii.util.extensions
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Guild

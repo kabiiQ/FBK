@@ -14,8 +14,8 @@ import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.util.URLUtil
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.constants.URLUtil
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 

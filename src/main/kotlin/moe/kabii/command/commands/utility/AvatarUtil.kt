@@ -5,9 +5,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.userAddress
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {

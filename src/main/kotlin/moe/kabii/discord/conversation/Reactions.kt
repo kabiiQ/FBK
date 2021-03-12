@@ -4,9 +4,9 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.structure.UserID
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryBlock
+import moe.kabii.util.extensions.UserID
+import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.tryBlock
 import reactor.core.publisher.Flux
 
 typealias Complete = Boolean

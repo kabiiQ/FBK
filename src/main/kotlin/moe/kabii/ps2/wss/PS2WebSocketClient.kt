@@ -46,8 +46,7 @@ class PS2WebSocketClient(val channel: SendChannel<WSSEvent>, addr: URI) : WebSoc
         context.launch {
             val event = deserializer.fromPayload(message)
             if(event != null) {
-                // todo trace
-                LOG.trace("PS2 event decoded: $event")
+                //LOG.trace("PS2 event decoded: $event")
                 channel.send(event)
             }
         }

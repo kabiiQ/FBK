@@ -11,7 +11,7 @@ import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.conversation.ReactionInfo
 import moe.kabii.discord.conversation.ReactionListener
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.constants.EmojiCharacters
 import reactor.core.publisher.Mono
 
 object Drag : Command("drag", "move", "pull") {

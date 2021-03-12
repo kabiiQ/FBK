@@ -9,9 +9,9 @@ import moe.kabii.discord.games.GameManager
 import moe.kabii.discord.games.connect4.Connect4Game
 import moe.kabii.discord.games.connect4.EmbedInfo
 import moe.kabii.discord.util.Search
-import moe.kabii.structure.extensions.success
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.userAddress
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 

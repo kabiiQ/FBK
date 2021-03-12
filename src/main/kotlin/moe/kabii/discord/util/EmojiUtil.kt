@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import discord4j.core.`object`.reaction.ReactionEmoji
 import emoji4j.EmojiUtils
-import moe.kabii.structure.extensions.snowflake
+import moe.kabii.util.extensions.snowflake
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,

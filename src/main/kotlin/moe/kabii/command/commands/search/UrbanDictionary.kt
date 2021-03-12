@@ -11,7 +11,7 @@ import moe.kabii.command.Command
 import moe.kabii.discord.conversation.Page
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 

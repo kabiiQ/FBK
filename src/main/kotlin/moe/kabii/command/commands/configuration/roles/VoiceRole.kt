@@ -10,8 +10,8 @@ import moe.kabii.data.mongodb.guilds.VoiceConfiguration
 import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 
 object VoiceRole : CommandContainer {
     object AssignVoiceRole : Command("voiceroleassign", "voicerolecreate", "voiceroleadd", "assignvoicerole") {

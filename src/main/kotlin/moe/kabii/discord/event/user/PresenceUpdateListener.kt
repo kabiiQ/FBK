@@ -6,11 +6,10 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.logColor
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.*
 
 object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdateEvent::class) {
     override suspend fun handle(event: PresenceUpdateEvent) {
@@ -20,7 +19,7 @@ object PresenceUpdateListener : EventListener<PresenceUpdateEvent>(PresenceUpdat
         val config = GuildConfigurations.getOrCreateGuild(event.guildId.asLong())
 
         val logChannels by lazy {
-            config.logChannels().map(FeatureChannel::logSettings)
+            config.logChannels()
         }
 
         // avatarlogs

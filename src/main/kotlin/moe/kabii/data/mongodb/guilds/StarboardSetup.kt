@@ -2,7 +2,7 @@ package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.Guild
 import moe.kabii.data.mongodb.GuildConfiguration
-import moe.kabii.discord.util.Starboard
+import moe.kabii.discord.event.starboard.Starboard
 
 data class StarboardSetup(
     var channel: Long,

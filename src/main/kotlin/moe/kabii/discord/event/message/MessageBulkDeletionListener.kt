@@ -8,15 +8,15 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.logColor
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
 
 object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(MessageBulkDeleteEvent::class) {
     override suspend fun handle(event: MessageBulkDeleteEvent) {
         val config = GuildConfigurations.getOrCreateGuild(event.guildId.asLong())
 
         val deleteLogs = config.logChannels()
-            .filter { channel -> channel.logSettings.deleteLog }
+            .filter { channel -> channel.deleteLog }
         if(deleteLogs.none()) return
 
         val eventChannel = event.channel
@@ -51,7 +51,7 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
                         // channel is deleted or we don't have send message perms. remove log configuration
                         LOG.info("Unable to send bulk delete log for channel '${targetLog.channelID}'. Disabling message deletion log.")
                         LOG.debug(ce.stackTraceString)
-                        targetLog.logSettings.deleteLog = false
+                        targetLog.deleteLog = false
                         config.save()
                     } else throw ce
                 }

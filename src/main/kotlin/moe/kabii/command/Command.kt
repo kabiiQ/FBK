@@ -4,7 +4,7 @@ import discord4j.rest.util.Permission
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.params.TerminalParameters
 import moe.kabii.command.params.TwitchParameters
-import moe.kabii.structure.SourcePaths
+import moe.kabii.discord.util.SourcePaths
 
 // Now purely aesthetic, Command inheritance is reflectively searched
 interface CommandContainer

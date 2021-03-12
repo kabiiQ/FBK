@@ -4,8 +4,8 @@ import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
-import moe.kabii.structure.extensions.applicationLoop
-import moe.kabii.structure.extensions.propagateTransaction
+import moe.kabii.util.extensions.applicationLoop
+import moe.kabii.util.extensions.propagateTransaction
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max

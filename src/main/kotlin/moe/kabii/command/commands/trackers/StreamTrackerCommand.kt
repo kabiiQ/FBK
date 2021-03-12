@@ -14,9 +14,9 @@ import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.extensions.propagateTransaction
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object StreamTrackerCommand : TrackerCommand {

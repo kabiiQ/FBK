@@ -1,6 +1,6 @@
 package moe.kabii.discord.trackers.videos.youtube
 
-import moe.kabii.util.URLUtil
+import moe.kabii.util.constants.URLUtil
 import java.time.Duration
 import java.time.Instant
 

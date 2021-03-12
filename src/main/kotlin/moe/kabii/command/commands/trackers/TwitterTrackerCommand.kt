@@ -11,9 +11,9 @@ import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.twitter.TwitterParser
-import moe.kabii.structure.extensions.propagateTransaction
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
 
 object TwitterTrackerCommand : TrackerCommand {
 

@@ -1,20 +1,16 @@
 package moe.kabii.discord.event.user
 
-import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.RoleUtil
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
@@ -28,12 +24,6 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
         if(old.roleIds != event.currentRoles) {
             val addedRoles = event.currentRoles - old.roleIds
             val removedRoles = old.roleIds - event.currentRoles
-
-            // empty Twitch roles
-            removedRoles.toFlux()
-                .map(Snowflake::long)
-                .flatMap { roleID -> mono { RoleUtil.removeIfEmptyStreamRole(guild, roleID) }}
-                .subscribe()
 
             // exclusive role sets
             // if added role is part of exclusive role set, any other roles in that set from the user
@@ -51,7 +41,6 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
             // post role update log
             val member = event.member.awaitSingle()
             config.logChannels()
-                .map(FeatureChannel::logSettings)
                 .filter(LogSettings::roleUpdateLog)
                 .forEach { targetLog ->
                     try {

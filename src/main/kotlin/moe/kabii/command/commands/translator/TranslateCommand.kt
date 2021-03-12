@@ -5,9 +5,9 @@ import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.translation.Translator
-import moe.kabii.structure.extensions.createJumpLink
-import moe.kabii.structure.extensions.stackTraceString
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.createJumpLink
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.userAddress
 
 object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
     override val wikiPath = "Translator#simple-translation-to-your-default-language-with-translate-most-common"

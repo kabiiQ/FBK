@@ -3,7 +3,7 @@ package moe.kabii.data.mongodb
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
 import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.structure.GuildID
+import moe.kabii.util.extensions.GuildID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
@@ -62,6 +62,11 @@ data class GuildConfiguration(
 
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
+        .map(FeatureChannel::logSettings)
+
+    fun welcomeChannels() = options.featureChannels.values.toList()
+        .filter(FeatureChannel::welcomeChannel)
+        .map(FeatureChannel::welcomeSettings)
 
     suspend fun save() {
         GuildConfigurations.mongoConfigurations.updateOne(this, upsert)

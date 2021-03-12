@@ -6,13 +6,13 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
+import moe.kabii.discord.util.ColorUtil
+import moe.kabii.discord.util.RGB
 import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.errorColor
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.EmbedBlock
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.util.ColorUtil
-import moe.kabii.util.RGB
+import moe.kabii.util.extensions.EmbedBlock
+import moe.kabii.util.extensions.tryAwait
 
 object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
     override val wikiPath = "Moderation-Commands#randomizing-a-roles-color"

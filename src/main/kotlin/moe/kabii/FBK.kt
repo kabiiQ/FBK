@@ -28,9 +28,9 @@ import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.translation.Translator
 import moe.kabii.net.NettyFileServer
-import moe.kabii.structure.Metadata
-import moe.kabii.structure.Uptime
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.discord.util.Metadata
+import moe.kabii.discord.util.Uptime
+import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.twitch.TwitchMessageHandler
 import org.reflections.Reflections

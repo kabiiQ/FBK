@@ -6,10 +6,10 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.structure.extensions.orNull
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.userAddress
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 

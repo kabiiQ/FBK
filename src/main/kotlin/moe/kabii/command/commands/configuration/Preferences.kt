@@ -7,10 +7,10 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.discord.util.MagicNumbers
-import moe.kabii.structure.extensions.snowflake
-import moe.kabii.structure.extensions.tryAwait
-import moe.kabii.structure.extensions.userAddress
+import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.userAddress
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 

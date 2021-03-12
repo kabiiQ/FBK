@@ -21,8 +21,8 @@ import moe.kabii.discord.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.structure.WithinExposedContext
-import moe.kabii.structure.extensions.*
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration

@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.discord
 
-import moe.kabii.structure.extensions.orNull
+import moe.kabii.util.extensions.orNull
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

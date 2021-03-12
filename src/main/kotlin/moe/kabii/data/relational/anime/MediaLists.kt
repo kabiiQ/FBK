@@ -9,7 +9,7 @@ import moe.kabii.discord.trackers.anime.MediaListParser
 import moe.kabii.discord.trackers.anime.anilist.AniListParser
 import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
 import moe.kabii.discord.trackers.anime.mal.MALParser
-import moe.kabii.structure.WithinExposedContext
+import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

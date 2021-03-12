@@ -6,7 +6,7 @@ import moe.kabii.OkHTTP
 import moe.kabii.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.ps2.polling.json.PS2FisuPopulationResponse
 import moe.kabii.ps2.polling.json.PS2Server
-import moe.kabii.structure.extensions.stackTraceString
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
 import java.util.*

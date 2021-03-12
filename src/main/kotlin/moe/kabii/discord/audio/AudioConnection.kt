@@ -9,7 +9,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
-import moe.kabii.structure.extensions.success
+import moe.kabii.util.extensions.success
 
 data class AudioConnection(
     val guild: GuildAudio,

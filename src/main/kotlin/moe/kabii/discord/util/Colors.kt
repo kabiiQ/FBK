@@ -22,3 +22,11 @@ fun logColor(member: Member?, spec: EmbedCreateSpec) =
         .defaultIfEmpty(fbkColor(spec))
 
 fun starColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(16755762))
+
+object ColorUtil {
+    fun hexString(color: Color) = String.format("#%06X", (0xFFFFFF).and(color.rgb))
+}
+
+data class RGB(val r: Int, val g: Int, val b: Int) {
+    constructor(color: Color) : this(color.red, color.green, color.blue)
+}

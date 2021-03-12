@@ -6,7 +6,7 @@ import moe.kabii.ps2.polling.FisuPS2Parser
 import moe.kabii.ps2.polling.PS2Parser
 import moe.kabii.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.ps2.store.PS2Faction
-import moe.kabii.util.EmojiCharacters
+import moe.kabii.util.constants.EmojiCharacters
 
 object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psservers", "pservers", "psstatus", "psserver") {
     override val wikiPath: String? = null
