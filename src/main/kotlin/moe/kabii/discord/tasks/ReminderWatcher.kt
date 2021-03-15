@@ -12,9 +12,9 @@ import moe.kabii.data.relational.discord.Reminder
 import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.util.reminderColor
-import moe.kabii.util.extensions.*
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration

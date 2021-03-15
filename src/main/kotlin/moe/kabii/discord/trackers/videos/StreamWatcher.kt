@@ -20,10 +20,10 @@ import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.EditableChannelWrapper
-import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.discord.util.errorColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait

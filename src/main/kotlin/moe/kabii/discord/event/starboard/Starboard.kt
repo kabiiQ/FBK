@@ -13,8 +13,8 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
 import moe.kabii.discord.util.starColor
-import moe.kabii.util.extensions.*
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.*
 import java.net.URL
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {

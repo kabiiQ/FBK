@@ -20,9 +20,9 @@ import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.translation.Translator
-import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.snowflake

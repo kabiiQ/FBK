@@ -6,8 +6,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.s
 import moe.kabii.util.constants.URLUtil
+import moe.kabii.util.extensions.s
 import org.apache.commons.lang3.StringUtils
 
 object QueueInfo : AudioCommandContainer {

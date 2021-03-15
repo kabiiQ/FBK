@@ -14,11 +14,11 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
+import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.discord.util.DiscordBot
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 

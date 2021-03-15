@@ -11,7 +11,7 @@ import moe.kabii.ps2.polling.json.PS2OutfitMember
 
 object PS2OutfitLookupCommands : CommandContainer {
 
-    object PS2OutfitLookupByTag : Command("ps2outfit", "ps2outfit:tag") {
+    object PS2OutfitLookupByTag : Command("ps2outfit", "ps2outfit:tag", "psoutfit", "psfit", "ps2fit") {
         override val wikiPath: String? = null // todo
 
         init {

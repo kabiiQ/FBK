@@ -2,11 +2,11 @@ package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.discord.util.fbkColor
-import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
+import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.EmbedBlock
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import kotlin.reflect.KMutableProperty1

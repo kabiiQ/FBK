@@ -8,8 +8,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.DiscordBot
-import moe.kabii.util.extensions.orNull
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.orNull
 
 object StarboardEventHandler {
     object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {

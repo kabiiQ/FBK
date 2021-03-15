@@ -27,12 +27,12 @@ import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.translation.Translator
-import moe.kabii.net.NettyFileServer
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.net.NettyFileServer
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.twitch.TwitchMessageHandler
+import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
 

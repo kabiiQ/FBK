@@ -9,8 +9,8 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.discord.util.Search
-import moe.kabii.util.extensions.orNull
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.orNull
 
 object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {
     override val wikiPath = "Starboard#starboard-configuration-starboard"

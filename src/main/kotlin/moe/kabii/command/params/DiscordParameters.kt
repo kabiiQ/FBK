@@ -22,12 +22,8 @@ import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.discord.util.specColor
-import moe.kabii.util.extensions.EmbedBlock
-import moe.kabii.util.extensions.EmbedReceiver
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.tryBlock
-import moe.kabii.util.extensions.userAddress
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 

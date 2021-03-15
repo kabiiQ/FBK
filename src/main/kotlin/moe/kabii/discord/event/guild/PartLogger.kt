@@ -20,7 +20,7 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object PartHandler {
+object PartLogger {
     object PartListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
         override suspend fun handle(event: MemberLeaveEvent) = handlePart(event.guildId, event.user, event.member.orNull())
     }

@@ -20,7 +20,7 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object JoinHandler {
+object JoinLogger {
     object JoinListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
         override suspend fun handle(event: MemberJoinEvent) = handleJoin(event.member)
     }
