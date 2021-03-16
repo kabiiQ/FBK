@@ -34,9 +34,6 @@ class MessageHandler(val manager: CommandManager) {
         if(event.message.author.orNull()?.isBot ?: true) return@launch
         var content = event.message.content
 
-        // only embeds, files, skip any further processing at this time
-        if (content.isBlank()) return@launch
-
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull() // null if pm
         val msgArgs = content.split(" ")
 
@@ -190,7 +187,7 @@ class MessageHandler(val manager: CommandManager) {
         // DISCORD CONVERSATION CALLBACKS
         Conversation.conversations.find { conversation ->
             conversation.criteria.channel == event.message.channelId.asLong()
-                    &&  conversation.criteria.user == author.id.asLong()
-        }?.test(content)
+                    && conversation.criteria.user == author.id.asLong()
+        }?.test(content, full = event.message)
     }
 }

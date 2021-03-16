@@ -1,10 +1,14 @@
 package moe.kabii.command.commands.configuration.setup
 
+import discord4j.core.`object`.entity.Message
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.fbkColor
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
+import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.EmbedBlock
 import org.apache.commons.lang3.StringUtils
@@ -50,6 +54,16 @@ class DurationElement<T>(
     val default: Duration?
 ) : ConfigurationElement<T>(fullName, aliases)
 
+class CustomElement<T, VT>(
+    fullName: String,
+    aliases: List<String>,
+    val prop: KMutableProperty1<T, Any?>,
+    val prompt: String,
+    val default: VT?,
+    val parser: suspend (DiscordParameters, Message) -> Result<VT?, Unit>, // given input, produce value or invalid
+    val value: (T) -> String // given value, produce string for embed output
+) : ConfigurationElement<T>(fullName, aliases)
+
 class ViewElement<T, ANY : Any?>(
     fullName: String,
     aliases: List<String>,
@@ -75,10 +89,12 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             if(duration != null) DurationFormatter(duration).inputTime
             else "disabled"
         }
+        is CustomElement<T, *> -> element.value(instance)
         is ViewElement<T, *> -> element.prop.get(instance).toString()
     }
     private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.aliases.first()})**"
 
+    private val reset = Regex("(reset|none|clear|remove)", RegexOption.IGNORE_CASE)
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         fun updatedEmbed(element: ConfigurationElement<T>, new: Any) = origin.embed {
             setTitle("Configuration Updated")
@@ -110,7 +126,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     addField("Available (Disabled) Features", available, true)
                 }
                 module.elements.mapIndexedNotNull { id, element ->
-                    if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${getValue(element)}" else null
+                    if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${EmojiCharacters.spacer}**=** ${getValue(element)}" else null
                 }.run {
                     if(isNotEmpty())
                         addField(
@@ -141,7 +157,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getString(timeout = null)
                         if(response != null) {
-                            if(response.toLowerCase() == "reset") {
+                            if(response.matches(reset)) {
                                 element.prop.set(instance, element.default)
                             } else {
                                 element.prop.set(instance, response)
@@ -165,6 +181,15 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getDuration(timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response.toString())
+                        prompt.delete().subscribe()
+                    }
+                    is CustomElement<T, *> -> {
+                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val response = origin.getMessage(timeout = embedTimeout)
+                        if(response != null) {
+                            val parsed = element.parser(origin, response)
+                            if(parsed is Ok) element.prop.set(instance, parsed.value)
+                        }
                         prompt.delete().subscribe()
                     }
                     is ViewElement<*, *> -> {
@@ -203,7 +228,8 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         }
         val tag = element.aliases.first()
         // <command> prop -> manual get
-        if(origin.args.size == 1) {
+        // dont run this if this is a custom element w/ attachment
+        if(origin.args.size == 1 && !(element is CustomElement<T, *> && origin.event.message.attachments.isNotEmpty())) {
             origin.embed {
                 setTitle("From ${module.name} configuration:")
                 addField(getName(element), getValue(element), false)
@@ -213,8 +239,9 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         // <command> prop <toggle/reset> -> specific actions
         if(origin.args.size == 2) {
-            when(origin.args[1].toLowerCase()) {
-                "toggle" -> {
+            val arg = origin.args[1].toLowerCase()
+            when {
+                arg.equals("toggle") -> {
                     if(element !is BooleanElement) {
                         origin.error("The setting **$tag** is not a toggle.").awaitSingle()
                         return false
@@ -224,10 +251,11 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     updatedEmbed(element, new).subscribe()
                     return true
                 }
-                "reset" -> {
+                arg.matches(reset) -> {
                     when(element) {
                         is StringElement -> element.prop.set(instance, element.default)
                         is DurationElement -> element.prop.set(instance, element.default?.toString())
+                        is CustomElement<T, *> -> element.prop.set(instance, element.default)
                         else -> {
                             origin.error("The setting **$tag** is not a resettable custom value.").awaitSingle()
                             return false
@@ -303,6 +331,15 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 val output = DurationFormatter(input).inputTime
                 updatedEmbed(element, output).awaitSingle()
                 return true
+            }
+            is CustomElement<T, *> -> {
+                val input = element.parser(origin, origin.event.message)
+                return if(input is Ok) {
+                    element.prop.set(instance, input.value)
+                    val output = element.value(instance)
+                    updatedEmbed(element, output).awaitSingle()
+                    true
+                } else false
             }
             is ViewElement<*, *> -> {
                 origin.error(element.redirection).awaitSingle()

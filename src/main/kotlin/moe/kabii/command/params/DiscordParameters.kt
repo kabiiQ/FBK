@@ -117,6 +117,13 @@ data class DiscordParameters (
     fun embed(info: String) = embed { setDescription(info) }
     fun embed(user: User, info: String) = embed(user) { setDescription(info) }
 
+    suspend fun getMessage(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<Message?> {
+        var (user, channel) = Criteria defaultFor this
+        user = limitDifferentUser ?: user
+        val responseCriteria = ResponseCriteria(user, channel, ResponseType.MESSAGE)
+        Conversation.register(responseCriteria, event.client, it, timeout = timeout)
+    }
+
     suspend fun getString(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<String?> {
         var (user, channel) = Criteria defaultFor this
         user = limitDifferentUser ?: user

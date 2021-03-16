@@ -1,6 +1,7 @@
 package moe.kabii.discord.conversation
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.Message
 import kotlinx.coroutines.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.util.DurationParser
@@ -11,8 +12,8 @@ import kotlin.coroutines.resume
 // bit hacky, but unchecked casts are guaranteed by enum type.
 @Suppress("UNCHECKED_CAST")
 class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener: ReactionListener?) {
-    fun test(message: String) {
-        if(message.isBlank()) return
+    fun test(message: String, full: Message? = null) {
+        if(message.isBlank() && criteria.type != ResponseType.MESSAGE) return
         if(message.toLowerCase().trim() == "exit") {
             coroutine as CancellableContinuation<Any?>
             coroutine.resume(null)
@@ -101,6 +102,13 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
                     cancel()
                 }
             }
+            ResponseType.MESSAGE -> {
+                if(full != null) {
+                    coroutine as CancellableContinuation<Message>
+                    coroutine.resume(full)
+                    cancel()
+                }
+            }
         }
     }
 
@@ -158,7 +166,7 @@ internal class BoolResponseCriteria(user: Long, channel: Long, message: Long?) :
 
 internal class PageResponseCriteria(user: Long, channel: Long, message: Long, val page: Page) : ResponseCriteria(user, channel, ResponseType.PAGE, message)
 
-enum class ResponseType { STR, LINE, BOOL, LONG, PAGE, DOUBLE, DURATION }
+enum class ResponseType { STR, LINE, BOOL, LONG, PAGE, DOUBLE, DURATION, MESSAGE }
 
 enum class Direction(val unicode: String, val identity: String) {
     LEFT("\u25C0", "back"),
