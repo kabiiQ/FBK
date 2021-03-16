@@ -26,3 +26,21 @@ data class LogSettings(
 
     fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, usernameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
 }
+
+data class WelcomeSettings(
+    val channelId: Long,
+    var includeAvatar: Boolean = true,
+    var includeUsername: Boolean = true,
+    var message: String = "",
+    var welcomeTagLine: String = "WELCOME",
+    var imagePath: String? = null,
+    var imageText: String = "Welcome to the server!",
+    var imageTextColor: Int? = defaultColor
+) {
+    fun textColor() = imageTextColor ?: defaultColor
+    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null).any(true::equals)
+
+    companion object {
+        val defaultColor = 0xFFFFFF
+    }
+}

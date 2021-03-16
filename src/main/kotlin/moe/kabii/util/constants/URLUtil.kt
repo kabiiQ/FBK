@@ -4,6 +4,8 @@ import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.trackers.anime.MediaType
 
 object URLUtil {
+    const val colorPicker = "https://htmlcolorcodes.com/color-picker/"
+
     object StreamingSites {
         object Youtube {
             fun thumbnail(videoID: String) = "https://i.ytimg.com/vi/$videoID/maxresdefault.jpg"

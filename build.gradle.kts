@@ -87,6 +87,11 @@ dependencies {
     implementation("org.java-websocket:Java-WebSocket:1.5.1")
     implementation("com.googlecode.json-simple:json-simple:1.1.1")
 
+    // welcome banner image processing
+    implementation("com.twelvemonkeys.imageio:imageio-jpeg:3.6.4")
+    implementation("com.twelvemonkeys.imageio:imageio-psd:3.6.4")
+    implementation("com.twelvemonkeys.imageio:imageio-bmp:3.6.4")
+
     // database i/o
     // mongodb per-guild configurations
     implementation("org.litote.kmongo:kmongo-coroutine:4.2.4")

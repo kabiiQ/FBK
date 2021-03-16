@@ -24,7 +24,8 @@ fun logColor(member: Member?, spec: EmbedCreateSpec) =
 fun starColor(spec: EmbedCreateSpec) = spec.setColor(Color.of(16755762))
 
 object ColorUtil {
-    fun hexString(color: Color) = String.format("#%06X", (0xFFFFFF).and(color.rgb))
+    fun hexString(color: Color) = hexString(color.rgb)
+    fun hexString(color: Int) = String.format("#%06X", 0xFFFFFF and color)
 }
 
 data class RGB(val r: Int, val g: Int, val b: Int) {

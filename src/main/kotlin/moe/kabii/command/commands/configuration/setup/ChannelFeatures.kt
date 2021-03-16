@@ -20,6 +20,7 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr"), FeatureChannel::twitterChannel),
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
+        BooleanElement("User welcome message channel", listOf("welcome", "welcomes", "welcoming"), FeatureChannel::welcomeChannel),
         BooleanElement("PS2 event tracking", listOf("ps2", "planetside", "planetside2"), FeatureChannel::ps2Channel),
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),
         BooleanElement("Limit track command usage to moderators", listOf("lock", "locked", "limit", "limited"), FeatureChannel::locked),
@@ -37,6 +38,8 @@ object ChannelFeatures : CommandContainer {
 
                 val wasLog = features.logChannel
                 val wasAnime = features.animeChannel
+                val wasWelcome = features.welcomeChannel
+
                 val configurator = Configurator(
                     "Feature configuration for #${guildChan.name}",
                     ChannelFeatureModule,
@@ -46,16 +49,24 @@ object ChannelFeatures : CommandContainer {
                     // validate default track target, if configured
                     features.validateDefaultTarget()
 
+                    val notifs = mutableListOf<String>()
 
+
+                    if(!wasWelcome && features.welcomeChannel) {
+                        notifs.add("${chan.mention} is now a user welcoming channel. This can be further configured using the **welcome** command.")
+                    }
+                    if(!wasLog && features.logChannel) {
+                        notifs.add("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.")
+                    }
                     if(!wasAnime && features.animeChannel) {
                         features.locked = false
-                        embed("The **track** command has been unlocked for all users in ${chan.mention} as this is the typical use-case for the anime tracker. To lock the **track** command to channel moderators, you can run **feature lock enable**.").awaitSingle()
+                        notifs.add("The **track** command has been unlocked for all users in ${chan.mention} as this is the typical use-case for the anime tracker. To lock the **track** command to channel moderators, you can run **feature lock enable**.")
                     }
 
                     config.save()
 
-                    if(!wasLog && features.logChannel) {
-                        embed("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.").subscribe()
+                    if(notifs.isNotEmpty()) {
+                        embed(notifs.joinToString("\n\n")).awaitSingle()
                     }
                 }
             }
