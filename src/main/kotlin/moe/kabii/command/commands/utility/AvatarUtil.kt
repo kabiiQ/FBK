@@ -22,7 +22,7 @@ object AvatarUtil : CommandContainer {
                 }
                 embed {
                     setTitle("Avatar for **${targetUser.userAddress()}**")
-                    setImage(targetUser.avatarUrl)
+                    setImage("${targetUser.avatarUrl}?size=256")
                 }.awaitSingle()
             }
         }
