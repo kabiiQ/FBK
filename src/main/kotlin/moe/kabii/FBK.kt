@@ -20,8 +20,10 @@ import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.discord.invite.InviteWatcher
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.trackers.ServiceWatcherManager
@@ -35,10 +37,12 @@ import moe.kabii.twitch.TwitchMessageHandler
 import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
+import kotlin.concurrent.thread
 
 @Suppress("UNUSED_VARIABLE")
 fun main() {
     // init global objects
+    val threadPools = DiscordTaskPool
     val mongo = MongoDBConnection
     val postgres = PostgresConnection
     LOG.info("FBK version: ${Metadata.buildInfo}")
@@ -80,6 +84,21 @@ fun main() {
     Uptime
     val gateway = checkNotNull(discord.login().block())
 
+    // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
+    thread(start = true, name = "Initalization") {
+        val translator = Translator
+        val welcomer = WelcomeImageGenerator
+
+        // join any linked channels on twitch IRC
+        runBlocking {
+            val twitchChannels = GuildConfigurations.guildConfigurations.values
+                .mapNotNull { config -> config.options.linkedTwitchChannel?.twitchid }
+            TwitchParser.getUsers(twitchChannels).values
+                .mapNotNull { user -> user.orNull()?.username }
+                .forEach(twitch.chat::joinChannel)
+        }
+    }
+
     // begin listening for terminal commands
     TerminalListener(manager, gateway).launch()
 
@@ -90,7 +109,6 @@ fun main() {
 
     // start lifetime task threads
     ServiceWatcherManager(gateway).launch()
-    val translator = Translator
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
@@ -134,13 +152,4 @@ fun main() {
     val onTwitchMessage = twitch.eventManager
         .getEventHandler(SimpleEventHandler::class.java)
         .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
-
-    // join any linked channels on twitch IRC
-    runBlocking {
-        val twitchChannels = GuildConfigurations.guildConfigurations.values
-            .mapNotNull { config -> config.options.linkedTwitchChannel?.twitchid }
-        TwitchParser.getUsers(twitchChannels).values
-            .mapNotNull { user -> user.orNull()?.username }
-            .forEach(twitch.chat::joinChannel)
-    }
 }

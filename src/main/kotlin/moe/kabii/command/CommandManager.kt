@@ -3,9 +3,8 @@ package moe.kabii.command
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import moe.kabii.LOG
-import java.util.concurrent.Executors
+import moe.kabii.discord.tasks.DiscordTaskPool
 
 class CommandManager {
     internal val commandsDiscord = mutableMapOf<String, Command>()
@@ -14,8 +13,7 @@ class CommandManager {
 
     internal val commands: List<Command> by lazy { commandsDiscord.values + commandsTwitch.values + commandsTerminal.values }
 
-    internal val commandPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
-    internal val context = CoroutineScope(commandPool + CoroutineName("CommandHandler") + SupervisorJob())
+    internal val context = CoroutineScope(DiscordTaskPool.commandThreads + CoroutineName("CommandHandler") + SupervisorJob())
 
     fun registerInstance(command: Command) {
         if(command.executeDiscord != null) {

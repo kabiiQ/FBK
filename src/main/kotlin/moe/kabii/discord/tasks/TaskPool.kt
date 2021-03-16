@@ -7,6 +7,7 @@ object DiscordTaskPool {
     private val dispatchThreads = Executors.newCachedThreadPool().asCoroutineDispatcher()
 
     // threading needs may change in future, currently all using one thread pool that will expand when needed
+    val commandThreads = dispatchThreads
     val streamThreads = dispatchThreads
     val listThreads = dispatchThreads
     val reminderThreads = dispatchThreads
