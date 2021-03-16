@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.4.30"
+    val kotlinVer = "1.4.31"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -45,12 +45,12 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.4.2"
+    val coroutinesVer = "1.4.3"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.0-M1-1.4.0-rc")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.2") // can update once d4j 3.2 is available
+    //implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.3") // can update once d4j 3.2 is available
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE") // reactor kotlin coroutine compat
     //implementation("io.projectreactor:reactor-core")
 
@@ -59,12 +59,12 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.1.3") // discord websocket and api
 
     // twitch irc
-    implementation("com.github.twitch4j:twitch4j:1.2.0")
+    implementation("com.github.twitch4j:twitch4j:1.2.1")
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.71") // discord audio library
-    implementation("com.github.natanbc:lavadsp:0.7.6") // some lavaplayer audio filters
+    implementation("com.sedmelluq:lavaplayer:1.3.73") // discord audio library
+    implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
 
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
@@ -79,7 +79,7 @@ dependencies {
     implementation("com.kcthota:emoji4j:6.0")
 
     // thumbnail file server
-    val ktor = "1.4.1"
+    val ktor = "1.5.2"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
 
@@ -88,9 +88,10 @@ dependencies {
     implementation("com.googlecode.json-simple:json-simple:1.1.1")
 
     // welcome banner image processing
-    implementation("com.twelvemonkeys.imageio:imageio-jpeg:3.6.4")
-    implementation("com.twelvemonkeys.imageio:imageio-psd:3.6.4")
-    implementation("com.twelvemonkeys.imageio:imageio-bmp:3.6.4")
+    val imageIO = "3.6.4"
+    implementation("com.twelvemonkeys.imageio:imageio-jpeg:$imageIO")
+    implementation("com.twelvemonkeys.imageio:imageio-psd:$imageIO")
+    implementation("com.twelvemonkeys.imageio:imageio-bmp:$imageIO")
 
     // database i/o
     // mongodb per-guild configurations
