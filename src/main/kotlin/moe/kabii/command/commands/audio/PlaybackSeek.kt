@@ -9,7 +9,7 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
-import moe.kabii.util.extensions.EmbedReceiver
+import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.userAddress
 import java.time.Duration
 
@@ -63,12 +63,15 @@ object PlaybackSeek : AudioCommandContainer {
         }
     }
 
-    private fun timeSkipMessage(author: User, time: Duration, backwards: Boolean, newPosition: Duration, track: AudioTrack): EmbedReceiver = {
-        setAuthor(author.userAddress(), null, author.avatarUrl)
+    private fun timeSkipMessage(author: User, time: Duration, backwards: Boolean, newPosition: Duration, track: AudioTrack): EmbedBlock {
         val direction = if(backwards) "backwards" else "forwards"
         val positiveTime = DurationFormatter(time).colonTime
         val new = DurationFormatter(newPosition).colonTime
-        setDescription("Moving $direction $positiveTime. in the current track ${trackString(track)} **-> $new**.")
+
+        return {
+            setAuthor(author.userAddress(), null, author.avatarUrl)
+            setDescription("Moving $direction $positiveTime. in the current track ${trackString(track)} **-> $new**.")
+        }
     }
 
     object PlaybackForward : Command("ff", "fastforward", "forward") {
@@ -99,7 +102,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val position = Duration.ofMillis(track.position)
                 val seekTo = position.plus(seekForwards)
                 if(trySeekCurrentTrack(this, track, seekTo)) {
-                    embed(timeSkipMessage(author, seekForwards, false, seekTo, track)).awaitSingle()
+                    embedBlock(timeSkipMessage(author, seekForwards, false, seekTo, track)).awaitSingle()
                 }
             }
         }
@@ -133,7 +136,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val position = Duration.ofMillis(track.position)
                 val seekTo = position.minus(seekBackwards)
                 if(trySeekCurrentTrack(this, track, seekTo)) {
-                    embed(timeSkipMessage(author, seekBackwards, true, seekTo, track)).awaitSingle()
+                    embedBlock(timeSkipMessage(author, seekBackwards, true, seekTo, track)).awaitSingle()
                 }
             }
         }

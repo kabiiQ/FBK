@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.starboard
+package moe.kabii.discord.event.message.starboard
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message

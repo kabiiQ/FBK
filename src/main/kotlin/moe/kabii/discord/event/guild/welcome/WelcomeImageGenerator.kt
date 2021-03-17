@@ -16,12 +16,13 @@ import java.net.URL
 import javax.imageio.ImageIO
 
 object WelcomeImageGenerator {
+    private val fontDir = File("files/font/")
     val bannerRoot = File("files/bannerimage/")
 
     private val taglinePt = 100f
-    private val taglineFont = Font.createFont(Font.TRUETYPE_FONT, File(bannerRoot, "Prompt-Bold.ttf")).deriveFont(taglinePt)
+    private val taglineFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "Prompt-Bold.ttf")).deriveFont(taglinePt)
 
-    private val baseFont = Font.createFont(Font.TRUETYPE_FONT, File(bannerRoot, "NotoSansCJK-Bold.ttc"))
+    private val baseFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "NotoSansCJK-Bold.ttc"))
     private val usernamePt = 64f
     private val usernameFont = baseFont.deriveFont(usernamePt)
     private val textPt = 64f

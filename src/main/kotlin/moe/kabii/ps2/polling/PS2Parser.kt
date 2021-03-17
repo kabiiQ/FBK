@@ -15,7 +15,7 @@ import java.time.Instant
 import kotlin.math.max
 
 object PS2Parser {
-    private val limitRate = Duration.ofSeconds(6)
+    private val limitRate = Duration.ofMillis(500L)
     private var nextCall = Instant.now()
 
     private val httpClient

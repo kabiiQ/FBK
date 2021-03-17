@@ -73,35 +73,33 @@ data class DiscordParameters (
 
     suspend fun channelVerify(vararg permissions: Permission) = member.channelVerify(guildChan, *permissions)
 
-    fun error(block: EmbedReceiver) = chan.createEmbed { embed ->
+    fun error(block: EmbedSuspension) = chan.createEmbed { embed ->
         errorColor(embed)
         runBlocking {
             block(embed)
         }
     }
 
-    fun error(author: User, block: EmbedReceiver) = this.error {
+    fun error(author: User, block: EmbedSuspension) = this.error {
         block(this)
         setAuthor(author.userAddress(), null, author.avatarUrl)
     }
 
-    fun embed(block: EmbedReceiver) = chan.createEmbed { embed ->
+    fun embed(block: EmbedSuspension) = chan.createEmbed { embed ->
         fbkColor(embed)
         runBlocking {
             block(embed)
         }
     }
 
-    fun embed(author: User, block: EmbedReceiver) = this.embed {
+    fun embed(author: User, block: EmbedSuspension) = this.embed {
         block(this)
         setAuthor(author.userAddress(), null, author.avatarUrl)
     }
 
     fun embedBlock(block: EmbedBlock) = chan.createEmbed { embed ->
         fbkColor(embed)
-        runBlocking {
-            block(embed)
-        }
+        block(embed)
     }
 
     fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->
