@@ -21,7 +21,8 @@ import javax.imageio.ImageIO
 import kotlin.reflect.KMutableProperty1
 
 object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomesetup", "setupwelcome", "welcomer") {
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Welcoming-Users#welcome-message-configuration"
+    private val variableWiki = "https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables"
 
     object WelcomeConfigModule : ConfigurationModule<WelcomeSettings>(
         "welcome",
@@ -36,15 +37,16 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
         StringElement("Text message sent when welcoming new user",
             listOf("message", "text", "textmessage", "messagetext"),
             WelcomeSettings::message,
-            // todo add wiki link
-            prompt = "Enter the plain-text message that will be sent when welcoming a new user. If you would like to also mention the user, see this page for such variables you may use. Enter **reset** to remove the currently configured message.",
+            prompt = "Enter the plain-text message that will be sent when welcoming a new user. If you would like to also mention the user, see [this page]($variableWiki) for such variables you may use. Enter **reset** to remove the currently configured message.",
             default = ""
         ),
-        StringElement("Welcome Tagline (included in image or embed)",
+        CustomElement("Welcome Tagline (included in image or embed)",
             listOf("tagline", "welcome"),
-            WelcomeSettings::welcomeTagLine,
-            prompt = "Enter a tagline for the image (large text placed at the top, keep it short). Only used if an image is configured. Enter **reset** to set this back to the default (WELCOME).",
-            default = "WELCOME"
+            WelcomeSettings::welcomeTagLine as KMutableProperty1<WelcomeSettings, Any?>,
+            prompt = "Enter a tagline for the image (large text placed at the top, keep it short). Only used if an image is configured. Enter **reset** to set this back to the default (WELCOME). Enter **remove** to remove the tag line.",
+            default = "WELCOME",
+            parser = ::setTagline,
+            value = { welcome -> if(welcome.welcomeTagLine != null) welcome.welcomeTagLine!! else "<NONE>" }
         ),
         CustomElement("Banner image to use for welcoming",
             listOf("image", "banner", "bannerimage", "welcomeimage"),
@@ -54,11 +56,14 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             parser = ::verifySaveImage,
             value = { welcome -> if(welcome.imagePath != null) "banner image SET" else "no banner image" }
         ),
-        StringElement("Image message",
+        CustomElement(
+            "Image message",
             listOf("imagetext"),
-            WelcomeSettings::imageText,
-            prompt = "Enter the text which will be placed on the welcome image. See this page for the variables you may use. Enter **reset** to remove the currently configured message.",
-            default = ""
+            WelcomeSettings::subText as KMutableProperty1<WelcomeSettings, Any?>,
+            prompt = "Enter the text which will be placed on the welcome image. See [this page]($variableWiki) for the variables you may use. Enter **reset** to restore the default (${WelcomeSettings.defaultSubText}. Enter **remove** to remove the subtext and omit this field.)",
+            default = WelcomeSettings.defaultSubText,
+            parser = ::setImageText,
+            value = { welcome -> if(welcome.subText != null) welcome.subText!! else "<NONE>" }
         ),
         CustomElement("Text color on image",
             listOf("color", "textcolor", "colortext"),
@@ -112,11 +117,26 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
         }
     }
 
+    private fun setTagline(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
+        return when(value.trim().toLowerCase()) {
+            "reset" -> Ok("WELCOME")
+            "remove", "clear", "unset", "none", "<none>" -> Ok(null)
+            else -> Ok(value)
+        }
+    }
+
+    private fun setImageText(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
+        return when(value.trim().toLowerCase()) {
+            "reset" -> Ok(WelcomeSettings.defaultSubText)
+            "remove", "clear", "unset", "none", "<none>" -> Ok(null)
+            else -> Ok(value)
+        }
+    }
+
     private val resetImage = Regex("(remove|reset|unset|none|clear)", RegexOption.IGNORE_CASE)
     private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
-    private suspend fun verifySaveImage(origin: DiscordParameters, message: Message): Result<String?, Unit> {
-        val input = message.content.split(" ").lastOrNull()
-        if(input?.matches(resetImage) == true) {
+    private suspend fun verifySaveImage(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
+        if(value.matches(resetImage)) {
             origin.embed("Current welcome banner image has been removed.").awaitSingle()
             return Ok(null)
         }
@@ -184,8 +204,8 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     }
 
     private val resetColor = Regex("(reset|white)", RegexOption.IGNORE_CASE)
-    private suspend fun verifyColor(origin: DiscordParameters, message: Message): Result<Int?, Unit> {
-        val colorArg = message.content.split(" ").lastOrNull() ?: return Err(Unit)
+    private suspend fun verifyColor(origin: DiscordParameters, message: Message, value: String): Result<Int?, Unit> {
+        val colorArg = value.split(" ").lastOrNull()?.ifBlank { null } ?: return Err(Unit)
         if(colorArg.matches(resetColor)) return Ok(Color.WHITE.rgb)
 
         // parse color code

@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.twitter.watcher
 
-import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.MessageCreateSpec
 import moe.kabii.LOG
 import moe.kabii.util.extensions.stackTraceString

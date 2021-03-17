@@ -60,7 +60,7 @@ class CustomElement<T, VT>(
     val prop: KMutableProperty1<T, Any?>,
     val prompt: String,
     val default: VT?,
-    val parser: suspend (DiscordParameters, Message) -> Result<VT?, Unit>, // given input, produce value or invalid
+    val parser: suspend (DiscordParameters, Message, String) -> Result<VT?, Unit>, // given input, produce value or invalid
     val value: (T) -> String // given value, produce string for embed output
 ) : ConfigurationElement<T>(fullName, aliases)
 
@@ -94,14 +94,14 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     }
     private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.aliases.first()})**"
 
-    private val reset = Regex("(reset|none|clear|remove)", RegexOption.IGNORE_CASE)
+    private val reset = Regex("reset", RegexOption.IGNORE_CASE)
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         fun updatedEmbed(element: ConfigurationElement<T>, new: Any) = origin.embed {
             setTitle("Configuration Updated")
             val property = element.aliases.first()
             val newState = when(element) {
                 is BooleanElement -> if(new as Boolean) "**enabled**" else "**disabled**"
-                else -> "set to **$new**"
+                else -> "set to **${new.toString().ifBlank { "empty" }}**"
             }
             setDescription("The option **$property** has been $newState.")
         }
@@ -187,7 +187,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         val prompt = origin.embed(element.prompt).awaitSingle()
                         val response = origin.getMessage(timeout = embedTimeout)
                         if(response != null) {
-                            val parsed = element.parser(origin, response)
+                            val parsed = element.parser(origin, response, response.content)
                             if(parsed is Ok) element.prop.set(instance, parsed.value)
                         }
                         prompt.delete().subscribe()
@@ -333,7 +333,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 return true
             }
             is CustomElement<T, *> -> {
-                val input = element.parser(origin, origin.event.message)
+                val input = element.parser(origin, origin.event.message, origin.args.drop(1).joinToString(" "))
                 return if(input is Ok) {
                     element.prop.set(instance, input.value)
                     val output = element.value(instance)

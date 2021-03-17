@@ -32,15 +32,16 @@ data class WelcomeSettings(
     var includeAvatar: Boolean = true,
     var includeUsername: Boolean = true,
     var message: String = "",
-    var welcomeTagLine: String = "WELCOME",
+    var welcomeTagLine: String? = "WELCOME",
     var imagePath: String? = null,
-    var imageText: String = "Welcome to the server!",
+    var subText: String? = defaultSubText,
     var imageTextColor: Int? = defaultColor
 ) {
     fun textColor() = imageTextColor ?: defaultColor
-    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null).any(true::equals)
+    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null, welcomeTagLine != null, subText != null).any(true::equals)
 
     companion object {
+        const val defaultSubText = "Welcome to the server!"
         val defaultColor = 0xFFFFFF
     }
 }

@@ -79,7 +79,7 @@ dependencies {
     implementation("com.kcthota:emoji4j:6.0")
 
     // thumbnail file server
-    val ktor = "1.5.2"
+    val ktor = "1.4.1"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
 

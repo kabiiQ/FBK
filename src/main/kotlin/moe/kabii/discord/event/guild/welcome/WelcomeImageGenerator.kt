@@ -57,7 +57,7 @@ object WelcomeImageGenerator {
             val lineSpacing = 20
             val avatarPadding = 12
             // draw tag line
-            if(config.welcomeTagLine.isNotBlank()) {
+            if(config.welcomeTagLine != null) {
                 val tagBounds = taglineFont.getStringBounds(config.welcomeTagLine, frc)
 
                 val tagWidth = tagBounds.width.toFloat()
@@ -137,8 +137,8 @@ object WelcomeImageGenerator {
             }
 
             // draw text
-            if(config.imageText.isNotBlank()) {
-                val text = WelcomeMessageFormatter.format(member, config.imageText, rich = false)
+            if(config.subText != null) {
+                val text = WelcomeMessageFormatter.format(member, config.subText!!, rich = false)
 
                 var font: Font
                 var fontSize = textPt
