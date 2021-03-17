@@ -22,6 +22,7 @@ import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
+import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
@@ -169,12 +170,27 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                                 "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
                                             } else ""
 
-                                            tweet.attachments.firstOrNull()?.url?.run(embed::setImage)
+                                            var attachmentInfo = ""
                                             val attachInfo = when {
-                                                tweet.attachments.firstOrNull()?.type == TwitterMediaType.VID -> "(Open on Twitter to view video)\n"
-                                                tweet.attachments.size > 1 -> "(Open on Twitter to view ${tweet.attachments.size} images)\n"
+                                                tweet.attachments.firstOrNull()?.type == TwitterMediaType.VID -> {
+                                                    attachmentInfo += "(${EmojiCharacters.play})"
+                                                    "(Open on Twitter to view video)\n"
+                                                }
+                                                tweet.attachments.size > 1 -> {
+                                                    val size = tweet.attachments.size
+                                                    attachmentInfo += " (+${size - 1})"
+                                                    "(Open on Twitter to view $size images)\n"
+                                                }
                                                 else -> ""
                                             }
+
+                                            val attachment = tweet.attachments.firstOrNull()
+                                            val thumbnail = if(attachment != null) {
+                                                if(attachmentInfo.isNotBlank() && attachment.url != null) {
+                                                    TwitterThumbnailGenerator.attachInfoTag(attachment.url, attachmentInfo, spec)
+                                                } else attachment.url
+                                            } else null
+                                            thumbnail?.run(embed::setImage)
 
                                             embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
                                             embed.setTimestamp(tweet.createdAt)
