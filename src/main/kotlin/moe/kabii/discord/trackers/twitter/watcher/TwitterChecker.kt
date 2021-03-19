@@ -170,24 +170,18 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                                 "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
                                             } else ""
 
-                                            var attachmentInfo = ""
+                                            val attachment = tweet.attachments.firstOrNull()
+                                            val size = tweet.attachments.size
+                                            val isVid = attachment?.type == TwitterMediaType.VID
                                             val attachInfo = when {
-                                                tweet.attachments.firstOrNull()?.type == TwitterMediaType.VID -> {
-                                                    attachmentInfo += "(${EmojiCharacters.play})"
-                                                    "(Open on Twitter to view video)\n"
-                                                }
-                                                tweet.attachments.size > 1 -> {
-                                                    val size = tweet.attachments.size
-                                                    attachmentInfo += " (+${size - 1})"
-                                                    "(Open on Twitter to view $size images)\n"
-                                                }
+                                                isVid -> "(Open on Twitter to view video)\n"
+                                                size > 1 -> "(Open on Twitter to view $size images)\n"
                                                 else -> ""
                                             }
 
-                                            val attachment = tweet.attachments.firstOrNull()
                                             val thumbnail = if(attachment != null) {
-                                                if(attachmentInfo.isNotBlank() && attachment.url != null) {
-                                                    TwitterThumbnailGenerator.attachInfoTag(attachment.url, attachmentInfo, spec)
+                                                if((size > 1 || isVid)  && attachment.url != null) {
+                                                    TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, size, isVid)
                                                 } else attachment.url
                                             } else null
                                             thumbnail?.run(embed::setImage)
