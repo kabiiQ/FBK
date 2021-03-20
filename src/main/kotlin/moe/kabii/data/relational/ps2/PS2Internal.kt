@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.ps2
 
-import moe.kabii.ps2.store.PS2DataCache
+import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

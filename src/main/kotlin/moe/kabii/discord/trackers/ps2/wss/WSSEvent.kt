@@ -1,12 +1,12 @@
-package moe.kabii.ps2.wss
+package moe.kabii.discord.trackers.ps2.wss
 
 import com.squareup.moshi.JsonClass
 import discord4j.rest.util.Color
 import moe.kabii.MOSHI
-import moe.kabii.ps2.polling.json.PS2Facility
-import moe.kabii.ps2.polling.json.PS2Server
-import moe.kabii.ps2.polling.json.PS2Zone
-import moe.kabii.ps2.store.PS2Faction
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Facility
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Server
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Zone
+import moe.kabii.discord.trackers.ps2.store.PS2Faction
 
 sealed class WSSEvent {
 

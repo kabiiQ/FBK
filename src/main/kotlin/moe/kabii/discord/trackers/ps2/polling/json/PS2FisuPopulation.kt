@@ -1,4 +1,4 @@
-package moe.kabii.ps2.polling.json
+package moe.kabii.discord.trackers.ps2.polling.json
 
 import com.squareup.moshi.JsonClass
 

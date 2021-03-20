@@ -11,8 +11,8 @@ import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.trackers.PS2Target
-import moe.kabii.ps2.store.PS2DataCache
-import moe.kabii.ps2.store.PS2StaticData
+import moe.kabii.discord.trackers.ps2.store.PS2DataCache
+import moe.kabii.discord.trackers.ps2.store.PS2StaticData
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {

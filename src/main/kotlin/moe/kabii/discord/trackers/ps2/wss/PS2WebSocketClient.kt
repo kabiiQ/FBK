@@ -1,4 +1,4 @@
-package moe.kabii.ps2.wss
+package moe.kabii.discord.trackers.ps2.wss
 
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +41,7 @@ class PS2WebSocketClient(val channel: SendChannel<WSSEvent>, addr: URI) : WebSoc
     }
 
     override fun onMessage(message: String?) {
-        LOG.trace("PS2 WebSocket sent: $message")
+        //LOG.trace("PS2 WebSocket sent: $message")
         message ?: return
         context.launch {
             val event = deserializer.fromPayload(message)

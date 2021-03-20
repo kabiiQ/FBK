@@ -1,11 +1,11 @@
-package moe.kabii.ps2.wss
+package moe.kabii.discord.trackers.ps2.wss
 
 import moe.kabii.LOG
-import moe.kabii.ps2.polling.json.PS2Facility
-import moe.kabii.ps2.polling.json.PS2Server
-import moe.kabii.ps2.polling.json.PS2Zone
-import moe.kabii.ps2.store.PS2Faction
-import moe.kabii.ps2.store.PS2StaticData
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Facility
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Server
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Zone
+import moe.kabii.discord.trackers.ps2.store.PS2Faction
+import moe.kabii.discord.trackers.ps2.store.PS2StaticData
 import moe.kabii.util.extensions.stackTraceString
 import org.json.simple.JSONObject
 import org.json.simple.JSONValue
@@ -16,12 +16,16 @@ class EventDeserializer {
         return try {
 
             val event = JSONValue.parse(rawEvent) as JSONObject
-            if(event["type"] != "serviceMessage") return null
+
+            val eventType = event["type"]
+            if(eventType == "heartbeat") {
+                LOG.debug("PS2 WSS Heartbeat: $rawEvent")
+                return null
+            } else if(eventType != "serviceMessage") return null
 
             val payload = event["payload"] as JSONObject
-            val type = payload["event_name"]
 
-            when(type) {
+            when(val type = payload["event_name"]) {
                 "PlayerLogin" -> WSSEvent.PlayerLog(getCharacter(payload), WSSEvent.StateEvent.LOGIN)
                 "PlayerLogout" -> WSSEvent.PlayerLog(getCharacter(payload), WSSEvent.StateEvent.LOGOUT)
                 "ContinentLock", "ContinentUnlock" -> {
@@ -48,9 +52,8 @@ class EventDeserializer {
             }
 
         } catch(e: Exception) {
-            // todo set debug
             LOG.info("Error deserializing PS2 WSS payload: $${e.message} :: $rawEvent")
-            LOG.info(e.stackTraceString)
+            LOG.debug(e.stackTraceString)
             null
         }
     }

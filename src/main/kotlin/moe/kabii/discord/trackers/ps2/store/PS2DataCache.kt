@@ -1,12 +1,12 @@
-package moe.kabii.ps2.store
+package moe.kabii.discord.trackers.ps2.store
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.ps2.polling.PS2Parser
-import moe.kabii.ps2.polling.json.PS2Outfit
-import moe.kabii.ps2.polling.json.PS2Player
+import moe.kabii.discord.trackers.ps2.polling.PS2Parser
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Outfit
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Player
 import moe.kabii.util.extensions.WithinExposedContext
 import org.joda.time.DateTime
 import org.joda.time.Duration

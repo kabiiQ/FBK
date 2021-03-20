@@ -2,7 +2,7 @@ package moe.kabii.command.commands.ps2
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.ps2.polling.PS2Parser
+import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.ZoneId

@@ -1,10 +1,10 @@
-package moe.kabii.ps2.polling
+package moe.kabii.discord.trackers.ps2.polling
 
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.Keys
-import moe.kabii.ps2.polling.json.*
+import moe.kabii.discord.trackers.ps2.polling.json.*
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
 import okhttp3.Request

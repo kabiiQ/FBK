@@ -1,14 +1,14 @@
-package moe.kabii.ps2.store
+package moe.kabii.discord.trackers.ps2.store
 
 import discord4j.rest.util.Color
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
-import moe.kabii.ps2.polling.PS2Parser
-import moe.kabii.ps2.polling.json.PS2Facility
-import moe.kabii.ps2.polling.json.PS2FisuPopulation
-import moe.kabii.ps2.polling.json.PS2Server
-import moe.kabii.ps2.polling.json.PS2Zone
+import moe.kabii.discord.trackers.ps2.polling.PS2Parser
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Facility
+import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulation
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Server
+import moe.kabii.discord.trackers.ps2.polling.json.PS2Zone
 import moe.kabii.util.constants.EmojiCharacters
 import kotlin.reflect.KProperty1
 

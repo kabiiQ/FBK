@@ -1,4 +1,4 @@
-package moe.kabii.ps2.wss
+package moe.kabii.discord.trackers.ps2.wss
 
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -18,8 +18,8 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerUtil
-import moe.kabii.ps2.store.PS2DataCache
-import moe.kabii.ps2.store.PS2Faction
+import moe.kabii.discord.trackers.ps2.store.PS2DataCache
+import moe.kabii.discord.trackers.ps2.store.PS2Faction
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.snowflake

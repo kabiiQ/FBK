@@ -7,11 +7,11 @@ import moe.kabii.discord.trackers.anime.anilist.AniListParser
 import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
 import moe.kabii.discord.trackers.anime.mal.MALParser
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
+import moe.kabii.discord.trackers.ps2.wss.PS2EventStream
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
-import moe.kabii.ps2.wss.PS2EventStream
 
 data class ServiceRequestCooldownSpec(
     val callDelay: Long,

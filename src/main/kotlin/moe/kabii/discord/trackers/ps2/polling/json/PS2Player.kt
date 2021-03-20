@@ -1,10 +1,10 @@
-package moe.kabii.ps2.polling.json
+package moe.kabii.discord.trackers.ps2.polling.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.launch
-import moe.kabii.ps2.store.PS2DataCache
-import moe.kabii.ps2.store.PS2Faction
+import moe.kabii.discord.trackers.ps2.store.PS2DataCache
+import moe.kabii.discord.trackers.ps2.store.PS2Faction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Instant
 
