@@ -61,7 +61,6 @@ object TwitterThumbnailGenerator {
                 val posX = (image.width - metrics.stringWidth(str)) / 2
                 val posY = ((image.height - metrics.height) / 2) + metrics.ascent
 
-                graphics.font = font
                 graphics.color = Color(1f, 1f, 1f, 0.7f) // white 70% opacity
                 graphics.drawString(str, posX, posY)
             }

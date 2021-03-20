@@ -24,7 +24,7 @@ object WelcomeImageGenerator {
     private val taglineFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "Prompt-Bold.ttf")).deriveFont(taglinePt)
 
     private val baseFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "NotoSansCJK-Bold.ttc"))
-    private val fallbackFont = Font(Font.MONOSPACED, Font.BOLD, 128)
+    private val fallbackFont = Font("LucidaSans", Font.BOLD, 128)
     private val usernamePt = 64f
     private val textPt = 64f
 
