@@ -4,7 +4,6 @@ import discord4j.core.spec.MessageCreateSpec
 import moe.kabii.LOG
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.stackTraceString
-import org.apache.commons.io.output.TaggedWriter
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics2D
@@ -53,7 +52,6 @@ object TwitterThumbnailGenerator {
             if(video) {
                 val str = "(${EmojiCharacters.play})"
 
-                val frc = graphics.fontRenderContext
                 val fontPt = image.height * .50f
                 val font = infoFont.deriveFont(fontPt)
                 graphics.font = font

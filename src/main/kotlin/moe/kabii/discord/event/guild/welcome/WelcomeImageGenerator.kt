@@ -5,15 +5,16 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.formatting.GraphicsUtil
 import java.awt.*
 import java.awt.geom.Ellipse2D
-import java.awt.geom.Rectangle2D
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
 import java.net.URL
 import javax.imageio.ImageIO
+import kotlin.math.max
 
 object WelcomeImageGenerator {
     private val fontDir = File("files/font/")
@@ -23,10 +24,9 @@ object WelcomeImageGenerator {
     private val taglineFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "Prompt-Bold.ttf")).deriveFont(taglinePt)
 
     private val baseFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "NotoSansCJK-Bold.ttc"))
+    private val fallbackFont = Font(Font.MONOSPACED, Font.BOLD, 128)
     private val usernamePt = 64f
-    private val usernameFont = baseFont.deriveFont(usernamePt)
     private val textPt = 64f
-    private val textFont = baseFont.deriveFont(textPt)
 
     const val targetHeight = 512
     const val targetWidth = targetHeight * 2
@@ -38,7 +38,6 @@ object WelcomeImageGenerator {
 
     suspend fun generate(config: WelcomeSettings, member: Member): InputStream? {
         if(config.imagePath.isNullOrBlank()) return null
-
         var graphics: Graphics2D? = null
         try {
 
@@ -52,7 +51,7 @@ object WelcomeImageGenerator {
 
             val textColor = Color(config.textColor())
 
-            var y = 110f // 115px from top to baseline first line
+            var y = 90f // 100px from top to baseline first line
 
             val lineSpacing = 20
             val avatarPadding = 12
@@ -76,26 +75,17 @@ object WelcomeImageGenerator {
 
             // draw username
             if(config.includeUsername) {
-                val username = member.userAddress()
+                var username = member.userAddress()
 
-                var font: Font
-                var fontSize = usernamePt
-                var nameBounds: Rectangle2D
-                var nameWidth: Float
+                val fit = GraphicsUtil.fitFontHorizontal(image.width, baseFont, usernamePt, username, sidePadding = 10, minPt = 24f, fallback = fallbackFont)
+                graphics.font = fit.font
+                username = fit.str
 
-                // ensure username fits in image width, scale down font as needed
-                val sidePadding = 10
-                do {
-                    font = usernameFont.deriveFont(fontSize)
-                    nameBounds = font.getStringBounds(username, frc)
-                    nameWidth = nameBounds.width.toFloat()
-                    fontSize -= 2f
-                } while(nameWidth > (image.width - sidePadding * 2) && fontSize >= 24)
-
-                val xCenter = (image.width - nameWidth) / 2
+                // x coord is centered
+                val nameWidth = graphics.fontMetrics.stringWidth(username)
+                val xCenter = (image.width - nameWidth) / 2f
 
                 y += lineSpacing
-                graphics.font = font
                 graphics.color = Color.BLACK
                 graphics.drawString(username, xCenter - 2f, y - 2f) // drop shadow down-left offset
                 graphics.color = textColor
@@ -128,7 +118,7 @@ object WelcomeImageGenerator {
                     graphics.stroke = BasicStroke(6f)
                     graphics.drawOval(outlineXCenter, outlineYCenter, outlineD, outlineD)
                     graphics.stroke = BasicStroke()
-                    y += outlineR + lineSpacing + avatarPadding
+                    y += outlineR
 
                 } catch(e: Exception) {
                     LOG.warn("Unable to load user avatar user ${member.id.asString()} for welcome banner: ${member.avatarUrl} :: ${e.message}")
@@ -136,33 +126,30 @@ object WelcomeImageGenerator {
                 }
             }
 
-            // draw text
-            if(config.subText != null) {
-                val text = WelcomeMessageFormatter.format(member, config.subText!!, rich = false)
+            // draw caption
+            if(config.imageText != null) {
+                var str = WelcomeMessageFormatter.format(member, config.imageText!!, rich = false)
 
-                var font: Font
-                var fontSize = textPt
-                var textBounds: Rectangle2D
-                var textWidth: Float
+                val fit = GraphicsUtil.fitFontHorizontal(image.width, baseFont, textPt, str, sidePadding = 20, minPt = 16f, fallback = fallbackFont)
+                graphics.font = fit.font
+                str = fit.str
 
-                // ensure this text fits in image width, scale down font as needed
-                val sidePadding = 20
-                do {
-                    font = textFont.deriveFont(fontSize)
-                    textBounds = font.getStringBounds(text, frc)
-                    textWidth = textBounds.width.toFloat()
-                    fontSize -= 2f
-                } while(textWidth > (image.width - sidePadding * 2) && fontSize >= 32)
+                val metrics = graphics.fontMetrics
+                // x coord is centered
+                val textWidth = metrics.stringWidth(str)
+                val xCenter = (image.width - textWidth) / 2f
 
-                val xCenter = (image.width - textWidth) / 2
+                // y coord is centered within the remaining space, but at least far enough from the avatar to fit the text
+                val yRemain = image.height - y
+                val yCenter = yRemain / 2
+                val yFontFit = ((yRemain - metrics.height) / 2) + metrics.ascent
 
-                // image text goes in the middle of the remaining space
-                y += (image.height - y) / 2
-                graphics.font = font
+                y += max(yCenter, yFontFit)
+
                 graphics.color = Color.BLACK
-                graphics.drawString(text, xCenter - 2f, y - 2f)
+                graphics.drawString(str, xCenter - 2f, y - 2f)
                 graphics.color = textColor
-                graphics.drawString(text, xCenter, y)
+                graphics.drawString(str, xCenter, y)
             }
 
             ByteArrayOutputStream().use { os ->
