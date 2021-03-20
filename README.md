@@ -21,9 +21,9 @@ FBK is a general-purpose bot with a focus on **utility commands** and **service 
 
 We try to cover a wide range of functionality with the bot, so not all features will be described here. 
 
-A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available. 
+A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available for other features.
 
-**Features include, and are not limited to:**
+**Primary Features Include:**
 
 - ## **Service Integration**
   - [Livestream/Video notifications](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
@@ -43,9 +43,9 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [**Fast forward/rewind/skip** to timestamp in songs at will](https://github.com/kabiiQ/FBK/wiki/Music-Player#playback-manipulation)
   - [**Speed up songs**, change their pitch, or apply a bass boost](https://github.com/kabiiQ/FBK/wiki/Music-Player#audio-manipulationfilters)
 
-
+- ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
-- ## [**Set timed reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
+- ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
 - ## [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
 
 - ## **General Utility**
@@ -53,17 +53,17 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
   - [Access server voice channel screenshare](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
 
-- ### Game(s)
+- ## Game(s)
   - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games-(Connect-4))
 
-- ### Automatic role assignment/removal on (each only if configured):
+- ## Automatic role assignment/removal on (each only if configured):
   - [User joining server (per invite code if needed)](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-joining-your-server)
   - [User joining/leaving voice channels](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-in-a-voice-channel)
   - [User **reactions** on a specific message **(reaction roles)**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-reacting-to-a-specific-message)
   - [User running a custom command](https://github.com/kabiiQ/FBK/wiki/Command-Roles#custom-role-commands)
   - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
-- ### General Configurability
+- ## General Configurability
   - [Change bot prefix freely or add a command suffix instead](https://github.com/kabiiQ/FBK/wiki/Configuration#changing-command-prefix-andor-suffix)
   - Targeted functionality such as music bot commands and service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
   - [Blacklist specific bot commands or require commands to be whitelisted](https://github.com/kabiiQ/FBK/wiki/Configuration#using-a-command-blacklist-or-whitelist) if further usage restriction is required
@@ -76,7 +76,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 
 # Development 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.4.21-blue.svg?logo=Kotlin)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.4.31-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 
@@ -88,10 +88,10 @@ Feature ideas/requests, issue reports, and general questions are welcome in the 
 
 This bot is written in [Kotlin](https://kotlinlang.org/).
 
-The big libraries making my work on KizunaAi doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L42) file.
+The big libraries making my work on FBK doable are [Discord4J](https://github.com/Discord4J/Discord4J/) and [LavaPlayer](https://github.com/sedmelluq/lavaplayer/). All dependencies being pulled can be found in the [build](https://github.com/kabiiQ/FBK/blob/master/build.gradle.kts#L42) file.
 
 ## Self-Hosting:
-As an open-source project, KizunaAi can be compiled using her Gradle build script, and ran independently. To run a custom version of the bot will require editing keys.toml with your own API keys. As provided, she will require access to a [MongoDB](https://www.mongodb.com/try/download/community) and a [PostgreSQL](https://www.postgresql.org/download/) server. Database logins, required API keys, and ports that are opened for use must be placed in `keys.toml`. Detailed instructions or support should not be expected for this use case. You are free to do so, but I would still appreciate your feedback for the public version or your membership in the community Discord server.
+As an open-source project, FBK can be compiled using her Gradle build script, and ran independently. To run a custom version of the bot will require editing keys.toml with your own API keys. As provided, she will require access to a [MongoDB](https://www.mongodb.com/try/download/community) and a [PostgreSQL](https://www.postgresql.org/download/) server. Database logins, required API keys, and ports that are opened for use must be placed in `keys.toml`. Detailed instructions or support should not be expected for this use case. You are free to do so, but I would still appreciate your feedback for the public version or your membership in the community Discord server.
 
 
 # Licensing / Liability

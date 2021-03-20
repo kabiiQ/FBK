@@ -33,7 +33,7 @@ If the "service integration" features including and not limited to the Twitter, 
 
 For streaming platforms:
 
-- Event (video upload or livestream) IDs
+- Event (video upload, livestream, Tweet) unique IDs
 - Event titles, live status, schedule, viewer counts, and any information added in the future which can be displayed in bot messages
 
 Anime/manga "media list" trackers:
