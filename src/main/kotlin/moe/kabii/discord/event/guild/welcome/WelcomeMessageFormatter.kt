@@ -31,7 +31,7 @@ object WelcomeMessageFormatter {
         else format(member, config.message, rich = true)
 
         val image = WelcomeImageGenerator.generate(config, member)
-        val subText = if(config.subText != null) format(member, config.subText!!, rich = true) else null
+        val subText = if(config.imageText != null) format(member, config.imageText!!, rich = true) else null
         return {
             if(message != null) this.setContent(message)
 
@@ -39,7 +39,7 @@ object WelcomeMessageFormatter {
             if(image != null) {
 
                 this.addFile("welcome.png", image)
-            } else if(config.includeUsername || config.includeAvatar || config.welcomeTagLine != null || config.subText != null) {
+            } else if(config.includeUsername || config.includeAvatar || config.welcomeTagLine != null || config.imageText != null) {
 
                 this.setEmbed { embed ->
                     embed.setColor(Color.of(6750056))

@@ -50,24 +50,9 @@ object TrackerUtil {
             guildDelete.set(features, false)
             config.save()
 
-            val feature = guildDelete.name.replace("Channel", "", ignoreCase = true)
-            try {
-
-                if(GuildConfigurations.guildConfigurations[guildId] == null) return // removed from guild
-                discord.getGuildById(guildId.snowflake)
-                    .flatMap(Guild::getOwner)
-                    .flatMap(Member::getPrivateChannel)
-                    .flatMap { pm ->
-                        pm.createEmbed { spec ->
-                            errorColor(spec)
-                            spec.setDescription("I tried to send a **$feature** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$feature** feature has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}feature $feature enable** in <#$channelId> to re-enable this tracker.")
-                        }
-                    }.awaitSingle()
-
-            } catch(e: Exception) {
-                LOG.warn("Unable to send notification to $guildId owner regarding feature disabled. Disabling feature $feature silently: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            }
+            val featureName = guildDelete.name.replace("Channel", "", ignoreCase = true)
+            val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}feature $featureName enable** in <#$channelId> to re-enable this tracker."
+            notifyOwner(discord, guildId, message)
 
         } else {
             // delete target, we do not keep configs for dms
@@ -77,6 +62,24 @@ object TrackerUtil {
                 LOG.error("SEVERE: SQL error in #permissionDenied: ${e.message}")
                 LOG.error(e.stackTraceString)
             }
+        }
+    }
+
+    suspend fun notifyOwner(discord: GatewayDiscordClient, guildId: Long, message: String) {
+        try {
+            if(GuildConfigurations.guildConfigurations[guildId] == null) return // removed from guild
+            discord.getGuildById(guildId.snowflake)
+                .flatMap(Guild::getOwner)
+                .flatMap(Member::getPrivateChannel)
+                .flatMap { pm ->
+                    pm.createEmbed { spec ->
+                        errorColor(spec)
+                        spec.setDescription(message)
+                    }
+                }.awaitSingle()
+        } catch(e: Exception) {
+            LOG.warn("Unable to send notification to $guildId owner regarding feature disabled. Disabling feature silently: $message :: ${e.message}")
+            LOG.debug(e.stackTraceString)
         }
     }
 

@@ -54,8 +54,9 @@ data class GuildConfiguration(
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
     val translator: TranslatorSettings = TranslatorSettings(),
-    var starboard: StarboardSetup? = null) {
-
+    var starboard: StarboardSetup? = null,
+    val welcomer: WelcomeSettings = WelcomeSettings()
+) {
     companion object {
         const val defaultPrefix = ";"
     }
@@ -63,10 +64,6 @@ data class GuildConfiguration(
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
         .map(FeatureChannel::logSettings)
-
-    fun welcomeChannels() = options.featureChannels.values.toList()
-        .filter(FeatureChannel::welcomeChannel)
-        .map(FeatureChannel::welcomeSettings)
 
     suspend fun save() {
         GuildConfigurations.mongoConfigurations.updateOne(this, upsert)

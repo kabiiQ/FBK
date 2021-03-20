@@ -6,7 +6,9 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
+import moe.kabii.command.commands.configuration.setup.base.BaseConfigurationParsers
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.event.guild.welcome.WelcomeMessageFormatter
@@ -22,10 +24,18 @@ import kotlin.reflect.KMutableProperty1
 
 object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomesetup", "setupwelcome", "welcomer") {
     override val wikiPath = "Welcoming-Users#welcome-message-configuration"
-    private val variableWiki = "https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables"
+    private const val variableWiki = "https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables"
 
     object WelcomeConfigModule : ConfigurationModule<WelcomeSettings>(
         "welcome",
+        CustomElement("Channel to send welcome messages to",
+            listOf("channel", "channelid", "usechannel", "welcomechannel", "welcome"),
+            WelcomeSettings::channelId as KMutableProperty1<WelcomeSettings, Any?>,
+            prompt = "Enter a channel to be used for welcoming new users. Enter **remove** to clear this and disable welcome messages.",
+            default = null,
+            parser = BaseConfigurationParsers::textChannelParser,
+            value = { welcome -> if(welcome.channelId != null) "<#${welcome.channelId}>" else "not set" }
+        ),
         BooleanElement("Include new user's avatar in welcome embed or image",
             listOf("avatar", "includeavatar", "pfp"),
             WelcomeSettings::includeAvatar
@@ -35,7 +45,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             WelcomeSettings::includeUsername
         ),
         StringElement("Text message sent when welcoming new user",
-            listOf("message", "text", "textmessage", "messagetext"),
+            listOf("message", "textmessage", "messagetext"),
             WelcomeSettings::message,
             prompt = "Enter the plain-text message that will be sent when welcoming a new user. If you would like to also mention the user, see [this page]($variableWiki) for such variables you may use. Enter **reset** to remove the currently configured message.",
             default = ""
@@ -58,12 +68,12 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
         ),
         CustomElement(
             "Image message",
-            listOf("imagetext"),
-            WelcomeSettings::subText as KMutableProperty1<WelcomeSettings, Any?>,
-            prompt = "Enter the text which will be placed on the welcome image. See [this page]($variableWiki) for the variables you may use. Enter **reset** to restore the default (${WelcomeSettings.defaultSubText}. Enter **remove** to remove the subtext and omit this field.)",
-            default = WelcomeSettings.defaultSubText,
+            listOf("text", "imagetext", "subtitle", "caption"),
+            WelcomeSettings::imageText as KMutableProperty1<WelcomeSettings, Any?>,
+            prompt = "Enter the text which will be placed on the welcome image. See [this page]($variableWiki) for the variables you may use. Enter **reset** to restore the default (${WelcomeSettings.defaultImageText}. Enter **remove** to remove the subtext and omit this field.)",
+            default = WelcomeSettings.defaultImageText,
             parser = ::setImageText,
-            value = { welcome -> if(welcome.subText != null) welcome.subText!! else "<NONE>" }
+            value = { welcome -> if(welcome.imageText != null) welcome.imageText!! else "<NONE>" }
         ),
         CustomElement("Text color on image",
             listOf("color", "textcolor", "colortext"),
@@ -77,40 +87,48 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
 
     init {
         discord {
-            channelVerify(Permission.MANAGE_CHANNELS)
+            member.verify(Permission.MANAGE_CHANNELS)
 
-            val features = features()
-            if(!features.welcomeChannel) {
-                error("**${guildChan.name}** is not set up to welcome users. If intended, this can be enabled with **feature welcome enable**.").awaitSingle()
-                return@discord
-            }
+            val welcomer = config.welcomer
+            when(args.getOrNull(0)?.toLowerCase()) {
+                "test" -> {
+                    // test the current welcome config
+                    if(!welcomer.anyElements()) {
+                        error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.").awaitSingle()
+                        return@discord
+                    }
 
-            val welcomer = features.welcomeSettings
-
-            if(args.getOrNull(0)?.equals("test", ignoreCase = true) == true) {
-
-                // test the current welcome config
-                if(!welcomer.anyElements()) {
-                    error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.").awaitSingle()
-                    return@discord
+                    val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, member)
+                    chan.createMessage(welcomeMessage).awaitSingle()
                 }
-
-                val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, member)
-                chan.createMessage(welcomeMessage).awaitSingle()
-
-            } else {
-                val oldImage = welcomer.imagePath
-
-                val configurator = Configurator(
-                    "User welcome settings in ${guildChan.name}",
-                    WelcomeConfigModule,
-                    welcomer
-                )
-                if(configurator.run(this)) {
+                "here", "use", "set", "create", "install", "enable", "on" -> {
+                    // set the current channel as the welcomer
+                    welcomer.channelId = chan.id.asLong()
                     config.save()
+                    embed("This channel (${chan.mention}) has been set the welcome message channel for **${target.name}**.").awaitSingle()
+                }
+                "getbanner", "showbanner" -> {
+                    // allow downloading the existing banner
+                    val banner = File(WelcomeImageGenerator.bannerRoot, "${target.id.asString()}.png")
 
-                    if(welcomer.imagePath == null && oldImage != null) {
-                        File(WelcomeImageGenerator.bannerRoot, oldImage).delete()
+                    chan.createMessage { spec ->
+                        spec.addFile("welcome_banner.png", banner.inputStream())
+                    }.awaitSingle()
+                }
+                else -> {
+                    val oldImage = welcomer.imagePath
+
+                    val configurator = Configurator(
+                        "User welcome settings in ${guildChan.name}",
+                        WelcomeConfigModule,
+                        welcomer
+                    )
+                    if(configurator.run(this)) {
+                        config.save()
+
+                        if(welcomer.imagePath == null && oldImage != null) {
+                            File(WelcomeImageGenerator.bannerRoot, oldImage).delete()
+                        }
                     }
                 }
             }
@@ -127,7 +145,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
 
     private fun setImageText(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
         return when(value.trim().toLowerCase()) {
-            "reset" -> Ok(WelcomeSettings.defaultSubText)
+            "reset" -> Ok(WelcomeSettings.defaultImageText)
             "remove", "clear", "unset", "none", "<none>" -> Ok(null)
             else -> Ok(value)
         }
@@ -189,7 +207,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             val bannerFile = File(WelcomeImageGenerator.bannerRoot, imagePath)
             ImageIO.write(sizedImage, "png", bannerFile)
 
-            origin.features().welcomeSettings.imagePath = imagePath
+            origin.config.welcomer.imagePath = imagePath
             origin.config.save()
 
             origin.embed("New banner image accepted.").awaitSingle()

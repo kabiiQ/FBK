@@ -50,7 +50,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         discord {
             member.verify(Permission.MANAGE_CHANNELS)
             val action = when(args.getOrNull(0)?.toLowerCase()) {
-                "set", "create", "move", "here", "enable", "setup", "on", "1" -> ::createStarboard
+                "here", "set", "create", "move", "here", "enable", "setup", "on", "1" -> ::createStarboard
                 "disable", "unset", "remove", "delete", "off", "0" -> ::disableStarboard
                 else -> ::configStarboard // if not set/disable, run standard configurator
             }
