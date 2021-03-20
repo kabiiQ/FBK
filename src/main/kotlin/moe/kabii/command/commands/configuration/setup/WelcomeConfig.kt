@@ -59,12 +59,12 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             value = { welcome -> if(welcome.welcomeTagLine != null) welcome.welcomeTagLine!! else "<NONE>" }
         ),
         CustomElement("Banner image to use for welcoming",
-            listOf("image", "banner", "bannerimage", "welcomeimage"),
+            listOf("image", "banner", "bannerimage", "welcomeimage", "setbanner"),
             WelcomeSettings::imagePath as KMutableProperty1<WelcomeSettings, Any?>,
             prompt = "Now setting welcome image: please upload directly to Discord. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped. Enter **remove** to remove any currently set image.",
             default = null,
             parser = ::verifySaveImage,
-            value = { welcome -> if(welcome.imagePath != null) "banner image SET" else "no banner image" }
+            value = { welcome -> if(welcome.imagePath != null) "banner image SET: can be downloaded with **welcome getbanner** if needed." else "banner image NOT set." }
         ),
         CustomElement(
             "Image message",
@@ -111,9 +111,13 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
                     // allow downloading the existing banner
                     val banner = File(WelcomeImageGenerator.bannerRoot, "${target.id.asString()}.png")
 
-                    chan.createMessage { spec ->
-                        spec.addFile("welcome_banner.png", banner.inputStream())
-                    }.awaitSingle()
+                    if(banner.exists()) {
+                        chan.createMessage { spec ->
+                            spec.addFile("welcome_banner.png", banner.inputStream())
+                        }.awaitSingle()
+                    } else {
+                        error("Welcome banner image is not set for this server.").awaitSingle()
+                    }
                 }
                 else -> {
                     val oldImage = welcomer.imagePath

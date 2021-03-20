@@ -18,7 +18,7 @@ object GraphicsUtil {
         // often, the max font width will fit. otherwise, approximate a font size and scale
         if(wTextMax <= maxWidth) return FontFit(maxFont, str)
 
-        val scaleFactor = maxWidth / wTextMax
+        val scaleFactor = maxWidth / wTextMax.toFloat()
         val scaledPt = max(maxPt * scaleFactor, minPt) // cap font size at minPt
         val scaledFont = useFont.deriveFont(scaledPt)
         val metrics = canvas.getFontMetrics(scaledFont)
