@@ -22,7 +22,6 @@ import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
@@ -159,7 +158,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                         spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
 
                                         spec.setEmbed { embed ->
-                                            embed.setColor(Color.of(1942002))
+                                            val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
+                                            embed.setColor(Color.of(color))
                                             val author = (if(tweet.retweet) referenceUser else user) ?: user
                                             embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
 
