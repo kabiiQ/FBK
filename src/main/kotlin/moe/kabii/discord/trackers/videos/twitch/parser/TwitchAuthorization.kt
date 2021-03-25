@@ -11,7 +11,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
-class Authorization {
+class TwitchAuthorization {
     private val clientID = Keys.config[Keys.Twitch.client]
     private val clientSecret = Keys.config[Keys.Twitch.secret]
     var accessToken = Keys.config[Keys.Twitch.token]

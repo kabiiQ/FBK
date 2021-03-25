@@ -26,7 +26,7 @@ object TwitchParser {
     val color = Color.of(6570405)
 
     private val clientID = Keys.config[Keys.Twitch.client]
-    private val oauth = Authorization()
+    private val oauth = TwitchAuthorization()
 
     private val gameCache = mutableMapOf<Long, TwitchGameInfo>()
 

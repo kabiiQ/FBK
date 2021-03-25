@@ -2,7 +2,7 @@ package moe.kabii.command.commands.trackers
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -20,7 +20,7 @@ object TwitterTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the twitter feature is enabled here
         if(origin.guild != null) {
-            if(features == null || !features.twitterChannel) throw FeatureDisabledException("twitter", origin)
+            if(features == null || !features.twitterChannel) throw ChannelFeatureDisabledException("twitter", origin)
         }
 
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {

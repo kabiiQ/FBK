@@ -16,6 +16,7 @@ object PS2OutfitLookupCommands : CommandContainer {
 
         init {
             discord {
+                PS2Command.checkEnabled(this)
                 if(args.isEmpty()) {
                     usage("**ps2outfit** is used to look up and outfit by their tag. **ps2outfit:name** can be used to look up by name.", "ps2outfit <TAG>")
                     return@discord
@@ -25,11 +26,12 @@ object PS2OutfitLookupCommands : CommandContainer {
         }
     }
 
-    object PS2OutfitLookupByName : Command("ps2outfit:name") {
+    object PS2OutfitLookupByName : Command("ps2outfit:name", "psoutfit:name", "psfit:name", "ps2fit:name") {
         override val wikiPath: String? = null // todo
 
         init {
             discord {
+                PS2Command.checkEnabled(this)
                 if(args.isEmpty()) {
                     usage("**ps2outfit:name is used to look up an outfit by their full name, in the event they have no tag.", "ps2outfit:name <outfit name>").awaitSingle()
                     return@discord

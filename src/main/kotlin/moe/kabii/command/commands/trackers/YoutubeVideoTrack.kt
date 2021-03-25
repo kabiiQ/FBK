@@ -4,7 +4,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
-import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.DiscordObjects
@@ -28,7 +28,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
                 val features = config.options.featureChannels[chan.id.asLong()]
                 if(features == null || !features.youtubeChannel) {
                     // feature not enabled, allow moderators to bypass
-                    if(!member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)) throw FeatureDisabledException(YoutubeTarget.featureName, this)
+                    if(!member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)) throw ChannelFeatureDisabledException(YoutubeTarget.featureName, this)
                 } else {
                     // feature is enabled, but restrict if guild has 'locked' config
                     if(features.locked) {

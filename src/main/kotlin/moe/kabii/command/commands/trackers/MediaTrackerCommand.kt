@@ -4,7 +4,7 @@ import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -27,7 +27,7 @@ object MediaTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the media list feature is enabled here
         if(origin.guild != null) {
-            if(features == null || !features.animeChannel) throw FeatureDisabledException("anime", origin)
+            if(features == null || !features.animeChannel) throw ChannelFeatureDisabledException("anime", origin)
         }
 
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite

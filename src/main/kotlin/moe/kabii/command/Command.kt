@@ -47,5 +47,6 @@ abstract class Command(val baseName: String, vararg alias: String) {
 }
 
 class GuildTargetInvalidException(val string: String) : RuntimeException()
-class FeatureDisabledException(val feature: String, val origin: DiscordParameters) : RuntimeException()
+class ChannelFeatureDisabledException(val feature: String, val origin: DiscordParameters) : RuntimeException()
+class GuildFeatureDisabledException(val featureName: String, val enablePermission: Permission?, val adminEnable: String?) : RuntimeException()
 class CommandAbortedException : RuntimeException()

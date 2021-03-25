@@ -8,7 +8,7 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.FeatureDisabledException
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
@@ -47,7 +47,7 @@ internal interface AudioCommandContainer : CommandContainer {
         val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
         if(musicChan != true) {
             if(origin.run { member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS) }) return
-            else throw FeatureDisabledException("music", origin)
+            else throw ChannelFeatureDisabledException("music", origin)
         }
     }
 

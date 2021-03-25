@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
+import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
@@ -22,7 +23,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class MessageHandler(val manager: CommandManager) {
+class MessageHandler(val manager: CommandManager, val services: ServiceWatcherManager) {
     val mention: Regex by lazy {
         val id = DiscordBot.selfId.long
         Regex("<@!?$id>")
@@ -111,7 +112,7 @@ class MessageHandler(val manager: CommandManager) {
                 val isPM = !event.guildId.isPresent
                 // command parameters
                 val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
-                if(!enabled) return@launch
+                if(!enabled) throw GuildFeatureDisabledException("**${command.baseName} command", null, null)
                 val guild = event.guild.awaitFirstOrNull()
                 val targetID = (guild?.id ?: author.id).asLong()
                 val username = author.username
@@ -142,10 +143,23 @@ class MessageHandler(val manager: CommandManager) {
                     val reqs = perms.perms.joinToString(", ")
                     param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
 
-                } catch (feat: FeatureDisabledException) {
+                } catch (feat: ChannelFeatureDisabledException) {
                     val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
-                    val enableNotice = if(channelMod) " Channel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**." else ""
-                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice").subscribe()
+                    val enableNotice = if(channelMod) "\nChannel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**." else ""
+                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice")
+                        .awaitSingle()
+
+                } catch (guildFeature: GuildFeatureDisabledException) {
+
+                    val serverAdmin = guildFeature.enablePermission?.run { param.member.hasPermissions(this) }
+                    val enableNotice = if(serverAdmin == true && guildFeature.adminEnable != null) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
+                    author.privateChannel
+                        .flatMap { pm ->
+                            pm.createEmbed { spec ->
+                                errorColor(spec)
+                                spec.setDescription("I tried to respond to your command **${command.baseName} in channel ${chan.mention} but the ${guildFeature.featureName} is not enabled in **$guildName**.$enableNotice")
+                            }
+                        }.awaitSingle()
 
                 } catch (ba: BotAdminException) {
                     LOG.info("Bot admin check failed: $param")
@@ -162,15 +176,16 @@ class MessageHandler(val manager: CommandManager) {
                             if (ce.errorResponse.orNull()?.fields?.get("message")?.equals("Missing Permissions") != true) return@launch
                             val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
                             val listMissing = command.discordReqs
-                                    .filterNot(botPermissions::contains)
-                                    .joinToString("\n")
+                                .filterNot(botPermissions::contains)
+                                .map(Permission::friendlyName)
+                                .joinToString("\n")
                             author.privateChannel
                                     .flatMap { pm ->
                                         pm.createEmbed { spec ->
                                             errorColor(spec)
                                             spec.setDescription("I tried to respond to your command **${command.baseName}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
                                         }
-                                    }.subscribe()
+                                    }.awaitSingle()
                         }
                         else -> {
                             LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetID: ${ce.message}")

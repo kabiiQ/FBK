@@ -4,7 +4,9 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
+import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import org.apache.commons.lang.WordUtils
 
 suspend fun Message.createJumpLink(): String {
     val guild = guild.awaitFirstOrNull()
@@ -28,3 +30,6 @@ suspend fun User.userAddress(guild: Guild): String {
 }
 
 fun User.userAddress(): String = "$username#$discriminator"
+
+val Permission.friendlyName
+get() = name.replace("_", "").run(WordUtils::capitalizeFully)

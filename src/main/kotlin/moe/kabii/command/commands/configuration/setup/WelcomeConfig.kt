@@ -23,7 +23,7 @@ import javax.imageio.ImageIO
 import kotlin.reflect.KMutableProperty1
 
 object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomesetup", "setupwelcome", "welcomer") {
-    override val wikiPath = "Welcoming-Users#welcome-message-configuration"
+    override val wikiPath = "Welcoming-Users"
     private const val variableWiki = "https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables"
 
     object WelcomeConfigModule : ConfigurationModule<WelcomeSettings>(

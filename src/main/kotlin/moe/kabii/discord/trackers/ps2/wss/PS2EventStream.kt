@@ -38,6 +38,7 @@ class PS2EventStream(val discord: GatewayDiscordClient) : Runnable {
         val uri = URI("wss://push.planetside2.com/streaming?environment=ps2&service-id=s:$serviceId")
 
         applicationLoop {
+            LOG.info("PS2 WebSocket RESET")
             // connect to ps2 websocket api
             try {
                 val channel = Channel<WSSEvent>()

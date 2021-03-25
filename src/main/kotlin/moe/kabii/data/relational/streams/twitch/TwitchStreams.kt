@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.select
 
@@ -39,7 +40,8 @@ object DBTwitchStreams {
                     TwitchStreams
                         .innerJoin(TrackedStreams.StreamChannels)
                         .select {
-                            TrackedStreams.StreamChannels.siteChannelID eq twitchId
+                            TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH and
+                                    (TrackedStreams.StreamChannels.siteChannelID eq twitchId)
                         }
                 )
             }

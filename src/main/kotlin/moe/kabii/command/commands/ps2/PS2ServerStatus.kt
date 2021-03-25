@@ -13,6 +13,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
 
     init {
         discord {
+            PS2Command.checkEnabled(this)
             // get all servers and list status
             val servers = try {
                 PS2Parser.getServers()

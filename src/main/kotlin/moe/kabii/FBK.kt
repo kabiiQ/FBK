@@ -68,9 +68,6 @@ fun main() {
         .build()
 
     val manager = CommandManager()
-    val discordHandler = MessageHandler(manager)
-    val twitchHandler = TwitchMessageHandler(manager)
-
     // register all commands with the command manager
     reflection.getSubTypesOf(Command::class.java)
         .forEach(manager::registerClass)
@@ -108,7 +105,11 @@ fun main() {
     }
 
     // start lifetime task threads
-    ServiceWatcherManager(gateway).launch()
+    val services = ServiceWatcherManager(gateway)
+    services.launch()
+
+    val discordHandler = MessageHandler(manager, services)
+    val twitchHandler = TwitchMessageHandler(manager)
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
