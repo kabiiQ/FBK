@@ -28,6 +28,8 @@ object WelcomeImageGenerator {
     private val usernamePt = 64f
     private val textPt = 64f
 
+    private val shadowColor = Color(0f, 0f, 0f, 0.5f)
+
     const val targetHeight = 512
     const val targetWidth = targetHeight * 2
     val dimensionStr = "${targetWidth}x$targetHeight"
@@ -63,7 +65,7 @@ object WelcomeImageGenerator {
                 if(tagWidth <= image.width) {
                     val xCenter = (image.width - tagWidth) / 2
                     graphics.font = taglineFont
-                    graphics.color = Color.BLACK
+                    graphics.color = shadowColor
                     graphics.drawString(config.welcomeTagLine, xCenter - 4f, y - 4f) // drop shadow up-left offset
                     graphics.color = textColor
                     graphics.drawString(config.welcomeTagLine, xCenter, y)
@@ -86,7 +88,7 @@ object WelcomeImageGenerator {
                 val xCenter = (image.width - nameWidth) / 2f
 
                 y += lineSpacing
-                graphics.color = Color.BLACK
+                graphics.color = shadowColor
                 graphics.drawString(username, xCenter - 2f, y - 2f) // drop shadow down-left offset
                 graphics.color = textColor
                 graphics.drawString(username, xCenter, y)
@@ -146,7 +148,7 @@ object WelcomeImageGenerator {
 
                 y += max(yCenter, yFontFit)
 
-                graphics.color = Color.BLACK
+                graphics.color = shadowColor
                 graphics.drawString(str, xCenter - 2f, y - 2f)
                 graphics.color = textColor
                 graphics.drawString(str, xCenter, y)

@@ -65,13 +65,13 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                 msgArgs.getOrNull(1)
             }
             else -> null
-        }
+        }?.toLowerCase()
 
         val author = event.message.author.orNull() ?: return@launch
         if (cmdStr != null) {
             if(config != null) {
                 // custom command listener
-                config.customCommands.commands.find { custom -> custom.command == cmdStr.toLowerCase() }?.run {
+                config.customCommands.commands.find { custom -> custom.command == cmdStr }?.run {
                     if (!restrict || event.member.get().hasPermissions(Permission.MANAGE_MESSAGES)) {
                         event.message.channel
                             .flatMap { chan -> chan.createMessage(response) }
@@ -80,7 +80,7 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                 }
 
                 // role command listener
-                config.selfRoles.roleCommands.toMap().entries.find { (command, _) -> cmdStr.toLowerCase() == command }
+                config.selfRoles.roleCommands.toMap().entries.find { (command, _) -> cmdStr == command }
                     ?.also { (command, role) ->
                         val guildRole =
                             event.guild.flatMap { guild -> guild.getRoleById(role.snowflake) }.tryAwait()
@@ -107,12 +107,12 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                 }
             }
 
-            val command = manager.commandsDiscord[cmdStr.toLowerCase()]
+            val command = manager.commandsDiscord[cmdStr]
             if (command != null) {
                 val isPM = !event.guildId.isPresent
                 // command parameters
                 val enabled = if(isPM) true else config!!.commandFilter.isCommandEnabled(command)
-                if(!enabled) throw GuildFeatureDisabledException("**${command.baseName} command", null, null)
+                if(!enabled) throw GuildCommandDisabledException(cmdStr)
                 val guild = event.guild.awaitFirstOrNull()
                 val targetID = (guild?.id ?: author.id).asLong()
                 val username = author.username
@@ -151,13 +151,18 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
 
                 } catch (guildFeature: GuildFeatureDisabledException) {
 
-                    val serverAdmin = guildFeature.enablePermission?.run { param.member.hasPermissions(this) }
-                    val enableNotice = if(serverAdmin == true && guildFeature.adminEnable != null) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
+                    val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
+                    val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
+                    param.error("I tried to respond to your command **$cmdStr** in channel ${chan.mention} but the **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")
+                        .awaitSingle()
+
+                } catch (cmd: GuildCommandDisabledException) {
+
                     author.privateChannel
                         .flatMap { pm ->
                             pm.createEmbed { spec ->
                                 errorColor(spec)
-                                spec.setDescription("I tried to respond to your command **${command.baseName} in channel ${chan.mention} but the ${guildFeature.featureName} is not enabled in **$guildName**.$enableNotice")
+                                spec.setDescription("I tried to respond to your command **$cmdStr** in channel ${chan.mention} but that command has been disabled by the staff of **$guildName**.")
                             }
                         }.awaitSingle()
 

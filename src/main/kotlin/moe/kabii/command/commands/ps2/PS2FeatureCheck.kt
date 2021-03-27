@@ -10,7 +10,7 @@ object PS2Command {
     fun checkEnabled(origin: DiscordParameters) {
         if(origin.guild != null) {
             val feature = GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).guildSettings.ps2Commands
-            if(!feature) throw GuildFeatureDisabledException("**PS2** feature", Permission.MANAGE_GUILD, "guildcfg ps2 enable")
+            if(!feature) throw GuildFeatureDisabledException("PS2", Permission.MANAGE_GUILD, "guildcfg ps2 enable")
         } // else this is pm, allow
     }
 
