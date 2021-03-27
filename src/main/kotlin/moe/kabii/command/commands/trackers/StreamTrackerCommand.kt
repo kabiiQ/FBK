@@ -2,7 +2,8 @@ package moe.kabii.command.commands.trackers
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.FeatureDisabledException
+import moe.kabii.LOG
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -16,6 +17,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
@@ -26,7 +28,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // make sure feature is enabled or this channel is private
         if(origin.guild != null) {
-            if(features == null || !streamTarget.channelFeature.get(features)) throw FeatureDisabledException(streamTarget.featureName, origin)
+            if(features == null || !streamTarget.channelFeature.get(features)) throw ChannelFeatureDisabledException(streamTarget.featureName, origin)
         } // else this is PM, allow
 
         // validate stream is real and get service ID
@@ -59,7 +61,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // get the db 'channel' object or create if this is a new stream channel
         val dbChannel = newSuspendedTransaction {
-            TrackedStreams.StreamChannel.getOrInsert(site, streamId)
+            TrackedStreams.StreamChannel.getOrInsert(site, streamId, origin = origin)
         }
 
         newSuspendedTransaction {
@@ -69,7 +71,21 @@ object StreamTrackerCommand : TrackerCommand {
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
             }
         }
+
         origin.embed("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!").awaitSingle()
+
+        // side-effects for prompt data maintenance
+        try {
+            val callback = streamTarget.onTrack
+            if(callback != null) {
+                propagateTransaction {
+                    callback(origin, dbChannel)
+                }
+            }
+        } catch(e: Exception) {
+            LOG.warn("Error getting initial update for StreamChannel: ${e.message}")
+            LOG.info(e.stackTraceString)
+        }
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {

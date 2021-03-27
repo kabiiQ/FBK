@@ -9,7 +9,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -236,14 +235,6 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     }
 
     @WithinExposedContext
-    private suspend fun getStreamConfig(target: TrackedStreams.Target): StreamSettings {
-        // get channel stream embed settings
-        val (_, features) =
-            GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
-        return features?.streamSettings ?: StreamSettings() // use default settings for pm notifications
-    }
-
-    @WithinExposedContext
     suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedStreams.Target, time: Instant): Message? {
         // get target channel in discord
         val chan = getUpcomingChannel(target)
@@ -275,7 +266,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -320,7 +311,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -360,7 +351,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     @WithinExposedContext
     suspend fun sendLiveReminder(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         // get target channel in Discord
-        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
+        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, FeatureChannel::youtubeChannel, null)
 
         val mention = if(videoTrack.mentionRole != null) "<@&${videoTrack.mentionRole}> " else "<@${videoTrack.tracker.userID}> Livestream reminder: "
         val new = chan
@@ -374,10 +365,10 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
 
         // get target channel in discord, make sure it still exists
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
+        val guildId = target.discordChannel.guild?.guildID
+        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
 
         // get channel stream embed settings
-        val guildId = target.discordChannel.guild?.guildID
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
         val features = getStreamConfig(target)
 
@@ -440,22 +431,6 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
                 TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
                 return null
             } else throw ce
-        }
-    }
-
-    private suspend fun getChannel(guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
-        return try {
-            discord.getChannelById(channel.snowflake)
-                .ofType(MessageChannel::class.java)
-                .awaitSingle()
-        } catch(e: Exception) {
-            if(e is ClientException && e.status.code() == 403) {
-                LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
-            } else {
-                LOG.warn("${Thread.currentThread().name} - YoutubeNotifier :: Unable to get Discord channel: ${e.message}")
-            }
-            throw e
         }
     }
 

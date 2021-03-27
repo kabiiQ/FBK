@@ -67,6 +67,12 @@ object Keys : ConfigSpec("") {
     object Planetside : ConfigSpec("ps2") {
         val censusId by required<String>("census_id")
     }
+    object Twitcasting : ConfigSpec() {
+        val clientId by required<String>("twitcast_client_id")
+        val clientSecret by required<String>("twitcast_client_secret")
+        val webhookUrl by required<String>("twitcast_webhook_url")
+        val webhookPort by required<Int>("twitcast_webhook_port")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

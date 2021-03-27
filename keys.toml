@@ -62,3 +62,9 @@ gtranslator_key = ''
 
 [ps2]
 census_id = ''
+
+[twitcasting]
+twitcast_client_id = ''
+twitcast_client_secret = ''
+twitcast_webhook_url = ''
+twitcast_webhook_port = 8002

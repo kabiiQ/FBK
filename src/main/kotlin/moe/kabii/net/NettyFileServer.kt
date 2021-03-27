@@ -40,6 +40,7 @@ object NettyFileServer {
         val glitch = File(staticRoot, "Twitch_Glitch_Purple.png")
         val youtubeLogo = File(staticRoot, "youtube_social_circle_red.png")
         val twitterLogo = File(staticRoot, "twitter.png")
+        val twitcastingLogo = File(staticRoot, "twitcasting_logo.png")
 
         routing {
             get("/thumbnails/twitch/{twitchname}/{...}") {
@@ -91,6 +92,9 @@ object NettyFileServer {
             get("/twitter") {
                 call.respondFile(twitterLogo)
             }
+            get("/twitcasting") {
+                call.respondFile(twitcastingLogo)
+            }
         }
     }
 
@@ -98,6 +102,7 @@ object NettyFileServer {
     val glitch = "$domain/glitch"
     val youtubeLogo = "$domain/ytlogo"
     val twitterLogo = "$domain/twitter"
+    val twitcastingLogo = "$domain/twitcasting"
     fun rgb(rgb: RGB): String {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"

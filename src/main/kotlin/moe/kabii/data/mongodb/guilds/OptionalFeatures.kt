@@ -16,6 +16,8 @@ data class FeatureChannel(
     var locked: Boolean = true,
     var twitchChannel: Boolean = false,
     var youtubeChannel: Boolean = false,
+    var twitcastingChannel: Boolean = false,
+    var streamsChannel: Boolean = booleanArrayOf(twitchChannel, youtubeChannel, twitcastingChannel).any(true::equals),
     var twitterChannel: Boolean = false,
     var animeChannel: Boolean = false,
     var logChannel: Boolean = false,

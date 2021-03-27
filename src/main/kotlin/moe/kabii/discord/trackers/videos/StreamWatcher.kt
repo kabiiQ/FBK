@@ -10,7 +10,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.MongoStreamChannel
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -19,6 +21,8 @@ import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.discord.trackers.TrackerUtil
+import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.discord.util.EditableChannelWrapper
 import moe.kabii.discord.util.errorColor
 import moe.kabii.rusty.Err
@@ -29,6 +33,7 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
+import kotlin.reflect.KMutableProperty1
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 
@@ -79,6 +84,12 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 
                 channel.delete()
                 LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
+
+                // todo definitely extract/encapsulate this behavior (using TrackerTarget?) if we add any more side effects like this
+                if(channel.site == TrackedStreams.DBSite.TWITCASTING) {
+                    TwitcastWebhookManager.unregister(channel.siteChannelID)
+                }
+
                 null
             } else emptyList()
         }
@@ -202,5 +213,30 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 } else throw ce
             }
         }
+    }
+
+    @WithinExposedContext
+    suspend fun getChannel(guild: Long?, channel: Long, feature: KMutableProperty1<FeatureChannel, Boolean>, deleteTarget: TrackedStreams.Target?): MessageChannel {
+        return try {
+            discord.getChannelById(channel.snowflake)
+                .ofType(MessageChannel::class.java)
+                .awaitSingle()
+        } catch(e: Exception) {
+            if(e is ClientException && e.status.code() == 403) {
+                LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. StreamWatcher.java")
+                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
+            } else {
+                LOG.warn("${Thread.currentThread().name} - StreamWatcher :: Unable to get Discord channel: ${e.message}")
+            }
+            throw e
+        }
+    }
+
+    @WithinExposedContext
+    suspend fun getStreamConfig(target: TrackedStreams.Target): StreamSettings {
+        // get channel stream embed settings
+        val (_, features) =
+            GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+        return features?.streamSettings ?: StreamSettings() // use default settings for pm notifications
     }
 }

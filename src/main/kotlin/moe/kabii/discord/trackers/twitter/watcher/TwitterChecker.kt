@@ -54,13 +54,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
-                        val targets = getActiveTargets(feed) ?: return@forEach // feed untracked entirely
-
-                        if(targets.isEmpty()) {
-                            LOG.info("Untracking Twitter Feed '${feed.userId} as it is not tracked in any channels.")
-                            feed.delete()
-                            return@forEach
-                        }
+                        val targets = getActiveTargets(feed)?.ifEmpty { null }
+                            ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
                         // determine if any targets want RT or quote tweets
                         var pullRetweets = false

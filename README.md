@@ -8,9 +8,11 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 FBK is now available for invite and public use as of December 2020. I have not done any sort of advertising yet, but feel free to use it or share it.
 
-[Invite link granting default permissions](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=288681168&scope=bot)
+#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=288681168&scope=applications.commands%20bot)
 
-[Invite link granting Administrator (all permissions)](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=8&scope=bot)
+##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
+
+##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=314672047718531072&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
 
 # Join our Discord server
 
@@ -29,7 +31,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Livestream/Video notifications](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
     - Post information on specific streams while they are live
     - Optionally mention a role when they become live
-    - Currently supports **Twitch** livestreams, and **YouTube** livestreams/video uploads.
+    - Currently supports **Twitch** and **TwitCasting** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**

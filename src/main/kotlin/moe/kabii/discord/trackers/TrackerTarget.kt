@@ -9,8 +9,10 @@ import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -32,6 +34,9 @@ sealed class TrackerTarget(
 // streaming targets
 data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String, val url: String)
 
+typealias TrackCallback = (suspend (DiscordParameters, TrackedStreams.StreamChannel) -> Unit)?
+
+// enforces the properties required throughout the code to add a streaming site and relates them to each other
 sealed class StreamingTarget(
     val serviceColor: Color,
     full: String,
@@ -43,6 +48,8 @@ sealed class StreamingTarget(
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: TrackedStreams.DBSite
+
+    abstract val onTrack: TrackCallback
 
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
     abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
@@ -66,16 +73,19 @@ object TwitchTarget : StreamingTarget(
     override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
 
     override fun feedById(id: String): String = "" // unavailable without making requests. todo store in db ?
+
+    override val onTrack = null
 }
 
+private const val youtubeRegex = "([a-zA-Z0-9-_]{24})"
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::youtubeChannel,
     "youtube",
     listOf(
-        Regex("([a-zA-Z0-9-_]{24})"),
-        Regex("youtube.com/channel/([a-zA-Z0-9-_]{24})")
+        Regex(youtubeRegex),
+        Regex("youtube.com/channel/$youtubeRegex")
     ),
     "youtube", "yt", "youtube.com", "utube", "ytube"
 ) {
@@ -98,6 +108,45 @@ object YoutubeTarget : StreamingTarget(
     }
 
     override fun feedById(id: String): String = URLUtil.StreamingSites.Youtube.channel(id)
+
+    override val onTrack: TrackCallback = { _, channel ->
+        YoutubeVideoIntake.intakeExisting(channel.siteChannelID)
+    }
+}
+
+object TwitcastingTarget : StreamingTarget(
+    TwitcastingParser.color,
+    "TwitCasting",
+    FeatureChannel::twitcastingChannel,
+    "twitcasting",
+    listOf(
+        Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})"),
+        Regex("twitcasting.tv/([a-z0-9_]{4,18})"),
+    ),
+    "twitcasting", "twitcast", "tcast"
+) {
+    override val dbSite: TrackedStreams.DBSite
+        get() = TrackedStreams.DBSite.TWITCASTING
+
+    override suspend fun getChannel(id: String) = getChannelByIdentifier(id)
+    override suspend fun getChannelById(id: String) = getChannelByIdentifier(id)
+
+    override fun feedById(id: String) = ""
+
+    private suspend fun getChannelByIdentifier(identifier: String) = try {
+        val user = TwitcastingParser.searchUser(identifier)
+        if(user != null) {
+            Ok(BasicStreamChannel(TwitcastingTarget, user.userId, user.screenId, user.url))
+        } else Err(StreamErr.NotFound)
+    } catch(e: Exception) {
+        LOG.debug("Error getting TwitCasting channel: ${e.message}")
+        LOG.debug(e.stackTraceString)
+        Err(StreamErr.IO)
+    }
+
+    override val onTrack: TrackCallback = { origin, channel ->
+        origin.handler.services.twitcastChecker.checkUserForMovie(channel)
+    }
 }
 
 // anime targets
@@ -225,9 +274,10 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             return if(inputArgs.size == 1) {
 
                 // if 1 arg, user supplied just a username OR a url (containing site and username)
+                val arg = inputArgs[0].toLowerCase()
                 val urlMatch = declaredTargets.map { supportedSite ->
                     supportedSite.url.mapNotNull { exactUrl ->
-                        exactUrl.find(inputArgs[0])?.to(supportedSite)
+                        exactUrl.find(arg)?.to(supportedSite)
                     }
                 }.flatten().firstOrNull()
 

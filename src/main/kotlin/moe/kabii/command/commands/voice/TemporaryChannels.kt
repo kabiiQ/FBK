@@ -5,9 +5,9 @@ import discord4j.rest.util.Permission
 import discord4j.rest.util.PermissionSet
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.success
 

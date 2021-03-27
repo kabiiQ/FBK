@@ -9,7 +9,8 @@ data class GuildSettings(
     var twitchURLInfo: Boolean = false,
     var utilizeInvites: Boolean = false,
     var publishTrackerMessages: Boolean = false,
-    var reactionTranslations: Boolean = true
+    var reactionTranslations: Boolean = true,
+    var ps2Commands: Boolean = false
 )
 
 data class StreamInfo(

@@ -3,8 +3,8 @@ package moe.kabii.command.commands.trackers
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.command.Command
 import moe.kabii.command.ChannelFeatureDisabledException
+import moe.kabii.command.Command
 import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.DiscordObjects
