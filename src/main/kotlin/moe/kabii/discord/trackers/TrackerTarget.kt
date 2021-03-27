@@ -59,7 +59,7 @@ sealed class StreamingTarget(
 object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     "Twitch",
-    FeatureChannel::twitchChannel,
+    FeatureChannel::streamsChannel,
     "twitch",
     listOf(
         Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
@@ -81,7 +81,7 @@ private const val youtubeRegex = "([a-zA-Z0-9-_]{24})"
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
-    FeatureChannel::youtubeChannel,
+    FeatureChannel::streamsChannel,
     "youtube",
     listOf(
         Regex(youtubeRegex),
@@ -117,7 +117,7 @@ object YoutubeTarget : StreamingTarget(
 object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
     "TwitCasting",
-    FeatureChannel::twitcastingChannel,
+    FeatureChannel::streamsChannel,
     "twitcasting",
     listOf(
         Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})"),

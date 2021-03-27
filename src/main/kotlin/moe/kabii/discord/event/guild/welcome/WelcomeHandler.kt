@@ -39,7 +39,7 @@ object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class)
 
                     config.welcomer.channelId = null
                     config.save()
-                    val message = "I tried to send a **welcome** message but I am missing permission to send embeds/messages in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}welcome channel <#$channelId> to re-enable the welcomer."
+                    val message = "I tried to send a **welcome** message but I am missing permission to send messages+embeds/files in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}welcome channel <#$channelId> to re-enable the welcomer."
                     TrackerUtil.notifyOwner(event.client, event.guildId.asLong(), message)
                 }
                 else -> throw ce

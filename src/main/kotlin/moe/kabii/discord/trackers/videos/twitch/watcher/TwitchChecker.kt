@@ -241,7 +241,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         if (err == 403) {
                             // we don't have perms to send
                             LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
-                            TrackerUtil.permissionDenied(chan, FeatureChannel::twitchChannel, target::delete)
+                            TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
                             return@forEach
                         } else throw ce
                     }

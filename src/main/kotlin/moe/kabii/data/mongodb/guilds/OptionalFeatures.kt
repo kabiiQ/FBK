@@ -14,6 +14,7 @@ data class OptionalFeatures(
 data class FeatureChannel(
     val channelID: Long,
     var locked: Boolean = true,
+    // todo remove individual fields after db commit
     var twitchChannel: Boolean = false,
     var youtubeChannel: Boolean = false,
     var twitcastingChannel: Boolean = false,
@@ -33,9 +34,7 @@ data class FeatureChannel(
     val twitterSettings: TwitterSettings = TwitterSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
-    fun anyEnabled() = booleanArrayOf(twitchChannel, youtubeChannel, twitterChannel, animeChannel, logChannel).any(true::equals)
-
-    fun isStreamChannel() = booleanArrayOf(twitchChannel, youtubeChannel).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(streamsChannel, twitterChannel, animeChannel, logChannel).any(true::equals)
 
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
@@ -44,9 +43,8 @@ data class FeatureChannel(
         // fallback to enabled tracker of specified type
         // if multiple are enabled, it will default in this order
         return when {
-            twitchChannel && type.isSuperclassOf(TwitchTarget::class) -> TwitchTarget
+            streamsChannel && type.isSuperclassOf(StreamingTarget::class) -> TwitchTarget
             twitterChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
-            youtubeChannel && type.isSuperclassOf(YoutubeTarget::class) -> YoutubeTarget
             animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             ps2Channel && type.isSuperclassOf(PS2Target::class) -> PS2Target.Player
             else -> null

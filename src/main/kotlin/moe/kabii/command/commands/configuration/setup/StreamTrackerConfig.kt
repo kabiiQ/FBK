@@ -68,7 +68,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             channelVerify(Permission.MANAGE_CHANNELS)
             val features = features()
 
-            if(!features.isStreamChannel()) {
+            if(!features.streamsChannel) {
                 error("**#${guildChan.name}** does not have stream tracking enabled.").awaitSingle()
                 return@discord
             }

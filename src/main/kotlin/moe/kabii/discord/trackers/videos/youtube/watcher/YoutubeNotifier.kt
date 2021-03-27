@@ -254,7 +254,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
+                TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -266,7 +266,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::streamsChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -301,7 +301,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
+                TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -311,7 +311,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::streamsChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -340,7 +340,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
+                TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -351,7 +351,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
     @WithinExposedContext
     suspend fun sendLiveReminder(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         // get target channel in Discord
-        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, FeatureChannel::youtubeChannel, null)
+        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, FeatureChannel::streamsChannel, null)
 
         val mention = if(videoTrack.mentionRole != null) "<@&${videoTrack.mentionRole}> " else "<@${videoTrack.tracker.userID}> Livestream reminder: "
         val new = chan
@@ -366,7 +366,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
 
         // get target channel in discord, make sure it still exists
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::youtubeChannel, target)
+        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamsChannel, target)
 
         // get channel stream embed settings
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
@@ -428,7 +428,7 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::youtubeChannel, target::delete)
+                TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
                 return null
             } else throw ce
         }

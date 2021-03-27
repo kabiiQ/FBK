@@ -224,7 +224,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         } catch(e: Exception) {
             if(e is ClientException && e.status.code() == 403) {
                 LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. StreamWatcher.java")
-                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::youtubeChannel, { deleteTarget?.delete() })
+                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::streamsChannel, { deleteTarget?.delete() })
             } else {
                 LOG.warn("${Thread.currentThread().name} - StreamWatcher :: Unable to get Discord channel: ${e.message}")
             }
