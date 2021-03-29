@@ -27,7 +27,7 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
         routing {
 
             trace { trace ->
-                LOG.info(trace.buildText())
+                LOG.debug(trace.buildText())
             }
 
             post {
