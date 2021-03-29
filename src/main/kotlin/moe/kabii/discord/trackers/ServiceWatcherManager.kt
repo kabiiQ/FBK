@@ -36,7 +36,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
         val twitcastCooldowns = ServiceRequestCooldownSpec(
             callDelay = 1100L,
-            minimumRepeatTime = 300_000L
+            minimumRepeatTime = 900_000L
         )
         twitcastChecker = TwitcastChecker(discord, twitcastCooldowns)
 

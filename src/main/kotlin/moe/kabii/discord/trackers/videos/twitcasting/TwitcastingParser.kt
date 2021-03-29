@@ -66,8 +66,12 @@ object TwitcastingParser {
                 val body = response.body!!.string()
                 return when {
                     response.isSuccessful -> {
-                        val json = MOSHI.adapter(R::class.java).fromJson(body)
-                        json ?: throw IOException("Invalid JSON provided by Twitcasting: $body")
+                        try {
+                            // wrap both null and exception -> ioexception
+                            MOSHI.adapter(R::class.java).fromJson(body) ?: throw IOException()
+                        } catch(e: Exception) {
+                            throw IOException("Invalid JSON provided by Twitcasting: $body")
+                        }
                     }
                     // twitcasting should return 404 for legitimate 'user/movie does not exist' response - validate this isn't a regular 404
                     response.code == 404 && body.contains("\"message\":\"Not Found\"", ignoreCase = true) -> {

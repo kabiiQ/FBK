@@ -80,7 +80,7 @@ class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceReque
         val targets = getActiveTargets(channel) ?: return // channel untracked
         if(user.live) {
             // user is now live
-            val movie = TwitcastingParser.getMovie(user.movieId) ?: throw IOException("TwitCasting user returned movie ID: ${user.movieId} but the movie does not exist")
+            val movie = user.movieId?.run { TwitcastingParser.getMovie(this) } ?: throw IOException("TwitCasting user returned movie ID: ${user.movieId} but the movie does not exist")
             checkMovie(channel, movie, targets)
         }
     }

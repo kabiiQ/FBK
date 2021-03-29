@@ -70,8 +70,8 @@ object Keys : ConfigSpec("") {
     object Twitcasting : ConfigSpec() {
         val clientId by required<String>("twitcast_client_id")
         val clientSecret by required<String>("twitcast_client_secret")
-        val webhookUrl by required<String>("twitcast_webhook_url")
         val webhookPort by required<Int>("twitcast_webhook_port")
+        val signature by required<String>("twitcast_webhook_signature")
     }
 
     fun saveConfigFile() {

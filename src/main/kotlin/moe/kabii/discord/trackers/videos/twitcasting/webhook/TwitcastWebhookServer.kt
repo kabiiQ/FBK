@@ -20,10 +20,15 @@ import moe.kabii.util.extensions.propagateTransaction
 class TwitcastWebhookServer(val checker: TwitcastChecker) {
 
     private val port = Keys.config[Keys.Twitcasting.webhookPort]
+    private val signature = Keys.config[Keys.Twitcasting.signature]
 
     private val incomingAdapter = MOSHI.adapter(TwitcastingMovieResponse::class.java)
-    val server = embeddedServer(Netty, port = port) {
+    val server = embeddedServer(Netty, port = this.port) {
         routing {
+
+            trace { trace ->
+                LOG.info(trace.buildText())
+            }
 
             post {
                 call.response.status(HttpStatusCode.OK)
@@ -40,7 +45,10 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
                     }
                 }
 
-                // todo validation
+                if(movie?.signature != signature) {
+                    LOG.warn("TwitCasting POST with invalid signature: $movie")
+                } else LOG.debug("TwitCasting POST passed validation: ${movie.signature}")
+
                 propagateTransaction {
                     val channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCASTING, movie.broadcaster.userId)
                     if(channel != null) {
@@ -48,7 +56,6 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
                     }
                 }
             }
-
         }
     }
 }

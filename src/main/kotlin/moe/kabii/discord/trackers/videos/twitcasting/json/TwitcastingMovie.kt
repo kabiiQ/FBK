@@ -7,7 +7,8 @@ import java.time.Instant
 @JsonClass(generateAdapter = true)
 data class TwitcastingMovieResponse(
     val movie: TwitcastingMovie,
-    val broadcaster: TwitcastingUser
+    val broadcaster: TwitcastingUser,
+    val signature: String?
 )
 
 @JsonClass(generateAdapter = true)
