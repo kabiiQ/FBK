@@ -146,6 +146,7 @@ object TwitcastingTarget : StreamingTarget(
 
     override val onTrack: TrackCallback = { origin, channel ->
         origin.handler.services.twitcastChecker.checkUserForMovie(channel)
+        TwitcastingParser.registerWebhook(channel.siteChannelID)
     }
 }
 
@@ -244,21 +245,19 @@ sealed class PS2Target(
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
 
     companion object {
-        // a bit rigid design-wise - enforces the current structure of the tracker classes to be nested.
-        // however, simple and better than manually adding targets
-        // todo refactor, do less manually/rigidly
-        val declaredTargets = TrackerTarget::class.sealedSubclasses
-            .flatMap { c -> c.sealedSubclasses }
-            .mapNotNull { c -> c.objectInstance }
-            .plus(
-                TrackerTarget::class.sealedSubclasses
-                    .mapNotNull { c -> c.objectInstance }
-            ).plus(
-                TrackerTarget::class.sealedSubclasses
-                    .flatMap { c -> c.sealedSubclasses }
-                    .flatMap { c -> c.sealedSubclasses }
-                    .mapNotNull { c -> c.objectInstance }
-            )
+        val declaredTargets: List<TrackerTarget>
+
+        init {
+            val targets = mutableListOf<TrackerTarget>()
+            fun addSubClasses(root: KClass<out TrackerTarget>) {
+                root.sealedSubclasses.mapNotNullTo(targets) { kclass ->
+                    addSubClasses(kclass)
+                    kclass.objectInstance
+                }
+            }
+            addSubClasses(TrackerTarget::class)
+            declaredTargets = targets
+        }
 
         fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID
