@@ -131,7 +131,9 @@ object TwitcastingTarget : StreamingTarget(
     override suspend fun getChannel(id: String) = getChannelByIdentifier(id)
     override suspend fun getChannelById(id: String) = getChannelByIdentifier(id)
 
-    override fun feedById(id: String) = ""
+    private val twitcastingNameType = Regex("c:[a-zA-Z0-9_]{4,15}")
+    override fun feedById(id: String)
+        = if(id.matches(twitcastingNameType)) URLUtil.StreamingSites.TwitCasting.channelByName(id) else ""
 
     private suspend fun getChannelByIdentifier(identifier: String) = try {
         val user = TwitcastingParser.searchUser(identifier)
