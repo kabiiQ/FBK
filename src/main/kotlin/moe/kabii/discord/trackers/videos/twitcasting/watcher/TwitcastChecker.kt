@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.videos.twitcasting.watcher
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
@@ -21,8 +22,10 @@ import kotlin.math.max
 class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, TwitcastNotifier(discord) {
 
     override fun run() {
-        val webhookServer = TwitcastWebhookServer(this)
-        webhookServer.server.start()
+        if(Keys.config[Keys.Twitcasting.listen]) {
+            val webhookServer = TwitcastWebhookServer(this)
+            webhookServer.server.start()
+        }
         applicationLoop {
             // slow interval poller to verify stream states (rapid processing done based on webhooks)
             val start = Instant.now()

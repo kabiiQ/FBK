@@ -2,6 +2,7 @@ package moe.kabii.discord.trackers.videos.twitcasting.webhook
 
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingWebhook
@@ -13,6 +14,9 @@ import java.time.Duration
 object TwitcastWebhookManager : Runnable {
 
     override fun run() {
+        // debug instances should not update webhook list and will not receive webhooks anyways if they are on a different IP
+        if(!Keys.config[Keys.Twitcasting.listen]) return
+
         applicationLoop {
             try {
                 validateAll()
@@ -26,8 +30,7 @@ object TwitcastWebhookManager : Runnable {
 
     private var activeWebhooks = mutableListOf<String>()
 
-    suspend fun validateAll() {
-
+    private suspend fun validateAll() {
         propagateTransaction {
 
             // get all active webhooks
@@ -70,7 +73,6 @@ object TwitcastWebhookManager : Runnable {
     }
 
     suspend fun unregister(userId: String) {
-        if(!activeWebhooks.contains(userId)) return
         val removed = TwitcastingParser.unregisterWebhook(userId)
         if(removed) {
             activeWebhooks.remove(userId)

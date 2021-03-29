@@ -124,7 +124,7 @@ object TwitcastingParser {
         delay()
         // DELETE request with info in ... query? just following docs
         val request = Request.Builder()
-            .url("$baseUrl/webhooks?user_id=$userId&events[]=liststarts&events[]=liveend")
+            .url("$baseUrl/webhooks?user_id=$userId&events[]=livestart&events[]=liveend")
             .delete()
             .run(::applyHeaders)
             .build()

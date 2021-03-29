@@ -68,3 +68,4 @@ twitcast_client_id = ''
 twitcast_client_secret = ''
 twitcast_webhook_port = 8002
 twitcast_webhook_signature = ''
+twitcast_webhook_listen = true
