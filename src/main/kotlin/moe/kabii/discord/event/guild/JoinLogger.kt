@@ -70,18 +70,18 @@ object JoinLogger {
                         .thenReturn(Unit).awaitSingle()
                 } catch (ce: ClientException) {
                     val err = ce.status.code()
-                    if (err == 404 || err == 403) {
+                    if (err == 404) {
                         LOG.info("Unable to access role in join configuration :: $joinConfig. Removing configuration")
                         config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted or not accessible
                         config.save()
-                        return@filter true
                     }
+                    return@filter true
                 }
                 false
             }.map(JoinConfiguration::role)
         }
 
-        if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")})"
+        if(failedRoles.isNotEmpty()) errorStr += " (Bot is missing permissions to add roles: ${failedRoles.joinToString(", ")}. Verify I have at least one role above all these roles.)"
 
         // send log message
 

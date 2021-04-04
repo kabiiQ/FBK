@@ -99,7 +99,7 @@ object TrackedStreams {
     object Mentions : IntIdTable() {
         val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
-        val mentionRole = long("discord_mention_role_id").uniqueIndex()
+        val mentionRole = long("discord_mention_role_id")
 
         override val primaryKey = PrimaryKey(streamChannel, guild)
     }

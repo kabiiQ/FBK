@@ -275,10 +275,9 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             return if(inputArgs.size == 1) {
 
                 // if 1 arg, user supplied just a username OR a url (containing site and username)
-                val arg = inputArgs[0].toLowerCase()
                 val urlMatch = declaredTargets.map { supportedSite ->
                     supportedSite.url.mapNotNull { exactUrl ->
-                        exactUrl.find(arg)?.to(supportedSite)
+                        exactUrl.find(inputArgs[0])?.to(supportedSite)
                     }
                 }.flatten().firstOrNull()
 
