@@ -1,5 +1,6 @@
 package moe.kabii.discord.event.guild.welcome
 
+import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.entity.Member
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
@@ -103,7 +104,13 @@ object WelcomeImageGenerator {
 
                 try {
                     val avatarUrl = URL("${member.avatarUrl}?size=256")
-                    val avatar = ImageIO.read(avatarUrl)
+
+                    // discord usually returns 256x256 avatar - unless original was smaller
+                    val raw = ImageIO.read(avatarUrl)
+                    val avatar = if(raw.height == avatarDia && raw.width == avatarDia) raw else {
+                        val resampler = ResampleOp(avatarDia, avatarDia, ResampleOp.FILTER_LANCZOS)
+                        resampler.filter(raw, null)
+                    }
 
                     // draw avatar in circle shape
                     y += outlineR + avatarPadding

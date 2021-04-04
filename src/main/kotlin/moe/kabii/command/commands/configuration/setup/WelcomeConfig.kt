@@ -175,7 +175,6 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             val imageUrl = URL(attachment.url)
             val image = ImageIO.read(imageUrl)
 
-
             val targetH = WelcomeImageGenerator.targetHeight
             val targetW = WelcomeImageGenerator.targetWidth
             // validate image size
