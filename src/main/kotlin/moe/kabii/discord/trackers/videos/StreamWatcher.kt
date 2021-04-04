@@ -40,14 +40,6 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     private val job = SupervisorJob()
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
 
-    private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
-
-    companion object {
-        // rename
-        private val job = SupervisorJob()
-        private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
-    }
-
     @WithinExposedContext
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val existingTargets = channel.targets
@@ -120,102 +112,6 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     }
 
     @WithinExposedContext
-    suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
-        // if this is a guild channel with the rename feature enabled, execute this functionality
-        val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms
-
-        val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
-        val features = config.options.featureChannels.getValue(guildChan.id.asLong())
-
-        val feature = features.streamSettings
-        if(!feature.renameEnabled) return // feature not enabled in channel
-
-        // get all live streams in this channel
-        val liveChannels = mutableListOf<TrackedStreams.StreamChannel>()
-
-        // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
-        // twitch notifs
-        DBTwitchStreams.Notification.wrapRows(
-            DBTwitchStreams.Notifications
-                .innerJoin(MessageHistory.Messages
-                    .innerJoin(DiscordObjects.Channels))
-                .select {
-                    DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                })
-            .filter { notif ->
-                if(endingStream != null) {
-                    notif.channelID.id != endingStream.id
-                } else true
-            }
-            .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
-
-        // yt notifs
-        YoutubeNotification.wrapRows(
-            YoutubeNotifications
-                .innerJoin(MessageHistory.Messages
-                    .innerJoin(DiscordObjects.Channels))
-                .select {
-                    DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                })
-            .filter { notif ->
-                if(endingStream != null) {
-                    notif.videoID.ytChannel.id != endingStream.id
-                } else true
-            }
-            .mapTo(liveChannels) { it.videoID.ytChannel }
-
-
-        // copy marks for safety (this thread can run at any time)
-        val marks = feature.marks.toList()
-        val currentName = guildChan.name
-
-        // generate new channel name
-        val newName = if(liveChannels.isEmpty()) {
-            if(feature.notLive.isBlank()) "not-live" else feature.notLive
-        } else {
-            val liveMarks = liveChannels
-                .sortedBy(TrackedStreams.StreamChannel::id)
-                .mapNotNull { liveChannel ->
-                    val dbChannel = MongoStreamChannel.of(liveChannel)
-                    marks.find { existing ->
-                        existing.channel == dbChannel
-                    }?.mark
-                }.joinToString("")
-            val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".replace(disallowedChara, "").take(MagicNumbers.Channel.NAME)
-            if(new.isBlank()) "\uD83D\uDD34-live" else new
-        }
-
-        // discord channel renaming is HEAVILY rate-limited - careful to not request same name
-        if(newName == currentName) return
-
-        LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
-        val wrapper = EditableChannelWrapper(
-            name = newName
-        )
-        renameScope.launch {
-            try {
-                when (guildChan) {
-                    is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
-                    is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
-                    else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
-                }
-            } catch(ce: ClientException) {
-                if(ce.status.code() == 403) {
-                    guildChan.createEmbed { spec ->
-                        errorColor(spec)
-                        spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
-                    }.awaitSingle()
-                } else if(ce.status.code() == 400) {
-                    guildChan.createEmbed { spec ->
-                        errorColor(spec)
-                        spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
-                    }.awaitSingle()
-                } else throw ce
-            }
-        }
-    }
-
-    @WithinExposedContext
     suspend fun getChannel(guild: Long?, channel: Long, feature: KMutableProperty1<FeatureChannel, Boolean>, deleteTarget: TrackedStreams.Target?): MessageChannel {
         return try {
             discord.getChannelById(channel.snowflake)
@@ -239,4 +135,108 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
         return features?.streamSettings ?: StreamSettings() // use default settings for pm notifications
     }
+
+    companion object {
+        // rename
+        private val job = SupervisorJob()
+        private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
+        private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
+
+        @WithinExposedContext
+        suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
+            // if this is a guild channel with the rename feature enabled, execute this functionality
+            val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms
+
+            val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
+            val features = config.options.featureChannels.getValue(guildChan.id.asLong())
+
+            val feature = features.streamSettings
+            if(!feature.renameEnabled) return // feature not enabled in channel
+
+            // get all live streams in this channel
+            val liveChannels = mutableListOf<TrackedStreams.StreamChannel>()
+
+            // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
+            // twitch notifs
+            DBTwitchStreams.Notification.wrapRows(
+                DBTwitchStreams.Notifications
+                    .innerJoin(MessageHistory.Messages
+                        .innerJoin(DiscordObjects.Channels))
+                    .select {
+                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                    })
+                .filter { notif ->
+                    if(endingStream != null) {
+                        notif.channelID.id != endingStream.id
+                    } else true
+                }
+                .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
+
+            // yt notifs
+            YoutubeNotification.wrapRows(
+                YoutubeNotifications
+                    .innerJoin(MessageHistory.Messages
+                        .innerJoin(DiscordObjects.Channels))
+                    .select {
+                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                    })
+                .filter { notif ->
+                    if(endingStream != null) {
+                        notif.videoID.ytChannel.id != endingStream.id
+                    } else true
+                }
+                .mapTo(liveChannels) { it.videoID.ytChannel }
+
+
+            // copy marks for safety (this thread can run at any time)
+            val marks = feature.marks.toList()
+            val currentName = guildChan.name
+
+            // generate new channel name
+            val newName = if(liveChannels.isEmpty()) {
+                if(feature.notLive.isBlank()) "not-live" else feature.notLive
+            } else {
+                val liveMarks = liveChannels
+                    .sortedBy(TrackedStreams.StreamChannel::id)
+                    .mapNotNull { liveChannel ->
+                        val dbChannel = MongoStreamChannel.of(liveChannel)
+                        marks.find { existing ->
+                            existing.channel == dbChannel
+                        }?.mark
+                    }.joinToString("")
+                val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".replace(disallowedChara, "").take(MagicNumbers.Channel.NAME)
+                if(new.isBlank()) "\uD83D\uDD34-live" else new
+            }
+
+            // discord channel renaming is HEAVILY rate-limited - careful to not request same name
+            if(newName == currentName) return
+
+            LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
+            val wrapper = EditableChannelWrapper(
+                name = newName
+            )
+            renameScope.launch {
+                try {
+                    when (guildChan) {
+                        is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                        is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                        else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
+                    }
+                } catch(ce: ClientException) {
+                    if(ce.status.code() == 403) {
+                        guildChan.createEmbed { spec ->
+                            errorColor(spec)
+                            spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
+                        }.awaitSingle()
+                    } else if(ce.status.code() == 400) {
+                        guildChan.createEmbed { spec ->
+                            errorColor(spec)
+                            spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
+                        }.awaitSingle()
+                    } else throw ce
+                }
+            }
+        }
+    }
+
 }

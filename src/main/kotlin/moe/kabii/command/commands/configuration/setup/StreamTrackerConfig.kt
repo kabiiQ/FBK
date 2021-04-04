@@ -8,8 +8,10 @@ import moe.kabii.data.mongodb.guilds.MongoStreamChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.util.extensions.propagateTransaction
 
 object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytcfg", "streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {
     override val wikiPath = "Livestream-Tracker#configuration"
@@ -74,7 +76,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             }
 
             val action = args.getOrNull(0)
-            when(action?.toLowerCase()) {
+            val modified = when(action?.toLowerCase()) {
                 "set" -> {
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
@@ -131,7 +133,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                                 "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
                                 "Note that it is **impossible** to use uploaded/custom emojis in a channel name.").awaitSingle()
                     }
-                    config.save()
+                    true
                 }
                 "marks" -> {
                     // rename marks -> list configured channel marks
@@ -154,6 +156,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         }
 
                     }.awaitSingle()
+                    false
                 }
                 else -> { // other args, including null, are valid for configurator run
 
@@ -165,13 +168,19 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         features.streamSettings
                     )
 
-                    if(configurator.run(this)) {
-                        config.save()
-                    }
+                    val modified = configurator.run(this)
 
                     if(!wasRename && features.streamSettings.renameEnabled) {
                         features.streamSettings.notLive = guildChan.name
                     }
+                    modified
+                }
+            }
+
+            if(modified) {
+                config.save()
+                propagateTransaction {
+                    StreamWatcher.checkAndRenameChannel(chan, null)
                 }
             }
         }
