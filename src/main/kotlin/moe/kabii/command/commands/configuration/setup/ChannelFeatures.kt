@@ -14,9 +14,9 @@ import moe.kabii.util.extensions.tryAwait
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
-        BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeChannel),
-        BooleanElement("Livestream/video site tracking", listOf("streams", "stream", "twitch", "yt", "youtube", "twitcasting", "twitcast"), FeatureChannel::streamsChannel),
-        BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr"), FeatureChannel::twitterChannel),
+        BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeTargetChannel),
+        BooleanElement("Livestream/video site tracking", listOf("streams", "stream", "twitch", "yt", "youtube", "twitcasting", "twitcast"), FeatureChannel::streamTargetChannel),
+        BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr"), FeatureChannel::twitterTargetChannel),
         BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
         BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
         BooleanElement("PS2 event tracking", listOf("ps2", "planetside", "planetside2"), FeatureChannel::ps2Channel),
@@ -35,7 +35,6 @@ object ChannelFeatures : CommandContainer {
                 val features = features()
 
                 val wasLog = features.logChannel
-                val wasAnime = features.animeChannel
 
                 val configurator = Configurator(
                     "Feature configuration for #${guildChan.name}",
@@ -50,10 +49,6 @@ object ChannelFeatures : CommandContainer {
 
                     if(!wasLog && features.logChannel) {
                         notifs.add("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.")
-                    }
-                    if(!wasAnime && features.animeChannel) {
-                        features.locked = false
-                        notifs.add("The **track** command has been unlocked for all users in ${chan.mention} as this is the typical use-case for the anime tracker. To lock the **track** command to channel moderators, you can run **feature lock enable**.")
                     }
 
                     config.save()
@@ -101,10 +96,9 @@ object ChannelFeatures : CommandContainer {
                     channels.forEach { (channel, features) ->
                         val codes = StringBuilder()
                         with(features) {
-                            if(animeChannel) codes.append("Anime List Tracker (anime)\n")
-                            if(streamsChannel) codes.append("Livestream/Video tracker (streams)\n")
                             if(logChannel) codes.append("Event Log Channel (log)\n")
-                            if(twitterChannel) codes.append("Twitter Feed Tracker (twitter)\n")
+                            if(musicChannel) codes.append("Music Commands (music)\n")
+                            if(tempChannelCreation) codes.append("Temporary VC Commands (temp)\n")
                         }
                         addField("#${channel.name}", codes.toString().trim(), true)
                     }

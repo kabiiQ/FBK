@@ -109,7 +109,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
 
         // get target channel in discord
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamsChannel, target)
+        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
 
         // get embed settings
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
@@ -154,7 +154,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamsChannel, target::delete)
+                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
             } else throw ce
         }
     }

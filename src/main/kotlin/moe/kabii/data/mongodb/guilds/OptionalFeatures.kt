@@ -19,17 +19,15 @@ data class OptionalFeatures(
 data class FeatureChannel(
     val channelID: Long,
     var locked: Boolean = true,
-    // todo remove individual fields after db commit
-    var twitchChannel: Boolean = false,
-    var youtubeChannel: Boolean = false,
-    var twitcastingChannel: Boolean = false,
-    var streamsChannel: Boolean = booleanArrayOf(twitchChannel, youtubeChannel, twitcastingChannel).any(true::equals),
-    var twitterChannel: Boolean = false,
-    var animeChannel: Boolean = false,
-    var logChannel: Boolean = false,
+
+    var streamTargetChannel: Boolean = true,
+    var twitterTargetChannel: Boolean = true,
+    var animeTargetChannel: Boolean = true,
+    var ps2Channel: Boolean = true,
     var musicChannel: Boolean = false,
-    var ps2Channel: Boolean = false,
+    var logChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
+
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,
     var defaultTracker: TrackerTarget? = null,
@@ -39,7 +37,7 @@ data class FeatureChannel(
     val twitterSettings: TwitterSettings = TwitterSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
-    fun anyEnabled() = booleanArrayOf(streamsChannel, twitterChannel, animeChannel, logChannel).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(musicChannel, tempChannelCreation, logChannel).any(true::equals)
 
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
@@ -48,9 +46,9 @@ data class FeatureChannel(
         // fallback to enabled tracker of specified type
         // if multiple are enabled, it will default in this order
         return when {
-            streamsChannel && type.isSuperclassOf(StreamingTarget::class) -> TwitchTarget
-            twitterChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
-            animeChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
+            streamTargetChannel && type.isSuperclassOf(StreamingTarget::class) -> TwitchTarget
+            twitterTargetChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
+            animeTargetChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             ps2Channel && type.isSuperclassOf(PS2Target::class) -> PS2Target.Player
             else -> null
         }

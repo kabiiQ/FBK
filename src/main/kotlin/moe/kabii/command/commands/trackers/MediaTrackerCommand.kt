@@ -27,7 +27,7 @@ object MediaTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the media list feature is enabled here
         if(origin.guild != null) {
-            if(features == null || !features.animeChannel) throw ChannelFeatureDisabledException("anime", origin)
+            if(features == null || !features.animeTargetChannel) throw ChannelFeatureDisabledException("anime", origin)
         }
 
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite

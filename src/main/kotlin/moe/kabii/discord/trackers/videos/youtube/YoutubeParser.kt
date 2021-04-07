@@ -9,6 +9,7 @@ import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeChannelResponse
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeErrorResponse
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeVideoResponse
+import moe.kabii.discord.util.BotUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -155,7 +156,6 @@ object YoutubeParser {
                             // if this triggers on video/channel calls, we will need to increase delay between calls
                             // and hopefully request increased quota from YT. set a flag to stop requests for the day
                             LOG.error("Youtube Quota exceeded : $error")
-                            // todo message meta-log
                         } else {
                             LOG.warn("Youtube call returned an error: $error")
                         }

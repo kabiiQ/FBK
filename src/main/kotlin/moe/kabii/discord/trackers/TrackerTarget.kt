@@ -59,7 +59,7 @@ sealed class StreamingTarget(
 object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     "Twitch",
-    FeatureChannel::streamsChannel,
+    FeatureChannel::streamTargetChannel,
     "twitch",
     listOf(
         Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
@@ -81,7 +81,7 @@ private const val youtubeRegex = "([a-zA-Z0-9-_]{24})"
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
-    FeatureChannel::streamsChannel,
+    FeatureChannel::streamTargetChannel,
     "youtube",
     listOf(
         Regex(youtubeRegex),
@@ -117,7 +117,7 @@ object YoutubeTarget : StreamingTarget(
 object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
     "TwitCasting",
-    FeatureChannel::streamsChannel,
+    FeatureChannel::streamTargetChannel,
     "twitcasting",
     listOf(
         Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})"),
@@ -157,7 +157,7 @@ sealed class AnimeTarget(
     full: String,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, FeatureChannel::animeChannel, "anime", url, *alias) {
+) : TrackerTarget(full, FeatureChannel::animeTargetChannel, "anime", url, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: ListSite
@@ -200,7 +200,7 @@ object AniListTarget : AnimeTarget(
 
 object TwitterTarget : TrackerTarget(
     "Twitter",
-    FeatureChannel::twitterChannel,
+    FeatureChannel::twitterTargetChannel,
     "twitter",
     listOf(
         Regex("twitter.com/([a-zA-Z0-9_]{4,15})"),

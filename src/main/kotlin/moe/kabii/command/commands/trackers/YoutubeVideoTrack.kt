@@ -27,7 +27,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             if(guild != null) {
                 val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
                 val features = config.options.featureChannels[chan.id.asLong()]
-                if(features == null || !features.streamsChannel) {
+                if(features == null || !features.streamTargetChannel) {
                     // feature not enabled, allow moderators to bypass
                     if(!member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)) throw ChannelFeatureDisabledException(YoutubeTarget.featureName, this)
                 } else {

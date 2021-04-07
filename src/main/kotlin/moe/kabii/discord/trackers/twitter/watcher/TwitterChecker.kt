@@ -189,7 +189,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                     TrackerUtil.checkAndPublish(notif)
                                 } catch (e: Exception) {
                                     if (e is ClientException && e.status.code() == 403) {
-                                        TrackerUtil.permissionDenied(discord, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterChannel, target::delete)
+                                        TrackerUtil.permissionDenied(discord, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
                                         LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
                                     } else {
                                         LOG.warn("Error sending Tweet to channel: ${e.message}")
@@ -245,7 +245,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
             existingTargets.filter { target ->
                 // ignore, but do not untrack targets with feature disabled
                 val guildId = target.discordChannel.guild?.guildID ?: return@filter true
-                GuildConfigurations.findFeatures(target)?.twitterChannel == true
+                GuildConfigurations.findFeatures(target)?.twitterTargetChannel == true
             }
         } else {
             feed.delete()

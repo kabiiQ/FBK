@@ -7,7 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.discord.trackers.TargetArguments
 
 object TrackerConfig : CommandContainer {
-    object SetDefaultTracker : Command("usetracker", "settracker", "usetrack", "settrack") {
+    object SetDefaultTracker : Command("usetracker", "settracker", "usetrack", "settrack", "usefeature", "usetarget", "settarget", "setfeature") {
         override val wikiPath = "Configuration#overriding-the-default-website-for-track-with-the-usetracker-command"
 
         init {
