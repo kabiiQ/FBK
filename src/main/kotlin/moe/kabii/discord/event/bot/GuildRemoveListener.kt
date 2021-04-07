@@ -1,16 +1,13 @@
 package moe.kabii.discord.event.bot
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.DiscordBot
-import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryBlock
 
 object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {

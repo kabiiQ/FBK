@@ -7,7 +7,6 @@ import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.Command
 import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
