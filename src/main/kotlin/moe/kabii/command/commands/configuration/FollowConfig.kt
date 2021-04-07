@@ -11,6 +11,7 @@ import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -73,32 +74,47 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             }
 
 
-            // todo "none"
-
-
-            val newMentionRole = Search.roleByNameOrID(this, roleArg)
-            if (newMentionRole == null) {
-                error("Unable to find the role **$roleArg** in **${target.name}**.").awaitSingle()
-                return@discord
+            val newMentionRole = when(roleArg.toLowerCase()) {
+                "none", "remove", "unset", "null", "clear" -> null
+                else -> {
+                    val search = Search.roleByNameOrID(this, roleArg)
+                    if(search == null) {
+                        error("Unable to find the role **$roleArg** in **${target.name}**.").awaitSingle()
+                        return@discord
+                    } else search
+                }
             }
+
             // create or overwrite mention for this guild
-            transaction {
+            val updateStr = propagateTransaction {
                 val dbGuild = DiscordObjects.Guild.getOrInsert(target.id.asLong())
                 val existingMention = TrackedStreams.Mention.find {
                     TrackedStreams.Mentions.streamChannel eq matchingTarget.streamChannel.id and
                             (TrackedStreams.Mentions.guild eq dbGuild.id)
                 }.firstOrNull()
-                if (existingMention != null) {
-                    existingMention.mentionRole = newMentionRole.id.asLong()
-                } else {
-                    TrackedStreams.Mention.new {
-                        this.stream = matchingTarget.streamChannel
-                        this.guild = dbGuild
-                        this.mentionRole = newMentionRole.id.asLong()
+
+                if(newMentionRole == null) {
+                    // unset role
+                    if(existingMention != null) {
+                        existingMention.delete()
                     }
+                    "**removed**."
+                } else {
+                    // setting new role
+                    if(existingMention != null) {
+                        existingMention.mentionRole = newMentionRole.id.asLong()
+                    } else {
+                        TrackedStreams.Mention.new {
+                            this.stream = matchingTarget.streamChannel
+                            this.guild = dbGuild
+                            this.mentionRole = newMentionRole.id.asLong()
+                        }
+                    }
+                    "set to **${newMentionRole.name}**."
                 }
             }
-            embed("The mention role for **${streamInfo.displayName}** has been set to **${newMentionRole.name}**.").awaitSingle()
+
+            embed("The mention role for **${streamInfo.displayName}** has been $updateStr.").awaitSingle()
         }
     }
 }
