@@ -8,6 +8,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.success
 
@@ -20,7 +21,7 @@ object TemporaryChannels : CommandContainer {
             discord {
                 // feature must be manually enabled at this time. not likely to be something server owners want without knowing
                 if(config.options.featureChannels[chan.id.asLong()]?.tempChannelCreation != true) {
-                    throw ChannelFeatureDisabledException("temp", origin = this)
+                    throw ChannelFeatureDisabledException("temp", origin = this, FeatureChannel::tempChannelCreation)
                 }
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()

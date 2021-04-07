@@ -12,6 +12,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.BotUtil
@@ -46,8 +47,7 @@ internal interface AudioCommandContainer : CommandContainer {
     suspend fun validateChannel(origin: DiscordParameters) {
         val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
         if(musicChan != true) {
-            if(origin.run { member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS) }) return
-            else throw ChannelFeatureDisabledException("music", origin)
+            throw ChannelFeatureDisabledException("music", origin, FeatureChannel::musicChannel)
         }
     }
 

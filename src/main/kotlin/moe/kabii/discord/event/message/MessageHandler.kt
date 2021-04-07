@@ -144,9 +144,20 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                     param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
 
                 } catch (feat: ChannelFeatureDisabledException) {
-                    val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
-                    val enableNotice = if(channelMod) "\nChannel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**." else ""
-                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice")
+                    //val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
+                    //val enableNotice = if(channelMod) "\nChannel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**." else ""
+                    val enableNotice = "\nChannel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**."
+
+                    val channels = if(feat.listChannels != null) {
+                        feat.origin.config.options
+                            .getChannels(feat.listChannels).keys
+                            .ifEmpty { null }
+                            ?.joinToString(", ") { chanId -> "<#$chanId>"}
+                    } else null
+                    val enabledIn = if(channels != null) "\n**${feat.feature}** is currently enabled in the following channels: $channels"
+                    else ""
+
+                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn")
                         .awaitSingle()
 
                 } catch (guildFeature: GuildFeatureDisabledException) {

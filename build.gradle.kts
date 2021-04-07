@@ -37,6 +37,10 @@ repositories {
         name = "kotlinx-bintray"
         url = uri("https://kotlin.bintray.com/kotlinx")
     }
+    maven {
+        name = "lavaplayer"
+        url = uri("https://m2.dv8tion.net/releases")
+    }
 }
 
 dependencies {
@@ -63,7 +67,7 @@ dependencies {
     //implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.9.0") // use reactor with twitch4j - NOT WORKING WITH LATEST REACTOR
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.73") // discord audio library
+    implementation("com.sedmelluq:lavaplayer:1.3.75") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
 
     // other api - http calls

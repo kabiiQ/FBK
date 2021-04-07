@@ -4,7 +4,9 @@ import discord4j.rest.util.Permission
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.params.TerminalParameters
 import moe.kabii.command.params.TwitchParameters
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.SourcePaths
+import kotlin.reflect.KProperty1
 
 // Now purely aesthetic, Command inheritance is reflectively searched
 interface CommandContainer
@@ -47,6 +49,6 @@ abstract class Command(val baseName: String, vararg alias: String) {
 }
 
 class GuildTargetInvalidException(val string: String) : RuntimeException()
-class ChannelFeatureDisabledException(val feature: String, val origin: DiscordParameters) : RuntimeException()
+class ChannelFeatureDisabledException(val feature: String, val origin: DiscordParameters, val listChannels: KProperty1<FeatureChannel, Boolean>? = null) : RuntimeException()
 class GuildFeatureDisabledException(val featureName: String, val enablePermission: Permission, val adminEnable: String) : RuntimeException()
 class GuildCommandDisabledException(val commandName: String) : RuntimeException()

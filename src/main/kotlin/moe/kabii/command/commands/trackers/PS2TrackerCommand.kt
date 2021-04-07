@@ -19,7 +19,7 @@ object PS2TrackerCommand : TrackerCommand {
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         if(origin.guild != null) {
-            if(features == null || !features.ps2Channel) throw ChannelFeatureDisabledException("ps2", origin)
+            if(features == null || !features.ps2Channel) throw ChannelFeatureDisabledException("ps2", origin, FeatureChannel::ps2Channel)
         }
 
         val ps2Target = requireNotNull(target.site as? PS2Target) { "Invalid target arguments provided to PS2TrackerCommand" }

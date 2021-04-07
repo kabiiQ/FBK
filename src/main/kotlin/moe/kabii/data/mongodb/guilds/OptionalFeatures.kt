@@ -4,12 +4,17 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.*
 import moe.kabii.util.constants.EmojiCharacters
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.isSuperclassOf
 
 // channel-specific features/settings
 data class OptionalFeatures(
     val featureChannels: MutableMap<Long, FeatureChannel> = mutableMapOf(),
-    var linkedTwitchChannel: TwitchConfig? = null)
+    var linkedTwitchChannel: TwitchConfig? = null) {
+
+    fun getChannels(feature: KProperty1<FeatureChannel, Boolean>)
+        = featureChannels.filter { (_, chan) -> feature.get(chan) }
+}
 
 data class FeatureChannel(
     val channelID: Long,
