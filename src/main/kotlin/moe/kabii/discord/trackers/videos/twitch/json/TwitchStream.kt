@@ -2,6 +2,7 @@ package moe.kabii.discord.trackers.videos.twitch.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import moe.kabii.discord.trackers.videos.twitch.TwitchStreamInfo
 import java.time.Instant
 
 @JsonClass(generateAdapter = true)
@@ -22,4 +23,6 @@ data class TwitchStream(
     @Transient val startedAt = Instant.parse(_startedAt)
     @Transient val userID = _userID.toLong()
     @Transient val gameID = _gameID.toLongOrNull() ?: 0
+
+    fun asStreamInfo() = TwitchStreamInfo(userID, username, title, viewers, startedAt, thumbnail, gameID)
 }

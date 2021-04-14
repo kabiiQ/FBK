@@ -3,6 +3,8 @@ package moe.kabii.data.relational.streams
 import discord4j.common.util.Snowflake
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.streams.youtube.WebSubSubscription
+import moe.kabii.data.relational.streams.youtube.WebSubSubscriptions
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TwitcastingTarget
 import moe.kabii.discord.trackers.TwitchTarget
@@ -35,13 +37,17 @@ object TrackedStreams {
         val targets by Target referrersOn Targets.streamChannel
         val mentionRoles by Mention referrersOn Mentions.streamChannel
 
+        val subscription by WebSubSubscription referrersOn WebSubSubscriptions.webSubChannel
+
         companion object : IntEntityClass<StreamChannel>(StreamChannels) {
 
+            @WithinExposedContext
             fun getChannel(site: DBSite, channelId: String): StreamChannel? = find {
                 StreamChannels.site eq site and
                         (StreamChannels.siteChannelID eq channelId)
             }.firstOrNull()
 
+            @WithinExposedContext
             fun getOrInsert(site: DBSite, channelId: String, origin: DiscordParameters? = null): StreamChannel {
                 val existing = getChannel(site, channelId)
                 return if(existing != null) existing else {

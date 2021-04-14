@@ -100,7 +100,7 @@ class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceReque
 
                 // check that all targets have a notification for this movie (for late tracks)
                 targets.forEach { target ->
-                    if(Twitcasts.Notification.getForTarget(target).empty()) {
+                    if(Twitcasts.TwitNotif.getForTarget(target).empty()) {
                         try {
                             createLiveNotification(info, target)
                         } catch(e: Exception) {

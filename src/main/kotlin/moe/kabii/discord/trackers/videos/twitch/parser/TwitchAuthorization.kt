@@ -16,6 +16,9 @@ class TwitchAuthorization {
     private val clientSecret = Keys.config[Keys.Twitch.secret]
     var accessToken = Keys.config[Keys.Twitch.token]
 
+    val authorization: String
+    get() = "Bearer $accessToken"
+
     private val tokenAdapter = MOSHI.adapter(TwitchTokenResponse::class.java)
 
     fun refreshOAuthToken() {

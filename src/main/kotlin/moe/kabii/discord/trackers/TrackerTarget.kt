@@ -74,7 +74,15 @@ object TwitchTarget : StreamingTarget(
 
     override fun feedById(id: String): String = "" // unavailable without making requests. todo store in db ?
 
-    override val onTrack = null
+    override val onTrack: TrackCallback = callback@{ origin, channel ->
+        val services = origin.handler.services
+        val twitch = services.twitch
+
+        val targets = twitch.getActiveTargets(channel) ?: return@callback
+        val stream = TwitchParser.getStream(channel.siteChannelID.toLong()).orNull()
+        twitch.updateChannel(channel, stream, targets)
+        services.twitchFeedSub.subscribe(channel.siteChannelID)
+    }
 }
 
 private const val youtubeRegex = "([a-zA-Z0-9-_]{24})"
@@ -242,7 +250,6 @@ sealed class PS2Target(
             get() = PS2Tracks.PS2EventType.OUTFITCAP
     }
 }
-
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
 

@@ -33,24 +33,24 @@ object Twitcasts {
         }
     }
 
-    object TwitNotif : IntIdTable() {
+    object TwitNotifs : IntIdTable() {
         val targetId = reference("assoc_twitcast_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE).uniqueIndex()
         val channelId = reference("assoc_twitcast_channel", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
         val message = reference("assoc_message_id", MessageHistory.Messages, ReferenceOption.CASCADE)
     }
 
-    class Notification(id: EntityID<Int>) : IntEntity(id) {
-        var targetId by TrackedStreams.Target referencedOn TwitNotif.targetId
-        var channelId by TrackedStreams.StreamChannel referencedOn TwitNotif.channelId
-        var messageId by MessageHistory.Message referencedOn TwitNotif.message
+    class TwitNotif(id: EntityID<Int>) : IntEntity(id) {
+        var targetId by TrackedStreams.Target referencedOn TwitNotifs.targetId
+        var channelId by TrackedStreams.StreamChannel referencedOn TwitNotifs.channelId
+        var messageId by MessageHistory.Message referencedOn TwitNotifs.message
 
-        companion object : IntEntityClass<Notification>(TwitNotif) {
+        companion object : IntEntityClass<TwitNotif>(TwitNotifs) {
             fun getForChannel(dbChannel: TrackedStreams.StreamChannel) = find {
-                TwitNotif.channelId eq dbChannel.id
+                TwitNotifs.channelId eq dbChannel.id
             }
 
             fun getForTarget(dbTarget: TrackedStreams.Target) = find {
-                TwitNotif.targetId eq dbTarget.id
+                TwitNotifs.targetId eq dbTarget.id
             }
         }
     }

@@ -42,6 +42,8 @@ object Keys : ConfigSpec("") {
         val oauth by required<String>("chat_oauth_token")
         val token by required<String>("app_access_token")
         val callback by required<String>()
+        val signingKey by required<String>("twitch_signing_key")
+        val webhookPort by required<Int>("twitch_webhook_port")
     }
     object Netty : ConfigSpec() {
         val port by required<Int>()

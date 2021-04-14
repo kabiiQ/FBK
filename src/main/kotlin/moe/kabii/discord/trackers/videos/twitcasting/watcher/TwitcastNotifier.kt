@@ -57,7 +57,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
     @WithinExposedContext
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
-        Twitcasts.Notification.getForChannel(channel).forEach { notification ->
+        Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
             try {
                 val dbMessage = notification.messageId
                 val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
@@ -144,7 +144,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log notification in db
-            Twitcasts.Notification.new {
+            Twitcasts.TwitNotif.new {
                 this.targetId = target
                 this.channelId = target.streamChannel
                 this.messageId =  MessageHistory.Message.getOrInsert(newNotification)

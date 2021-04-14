@@ -86,7 +86,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
     }
 
     @WithinExposedContext
-    private suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?, filteredTargets: List<TrackedStreams.Target>) {
+    suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?, filteredTargets: List<TrackedStreams.Target>) {
         val twitchId = channel.siteChannelID.toLong()
 
         // get streaming site user object when needed

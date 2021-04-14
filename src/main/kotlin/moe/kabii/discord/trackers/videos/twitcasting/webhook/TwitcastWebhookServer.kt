@@ -13,7 +13,8 @@ import moe.kabii.data.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.fromJsonSafe
 import moe.kabii.util.extensions.propagateTransaction
 

@@ -25,8 +25,8 @@ import java.time.Instant
 object TwitchParser {
     val color = Color.of(6570405)
 
-    private val clientID = Keys.config[Keys.Twitch.client]
-    private val oauth = TwitchAuthorization()
+    val clientID = Keys.config[Keys.Twitch.client]
+    val oauth = TwitchAuthorization()
 
     private val gameCache = mutableMapOf<Long, TwitchGameInfo>()
 
@@ -40,7 +40,7 @@ object TwitchParser {
         for(attempt in 1..3) {
             try {
                 val request = builder
-                    .header("Authorization", "Bearer ${oauth.accessToken}")
+                    .header("Authorization", oauth.authorization)
                     .build()
 
                 val response = OkHTTP.newCall(request).execute()
@@ -136,7 +136,7 @@ object TwitchParser {
                     // find the stream for each user in the request
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
-                        Ok(TwitchStreamInfo(match.userID, match.username, match.title, match.viewers, match.startedAt, match.thumbnail, match.gameID))
+                        Ok(match.asStreamInfo())
                     } else Err(StreamErr.NotFound)
                 }
             } else ids.map { it to Err(StreamErr.IO) }
