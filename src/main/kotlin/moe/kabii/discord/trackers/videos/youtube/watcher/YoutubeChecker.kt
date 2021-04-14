@@ -1,7 +1,9 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.GatewayDiscordClient
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
@@ -12,6 +14,7 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
@@ -27,6 +30,8 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions, discord) {
     override fun run() {
+        val cleanInterval = 240 // only clean db approx every 2 hours
+        var tickId = 0
         applicationLoop {
             val start = Instant.now()
             propagateTransaction {
@@ -40,8 +45,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
 
                     val currentTime = DateTime.now()
 
-                    // 1: collect all videos we have as 'currently live' - don't need to recheck within 2 minutes
-                    val reCheck = currentTime - 118_000L
+                    // 1: collect all videos we have as 'currently live' - don't recheck within 3 minutes-ish
+                    val reCheck = currentTime - 175_000L
                     val dbLiveVideos = YoutubeLiveEvent.wrapRows(
                         YoutubeLiveEvents
                             .innerJoin(YoutubeVideos)
@@ -119,10 +124,17 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                         }.forEach { job -> job.join() }
 
                     // clean up videos db
-//                    val old = DateTime.now().minusWeeks(1)
-//                    YoutubeVideos.deleteWhere {
-//                        YoutubeVideos.lastAPICall lessEq old
-//                    }
+                    if(tickId == 0) {
+                        LOG.info("Executing YouTube DB cleanup")
+                        val old = DateTime.now().minusWeeks(4)
+                        YoutubeVideos.deleteWhere {
+                            YoutubeVideos.lastAPICall lessEq old
+                        }
+                        val overdue = DateTime.now().minusDays(1)
+                        YoutubeScheduledEvents.deleteWhere {
+                            YoutubeScheduledEvents.scheduledStart less overdue
+                        }
+                    }
                 } catch (e: Exception) {
                     LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
                     LOG.debug(e.stackTraceString)
@@ -131,6 +143,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(max(delay, 0L))
+            tickId = (tickId + 1) mod cleanInterval
         }
     }
 

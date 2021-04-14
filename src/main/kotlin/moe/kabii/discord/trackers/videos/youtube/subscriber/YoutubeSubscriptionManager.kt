@@ -4,8 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.youtube.FeedSubscription
-import moe.kabii.data.relational.streams.youtube.FeedSubscriptions
+import moe.kabii.data.relational.streams.youtube.WebSubSubscription
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.util.extensions.applicationLoop
@@ -31,13 +30,12 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: S
         // start callback server
         listener.server.start()
 
-        val cutOff = DateTime.now().minus(maxSubscriptionInterval)
         currentSubscriptions = transaction {
-            FeedSubscription.find {
-                FeedSubscriptions.lastSubscription greaterEq cutOff
-            }.map { feed ->
-                feed.ytChannel.siteChannelID
-            }.toSet()
+            WebSubSubscription
+                .getCurrent(TrackedStreams.DBSite.YOUTUBE, maxSubscriptionInterval)
+                .map { feed ->
+                    feed.webSubChannel.siteChannelID
+                }.toSet()
         }
 
         applicationLoop {
@@ -48,17 +46,15 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: S
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                     }
                     ytChannels.forEach { channel ->
-                        val subscription = FeedSubscription.find {
-                            FeedSubscriptions.ytChannel eq channel.id
-                        }.firstOrNull()
+                        val subscription = channel.subscription.firstOrNull()
 
                         // only make actual call to google if last call is old - but still maintain current list in memory
                         if (subscription == null) {
                             LOG.info("new subscription: ${channel.siteChannelID}")
                             val callTopic = subscriber.subscribe(channel.siteChannelID)
                             if (callTopic != null) {
-                                FeedSubscription.new {
-                                    this.ytChannel = channel
+                                WebSubSubscription.new {
+                                    this.webSubChannel = channel
                                     this.lastSubscription = DateTime.now()
                                 }
                             }
