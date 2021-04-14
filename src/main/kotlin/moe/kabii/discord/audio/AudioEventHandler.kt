@@ -68,7 +68,8 @@ object AudioEventHandler : AudioEventAdapter() {
                         val title = AudioCommandContainer.trackString(track)
                         fbkColor(embed)
                         val now = if(track.position > 0) "Resuming" else "Now playing"
-                        embed.setDescription("$now **$title**. $paused")
+                        val looping = if(data.audio.looping) "\n\n**The queue is currently configured to loop tracks.**" else ""
+                        embed.setDescription("$now **$title**. $paused$looping")
                         if(track is YoutubeAudioTrack) embed.setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
                     }
                 }.map { np ->
@@ -128,6 +129,9 @@ object AudioEventHandler : AudioEventAdapter() {
                     } else {
                         // no more tracks being added, start timeout for leaving vc
                         data.audio.discord.startTimeout()
+                        if(data.audio.looping) {
+                            data.audio.looping = false
+                        }
                     }
                 }
 

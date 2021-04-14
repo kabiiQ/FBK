@@ -53,8 +53,7 @@ object TwitterThumbnailGenerator {
                 val str = "(${EmojiCharacters.play})"
 
                 val fontPt = image.height * .50f
-                val font = infoFont.deriveFont(fontPt)
-                graphics.font = font
+                graphics.font = infoFont.deriveFont(fontPt)
                 val metrics = graphics.fontMetrics
 
                 // center

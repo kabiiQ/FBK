@@ -7,12 +7,14 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.success
 import reactor.core.publisher.Mono
 import java.time.Duration
 
@@ -46,10 +48,16 @@ object ReactionRoleHandler {
             .flatMap { g -> g.getMemberById(userId) }.awaitSingle()!!
         if(member.isBot) return
 
+        val botReaction = TempStates.BotReactionRemove(messageId, userId, emoji)
+
         val reactionRoleId = reactionRole.role.snowflake
         val action = when(direction) {
             ReactionAction.ADD -> member.addRole(reactionRoleId, info)
-            ReactionAction.REMOVE -> member.removeRole(reactionRoleId, info)
+            ReactionAction.REMOVE -> {
+                // ignore REMOVE event if the bot itself removed this reaction (for 'clean' auto roles)
+                if(TempStates.emojiRemove.contains(botReaction)) return
+                member.removeRole(reactionRoleId, info)
+            }
         }
 
         try {
@@ -58,11 +66,14 @@ object ReactionRoleHandler {
             // if "clean" reaction-role config is enabled, remove user reaction here
             val clean = config.options.featureChannels[channelId.asLong()]?.cleanReactionRoles
             if(direction == ReactionAction.ADD && clean == true) {
-                message
-                    .delayElement(Duration.ofSeconds(30))
-                    .flatMap { m -> m.removeReaction(emoji, userId) }
-                    .thenReturn(Unit)
-                    .tryAwait()
+                val discordMessage = message.awaitSingle()
+                delay(Duration.ofSeconds(30))
+                TempStates.emojiRemove.add(botReaction)
+                discordMessage
+                    .removeReaction(emoji, userId)
+                    .success().awaitSingle()
+                delay(Duration.ofSeconds(2))
+                TempStates.emojiRemove.remove(botReaction)
             }
 
         } catch(e: Exception) {

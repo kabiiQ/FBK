@@ -13,7 +13,9 @@ import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.event.guild.welcome.WelcomeMessageFormatter
 import moe.kabii.discord.util.ColorUtil
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
 import java.awt.Color
