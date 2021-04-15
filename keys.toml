@@ -34,6 +34,8 @@ client_secret = ''
 chat_oauth_token = 'oauth:'
 app_access_token = ''
 callback = ''
+twitch_signing_key = ''
+twitch_webhook_port = 8003
 
 [censor]
 ip_services = [

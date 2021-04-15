@@ -43,7 +43,7 @@ object TrackerConfig : CommandContainer {
                     return@discord
                 }
 
-                features.defaultTracker = tracker
+                features.trackerDefault = tracker.alias.first()
                 config.save()
                 embed("The default track target for **#${guildChan.name}** has been set to **${tracker.full}**.").awaitSingle()
             }

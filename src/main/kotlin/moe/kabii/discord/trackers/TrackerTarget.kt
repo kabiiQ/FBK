@@ -228,7 +228,7 @@ sealed class PS2Target(
     abstract val dbType: PS2Tracks.PS2EventType
 
     sealed class Outfit(vararg alias: String) : PS2Target("Outfit member logins", *alias) {
-        object OutfitById : Outfit()
+        object OutfitById : Outfit("ps2outfit:id")
         object OutfitByName : Outfit("ps2outfit:name")
         object OutfitByTag : Outfit("ps2outfit:tag", "ps2outfit", "psoutfit")
 
@@ -266,6 +266,10 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             }
             addSubClasses(TrackerTarget::class)
             declaredTargets = targets
+        }
+
+        operator fun get(name: String) = declaredTargets.find { supportedSite ->
+            supportedSite.alias.contains(name)
         }
 
         fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {

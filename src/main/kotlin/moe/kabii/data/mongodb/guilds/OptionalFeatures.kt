@@ -30,7 +30,7 @@ data class FeatureChannel(
 
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,
-    var defaultTracker: TrackerTarget? = null,
+    var trackerDefault: String? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
     val youtubeSettings: YoutubeSettings = YoutubeSettings(),
@@ -39,9 +39,11 @@ data class FeatureChannel(
 ) {
     fun anyEnabled() = booleanArrayOf(musicChannel, tempChannelCreation, logChannel).any(true::equals)
 
+    fun defaultTracker() = trackerDefault?.run(TargetArguments::get)
+
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
-        if(defaultTracker != null && type.isSuperclassOf(defaultTracker!!::class)) return defaultTracker
+        if(trackerDefault != null && type.isSuperclassOf(trackerDefault!!::class)) return defaultTracker()
 
         // fallback to enabled tracker of specified type
         // if multiple are enabled, it will default in this order
@@ -56,11 +58,11 @@ data class FeatureChannel(
 
     fun validateDefaultTarget() {
         // if a default tracker is set, remove it if that feature is disabled
-        if(defaultTracker == null) return
-        
-        val enabled = defaultTracker?.channelFeature?.get(this) ?: return
+        if(trackerDefault == null) return
+
+        val enabled = defaultTracker()?.channelFeature?.get(this) ?: return
         if(!enabled) {
-            defaultTracker = null
+            trackerDefault = null
         }
     }
 }
