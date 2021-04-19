@@ -16,6 +16,7 @@ import moe.kabii.util.extensions.userAddress
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 object ReminderCommands : CommandContainer {
     object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
@@ -27,7 +28,7 @@ object ReminderCommands : CommandContainer {
                 // remindme time message !dm
                 if(args.isEmpty()) {
                     usage("**remind** schedules the bot to send you a reminder in the future. If ran in DM or the reminder contains the flag !dm, the reminder will be sent via DM. Otherwise, you will be pinged in the current channel.",
-                        "remind <time until reminder, examples: 1m, 1:00, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").awaitSingle()
+                        "remind <time until reminder, examples: 1m, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").awaitSingle()
                     return@discord
                 }
                 var time: Duration? = null
@@ -35,7 +36,7 @@ object ReminderCommands : CommandContainer {
                 val timeArg = StringBuilder()
                 for((index, arg) in args.withIndex()) {
                     timeArg.append(arg)
-                    val parse = DurationParser.tryParse(timeArg.toString())
+                    val parse = DurationParser.tryParse(timeArg.toString(), startAt = ChronoUnit.MINUTES)
                     if(parse == null) break
                     else {
                         time = parse

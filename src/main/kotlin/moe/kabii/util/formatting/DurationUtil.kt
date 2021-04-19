@@ -5,13 +5,17 @@ import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 object DurationParser {
-    private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS)
+    private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS, ChronoUnit.MONTHS, ChronoUnit.YEARS)
 
-    fun tryParse(input: String): Duration? {
+    fun tryParse(input: String, startAt: ChronoUnit? = null, stopAt: ChronoUnit? = null): Duration? {
         // try to parse as weeks:days:minutes:hours:seconds, rtl so "20" will work take as 20 seconds
         val args = input.split(":")
         val components = sequence {
-            categories.mapIndexed { index, chronoUnit ->
+            val iStart = startAt?.run(categories::indexOf) ?: 0
+            val iStop = stopAt?.run(categories::indexOf) ?: categories.size - 1
+            val parts = categories.toList().subList(iStart, iStop)
+
+            parts.mapIndexed { index, chronoUnit ->
                 // work backwards through arguments provided to start with our lowest supported unit of seconds
                 val element = args.getOrNull(args.size - index - 1)?.toLongOrNull() ?: return@sequence
                 yield(Duration.of(element, chronoUnit))
@@ -24,20 +28,37 @@ object DurationParser {
             .replace(" ", "") // remove spaces
             .let { string -> // parse weeks and days
                 var str = string
-                // get days and weeks component from input - weeks is not part of Duration, so we need to add weeks to the days component
+
+                // get days and weeks component from input - weeks+ is not part of Duration, so we need to add to the days component
+                val patternYears = Regex("([0-2]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
+                val matchYears = patternYears.find(str)
+                val inputYears = matchYears?.run {
+                    str = str.replace(this.value, "")
+                    groups[1]?.value?.toLong()
+                } ?: 0
+
+                val patternMonths = Regex("([0-9]+)MONTHS?")
+                val matchMonths = patternMonths.find(str)
+                val inputMonths = matchMonths?.run {
+                    str = str.replace(this.value, "")
+                    groups[1]?.value?.toLong()
+                } ?: 0L
+
                 val patternWeeks = Regex("([0-9]+)W(?:EEKS?)?") // match 2W, 2WEEK, 2WEEKS
                 val matchWeeks = patternWeeks.find(str)
                 val inputWeeks = matchWeeks?.run {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
-                } ?: 0
+                } ?: 0L
+
                 val patternDays = Regex("([0-9]+)D(?:AYS?)?")
                 val matchDays = patternDays.find(str)
                 val inputDays = matchDays?.run {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
-                } ?: 0
-                val days = inputDays + (inputWeeks * 7)
+                } ?: 0L
+
+                val days = inputDays + (inputWeeks * 7) + (inputMonths * 30) + (inputYears * 365)
                 if(days > 0) {
                     "${days}D$str"
                 } else str

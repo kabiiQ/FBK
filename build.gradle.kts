@@ -60,7 +60,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.1.3") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.1.5") // discord websocket and api
 
     // twitch irc
     implementation("com.github.twitch4j:twitch4j:1.2.1")
@@ -74,7 +74,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
 
     // other api - json response parsing
-    val moshiVer = "1.11.0"
+    val moshiVer = "1.12.0"
     implementation("com.squareup.moshi:moshi:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
@@ -99,11 +99,11 @@ dependencies {
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.2.4")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.2.6")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.29.1"
+    val exposedVer = "0.30.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")

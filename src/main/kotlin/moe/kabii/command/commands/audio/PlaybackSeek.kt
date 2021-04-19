@@ -12,6 +12,7 @@ import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.userAddress
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 object PlaybackSeek : AudioCommandContainer {
     private suspend fun trySeekCurrentTrack(origin: DiscordParameters, track: AudioTrack, target: Duration): Boolean {
@@ -50,7 +51,7 @@ object PlaybackSeek : AudioCommandContainer {
                     error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.").awaitSingle()
                     return@discord
                 }
-                val seekTo = DurationParser.tryParse(noCmd)
+                val seekTo = DurationParser.tryParse(noCmd, stopAt = ChronoUnit.HOURS)
                 if(seekTo == null) {
                     error("**$noCmd** is not a valid timestamp. Example: **seek 1:12**.").awaitSingle()
                     return@discord
@@ -93,7 +94,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val seekForwards = if(args.isEmpty()) {
                     Duration.ofSeconds(10)
                 } else {
-                    val parse = DurationParser.tryParse(noCmd)
+                    val parse = DurationParser.tryParse(noCmd, stopAt = ChronoUnit.HOURS)
                     if(parse == null) {
                         error("**$noCmd** is not a valid length to fast-forward the track.").awaitSingle()
                         return@discord
@@ -127,7 +128,7 @@ object PlaybackSeek : AudioCommandContainer {
                 val seekBackwards = if(args.isEmpty()) {
                     Duration.ofSeconds(10)
                 } else {
-                    val parse = DurationParser.tryParse(noCmd)
+                    val parse = DurationParser.tryParse(noCmd, stopAt = ChronoUnit.HOURS)
                     if(parse == null) {
                         error("**$noCmd** is not a valid length to rewind the track.").awaitSingle()
                         return@discord
