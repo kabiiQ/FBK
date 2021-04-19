@@ -30,13 +30,7 @@ object TrackerConfig : CommandContainer {
                     return@discord
                 }
 
-                // must be enabled feature in this channel to make any sense
-                val features = config.options.featureChannels[chan.id.asLong()]
-                if (features == null) {
-                    error("There are no trackers enabled in **#${guildChan.name}**.").awaitSingle()
-                    return@discord
-                }
-
+                val features = config.getOrCreateFeatures(chan.id.asLong())
                 val featureEnabled = tracker.channelFeature.get(features)
                 if (!featureEnabled) {
                     error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.").awaitSingle()

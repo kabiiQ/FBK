@@ -272,7 +272,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             supportedSite.alias.contains(name)
         }
 
-        fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
+        suspend fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID
             // empty 'args' is handled by initial command call erroring and should never occur here
             require(inputArgs.isNotEmpty()) { "Can not parse empty track target" }
@@ -280,7 +280,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             // get the channel features, if they exist. PMs do not require trackers to be enabled
             // thus, a URL or site name must be specified if used in PMs
             val features = if(origin.guild != null) {
-                GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).options.featureChannels[origin.guildChan.id.asLong()]
+                GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
             } else null
 
             return if(inputArgs.size == 1) {

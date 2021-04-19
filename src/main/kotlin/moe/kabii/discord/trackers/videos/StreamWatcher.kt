@@ -64,8 +64,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 val discordTarget = target.discordChannel
 
                 val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
-                    .options.featureChannels[discordTarget.channelID] ?: return@filter false // if no features, can not be enabled
+                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId).getOrCreateFeatures(discordTarget.channelID)
                 target.streamChannel.site.targetType.channelFeature.get(featureChannel)
             }
         } else {

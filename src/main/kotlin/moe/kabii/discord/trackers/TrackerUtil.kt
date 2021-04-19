@@ -46,7 +46,7 @@ object TrackerUtil {
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val features = config.options.featureChannels[channelId] ?: return
+            val features = config.getOrCreateFeatures(channelId)
             guildDelete.set(features, false)
             config.save()
 

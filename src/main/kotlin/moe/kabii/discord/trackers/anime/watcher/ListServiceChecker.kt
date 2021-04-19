@@ -166,7 +166,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                                         val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
                                         // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
                                         when {
-                                            animeSettings == null -> false
+                                            animeSettings == null -> true
                                             animeSettings.postNewItem && newEntry -> true
                                             animeSettings.postStatusChange && statusChange -> true
                                             animeSettings.postUpdatedStatus && statusUpdate -> true
@@ -231,8 +231,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                 // ignore, but do not untrack targets with feature disabled
                 val guildId = target.discord.guild?.guildID ?: return@filter true // PM do not have channel features
                 val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
-                    .options.featureChannels[target.discord.channelID]
-                    ?: return@filter false // if no features, can not be enabled
+                    .getOrCreateFeatures(target.discord.channelID)
                 target.mediaList.site.targetType.channelFeature.get(featureChannel)
             }
         } else {

@@ -28,7 +28,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // make sure feature is enabled or this channel is private
         if(origin.guild != null) {
-            if(features == null || !streamTarget.channelFeature.get(features)) throw ChannelFeatureDisabledException(streamTarget.featureName, origin)
+            if(features != null && !streamTarget.channelFeature.get(features)) throw ChannelFeatureDisabledException(streamTarget.featureName, origin)
         } // else this is PM, allow
 
         // validate stream is real and get service ID
