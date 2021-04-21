@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.event.message.MessageHandler
@@ -53,6 +54,7 @@ object Search {
                 }
             } else null
         }
+
         val matchTo = clean(query)
 
         // get all roles and find partial matches. then check exact matches as they are a subset of partial matches
@@ -114,6 +116,7 @@ object Search {
     }
 
     private val userMention = Regex("<@!?([0-9]+)>")
+    private val discrimPattern = Regex("(.+)#([0-9]{4})")
     private suspend fun memberByNameOrID(param: DiscordParameters, target: Guild, query: String): Member? {
         // check if this is a user ID
         val snowflake = query.toLongOrNull()?.snowflake
@@ -125,6 +128,15 @@ object Search {
         val mention = userMention.find(query)?.groups?.get(1)?.value?.toLongOrNull()?.snowflake
         if(mention != null) {
             return target.getMemberById(mention).tryAwait().orNull()
+        }
+        // check if this is a user#discrim exact specification
+        val discrimMatch = discrimPattern.find(query)
+        if(discrimMatch != null) {
+            val (_, username, discrim) = discrimMatch.groupValues
+            return target.members
+                .filter { member ->
+                    member.username == username && member.discriminator == discrim
+                }.take(1).awaitSingleOrNull()
         }
 
         suspend fun prompt(options: List<Member>): Member? {
@@ -152,6 +164,7 @@ object Search {
         }
 
         val matchTo = clean(query)
+
         fun match(str: String) = clean(str).contains(matchTo)
 
         val partial = target.members
