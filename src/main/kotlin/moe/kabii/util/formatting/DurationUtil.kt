@@ -30,7 +30,7 @@ object DurationParser {
                 var str = string
 
                 // get days and weeks component from input - weeks+ is not part of Duration, so we need to add to the days component
-                val patternYears = Regex("([0-2]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
+                val patternYears = Regex("([0-9]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
                 val matchYears = patternYears.find(str)
                 val inputYears = matchYears?.run {
                     str = str.replace(this.value, "")

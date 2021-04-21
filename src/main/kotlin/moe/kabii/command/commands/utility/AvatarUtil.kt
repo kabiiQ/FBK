@@ -10,7 +10,7 @@ import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
 
 object AvatarUtil : CommandContainer {
-    object Avatar : Command("avatar", "getavatar", "profilepic", "pfp") {
+    object Avatar : Command("avatar", "getavatar", "profilepic", "pfp", "ava", "avi", "pic") {
         override val wikiPath = "Discord-Info-Commands#get-user-avatar"
 
         init {

@@ -48,7 +48,7 @@ data class GuildAudio(
 
     val duration: Long?
         get() = if(playlist.none { track -> track.info.isStream })
-            playlist.map { track -> track.duration - track.position }.sum()
+            playlist.sumOf { track -> track.duration - track.position }
         else null
 
     val formatDuration: String?
