@@ -20,7 +20,7 @@ object TwitterTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the twitter feature is enabled here
         if(origin.guild != null) {
-            if(features == null || !features.twitterTargetChannel) throw ChannelFeatureDisabledException("twitter", origin)
+            if(features != null && !features.twitterTargetChannel) throw ChannelFeatureDisabledException("twitter", origin)
         }
 
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
