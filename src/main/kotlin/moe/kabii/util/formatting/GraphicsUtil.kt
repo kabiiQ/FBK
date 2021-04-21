@@ -5,13 +5,16 @@ import java.awt.Font
 import kotlin.math.max
 
 object GraphicsUtil {
+    private val defaultFont = Font("SansSerif", Font.BOLD, 128)
     private val canvas = Canvas()
 
     data class FontFit(val font: Font, val str: String)
     fun fitFontHorizontal(imageWidth: Int, baseFont: Font, maxPt: Float, str: String, sidePadding: Int, minPt: Float = 1f, fallback: Font? = null): FontFit {
         val maxWidth = imageWidth - (sidePadding * 2)
 
-        val useFont = if(baseFont.canDisplayUpTo(str) != -1 && fallback != null) fallback else baseFont
+        val useFont = if(baseFont.canDisplayUpTo(str) != -1) {
+            if(fallback != null && fallback.canDisplayUpTo(str) == -1) fallback else defaultFont
+        } else baseFont
         val maxFont = useFont.deriveFont(maxPt)
         val wTextMax = canvas.getFontMetrics(maxFont).stringWidth(str)
 
