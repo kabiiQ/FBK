@@ -24,6 +24,7 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
@@ -278,13 +279,12 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
-        val mention = mentionRole?.mention
         val new = try {
             val shortDescription = StringUtils.abbreviate(video.description, 200)
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
             chan.createMessage { spec ->
-                if(mention != null) spec.setContent(mention)
+                if(mentionRole != null) spec.setContent(mentionRole.discord.mention)
                 val embed: EmbedBlock = {
                     setColor(uploadColor)
                     setAuthor("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar)
@@ -373,11 +373,10 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
-        val mentionRole = if(guildId != null) {
+        val mention = if(guildId != null) {
             getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
-        val mention = mentionRole?.mention
         try {
             val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
             val shortTitle = StringUtils.abbreviate(liveStream.title, MagicNumbers.Embed.TITLE)
@@ -385,7 +384,10 @@ abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, di
             val sinceStr = if(startTime != null) " since " else " "
 
             val newNotification = chan.createMessage { spec ->
-                if(mention != null) spec.setContent(mention)
+                if(mention != null) {
+                    spec.setContent(mention.discord.mention)
+                    mention.db.lastMention = DateTime.now()
+                }
                 val embed: EmbedBlock = {
 
                     // only a slight output change if this is premiere vs. live stream

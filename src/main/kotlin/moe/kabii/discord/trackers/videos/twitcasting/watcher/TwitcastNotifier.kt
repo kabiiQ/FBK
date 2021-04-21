@@ -19,6 +19,7 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
@@ -116,10 +117,9 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
-        val mentionRole = if(guildId != null) {
+        val mention = if(guildId != null) {
             getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
-        val mention = mentionRole?.mention
 
         val (movie, user) = info
         try {
@@ -127,7 +127,13 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
             val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.DESC) ?: ""
 
             val newNotification = chan.createMessage { spec ->
-                if(mention != null) spec.setContent(mention)
+                if(mention != null) {
+                    if(mention.db.lastMention == null
+                        || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6)) {
+                        spec.setContent(mention.discord.mention)
+                        mention.db.lastMention = DateTime.now()
+                    }
+                }
 
                 val embed: EmbedBlock = {
                     setColor(liveColor)

@@ -86,8 +86,9 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         }
     }
 
+    data class MentionRole(val db: TrackedStreams.Mention, val discord: Role)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel): Role? {
+    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel): MentionRole? {
         val dbRole = dbStream.mentionRoles
             .firstOrNull { men -> men.guild.guildID == guildId }
         return if(dbRole != null) {
@@ -97,7 +98,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
                 .tryAwait()
             when(role) {
-                is Ok -> role.value
+                is Ok -> MentionRole(dbRole, role.value)
                 is Err -> {
                     val err = role.value
                     if(err is ClientException && err.status.code() == 404) {

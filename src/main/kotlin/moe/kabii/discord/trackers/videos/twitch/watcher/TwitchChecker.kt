@@ -24,6 +24,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -226,14 +227,19 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         .ofType(MessageChannel::class.java)
                         .awaitSingle()
                     // get mention role from db
-                    val mentionRole = if (guildId != null) {
+                    val mention = if (guildId != null) {
                         getMentionRoleFor(target.streamChannel, guildId, chan)
                     } else null
 
-                    val mention = mentionRole?.mention
                     val newNotification = try {
                         chan.createMessage { spec ->
-                            if (mention != null) spec.setContent(mention)
+                            if(mention != null) {
+                                if(mention.db.lastMention == null
+                                    || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6)) {
+                                    spec.setContent(mention.discord.mention)
+                                    mention.db.lastMention = DateTime.now()
+                                }
+                            }
                             spec.setEmbed(embed.block)
                         }.awaitSingle()
                     } catch (ce: ClientException) {

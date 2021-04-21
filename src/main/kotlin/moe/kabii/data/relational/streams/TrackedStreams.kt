@@ -15,6 +15,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.jodatime.datetime
 
 // generic logic to handle tracking any stream source
 object TrackedStreams {
@@ -106,6 +107,7 @@ object TrackedStreams {
         val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id")
+        val lastMention = datetime("last_role_mention_time").nullable()
 
         override val primaryKey = PrimaryKey(streamChannel, guild)
     }
@@ -114,6 +116,7 @@ object TrackedStreams {
         var stream by StreamChannel referencedOn Mentions.streamChannel
         var guild by DiscordObjects.Guild referencedOn Mentions.guild
         var mentionRole by Mentions.mentionRole
+        var lastMention by Mentions.lastMention
 
         companion object : IntEntityClass<Mention>(Mentions) {
             @WithinExposedContext
