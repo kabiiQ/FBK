@@ -50,8 +50,19 @@ object FilterPresets : AudioCommandContainer {
 
         init {
             discord {
+                val arg = args.getOrNull(0)?.toLowerCase()
+                val custom = arg?.toFloatOrNull()
+                val(band, name) = if(custom != null) {
+                    custom to "custom band: $custom"
+                } else {
+                    when(args.getOrNull(0)?.toLowerCase()) {
+                        "high", "hi" -> 350f to "high"
+                        "low", "lo" -> 100f to "low"
+                        else -> 220f to "mid"
+                    }
+                }
                 validateAndAlterFilters(this) {
-                    addExclusiveFilter(FilterType.Karaoke)
+                    addExclusiveFilter(FilterType.Karaoke(band, name))
                 }
             }
         }

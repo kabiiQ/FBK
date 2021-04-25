@@ -25,8 +25,8 @@ sealed class FilterType {
         override fun asString() = "Bass: ${(bass * 100).toInt()}%"
     }
 
-    object Karaoke : FilterType() {
-        override fun asString() = "Karaoke Filter (experimental)"
+    data class Karaoke(val band: Float, val type: String) : FilterType() {
+        override fun asString() = "Karaoke Filter (experimental, $type vocals)"
     }
 
     data class Rotation(val speed: Float) : FilterType() {
@@ -65,7 +65,9 @@ class FilterFactory {
                     setGain(4, -0.1f * multi)
                     setGain(5, -0.2f * multi)
                 }
-                is FilterType.Karaoke -> KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate)
+                is FilterType.Karaoke -> KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate).apply {
+                    filterBand = filter.band
+                }
                 is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
                     setRotationSpeed(filter.speed.toDouble())
                 }

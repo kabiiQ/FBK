@@ -34,13 +34,17 @@ data class AudioConnection(
 
                 if(this.isActive) {
                     LOG.debug("Timeout executing for guild ${guild.guildId}")
-                    mutex.withLock {
-                        connection?.disconnect()?.success()?.awaitSingle()
-                        timeoutJob = null
-                    }
+                    disconnect()
                 }
             }
         }
         timeoutJob = newJob
+    }
+
+    suspend fun disconnect() {
+        mutex.withLock {
+            connection?.disconnect()?.success()?.awaitSingle()
+            timeoutJob = null
+        }
     }
 }
