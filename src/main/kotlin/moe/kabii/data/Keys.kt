@@ -76,6 +76,9 @@ object Keys : ConfigSpec("") {
         val signature by required<String>("twitcast_webhook_signature")
         val listen by required<Boolean>("twitcast_webhook_listen")
     }
+    object DeepL : ConfigSpec("deepl") {
+        val authKey by required<String>("deepl_key")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

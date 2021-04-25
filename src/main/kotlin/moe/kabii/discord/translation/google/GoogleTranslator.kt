@@ -4,10 +4,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.translation.SupportedLanguages
-import moe.kabii.discord.translation.TranslationLanguage
-import moe.kabii.discord.translation.TranslationResult
-import moe.kabii.discord.translation.TranslationService
+import moe.kabii.discord.translation.*
 import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
@@ -31,7 +28,7 @@ object GoogleTranslator : TranslationService(
 
     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         if(from == to) {
-            return TranslationResult(this, from, to, rawText)
+            return NoOpTranslator.translateText(from, to, rawText)
         }
 
         val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
@@ -44,7 +41,7 @@ object GoogleTranslator : TranslationService(
 
         val response = OkHTTP.newCall(request).execute()
         val translation = try {
-                if(response.isSuccessful) {
+            if(response.isSuccessful) {
                 val body = response.body!!.string()
                 translationAdapter.fromJson(body)!!.data.translations.first()
             } else {

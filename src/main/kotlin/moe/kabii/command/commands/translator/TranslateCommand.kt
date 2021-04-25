@@ -39,13 +39,14 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
             } else noCmd
 
             // translate
-            val service = Translator.getService()
-            val languages = service.supportedLanguages
-            val fromLang = fromSearch?.run { languages.search(this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
-            val toLang = languages.search(toSearch).values.firstOrNull() ?: languages[toTagDefault] ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
+            val baseService = Translator.defaultService
+            val languages = baseService.supportedLanguages
+            val fromLang = fromSearch?.run { languages.search(baseService, this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
+            val toLang = languages.search(baseService, toSearch).values.firstOrNull() ?: languages[toTagDefault] ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
+            val translator = Translator.getService(text, fromLang?.tag, toLang.tag)
 
             val translation = try {
-                service.translateText(fromLang, toLang, text)
+                translator.service.translateText(translator.language, toLang, text)
             } catch(e: Exception) {
                 LOG.info("Translation request failed: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -58,7 +59,7 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
             embed {
                 setAuthor("Translation for ${author.userAddress()}", event.message.createJumpLink(), author.avatarUrl)
                 setDescription(translation.translatedText)
-                setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null)
+                setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null)
             }.awaitSingle()
         }
     }

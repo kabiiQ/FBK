@@ -6,16 +6,9 @@ data class SupportedLanguages(
     fun byTag(tag: String) = languages[tag.toLowerCase()]
     operator fun get(tag: String) = byTag(tag)
 
-    fun search(query: String): Map<String, TranslationLanguage> {
+    fun search(service: TranslationService, query: String): Map<String, TranslationLanguage> {
         // alias common tag errors here
-        val tag = when(query.toLowerCase()) {
-            "zh", "ch", "cn" -> "zh-Hans"
-            "kr" -> "ko"
-            "pt" -> "pt-br"
-            "sr" -> "sr-Cyrl"
-            "jp" -> "ja"
-            else -> query
-        }
+        val tag = service.tagAlias(query)
 
         // check if input is a language 'tag'
         val exactTag = languages.filterKeys { langTag -> langTag == tag.toLowerCase() }
@@ -34,15 +27,26 @@ data class SupportedLanguages(
                         || lang.nativeName.equals(clean, ignoreCase = true)
             }
 
-        return if(exact.isNotEmpty()) exact else partial
+        return exact.ifEmpty { partial }
     }
 }
 
-data class TranslationLanguage(
+class TranslationLanguage(
     val tag: String,
     val languageName: String,
     val nativeName: String
 ) {
     val fullName: String
     get() = if(languageName.equals(nativeName, ignoreCase = true)) languageName else "$languageName/$nativeName"
+
+    override fun equals(other: Any?): Boolean {
+        if(this === other) return true
+        if(javaClass != other?.javaClass) return false
+        other as TranslationLanguage
+        return tag.equals(other.tag, ignoreCase = true)
+    }
+
+    override fun hashCode(): Int {
+        return tag.hashCode()
+    }
 }

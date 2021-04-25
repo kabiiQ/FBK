@@ -28,7 +28,6 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         if(event.emoji.asUnicodeEmoji().orNull()?.raw?.equals(EmojiCharacters.translation) != true) return
 
         val message = event.message.awaitSingle()
-        val service = Translator.getService()
 
         val channel = event.channel.awaitSingle()
         if(config != null) {
@@ -51,8 +50,10 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         }.filterNotNull().joinToString("\n")
         if(contents.isBlank()) return
 
-        val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
-        val translation = service.translateText(from = null, to = defaultLang, rawText = contents)
+        val baseService = Translator.defaultService
+        val defaultLang = config?.translator?.defaultTargetLanguage?.run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
+        val translator = Translator.getService(contents, defaultLang.tag)
+        val translation = translator.service.translateText(from = translator.language, to = defaultLang, rawText = contents)
         val jumpLink = message.createJumpLink()
         channel.createEmbed { embed ->
             fbkColor(embed)
@@ -62,7 +63,7 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
             else "<No translation performed>"
             embed.setDescription(text)
 
-            embed.setFooter("Translator: ${service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+            embed.setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
         }.awaitSingle()
 
         /*ReactionListener(

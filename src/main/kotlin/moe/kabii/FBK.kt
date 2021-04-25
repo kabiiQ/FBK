@@ -83,7 +83,7 @@ fun main() {
 
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initalization") {
-        val translator = Translator
+        val translator = Translator.detector.detectLanguageOf("initalizing translator")
         val welcomer = WelcomeImageGenerator
 
         // join any linked channels on twitch IRC

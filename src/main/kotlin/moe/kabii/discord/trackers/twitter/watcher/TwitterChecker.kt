@@ -134,12 +134,13 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
                                     val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                                         try {
-                                            val service = Translator.getService()
+                                            val baseService = Translator.defaultService
                                             val defaultLang = GuildConfigurations
                                                 .getOrCreateGuild(target.discordChannel.guild!!.guildID)
                                                 .translator.defaultTargetLanguage
-                                                .run(service.supportedLanguages::get) ?: service.defaultLanguage()
-                                            val translation = service.translateText(from = null, to = defaultLang, rawText = tweet.text)
+                                                .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
+                                            val translator = Translator.getService(tweet.text, defaultLang.tag)
+                                            val translation = translator.service.translateText(from = translator.language, to = defaultLang, rawText = tweet.text)
                                             if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
                                             else null
                                         } catch(e: Exception) {

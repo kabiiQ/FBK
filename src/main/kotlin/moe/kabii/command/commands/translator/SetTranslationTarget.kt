@@ -12,7 +12,7 @@ object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "t
     init {
         discord {
             member.verify(Permission.MANAGE_MESSAGES)
-            val service = Translator.getService()
+            val service = Translator.defaultService
 
             // setlang <language>
             if(args.isEmpty()) {
@@ -21,7 +21,7 @@ object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "t
                 return@discord
             }
 
-            val matchLang = service.supportedLanguages.search(noCmd)
+            val matchLang = service.supportedLanguages.search(service, noCmd)
             val error = when(matchLang.size) {
                 0 -> "Unknown/unsupported language **$noCmd**. See [this link](${service.languageHelp}) for supported languages and their associated language codes."
                 1 -> null
