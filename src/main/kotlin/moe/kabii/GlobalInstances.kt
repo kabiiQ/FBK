@@ -18,3 +18,4 @@ val MOSHI: Moshi = Moshi.Builder()
     .build()
 
 val JSON = "application/json; charset=UTF-8".toMediaType()
+val UNENCODED = "application/x-www-form-urlencoded".toMediaType()

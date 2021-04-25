@@ -113,7 +113,7 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
     }
 
     fun cancel() {
-        all_conversations.remove(this)
+        allConversations.remove(this)
         try {
             (coroutine as CancellableContinuation<Any?>).resume(null)
         } catch (e: Exception) {} // already resumed ? should not happen but this may be a race
@@ -121,13 +121,13 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
     }
 
     companion object {
-        private val all_conversations = mutableListOf<Conversation>()
+        private val allConversations = mutableListOf<Conversation>()
 
         private val timeoutThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         private val timeouts = CoroutineScope(timeoutThread + SupervisorJob())
 
         val conversations
-            get() = all_conversations.toList()
+            get() = allConversations.toList()
 
         fun register(criteria: ResponseCriteria, discord: GatewayDiscordClient, callback: CancellableContinuation<*>, reactionListener: ReactionListener? = null, timeout: Long? = 40000): Conversation {
             // only one conversation per channel per user - best option unless we can clearly define the behavior with multiple conversations at once
@@ -135,17 +135,23 @@ class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordC
                 conversation.criteria.channel == criteria.channel && conversation.criteria.user == criteria.user
             }.forEach(Conversation::cancel)
             val new = Conversation(criteria, discord, callback, reactionListener)
-            all_conversations.add(new)
+            allConversations.add(new)
 
             if (timeout != null) {
                 timeouts.launch {
                     delay(timeout)
-                    if (all_conversations.contains(new)) {
+                    if (allConversations.contains(new)) {
                         new.cancel()
                     }
                 }
             }
             return new
+        }
+
+        fun shutdown(): Int {
+            val ending = allConversations.size
+            allConversations.forEach(Conversation::cancel)
+            return ending
         }
     }
 }
