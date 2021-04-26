@@ -96,7 +96,7 @@ object TwitterParser {
         if(!limits.includeRT) query.append(" -is:retweet ")
         if(!limits.includeQuote) query.append(" -is:quote ")
         if(limits.sinceId != null) query.append("&since_id=${limits.sinceId}")
-        query.append("&tweet.fields=created_at,referenced_tweets,possibly_sensitive,text")
+        query.append("&tweet.fields=created_at,referenced_tweets,possibly_sensitive,text,entities")
         query.append("&max_results=${limits.tweetLimit}")
         query.append("&expansions=author_id,attachments.media_keys,referenced_tweets.id.author_id")
         query.append("&user.fields=profile_image_url")

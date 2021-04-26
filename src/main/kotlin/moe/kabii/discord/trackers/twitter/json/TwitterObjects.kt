@@ -27,6 +27,7 @@ data class TwitterTweet(
     @Json(name = "attachments") val _attachments: TweetAttachmentsObject?,
     @Json(name = "author_id") val _authorId: String,
     @Json(name = "possibly_sensitive") val sensitive: Boolean?,
+    val entities: TwitterEntities?,
     @Json(name = "text") val _text: String
 ) {
 
@@ -94,3 +95,19 @@ data class TwitterReferences(
 data class TwitterError(
     @Json(name = "detail") val message: String
 )
+
+@JsonClass(generateAdapter = true)
+data class TwitterEntities(
+    val urls: List<TwitterUrlEntity>?
+)
+
+@JsonClass(generateAdapter = true)
+data class TwitterUrlEntity(
+    val images: List<TwitterUrlImage>?
+)
+
+@JsonClass(generateAdapter = true)
+data class TwitterUrlImage(
+    val url: String
+)
+

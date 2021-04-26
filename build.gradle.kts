@@ -50,7 +50,7 @@ dependencies {
 
     // kotlin libs
     val coroutinesVer = "1.4.3"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.0-M1-1.4.0-rc")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
@@ -109,6 +109,13 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
     implementation("org.postgresql:postgresql:42.2.19")
+
+    // language detection
+    implementation("com.github.pemistahl:lingua:1.0.3")
+    // todo should remove with lingua 1.1.0
+    runtimeOnly("org.jetbrains.kotlin:kotlin-stdlib:1.4.31")
+    runtimeOnly("org.jetbrains.kotlin:kotlin-stdlib-common:1.4.31")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.0.0")
 
     // .toml token configuration
     implementation("com.uchuhimo:konf:1.0.0")

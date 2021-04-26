@@ -179,7 +179,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                                 if((size > 1 || isVid)  && attachment.url != null) {
                                                     TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, size, isVid)
                                                 } else attachment.url
-                                            } else null
+                                            } else tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // use image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
                                             thumbnail?.run(embed::setImage)
 
                                             embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
