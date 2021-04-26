@@ -53,7 +53,7 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         val baseService = Translator.defaultService
         val defaultLang = config?.translator?.defaultTargetLanguage?.run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
         val translator = Translator.getService(contents, defaultLang.tag)
-        val translation = translator.service.translateText(from = translator.language, to = defaultLang, rawText = contents)
+        val translation = translator.service.translateText(from = null, to = defaultLang, rawText = contents, suspectLanguage = translator.suspect)
         val jumpLink = message.createJumpLink()
         channel.createEmbed { embed ->
             fbkColor(embed)

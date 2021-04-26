@@ -46,7 +46,7 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
             val translator = Translator.getService(text, fromLang?.tag, toLang.tag)
 
             val translation = try {
-                translator.service.translateText(translator.language, toLang, text)
+                translator.service.translateText(fromLang, toLang, text, translator.suspect)
             } catch(e: Exception) {
                 LOG.info("Translation request failed: ${e.message}")
                 LOG.debug(e.stackTraceString)

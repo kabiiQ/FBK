@@ -13,7 +13,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
     abstract val supportedLanguages: SupportedLanguages
 
     @Throws(IOException::class)
-    abstract fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
+    abstract fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult
 
     fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 
@@ -28,8 +28,8 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 }
 
 object NoOpTranslator : TranslationService("None", "") {
-     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
-        = TranslationResult(this, from!!, from, rawText)
+     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult
+        = TranslationResult(this, suspectLanguage!!, suspectLanguage, rawText)
 
     override val supportedLanguages = SupportedLanguages(mapOf())
 }
@@ -44,7 +44,7 @@ object Translator {
     val defaultService = services.first()
 
     val detector = LanguageDetectorBuilder.fromAllSpokenLanguages().build()
-    data class TranslationPair(val service: TranslationService, val language: TranslationLanguage?)
+    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?)
     fun getService(text: String?, vararg tags: String?): TranslationPair {
         // if language supported by deepL - use that for better translation
         val useService = services.toMutableList()
@@ -70,13 +70,15 @@ object Translator {
         google.translateText(
             from = null,
             to = google.defaultLanguage(),
-            rawText = "t"
+            rawText = "t",
+            suspectLanguage = null
         )
         val deepL = DeepLTranslator
         deepL.translateText(
             from = null,
             to = deepL.defaultLanguage(),
-            rawText = "h"
+            rawText = "h",
+            suspectLanguage = null
         )
     }
 }
