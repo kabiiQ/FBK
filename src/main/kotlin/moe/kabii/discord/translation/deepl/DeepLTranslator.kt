@@ -38,8 +38,10 @@ object DeepLTranslator : TranslationService(
             return NoOpTranslator.translateText(from, to, rawText, suspectLanguage)
         }
 
+        val text = rawText.capitalize()
+
         val requestBody = FormBody.Builder()
-            .add("text", rawText)
+            .add("text", text)
             .add("target_lang", to.tag)
             .add("source_lang", from?.tag ?: "")
             .build()
