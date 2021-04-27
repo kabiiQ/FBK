@@ -140,7 +140,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                                                 .translator.defaultTargetLanguage
                                                 .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
                                             val translator = Translator.getService(tweet.text, defaultLang.tag)
-                                            val translation = translator.service.translateText(from = null, to = defaultLang, rawText = tweet.text, suspectLanguage = translator.suspect)
+                                            val translation = translator.translate(from = null, to = defaultLang, text = tweet.text)
                                             if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
                                             else null
                                         } catch(e: Exception) {

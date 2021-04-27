@@ -2,10 +2,12 @@ package moe.kabii.discord.translation
 
 import com.github.pemistahl.lingua.api.Language
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.translation.azure.AzureTranslator
 import moe.kabii.discord.translation.deepl.DeepLTranslator
 import moe.kabii.discord.translation.google.GoogleTranslator
+import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
 abstract class TranslationService(val fullName: String, val languageHelp: String) {
@@ -13,7 +15,26 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
     abstract val supportedLanguages: SupportedLanguages
 
     @Throws(IOException::class)
-    abstract fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult
+    fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?, fallback: TranslationService?): TranslationResult {
+        if(suspectLanguage == to) {
+            return NoOpTranslator.doTranslation(suspectLanguage, suspectLanguage, rawText)
+        }
+
+        require(rawText.length <= 1_000) { "Translation exceeds 2000 characters" }
+
+        return try {
+            doTranslation(from, to, rawText)
+        } catch(io: IOException) {
+            LOG.error("Error getting translation from $fullName: ${io.message}")
+            LOG.debug(io.stackTraceString)
+
+            val backup = fallback?.doTranslation(from, to, rawText)
+            backup ?: throw IOException("Text translation failed with no available backup provider")
+        }
+    }
+
+    @Throws(IOException::class)
+    internal abstract fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
 
     fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 
@@ -28,8 +49,8 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 }
 
 object NoOpTranslator : TranslationService("None", "") {
-     override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult
-        = TranslationResult(this, suspectLanguage!!, suspectLanguage, rawText)
+     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
+        = TranslationResult(this, from!!, from, rawText)
 
     override val supportedLanguages = SupportedLanguages(mapOf())
 }
@@ -44,7 +65,12 @@ object Translator {
     val defaultService = services.first()
 
     val detector = LanguageDetectorBuilder.fromAllSpokenLanguages().build()
-    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?)
+
+    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?, val fallback: TranslationService?) {
+        fun translate(from: TranslationLanguage?, to: TranslationLanguage, text: String)
+            = service.translateText(from, to, text, suspect, fallback)
+    }
+
     fun getService(text: String?, vararg tags: String?): TranslationPair {
         // if language supported by deepL - use that for better translation
         val useService = services.toMutableList()
@@ -60,25 +86,23 @@ object Translator {
                 deepLLanguage
             }
         } else null
-        val service = useService.first(TranslationService::available)
-        return TranslationPair(service, detected)
+        val services = useService.filter(TranslationService::available)
+        return TranslationPair(services[0], detected, services.getOrNull(1))
     }
 
     init {
         // test google translator quota
         val google = GoogleTranslator
-        google.translateText(
+        google.doTranslation(
             from = null,
             to = google.defaultLanguage(),
-            rawText = "t",
-            suspectLanguage = null
+            rawText = "t"
         )
         val deepL = DeepLTranslator
-        deepL.translateText(
+        deepL.doTranslation(
             from = null,
             to = deepL.defaultLanguage(),
-            rawText = "h",
-            suspectLanguage = null
+            rawText = "h"
         )
     }
 }

@@ -33,11 +33,7 @@ object DeepLTranslator : TranslationService(
         else -> input.toUpperCase()
     }
 
-    override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult {
-        if(suspectLanguage == to) {
-            return NoOpTranslator.translateText(from, to, rawText, suspectLanguage)
-        }
-
+    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val text = rawText.capitalize()
 
         val requestBody = FormBody.Builder()

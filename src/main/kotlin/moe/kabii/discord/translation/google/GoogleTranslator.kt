@@ -26,11 +26,7 @@ object GoogleTranslator : TranslationService(
         this.supportedLanguages = pullLanguages()
     }
 
-    override fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult {
-        if(suspectLanguage == to) {
-            return NoOpTranslator.translateText(from, to, rawText, suspectLanguage)
-        }
-
+    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
 
         val request = Request.Builder()

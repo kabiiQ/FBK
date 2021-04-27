@@ -18,10 +18,8 @@ class EventDeserializer {
             val event = JSONValue.parse(rawEvent) as JSONObject
 
             val eventType = event["type"]
-            if(eventType == "heartbeat") {
-                LOG.debug("PS2 WSS Heartbeat: $rawEvent")
-                return null
-            } else if(eventType != "serviceMessage") return null
+            if(eventType == "heartbeat") return null
+            else if(eventType != "serviceMessage") return null
 
             val payload = event["payload"] as JSONObject
 
