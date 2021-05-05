@@ -5,7 +5,10 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.translation.*
+import moe.kabii.discord.translation.SupportedLanguages
+import moe.kabii.discord.translation.TranslationLanguage
+import moe.kabii.discord.translation.TranslationResult
+import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.azure.json.AzureLanguagesResponse
 import moe.kabii.discord.translation.azure.json.AzureTranslationRequest
 import moe.kabii.discord.translation.azure.json.AzureTranslationResponse

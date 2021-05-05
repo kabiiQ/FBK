@@ -4,7 +4,10 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
-import moe.kabii.discord.translation.*
+import moe.kabii.discord.translation.SupportedLanguages
+import moe.kabii.discord.translation.TranslationLanguage
+import moe.kabii.discord.translation.TranslationResult
+import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
