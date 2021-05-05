@@ -7,6 +7,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.WebSubSubscription
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
+import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -17,6 +18,7 @@ import org.joda.time.Instant
 
 class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
 
+    lateinit var checker: YoutubeChecker
     val subscriber = YoutubeFeedSubscriber()
     private val listener = YoutubeFeedListener(this)
 

@@ -1,6 +1,5 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
@@ -28,7 +27,7 @@ import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
-abstract class YoutubeNotifier(val subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient) : StreamWatcher(discord) {
+abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionManager) : StreamWatcher(subscriptions.discord) {
 
     companion object {
         private val liveColor = YoutubeParser.color

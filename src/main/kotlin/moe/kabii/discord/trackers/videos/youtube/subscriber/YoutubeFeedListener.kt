@@ -88,6 +88,8 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 // successfully acquired information on an updated video.
                 // let youtubevideointake decide what to do with this information
                 YoutubeVideoIntake.intakeXml(body)
+                // notify youtubechecker for immediate update
+                manager.checker.ytTick()
             }
         }
     }

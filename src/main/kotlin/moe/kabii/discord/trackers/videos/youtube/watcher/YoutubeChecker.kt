@@ -1,9 +1,9 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
@@ -28,12 +28,31 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
     class New(val new: YoutubeVideo) : YoutubeCall(new)
 }
 
-class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions, discord) {
+class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions) {
+    private val cleanInterval = 240 // only clean db approx every 2 hours
+    private val repeatTimeMillis = cooldowns.minimumRepeatTime
+    private val tickDelay = cooldowns.callDelay
+
+    private var nextCall = Instant.now()
+    private var tickId = 0
+    private val lock = Mutex()
+
     override fun run() {
-        val cleanInterval = 240 // only clean db approx every 2 hours
-        var tickId = 0
         applicationLoop {
             val start = Instant.now()
+            // call yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
+            if(start >= nextCall) {
+                this.ytTick()
+            }
+            val runDuration = Duration.between(start, Instant.now())
+            val delay = repeatTimeMillis - runDuration.toMillis()
+            delay(max(delay, 0L))
+        }
+    }
+
+    suspend fun ytTick() {
+        if(!lock.tryLock()) return // discard tick if one is already in progress
+        try {
             propagateTransaction {
                 try {
                     // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
@@ -140,10 +159,13 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, discord: Gateway
                     LOG.debug(e.stackTraceString)
                 }
             }
-            val runDuration = Duration.between(start, Instant.now())
-            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
-            delay(max(delay, 0L))
             tickId = (tickId + 1) mod cleanInterval
+        } finally {
+            taskScope.launch {
+                delay(tickDelay)
+                lock.unlock()
+            }
+            this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
         }
     }
 

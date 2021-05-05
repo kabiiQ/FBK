@@ -62,10 +62,11 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         )
         val ytSubscriptions = YoutubeSubscriptionManager(discord, subsDelay)
         val ytDelay = ServiceRequestCooldownSpec(
-            callDelay = 0L,
+            callDelay = 15_000L,
             minimumRepeatTime = 30_000L
         )
-        val ytChecker = YoutubeChecker(ytSubscriptions, discord, ytDelay)
+        val ytChecker = YoutubeChecker(ytSubscriptions, ytDelay)
+        ytSubscriptions.checker = ytChecker
         /*
         val pullDelay = ServiceRequestCooldownSpec(
             callDelay = 5_000L,
