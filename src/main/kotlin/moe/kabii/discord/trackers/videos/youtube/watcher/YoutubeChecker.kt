@@ -18,6 +18,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
+import org.litote.kmongo.util.idValue
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -111,13 +112,13 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         val callReason = targetLookup.getValue(videoId)
 
                                         val ytVideoInfo = when (ytVideo) {
-                                            is Ok -> {
+                                            is Ok -> ytVideo.value.also { video ->
                                                 // if youtube call succeeded, reflect this in db
                                                 with(callReason.video) {
                                                     lastAPICall = DateTime.now()
-                                                    lastTitle = ytVideo.value.title
+                                                    lastTitle = video.title
+                                                    ytChannel.lastKnownUsername = video.channel.name
                                                 }
-                                                ytVideo.value
                                             }
                                             is Err -> {
                                                 when (ytVideo.value) {

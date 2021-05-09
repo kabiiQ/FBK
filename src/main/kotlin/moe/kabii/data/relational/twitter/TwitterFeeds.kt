@@ -14,11 +14,13 @@ import org.jetbrains.exposed.sql.select
 object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
+    val lastKnownUsername = text("last_known_twitter_handle").nullable()
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var userId by TwitterFeeds.userId
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
+    var lastKnownUsername by TwitterFeeds.lastKnownUsername
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
@@ -29,6 +31,7 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
                 new {
                     this.userId = user.id
                     this.lastPulledTweet = null
+                    this.lastKnownUsername = user.username
                 }
             }
     }

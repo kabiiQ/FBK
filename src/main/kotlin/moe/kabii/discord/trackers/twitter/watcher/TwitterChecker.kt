@@ -93,6 +93,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         }
                         recent ?: return@forEach
                         val (user, tweets) = recent
+                        feed.lastKnownUsername = user.username
+
                         val latest = tweets.maxOf { tweet ->
 
                             // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs

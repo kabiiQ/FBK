@@ -45,7 +45,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.mapTo(tracks) { target ->
                     val stream = target.streamChannel
                     val url = stream.site.targetType.feedById(stream.siteChannelID)
-                    "[${stream.site.targetType.full}/${stream.siteChannelID}]($url): by <@${target.tracker.userID}>"
+                    "[${stream.site.targetType.full}/${stream.lastKnownUsername ?: stream.siteChannelID}]($url): by <@${target.tracker.userID}>"
                 }
 
                 // get all tracked anime lists in this channel
@@ -63,7 +63,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
                     val url = moe.kabii.discord.trackers.TwitterTarget.feedById(feed.userId.toString())
-                    "[Twitter/${feed.userId}]($url) by <@${target.tracker.userID}>"
+                    "[Twitter/${feed.lastKnownUsername ?: feed.userId}]($url) by <@${target.tracker.userID}>"
                 }
 
                 PS2Tracks.TrackTarget.find {

@@ -79,6 +79,7 @@ class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceReque
             return
         }
 
+        channel.lastKnownUsername = user.screenId
         // check targets first - allows untracking targets we don't care about
         val targets = getActiveTargets(channel) ?: return // channel untracked
         if(user.live) {

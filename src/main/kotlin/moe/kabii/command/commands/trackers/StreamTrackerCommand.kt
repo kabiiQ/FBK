@@ -61,7 +61,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // get the db 'channel' object or create if this is a new stream channel
         val dbChannel = newSuspendedTransaction {
-            TrackedStreams.StreamChannel.getOrInsert(site, streamId, origin = origin)
+            TrackedStreams.StreamChannel.getOrInsert(site, streamId, streamInfo.displayName)
         }
 
         newSuspendedTransaction {

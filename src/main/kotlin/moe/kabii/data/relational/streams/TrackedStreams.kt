@@ -29,11 +29,13 @@ object TrackedStreams {
     object StreamChannels : IntIdTable() {
         val site = enumeration("site_id", DBSite::class)
         val siteChannelID = varchar("site_channel_id", 64).uniqueIndex()
+        val lastKnownUsername = varchar("last_known_username", 64).nullable()
     }
 
     class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
         var site by StreamChannels.site
         var siteChannelID by StreamChannels.siteChannelID
+        var lastKnownUsername by StreamChannels.lastKnownUsername
 
         val targets by Target referrersOn Targets.streamChannel
         val mentionRoles by Mention referrersOn Mentions.streamChannel
@@ -49,12 +51,13 @@ object TrackedStreams {
             }.firstOrNull()
 
             @WithinExposedContext
-            fun getOrInsert(site: DBSite, channelId: String, origin: DiscordParameters? = null): StreamChannel {
+            fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel {
                 val existing = getChannel(site, channelId)
                 return if(existing != null) existing else {
                     val new = new {
                         this.site = site
                         this.siteChannelID = channelId
+                        if(username != null) this.lastKnownUsername = username
                     }
                     new
                 }

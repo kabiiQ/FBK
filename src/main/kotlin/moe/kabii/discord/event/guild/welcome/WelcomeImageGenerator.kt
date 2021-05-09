@@ -54,7 +54,7 @@ object WelcomeImageGenerator {
 
             val textColor = Color(config.textColor())
 
-            var y = 90f // 100px from top to baseline first line
+            var y = 90f // from top to baseline first line
 
             val lineSpacing = 20
             val avatarPadding = 12

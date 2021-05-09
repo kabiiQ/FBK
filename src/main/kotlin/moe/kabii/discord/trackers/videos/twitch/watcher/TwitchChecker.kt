@@ -95,7 +95,11 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
             runBlocking {
                 delay(400L)
                 when (val user = TwitchParser.getUser(twitchId)) {
-                    is Ok -> user.value
+                    is Ok -> {
+                        user.value.apply {
+                            channel.lastKnownUsername = this.username
+                        }
+                    }
                     is Err -> {
                         val err = user.value
                         if (err is StreamErr.NotFound) {

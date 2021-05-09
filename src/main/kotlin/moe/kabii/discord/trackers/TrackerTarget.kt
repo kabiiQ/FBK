@@ -17,7 +17,9 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.constants.URLUtil
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
+import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -69,10 +71,15 @@ object TwitchTarget : StreamingTarget(
     override val dbSite
         get() = TrackedStreams.DBSite.TWITCH
 
-    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
-    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.displayName, ok.url) }
+    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.username, ok.url) }
+    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.username, ok.url) }
 
-    override fun feedById(id: String): String = "" // unavailable without making requests. todo store in db ?
+    override fun feedById(id: String): String {
+            return TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, id)
+                ?.lastKnownUsername
+                ?.run(URLUtil.StreamingSites.Twitch::channelByName)
+                ?: ""
+    }
 
     override val onTrack: TrackCallback = callback@{ origin, channel ->
         val services = origin.handler.services
