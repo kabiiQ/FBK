@@ -70,7 +70,6 @@ internal interface AudioCommandContainer : CommandContainer {
     }
 
     suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
-        if(origin.config.musicBot.autoFSkip && canFSkip(origin, track)) return true
         val userChannel = origin.member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull() ?: return false
         val botChannel = BotUtil.getBotVoiceChannel(origin.target).tryAwait().orNull() ?: return false
         return botChannel.id == userChannel.id

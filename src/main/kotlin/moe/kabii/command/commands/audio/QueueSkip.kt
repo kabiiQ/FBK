@@ -19,6 +19,11 @@ object QueueSkip : AudioCommandContainer {
                     error("There is no track currently playing.").awaitSingle()
                     return@discord
                 }
+                if(config.musicBot.autoFSkip && canFSkip(this, track)) {
+                    audio.player.stopTrack()
+                    embed(author, "Force-skipped **${track.info.title}**.").awaitSingle()
+                    return@discord
+                }
                 if(!canVoteSkip(this, track)) {
                     error("You must be in the bot's voice channel to vote skip.").awaitSingle()
                     return@discord
