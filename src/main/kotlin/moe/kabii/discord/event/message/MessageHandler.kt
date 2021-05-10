@@ -164,8 +164,7 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
 
                     val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
                     val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
-                    param.error("I tried to respond to your command **$cmdStr** in channel ${chan.mention} but the **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")
-                        .awaitSingle()
+                    param.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.").awaitSingle()
 
                 } catch (cmd: GuildCommandDisabledException) {
 

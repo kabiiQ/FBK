@@ -16,8 +16,9 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
         BooleanElement("Use this server's invite info (required for invite-specific roles, bot requires Manage Server permission)", listOf("invite", "invites", "useinvites", "inviteperm"), GuildSettings::utilizeInvites),
         BooleanElement("Give users their roles back when they rejoin the server", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles),
         BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", listOf("publish"), GuildSettings::publishTrackerMessages),
-        BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl"), GuildSettings::reactionTranslations),
-        BooleanElement("Enable PS2 commands", listOf("ps2", "planetside2"), GuildSettings::ps2Commands)
+        BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl", "reactiontranslations"), GuildSettings::reactionTranslations),
+        BooleanElement("Enable PS2 commands", listOf("ps2", "planetside2", "ps2commands"), GuildSettings::ps2Commands),
+        BooleanElement("Enable internet search commands", listOf("search", "google", "ud", "wa", "searchcommands"), GuildSettings::searchCommands)
     )
 
     init {

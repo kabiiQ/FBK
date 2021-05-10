@@ -11,11 +11,13 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.command.Command
+import moe.kabii.command.GuildFeatureDisabledException
 import moe.kabii.command.GuildTargetInvalidException
 import moe.kabii.command.channelVerify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.message.MessageHandler
@@ -26,6 +28,9 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
+import kotlin.jvm.Throws
+import kotlin.reflect.KProperty0
+import kotlin.reflect.KProperty1
 
 data class DiscordParameters (
     val handler: MessageHandler,
@@ -72,6 +77,14 @@ data class DiscordParameters (
         get() = (chan as? GuildChannel) ?: throw GuildTargetInvalidException("This command must be executed in a server's channel.")
 
     suspend fun channelVerify(vararg permissions: Permission) = member.channelVerify(guildChan, *permissions)
+
+    @Throws(GuildFeatureDisabledException::class)
+    fun featureVerify(feature: KProperty1<GuildSettings, Boolean>, featureName: String? = null) {
+        if(guild != null) {
+            val name = featureName ?: feature.name
+            if(!feature.get(config.guildSettings)) throw GuildFeatureDisabledException(name, "guildcfg $name enable")
+        } // else this is pm, allow
+    }
 
     fun error(block: EmbedSuspension) = chan.createEmbed { embed ->
         errorColor(embed)

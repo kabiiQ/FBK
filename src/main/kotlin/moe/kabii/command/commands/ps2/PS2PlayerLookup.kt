@@ -2,6 +2,7 @@ package moe.kabii.command.commands.ps2
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
@@ -14,7 +15,7 @@ object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "
 
     init {
         discord {
-            PS2Command.checkEnabled(this)
+            featureVerify(GuildSettings::ps2Commands, "PS2")
             if(args.isEmpty()) {
                 usage("**ps2who** is used to look up a player by name.", "ps2who <username>").awaitSingle()
                 return@discord

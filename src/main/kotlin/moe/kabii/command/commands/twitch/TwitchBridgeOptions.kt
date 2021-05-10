@@ -14,7 +14,7 @@ import moe.kabii.rusty.Ok
 object TwitchBridgeOptions : CommandContainer {
 
     class SetLinkedChannel(private val twitchClient: TwitchClient) : Command("linktwitch", "twitchlink") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath: String? = null
 
         init {
             discord {
@@ -49,7 +49,7 @@ object TwitchBridgeOptions : CommandContainer {
     }
 
     class UnlinkChannel(private val twitchClient: TwitchClient) : Command("unlinktwitch", "twitchunlink") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath: String? = null
 
         init {
             discord {

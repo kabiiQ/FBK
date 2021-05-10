@@ -12,8 +12,7 @@ import java.time.Instant
 
 object TwitchInfo : CommandContainer {
     object Title : Command("title", "streamtitle", "streamname") {
-        override val wikiPath: String?
-            get() = TODO()
+        override val wikiPath: String? = null
 
         init {
             twitch {
@@ -37,7 +36,7 @@ object TwitchInfo : CommandContainer {
 
     // TODO game specifc uptime?
     object Uptime : Command("uptime", "up-time") {
-        override val wikiPath by lazy { TODO() }
+        override val wikiPath: String? = null
 
         init {
             twitch {

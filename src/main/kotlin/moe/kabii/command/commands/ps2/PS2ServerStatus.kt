@@ -2,6 +2,7 @@ package moe.kabii.command.commands.ps2
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.trackers.ps2.polling.FisuPS2Parser
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulation
@@ -13,7 +14,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
 
     init {
         discord {
-            PS2Command.checkEnabled(this)
+            featureVerify(GuildSettings::ps2Commands, "PS2")
             // get all servers and list status
             val servers = try {
                 PS2Parser.getServers()

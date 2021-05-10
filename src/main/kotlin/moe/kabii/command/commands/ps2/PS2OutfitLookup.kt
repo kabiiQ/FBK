@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.trackers.ps2.polling.json.PS2Outfit
@@ -16,7 +17,7 @@ object PS2OutfitLookupCommands : CommandContainer {
 
         init {
             discord {
-                PS2Command.checkEnabled(this)
+                featureVerify(GuildSettings::ps2Commands, "PS2")
                 if(args.isEmpty()) {
                     usage("**ps2outfit** is used to look up and outfit by their tag. **ps2outfit:name** can be used to look up by name.", "ps2outfit <TAG>")
                     return@discord
@@ -31,7 +32,7 @@ object PS2OutfitLookupCommands : CommandContainer {
 
         init {
             discord {
-                PS2Command.checkEnabled(this)
+                featureVerify(GuildSettings::ps2Commands, "PS2")
                 if(args.isEmpty()) {
                     usage("**ps2outfit:name is used to look up an outfit by their full name, in the event they have no tag.", "ps2outfit:name <outfit name>").awaitSingle()
                     return@discord
