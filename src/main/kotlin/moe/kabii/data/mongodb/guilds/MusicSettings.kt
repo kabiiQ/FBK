@@ -8,7 +8,7 @@ data class MusicSettings(
     var queuerFSkip: Boolean = true,
     var restrictFilters: Boolean = false,
     var restrictSeek: Boolean = true,
-    var alwaysFSkip: Boolean = false,
+    var autoFSkip: Boolean = true,
     var skipIfAbsent: Boolean = false,
     var skipRatio: Long = defaultRatio,
     var skipUsers: Long = defaultUsers,

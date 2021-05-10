@@ -40,7 +40,7 @@ object MusicConfig : CommandContainer {
             BooleanElement(
                 "Skip command will force skip when permitted",
                 listOf("alwaysfskip", "forceskip", "fskip", "force-skip"),
-                MusicSettings::alwaysFSkip
+                MusicSettings::autoFSkip
             ),
             BooleanElement(
                 "Skip song if the requester is no longer in the voice channel",
