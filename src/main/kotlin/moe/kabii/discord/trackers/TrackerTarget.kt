@@ -17,9 +17,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.constants.URLUtil
-import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
-import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 

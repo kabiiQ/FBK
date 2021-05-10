@@ -214,6 +214,7 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
             }
             return@launch
         }
+
         // DISCORD CONVERSATION CALLBACKS
         Conversation.conversations.find { conversation ->
             conversation.criteria.channel == event.message.channelId.asLong()

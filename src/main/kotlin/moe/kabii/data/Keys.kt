@@ -79,6 +79,9 @@ object Keys : ConfigSpec("") {
     object DeepL : ConfigSpec("deepl") {
         val authKey by required<String>("deepl_key")
     }
+    object Wolfram : ConfigSpec("wolfram") {
+        val appId by required<String>("wolfram_appid")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

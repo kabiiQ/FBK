@@ -28,8 +28,6 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
-import kotlin.jvm.Throws
-import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
 
 data class DiscordParameters (

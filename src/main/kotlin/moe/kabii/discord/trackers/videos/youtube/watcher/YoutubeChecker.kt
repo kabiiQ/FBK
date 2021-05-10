@@ -18,7 +18,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
-import org.litote.kmongo.util.idValue
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
