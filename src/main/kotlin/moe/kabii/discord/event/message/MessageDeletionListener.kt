@@ -67,7 +67,7 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
                         logChan.createEmbed { spec ->
                             fbkColor(spec)
                             spec.setAuthor(embedAuthor, null, author?.avatarUrl)
-                            val deletedContent = if(content.isNullOrBlank()) "Deleted message: $content" else "The deleted message had no message. (file/embed)"
+                            val deletedContent = if(content.isNullOrBlank()) "The deleted message had no message. (file/embed)" else "Deleted message: $content"
                             spec.setDescription(deletedContent)
                             spec.setFooter("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null)
                             spec.setTimestamp(event.messageId.timestamp)

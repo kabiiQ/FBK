@@ -42,7 +42,7 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
         val editLogs = logs.filter(LogSettings::editLog)
         if(editLogs.none()) return
 
-        val oldContent = if(oldMessage != null) "Previous message: $oldMessage" else "Previous message content not available"
+        val oldContent = if(oldMessage.isNullOrBlank()) "Previous message content not available" else "Previous message: $oldMessage"
         val jumpLink = message.createJumpLink()
 
         // post edit message to all enabled editlog channels
