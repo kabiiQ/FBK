@@ -117,7 +117,7 @@ object QueueEdit : AudioCommandContainer {
         }
     }
 
-    object ClearQueue : Command("clear", "empty") {
+    object ClearQueue : Command("clear", "empty", "stop") {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
