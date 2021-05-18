@@ -117,12 +117,28 @@ object QueueEdit : AudioCommandContainer {
         }
     }
 
-    object ClearQueue : Command("clear", "empty", "stop") {
+    object ClearQueue : Command("clear", "empty") {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
             discord {
                 RemoveTracks.executeDiscord!!(this.copy(args = listOf("-")))
+            }
+        }
+    }
+
+    object StopPlayback : Command("stop") {
+        override val wikiPath: String? = null
+
+        init {
+            discord {
+                ClearQueue.executeDiscord!!(this)
+
+                val audio = AudioManager.getGuildAudio(target.id.asLong())
+                val track = audio.player.playingTrack
+                if(canFSkip(this, track)) {
+                    audio.player.stopTrack()
+                }
             }
         }
     }

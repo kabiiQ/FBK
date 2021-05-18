@@ -4,7 +4,7 @@ import moe.kabii.command.Command
 import moe.kabii.discord.conversation.Conversation
 import kotlin.system.exitProcess
 
-object Shutdown : Command("shutdown", "stop", "end") {
+object Shutdown : Command("shutdown", "end") {
     override val wikiPath: String? = null
 
     init {
