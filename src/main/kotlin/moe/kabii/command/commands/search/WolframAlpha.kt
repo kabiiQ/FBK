@@ -20,10 +20,12 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
             }
 
             val response = WolframParser.query(noCmd)
+            val output = response.output ?: "Unknown"
             chan.createMessage { spec ->
                 spec.setEmbed { embed ->
                     if(response.success) fbkColor(embed) else errorColor(embed)
-                    embed.setDescription(response.output ?: "Unknown")
+                    embed.setDescription(output)
+                    if(output.contains("727")) embed.setFooter("(wysi)", null)
                 }
                 spec.setMessageReference(event.message.id)
             }.awaitSingle()

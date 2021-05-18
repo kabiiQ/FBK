@@ -14,7 +14,9 @@ object WolframParser {
     data class WolframResponse(val success: Boolean, val output: String?)
 
     @Throws(IOException::class)
-    fun query(query: String): WolframResponse {
+    fun query(raw: String): WolframResponse {
+        val query = raw.replace("+", "plus")
+
         val request = Request.Builder()
             .get()
             .header("User-Agent", "srkmfbk/1.0")
