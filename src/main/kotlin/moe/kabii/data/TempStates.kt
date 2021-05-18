@@ -11,4 +11,6 @@ object TempStates {
 
     data class BotReactionRemove(val messageId: Snowflake, val userId: Snowflake, val emoji: ReactionEmoji)
     val emojiRemove = mutableListOf<BotReactionRemove>()
+
+    val emojiTLCache = mutableSetOf<Snowflake>()
 }

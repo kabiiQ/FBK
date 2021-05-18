@@ -5,6 +5,7 @@ import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.hasPermissions
+import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.translation.Translator
@@ -25,9 +26,12 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         val config = event.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
         if(config?.guildSettings?.reactionTranslations == false) return // functionality can be disabled in guilds
 
-        if(event.emoji.asUnicodeEmoji().orNull()?.raw?.equals(EmojiCharacters.translation) != true) return
+        if(event.emoji.asUnicodeEmoji().orNull()?.raw?.equals(EmojiCharacters.translation) != true) return // only tl for specific emoji
+
+        if(TempStates.emojiTLCache.contains(event.messageId)) return // do not one message multiple times
 
         val message = event.message.awaitSingle()
+        if(message.getReactors(event.emoji).count().awaitSingle() > 1) return // further try to limit to one tl reaction per message
 
         val channel = event.channel.awaitSingle()
         if(config != null) {
@@ -49,6 +53,8 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
             }
         }.filterNotNull().joinToString("\n")
         if(contents.isBlank()) return
+
+        TempStates.emojiTLCache.add(message.id)
 
         val baseService = Translator.defaultService
         val defaultLang = config?.translator?.defaultTargetLanguage?.run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
