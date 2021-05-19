@@ -7,7 +7,6 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.CustomCommand
-import moe.kabii.util.extensions.reply
 
 object CustomCommands : CommandContainer {
     private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
@@ -37,17 +36,11 @@ object CustomCommands : CommandContainer {
                     usage("Add or edit a text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
             }
-            twitch {
-                if (isMod && args.size >= 2 && guild != null) {
-                    val add = addCommand(guild, args, noCmd)
-                    event.reply(add)
-                }
-            }
         }
     }
 
     object Mod : Command("modcommand", "mod-command", "command-mod", "commandmod", "editmodcommand") {
-        override val wikiPath: String? = null // undocumented, removal of twitch features pending
+        override val wikiPath: String? = null
 
         init {
             discord {
@@ -57,12 +50,6 @@ object CustomCommands : CommandContainer {
                     embed(add).awaitSingle()
                 } else {
                     usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
-                }
-            }
-            twitch {
-                if (isMod && args.size >= 2 && guild != null) {
-                    val add = addCommand(guild, args, noCmd, restrict = true)
-                    event.reply(add)
                 }
             }
         }
@@ -88,12 +75,6 @@ object CustomCommands : CommandContainer {
                     embed(remove).awaitSingle()
                 } else {
                     usage("Remove a text command. To see the commands created for **${target.name}**, use the **listcommands** command.", "removecommand <command name>").awaitSingle()
-                }
-            }
-            twitch {
-                if (isMod && args.size > 0 && guild != null) {
-                    val remove = removeCommand(guild, args[0])
-                    event.reply(remove)
                 }
             }
         }

@@ -39,7 +39,6 @@ object Keys : ConfigSpec("") {
     object Twitch : ConfigSpec() {
         val client by required<String>("client_id")
         val secret by required<String>("client_secret")
-        val oauth by required<String>("chat_oauth_token")
         val token by required<String>("app_access_token")
         val callback by required<String>()
         val signingKey by required<String>("twitch_signing_key")

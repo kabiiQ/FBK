@@ -2,7 +2,6 @@ package moe.kabii.command.commands.random
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.util.extensions.reply
 
 
 object Vinglish : Command("vinglish", "garble", "pepega") {
@@ -37,9 +36,6 @@ object Vinglish : Command("vinglish", "garble", "pepega") {
     init {
         discord {
             chan.createMessage(vinglishify(noCmd)).awaitSingle()
-        }
-        twitch {
-            event.reply(vinglishify(noCmd))
         }
     }
 }

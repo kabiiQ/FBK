@@ -9,9 +9,8 @@ import kotlin.reflect.full.isSuperclassOf
 
 // channel-specific features/settings
 data class OptionalFeatures(
-    val featureChannels: MutableMap<Long, FeatureChannel> = mutableMapOf(),
-    var linkedTwitchChannel: TwitchConfig? = null) {
-
+    val featureChannels: MutableMap<Long, FeatureChannel> = mutableMapOf()
+) {
     fun getChannels(feature: KProperty1<FeatureChannel, Boolean>)
         = featureChannels.filter { (_, chan) -> feature.get(chan) }
 }

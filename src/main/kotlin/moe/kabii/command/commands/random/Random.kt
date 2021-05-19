@@ -5,7 +5,6 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.util.extensions.mapNotNull
 import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.reply
 
 object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
@@ -54,12 +53,6 @@ object Random : CommandContainer {
                     setDescription("Result: $result")
                 }.awaitSingle()
             }
-            twitch {
-                val (range, result) = roll(
-                    args
-                )
-                event.reply("Roll $range: $result")
-            }
         }
     }
 
@@ -81,11 +74,6 @@ object Random : CommandContainer {
                     val choice = options.random()
                     setDescription("Result: $choice")
                 }.subscribe()
-            }
-            twitch {
-                if (args.isNotEmpty()) {
-                    event.reply("Result: ${args.random()}")
-                }
             }
         }
     }
@@ -120,9 +108,6 @@ object Random : CommandContainer {
             discord {
                 embed(magicball.random()).awaitSingle()
             }
-            twitch {
-                event.reply(magicball.random())
-            }
         }
     }
 
@@ -144,9 +129,6 @@ object Random : CommandContainer {
                 embed {
                     setDescription(flip(author.username))
                 }.awaitSingle()
-            }
-            twitch {
-                event.reply(flip(event.user.name))
             }
         }
     }

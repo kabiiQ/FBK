@@ -8,7 +8,7 @@ import moe.kabii.discord.trackers.ps2.polling.json.*
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
@@ -67,16 +67,16 @@ object PS2Parser {
     private const val outfitRequest = outfitRequestResolve
 
     suspend fun searchOutfitByTag(tag: String): PS2Outfit?
-        = censusRequest<PS2OutfitResponse>("outfit?alias_lower=${StringEscapeUtils.escapeHtml(tag.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
+        = censusRequest<PS2OutfitResponse>("outfit?alias_lower=${StringEscapeUtils.escapeHtml4(tag.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchOutfitByName(name: String): PS2Outfit?
-        = censusRequest<PS2OutfitResponse>("outfit?name_lower=${StringEscapeUtils.escapeHtml(name.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
+        = censusRequest<PS2OutfitResponse>("outfit?name_lower=${StringEscapeUtils.escapeHtml4(name.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchOutfitById(id: String): PS2Outfit?
         = censusRequest<PS2OutfitResponse>("outfit?outfit_id=$id&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchPlayerByName(name: String): PS2Player?
-        = censusRequest<PS2PlayerResponse>("character?name.first_lower=${StringEscapeUtils.escapeHtml(name.toLowerCase())}&$playerRequest").characters.firstOrNull()
+        = censusRequest<PS2PlayerResponse>("character?name.first_lower=${StringEscapeUtils.escapeHtml4(name.toLowerCase())}&$playerRequest").characters.firstOrNull()
 
     suspend fun searchPlayerById(id: String): PS2Player?
         = censusRequest<PS2PlayerResponse>("character?character_id=$id&$playerRequest").characters.firstOrNull()

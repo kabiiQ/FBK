@@ -8,19 +8,14 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import io.ktor.util.*
 import io.ktor.util.collections.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.sync.Mutex
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.errorColor
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
 import reactor.core.publisher.Mono
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -35,12 +30,11 @@ import java.util.concurrent.Executors
 // if so, we can save a few api calls. the audit log endpoint is slow enough that this optimization is worthwhile despite the complication.
 @KtorExperimentalAPI
 object LogWatcher {
-    const val delay = 5_000L // another arbitrary delay to wait for discord - this entire task is because the audit log may not update immediately. this delay might need to be increased.
+    const val delay = 4_000L // another arbitrary delay to wait for discord - this entire task is because the audit log may not update immediately. this delay might need to be increased.
 
     private val watcherThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val executor = CoroutineScope(watcherThread + SupervisorJob())
 
-    private val eventsMutex = Mutex()
     private val events: ConcurrentMap<Long, ConcurrentList<AuditableEvent>> = ConcurrentHashMap()
 
     fun auditEvent(discord: GatewayDiscordClient, event: AuditableEvent) {
@@ -93,7 +87,9 @@ object LogWatcher {
             for(auditTask in iter) {
                 // check if audit log contains event
                 val log = auditLogs.find(auditTask::match) ?: continue
+
                 iter.remove() // event will be handled here, might have later tick
+                val append = auditTask.appendedContent(log) ?: continue
 
                 discord.getMessageById(auditTask.logChannel.snowflake, auditTask.logMessage.snowflake)
                     .flatMap { logMessage ->

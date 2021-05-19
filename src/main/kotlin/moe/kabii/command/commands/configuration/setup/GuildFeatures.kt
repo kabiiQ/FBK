@@ -12,7 +12,6 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
     object GuildFeatureModule : ConfigurationModule<GuildSettings>(
         "guild",
         // BooleanElement("Use colored embeds for command responses", listOf("embeds", "embed"), GuildSettings::embedMessages), need to design fallback method first
-        //BooleanElement("Post information in linked Twitch chat when URLs are linked.", listOf("url", "urlinfo", "twitchurls"), GuildSettings::twitchURLInfo),
         BooleanElement("Use this server's invite info (required for invite-specific roles, bot requires Manage Server permission)", listOf("invite", "invites", "useinvites", "inviteperm"), GuildSettings::utilizeInvites),
         BooleanElement("Use this server's audit log to enhance log info, bot requires Audit Log permission", listOf("audit", "auditlog", "auditlogs"), GuildSettings::utilizeAuditLogs),
         BooleanElement("Give users their roles back when they rejoin the server", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles),

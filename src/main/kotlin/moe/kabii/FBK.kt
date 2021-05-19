@@ -1,21 +1,12 @@
 package moe.kabii
 
-import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
-import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
-import com.github.philippheuer.events4j.simple.SimpleEventHandler
-import com.github.twitch4j.TwitchClientBuilder
-import com.github.twitch4j.auth.providers.TwitchIdentityProvider
-import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.reactor.mono
-import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
-import moe.kabii.command.commands.twitch.TwitchBridgeOptions
 import moe.kabii.data.GQLQueries
 import moe.kabii.data.Keys
-import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
@@ -27,13 +18,11 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.trackers.ServiceWatcherManager
-import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
 import moe.kabii.net.NettyFileServer
 import moe.kabii.terminal.TerminalListener
-import moe.kabii.twitch.TwitchMessageHandler
 import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
 import reactor.core.publisher.Mono
@@ -53,28 +42,10 @@ fun main() {
 
     val reflection = Reflections("moe.kabii")
 
-    // establish twitch connection
-    val credential = CredentialManagerBuilder.builder().build()
-    credential.registerIdentityProvider(TwitchIdentityProvider(
-        keys[Keys.Twitch.client],
-        keys[Keys.Twitch.secret],
-        keys[Keys.Twitch.callback]
-    ))
-    val oAuth = OAuth2Credential("twitch", keys[Keys.Twitch.oauth])
-    val twitch = TwitchClientBuilder.builder()
-        .withEnableChat(true)
-        .withCredentialManager(credential)
-        .withChatAccount(oAuth)
-        .build()
-
     val manager = CommandManager()
     // register all commands with the command manager
     reflection.getSubTypesOf(Command::class.java)
         .forEach(manager::registerClass)
-
-    // register twitch-discord bridge commands which require access to the twitch client
-    manager.registerInstance(TwitchBridgeOptions.SetLinkedChannel(twitch))
-    manager.registerInstance(TwitchBridgeOptions.UnlinkChannel(twitch))
 
     // establish discord connection
     val discord = DiscordClient.create(keys[Keys.Discord.token])
@@ -85,15 +56,6 @@ fun main() {
     thread(start = true, name = "Initalization") {
         val translator = Translator.detector.detectLanguageOf("initalizing translator")
         val welcomer = WelcomeImageGenerator
-
-        // join any linked channels on twitch IRC
-        runBlocking {
-            val twitchChannels = GuildConfigurations.guildConfigurations.values
-                .mapNotNull { config -> config.options.linkedTwitchChannel?.twitchid }
-            TwitchParser.getUsers(twitchChannels).values
-                .mapNotNull { user -> user.orNull()?.username }
-                .forEach(twitch.chat::joinChannel)
-        }
     }
 
     // begin listening for terminal commands
@@ -109,7 +71,6 @@ fun main() {
     services.launch()
 
     val discordHandler = MessageHandler(manager, services)
-    val twitchHandler = TwitchMessageHandler(manager)
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
@@ -148,9 +109,4 @@ fun main() {
             LOG.warn(t.stackTraceString)
         }
         .subscribe()
-
-    // subscribe to twitch events
-    val onTwitchMessage = twitch.eventManager
-        .getEventHandler(SimpleEventHandler::class.java)
-        .onEvent(ChannelMessageEvent::class.java, twitchHandler::handle)
 }

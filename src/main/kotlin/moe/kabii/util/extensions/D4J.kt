@@ -6,7 +6,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import org.apache.commons.lang.WordUtils
+import org.apache.commons.text.WordUtils
 
 suspend fun Message.createJumpLink(): String {
     val guild = guild.awaitFirstOrNull()
