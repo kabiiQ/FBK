@@ -25,6 +25,7 @@ data class LogSettings(
     }
 
     fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, usernameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
+    fun auditableLog() = booleanArrayOf(false).any(true::equals)
 }
 
 data class WelcomeSettings(

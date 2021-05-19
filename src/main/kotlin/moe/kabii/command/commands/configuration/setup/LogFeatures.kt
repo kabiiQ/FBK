@@ -1,6 +1,7 @@
 package moe.kabii.command.commands.configuration.setup
 
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -94,6 +95,10 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                     config.guildSettings.utilizeInvites = true
                 }
                 config.save()
+
+                if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
+                    embed("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.").awaitSingle()
+                }
             }
         }
     }

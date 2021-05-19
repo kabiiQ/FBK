@@ -8,6 +8,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
+import moe.kabii.discord.auditlog.AuditableEvent
+import moe.kabii.discord.auditlog.LogWatcher
+import moe.kabii.discord.auditlog.events.AuditRoleUpdate
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.*
@@ -59,13 +62,12 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         if(added.isNotEmpty()) {
                             val addedStr = added.joinToString(", ")
 
-                            logChan.createEmbed { spec ->
+                            val logMessage = logChan.createEmbed { spec ->
                                 fbkColor(spec)
                                 spec.setAuthor(member.userAddress(), null, member.avatarUrl)
                                 spec.setDescription("Added to role **$addedStr**")
                                 spec.setFooter("User ID: ${member.id.asString()}", null)
                             }.awaitSingle()
-                            // todo auditevent here when d4j issue fixed
                         }
 
                         // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message

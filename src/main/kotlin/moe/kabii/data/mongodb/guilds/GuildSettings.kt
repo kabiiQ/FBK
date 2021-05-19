@@ -8,6 +8,7 @@ data class GuildSettings(
     var defaultFollow: StreamInfo? = null,
     var twitchURLInfo: Boolean = false,
     var utilizeInvites: Boolean = false,
+    var utilizeAuditLogs: Boolean = true,
     var publishTrackerMessages: Boolean = false,
     var reactionTranslations: Boolean = true,
     var ps2Commands: Boolean = false,
