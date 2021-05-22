@@ -1,6 +1,7 @@
 package moe.kabii.command.commands.voice
 
 import discord4j.core.`object`.PermissionOverwrite
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import discord4j.rest.util.PermissionSet
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -45,8 +46,9 @@ object TemporaryChannels : CommandContainer {
                     vc.setPermissionOverwrites(ownerPermissions)
                 }.awaitSingle()
 
-                val move = member.edit { member -> member.setNewVoiceChannel(newChannel.id) }.success()
-                if(move.awaitFirstOrNull() != true) {
+                try {
+                    member.edit { member -> member.setNewVoiceChannel(newChannel.id) }.awaitSingle()
+                } catch(ce: ClientException) {
                     error("Unable to move user into their temporary channel. Please check my permissions within this category.").awaitSingle()
                     newChannel.delete("Unable to move user into their temporary channel.").success().awaitSingle()
                     return@discord

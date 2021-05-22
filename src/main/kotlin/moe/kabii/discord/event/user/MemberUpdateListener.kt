@@ -8,6 +8,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
+//import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.*
@@ -22,8 +23,8 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
 
         // role update
         if(old.roleIds != event.currentRoles) {
-            val addedRoles = event.currentRoles - old.roleIds
-            val removedRoles = old.roleIds - event.currentRoles
+            val addedRoles = event.currentRoleIds - old.roleIds
+            val removedRoles = old.roleIds - event.currentRoleIds
 
             // exclusive role sets
             // if added role is part of exclusive role set, any other roles in that set from the user
@@ -31,7 +32,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                 .flatMap { roleID ->
                     Mono.justOrEmpty(config.autoRoles.exclusiveRoleSets.find { set -> set.roles.contains(roleID.asLong()) })
                         .flatMapMany { exclusiveSet ->
-                            event.currentRoles.toFlux()
+                            event.currentRoleIds.toFlux()
                                 .filterNot(roleID::equals)
                                 .filter { userRole -> exclusiveSet!!.roles.contains(userRole.asLong()) } // from the current user roles, get roles which are part of the exclusive role set and thus should be removed from the user
                                 .flatMap { removeID -> old.removeRole(removeID, "Role is exclusive with the added role ${roleID.asString()}")}
@@ -65,10 +66,6 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                                 spec.setDescription("Added to role **$addedStr**")
                                 spec.setFooter("User ID: ${member.id.asString()}", null)
                             }.awaitSingle()
-
-//                            LogWatcher.auditEvent(event.client, AuditRoleUpdate(
-//                                targetLog.channelID, logMessage.id.asLong(), event.guildId.asLong(), AuditRoleUpdate.Companion.RoleDirection.ADDED, addedRoles.first(), event.memberId
-//                            ))
                         }
 
                         // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message

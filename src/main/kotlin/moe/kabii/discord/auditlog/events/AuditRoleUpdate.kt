@@ -7,10 +7,10 @@ import discord4j.core.`object`.audit.ChangeKey
 import moe.kabii.discord.auditlog.AuditableEvent
 import moe.kabii.util.extensions.orNull
 
-class AuditRoleUpdate(logChannel: Long, logMessage: Long, guild: Long, val direction: RoleDirection, val roleID: Snowflake, val userID: Snowflake)
-    : AuditableEvent(logChannel, logMessage, guild) {
-    override fun appendedContent(auditLogEntry: AuditLogEntry): String {
-        //val actor = auditLogEntry.userId.map(Snowflake::asString).orElse("<UNKNOWN>")
+class AuditRoleUpdate(logChannel: Snowflake, logMessage: Snowflake, guild: Snowflake, val direction: RoleDirection, val roleID: Snowflake, val userID: Snowflake)
+    : AuditableEvent(logChannel, logMessage, guild.asLong()) {
+    override fun appendedContent(auditLogEntry: AuditLogEntry): String? {
+//        val actor = auditLogEntry.responsibleUserId.orNull()?.asString() ?: return null
         val actor = auditLogEntry.responsibleUserId.asString()
         return "\nPerformed by <@$actor>"
     }

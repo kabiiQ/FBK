@@ -8,19 +8,15 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 
 class CommandManager {
     internal val commandsDiscord = mutableMapOf<String, Command>()
-    internal val commandsTwitch = mutableMapOf<String, Command>()
     internal val commandsTerminal = mutableMapOf<String, Command>()
 
-    internal val commands: List<Command> by lazy { commandsDiscord.values + commandsTwitch.values + commandsTerminal.values }
+    internal val commands: List<Command> by lazy { commandsDiscord.values + commandsTerminal.values }
 
     internal val context = CoroutineScope(DiscordTaskPool.commandThreads + CoroutineName("CommandHandler") + SupervisorJob())
 
     fun registerInstance(command: Command) {
         if(command.executeDiscord != null) {
             command.aliases.associateWithTo(commandsDiscord) { command }
-        }
-        if(command.executeTwitch != null) {
-            command.aliases.associateWithTo(commandsTwitch) { command }
         }
         if(command.executeTerminal != null) {
             command.aliases.associateWithTo(commandsTerminal) { command }

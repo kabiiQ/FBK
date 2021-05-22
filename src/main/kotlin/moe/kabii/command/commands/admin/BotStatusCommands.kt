@@ -1,8 +1,8 @@
 package moe.kabii.command.commands.admin
 
 import discord4j.core.GatewayDiscordClient
-import discord4j.core.`object`.presence.Activity
-import discord4j.core.`object`.presence.Presence
+import discord4j.core.`object`.presence.ClientActivity
+import discord4j.core.`object`.presence.ClientPresence
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
@@ -26,7 +26,7 @@ object BotStatusCommands : CommandContainer {
         }
 
         private suspend fun setPlaying(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(Presence.online(Activity.playing(status))).awaitSingle()
+            discord.updatePresence(ClientPresence.online(ClientActivity.playing(status))).awaitSingle()
         }
     }
 
@@ -45,7 +45,7 @@ object BotStatusCommands : CommandContainer {
         }
 
         private suspend fun setWatching(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(Presence.online(Activity.watching(status))).awaitSingle()
+            discord.updatePresence(ClientPresence.online(ClientActivity.watching(status))).awaitSingle()
         }
     }
 
@@ -64,7 +64,7 @@ object BotStatusCommands : CommandContainer {
         }
 
         private suspend fun setListening(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(Presence.online(Activity.listening(status))).awaitSingle()
+            discord.updatePresence(ClientPresence.online(ClientActivity.listening(status))).awaitSingle()
         }
     }
 
@@ -91,7 +91,7 @@ object BotStatusCommands : CommandContainer {
          }
 
          private suspend fun setStreaming(discord: GatewayDiscordClient, name: String, url: String) {
-             discord.updatePresence(Presence.online(Activity.streaming(name, url))).awaitSingle()
+             discord.updatePresence(ClientPresence.online(ClientActivity.streaming(name, url))).awaitSingle()
          }
      }
 }

@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
 
-fun <T, R> Flux<T>.mapNotNull(mapper: (T) -> R?): Flux<R> {
+fun <T, R> Flux<T>.mapToNotNull(mapper: (T) -> R?): Flux<R> {
     return handle { obj: T, sink: SynchronousSink<R> ->
         mapper(obj)?.run(sink::next)
     }

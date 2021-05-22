@@ -3,7 +3,6 @@ package moe.kabii.command
 import discord4j.rest.util.Permission
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.params.TerminalParameters
-import moe.kabii.command.params.TwitchParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.SourcePaths
 import kotlin.reflect.KProperty1
@@ -18,8 +17,6 @@ abstract class Command(val baseName: String, vararg alias: String) {
     open val commandExempt: Boolean = false
 
     var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
-    private set
-    var executeTwitch: (suspend (TwitchParameters) -> Unit)? = null
     private set
     var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
     private set
@@ -37,10 +34,6 @@ abstract class Command(val baseName: String, vararg alias: String) {
 
     fun discord(block: suspend DiscordParameters.() -> Unit) {
         executeDiscord = block
-    }
-
-    fun twitch(block: suspend TwitchParameters.() -> Unit) {
-        executeTwitch = block
     }
 
     fun terminal(block: suspend TerminalParameters.() -> Unit) {

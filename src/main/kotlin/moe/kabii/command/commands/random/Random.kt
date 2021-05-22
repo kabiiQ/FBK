@@ -3,7 +3,7 @@ package moe.kabii.command.commands.random
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.util.extensions.mapNotNull
+import moe.kabii.util.extensions.mapToNotNull
 import moe.kabii.util.extensions.orNull
 
 object Random : CommandContainer {
@@ -65,7 +65,7 @@ object Random : CommandContainer {
                     event.message.channel
                         .flatMapMany { it.getMessagesBefore(event.message.id) }
                         .take(100)
-                        .mapNotNull { message -> message.author.orNull()?.username }
+                        .mapToNotNull { message -> message.author.orNull()?.username }
                         .distinct(String::hashCode)
                         .collectList()
                         .awaitSingle()

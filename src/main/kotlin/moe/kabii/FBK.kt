@@ -1,7 +1,8 @@
 package moe.kabii
 
-import discord4j.core.DiscordClient
+import discord4j.core.DiscordClientBuilder
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
@@ -48,7 +49,9 @@ fun main() {
         .forEach(manager::registerClass)
 
     // establish discord connection
-    val discord = DiscordClient.create(keys[Keys.Discord.token])
+    val discord = DiscordClientBuilder.create(keys[Keys.Discord.token])
+        .build().gateway()
+        .setEnabledIntents(IntentSet.all())
     Uptime
     val gateway = checkNotNull(discord.login().block())
 
