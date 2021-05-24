@@ -91,19 +91,28 @@ object Translator {
     }
 
     init {
-        // test google translator quota
-        val google = GoogleTranslator
-        google.doTranslation(
-            from = null,
-            to = google.defaultLanguage(),
-            rawText = "t"
-        )
-        val deepL = DeepLTranslator
-        deepL.doTranslation(
-            from = null,
-            to = deepL.defaultLanguage(),
-            rawText = "h"
-        )
+        // test quotas
+        try {
+            val google = GoogleTranslator
+            google.doTranslation(
+                from = null,
+                to = google.defaultLanguage(),
+                rawText = "t"
+            )
+        } catch(e: Exception) {
+            LOG.error(e.stackTraceString)
+        }
+
+        try {
+            val deepL = DeepLTranslator
+            deepL.doTranslation(
+                from = null,
+                to = deepL.defaultLanguage(),
+                rawText = "h"
+            )
+        } catch(e: Exception) {
+            LOG.error(e.stackTraceString)
+        }
     }
 }
 

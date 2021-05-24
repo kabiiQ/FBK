@@ -39,7 +39,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                 }
             } catch (e: Exception) {
                 error("Unable to reach UrbanDictionary.").awaitSingle()
-                LOG.trace(e.stackTraceString)
+                LOG.info(e.stackTraceString)
                 return@discord
             }
 
