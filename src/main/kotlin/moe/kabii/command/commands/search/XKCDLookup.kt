@@ -18,7 +18,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object XKCDLookup : Command("xkcd") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Lookup-Commands#xkcd-comics"
 
     private val xkcdAdapter = MOSHI.adapter(XKCDResponse::class.java)
     private val dateFormat = DateTimeFormatter.ofPattern("M d yyyy")

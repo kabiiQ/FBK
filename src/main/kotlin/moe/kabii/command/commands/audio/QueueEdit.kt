@@ -128,7 +128,7 @@ object QueueEdit : AudioCommandContainer {
     }
 
     object StopPlayback : Command("stop") {
-        override val wikiPath: String? = null
+        override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
             discord {

@@ -11,6 +11,9 @@ object PruneUsers : Command("prunemembers") {
     override val wikiPath: String? = null // intentionally undocumented command (for now)
 
     init {
+        // command disabled
+        TODO()
+
         botReqs(Permission.KICK_MEMBERS)
         discord {
             member.verify(Permission.KICK_MEMBERS, Permission.MANAGE_GUILD)
