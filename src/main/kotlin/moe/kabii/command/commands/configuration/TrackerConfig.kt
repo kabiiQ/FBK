@@ -21,7 +21,7 @@ object TrackerConfig : CommandContainer {
                     return@discord
                 }
 
-                val trackerArg = args[0].toLowerCase()
+                val trackerArg = args[0].lowercase()
                 val tracker = TargetArguments.declaredTargets.find { supportedSite ->
                     supportedSite.alias.contains(trackerArg)
                 }

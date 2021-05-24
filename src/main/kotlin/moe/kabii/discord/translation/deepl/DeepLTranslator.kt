@@ -28,7 +28,7 @@ object DeepLTranslator : TranslationService(
         this.supportedLanguages = pullLanguages()
     }
 
-    override fun tagAlias(input: String): String = when(input.toLowerCase()) {
+    override fun tagAlias(input: String): String = when(input.lowercase()) {
         "zh", "ch", "cn" -> "ZH"
         "en" -> "EN-US"
         "jp" -> "JA"
@@ -88,7 +88,7 @@ object DeepLTranslator : TranslationService(
             val languages = DeepLSupportedLanguage.parseList(body)
             if(languages != null) {
                 val deepLanguages = languages.associate { (language, name) ->
-                    language.toLowerCase() to TranslationLanguage(language, name, name)
+                    language.lowercase() to TranslationLanguage(language, name, name)
                 }
                 SupportedLanguages(deepLanguages)
             } else throw IOException("Invalid JSON provided from DeepL response: $body")

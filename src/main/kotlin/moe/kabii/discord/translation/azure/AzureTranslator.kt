@@ -80,7 +80,7 @@ object AzureTranslator : TranslationService(
             val languages = adapter.fromJson(body)
             if (languages != null) {
                 val azureLanguages = languages.translation.map { (tag, lang) ->
-                    tag.toLowerCase() to TranslationLanguage(tag, lang.name, lang.nativeName)
+                    tag.lowercase() to TranslationLanguage(tag, lang.name, lang.nativeName)
                 }.toMap()
                 SupportedLanguages(azureLanguages)
             } else throw IOException("Invalid JSON provided from Azure response: $body")

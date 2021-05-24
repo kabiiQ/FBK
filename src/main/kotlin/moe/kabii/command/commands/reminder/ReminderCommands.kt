@@ -61,7 +61,7 @@ object ReminderCommands : CommandContainer {
                 var replyPrivate = this.isPM
                 // remove flags from message
                 val reminderContent = args.drop(argIndex + 1).filter { arg ->
-                    when(arg.toLowerCase()) {
+                    when(arg.lowercase()) {
                         "!dm", "!pm" -> {
                             replyPrivate = true
                             false

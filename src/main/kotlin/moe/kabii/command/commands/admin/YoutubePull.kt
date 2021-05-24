@@ -32,7 +32,7 @@ object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "yt
         val arg = args[0]
 
         newSuspendedTransaction {
-            when (arg.toLowerCase()) {
+            when (arg.lowercase()) {
                 "any", "all", "full" -> TrackedStreams.StreamChannel.getActive {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                 }

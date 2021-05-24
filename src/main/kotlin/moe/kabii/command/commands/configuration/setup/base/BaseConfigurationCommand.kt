@@ -205,7 +205,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             return true
         }
 
-        val targetElement = origin.args[0].toLowerCase()
+        val targetElement = origin.args[0].lowercase()
 
         // <command> list/all -> list current config
 
@@ -221,7 +221,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             return false
         }
 
-        val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.toLowerCase() == targetElement.toLowerCase() } }
+        val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.lowercase() == targetElement.lowercase() } }
         if(element == null) {
             origin.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.").awaitSingle()
             return false
@@ -239,7 +239,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         // <command> prop <toggle/reset> -> specific actions
         if(origin.args.size == 2) {
-            val arg = origin.args[1].toLowerCase()
+            val arg = origin.args[1].lowercase()
             when {
                 arg.equals("toggle") -> {
                     if(element !is BooleanElement) {
@@ -271,7 +271,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         // <command> prop <new value> -> manual set, check input types
         when(element) {
             is BooleanElement -> {
-                val input = origin.args[1].toLowerCase()
+                val input = origin.args[1].lowercase()
                 val bool = when {
                     input.startsWith("y")
                             || input.startsWith("en")

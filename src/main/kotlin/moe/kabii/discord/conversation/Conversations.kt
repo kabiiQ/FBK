@@ -14,7 +14,7 @@ import kotlin.coroutines.resume
 class Conversation (val criteria: ResponseCriteria, val discord: GatewayDiscordClient, private val coroutine: CancellableContinuation<*>, val reactionListener: ReactionListener?) {
     fun test(message: String, full: Message? = null) {
         if(message.isBlank() && criteria.type != ResponseType.MESSAGE) return
-        if(message.toLowerCase().trim() == "exit") {
+        if(message.lowercase().trim() == "exit") {
             coroutine as CancellableContinuation<Any?>
             coroutine.resume(null)
             cancel()

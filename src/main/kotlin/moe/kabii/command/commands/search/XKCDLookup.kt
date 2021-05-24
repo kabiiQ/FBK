@@ -13,11 +13,9 @@ import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 object XKCDLookup : Command("xkcd") {
     override val wikiPath: String? = null

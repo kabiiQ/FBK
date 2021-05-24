@@ -29,10 +29,10 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
                     .filter(String::isNotBlank)
                 val cmdStr = msgArgs[0]
 
-                val command = manager.commandsTerminal[cmdStr.toLowerCase()]
+                val command = manager.commandsTerminal[cmdStr.lowercase()]
 
                 if(command == null) {
-                    if(manager.commands.find { it.aliases.contains(cmdStr.toLowerCase()) } != null) {
+                    if(manager.commands.find { it.aliases.contains(cmdStr.lowercase()) } != null) {
                         println("Command not supported for terminal usage.")
                     } else println("Command not found.")
                     return@launch

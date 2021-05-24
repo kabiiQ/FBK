@@ -80,7 +80,7 @@ object GoogleTranslator : TranslationService(
             val languages = adapter.fromJson(body)
             if(languages != null) {
                 val googleLanguages = languages.data.languages.map { (language, name) ->
-                    language.toLowerCase() to TranslationLanguage(language, name, name)
+                    language.lowercase() to TranslationLanguage(language, name, name)
                 }.toMap()
                 SupportedLanguages(googleLanguages)
             } else throw IOException("Invalid JSON provided from Google response: $body")

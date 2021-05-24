@@ -27,7 +27,7 @@ object RoleReactions : CommandContainer {
                     usage("**autorole reaction** is used to configure messages with attached reactions to self-assign roles.", "reaction role <add/remove/list>").awaitSingle()
                     return@discord
                 }
-                when(args[0].toLowerCase()) {
+                when(args[0].lowercase()) {
                     "add", "create", "insert", "+" -> AddReactionRole
                     "remove", "delete", "-" -> RemoveReactionRole
                     "list", "get", "all" -> ListReactionRoles

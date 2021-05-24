@@ -92,7 +92,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             member.verify(Permission.MANAGE_CHANNELS)
 
             val welcomer = config.welcomer
-            when(args.getOrNull(0)?.toLowerCase()) {
+            when(args.getOrNull(0)?.lowercase()) {
                 "test" -> {
                     // test the current welcome config
                     if(!welcomer.anyElements()) {
@@ -142,7 +142,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     }
 
     private fun setTagline(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
-        return when(value.trim().toLowerCase()) {
+        return when(value.trim().lowercase()) {
             "reset" -> Ok("WELCOME")
             "remove", "clear", "unset", "none", "<none>" -> Ok(null)
             else -> Ok(value)
@@ -150,7 +150,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     }
 
     private fun setImageText(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
-        return when(value.trim().toLowerCase()) {
+        return when(value.trim().lowercase()) {
             "reset" -> Ok(WelcomeSettings.defaultImageText)
             "remove", "clear", "unset", "none", "<none>" -> Ok(null)
             else -> Ok(value)

@@ -13,22 +13,22 @@ object AutoRole : Command("autorole", "auto-role")  {
                 usage("General autorole configuration command. Available categories: join, voice, reaction, command. Available actions: add, remove, list.", "autorole <category> <action> (parameters)").awaitSingle()
                 return@discord
             }
-            val target = when(args[1].toLowerCase()) {
-                "create", "assign", "add", "+", "insert", "new" -> when(args[0].toLowerCase()) {
+            val target = when(args[1].lowercase()) {
+                "create", "assign", "add", "+", "insert", "new" -> when(args[0].lowercase()) {
                     "join", "join-role" -> JoinRole.AssignAutoRole
                     "voice", "voice-role" -> VoiceRole.AssignVoiceRole
                     "reaction", "reactionrole" -> RoleReactions.AddReactionRole
                     "command", "commandrole" -> SelfRoleCommands.AddRoleCommand
                     else -> null
                 }
-                "delete", "unassign", "remove", "-" -> when(args[0].toLowerCase()) {
+                "delete", "unassign", "remove", "-" -> when(args[0].lowercase()) {
                     "join", "join-role" -> JoinRole.UnassignAutoRole
                     "voice", "voice-role" -> VoiceRole.UnassignVoiceRole
                     "reaction", "reactionrole" -> RoleReactions.RemoveReactionRole
                     "command", "commandrole" -> SelfRoleCommands.RemoveRoleCommand
                     else -> null
                 }
-                "list" -> when(args[0].toLowerCase()) {
+                "list" -> when(args[0].lowercase()) {
                     "join", "join-role" -> JoinRole.ListAutoRoleSetup
                     "voice", "voice-role" -> VoiceRole.ListVoiceRoleSetup
                     "reaction", "reactionrole" -> RoleReactions.ListReactionRoles

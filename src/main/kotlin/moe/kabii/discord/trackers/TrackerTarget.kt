@@ -326,7 +326,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 }
             } else {
                 // 2 or more inputArgs - must be site and account id or invalid
-                val siteArg = inputArgs[0].toLowerCase()
+                val siteArg = inputArgs[0].lowercase()
                 val site = declaredTargets.firstOrNull { supportedSite ->
                     supportedSite.alias.contains(siteArg)
                 }

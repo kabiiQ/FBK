@@ -9,7 +9,7 @@ object ParseUtil {
         val invalidArg = mutableListOf<String>()
         val ranges = sequence {
             // "all" / "-"
-            when(args[0].toLowerCase()) {
+            when(args[0].lowercase()) {
                 "all", "-" -> {
                     yield(1..maxSelection)
                     return@sequence

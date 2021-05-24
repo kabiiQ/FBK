@@ -36,7 +36,7 @@ object QueueEdit : AudioCommandContainer {
         val queue = audio.queue
         // no valid tracks provided, try to take argument as a user name/id
         // 'self' will override to removing your own tracks. slight overlap if someone was named 'self' but this is not a dangerous op
-        val user = if(arg.toLowerCase().trim() == "self") param.author else {
+        val user = if(arg.lowercase().trim() == "self") param.author else {
             Search.user(param, arg, param.target)
         }
         if(user == null) return emptyList()

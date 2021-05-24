@@ -38,7 +38,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
     fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 
-    open fun tagAlias(input: String): String = when(input.toLowerCase()) {
+    open fun tagAlias(input: String): String = when(input.lowercase()) {
         "zh", "ch", "cn" -> "zh-Hans"
         "kr" -> "ko"
         "pt" -> "pt-br"

@@ -76,7 +76,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             }
 
             val action = args.getOrNull(0)
-            val modified = when(action?.toLowerCase()) {
+            val modified = when(action?.lowercase()) {
                 "set" -> {
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
@@ -116,7 +116,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     }
 
                     val dbChannel = MongoStreamChannel.of(streamInfo)
-                    if(arrayOf("none", "reset", "remove").any(mark.toLowerCase()::equals)) {
+                    if(arrayOf("none", "reset", "remove").any(mark.lowercase()::equals)) {
 
                         feature.marks.removeIf { existing ->
                             existing.channel == dbChannel

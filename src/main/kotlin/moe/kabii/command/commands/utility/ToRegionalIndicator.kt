@@ -18,7 +18,7 @@ object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojilet
             }
             var previous = false
             val converted = noCmd.map {char ->
-                val lower = char.toLowerCase()
+                val lower = char.lowercaseChar()
                 val spacer = if(previous) {
                     previous = false// reset this no matter what, we only need to apply spacer if two regional emoji characters are back to back
                     " "

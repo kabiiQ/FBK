@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.userAddress
 import java.util.*
 
 object Search {
-    private fun clean(str: String) = str.trim().toLowerCase().replace(" ", "").replace(",", "") // comma to help assist matching, most commands accept comma separation so we'll remove them in the actual role names too
+    private fun clean(str: String) = str.trim().lowercase().replace(" ", "").replace(",", "") // comma to help assist matching, most commands accept comma separation so we'll remove them in the actual role names too
 
     private val roleMention = Regex("<@&([0-9]+)>")
     suspend fun roleByNameOrID(param: DiscordParameters, query: String): Role? {
@@ -62,7 +62,7 @@ object Search {
             .filter { role -> clean(role.name).contains(matchTo) }
             .collectList().awaitSingle()
         val exact = partial
-            .filter { role -> role.name.toLowerCase() == query.toLowerCase() }
+            .filter { role -> role.name.lowercase() == query.lowercase() }
 
         // exact matches are preferred if there were any found, check first
         when {
@@ -96,7 +96,7 @@ object Search {
 
     fun commandByAlias(handler: MessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
-        allowed && command.aliases.contains(name.toLowerCase())
+        allowed && command.aliases.contains(name.lowercase())
     }
 
     suspend fun user(param: DiscordParameters, query: String, guildContext: Guild? = null): User? {
@@ -178,9 +178,9 @@ object Search {
             .collectList().awaitSingle()
         val exact = partial
             .filter { member ->
-                if(member.nickname.map { nick -> nick.toLowerCase() == query.toLowerCase() }.orElse(false))
+                if(member.nickname.map { nick -> nick.lowercase() == query.lowercase() }.orElse(false))
                     return@filter true
-                member.username.toLowerCase() == query.toLowerCase()
+                member.username.lowercase() == query.lowercase()
             }
 
         when {

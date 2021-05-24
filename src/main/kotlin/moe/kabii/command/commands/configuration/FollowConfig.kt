@@ -74,7 +74,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             }
 
 
-            val newMentionRole = when(roleArg.toLowerCase()) {
+            val newMentionRole = when(roleArg.lowercase()) {
                 "none", "remove", "unset", "null", "clear" -> null
                 else -> {
                     val search = Search.roleByNameOrID(this, roleArg)

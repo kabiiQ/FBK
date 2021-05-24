@@ -67,16 +67,16 @@ object PS2Parser {
     private const val outfitRequest = outfitRequestResolve
 
     suspend fun searchOutfitByTag(tag: String): PS2Outfit?
-        = censusRequest<PS2OutfitResponse>("outfit?alias_lower=${StringEscapeUtils.escapeHtml4(tag.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
+        = censusRequest<PS2OutfitResponse>("outfit?alias_lower=${StringEscapeUtils.escapeHtml4(tag.lowercase())}&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchOutfitByName(name: String): PS2Outfit?
-        = censusRequest<PS2OutfitResponse>("outfit?name_lower=${StringEscapeUtils.escapeHtml4(name.toLowerCase())}&$outfitRequest").outfitList.firstOrNull()
+        = censusRequest<PS2OutfitResponse>("outfit?name_lower=${StringEscapeUtils.escapeHtml4(name.lowercase())}&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchOutfitById(id: String): PS2Outfit?
         = censusRequest<PS2OutfitResponse>("outfit?outfit_id=$id&$outfitRequest").outfitList.firstOrNull()
 
     suspend fun searchPlayerByName(name: String): PS2Player?
-        = censusRequest<PS2PlayerResponse>("character?name.first_lower=${StringEscapeUtils.escapeHtml4(name.toLowerCase())}&$playerRequest").characters.firstOrNull()
+        = censusRequest<PS2PlayerResponse>("character?name.first_lower=${StringEscapeUtils.escapeHtml4(name.lowercase())}&$playerRequest").characters.firstOrNull()
 
     suspend fun searchPlayerById(id: String): PS2Player?
         = censusRequest<PS2PlayerResponse>("character?character_id=$id&$playerRequest").characters.firstOrNull()
@@ -85,7 +85,7 @@ object PS2Parser {
         = censusRequest<PS2ServerResponse>("world?c:limit=20").worlds
 
     suspend fun searchServerByName(name: String): PS2Server?
-        = getServers().find { server -> server.name.toLowerCase() == name }
+        = getServers().find { server -> server.name.lowercase() == name }
 
     suspend fun getZones(): List<PS2Zone>
         = censusRequest<PS2ZoneResponse>("zone?c:limit=20").zoneList

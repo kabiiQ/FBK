@@ -10,7 +10,7 @@ import moe.kabii.data.mongodb.guilds.CustomCommand
 
 object CustomCommands : CommandContainer {
     private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
-        val command = args[0].toLowerCase()
+        val command = args[0].lowercase()
         val response = noCmd.substring(command.length + 1)
         val custom = CustomCommand(command, response, restrict)
 

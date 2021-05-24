@@ -3,7 +3,7 @@ package moe.kabii.discord.translation
 data class SupportedLanguages(
     private val languages: Map<String, TranslationLanguage>
 ) {
-    fun byTag(tag: String) = languages[tag.toLowerCase()]
+    fun byTag(tag: String) = languages[tag.lowercase()]
     operator fun get(tag: String) = byTag(tag)
 
     fun search(service: TranslationService, query: String): Map<String, TranslationLanguage> {
@@ -11,7 +11,7 @@ data class SupportedLanguages(
         val tag = service.tagAlias(query)
 
         // check if input is a language 'tag'
-        val exactTag = languages.filterKeys { langTag -> langTag == tag.toLowerCase() }
+        val exactTag = languages.filterKeys { langTag -> langTag == tag.lowercase() }
         if(exactTag.isNotEmpty()) return exactTag
 
         // otherwise, match by names. find partial matches and then check exact matches as they are a subset

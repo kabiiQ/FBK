@@ -1,7 +1,6 @@
 package moe.kabii.command.commands.search
 
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
@@ -12,7 +11,6 @@ import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
-import kotlin.jvm.Throws
 
 object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "evaluate") {
 

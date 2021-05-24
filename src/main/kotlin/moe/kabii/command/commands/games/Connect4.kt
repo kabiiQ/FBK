@@ -28,7 +28,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
 
             val p1Channel = event.message.channel.awaitSingle()
             val p1Existing = GameManager.matchGame(author.id, p1Channel.id)
-            when(args[0].toLowerCase()) {
+            when(args[0].lowercase()) {
                 "cancel", "end" -> {
                     // cancels an ongoing game
                     if(p1Existing == null || p1Existing !is Connect4Game) {

@@ -38,7 +38,7 @@ object  CommandFilters : CommandContainer {
                 }
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
-                when(args[0].toLowerCase()) {
+                when(args[0].lowercase()) {
                     "use" -> {
                         if(!filter.whitelisted) {
                             filter.useWhitelist()
@@ -106,7 +106,7 @@ object  CommandFilters : CommandContainer {
                 }
                 val filter = config.commandFilter
                 val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
-                when(args[0].toLowerCase()) {
+                when(args[0].lowercase()) {
                     "use" -> {
                         if(!filter.blacklisted) {
                             filter.useBlacklist()

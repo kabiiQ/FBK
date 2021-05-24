@@ -28,7 +28,7 @@ object VoiceRole : CommandContainer {
                 }
 
                 // voice channel target
-                val channelTarget = when(args[0].toLowerCase()) {
+                val channelTarget = when(args[0].lowercase()) {
                     "any", "all" -> null
                     else -> {
                         val channel = Search.channelByID<VoiceChannel>(this, args[0])
@@ -79,7 +79,7 @@ object VoiceRole : CommandContainer {
                     return@discord
                 }
 
-                val channelTarget = when(args[0].toLowerCase()) {
+                val channelTarget = when(args[0].lowercase()) {
                     "any", "all" -> null
                     else -> {
                         val channel = args[0].toLongOrNull()
