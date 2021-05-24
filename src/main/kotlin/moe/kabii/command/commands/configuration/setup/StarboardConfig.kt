@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.configuration.setup
 
+import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
@@ -11,6 +12,10 @@ import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.discord.util.Search
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
+import moe.kabii.rusty.*
+import moe.kabii.util.DiscordEmoji
+import moe.kabii.util.EmojiUtil
+import kotlin.reflect.KMutableProperty1
 
 object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {
     override val wikiPath = "Starboard#starboard-configuration-starboard"
@@ -43,14 +48,22 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         BooleanElement("Allow messages in NSFW-flagged channels to be starboarded",
             listOf("nsfw", "includensfw", "nsfwinclude"),
             StarboardSetup::includeNsfw
+        ),
+        CustomElement("Emoji used to add messages to the starboard",
+            listOf("emoji", "emote"),
+            StarboardSetup::emoji as KMutableProperty1<StarboardSetup, Any?>,
+            prompt = "Select an emote that users can add to messages to vote them onto the starboard. For custom emotes, I **MUST** be in the server the emote is from or things will not function as intended. Enter **reset** to restore the default star: ${EmojiCharacters.star}",
+            default = null,
+            parser = ::setStarboardEmoji,
+            value = { starboard -> starboard.useEmoji().string() }
         )
     )
 
     init {
         discord {
             member.verify(Permission.MANAGE_CHANNELS)
-            val action = when(args.getOrNull(0)?.toLowerCase()) {
-                "here", "set", "create", "move", "here", "enable", "setup", "on", "1" -> ::createStarboard
+            val action = when(args.getOrNull(0)?.lowercase()) {
+                "here", "set", "create", "move", "enable", "setup", "on", "1" -> ::createStarboard
                 "disable", "unset", "remove", "delete", "off", "0" -> ::disableStarboard
                 else -> ::configStarboard // if not set/disable, run standard configurator
             }
@@ -128,5 +141,15 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         if(configurator.run(this)) {
             config.save()
         }
+    }
+
+    private val resetEmoji = Regex("(reset|star)", RegexOption.IGNORE_CASE)
+    private suspend fun setStarboardEmoji(origin: DiscordParameters, message: Message, value: String): Result<DiscordEmoji?, Unit> {
+        if(resetEmoji.matches(value)) return Ok(null)
+        val emoji = EmojiUtil.parseEmoji(value)
+        return if(emoji == null) {
+            origin.error("$value is not a usable emoji.").awaitSingle()
+            Err(Unit)
+        } else Ok(emoji)
     }
 }

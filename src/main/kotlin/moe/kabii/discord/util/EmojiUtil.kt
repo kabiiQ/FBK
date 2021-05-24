@@ -18,6 +18,7 @@ import moe.kabii.util.extensions.snowflake
 sealed class DiscordEmoji {
     abstract val name: String
     abstract fun toReactionEmoji(): ReactionEmoji
+    abstract fun string(): String
 }
 
 data class CustomEmoji(
@@ -26,6 +27,7 @@ data class CustomEmoji(
     val animated: Boolean
 ) : DiscordEmoji() {
     override fun toReactionEmoji() = ReactionEmoji.custom(id.snowflake, name, animated)
+    override fun string() = "<:$name:$id>"
 
     // the custom emoji 'name' can change
     override fun equals(other: Any?): Boolean = other is CustomEmoji && other.id == this.id && other.animated == this.animated
@@ -35,9 +37,6 @@ data class CustomEmoji(
         result = 31 * result + animated.hashCode()
         return result
     }
-
-
-
 }
 
 data class UnicodeEmoji(
@@ -45,6 +44,7 @@ data class UnicodeEmoji(
 ) : DiscordEmoji() {
     override val name = unicode
     override fun toReactionEmoji() = ReactionEmoji.unicode(unicode)
+    override fun string() = unicode
 }
 
 object EmojiUtil {

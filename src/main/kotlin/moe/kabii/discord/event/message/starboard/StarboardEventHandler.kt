@@ -18,12 +18,13 @@ object StarboardEventHandler {
             if(event.userId == DiscordBot.selfId) return
 
             val guildId = event.guildId.orNull()?.asLong() ?: return
-            // only continue if star reaction
-            if(event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star }.orNull() == null) return
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
             val starboardCfg = config.starboard ?: return
+
+            // only continue if this guild's starboard emoji
+            if(event.emoji != starboardCfg.useEmoji().toReactionEmoji()) return
 
             // only continue if messages are allowed to be starred here (starboarded or starboard itself)
             val channelId = event.channelId.asLong()

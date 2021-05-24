@@ -46,7 +46,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
     private fun starboardContent(stars: Long, author: Long?, channel: Long): String {
         val mention = if(author != null) " <@$author>" else ""
-        return "${EmojiCharacters.star} $stars <#$channel>$mention"
+        return "${starboard.useEmoji().string()} $stars <#$channel>$mention"
     }
 
     private fun starboardEmbed(message: Message, jumpLink: String, newSpec: MessageCreateSpec): EmbedBlock = {
@@ -100,7 +100,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         config.save()
 
         // add star reaction to starboard post
-        starboardMessage.addReaction(ReactionEmoji.unicode(EmojiCharacters.star)).success().tryAwait()
+        starboardMessage.addReaction(starboard.useEmoji().toReactionEmoji()).success().tryAwait()
     }
 
     suspend fun removeFromBoard(message: StarredMessage) {

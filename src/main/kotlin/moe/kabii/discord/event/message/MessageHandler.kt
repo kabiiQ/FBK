@@ -65,7 +65,7 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                 msgArgs.getOrNull(1)
             }
             else -> null
-        }?.toLowerCase()
+        }?.lowercase()
 
         val author = event.message.author.orNull() ?: return@launch
         if (cmdStr != null) {
