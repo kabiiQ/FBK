@@ -1,9 +1,6 @@
 package moe.kabii.discord.translation.azure
 
-import moe.kabii.JSON
-import moe.kabii.LOG
-import moe.kabii.MOSHI
-import moe.kabii.OkHTTP
+import moe.kabii.*
 import moe.kabii.data.Keys
 import moe.kabii.discord.translation.SupportedLanguages
 import moe.kabii.discord.translation.TranslationLanguage
@@ -38,8 +35,7 @@ object AzureTranslator : TranslationService(
         val textPart = AzureTranslationRequest(text).toJson()
         val body = "[$textPart]".toRequestBody(JSON)
 
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .header("Ocp-Apim-Subscription-Key", azureKey)
             .url("https://api.cognitive.microsofttranslator.com/translate?api-version=3.0$paramTo$paramFrom")
             .post(body)
@@ -66,8 +62,7 @@ object AzureTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .url("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation")
             .build()
 

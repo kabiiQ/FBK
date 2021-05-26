@@ -4,6 +4,7 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
 import okhttp3.Request
 
@@ -34,9 +35,8 @@ class TwitchFeedSubscriber {
             .add("hub.secret", signingKey)
             .build()
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("https://api.twitch.tv/helix/webhooks/hub")
-            .header("User-Agent", "srkmfbk/1.0")
             .header("Client-ID", clientId)
             .header("Authorization", TwitchParser.oauth.authorization)
             .post(body)

@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.videos.youtube.subscriber
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
+import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
 import okhttp3.Request
 
@@ -31,7 +32,7 @@ class YoutubeFeedSubscriber {
             .add("hub.secret", signingKey)
             .build()
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("https://pubsubhubbub.appspot.com")
             .post(body)
             .build()

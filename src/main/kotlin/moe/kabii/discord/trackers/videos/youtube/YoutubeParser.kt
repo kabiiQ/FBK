@@ -9,6 +9,7 @@ import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeChannelResponse
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeErrorResponse
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeVideoResponse
+import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -125,11 +126,10 @@ object YoutubeParser {
     private inline fun <reified R: Any> requestJson(requestPart: String): R {
         val requestUrl = "https://www.googleapis.com/youtube/v3/$requestPart&key=$apiKey"
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url(requestUrl)
             .header("Accept", "application/json")
-            .header("User-Agent", "srkmfbk/1.0")
             .build()
 
         try {

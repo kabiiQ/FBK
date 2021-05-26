@@ -14,6 +14,7 @@ import moe.kabii.discord.trackers.videos.twitch.json.Helix
 import moe.kabii.discord.trackers.videos.twitch.json.TwitchGameResponse
 import moe.kabii.discord.trackers.videos.twitch.json.TwitchStreamRequest
 import moe.kabii.net.NettyFileServer
+import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -31,11 +32,10 @@ object TwitchParser {
     private val gameCache = mutableMapOf<Long, TwitchGameInfo>()
 
     private suspend inline fun <reified R: Any>  request(requestStr: String): Result<R, StreamErr> {
-        val builder = Request.Builder()
+        val builder = newRequestBuilder()
             .get()
             .url(requestStr)
             .header("Client-ID", clientID)
-            .header("User-Agent", "srkmfbk/1.0")
 
         for(attempt in 1..3) {
             try {

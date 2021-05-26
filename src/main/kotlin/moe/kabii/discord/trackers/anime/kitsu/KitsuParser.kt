@@ -5,6 +5,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.anime.*
+import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.fromJsonSafe
@@ -22,7 +23,7 @@ object KitsuParser : MediaListParser() {
         // url copied from site might provide id or slug, and a user will likely enter the slug. we always need the save an ID, however.
         val inputID = input.toIntOrNull()
         val userID = if(inputID == null) {
-            val userRequest = Request.Builder()
+            val userRequest = newRequestBuilder()
                 .get()
                 .url("https://kitsu.io/api/edge/users?filter[slug]=$input")
                 .build()

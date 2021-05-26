@@ -11,6 +11,7 @@ import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
+import moe.kabii.newRequestBuilder
 import okhttp3.Request
 import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
@@ -32,8 +33,7 @@ object GoogleTranslator : TranslationService(
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
 
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .url("https://translation.googleapis.com/language/translate/v2?key=$googleKey")
             .post(requestBody)
             .build()
@@ -66,8 +66,7 @@ object GoogleTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .url("https://translation.googleapis.com/language/translate/v2/languages?target=en&key=$googleKey")
             .build()
 

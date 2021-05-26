@@ -6,6 +6,7 @@ import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulationResponse
 import moe.kabii.discord.trackers.ps2.polling.json.PS2Server
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
@@ -15,10 +16,9 @@ object FisuPS2Parser {
 
     fun requestServerPopulations(servers: List<PS2Server>): Map<PS2Server, PS2FisuPopulation> {
         val serverIds = servers.joinToString(",", transform = PS2Server::worldIdStr)
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url("https://ps2.fisu.pw/api/population?world=$serverIds")
-            .header("User-Agent", "srkmfbk/1.0")
             .build()
         try {
             val response = OkHTTP.newCall(request).execute()

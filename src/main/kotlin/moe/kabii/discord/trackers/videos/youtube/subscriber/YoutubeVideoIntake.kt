@@ -9,6 +9,7 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
@@ -27,9 +28,8 @@ object YoutubeVideoIntake {
         val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
         taskScope.launch {
             lock.withLock {
-                val request = Request.Builder()
+                val request = newRequestBuilder()
                     .get()
-                    .header("User-Agent", "DiscordBot-srkmfbk/1.0")
                     .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
                     .build()
 

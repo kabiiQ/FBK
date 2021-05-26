@@ -5,6 +5,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.ps2.polling.json.*
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -32,10 +33,9 @@ object PS2Parser {
         val delay = Duration.between(Instant.now(), nextCall).toMillis()
         delay(max(delay, 0L))
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url("http://census.daybreakgames.com/s:$serviceId/get/ps2:v2/$substr")
-            .header("User-Agent", "srkmfbk/1.0")
             .build()
         try {
 

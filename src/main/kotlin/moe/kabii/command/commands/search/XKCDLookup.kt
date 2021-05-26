@@ -8,6 +8,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.stackTraceString
@@ -32,9 +33,8 @@ object XKCDLookup : Command("xkcd") {
 
                 // if no arg is provided (current comic) or a specific number is provided (lookup)
                 val comicPart = if(arg != null) "/$arg" else ""
-                val request = Request.Builder()
+                val request = newRequestBuilder()
                     .get()
-                    .header("User-Agent", "srkmfbk/1.0")
                     .url("http://xkcd.com$comicPart/info.0.json")
                     .build()
 

@@ -11,6 +11,7 @@ import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.util.RGB
+import moe.kabii.newRequestBuilder
 import okhttp3.Request
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -47,7 +48,7 @@ object NettyFileServer {
                 val twitchName = call.parameters["twitchname"]
                 if(twitchName != null) {
                     val thumbnailUrl = TwitchParser.getThumbnailUrl(twitchName)
-                    val request = Request.Builder().get().url(thumbnailUrl).build()
+                    val request = newRequestBuilder().get().url(thumbnailUrl).build()
                     try {
                         OkHTTP.newCall(request).execute().use { rs ->
                             call.respondBytes(rs.body!!.bytes(), contentType = ContentType.Image.PNG)

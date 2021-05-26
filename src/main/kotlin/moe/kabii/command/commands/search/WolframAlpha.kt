@@ -8,6 +8,7 @@ import moe.kabii.data.Keys
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
@@ -45,9 +46,8 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
     @Throws(IOException::class)
     fun query(raw: String): WolframResponse {
         val query = raw.replace("+", "plus")
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
-            .header("User-Agent", "srkmfbk/1.0")
             .url("https://api.wolframalpha.com/v1/result?appid=$appId&i=$query")
             .build()
 

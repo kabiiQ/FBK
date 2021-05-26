@@ -3,6 +3,7 @@ package moe.kabii.discord.trackers.anime
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
+import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -20,10 +21,9 @@ abstract class MediaListParser {
     abstract fun getListID(input: String): String?
 
     suspend fun <R: Any> requestMediaList(requestStr: String, translator: (Response) -> Result<R?, Long>): R? {
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url(requestStr)
-            .header("User-Agent", "srkmfbk/1.0")
             .build()
 
         for(attempt in 1..2) {

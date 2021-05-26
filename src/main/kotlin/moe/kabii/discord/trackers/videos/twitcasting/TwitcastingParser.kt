@@ -2,10 +2,7 @@ package moe.kabii.discord.trackers.videos.twitcasting
 
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
-import moe.kabii.JSON
-import moe.kabii.LOG
-import moe.kabii.MOSHI
-import moe.kabii.OkHTTP
+import moe.kabii.*
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.videos.twitcasting.json.*
 import moe.kabii.util.extensions.stackTraceString
@@ -38,7 +35,6 @@ object TwitcastingParser {
     }
 
     private fun applyHeaders(builder: Request.Builder) = builder
-        .header("User-Agent", "srkmfbk/1.0")
         .header("X-Api-Version", "2.0")
         .header("Authorization", authKey)
         .header("Accept", "application/json")
@@ -46,7 +42,7 @@ object TwitcastingParser {
     private val errorAdapter = MOSHI.adapter(TwitcastingErrorResponse::class.java)
     private suspend inline fun <reified R: Any> twitcastRequest(requestStr: String): R? {
         delay()
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url("$baseUrl/$requestStr")
             .run(::applyHeaders)
@@ -96,7 +92,7 @@ object TwitcastingParser {
         delay()
         // POST request with info in body
         val body = TwitcastingWebhookRequest(userId).toJson().toRequestBody(JSON)
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("$baseUrl/webhooks")
             .post(body)
             .run(::applyHeaders)
@@ -123,7 +119,7 @@ object TwitcastingParser {
     suspend fun unregisterWebhook(userId: String): Boolean {
         delay()
         // DELETE request with info in ... query? just following docs
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("$baseUrl/webhooks?user_id=$userId&events[]=livestart&events[]=liveend")
             .delete()
             .run(::applyHeaders)

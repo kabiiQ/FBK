@@ -12,6 +12,7 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.conversation.Page
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
@@ -26,9 +27,8 @@ object Urban : Command("urbandictionary", "urban", "ud") {
             featureVerify(GuildSettings::searchCommands, "search")
             val lookup = if (args.isEmpty()) author.username else noCmd
             val message = embed("Searching for **$lookup**...").awaitSingle()
-            val request = Request.Builder()
+            val request = newRequestBuilder()
                 .get()
-                .header("User-Agent", "DiscordBot-srkmfbk/1.0")
                 .url("https://api.urbandictionary.com/v0/define?term=$lookup")
                 .build()
 

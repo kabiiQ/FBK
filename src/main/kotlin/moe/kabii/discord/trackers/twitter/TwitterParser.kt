@@ -1,12 +1,9 @@
 package moe.kabii.discord.trackers.twitter
 
-import moe.kabii.LOG
-import moe.kabii.MOSHI
-import moe.kabii.OkHTTP
+import moe.kabii.*
 import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.twitter.json.*
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.time.Duration
 import java.time.Instant
 
@@ -26,10 +23,9 @@ object TwitterParser {
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     private inline fun <reified R: TwitterResponse> request(requestStr: String): R? {
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url(requestStr)
-            .header("User-Agent", "srkmfbk/1.0")
             .header("Authorization", "Bearer $token")
             .build()
 

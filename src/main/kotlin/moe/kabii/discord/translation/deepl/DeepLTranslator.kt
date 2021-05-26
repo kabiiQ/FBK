@@ -10,6 +10,7 @@ import moe.kabii.discord.translation.TranslationResult
 import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.deepl.json.DLTranslationResponse
 import moe.kabii.discord.translation.deepl.json.DeepLSupportedLanguage
+import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
 import okhttp3.Request
 import java.io.IOException
@@ -44,8 +45,7 @@ object DeepLTranslator : TranslationService(
             .add("target_lang", to.tag)
             .add("source_lang", from?.tag ?: "")
             .build()
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .url("https://api-free.deepl.com/v2/translate?auth_key=$key")
             .post(requestBody)
             .build()
@@ -77,8 +77,7 @@ object DeepLTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .url("https://api-free.deepl.com/v2/languages?auth_key=$key")
             .build()
         LOG.info("Requesting supported languages from DeepL")

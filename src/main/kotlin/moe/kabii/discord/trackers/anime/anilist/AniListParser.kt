@@ -6,6 +6,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.discord.trackers.anime.*
 import moe.kabii.discord.trackers.anime.anilist.json.*
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.fromJsonSafe
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
@@ -22,9 +23,8 @@ object AniListParser : MediaListParser() {
     override fun getListID(input: String): String? {
         val body = AniListUserRequest(input).generateRequestBody()
 
-        val userRequest = Request.Builder()
+        val userRequest = newRequestBuilder()
             .post(body)
-            .header("User-Agent", "srkmfbk/1.0")
             .url(endpoint)
             .build()
         val response = try {
@@ -50,9 +50,8 @@ object AniListParser : MediaListParser() {
 
         suspend fun pull(listPart: AniListMediaListRequest) {
             val body = listPart.generateRequestBody()
-            val listRequest = Request.Builder()
+            val listRequest = newRequestBuilder()
                 .post(body)
-                .header("User-Agent", "srkmfbk/1.0")
                 .url(endpoint)
                 .build()
             val response = try {

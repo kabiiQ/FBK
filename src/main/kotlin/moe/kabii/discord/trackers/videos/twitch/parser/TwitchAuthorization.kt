@@ -6,6 +6,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -25,8 +26,7 @@ class TwitchAuthorization {
         val empty = "".toRequestBody()
 
         val tokenURL = "https://id.twitch.tv/oauth2/token?client_id=$clientID&client_secret=$clientSecret&grant_type=client_credentials"
-        val request = Request.Builder()
-            .header("User-Agent", "srkmfbk/1.0")
+        val request = newRequestBuilder()
             .post(empty)
             .url(tokenURL)
             .build()
