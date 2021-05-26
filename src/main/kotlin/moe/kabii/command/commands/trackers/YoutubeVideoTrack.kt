@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
 object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidtrack", "youtubevid", "youtubevideo") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Livestream-Tracker#user-commands"
 
     init {
         discord {
