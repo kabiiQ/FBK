@@ -3,7 +3,7 @@ package moe.kabii.command.commands.search
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
@@ -14,7 +14,7 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
     init {
         discord {
             // manually post a Twitch stream
-            featureVerify(GuildSettings::searchCommands, "search")
+            channelFeatureVerify(FeatureChannel::searchCommands, "search")
             if(args.isEmpty()) {
                 usage("**twitch** posts information on a live Twitch stream.", "twitch <twitch username>").awaitSingle()
                 return@discord

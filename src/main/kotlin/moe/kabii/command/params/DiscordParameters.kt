@@ -10,13 +10,11 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
-import moe.kabii.command.Command
-import moe.kabii.command.GuildFeatureDisabledException
-import moe.kabii.command.GuildTargetInvalidException
-import moe.kabii.command.channelVerify
+import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
@@ -77,10 +75,19 @@ data class DiscordParameters (
     suspend fun channelVerify(vararg permissions: Permission) = member.channelVerify(guildChan, *permissions)
 
     @Throws(GuildFeatureDisabledException::class)
-    fun featureVerify(feature: KProperty1<GuildSettings, Boolean>, featureName: String? = null) {
+    fun guildFeatureVerify(feature: KProperty1<GuildSettings, Boolean>, featureName: String? = null) {
         if(guild != null) {
             val name = featureName ?: feature.name
             if(!feature.get(config.guildSettings)) throw GuildFeatureDisabledException(name, "guildcfg $name enable")
+        } // else this is pm, allow
+    }
+
+    @Throws(ChannelFeatureDisabledException::class)
+    fun channelFeatureVerify(feature: KProperty1<FeatureChannel, Boolean>, featureName: String? = null) {
+        if(guild != null) {
+            val features = config.options.featureChannels[chan.id.asLong()] ?: FeatureChannel(chan.id.asLong())
+            val name = featureName ?: feature.name.removeSuffix("Channel")
+            if(!feature.get(features)) throw ChannelFeatureDisabledException(name, this, feature)
         } // else this is pm, allow
     }
 

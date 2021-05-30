@@ -3,6 +3,7 @@ package moe.kabii.command.commands.audio
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 
@@ -12,7 +13,7 @@ object QueueSkip : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {
@@ -54,7 +55,7 @@ object QueueSkip : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {

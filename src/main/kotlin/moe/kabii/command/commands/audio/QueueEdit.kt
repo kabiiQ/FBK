@@ -4,6 +4,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
@@ -17,7 +18,7 @@ object QueueEdit : AudioCommandContainer {
 
         init {
             discord {
-                QueueTracks.validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 channelVerify(Permission.MANAGE_MESSAGES)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(audio.queue.isEmpty()) {
@@ -52,7 +53,7 @@ object QueueEdit : AudioCommandContainer {
         init {
             discord {
                 // remove 1,2, 4-5 only remove tracks the user can skip normally
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val queue = audio.queue
                 if (queue.isEmpty()) {

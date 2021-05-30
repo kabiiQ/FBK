@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
@@ -36,7 +37,7 @@ object PlaybackSeek : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 if(args.isEmpty()) {
                     usage("**seek** is used to go to a position in a song.", "seek <timestamp>").awaitSingle()
                     return@discord
@@ -80,7 +81,7 @@ object PlaybackSeek : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {
@@ -114,7 +115,7 @@ object PlaybackSeek : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {

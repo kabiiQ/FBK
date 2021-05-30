@@ -3,7 +3,6 @@ package moe.kabii.discord.event.message.starboard
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
@@ -13,7 +12,6 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
 import moe.kabii.discord.util.starColor
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import java.net.URL
 

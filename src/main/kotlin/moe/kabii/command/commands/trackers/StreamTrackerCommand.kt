@@ -3,7 +3,6 @@ package moe.kabii.command.commands.trackers
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -27,9 +26,7 @@ object StreamTrackerCommand : TrackerCommand {
         val site = streamTarget.dbSite
 
         // make sure feature is enabled or this channel is private
-        if(origin.guild != null) {
-            if(features != null && !streamTarget.channelFeature.get(features)) throw ChannelFeatureDisabledException(streamTarget.featureName, origin)
-        } // else this is PM, allow
+        origin.channelFeatureVerify(streamTarget.channelFeature, streamTarget.featureName)
 
         // validate stream is real and get service ID
         val streamInfo = when(val lookup = streamTarget.getChannel(target.identifier)) {

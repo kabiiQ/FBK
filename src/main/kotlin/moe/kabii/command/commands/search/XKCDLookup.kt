@@ -26,7 +26,7 @@ object XKCDLookup : Command("xkcd") {
 
     init {
         discord {
-            featureVerify(GuildSettings::searchCommands, "search")
+            channelFeatureVerify(FeatureChannel::searchCommands, "search")
 
             val arg = args.getOrNull(0)?.toIntOrNull()
             if(args.isEmpty() || arg != null) {

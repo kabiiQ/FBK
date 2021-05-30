@@ -7,7 +7,6 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
@@ -44,13 +43,6 @@ internal interface AudioCommandContainer : CommandContainer {
 
     fun trackString(track: AudioTrack, includeAuthor: Boolean = true): String = Companion.trackString(track, includeAuthor)
 
-    suspend fun validateChannel(origin: DiscordParameters) {
-        val musicChan = origin.config.options.featureChannels[origin.chan.id.asLong()]?.musicChannel
-        if(musicChan != true) {
-            throw ChannelFeatureDisabledException("music", origin, FeatureChannel::musicChannel)
-        }
-    }
-
     suspend fun getSkipsNeeded(origin: DiscordParameters): Int {
         // return lesser of ratio or raw user count - check min user votes first as it is easier than polling v
         val config = origin.config.musicBot
@@ -76,7 +68,7 @@ internal interface AudioCommandContainer : CommandContainer {
     }
 
     suspend fun validateAndAlterFilters(origin: DiscordParameters, consumer: suspend FilterFactory.() -> Unit) {
-        validateChannel(origin)
+        origin.channelFeatureVerify(FeatureChannel::musicChannel)
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {

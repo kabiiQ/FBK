@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.constants.URLUtil
@@ -16,7 +17,7 @@ object QueueInfo : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
                     embed("There are no tracks currently queued.").awaitSingle()
@@ -66,7 +67,7 @@ object QueueInfo : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
                     error("There is no track currently playing.").awaitSingle()

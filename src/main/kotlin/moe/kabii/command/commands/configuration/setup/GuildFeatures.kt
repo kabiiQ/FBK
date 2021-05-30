@@ -18,7 +18,6 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
         BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", listOf("publish"), GuildSettings::publishTrackerMessages),
         BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl", "reactiontranslations"), GuildSettings::reactionTranslations),
         BooleanElement("Enable PS2 commands", listOf("ps2", "planetside2", "ps2commands"), GuildSettings::ps2Commands),
-        BooleanElement("Enable internet search commands", listOf("search", "google", "ud", "wa", "searchcommands"), GuildSettings::searchCommands)
     )
 
     init {

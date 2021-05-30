@@ -3,6 +3,7 @@ package moe.kabii.command.commands.audio
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.*
 
 object QueueTracks : AudioCommandContainer {
@@ -11,7 +12,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this) // throws feature exception if this is not a valid "music" channel, caught upstream
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()
@@ -33,7 +34,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()
@@ -71,7 +72,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()
@@ -103,7 +104,7 @@ object QueueTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()

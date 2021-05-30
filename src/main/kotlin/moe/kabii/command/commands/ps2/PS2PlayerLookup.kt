@@ -15,7 +15,7 @@ object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "
 
     init {
         discord {
-            featureVerify(GuildSettings::ps2Commands, "PS2")
+            guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
             if(args.isEmpty()) {
                 usage("**ps2who** is used to look up a player by name.", "ps2who <username>").awaitSingle()
                 return@discord

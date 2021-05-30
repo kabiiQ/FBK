@@ -10,8 +10,7 @@ data class GuildSettings(
     var utilizeAuditLogs: Boolean = true,
     var publishTrackerMessages: Boolean = false,
     var reactionTranslations: Boolean = true,
-    var ps2Commands: Boolean = false,
-    var searchCommands: Boolean = true
+    var ps2Commands: Boolean = false
 )
 
 data class StreamInfo(

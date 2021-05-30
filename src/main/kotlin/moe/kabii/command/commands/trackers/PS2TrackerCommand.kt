@@ -2,7 +2,6 @@ package moe.kabii.command.commands.trackers
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
@@ -18,9 +17,7 @@ import moe.kabii.util.extensions.stackTraceString
 object PS2TrackerCommand : TrackerCommand {
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
-        if(origin.guild != null) {
-            if(features == null || !features.ps2Channel) throw ChannelFeatureDisabledException("ps2", origin, FeatureChannel::ps2Channel)
-        }
+        origin.channelFeatureVerify(FeatureChannel::ps2Channel, "ps2")
 
         val ps2Target = requireNotNull(target.site as? PS2Target) { "Invalid target arguments provided to PS2TrackerCommand" }
 
