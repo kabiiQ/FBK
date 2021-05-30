@@ -12,10 +12,10 @@ object PruneUsers : Command("prunemembers") {
 
     init {
         // command disabled
-        TODO()
 
         botReqs(Permission.KICK_MEMBERS)
         discord {
+            TODO()
             member.verify(Permission.KICK_MEMBERS, Permission.MANAGE_GUILD)
 
             val prompt = embed("This action will kick all members from your server who do not currently have a role. This is probably NOT what you want to do unless converting to a sub-only server. Please check that the bot has the \"kick members\" permission and confirm.").awaitSingle()
