@@ -8,7 +8,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.conversation.Page
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
@@ -23,7 +23,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
 
     init {
         discord {
-            featureVerify(GuildSettings::searchCommands, "search")
+            channelFeatureVerify(FeatureChannel::searchCommands, "search")
             val lookup = if (args.isEmpty()) author.username else noCmd
             val message = embed("Searching for **$lookup**...").awaitSingle()
             val request = Request.Builder()

@@ -4,6 +4,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.hasPermissions
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 
@@ -13,7 +14,7 @@ object PlaybackState : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.isPaused = true
                 embed("Audio playback is now paused. You can resume playback with the **resume** command.").awaitSingle()
@@ -26,7 +27,7 @@ object PlaybackState : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.volume
                 audio.player.isPaused = false
@@ -40,7 +41,7 @@ object PlaybackState : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {

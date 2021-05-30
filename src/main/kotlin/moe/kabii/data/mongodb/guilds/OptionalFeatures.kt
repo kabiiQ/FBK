@@ -19,13 +19,17 @@ data class FeatureChannel(
     val channelID: Long,
     var locked: Boolean = true,
 
+    // trackers
     var streamTargetChannel: Boolean = true,
     var twitterTargetChannel: Boolean = true,
     var animeTargetChannel: Boolean = true,
     var ps2Channel: Boolean = true,
+
+    // other commands
     var musicChannel: Boolean = false,
     var logChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
+    var searchCommands: Boolean = false,
 
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,

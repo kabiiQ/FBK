@@ -14,7 +14,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
 
     init {
         discord {
-            featureVerify(GuildSettings::ps2Commands, "PS2")
+            guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
             // get all servers and list status
             val servers = try {
                 PS2Parser.getServers()

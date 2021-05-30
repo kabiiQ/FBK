@@ -5,6 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.commands.audio.ParseUtil
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.util.constants.MagicNumbers
@@ -16,7 +17,7 @@ object SearchTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 // search source query
                 if(args.isEmpty()) {
                     usage("**search** is used to search a source for audio to play. You can provide the source (currently the only options are YouTube [yt] or SoundCloud [sc]) as the first argument, or YouTube will automatically be used.", "search (source) <query>").awaitSingle()
@@ -87,7 +88,7 @@ object SearchTracks : AudioCommandContainer {
 
         init {
             discord {
-                validateChannel(this)
+                channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     error(voice.error).awaitSingle()

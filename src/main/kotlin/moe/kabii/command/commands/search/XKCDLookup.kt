@@ -7,7 +7,7 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.stackTraceString
@@ -25,7 +25,7 @@ object XKCDLookup : Command("xkcd") {
 
     init {
         discord {
-            featureVerify(GuildSettings::searchCommands, "search")
+            channelFeatureVerify(FeatureChannel::searchCommands, "search")
 
             val arg = args.getOrNull(0)?.toIntOrNull()
             if(args.isEmpty() || arg != null) {

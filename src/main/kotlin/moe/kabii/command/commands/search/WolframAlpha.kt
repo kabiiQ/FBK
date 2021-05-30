@@ -5,7 +5,7 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.Keys
-import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.stackTraceString
@@ -21,7 +21,7 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
 
     init {
         discord {
-            featureVerify(GuildSettings::searchCommands, "search")
+            channelFeatureVerify(FeatureChannel::searchCommands, "search")
             if(args.isEmpty()) {
                 usage("**$alias** is used to answer a question or math input using WolframAlpha. You can also reply to the bot's response to request more information.", "$alias <search query>").awaitSingle()
                 return@discord
