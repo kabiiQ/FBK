@@ -14,15 +14,16 @@ import moe.kabii.util.extensions.tryAwait
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
-        BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists"), FeatureChannel::animeTargetChannel),
-        BooleanElement("Livestream/video site tracking", listOf("streams", "stream", "twitch", "yt", "youtube", "twitcasting", "twitcast"), FeatureChannel::streamTargetChannel),
-        BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr"), FeatureChannel::twitterTargetChannel),
-        BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog"), FeatureChannel::logChannel),
-        BooleanElement("Music bot commands", listOf("music", "musicbot"), FeatureChannel::musicChannel),
-        BooleanElement("PS2 event tracking", listOf("ps2", "planetside", "planetside2"), FeatureChannel::ps2Channel),
-        BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels"), FeatureChannel::tempChannelCreation),
+        BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists", "animetargetchannel"), FeatureChannel::animeTargetChannel),
+        BooleanElement("Livestream/video site tracking", listOf("streams", "stream", "twitch", "yt", "youtube", "twitcasting", "twitcast", "streamtargetchannel"), FeatureChannel::streamTargetChannel),
+        BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr", "twittertargetchannel"), FeatureChannel::twitterTargetChannel),
+        BooleanElement("Event log (See **log** command)", listOf("log", "modlog", "mod", "logs", "userlog", "botlog", "logchannel"), FeatureChannel::logChannel),
+        BooleanElement("Music bot commands", listOf("music", "musicbot", "musicchannel"), FeatureChannel::musicChannel),
+        BooleanElement("PS2 event tracking", listOf("ps2", "planetside", "planetside2", "ps2channel"), FeatureChannel::ps2Channel),
+        BooleanElement("Enable internet search commands", listOf("search", "google", "ud", "wa", "searchcommands"), FeatureChannel::searchCommands),
+        BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels", "tempchannelcreation"), FeatureChannel::tempChannelCreation),
         BooleanElement("Limit track command usage to moderators", listOf("lock", "locked", "limit", "limited"), FeatureChannel::locked),
-        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star"), FeatureChannel::allowStarboarding)
+        BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star", "allowstarboarding"), FeatureChannel::allowStarboarding),
     )
 
     object ChannelFeatures : Command("feature", "features", "channelfeatures", "config", "channel") {

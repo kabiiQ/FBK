@@ -29,9 +29,9 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                 usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live.", "mentionrole (site name) <stream username> <discord role ID>").awaitSingle()
                 return@discord
             }
-            // last arg must be discord role
-            val roleArg = args.last()
-            val targetArgs = args.dropLast(1)
+            val targetCount = if(TargetArguments[args[0]] == null) 1 else 2
+            val targetArgs = args.take(targetCount)
+            val roleArg = args.drop(targetCount).joinToString(" ")
 
             val siteTarget = when (val findTarget = TargetArguments.parseFor(this, targetArgs)) {
                 is Ok -> findTarget.value
