@@ -2,6 +2,9 @@ package moe.kabii.data
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.reaction.ReactionEmoji
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 
 // basic non-persistent in-memory storage
 object TempStates {
@@ -11,4 +14,9 @@ object TempStates {
     val emojiRemove = mutableListOf<BotReactionRemove>()
 
     val emojiTLCache = mutableSetOf<Snowflake>()
+}
+
+object TwitterFeedCache {
+    data class FeedCacheState(val initialBound: Long, val seenTweets: MutableList<Long> = mutableListOf())
+    val cache = ConcurrentHashMap<Long, FeedCacheState>()
 }

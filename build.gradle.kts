@@ -175,6 +175,7 @@ tasks {
 
 application {
     mainClass.set("moe.kabii.FBKKt")
+    applicationDefaultJvmArgs = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
 idea {

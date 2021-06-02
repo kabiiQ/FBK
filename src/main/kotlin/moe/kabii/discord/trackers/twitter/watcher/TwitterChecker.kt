@@ -8,6 +8,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
@@ -19,6 +20,8 @@ import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
+import moe.kabii.discord.trackers.twitter.json.TwitterTweet
+import moe.kabii.discord.trackers.twitter.json.TwitterUser
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
@@ -56,6 +59,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+
+                        TwitterFeedCache.cache.getOrPut(feed.userId) { TwitterFeedCache.FeedCacheState(feed.lastPulledTweet ?: 0) }
 
                         // determine if any targets want RT or quote tweets
                         var pullRetweets = false
@@ -96,111 +101,13 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         feed.lastKnownUsername = user.username
 
                         val latest = tweets.maxOf { tweet ->
-
                             // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
                             val age = Duration.between(tweet.createdAt, Instant.now())
-                            if (feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf tweet.id // if already handled or too old, skip, but do not pull tweet ID again
 
-                            // send discord notifs - check if any channels request
-                            targets.forEach target@{ target ->
-                                try {
-                                    // post a notif to this target
-                                    val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
-                                        .ofType(MessageChannel::class.java)
-                                        .awaitSingle()
+                            // if already handled or too old, skip, but do not pull tweet ID again
+                            if(feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf tweet.id
 
-                                    val features = GuildConfigurations.findFeatures(target)
-                                    val twitter = features?.twitterSettings ?: TwitterSettings()
-
-                                    if(!tweet.notifyOption.get(twitter)) return@target
-
-                                    val referenceUser = tweet.references.firstOrNull()?.author
-                                    val action = when {
-                                        tweet.retweet -> "retweeted \uD83D\uDD01"
-                                        tweet.reply -> "replied to a Tweet from **@${referenceUser?.username}** \uD83D\uDCAC"
-                                        tweet.quote -> "quoted a Tweet from **@${referenceUser?.username}** \uD83D\uDDE8"
-                                        else -> "posted a new Tweet"
-                                    }
-
-                                    if(tweet.sensitive == true && target.discordChannel.guild != null) {
-                                        // filter potentially nsfw tweets in guilds
-                                        val guildChan = channel as? TextChannel // will fail for news channels as they can not be marked nsfw
-                                        if(guildChan?.isNsfw != true) {
-                                            channel.createEmbed { embed ->
-                                                fbkColor(embed)
-                                                embed.setDescription("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
-                                            }.awaitSingle()
-                                            return@target
-                                        }
-                                    }
-
-                                    val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
-                                        try {
-                                            val baseService = Translator.defaultService
-                                            val defaultLang = GuildConfigurations
-                                                .getOrCreateGuild(target.discordChannel.guild!!.guildID)
-                                                .translator.defaultTargetLanguage
-                                                .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
-                                            val translator = Translator.getService(tweet.text, defaultLang.tag)
-                                            val translation = translator.translate(from = null, to = defaultLang, text = tweet.text)
-                                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
-                                            else null
-                                        } catch(e: Exception) {
-                                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
-                                            null
-                                        }
-                                    } else null
-
-                                    val notif = channel.createMessage { spec ->
-                                        // todo channel setting for custom message ?
-                                        spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
-
-                                        spec.setEmbed { embed ->
-                                            val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
-                                            embed.setColor(Color.of(color))
-                                            val author = (if(tweet.retweet) referenceUser else user) ?: user
-                                            embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
-
-                                            embed.setDescription(tweet.text)
-
-                                            val tlDetail = if(translation != null) {
-                                                embed.addField("**Tweet Translation**", StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.FIELD.VALUE), false)
-                                                "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
-                                            } else ""
-
-                                            val attachment = tweet.attachments.firstOrNull()
-                                            val size = tweet.attachments.size
-                                            val isVid = attachment?.type == TwitterMediaType.VID
-                                            val attachInfo = when {
-                                                isVid -> "(Open on Twitter to view video)\n"
-                                                size > 1 -> "(Open on Twitter to view $size images)\n"
-                                                else -> ""
-                                            }
-
-                                            val thumbnail = if(attachment != null) {
-                                                if((size > 1 || isVid)  && attachment.url != null) {
-                                                    TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, size, isVid)
-                                                } else attachment.url
-                                            } else tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // use image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
-                                            thumbnail?.run(embed::setImage)
-
-                                            embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
-                                            embed.setTimestamp(tweet.createdAt)
-                                        }
-                                    }.awaitSingle()
-
-                                    TrackerUtil.checkAndPublish(notif)
-                                } catch (e: Exception) {
-                                    if (e is ClientException && e.status.code() == 403) {
-                                        TrackerUtil.permissionDenied(discord, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
-                                        LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
-                                    } else {
-                                        LOG.warn("Error sending Tweet to channel: ${e.message}")
-                                        LOG.debug(e.stackTraceString)
-                                    }
-                                }
-                            }
-                            tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
+                            notifyTweet(user, tweet, targets)
                         }
                         if(latest > feed.lastPulledTweet ?: 0L) {
                             newSuspendedTransaction {
@@ -224,6 +131,111 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(Duration.ofMillis(max(delay, 0L)))
         }
+    }
+
+    @WithinExposedContext
+    suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
+        // send discord notifs - check if any channels request
+        targets.forEach target@{ target ->
+            try {
+                // post a notif to this target
+                val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
+                    .ofType(MessageChannel::class.java)
+                    .awaitSingle()
+
+                val features = GuildConfigurations.findFeatures(target)
+                val twitter = features?.twitterSettings ?: TwitterSettings()
+
+                if(!tweet.notifyOption.get(twitter)) return@target
+
+                val referenceUser = tweet.references.firstOrNull()?.author
+                val action = when {
+                    tweet.retweet -> "retweeted \uD83D\uDD01"
+                    tweet.reply -> "replied to a Tweet from **@${referenceUser?.username}** \uD83D\uDCAC"
+                    tweet.quote -> "quoted a Tweet from **@${referenceUser?.username}** \uD83D\uDDE8"
+                    else -> "posted a new Tweet"
+                }
+
+                if(tweet.sensitive == true && target.discordChannel.guild != null) {
+                    // filter potentially nsfw tweets in guilds
+                    val guildChan = channel as? TextChannel // will fail for news channels as they can not be marked nsfw
+                    if(guildChan?.isNsfw != true) {
+                        channel.createEmbed { embed ->
+                            fbkColor(embed)
+                            embed.setDescription("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
+                        }.awaitSingle()
+                        return@target
+                    }
+                }
+
+                val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
+                    try {
+                        val baseService = Translator.defaultService
+                        val defaultLang = GuildConfigurations
+                            .getOrCreateGuild(target.discordChannel.guild!!.guildID)
+                            .translator.defaultTargetLanguage
+                            .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
+                        val translator = Translator.getService(tweet.text, defaultLang.tag)
+                        val translation = translator.translate(from = null, to = defaultLang, text = tweet.text)
+                        if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
+                        else null
+                    } catch(e: Exception) {
+                        LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
+                        null
+                    }
+                } else null
+
+                val notif = channel.createMessage { spec ->
+                    // todo channel setting for custom message ?
+                    spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
+
+                    spec.setEmbed { embed ->
+                        val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
+                        embed.setColor(Color.of(color))
+                        val author = (if(tweet.retweet) referenceUser else user) ?: user
+                        embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
+
+                        embed.setDescription(tweet.text)
+
+                        val tlDetail = if(translation != null) {
+                            embed.addField("**Tweet Translation**", StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.FIELD.VALUE), false)
+                            "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
+                        } else ""
+
+                        val attachment = tweet.attachments.firstOrNull()
+                        val size = tweet.attachments.size
+                        val isVid = attachment?.type == TwitterMediaType.VID
+                        val attachInfo = when {
+                            isVid -> "(Open on Twitter to view video)\n"
+                            size > 1 -> "(Open on Twitter to view $size images)\n"
+                            else -> ""
+                        }
+
+                        val thumbnail = if(attachment != null) {
+                            if((size > 1 || isVid)  && attachment.url != null) {
+                                TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, size, isVid)
+                            } else attachment.url
+                        } else tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // use image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
+                        thumbnail?.run(embed::setImage)
+
+                        embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
+                        embed.setTimestamp(tweet.createdAt)
+                    }
+                }.awaitSingle()
+
+                TrackerUtil.checkAndPublish(notif)
+            } catch (e: Exception) {
+                if (e is ClientException && e.status.code() == 403) {
+                    TrackerUtil.permissionDenied(discord, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
+                    LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
+                } else {
+                    LOG.warn("Error sending Tweet to channel: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                }
+            }
+        }
+        TwitterFeedCache.cache[user.id]?.seenTweets?.add(tweet.id)
+        return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
     @WithinExposedContext

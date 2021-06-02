@@ -15,12 +15,18 @@ object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
     val lastKnownUsername = text("last_known_twitter_handle").nullable()
+
+    val streamFeed = bool("twitter_should_stream_feed")
+    val streamRule = reference("twit_feed_streaming_rule", TwitterStreamRules, ReferenceOption.SET_NULL).nullable()
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var userId by TwitterFeeds.userId
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
     var lastKnownUsername by TwitterFeeds.lastKnownUsername
+
+    var streamFeed by TwitterFeeds.streamFeed
+    var streamRule by TwitterStreamRule optionalReferencedOn TwitterFeeds.streamRule
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
@@ -35,6 +41,18 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
                 }
             }
     }
+}
+
+object TwitterStreamRules : IntIdTable() {
+    val ruleId =  long("twit_streaming_rule_id").uniqueIndex()
+}
+
+class TwitterStreamRule(id: EntityID<Int>) : IntEntity(id) {
+    var ruleId by TwitterStreamRules.ruleId
+
+    val feeds by TwitterFeed optionalReferrersOn TwitterFeeds.streamRule
+
+    companion object : IntEntityClass<TwitterStreamRule>(TwitterStreamRules)
 }
 
 object TwitterTargets : IntIdTable() {
