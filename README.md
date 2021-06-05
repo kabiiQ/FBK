@@ -78,7 +78,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 
 # Development 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.4.31-blue.svg?logo=Kotlin)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 

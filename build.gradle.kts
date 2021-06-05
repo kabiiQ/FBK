@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.5.0"
+    val kotlinVer = "1.5.10"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -49,7 +49,7 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.5.0-RC"
+    val coroutinesVer = "1.5.0"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
@@ -62,7 +62,7 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.2.0-M3") // discord websocket and api
 
     // music bot
-    implementation("com.sedmelluq:lavaplayer:1.3.76") // discord audio library
+    implementation("com.sedmelluq:lavaplayer:1.3.77") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
 
     // other api - http calls
@@ -100,7 +100,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.31.1"
+    val exposedVer = "0.32.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
