@@ -16,7 +16,6 @@ object TwitterFeeds : IntIdTable() {
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
     val lastKnownUsername = text("last_known_twitter_handle").nullable()
 
-    val streamFeed = bool("twitter_should_stream_feed")
     val streamRule = reference("twit_feed_streaming_rule", TwitterStreamRules, ReferenceOption.SET_NULL).nullable()
 }
 
@@ -25,7 +24,6 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
     var lastKnownUsername by TwitterFeeds.lastKnownUsername
 
-    var streamFeed by TwitterFeeds.streamFeed
     var streamRule by TwitterStreamRule optionalReferencedOn TwitterFeeds.streamRule
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
@@ -52,21 +50,29 @@ class TwitterStreamRule(id: EntityID<Int>) : IntEntity(id) {
 
     val feeds by TwitterFeed optionalReferrersOn TwitterFeeds.streamRule
 
-    companion object : IntEntityClass<TwitterStreamRule>(TwitterStreamRules)
+    companion object : IntEntityClass<TwitterStreamRule>(TwitterStreamRules) {
+        fun insert(ruleId: String) = new {
+            this.ruleId = ruleId.toLong()
+        }
+    }
 }
 
 object TwitterTargets : IntIdTable() {
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracker", DiscordObjects.Users, ReferenceOption.CASCADE)
+
     val mentionRole = long("discord_mention_role_id").nullable()
+    val shouldStream = bool("twitter_streaming_feed").default(false)
 }
 
 class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     var twitterFeed by TwitterFeed referencedOn TwitterTargets.twitterFeed
     var discordChannel by DiscordObjects.Channel referencedOn TwitterTargets.discordChannel
     var tracker by DiscordObjects.User referencedOn TwitterTargets.tracker
+
     var mentionRole by TwitterTargets.mentionRole
+    var shouldStream by TwitterTargets.shouldStream
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext

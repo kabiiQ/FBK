@@ -2,8 +2,6 @@ package moe.kabii.data
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.reaction.ReactionEmoji
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
 // basic non-persistent in-memory storage

@@ -4,6 +4,11 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargets
+import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
+import moe.kabii.util.extensions.propagateTransaction
 
 object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
     override val wikiPath = "Twitter-Tracker"
@@ -27,8 +32,13 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
             TwitterSettings::displayReplies
         ),
         BooleanElement("Automatically request a translation for posted tweets",
-            listOf("translate", "translations", "tl", "t"),
+            listOf(
+                "translate", "translations", "tl", "t"),
             TwitterSettings::autoTranslate
+        ),
+        BooleanElement("Receive Tweet updates faster (for high priority feeds)",
+            listOf("stream", "streaming", "prioritize", "priority"),
+            TwitterSettings::streamFeeds
         )
     )
 
@@ -43,13 +53,37 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
             }
             val twitter = features.twitterSettings
             val configurator = Configurator(
-                "Twitter tracker settings for **#${guildChan.name}**",
+                "Twitter tracker settings for #${guildChan.name}",
                 TwitterConfigModule,
                 twitter
             )
 
+            val wasStream = twitter.streamFeeds
+
             if(configurator.run(this)) {
                 config.save()
+            }
+
+            if(wasStream != twitter.streamFeeds) {
+                propagateTransaction {
+
+                    val dbChan = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), target.id.asLong())
+                    val targets = TwitterTarget.find {
+                        TwitterTargets.discordChannel eq dbChan.id
+                    }
+
+                    if(twitter.streamFeeds) {
+                        val feeds = targets
+                            .onEach { target -> target.shouldStream = true }
+                            .map(TwitterTarget::twitterFeed)
+                        TwitterFeedSubscriber.addStreamingFeeds(feeds)
+                    } else {
+                        val feeds = targets
+                            .onEach { target -> target.shouldStream = false }
+                            .map(TwitterTarget::twitterFeed)
+                        TwitterFeedSubscriber.removeStreamingFeeds(feeds)
+                    }
+                }
             }
         }
     }

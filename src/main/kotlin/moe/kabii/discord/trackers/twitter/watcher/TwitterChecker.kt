@@ -239,7 +239,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
     }
 
     @WithinExposedContext
-    private suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
+    suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
         val existingTargets = feed.targets.toList()
             .filter { target ->
                 // untrack target if discord channel is deleted
@@ -259,10 +259,15 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
         return if (existingTargets.isNotEmpty()) {
             existingTargets.filter { target ->
                 // ignore, but do not untrack targets with feature disabled
-                val guildId = target.discordChannel.guild?.guildID ?: return@filter true
-                GuildConfigurations.findFeatures(target)?.twitterTargetChannel == true
+                GuildConfigurations.findFeatures(target)?.twitterTargetChannel != false // enabled or DM
             }
         } else {
+            try {
+                TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
+            } catch(e: Exception) {
+                LOG.error("Error removing streaming feed subscription: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            }
             feed.delete()
             LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
             null
