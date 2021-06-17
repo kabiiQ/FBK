@@ -2,7 +2,11 @@ package moe.kabii.discord.trackers.twitter
 
 import moe.kabii.*
 import moe.kabii.data.Keys
+import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterStreamRule
 import moe.kabii.discord.trackers.twitter.json.*
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import java.time.Duration
 import java.time.Instant
@@ -15,10 +19,12 @@ class TwitterRateLimitReachedException(val reset: Duration, message: String) : T
 
 object TwitterParser {
 
-    private val token = Keys.config[Keys.Twitter.token]
+    val token = Keys.config[Keys.Twitter.token]
 
     val sinceIdError = Regex("Please use a 'since_id' that is larger than (\\d{19,})")
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
+
+    private fun applyHeaders(builder: Request.Builder): Request.Builder = builder.header("User-Agent", "srkmfbk/1.0").header("Authorization", "Bearer $token")
 
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     private inline fun <reified R: TwitterResponse> request(requestStr: String): R? {
@@ -26,9 +32,13 @@ object TwitterParser {
         val request = newRequestBuilder()
             .get()
             .url(requestStr)
-            .header("Authorization", "Bearer $token")
+            .run(::applyHeaders)
             .build()
+        return doRequest(request)
+    }
 
+    @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
+    private inline fun <reified R: TwitterResponse> doRequest(request: Request): R? {
         try {
             OkHTTP.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -92,29 +102,58 @@ object TwitterParser {
         if(!limits.includeRT) query.append(" -is:retweet ")
         if(!limits.includeQuote) query.append(" -is:quote ")
         if(limits.sinceId != null) query.append("&since_id=${limits.sinceId}")
-        query.append("&tweet.fields=created_at,referenced_tweets,possibly_sensitive,text,entities")
         query.append("&max_results=${limits.tweetLimit}")
-        query.append("&expansions=author_id,attachments.media_keys,referenced_tweets.id.author_id")
-        query.append("&user.fields=profile_image_url")
-        query.append("&media.fields=preview_image_url,url")
-        val call = request<TwitterRecentTweetsResponse>(query.toString())
+        applyTweetQueryParams(query)
+        val call = request<TwitterTweetResponse>(query.toString())
         return if(call?.data != null && call.includes != null) {
-            val tweets = call.data.onEach { tweet -> mapTweetIncludes(tweet, call.includes) }
-            TwitterRecentTweets(user = call.includes.users.first(), tweets = tweets)
+            TwitterRecentTweets(user = call.includes.users.first(), tweets = call.data)
         } else null
     }
 
-    private fun mapTweetIncludes(tweet: TwitterTweet, includes: TwitterExpandedResponse) {
-        tweet.attachments = mutableListOf()
-        tweet._attachments?.mediaKeys?.mapNotNullTo(tweet.attachments) { key ->
-            includes.media?.find { media -> media.key == key }
+    fun applyTweetQueryParams(query: StringBuilder, first: Boolean = false) {
+        val char = if(first) '?' else '&'
+        query.append("${char}tweet.fields=created_at,referenced_tweets,possibly_sensitive,text,entities")
+        query.append("&expansions=author_id,attachments.media_keys,referenced_tweets.id.author_id")
+        query.append("&user.fields=profile_image_url")
+        query.append("&media.fields=preview_image_url,url")
+    }
+
+    @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
+    fun updateStreamRules(update: TwitterRuleRequest): TwitterRuleResponse? {
+        val request = Request.Builder()
+            .url("https://api.twitter.com/2/tweets/search/stream/rules")
+            .post(update.toRequestBody())
+            .run(::applyHeaders)
+            .build()
+        return doRequest(request)
+    }
+
+    @WithinExposedContext
+    @Throws(TwitterIOException::class)
+    suspend fun deleteRule(rule: TwitterStreamRule): TwitterRuleResponse {
+        val deletion = updateStreamRules(TwitterRuleRequest.delete(rule.ruleId))
+        if(deletion?.meta?.summary?.notDeleted != 0) {
+            throw TwitterIOException("Twitter rule deletion failed: $rule")
         }
-        tweet.references = mutableListOf()
-        tweet._references?.mapNotNullTo(tweet.references) { reference ->
-            includes.tweets?.find { included -> reference.referencedTweetId == included.id }
+        propagateTransaction {
+            rule.delete()
         }
-        includes.tweets.orEmpty().plus(tweet).forEach { tw ->
-            tw.author = includes.users.firstOrNull { includedUser -> tw.authorId == includedUser.id }
+        return deletion
+    }
+
+    @WithinExposedContext
+    suspend fun createRule(feeds: List<TwitterFeed>): TwitterRuleResponse {
+        val rule = feeds.joinToString(" OR ") { feed -> "from:${feed.userId}" }
+        val twitterRule = updateStreamRules(TwitterRuleRequest.add(rule))
+        val ruleId = twitterRule?.data?.firstOrNull()?.ruleId
+        if(twitterRule == null || ruleId == null) throw TwitterIOException("Twitter rule creation failed: $feeds")
+        propagateTransaction {
+            val dbRule = TwitterStreamRule.insert(ruleId)
+
+            feeds.onEach { feed ->
+                feed.streamRule = dbRule
+            }
         }
+        return twitterRule
     }
 }

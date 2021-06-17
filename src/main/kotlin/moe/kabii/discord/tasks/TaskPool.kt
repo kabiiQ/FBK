@@ -14,4 +14,5 @@ object DiscordTaskPool {
     val renameThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ps2DBThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ps2WSSThread = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+    val twitterIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 }

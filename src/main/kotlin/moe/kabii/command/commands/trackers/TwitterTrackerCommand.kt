@@ -10,6 +10,7 @@ import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.twitter.TwitterParser
+import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -43,15 +44,23 @@ object TwitterTrackerCommand : TrackerCommand {
             }
 
             // get the db 'twitterfeed' object, create if this is new track
-            val dbFeed = TwitterFeed.getOrInsert(twitterUser)
+            val dbFeed = propagateTransaction {
+                TwitterFeed.getOrInsert(twitterUser)
+            }
+            val shouldStream = features?.twitterSettings?.streamFeeds == true
 
             TwitterTarget.new {
                 this.twitterFeed = dbFeed
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
                 this.mentionRole = null
+                this.shouldStream = shouldStream
             }
+
             origin.embed("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!").awaitSingle()
+            if(shouldStream) {
+                TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))
+            }
         }
     }
 
@@ -84,8 +93,11 @@ object TwitterTrackerCommand : TrackerCommand {
                 || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
                 || origin.author.id.asLong() == existingTrack.tracker.userID
             ) {
-                existingTrack.delete()
+                val feed = existingTrack.twitterFeed
+
+                propagateTransaction { existingTrack.delete() }
                 origin.embed("No longer tracking **Twitter/${twitterUser.username}**.").awaitSingle()
+                TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
             } else {
                 val tracker = origin.chan.client
                     .getUserById(existingTrack.tracker.userID.snowflake).tryAwait().orNull()

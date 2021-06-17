@@ -17,7 +17,7 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
         discord {
             // translate (!target[,<#]source) <text>
             if(args.isEmpty()) {
-                usage("**translate** can be used to translate text to a different language using Microsoft translations.\n\nIf no target language is specified, this server's default (from **setlang** command) will be used.\n\nIf no source is specified, it will try to be detected.\n\n", "translate (!target#source) <text>").awaitSingle()
+                usage("**translate** can be used to translate text to a different language.\n\nIf no target language is specified, this server's default (from **setlang** command) will be used.\nIf no source is specified, it will try to be detected.\n\n", "translate (!target#source) <text>").awaitSingle()
                 return@discord
             }
 

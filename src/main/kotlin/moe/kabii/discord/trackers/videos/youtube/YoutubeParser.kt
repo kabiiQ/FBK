@@ -91,12 +91,11 @@ object YoutubeParser {
                     requestedId == foundVideo.id
                 }
                 val value = if(match != null) {
-                    val thumbnail = match.snippet.thumbnails.maxres ?: match.snippet.thumbnails.default
                     val video = YoutubeVideoInfo(
                         id = match.id,
                         title = match.snippet.title,
                         description = match.snippet.description,
-                        thumbnail = thumbnail.url,
+                        thumbnail = match.snippet.thumbnails.thumbnail(match.id),
                         live = match.snippet.live,
                         upcoming = match.snippet.upcoming,
                         premiere = match.premiere,

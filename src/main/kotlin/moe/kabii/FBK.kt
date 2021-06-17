@@ -4,6 +4,7 @@ import discord4j.core.DiscordClientBuilder
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
 import moe.kabii.data.GQLQueries
@@ -19,6 +20,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.trackers.ServiceWatcherManager
+import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
@@ -57,8 +59,11 @@ fun main() {
 
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initalization") {
-        val translator = Translator.detector.detectLanguageOf("initalizing translator")
-        val welcomer = WelcomeImageGenerator
+        runBlocking {
+            val translator = Translator.detector.detectLanguageOf("initalizing translator")
+            val welcomer = WelcomeImageGenerator
+            TwitterFeedSubscriber.verifySubscriptions()
+        }
     }
 
     // begin listening for terminal commands

@@ -14,7 +14,7 @@ class CommandManager {
 
     internal val context = CoroutineScope(DiscordTaskPool.commandThreads + CoroutineName("CommandHandler") + SupervisorJob())
 
-    fun registerInstance(command: Command) {
+    private fun registerInstance(command: Command) {
         if(command.executeDiscord != null) {
             command.aliases.associateWithTo(commandsDiscord) { command }
         }

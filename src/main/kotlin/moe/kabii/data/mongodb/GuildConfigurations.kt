@@ -31,8 +31,7 @@ object GuildConfigurations {
     }
 
     @Synchronized suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
-        val guildId = target.discordChannel.guild?.guildID
-        if(guildId == null) return null
+        val guildId = target.discordChannel.guild?.guildID ?: return null
         val guildConfig = getOrCreateGuild(guildId)
         return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)
     }
