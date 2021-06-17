@@ -116,7 +116,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             malThread,
             kitsuThread,
             aniListThread,
-            //Thread(twitter, "TwitterChecker"), todo
+            Thread(twitter, "TwitterChecker"),
             Thread(twitterStream, "TwitterStream"),
             Thread(ps2Websocket, "PS2EventStream"),
             Thread(twitcastChecker, "TwitcastChecker"),

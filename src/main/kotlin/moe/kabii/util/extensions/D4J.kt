@@ -32,4 +32,4 @@ suspend fun User.userAddress(guild: Guild): String {
 fun User.userAddress(): String = "$username#$discriminator"
 
 val Permission.friendlyName
-get() = name.replace("_", "").run(WordUtils::capitalizeFully)
+get() = name.replace("_", " ").run(WordUtils::capitalizeFully)

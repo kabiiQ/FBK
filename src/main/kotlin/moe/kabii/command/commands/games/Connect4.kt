@@ -98,7 +98,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                     }
 
                     // neither player is in a game, can issue the challenge
-                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${p2Target.userAddress()}**. Do you accept?")
+                    val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.userAddress()}**. Do you accept?")
                         .awaitSingle()
 
                     val notice = if (guild == null) {

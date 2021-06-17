@@ -11,10 +11,10 @@ import moe.kabii.util.extensions.propagateTransaction
 object TwitterFeedSubscriber {
 
     // twitter constants
-    const val maxRules = 25
-    const val charPerRule = 512
-    const val charPerFeed = 30
-    const val feedsPerRule = charPerRule / charPerFeed // 17
+    private const val maxRules = 25
+    private const val charPerRule = 512
+    private const val charPerFeed = 30
+    private const val feedsPerRule = charPerRule / charPerFeed // 17
 
     suspend fun verifySubscriptions() {
         propagateTransaction {

@@ -64,6 +64,8 @@ dependencies {
     // music bot
     implementation("com.sedmelluq:lavaplayer:1.3.77") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
+    implementation("com.github.kokorin.jaffree:jaffree:2021.05.31")
+    implementation("org.apache.commons:commons-compress:1.20")
 
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")

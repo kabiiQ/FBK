@@ -34,7 +34,7 @@ object MessageHistory {
                             ?.asLong()
                     )
                     author = DiscordObjects.User.getOrInsert(message.author.get().id.asLong())
-                    content = message.content
+                    content = message.content.take(2000)
                 }
             }
 

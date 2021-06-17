@@ -103,6 +103,6 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
     }
 
     private fun log(type: String, ctx: PipelineContext<Unit, ApplicationCall>) {
-        LOG.info("$type:$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
+        LOG.trace("$type:$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
     }
 }

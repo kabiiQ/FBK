@@ -64,8 +64,9 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
 
                     LOG.info("Twitter stream opened, listening for data")
 
-                    reader.lines().forEach { line ->
-                        if(line.isBlank()) return@forEach // keep alive signal
+                    reader.lines()
+                        .filter(String::isNotBlank) // keep alive signals \r\n
+                        .forEach { line ->
 
                         // process data
                         LOG.trace("TwitterStream: $line")
@@ -89,7 +90,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                                         feed.lastKnownUsername = user.username
 
                                         // if already handled, skip
-                                        val cache = TwitterFeedCache.cache.getOrPut(feed.userId) { TwitterFeedCache.FeedCacheState(feed.lastPulledTweet ?: 0L) }
+                                        val cache = TwitterFeedCache.getOrPut(feed)
                                         if(tweet.id < cache.initialBound || cache.seenTweets.contains(tweet.id)) return@propagateTransaction
 
                                         if(tweet.id > feed.lastPulledTweet ?: 0L) {

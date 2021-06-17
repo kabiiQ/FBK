@@ -60,7 +60,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
-                        TwitterFeedCache.cache.getOrPut(feed.userId) { TwitterFeedCache.FeedCacheState(feed.lastPulledTweet ?: 0) }
+                        val cache = TwitterFeedCache.getOrPut(feed)
 
                         // determine if any targets want RT or quote tweets
                         var pullRetweets = false
@@ -105,7 +105,10 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             val age = Duration.between(tweet.createdAt, Instant.now())
 
                             // if already handled or too old, skip, but do not pull tweet ID again
-                            if(feed.lastPulledTweet ?: 0 >= tweet.id || age > Duration.ofHours(2)) return@maxOf tweet.id
+                            if(feed.lastPulledTweet ?: 0 >= tweet.id
+                                || age > Duration.ofHours(2)
+                                || cache.seenTweets.contains(tweet.id)
+                            ) return@maxOf tweet.id
 
                             notifyTweet(user, tweet, targets)
                         }
@@ -234,7 +237,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                 }
             }
         }
-        TwitterFeedCache.cache[user.id]?.seenTweets?.add(tweet.id)
+        TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
