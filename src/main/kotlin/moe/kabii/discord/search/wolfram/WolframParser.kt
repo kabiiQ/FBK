@@ -3,6 +3,7 @@ package moe.kabii.discord.search.wolfram
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
@@ -17,9 +18,8 @@ object WolframParser {
     fun query(raw: String): WolframResponse {
         val query = raw.replace("+", "plus")
 
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
-            .header("User-Agent", "srkmfbk/1.0")
             .url("https://api.wolframalpha.com/v1/result?appid=$appId&i=$query")
             .build()
 

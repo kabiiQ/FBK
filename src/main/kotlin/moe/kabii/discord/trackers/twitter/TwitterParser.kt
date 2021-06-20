@@ -8,6 +8,7 @@ import moe.kabii.discord.trackers.twitter.json.*
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.Request
 import java.time.Duration
 import java.time.Instant
 
@@ -24,22 +25,13 @@ object TwitterParser {
     val sinceIdError = Regex("Please use a 'since_id' that is larger than (\\d{19,})")
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
 
-    private fun applyHeaders(builder: Request.Builder): Request.Builder = builder.header("User-Agent", "srkmfbk/1.0").header("Authorization", "Bearer $token")
+    @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
+    private inline fun <reified R: TwitterResponse> get(requestStr: String): R? = newRequestBuilder().get().url(requestStr).run(::doRequest)
 
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
-    private inline fun <reified R: TwitterResponse> request(requestStr: String): R? {
-
-        val request = newRequestBuilder()
-            .get()
-            .url(requestStr)
-            .run(::applyHeaders)
-            .build()
-        return doRequest(request)
-    }
-
-    @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
-    private inline fun <reified R: TwitterResponse> doRequest(request: Request): R? {
+    private inline fun <reified R: TwitterResponse> doRequest(builder: Request.Builder): R? {
         try {
+            val request = builder.header("Authorization", "Bearer $token").build()
             OkHTTP.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
                     if (response.code == 429) {
@@ -83,7 +75,7 @@ object TwitterParser {
     }
 
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
-    fun getUser(username: String): TwitterUser? = request<TwitterUserResponse>("https://api.twitter.com/2/users/by/username/$username")?.data
+    fun getUser(username: String): TwitterUser? = get<TwitterUserResponse>("https://api.twitter.com/2/users/by/username/$username")?.data
 
     data class TwitterRecentTweets(val user: TwitterUser, val tweets: List<TwitterTweet>)
 
@@ -104,7 +96,7 @@ object TwitterParser {
         if(limits.sinceId != null) query.append("&since_id=${limits.sinceId}")
         query.append("&max_results=${limits.tweetLimit}")
         applyTweetQueryParams(query)
-        val call = request<TwitterTweetResponse>(query.toString())
+        val call = get<TwitterTweetResponse>(query.toString())
         return if(call?.data != null && call.includes != null) {
             TwitterRecentTweets(user = call.includes.users.first(), tweets = call.data)
         } else null
@@ -120,11 +112,9 @@ object TwitterParser {
 
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     fun updateStreamRules(update: TwitterRuleRequest): TwitterRuleResponse? {
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("https://api.twitter.com/2/tweets/search/stream/rules")
             .post(update.toRequestBody())
-            .run(::applyHeaders)
-            .build()
         return doRequest(request)
     }
 
