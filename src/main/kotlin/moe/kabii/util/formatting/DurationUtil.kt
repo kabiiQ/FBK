@@ -2,9 +2,14 @@ package moe.kabii.util
 
 import moe.kabii.rusty.Try
 import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 object DurationParser {
+    private val patternYears = Regex("([0-9]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
+    private val patternMonths = Regex("([0-9]+)MONTHS?")
+
     private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS, ChronoUnit.MONTHS, ChronoUnit.YEARS)
 
     fun tryParse(input: String, startAt: ChronoUnit? = null, stopAt: ChronoUnit? = null): Duration? {
@@ -29,20 +34,25 @@ object DurationParser {
             .let { string -> // parse weeks and days
                 var str = string
 
+                var days = 0L
                 // get days and weeks component from input - weeks+ is not part of Duration, so we need to add to the days component
-                val patternYears = Regex("([0-9]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
-                val matchYears = patternYears.find(str)
-                val inputYears = matchYears?.run {
+                val inputYears = patternYears.find(str)?.run {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
                 } ?: 0
+                if(inputYears > 0) {
+                    val future = LocalDateTime.now().plusYears(inputYears)
+                    days += Duration.between(Instant.now(), future).toDays()
+                }
 
-                val patternMonths = Regex("([0-9]+)MONTHS?")
-                val matchMonths = patternMonths.find(str)
-                val inputMonths = matchMonths?.run {
+                val inputMonths = patternMonths.find(str)?.run {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
                 } ?: 0L
+                if(inputMonths > 0) {
+                    val future = LocalDateTime.now().plusMonths(inputMonths)
+                    days += Duration.between(Instant.now(), future).toDays()
+                }
 
                 val patternWeeks = Regex("([0-9]+)W(?:EEKS?)?") // match 2W, 2WEEK, 2WEEKS
                 val matchWeeks = patternWeeks.find(str)
@@ -50,6 +60,7 @@ object DurationParser {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
                 } ?: 0L
+                days += inputWeeks * 7
 
                 val patternDays = Regex("([0-9]+)D(?:AYS?)?")
                 val matchDays = patternDays.find(str)
@@ -57,8 +68,8 @@ object DurationParser {
                     str = str.replace(this.value, "")
                     groups[1]?.value?.toLong()
                 } ?: 0L
+                days += inputDays
 
-                val days = inputDays + (inputWeeks * 7) + (inputMonths * 30) + (inputYears * 365)
                 if(days > 0) {
                     "${days}D$str"
                 } else str
