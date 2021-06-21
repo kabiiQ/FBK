@@ -10,6 +10,7 @@ import moe.kabii.discord.translation.TranslationResult
 import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.deepl.json.DLTranslationResponse
 import moe.kabii.discord.translation.deepl.json.DeepLSupportedLanguage
+import moe.kabii.util.extensions.capitilized
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
 import okhttp3.Request
@@ -38,12 +39,12 @@ object DeepLTranslator : TranslationService(
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
-        val text = rawText.capitalize()
+        val text = rawText.capitilized()
 
         val requestBody = FormBody.Builder()
             .add("text", text)
-            .add("target_lang", to.tag)
-            .add("source_lang", from?.tag ?: "")
+            .add("target_lang", to.tag.run(::tagAlias))
+            .add("source_lang", from?.tag?.run(::tagAlias) ?: "")
             .build()
         val request = newRequestBuilder()
             .url("https://api-free.deepl.com/v2/translate?auth_key=$key")
