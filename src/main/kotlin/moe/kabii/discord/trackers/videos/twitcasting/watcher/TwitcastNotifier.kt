@@ -110,7 +110,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
 
         // get target channel in discord
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
+        val chan = getChannel(guildId, target.discordChannel.channelID, target)
 
         // get embed settings
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)

@@ -45,7 +45,7 @@ object WelcomeMessageFormatter {
                     embed.setColor(Color.of(6750056))
                     if(config.includeAvatar) embed.setImage(member.avatarUrl)
                     if(config.includeUsername) embed.setAuthor(member.userAddress(), null, member.avatarUrl)
-                    if(config.welcomeTagLine != null) embed.setTitle(config.welcomeTagLine)
+                    if(config.welcomeTagLine != null) embed.setTitle(config.welcomeTagLine!!)
                     subText?.run(embed::setDescription)
                 }
             }

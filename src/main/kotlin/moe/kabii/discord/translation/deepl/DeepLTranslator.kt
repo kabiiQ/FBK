@@ -35,7 +35,7 @@ object DeepLTranslator : TranslationService(
         "en" -> "EN-US"
         "jp" -> "JA"
         "pt" -> "PT-BR"
-        else -> input.toUpperCase()
+        else -> input.uppercase()
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {

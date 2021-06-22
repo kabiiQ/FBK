@@ -7,6 +7,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.NewsChannel
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.LOG
@@ -31,7 +32,7 @@ object TrackerUtil {
             if (settings?.publishTrackerMessages ?: return) {
                 message.channel
                     .ofType(NewsChannel::class.java)
-                    .awaitSingleOrNull() ?: return
+                    .awaitFirstOrNull() ?: return
                 message.publish()
                     .thenReturn(Unit)
                     .awaitSingle()

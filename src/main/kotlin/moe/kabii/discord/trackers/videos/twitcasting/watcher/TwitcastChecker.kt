@@ -90,7 +90,7 @@ class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceReque
     }
 
     suspend fun checkMovie(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedStreams.Target>) {
-        val (movie, user) = info
+        val (movie, _) = info
 
         // actions depend on : movie live state and whether we already knew about this movie
         val existing = Twitcasts.Movie.find {

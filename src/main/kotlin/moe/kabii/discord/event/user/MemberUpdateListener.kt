@@ -60,7 +60,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         if(added.isNotEmpty()) {
                             val addedStr = added.joinToString(", ")
 
-                            val logMessage = logChan.createEmbed { spec ->
+                            logChan.createEmbed { spec ->
                                 fbkColor(spec)
                                 spec.setAuthor(member.userAddress(), null, member.avatarUrl)
                                 spec.setDescription("Added to role **$addedStr**")

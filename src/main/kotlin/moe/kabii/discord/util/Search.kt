@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.command.Command
@@ -136,7 +137,7 @@ object Search {
             return target.members
                 .filter { member ->
                     member.username == username && member.discriminator == discrim
-                }.take(1).awaitSingleOrNull()
+                }.take(1).awaitFirstOrNull()
         }
 
         suspend fun prompt(options: List<Member>): Member? {

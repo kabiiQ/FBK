@@ -172,13 +172,13 @@ object RoleReactions : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
                 val configs = config.selfRoles.reactionRoles.toList().map { cfg ->
                     // generate string for each config that is still valid
-                    val (messageInfo, emoji, roleId) = cfg
-                    val channelId = cfg.message.channelID.snowflake
+                    val (message, _, roleId) = cfg
+                    val channelId = message.channelID.snowflake
                     try {
                         val role = target.getRoleById(roleId.snowflake).awaitSingle()
                         val channel = target.getChannelById(channelId).ofType(GuildMessageChannel::class.java).awaitSingle()
-                        val link = "https://discord.com/channels/${target.id.asString()}/${cfg.message.channelID}/${cfg.message.messageID}"
-                        "Message #[${cfg.message.messageID}]($link) in ${channel.name} for role **${role.name}**"
+                        val link = "https://discord.com/channels/${target.id.asString()}/${message.channelID}/${message.messageID}"
+                        "Message #[${message.messageID}]($link) in ${channel.name} for role **${role.name}**"
                     } catch(e: Exception) {
                         if(e is ClientException && e.status.code() == 404) {
                             config.selfRoles.reactionRoles.remove(cfg)

@@ -51,6 +51,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
             listOf("nsfw", "includensfw", "nsfwinclude"),
             StarboardSetup::includeNsfw
         ),
+        @Suppress("UNCHECKED_CAST")
         CustomElement("Emoji used to add messages to the starboard",
             listOf("emoji", "emote"),
             StarboardSetup::emoji as KMutableProperty1<StarboardSetup, Any?>,
@@ -146,6 +147,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
     }
 
     private val resetEmoji = Regex("(reset|star)", RegexOption.IGNORE_CASE)
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
     private suspend fun setStarboardEmoji(origin: DiscordParameters, message: Message, value: String): Result<DiscordEmoji?, Unit> {
         if(resetEmoji.matches(value)) return Ok(null)
         val emoji = EmojiUtil.parseEmoji(value)

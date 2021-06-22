@@ -101,9 +101,9 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                     val prompt = p2Channel.createMessage("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.userAddress()}**. Do you accept?")
                         .awaitSingle()
 
-                    val notice = if (guild == null) {
+                    if (guild == null) {
                         embed("Your challenge has been sent.").awaitSingle()
-                    } else null
+                    }
 
                     val response = getBool(prompt, timeout = 600000L /* 10 minutes */, limitDifferentUser = p2Target.id.asLong())
                     when (response) { // (Boolean?) type

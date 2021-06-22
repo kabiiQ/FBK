@@ -7,12 +7,12 @@ data class EditableChannelWrapper(
     var name: String? = null
 ) {
     fun applyTo(spec: TextChannelEditSpec): TextChannelEditSpec {
-        if(name != null) spec.setName(name)
+        if(name != null) spec.setName(name!!)
         return spec
     }
 
     fun applyTo(spec: NewsChannelEditSpec): NewsChannelEditSpec {
-        if(name != null) spec.setName(name)
+        if(name != null) spec.setName(name!!)
         return spec
     }
 }

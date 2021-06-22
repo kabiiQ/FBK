@@ -9,7 +9,6 @@ import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.azure.json.AzureLanguagesResponse
 import moe.kabii.discord.translation.azure.json.AzureTranslationRequest
 import moe.kabii.discord.translation.azure.json.AzureTranslationResponse
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
@@ -33,12 +32,12 @@ object AzureTranslator : TranslationService(
         val paramFrom = if(from != null) "&from=${from.tag}" else ""
 
         val textPart = AzureTranslationRequest(text).toJson()
-        val body = "[$textPart]".toRequestBody(JSON)
+        val requestBody = "[$textPart]".toRequestBody(JSON)
 
         val request = newRequestBuilder()
             .header("Ocp-Apim-Subscription-Key", azureKey)
             .url("https://api.cognitive.microsofttranslator.com/translate?api-version=3.0$paramTo$paramFrom")
-            .post(body)
+            .post(requestBody)
             .build()
 
         val response = OkHTTP.newCall(request).execute()

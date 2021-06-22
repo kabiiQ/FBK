@@ -10,6 +10,7 @@ import kotlin.reflect.KMutableProperty1
 object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "youtubeconfig") {
     override val wikiPath = "Livestream-Tracker#-youtube-tracker-configuration-with-youtube"
 
+    @Suppress("UNCHECKED_CAST")
     object YoutubeConfigModule : ConfigurationModule<YoutubeSettings>(
         "youtube tracker",
         BooleanElement("Post when tracked channels are live (yt)",

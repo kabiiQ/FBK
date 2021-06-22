@@ -7,7 +7,6 @@ import moe.kabii.discord.trackers.anime.anilist.AniListParser
 import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
 import moe.kabii.discord.trackers.anime.mal.MALParser
 import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
-import moe.kabii.discord.trackers.ps2.wss.PS2EventStream
 import moe.kabii.discord.trackers.twitter.watcher.TweetStream
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
@@ -104,8 +103,6 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         val twitter = TwitterChecker(discord, twitterDelay)
         val twitterStream = TweetStream(twitter)
 
-        val ps2Websocket = PS2EventStream(discord)
-
         serviceThreads = listOf(
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
@@ -118,7 +115,6 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             aniListThread,
             Thread(twitter, "TwitterChecker"),
             Thread(twitterStream, "TwitterStream"),
-            Thread(ps2Websocket, "PS2EventStream"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager")
         )

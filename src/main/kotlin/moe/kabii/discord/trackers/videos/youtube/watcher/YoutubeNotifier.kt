@@ -71,7 +71,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         //  targets that specifically asked for this video and may not have the channel tracked at all are a little different
         YoutubeVideoTrack.getForVideo(dbVideo).forEach { track ->
             try {
-                sendLiveReminder(dbVideo, video, track)
+                sendLiveReminder(video, track)
             } catch(e: Exception) {
                 LOG.warn("Error while sending live reminder for channel, dropping notification without sending: ${dbVideo.ytChannel} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -266,7 +266,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         // get target channel in discord
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -310,7 +310,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
+        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
@@ -348,9 +348,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     }
 
     @WithinExposedContext
-    suspend fun sendLiveReminder(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
+    suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         // get target channel in Discord
-        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, FeatureChannel::streamTargetChannel, null)
+        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
 
         val mention = if(videoTrack.mentionRole != null) "<@&${videoTrack.mentionRole}> " else "<@${videoTrack.tracker.userID}> Livestream reminder: "
         val new = chan
@@ -365,7 +365,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // get target channel in discord, make sure it still exists
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
+        val chan = getChannel(guildId, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)

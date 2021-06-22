@@ -131,15 +131,13 @@ class Connect4Game(
             }
 
             // change display names in embed
-            when(currentTurn) {
-                CircleState.RED -> {
-                    redDisplayName = "**$redDisplayName\n\nWinner!**"
-                    blueDisplayName = "~~$blueDisplayName~~"
-                }
-                CircleState.BLUE -> {
-                    redDisplayName = "~~$redDisplayName~~"
-                    blueDisplayName = "**$blueDisplayName\n\nWinner!**"
-                }
+            if(currentTurn == CircleState.RED) {
+                redDisplayName = "**$redDisplayName\n\nWinner!**"
+                blueDisplayName = "~~$blueDisplayName~~"
+            }
+            else if(currentTurn == CircleState.BLUE) {
+                redDisplayName = "~~$redDisplayName~~"
+                blueDisplayName = "**$blueDisplayName\n\nWinner!**"
             }
 
             // declare victor, changes embed color

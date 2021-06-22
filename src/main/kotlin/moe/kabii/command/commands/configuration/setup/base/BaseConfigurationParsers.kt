@@ -12,6 +12,7 @@ import moe.kabii.rusty.Result
 object BaseConfigurationParsers {
 
     private val reset = Regex("(reset|remove|unset|delete)", RegexOption.IGNORE_CASE)
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
     suspend fun textChannelParser(origin: DiscordParameters, message: Message, value: String): Result<Long?, Unit> {
 
         val input = value.trim().ifBlank { null } ?: return Err(Unit)

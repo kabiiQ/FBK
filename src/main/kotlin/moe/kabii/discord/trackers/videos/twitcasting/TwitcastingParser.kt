@@ -91,28 +91,20 @@ object TwitcastingParser {
     suspend fun registerWebhook(userId: String): Boolean {
         delay()
         // POST request with info in body
-        val body = TwitcastingWebhookRequest(userId).toJson().toRequestBody(JSON)
+        val requestBody = TwitcastingWebhookRequest(userId).toJson().toRequestBody(JSON)
         val request = newRequestBuilder()
             .url("$baseUrl/webhooks")
-            .post(body)
+            .post(requestBody)
             .run(::applyHeaders)
             .build()
 
         val response = OkHTTP.newCall(request).execute()
-        try {
-            val body = response.body!!.string()
-
-            if(response.isSuccessful) {
-                if(response.code == 200) {
-                    LOG.info("New Twitcasting webhook registered :: $body")
-                }
-                return true
-            } else {
-                LOG.warn("Unable to register Twitcasting Webhook :: $body")
-                return false
+        return response.use { rs ->
+            val body = rs.body!!.string()
+            rs.isSuccessful.also {
+                if(rs.code == 200) LOG.info("New Twitcasting webhook registered :: $body")
+                else LOG.warn("Unable to register Twitcasting Webhook :: $body")
             }
-        } finally {
-            response.close()
         }
     }
 

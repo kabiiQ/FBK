@@ -66,7 +66,7 @@ object KitsuParser : MediaListParser() {
                 }
             }
 
-            val mediaResponse = kitsuResponseAdapter.fromJson(responseBody)!!
+            val mediaResponse = kitsuResponseAdapter.fromJson(responseBody!!)!!
 
             if(mediaResponse.data.isEmpty()) {
                 if(offset == 0) throw MediaListDeletedException("Kitsu: media list contained no items (invalid ID or actual empty list)") // kitsu just returns empty list if invalid id

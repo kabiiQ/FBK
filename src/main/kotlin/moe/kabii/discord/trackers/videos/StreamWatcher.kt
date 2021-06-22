@@ -112,7 +112,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     }
 
     @WithinExposedContext
-    suspend fun getChannel(guild: Long?, channel: Long, feature: KMutableProperty1<FeatureChannel, Boolean>, deleteTarget: TrackedStreams.Target?): MessageChannel {
+    suspend fun getChannel(guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
         return try {
             discord.getChannelById(channel.snowflake)
                 .ofType(MessageChannel::class.java)

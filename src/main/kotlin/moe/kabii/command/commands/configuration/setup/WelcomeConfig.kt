@@ -28,6 +28,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     override val wikiPath = "Welcoming-Users"
     private const val variableWiki = "https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables"
 
+    @Suppress("UNCHECKED_CAST")
     object WelcomeConfigModule : ConfigurationModule<WelcomeSettings>(
         "welcome",
         CustomElement("Channel to send welcome messages to",
@@ -141,6 +142,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
         }
     }
 
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
     private fun setTagline(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
         return when(value.trim().lowercase()) {
             "reset" -> Ok("WELCOME")
@@ -149,6 +151,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
         }
     }
 
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
     private fun setImageText(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
         return when(value.trim().lowercase()) {
             "reset" -> Ok(WelcomeSettings.defaultImageText)
@@ -227,6 +230,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     }
 
     private val resetColor = Regex("(reset|white)", RegexOption.IGNORE_CASE)
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
     private suspend fun verifyColor(origin: DiscordParameters, message: Message, value: String): Result<Int?, Unit> {
         val colorArg = value.split(" ").lastOrNull()?.ifBlank { null } ?: return Err(Unit)
         if(colorArg.matches(resetColor)) return Ok(Color.WHITE.rgb)
