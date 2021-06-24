@@ -8,7 +8,6 @@ import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulationResponse
 import moe.kabii.discord.trackers.ps2.polling.json.PS2Server
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 import java.util.*
 

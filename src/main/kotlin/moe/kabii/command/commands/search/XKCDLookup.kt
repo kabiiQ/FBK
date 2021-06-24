@@ -8,12 +8,10 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 import java.time.LocalDate
 import java.time.ZoneOffset

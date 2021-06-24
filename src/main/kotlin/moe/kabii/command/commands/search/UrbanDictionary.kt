@@ -14,7 +14,6 @@ import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 
 object Urban : Command("urbandictionary", "urban", "ud") {

@@ -7,6 +7,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -91,11 +92,16 @@ data class DiscordParameters (
         } // else this is pm, allow
     }
 
-    fun error(block: EmbedSuspension) = chan.createEmbed { embed ->
-        errorColor(embed)
-        runBlocking {
-            block(embed)
+    private fun reference(spec: MessageCreateSpec) = spec.setMessageReference(event.message.id)
+
+    fun error(block: EmbedSuspension) = chan.createMessage { spec ->
+        spec.setEmbed { embed ->
+            errorColor(embed)
+            runBlocking {
+                block(embed)
+            }
         }
+        reference(spec)
     }
 
     fun error(author: User, block: EmbedSuspension) = this.error {
@@ -103,11 +109,14 @@ data class DiscordParameters (
         setAuthor(author.userAddress(), null, author.avatarUrl)
     }
 
-    fun embed(block: EmbedSuspension) = chan.createEmbed { embed ->
-        fbkColor(embed)
-        runBlocking {
-            block(embed)
+    fun embed(block: EmbedSuspension) = chan.createMessage { spec ->
+        spec.setEmbed { embed ->
+            fbkColor(embed)
+            runBlocking {
+                block(embed)
+            }
         }
+        reference(spec)
     }
 
     fun embed(author: User, block: EmbedSuspension) = this.embed {
@@ -115,9 +124,12 @@ data class DiscordParameters (
         setAuthor(author.userAddress(), null, author.avatarUrl)
     }
 
-    fun embedBlock(block: EmbedBlock) = chan.createEmbed { embed ->
-        fbkColor(embed)
-        block(embed)
+    fun embedBlock(block: EmbedBlock) = chan.createMessage { spec ->
+        spec.setEmbed { embed ->
+            fbkColor(embed)
+            block(embed)
+        }
+        reference(spec)
     }
 
     fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->

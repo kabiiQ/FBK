@@ -9,7 +9,6 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.NewsChannel
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel

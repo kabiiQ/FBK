@@ -8,7 +8,6 @@ import moe.kabii.discord.trackers.ps2.polling.json.*
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 import java.time.Duration

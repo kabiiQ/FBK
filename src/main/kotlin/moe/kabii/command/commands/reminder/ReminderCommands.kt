@@ -51,8 +51,7 @@ object ReminderCommands : CommandContainer {
                 val length = DurationFormatter(time).fullTime
                 if(time.seconds < 60 || time.toDays() > 732) {
                     // currently this is technically a limitation because we only pull from the database once per minute and shorter reminders will be lost as a result.
-                    // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways, if someone tries to write "20"
-                    // and this would be taken as 20 seconds rather than if they expected minutes or hours
+                    // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways
                     // also 2 years limit just for some arbitrary practicality
                     error("**${args[0]}** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.").awaitSingle()
                     return@discord

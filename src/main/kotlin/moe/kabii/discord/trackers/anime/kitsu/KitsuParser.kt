@@ -10,7 +10,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.fromJsonSafe
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 object KitsuParser : MediaListParser() {

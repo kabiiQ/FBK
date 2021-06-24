@@ -10,7 +10,6 @@ import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "evaluate") {

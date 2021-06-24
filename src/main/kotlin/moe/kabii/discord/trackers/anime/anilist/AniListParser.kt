@@ -9,7 +9,6 @@ import moe.kabii.discord.trackers.anime.anilist.json.*
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.fromJsonSafe
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 object AniListParser : MediaListParser() {

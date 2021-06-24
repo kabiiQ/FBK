@@ -61,15 +61,18 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         val translator = Translator.getService(contents, defaultLang.tag)
         val translation = translator.translate(from = null, to = defaultLang, text = contents)
         val jumpLink = message.createJumpLink()
-        channel.createEmbed { embed ->
-            fbkColor(embed)
-            embed.setAuthor("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl)
+        channel.createMessage { spec ->
+            spec.setEmbed { embed ->
+                fbkColor(embed)
+                embed.setAuthor("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl)
 
-            val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC)
-            else "<No translation performed>"
-            embed.setDescription(text)
+                val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC)
+                else "<No translation performed>"
+                embed.setDescription(text)
 
-            embed.setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+                embed.setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
+            }
+            spec.setMessageReference(message.id)
         }.awaitSingle()
 
         /*ReactionListener(
