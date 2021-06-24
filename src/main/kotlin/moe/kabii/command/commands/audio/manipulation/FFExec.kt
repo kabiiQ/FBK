@@ -1,6 +1,8 @@
 package moe.kabii.command.commands.audio.manipulation
 
-import com.github.kokorin.jaffree.ffmpeg.*
+import com.github.kokorin.jaffree.ffmpeg.ChannelOutput
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg
+import com.github.kokorin.jaffree.ffmpeg.UrlInput
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin

@@ -3,12 +3,14 @@ package moe.kabii.discord.trackers.twitter.watcher
 import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.MOSHI
+import moe.kabii.USERAGENT
 import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.json.TwitterSingleTweetData
+import moe.kabii.discord.util.Metadata
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -25,6 +27,8 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
     private val tweetAdapter = MOSHI.adapter(TwitterSingleTweetData::class.java)
 
     override fun run() {
+        if(!Metadata.host) return
+
         var networkError = 250L
         var httpError = 5_000L
         var rateLimitError = 60_000L
@@ -39,7 +43,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
             try {
                 val conn = URL(streamUrl).openConnection() as HttpsURLConnection
                 conn.readTimeout = 40_500 // two missed heart beats = disconnect
-                conn.setRequestProperty("User-Agent", "srkmfbk/1.0")
+                conn.setRequestProperty("User-Agent", USERAGENT)
                 conn.setRequestProperty("Authorization", "Bearer ${TwitterParser.token}")
 
                 if(conn.responseCode != 200) {

@@ -5,7 +5,6 @@ import moe.kabii.OkHTTP
 import moe.kabii.data.Keys
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
-import okhttp3.Request
 
 class YoutubeFeedSubscriber {
 

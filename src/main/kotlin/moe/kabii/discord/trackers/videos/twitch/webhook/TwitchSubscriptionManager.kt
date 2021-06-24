@@ -8,6 +8,7 @@ import moe.kabii.data.relational.streams.youtube.WebSubSubscription
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
+import moe.kabii.discord.util.Metadata
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -29,6 +30,7 @@ class TwitchSubscriptionManager(discord: GatewayDiscordClient, checker: TwitchCh
 
     override fun run() {
         // start callback server
+        if(!Metadata.host) return
         listener.server.start()
 
         currentSubscriptions = transaction {

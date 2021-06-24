@@ -3,7 +3,6 @@ package moe.kabii.discord.trackers.videos.twitcasting.watcher
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
-import moe.kabii.data.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
@@ -11,6 +10,7 @@ import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingUser
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookServer
+import moe.kabii.discord.util.Metadata
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -22,7 +22,7 @@ import kotlin.math.max
 class TwitcastChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, TwitcastNotifier(discord) {
 
     override fun run() {
-        if(Keys.config[Keys.Twitcasting.listen]) {
+        if(Metadata.host) {
             val webhookServer = TwitcastWebhookServer(this)
             webhookServer.server.start()
         }

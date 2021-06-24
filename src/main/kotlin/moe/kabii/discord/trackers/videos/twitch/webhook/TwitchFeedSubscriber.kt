@@ -6,7 +6,6 @@ import moe.kabii.data.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
-import okhttp3.Request
 
 class TwitchFeedSubscriber {
 

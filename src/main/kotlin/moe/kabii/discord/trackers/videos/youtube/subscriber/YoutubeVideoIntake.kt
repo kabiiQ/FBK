@@ -12,7 +12,6 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import org.dom4j.io.SAXReader
 import org.xml.sax.InputSource
 import java.io.StringReader

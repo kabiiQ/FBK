@@ -14,7 +14,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 class YoutubeAPIException(message: String, cause: Throwable? = null) : IOException(message, cause)

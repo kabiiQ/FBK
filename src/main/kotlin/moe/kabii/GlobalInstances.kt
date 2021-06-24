@@ -11,8 +11,9 @@ import org.slf4j.LoggerFactory
 val LOG: Logger = LoggerFactory.getLogger("moe.kabii")
 
 // global okhttp instance
+const val USERAGENT = "srkmfbk/1.1"
 val OkHTTP = OkHttpClient()
-fun newRequestBuilder() = Request.Builder().header("User-Agent", "srkmfbk/1.1")
+fun newRequestBuilder() = Request.Builder().header("User-Agent", USERAGENT)
 
 // json parser instance
 val MOSHI: Moshi = Moshi.Builder()

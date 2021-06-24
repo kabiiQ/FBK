@@ -12,7 +12,6 @@ import moe.kabii.discord.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.discord.translation.google.json.GoogleTranslationRequest
 import moe.kabii.discord.translation.google.json.GoogleTranslationResponse
 import moe.kabii.newRequestBuilder
-import okhttp3.Request
 import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 

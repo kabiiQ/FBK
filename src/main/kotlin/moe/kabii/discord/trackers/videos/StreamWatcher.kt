@@ -33,7 +33,6 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
-import kotlin.reflect.KMutableProperty1
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 

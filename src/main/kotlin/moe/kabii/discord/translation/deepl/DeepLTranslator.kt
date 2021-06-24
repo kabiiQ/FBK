@@ -10,10 +10,9 @@ import moe.kabii.discord.translation.TranslationResult
 import moe.kabii.discord.translation.TranslationService
 import moe.kabii.discord.translation.deepl.json.DLTranslationResponse
 import moe.kabii.discord.translation.deepl.json.DeepLSupportedLanguage
-import moe.kabii.util.extensions.capitilized
 import moe.kabii.newRequestBuilder
+import moe.kabii.util.extensions.capitilized
 import okhttp3.FormBody
-import okhttp3.Request
 import java.io.IOException
 
 object DeepLTranslator : TranslationService(

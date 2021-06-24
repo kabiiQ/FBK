@@ -70,7 +70,7 @@ fun main() {
     TerminalListener(manager, gateway).launch()
 
     // start file server
-    if(keys[Keys.Netty.host]) {
+    if(Metadata.host) {
         NettyFileServer.server.start()
     }
 
