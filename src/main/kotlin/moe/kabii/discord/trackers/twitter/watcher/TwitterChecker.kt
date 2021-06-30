@@ -139,6 +139,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
     @WithinExposedContext
     suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
         // send discord notifs - check if any channels request
+        TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
         targets.forEach target@{ target ->
             try {
                 // post a notif to this target
@@ -237,7 +238,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                 }
             }
         }
-        TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
