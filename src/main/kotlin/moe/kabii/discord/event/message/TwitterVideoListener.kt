@@ -4,8 +4,12 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.MessageInfo
+import moe.kabii.discord.conversation.ReactionInfo
+import moe.kabii.discord.conversation.ReactionListener
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.trackers.twitter.TwitterParser
+import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.stackTraceString
 
@@ -36,13 +40,23 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
 
         val variants = tweet.extended?.media?.mapNotNull { media -> media.video }?.firstOrNull()?.variants ?: return
         val videoUrl = variants
-            .filter { it.contentType == "video/mp4" }
+            .filter { it.contentType == "video/mp4" && it.bitrate != null }
             .maxByOrNull { it.bitrate!! }
             ?.url ?: return
+
         val channel = event.message.channel.awaitSingle()
-        channel.createMessage { spec ->
+        val video = channel.createMessage { spec ->
             spec.setMessageReference(event.message.id)
             spec.setContent(videoUrl)
         }.awaitSingle()
+
+        ReactionListener(
+            MessageInfo.of(video),
+            listOf(ReactionInfo(EmojiCharacters.cancel, "cancel")),
+            author.id.asLong(),
+            event.client) { _, _, _ ->
+                video.delete().subscribe()
+                true
+            }.create(video, add = true)
     }
 }
