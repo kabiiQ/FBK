@@ -124,7 +124,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
         val (movie, user) = info
         try {
             val title = StringUtils.abbreviate(movie.title, MagicNumbers.Embed.TITLE)
-            val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.DESC) ?: ""
+            val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.NORM_DESC) ?: ""
 
             val newNotification = chan.createMessage { spec ->
                 if(mention != null) {

@@ -40,7 +40,7 @@ object SearchTracks : AudioCommandContainer {
                     val track = search[index]
                     val author = if(track.info.author != null) " Uploaded by ${track.info.author}" else ""
                     val entry = "$id. ${trackString(track, includeAuthor = false)}$author\n"
-                    if(menu.length + entry.length > MagicNumbers.Embed.DESC) break
+                    if(menu.length + entry.length > MagicNumbers.Embed.NORM_DESC) break
                     menu.append(entry)
                 }
                 // technically should keep track of which ones aren't printed but it's not a big deal if the user queues something that isn't displayed. we just can't send the name.

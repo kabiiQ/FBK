@@ -41,7 +41,7 @@ object QueueInfo : AudioCommandContainer {
                         val index = queueIndex + starting + 1
                         "$index. ${trackString(queueTrack)}"
                     }.joinToString("\n")
-                    val list = StringUtils.abbreviate(listLong, MagicNumbers.Embed.DESC)
+                    val list = StringUtils.abbreviate(listLong, MagicNumbers.Embed.NORM_DESC)
                     "In queue:\n$list"
                 }
 

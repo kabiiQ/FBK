@@ -29,7 +29,7 @@ object PaginationUtil {
     }.toList()
 
     suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: ((EmbedCreateSpec) -> Unit)? = null) {
-        val pages = partition(MagicNumbers.Embed.DESC, elements)
+        val pages = partition(MagicNumbers.Embed.NORM_DESC, elements)
         var page: Page? = Page(pages.size, 0)
         var first = true
 

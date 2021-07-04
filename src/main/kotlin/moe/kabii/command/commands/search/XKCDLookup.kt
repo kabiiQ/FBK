@@ -60,7 +60,7 @@ object XKCDLookup : Command("xkcd") {
                     setColor(Color.of(9873608))
                     val title = "xkcd #${comic.num}: ${comic.title}"
                     setAuthor(StringUtils.abbreviate(title, MagicNumbers.Embed.TITLE), "https://xkcd.com/${comic.num}", null)
-                    setDescription(StringUtils.abbreviate(comic.alt, MagicNumbers.Embed.DESC))
+                    setDescription(StringUtils.abbreviate(comic.alt, MagicNumbers.Embed.NORM_DESC))
                     setImage(comic.img)
                     setTimestamp(date)
                 }

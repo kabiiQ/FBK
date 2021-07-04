@@ -45,7 +45,7 @@ object Preferences : CommandContainer {
                                 val index = guildIndex + 1
                                 "$index: ${guild.name}"
                             }.joinToString("\n")
-                            val servers = StringUtils.abbreviate(serversLong, MagicNumbers.Embed.DESC)
+                            val servers = StringUtils.abbreviate(serversLong, MagicNumbers.Embed.MAX_DESC)
                             val botAvatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                             val prompt = embed {
                                 setAuthor("Mutual Servers with ${author.userAddress()}:", null, botAvatar)

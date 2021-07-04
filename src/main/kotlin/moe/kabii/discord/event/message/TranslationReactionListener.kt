@@ -66,7 +66,7 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
                 fbkColor(embed)
                 embed.setAuthor("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl)
 
-                val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.DESC)
+                val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
                 else "<No translation performed>"
                 embed.setDescription(text)
 
