@@ -149,4 +149,6 @@ object TwitterParser {
         }
         return twitterRule
     }
+
+    fun getV1Tweet(tweetId: String): TwitterV1Status? = request("https://api.twitter.com/1.1/statuses/show/$tweetId.json")
 }

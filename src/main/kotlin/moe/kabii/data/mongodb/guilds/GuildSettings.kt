@@ -10,6 +10,7 @@ data class GuildSettings(
     var utilizeAuditLogs: Boolean = true,
     var publishTrackerMessages: Boolean = false,
     var reactionTranslations: Boolean = true,
+    var twitterVideoLinks: Boolean = false,
     var ps2Commands: Boolean = false
 )
 
