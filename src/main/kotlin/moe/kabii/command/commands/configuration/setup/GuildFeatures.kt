@@ -17,6 +17,7 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
         BooleanElement("Give users their roles back when they rejoin the server", listOf("reassign", "rejoin", "roles"), GuildSettings::reassignRoles),
         BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", listOf("publish"), GuildSettings::publishTrackerMessages),
         BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl", "reactiontranslations"), GuildSettings::reactionTranslations),
+        BooleanElement("Provide a playable video when users post a Twitter link containing a video.", listOf("twittervids", "twittervid", "twitterlinks", "twitterurls"), GuildSettings::twitterVideoLinks),
         BooleanElement("Enable PS2 commands", listOf("ps2", "planetside2", "ps2commands"), GuildSettings::ps2Commands),
     )
 
