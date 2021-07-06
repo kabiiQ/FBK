@@ -26,7 +26,7 @@ object StreamTrackerCommand : TrackerCommand {
         val site = streamTarget.dbSite
 
         // make sure feature is enabled or this channel is private
-        origin.channelFeatureVerify(streamTarget.channelFeature, streamTarget.featureName)
+        origin.channelFeatureVerify(streamTarget.channelFeature, streamTarget.featureName, allowOverride = false)
 
         // validate stream is real and get service ID
         val streamInfo = when(val lookup = streamTarget.getChannel(target.identifier)) {

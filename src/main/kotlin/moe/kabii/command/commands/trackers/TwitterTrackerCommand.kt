@@ -19,7 +19,7 @@ object TwitterTrackerCommand : TrackerCommand {
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the twitter feature is enabled here
-        origin.channelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter")
+        origin.channelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", allowOverride = false)
 
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
             origin.error("Invalid Twitter username **${target.identifier}**.").awaitSingle()

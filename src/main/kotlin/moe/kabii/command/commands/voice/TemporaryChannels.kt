@@ -20,7 +20,7 @@ object TemporaryChannels : CommandContainer {
             botReqs(Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS)
             discord {
                 // feature must be manually enabled at this time. not likely to be something server owners want without knowing
-                channelFeatureVerify(FeatureChannel::tempChannelCreation, "temp")
+                channelFeatureVerify(FeatureChannel::tempChannelCreation, "temp", allowOverride = false)
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()
                 if(voice == null) {
