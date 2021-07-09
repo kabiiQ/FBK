@@ -32,7 +32,7 @@ object Purge : CommandContainer {
                 messageCount++
             }
             .map(Message::getId)
-            .transform(origin.chan::bulkDelete) // returns messages which could not be bulk deleted
+            .transform { origin.chan.bulkDelete(it) } // returns messages which could not be bulk deleted
             .collectList()
             .awaitSingle()
         val warnSkip = if(skipped.isNotEmpty()) " ${skipped.size} messages were skipped as they were [too old](https://github.com/discord/discord-api-docs/issues/208) to be purged." else ""

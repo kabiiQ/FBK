@@ -28,7 +28,7 @@ object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
                 addField("Account created", formatter.format(accountCreation), false)
 
                 if(guildMember != null) {
-                    val guildJoin = guildMember.joinTime.atZone(ZoneOffset.UTC).toLocalDateTime()
+                    val guildJoin = guildMember.joinTime.get().atZone(ZoneOffset.UTC).toLocalDateTime()
                     addField("Joined ${guild!!.name}", formatter.format(guildJoin), false)
                 }
             }.awaitSingle()

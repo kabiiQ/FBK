@@ -45,7 +45,7 @@ object SkebLookup : Command("skeb") {
                 desc.append("Private requests: ${flag(skebber.private)}\n")
                 desc.append("Genre: ${skebber.genre}\n")
                 desc.append("Received requests: ${skebber.receivedRequests}\n")
-                desc.append("Recommended price: JPY${skebber.defaultAmount ?: "Unknown"}\n")
+                desc.append("Recommended price: JPY**${skebber.defaultAmount ?: "Unknown"}**\n")
                 desc.append("Currently accepting requests: ${flag(skebber.accepting)}")
             } else desc.append("@${skebber.username} is not a skeb creator.")
             embed {
