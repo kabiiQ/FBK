@@ -63,7 +63,7 @@ data class TweetAttachmentsObject(
 )
 
 enum class TwitterMediaType(val matchName: String) {
-    GIF("GIF"),
+    GIF("animated_gif"),
     VID("video"),
     PIC("photo");
 

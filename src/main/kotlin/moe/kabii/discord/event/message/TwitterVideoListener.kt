@@ -34,19 +34,13 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
         val tweetId = twitterUrl.find(content)?.groups?.get(1) ?: return
 
         // request tweet info
-        val tweet = try {
-            TwitterParser.getV1Tweet(tweetId.value) ?: return
+        val videoUrl = try {
+            TwitterParser.getV1Tweet(tweetId.value)?.findAttachedVideo() ?: return
         } catch(e: Exception) {
             LOG.warn("Error getting linked Tweet: ${e.message}")
             LOG.debug(e.stackTraceString)
             return
         }
-
-        val variants = tweet.extended?.media?.mapNotNull { media -> media.video }?.firstOrNull()?.variants ?: return
-        val videoUrl = variants
-            .filter { it.contentType == "video/mp4" && it.bitrate != null }
-            .maxByOrNull { it.bitrate!! }
-            ?.url ?: return
 
         val channel = event.message.channel.awaitSingle()
         val video = channel.createMessage { spec ->

@@ -19,7 +19,7 @@ object TwitterThumbnailGenerator {
     private val fontDir = File("files/font/")
     private val infoFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "Prompt-Bold.ttf"))
 
-    fun attachInfoTag(thumbnailUrl: String, target: MessageCreateSpec, imageCount: Int, video: Boolean): String? {
+    fun attachInfoTag(thumbnailUrl: String, target: MessageCreateSpec, imageCount: Int = 1, video: Boolean = false): String? {
         var attachUrl: String? = null
         var graphics: Graphics2D? = null
 
