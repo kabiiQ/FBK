@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.stackTraceString
 object PS2TrackerCommand : TrackerCommand {
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
-        origin.channelFeatureVerify(FeatureChannel::ps2Channel, "ps2")
+        origin.channelFeatureVerify(FeatureChannel::ps2Channel, "ps2", allowOverride = false)
 
         val ps2Target = requireNotNull(target.site as? PS2Target) { "Invalid target arguments provided to PS2TrackerCommand" }
 

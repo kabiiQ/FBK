@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.SimpleDateFormat
@@ -103,9 +104,10 @@ class UserEventFormatter(val user: User) {
 
         val matchDuration = paramMatcher(format, "joinDuration")
         if (matchDuration != null) {
-            format = if (member != null) {
+            val joinTime = member?.joinTime?.orNull()
+            format = if (joinTime != null) {
                 val durationFormatParam = matchDuration.groups[1]
-                val duration = Duration.between(member.joinTime, Instant.now())
+                val duration = Duration.between(joinTime, Instant.now())
                 val durationFormat = durationFormatParam?.value ?: "dddd'd'HH'h'"
                 val durationValue = DurationFormatUtils.formatDuration(duration.toMillis(), durationFormat, false)
                 format.replace(matchDuration.value, durationValue)

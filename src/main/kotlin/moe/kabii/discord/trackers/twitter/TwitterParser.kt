@@ -62,8 +62,7 @@ object TwitterParser {
                 }
                 val body = response.body!!.string()
                 return try {
-                    val json = MOSHI.adapter(R::class.java).fromJson(body)
-                    if (json != null) json else null
+                    MOSHI.adapter(R::class.java).fromJson(body)
                 } catch (e: Exception) {
                     LOG.error("Invalid JSON provided by Twitter: ${e.message} :: $body")
                     throw TwitterIOException(e)

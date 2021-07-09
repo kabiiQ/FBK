@@ -25,7 +25,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 object MediaTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
         // if this is in a guild make sure the media list feature is enabled here
-        origin.channelFeatureVerify(FeatureChannel::animeTargetChannel, "anime")
+        origin.channelFeatureVerify(FeatureChannel::animeTargetChannel, "anime", allowOverride = false)
 
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
         val siteName = site.targetType.full

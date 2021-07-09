@@ -26,10 +26,7 @@ import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
-import moe.kabii.util.extensions.applicationLoop
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
@@ -189,6 +186,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     }
                 } else null
 
+                var attachedVideo: String? = null
                 val notif = channel.createMessage { spec ->
                     // todo channel setting for custom message ?
                     spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
@@ -207,25 +205,55 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         } else ""
 
                         val attachment = tweet.attachments.firstOrNull()
+                        val attachType = attachment?.type
                         val size = tweet.attachments.size
-                        val isVid = attachment?.type == TwitterMediaType.VID
-                        val attachInfo = when {
-                            isVid -> "(Open on Twitter to view video)\n"
-                            size > 1 -> "(Open on Twitter to view $size images)\n"
-                            else -> ""
+                        var attachInfo = ""
+                        var thumbnail: String? = null
+
+                        when {
+                            attachType == TwitterMediaType.VID || attachType == TwitterMediaType.GIF -> {
+                                attachInfo = "(Open on Twitter to view video)\n"
+                                // process video attachment
+                                attachedVideo = try {
+                                    TwitterParser.getV1Tweet(tweet.id.toString())?.findAttachedVideo()
+                                } catch(e: Exception) {
+                                    LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
+                                    null
+                                }
+
+                                if(attachedVideo == null) {
+                                    // if we can't provide video, revert to notifying user/regular thumbnail attachment
+                                    if(attachment.url != null) {
+                                        thumbnail = TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, video = true)
+                                    }
+                                }
+                            }
+                            size > 1 -> {
+                                attachInfo = "(Open on Twitter to view $size images)\n"
+                                // tag w/ number of photos
+                                if(attachment?.url != null) {
+                                    thumbnail = TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, imageCount = size)
+                                }
+                            }
+
                         }
 
-                        val thumbnail = if(attachment != null) {
-                            if((size > 1 || isVid)  && attachment.url != null) {
-                                TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, size, isVid)
-                            } else attachment.url
-                        } else tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // use image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
+                        if(thumbnail == null && attachedVideo == null) {
+                            thumbnail = attachment?.url ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
+                        }
                         thumbnail?.run(embed::setImage)
 
                         embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
                         embed.setTimestamp(tweet.createdAt)
                     }
                 }.awaitSingle()
+
+                if(attachedVideo != null) {
+                    channel.createMessage { spec ->
+                        spec.setContent(attachedVideo!!)
+                        spec.setMessageReference(notif.id)
+                    }.tryAwait()
+                }
 
                 TrackerUtil.checkAndPublish(notif)
             } catch (e: Exception) {

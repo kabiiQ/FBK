@@ -10,8 +10,7 @@ import moe.kabii.util.extensions.orNull
 class AuditRoleUpdate(logChannel: Snowflake, logMessage: Snowflake, guild: Snowflake, val direction: RoleDirection, val roleID: Snowflake, val userID: Snowflake)
     : AuditableEvent(logChannel, logMessage, guild.asLong()) {
     override fun appendedContent(auditLogEntry: AuditLogEntry): String? {
-//        val actor = auditLogEntry.responsibleUserId.orNull()?.asString() ?: return null
-        val actor = auditLogEntry.responsibleUserId.asString()
+        val actor = auditLogEntry.responsibleUserId.orNull()?.asString() ?: return null
         return "\nPerformed by <@$actor>"
     }
 

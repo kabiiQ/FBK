@@ -84,11 +84,12 @@ data class DiscordParameters (
     }
 
     @Throws(ChannelFeatureDisabledException::class)
-    fun channelFeatureVerify(feature: KProperty1<FeatureChannel, Boolean>, featureName: String? = null) {
+    suspend fun channelFeatureVerify(feature: KProperty1<FeatureChannel, Boolean>, featureName: String? = null, allowOverride: Boolean = true) {
         if(guild != null) {
             val features = config.options.featureChannels[chan.id.asLong()] ?: FeatureChannel(chan.id.asLong())
             val name = featureName ?: feature.name.removeSuffix("Channel")
-            if(!feature.get(features)) throw ChannelFeatureDisabledException(name, this, feature)
+            val permOverride = member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)
+            if(!feature.get(features) && (!allowOverride || !permOverride)) throw ChannelFeatureDisabledException(name, this, feature)
         } // else this is pm, allow
     }
 

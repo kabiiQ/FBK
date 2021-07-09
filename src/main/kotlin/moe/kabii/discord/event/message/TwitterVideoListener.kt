@@ -1,7 +1,9 @@
 package moe.kabii.discord.event.message
 
+import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
@@ -12,6 +14,8 @@ import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.success
+import java.time.Duration
 
 object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEvent::class) {
     private val twitterUrl = Regex("https://(?:mobile\\.)?twitter\\.com/.{4,15}/status/(\\d{19,20})")
@@ -30,19 +34,13 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
         val tweetId = twitterUrl.find(content)?.groups?.get(1) ?: return
 
         // request tweet info
-        val tweet = try {
-            TwitterParser.getV1Tweet(tweetId.value) ?: return
+        val videoUrl = try {
+            TwitterParser.getV1Tweet(tweetId.value)?.findAttachedVideo() ?: return
         } catch(e: Exception) {
             LOG.warn("Error getting linked Tweet: ${e.message}")
             LOG.debug(e.stackTraceString)
             return
         }
-
-        val variants = tweet.extended?.media?.mapNotNull { media -> media.video }?.firstOrNull()?.variants ?: return
-        val videoUrl = variants
-            .filter { it.contentType == "video/mp4" && it.bitrate != null }
-            .maxByOrNull { it.bitrate!! }
-            ?.url ?: return
 
         val channel = event.message.channel.awaitSingle()
         val video = channel.createMessage { spec ->
@@ -50,13 +48,16 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
             spec.setContent(videoUrl)
         }.awaitSingle()
 
+        val reaction = ReactionInfo(EmojiCharacters.cancel, "cancel")
         ReactionListener(
             MessageInfo.of(video),
-            listOf(ReactionInfo(EmojiCharacters.cancel, "cancel")),
+            listOf(reaction),
             author.id.asLong(),
             event.client) { _, _, _ ->
                 video.delete().subscribe()
                 true
             }.create(video, add = true)
+        delay(Duration.ofSeconds(30))
+        video.removeReactions(ReactionEmoji.unicode(reaction.unicode)).success().awaitSingle()
     }
 }

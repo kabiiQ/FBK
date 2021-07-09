@@ -6,7 +6,13 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class TwitterV1Status(
     @Json(name = "extended_entities") val extended: TwitterExtendedEntities?
-) : TwitterResponse
+) : TwitterResponse {
+    fun findAttachedVideo() = extended?.media
+        ?.mapNotNull { media -> media.video }
+        ?.firstOrNull()?.variants
+        ?.filter { it.contentType == "video/mp4" && it.bitrate != null }
+        ?.maxByOrNull { it.bitrate!! }?.url
+}
 
 @JsonClass(generateAdapter = true)
 data class TwitterExtendedEntities(

@@ -63,7 +63,6 @@ object GuildUtil : CommandContainer {
                     addField("Emoji Count", emojiCount, true)
                     addField("Server ID", serverID, true)
                     addField("Default Notifications", notif, true)
-                    addField("Voice Region", region, true)
 
                     if(features.isNotEmpty()) {
                         val featureList = "\n${features.joinToString("\n")}"
