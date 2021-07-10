@@ -1,6 +1,7 @@
 package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.User
+import moe.kabii.util.DiscordEmoji
 
 data class LogSettings(
     val channelID: Long,
@@ -36,7 +37,8 @@ data class WelcomeSettings(
     var welcomeTagLine: String? = "WELCOME",
     var imagePath: String? = null,
     var imageText: String? = defaultImageText,
-    var imageTextColor: Int? = defaultColor
+    var imageTextColor: Int? = defaultColor,
+    var emoji: DiscordEmoji? = null
 ) {
     fun textColor() = imageTextColor ?: defaultColor
     fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null, welcomeTagLine != null, imageText != null).any(true::equals)
