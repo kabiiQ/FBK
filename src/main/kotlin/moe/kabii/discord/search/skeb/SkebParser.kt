@@ -5,7 +5,6 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
-import kotlin.jvm.Throws
 
 open class SkebIOException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
     constructor(cause: Throwable) : this(cause.message.orEmpty(), cause)

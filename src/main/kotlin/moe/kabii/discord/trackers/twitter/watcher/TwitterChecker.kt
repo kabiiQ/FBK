@@ -244,7 +244,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             thumbnail = attachment?.url ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
                         }
                         thumbnail?.run(embed::setImage)
-
+                        val footer = "$attachInfo$tlDetail"
+                        if(footer.isNotBlank()) embed.setFooter(footer, NettyFileServer.twitterLogo)
                     }
                 }.awaitSingle()
 

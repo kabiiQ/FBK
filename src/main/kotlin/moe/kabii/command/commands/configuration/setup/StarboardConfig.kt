@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
@@ -11,11 +10,6 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.discord.util.Search
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
-import moe.kabii.rusty.Result
-import moe.kabii.util.DiscordEmoji
-import moe.kabii.util.EmojiUtil
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import kotlin.reflect.KMutableProperty1

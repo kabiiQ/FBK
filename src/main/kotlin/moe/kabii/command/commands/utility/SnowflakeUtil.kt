@@ -9,7 +9,6 @@ import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
 import java.io.File
-import java.time.format.DateTimeFormatter
 
 object SnowflakeUtil : CommandContainer {
     object GetIDs : Command("ids", "getids", "allids", "roleids") {

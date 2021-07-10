@@ -7,9 +7,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
-import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.command.*
