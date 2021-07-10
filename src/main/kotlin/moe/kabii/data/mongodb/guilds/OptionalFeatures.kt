@@ -46,7 +46,10 @@ data class FeatureChannel(
 
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
-        if(trackerDefault != null && type.isSuperclassOf(trackerDefault!!::class)) return defaultTracker()
+        if(trackerDefault != null) {
+            val default = defaultTracker()
+            if(type.isSuperclassOf(default!!::class)) return default
+        }
 
         // fallback to enabled tracker of specified type
         // if multiple are enabled, it will default in this order
