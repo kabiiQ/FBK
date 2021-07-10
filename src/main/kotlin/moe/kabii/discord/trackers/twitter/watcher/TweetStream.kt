@@ -69,12 +69,12 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                         .forEach { line ->
 
                         // process data
-                        LOG.trace("TwitterStream: $line")
+                        LOG.info("TwitterStream: $line")
                         try {
                             val response = tweetAdapter.fromJson(line)
 
                             if(response?.data != null && response.includes != null) {
-                                LOG.info("Decoded tweet from stream: $response")
+                                LOG.trace("Decoded tweet from stream: $response")
 
                                 val user = response.includes.users.first()
                                 val tweet = response.data
@@ -102,7 +102,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                                 }
                             }
                         } catch(e: Exception) {
-                            LOG.trace("Unable to decode Tweet: ${e.message}")
+                            LOG.warn("Unable to decode Tweet: ${e.message}")
                         }
                     }
                     delay(1_000L)
