@@ -6,6 +6,7 @@ import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.command.commands.configuration.setup.base.BaseConfigurationParsers
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
@@ -56,7 +57,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
             StarboardSetup::emoji as KMutableProperty1<StarboardSetup, Any?>,
             prompt = "Select an emote that users can add to messages to vote them onto the starboard. For custom emotes, I **MUST** be in the server the emote is from or things will not function as intended. Enter **reset** to restore the default star: ${EmojiCharacters.star}",
             default = null,
-            parser = ::setStarboardEmoji,
+            parser = BaseConfigurationParsers.emojiParser(Regex("(reset|star)", RegexOption.IGNORE_CASE)),
             value = { starboard -> starboard.useEmoji().string() }
         )
     )
@@ -143,15 +144,5 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         if(configurator.run(this)) {
             config.save()
         }
-    }
-
-    private val resetEmoji = Regex("(reset|star)", RegexOption.IGNORE_CASE)
-    private suspend fun setStarboardEmoji(origin: DiscordParameters, message: Message, value: String): Result<DiscordEmoji?, Unit> {
-        if(resetEmoji.matches(value)) return Ok(null)
-        val emoji = EmojiUtil.parseEmoji(value)
-        return if(emoji == null) {
-            origin.error("$value is not a usable emoji.").awaitSingle()
-            Err(Unit)
-        } else Ok(emoji)
     }
 }

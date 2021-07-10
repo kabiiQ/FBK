@@ -16,6 +16,7 @@ import moe.kabii.discord.util.ColorUtil
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
 import java.awt.Color
@@ -84,6 +85,14 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             default = WelcomeSettings.defaultColor,
             parser = ::verifyColor,
             value = { welcome -> ColorUtil.hexString(welcome.textColor()) }
+        ),
+        CustomElement("Add reaction to welcome",
+            listOf("emoji", "reaction", "react"),
+            WelcomeSettings::emoji as KMutableProperty1<WelcomeSettings, Any?>,
+            prompt = "Enter an emoji that will be added onto the welcome post that users can react to, such as ${EmojiCharacters.wave}. For custom emotes, I MUST be in the server the emote is from or this will not function. Enter **reset** to remove any currently configured emoji.",
+            default = null,
+            parser = BaseConfigurationParsers.emojiParser(Regex("(reset)", RegexOption.IGNORE_CASE)),
+            value = { welcome -> welcome.emoji?.string() ?: "not set" }
         )
     )
 

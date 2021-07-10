@@ -10,6 +10,7 @@ import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.success
 
 object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
 
@@ -18,7 +19,7 @@ object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class)
         val channelId = config.welcomer.channelId ?: return
         val welcomer = if(config.welcomer.anyElements()) config.welcomer else WelcomeSettings(channelId = channelId)
 
-        try {
+        val welcome = try {
             val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, event.member)
             event.client
                 .getChannelById(channelId.snowflake)
@@ -44,6 +45,12 @@ object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class)
                 }
                 else -> throw ce
             }
+            null
+        }
+
+        // add a reaction, if configured
+        if(welcome != null && welcomer.emoji != null) {
+            welcome.addReaction(welcomer.emoji!!.toReactionEmoji()).success().awaitSingle()
         }
     }
 }
