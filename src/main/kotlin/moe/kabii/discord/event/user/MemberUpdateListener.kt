@@ -5,11 +5,14 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
 //import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
@@ -18,11 +21,66 @@ import reactor.kotlin.core.publisher.toFlux
 object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent::class) {
     override suspend fun handle(event: MemberUpdateEvent) {
         val old = event.old.orNull() ?: return
-        val guild = event.guild.awaitSingle()
         val config = GuildConfigurations.guildConfigurations[event.guildId.asLong()] ?: return
+        val member = event.member.awaitSingle()
+
+        // nickname update
+        val oldName = "${old.displayName}#${old.discriminator}"
+        val newName = "${member.displayName}#${member.discriminator}"
+        if(!oldName.equals(newName, ignoreCase = true)) {
+            try {
+                config.logChannels()
+                    .filter(LogSettings::displayNameLog)
+                    .filter { log -> log.shouldInclude(member) }
+                    .forEach { targetLog ->
+                        try {
+                            event.client
+                                .getChannelById(targetLog.channelID.snowflake)
+                                .ofType(MessageChannel::class.java)
+                                .flatMap { chan ->
+                                    chan.createEmbed { spec ->
+                                        fbkColor(spec)
+                                        spec.setAuthor(member.userAddress(), null, member.avatarUrl)
+
+                                        val changeType = when {
+                                            old.nickname.isPresent && member.nickname.isEmpty -> "Removed nickname"
+                                            old.nickname.isEmpty && member.nickname.isPresent -> "Added nickname"
+                                            else -> "Changed nickname"
+                                        }
+                                        spec.setTitle(changeType)
+                                        spec.setDescription("**Old:** $oldName\n**New:** $newName")
+
+                                        spec.setFooter("User ID: ${member.id.asString()}", null)
+                                    }
+                                }.awaitSingle()
+                        } catch(ce: ClientException) {
+                            LOG.warn("Unable to send display name update to channel: ${targetLog.channelID}. Disabling feature in channel.")
+                            when(ce.status.code()) {
+                                404 -> {
+                                    // channel deleted
+                                    targetLog.displayNameLog = false
+                                    config.save()
+                                }
+                                403 -> {
+                                    // permission denied
+                                    targetLog.displayNameLog = false
+                                    config.save()
+                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}log names enable** to re-enable this log."
+                                    TrackerUtil.notifyOwner(event.client, event.guildId.asLong(), message)
+                                }
+                                else -> throw ce
+                            }
+                        }
+                    }
+            } catch(e: Exception) {
+                LOG.warn("Error sending display name update: ${e.message}")
+                LOG.trace(e.stackTraceString)
+            }
+        }
 
         // role update
         if(old.roleIds != event.currentRoles) {
+            val guild = event.guild.awaitSingle()
             val addedRoles = event.currentRoleIds - old.roleIds
             val removedRoles = old.roleIds - event.currentRoleIds
 
@@ -40,7 +98,6 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                 }.subscribe()
 
             // post role update log
-            val member = event.member.awaitSingle()
             config.logChannels()
                 .filter(LogSettings::roleUpdateLog)
                 .forEach { targetLog ->

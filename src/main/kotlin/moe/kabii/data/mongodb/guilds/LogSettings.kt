@@ -12,7 +12,7 @@ data class LogSettings(
     var partLog: Boolean = false,
     var partFormat: String = defaultPart,
     var avatarLog: Boolean = false,
-    var usernameLog: Boolean = false,
+    var displayNameLog: Boolean = false,
     var voiceLog: Boolean = false,
     var editLog: Boolean = false,
     var deleteLog: Boolean = false,
@@ -25,7 +25,7 @@ data class LogSettings(
         const val defaultPart = "**&name&discrim** left the server. (&mention)"
     }
 
-    fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, usernameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, displayNameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
     fun auditableLog() = booleanArrayOf(false).any(true::equals)
 }
 
