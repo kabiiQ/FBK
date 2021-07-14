@@ -33,6 +33,8 @@ data class FeatureChannel(
 
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,
+    var logCurrentChannel: Boolean = true,
+
     var trackerDefault: String? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),

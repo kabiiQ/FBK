@@ -5,6 +5,7 @@ import moe.kabii.util.DiscordEmoji
 
 data class LogSettings(
     val channelID: Long,
+    var logCurrentChannel: Boolean = true,
     var includeBots: Boolean = true,
     // components a modlog channel can have
     var joinLog: Boolean = false,

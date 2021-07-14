@@ -24,6 +24,7 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Temporary voice channel creation", listOf("temp", "temporary", "tempchannel", "tempchannels", "tempchannelcreation"), FeatureChannel::tempChannelCreation),
         BooleanElement("Limit track command usage to moderators", listOf("lock", "locked", "limit", "limited"), FeatureChannel::locked),
         BooleanElement("Allow this channel's messages in your starboard (if enabled)", listOf("starboarded", "starboard", "starboardview", "stars", "star", "allowstarboarding"), FeatureChannel::allowStarboarding),
+        BooleanElement("Include this channel's messages in any edit/delete log in this server.", listOf("logged", "logmessages"), FeatureChannel::logCurrentChannel)
     )
 
     object ChannelFeatures : Command("feature", "features", "channelfeatures", "config", "channel") {

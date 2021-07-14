@@ -39,6 +39,9 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
         val author = message.author.orNull()
         if(author == null || author.isBot) return
 
+        val channelFeatures = config.options.featureChannels[event.channelId.asLong()]
+        if(channelFeatures?.logCurrentChannel == false) return
+
         val editLogs = logs.filter(LogSettings::editLog)
         if(editLogs.none()) return
 
