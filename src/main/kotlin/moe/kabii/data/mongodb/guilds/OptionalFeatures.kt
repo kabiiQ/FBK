@@ -82,6 +82,8 @@ data class StreamSettings(
     var endGame: Boolean = true,
 
     var renameEnabled: Boolean = false,
+    var pinActive: Boolean = false,
+
     var notLive: String = "no-streams-live",
     var livePrefix: String = "${EmojiCharacters.liveCircle}-live-",
     var liveSuffix: String = "",

@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -92,7 +93,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 val features = getStreamConfig(notification.targetID)
 
-                if(features.summaries) {
+                val action = if(features.summaries) {
 
                     existingNotif.edit { edit ->
                         edit.setEmbed { spec ->
@@ -135,13 +136,14 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                                 spec.setDescription("Last video title: $lastTitle")
                             }
                         }
-                    }
+                    }.then(mono {
+                        TrackerUtil.checkUnpin(existingNotif)
+                    })
                 } else {
 
                     existingNotif.delete()
 
-                }.then().success().awaitSingle()
-
+                }.thenReturn(Unit).tryAwait()
                 checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
@@ -411,6 +413,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 spec.setEmbed(embed)
             }.awaitSingle()
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+            TrackerUtil.pinActive(discord, features, newNotification)
 
             // log message in db
             YoutubeNotification.new {

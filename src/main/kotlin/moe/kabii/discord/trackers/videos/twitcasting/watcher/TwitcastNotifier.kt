@@ -4,6 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -65,7 +66,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                     .awaitSingle()
                 val features = getStreamConfig(notification.targetId)
 
-                if(features.summaries && info != null) {
+                val action = if(features.summaries && info != null) {
                     val (movie, user) = info
 
                     val duration = Duration
@@ -85,12 +86,15 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                             embed.setTitle(movie.title)
                             embed.setThumbnail(movie.thumbnailUrl)
                         }
-                    }
+                    }.then(mono {
+                        TrackerUtil.checkUnpin(existingNotif)
+                    })
 
                 } else {
                     existingNotif.delete()
-                }.then().success().awaitSingle()
+                }
 
+                action.thenReturn(Unit).tryAwait()
                 checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = channel)
 
             } catch(ce: ClientException) {
@@ -147,6 +151,8 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                 }
                 spec.setEmbed(embed)
             }.awaitSingle()
+
+            TrackerUtil.pinActive(discord, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log notification in db

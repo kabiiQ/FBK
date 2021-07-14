@@ -124,9 +124,10 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         try {
                             val discordMessage = getDiscordMessage(notif, channel)
                             if (discordMessage != null) {
-                                discordMessage.delete().success().awaitSingle()
+                                discordMessage.delete().thenReturn(Unit).tryAwait()
 
                                 // edit channel name if feature is enabled and stream ended
+                                TrackerUtil.checkUnpin(discordMessage)
                                 checkAndRenameChannel(discordMessage.channel.awaitSingle())
                             }
                         } catch(e: Exception) {
@@ -158,7 +159,9 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                                 discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
                             } else {
                                 discordMessage.delete()
-                            }.awaitSingle()
+                            }.thenReturn(Unit).tryAwait()
+
+                            TrackerUtil.checkUnpin(discordMessage)
                         }
 
                         // edit channel name if feature is enabled and stream ended
@@ -253,6 +256,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         } else throw ce
                     }
 
+                    TrackerUtil.pinActive(discord, settings, newNotification)
                     TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
                     DBTwitchStreams.Notification.new {
