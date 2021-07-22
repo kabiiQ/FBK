@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers.twitter.watcher
 
+import discord4j.common.util.TimestampFormat
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
@@ -189,7 +190,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                 var attachedVideo: String? = null
                 val notif = channel.createMessage { spec ->
                     // todo channel setting for custom message ?
-                    spec.setContent("**@${user.username}** $action: https://twitter.com/${user.username}/status/${tweet.id}")
+                    val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
+                    spec.setContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
 
                     spec.setEmbed { embed ->
                         val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
@@ -242,9 +244,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             thumbnail = attachment?.url ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
                         }
                         thumbnail?.run(embed::setImage)
-
-                        embed.setFooter("$attachInfo${tlDetail}Twitter", NettyFileServer.twitterLogo)
-                        embed.setTimestamp(tweet.createdAt)
+                        val footer = "$attachInfo$tlDetail"
+                        if(footer.isNotBlank()) embed.setFooter(footer, NettyFileServer.twitterLogo)
                     }
                 }.awaitSingle()
 

@@ -59,7 +59,7 @@ data class TwitterTweet(
 
 @JsonClass(generateAdapter = true)
 data class TweetAttachmentsObject(
-    @Json(name = "media_keys") val mediaKeys: List<String>
+    @Json(name = "media_keys") val mediaKeys: List<String>?
 )
 
 enum class TwitterMediaType(val matchName: String) {

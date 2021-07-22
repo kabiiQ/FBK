@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.utility
 
+import discord4j.common.util.TimestampFormat
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
@@ -8,7 +9,6 @@ import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
 import java.io.File
-import java.time.format.DateTimeFormatter
 
 object SnowflakeUtil : CommandContainer {
     object GetIDs : Command("ids", "getids", "allids", "roleids") {
@@ -67,7 +67,6 @@ object SnowflakeUtil : CommandContainer {
         }
     }
 
-    private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
     object Timestamp : Command("timestamp", "snowflakedate", "checktimestamp", "gettimestamp", "timeof", "timestampof", "snowflaketime") {
         override val wikiPath = "Discord-Info-Commands#-get-the-timestamp-for-any-discord-id-snowflake"
 
@@ -90,12 +89,8 @@ object SnowflakeUtil : CommandContainer {
                     else -> null
                 }.orEmpty()
 
-                val formatted = formatter.format(snowflake.utc)
-                embed {
-                    setDescription("${validation}The snowflake **$id** would represent a Discord object created:\n**$formatted**")
-                    setFooter("Localized timestamp", null)
-                    setTimestamp(snowflake.instant)
-                }.awaitSingle()
+                val formatted = TimestampFormat.LONG_DATE_TIME.format(snowflake.instant)
+                embed("${validation}The snowflake **$id** would represent a Discord object created: **$formatted**").awaitSingle()
             }
         }
     }

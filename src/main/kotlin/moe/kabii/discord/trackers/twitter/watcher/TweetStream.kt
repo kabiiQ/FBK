@@ -73,17 +73,17 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                         .forEach { line ->
 
                         // process data
-                        LOG.trace("TwitterStream: $line")
-                        try {
-                            val response = tweetAdapter.fromJson(line)
+                        LOG.info("TwitterStream: $line")
+                        intakeContext.launch {
+                            try {
+                                val response = tweetAdapter.fromJson(line)
 
-                            if(response?.data != null && response.includes != null) {
-                                LOG.info("Decoded tweet from stream: $response")
+                                if(response?.data != null && response.includes != null) {
+                                    LOG.trace("Decoded tweet from stream: $response")
 
-                                val user = response.includes.users.first()
-                                val tweet = response.data
+                                    val user = response.includes.users.first()
+                                    val tweet = response.data
 
-                                intakeContext.launch {
                                     propagateTransaction {
                                         val feed = TwitterFeed
                                             .find { TwitterFeeds.userId eq user.id }
@@ -104,9 +104,9 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                                         twitter.notifyTweet(user, tweet, targets)
                                     }
                                 }
+                            } catch(e: Exception) {
+                                LOG.warn("Unable to decode Tweet: ${e.message}")
                             }
-                        } catch(e: Exception) {
-                            LOG.trace("Unable to decode Tweet: ${e.message}")
                         }
                     }
                     delay(1_000L)

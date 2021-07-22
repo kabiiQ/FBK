@@ -10,6 +10,7 @@ import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.success
 
 object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
 
@@ -18,7 +19,7 @@ object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class)
         val channelId = config.welcomer.channelId ?: return
         val welcomer = if(config.welcomer.anyElements()) config.welcomer else WelcomeSettings(channelId = channelId)
 
-        try {
+        val welcome = try {
             val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, event.member)
             event.client
                 .getChannelById(channelId.snowflake)
@@ -39,11 +40,17 @@ object WelcomerListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class)
 
                     config.welcomer.channelId = null
                     config.save()
-                    val message = "I tried to send a **welcome** message but I am missing permission to send messages+embeds/files in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}welcome channel <#$channelId> to re-enable the welcomer."
+                    val message = "I tried to send a **welcome** message but I am missing permission to send messages+embeds/files in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}welcome channel <#$channelId>** to re-enable the welcomer."
                     TrackerUtil.notifyOwner(event.client, event.guildId.asLong(), message)
                 }
                 else -> throw ce
             }
+            null
+        }
+
+        // add a reaction, if configured
+        if(welcome != null && welcomer.emoji != null) {
+            welcome.addReaction(welcomer.emoji!!.toReactionEmoji()).success().awaitSingle()
         }
     }
 }

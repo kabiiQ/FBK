@@ -8,6 +8,8 @@ import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.util.DiscordEmoji
+import moe.kabii.util.EmojiUtil
 
 object BaseConfigurationParsers {
 
@@ -25,5 +27,14 @@ object BaseConfigurationParsers {
             return Err(Unit)
         }
         return Ok(matchChannel.id.asLong())
+    }
+
+    fun emojiParser(resetEmoji: Regex): suspend (DiscordParameters, Message, String) -> Result<DiscordEmoji?, Unit> = parser@{ origin, _, value ->
+        if(resetEmoji.matches(value)) return@parser Ok(null)
+        val emoji = EmojiUtil.parseEmoji(value)
+        return@parser if(emoji == null) {
+            origin.error("$value is not a usable emoji.").awaitSingle()
+            Err(Unit)
+        } else Ok(emoji)
     }
 }

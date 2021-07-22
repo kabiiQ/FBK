@@ -1,9 +1,11 @@
 package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.User
+import moe.kabii.util.DiscordEmoji
 
 data class LogSettings(
     val channelID: Long,
+    var logCurrentChannel: Boolean = true,
     var includeBots: Boolean = true,
     // components a modlog channel can have
     var joinLog: Boolean = false,
@@ -11,7 +13,7 @@ data class LogSettings(
     var partLog: Boolean = false,
     var partFormat: String = defaultPart,
     var avatarLog: Boolean = false,
-    var usernameLog: Boolean = false,
+    var displayNameLog: Boolean = false,
     var voiceLog: Boolean = false,
     var editLog: Boolean = false,
     var deleteLog: Boolean = false,
@@ -24,7 +26,7 @@ data class LogSettings(
         const val defaultPart = "**&name&discrim** left the server. (&mention)"
     }
 
-    fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, usernameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, displayNameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
     fun auditableLog() = booleanArrayOf(false).any(true::equals)
 }
 
@@ -36,7 +38,8 @@ data class WelcomeSettings(
     var welcomeTagLine: String? = "WELCOME",
     var imagePath: String? = null,
     var imageText: String? = defaultImageText,
-    var imageTextColor: Int? = defaultColor
+    var imageTextColor: Int? = defaultColor,
+    var emoji: DiscordEmoji? = null
 ) {
     fun textColor() = imageTextColor ?: defaultColor
     fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null, welcomeTagLine != null, imageText != null).any(true::equals)

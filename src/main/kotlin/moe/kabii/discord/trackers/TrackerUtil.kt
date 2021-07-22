@@ -1,5 +1,6 @@
 package moe.kabii.discord.trackers
 
+import discord4j.common.util.Snowflake
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
@@ -8,15 +9,18 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.NewsChannel
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
+import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.util.errorColor
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.success
 import kotlin.reflect.KMutableProperty1
 
 object TrackerUtil {
@@ -83,9 +87,36 @@ object TrackerUtil {
         }
     }
 
-
     suspend fun permissionDenied(channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
         val guildChan = channel as? GuildMessageChannel
         permissionDenied(channel.client, guildChan?.guildId?.asLong(), channel.id.asLong(), guildDelete, pmDelete)
+    }
+
+    suspend fun pinActive(discord: GatewayDiscordClient, settings: StreamSettings, message: Message) {
+        if(settings.pinActive) {
+            try {
+                message.pin().thenReturn(Unit).awaitSingle()
+            } catch (e: Exception) {
+                LOG.warn("Unable to pin message to channel: ${message.channelId.asString()} :: ${e.message}}")
+                LOG.trace(e.stackTraceString)
+
+                if(e is ClientException && e.status.code() == 403) {
+                    val guildId = message.guildId.orNull() ?: return
+                    val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this log."
+                    notifyOwner(discord, guildId.asLong(), notice)
+                }
+            }
+        }
+    }
+
+    suspend fun checkUnpin(message: Message) {
+        try {
+            if(message.isPinned) {
+                message.unpin().success().awaitSingle()
+            }
+        } catch(e: Exception) {
+            LOG.warn("Unable to unpin message from channel: ${message.channelId.asString()} :: ${e.message}")
+            LOG.trace(e.stackTraceString)
+        }
     }
 }

@@ -19,6 +19,9 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
         val guildId = event.guildId.orNull()?.asLong() ?: return // ignore DM event
         val config = GuildConfigurations.guildConfigurations[guildId] ?: return
 
+        val channelFeatures = config.options.featureChannels[event.channelId.asLong()]
+        if(channelFeatures?.logCurrentChannel == false) return
+
         val deleteLogs = config.logChannels()
             .filter { channel -> channel.deleteLog }
 

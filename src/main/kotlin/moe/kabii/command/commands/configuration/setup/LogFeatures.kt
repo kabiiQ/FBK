@@ -33,8 +33,8 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
         ),
         BooleanElement(
             "Username log",
-            listOf("usernames", "username"),
-            LogSettings::usernameLog
+            listOf("names", "usernames", "username", "nicknames", "nickname", "nick", "nicks"),
+            LogSettings::displayNameLog
         ),
         BooleanElement(
             "Voice channel activity log",

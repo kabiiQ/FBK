@@ -33,6 +33,8 @@ data class FeatureChannel(
 
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,
+    var logCurrentChannel: Boolean = true,
+
     var trackerDefault: String? = null,
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
@@ -46,7 +48,10 @@ data class FeatureChannel(
 
     fun findDefaultTarget(type: KClass<out TrackerTarget> = TrackerTarget::class): TrackerTarget? {
         // if type is specified, this is a restriction on what type of target we need
-        if(trackerDefault != null && type.isSuperclassOf(trackerDefault!!::class)) return defaultTracker()
+        if(trackerDefault != null) {
+            val default = defaultTracker()
+            if(type.isSuperclassOf(default!!::class)) return default
+        }
 
         // fallback to enabled tracker of specified type
         // if multiple are enabled, it will default in this order
@@ -77,6 +82,8 @@ data class StreamSettings(
     var endGame: Boolean = true,
 
     var renameEnabled: Boolean = false,
+    var pinActive: Boolean = false,
+
     var notLive: String = "no-streams-live",
     var livePrefix: String = "${EmojiCharacters.liveCircle}-live-",
     var liveSuffix: String = "",

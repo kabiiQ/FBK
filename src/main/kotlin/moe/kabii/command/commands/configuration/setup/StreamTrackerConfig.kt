@@ -41,6 +41,10 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             listOf("rename", "renamechannel", "renaming", "renam"),
             StreamSettings::renameEnabled
         ),
+        BooleanElement("Pin active livestreams in this channel",
+            listOf("pin", "pins"),
+            StreamSettings::pinActive
+        ),
         StringElement(
             "Channel name when no streams are live",
             listOf("notlive", "nolive", "nonelive", "not-live"),
