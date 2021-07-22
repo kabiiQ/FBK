@@ -45,6 +45,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                                         val changeType = when {
                                             old.nickname.isPresent && member.nickname.isEmpty -> "Removed nickname"
                                             old.nickname.isEmpty && member.nickname.isPresent -> "Added nickname"
+                                            old.nickname.isEmpty && member.nickname.isEmpty -> "Changed username"
                                             else -> "Changed nickname"
                                         }
                                         spec.setTitle(changeType)
