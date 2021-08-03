@@ -15,8 +15,11 @@ import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookMana
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchFeedSubscriber
 import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchSubscriptionManager
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeFeedPuller
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
+import moe.kabii.discord.ytchat.YoutubeChatWatcher
+import moe.kabii.discord.ytchat.YoutubeMembershipMaintainer
 
 data class ServiceRequestCooldownSpec(
     val callDelay: Long,
@@ -68,13 +71,17 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         )
         val ytChecker = YoutubeChecker(ytSubscriptions, ytDelay)
         ytSubscriptions.checker = ytChecker
-        /*
+
+        val ytChatWatcher = YoutubeChatWatcher(discord)
+
+        val ytMembershipMaintainer = YoutubeMembershipMaintainer(discord)
+
         val pullDelay = ServiceRequestCooldownSpec(
             callDelay = 5_000L,
             minimumRepeatTime = 120_000L
         )
         val ytManualPuller = YoutubeFeedPuller(pullDelay)
-        */
+
 
         val malDelay = ServiceRequestCooldownSpec(
             callDelay = MALParser.callCooldown,
@@ -112,7 +119,8 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             Thread(twitchSubs, "TwitchSubscriptionManager"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
-            // Thread(ytManualPuller, "YT-ManualFeedPull"),
+            Thread(ytManualPuller, "YT-ManualFeedPull"),
+            Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
             malThread,
             kitsuThread,
             aniListThread,
@@ -120,7 +128,8 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             Thread(twitterStream, "TwitterStream"),
             Thread(ps2Websocket, "PS2EventStream"),
             Thread(twitcastChecker, "TwitcastChecker"),
-            Thread(TwitcastWebhookManager, "TwitcastWebhookManager")
+            Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
+            Thread(ytChatWatcher, "YTChatWatcher")
         )
     }
 

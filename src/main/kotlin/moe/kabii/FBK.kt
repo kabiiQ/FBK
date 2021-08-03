@@ -26,6 +26,7 @@ import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
 import moe.kabii.net.NettyFileServer
+import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
@@ -65,6 +66,7 @@ fun main() {
             val translator = Translator.detector.detectLanguageOf("initalizing translator")
             val welcomer = WelcomeImageGenerator
             TwitterFeedSubscriber.verifySubscriptions()
+            val streamers = KnownStreamers
         }
     }
 

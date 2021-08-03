@@ -1,4 +1,4 @@
-package moe.kabii.data
+package moe.kabii.data.flat
 
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
@@ -14,6 +14,8 @@ object Keys : ConfigSpec("") {
 
     object Discord : ConfigSpec() {
         val token by required<String>()
+        val clientId by required<String>("discord_client_id")
+        val clientSecret by required<String>("discord_client_secret")
     }
     object Osu : ConfigSpec() {
         val token by required<String>()
@@ -80,6 +82,11 @@ object Keys : ConfigSpec("") {
     }
     object Wolfram : ConfigSpec("wolfram") {
         val appId by required<String>("wolfram_appid")
+    }
+    object OAuth : ConfigSpec("oauth") {
+        val rootOauthUri by required<String>("root_oauth_uri")
+        val portBlock by required<Int>("port_block_start")
+        val stateKey by required<String>("oauth_signing_key")
     }
 
     fun saveConfigFile() {

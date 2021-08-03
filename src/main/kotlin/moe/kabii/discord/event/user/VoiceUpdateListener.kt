@@ -51,9 +51,9 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
             .filter { log -> log.shouldInclude(user) }
             .forEach { targetLog ->
                 val status = when {
-                    new && !old -> "Connected to voice channel ``${newChannel!!.name}``"
-                    !new && old -> "Disconnected from voice channel ``${oldChannel!!.name}``"
-                    new && old -> "Moved from channel ``${oldChannel!!.name}`` -> ``${newChannel!!.name}``"
+                    new && !old -> "Connected to voice channel `${newChannel!!.name}`"
+                    !new && old -> "Disconnected from voice channel `${oldChannel!!.name}`"
+                    new && old -> "Moved from channel `${oldChannel!!.name}` -> `${newChannel!!.name}`"
                     else -> return@forEach
                 }
 
@@ -133,14 +133,18 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
                 .flatMap(BotUtil::isSingleClient)
                 .awaitFirstOrNull()
             val audio = AudioManager.getGuildAudio(guildID.long)
-            if(alone == false) {
-                // someone is in the bot channel. if audio is being played, cancel any timeouts
-                if(audio.player.playingTrack != null || audio.queue.isNotEmpty()) {
-                    audio.discord.cancelPendingTimeout()
-                } // otherwise, let the timeout continue. we leave the vc if not in use
-            } else {
-                // bot is alone... schedule a disconnection
-                audio.discord.startTimeout()
+            when(alone) {
+                true -> {
+                    // bot is alone - schedule a disconnection
+                    audio.discord.startTimeout()
+                }
+                false -> {
+                    // someone is in the bot channel. if audio is being played, cancel any timeouts
+                    if(audio.player.playingTrack != null || audio.queue.isNotEmpty()) {
+                        audio.discord.cancelPendingTimeout()
+                    } // otherwise, let the timeout continue. we leave the vc if not in use
+                }
+                // else -> the bot is not in a voice channel (empty)
             }
 
             val eventMember = member ?: return // kicked

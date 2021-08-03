@@ -1,6 +1,6 @@
 package moe.kabii.data.relational
 
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
@@ -12,6 +12,9 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
+import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
@@ -22,7 +25,7 @@ internal object PostgresConnection {
     val postgres = Database.connect(
         Keys.config[Keys.Postgres.connectionString],
         driver = "org.postgresql.Driver"
-    )
+    ).apply { useNestedTransactions = true }
 
     init {
         transaction {
@@ -52,7 +55,10 @@ internal object PostgresConnection {
                 TwitterTargets,
                 PS2Tracks.TrackTargets,
                 PS2Internal.Characters,
-                PS2Internal.Outfits
+                PS2Internal.Outfits,
+                YoutubeMembers,
+                LinkedYoutubeAccounts,
+                MembershipConfigurations
             )
         }
     }
