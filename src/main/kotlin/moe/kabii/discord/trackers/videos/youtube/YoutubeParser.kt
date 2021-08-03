@@ -4,7 +4,7 @@ import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeChannelResponse
 import moe.kabii.discord.trackers.videos.youtube.json.YoutubeErrorResponse
@@ -28,7 +28,7 @@ object YoutubeParser {
     val youtubeNamePattern = Regex("([a-zA-Z0-9)]{6,20})")
 
     val youtubeVideoPattern = Regex("([a-zA-Z0-9-_]{11})")
-    val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/)|(?:(?:watch)?\\?v(?:i)?=|&v(?:i)?=))($youtubeVideoPattern)")
+    val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/)|(?:(?:watch)?\\?vi?=|&vi?=))($youtubeVideoPattern)")
 
     @Throws(YoutubeAPIException::class)
     fun getChannelFromUnknown(identifier: String): YoutubeChannelInfo? {

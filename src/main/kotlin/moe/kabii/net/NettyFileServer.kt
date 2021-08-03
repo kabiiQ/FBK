@@ -8,7 +8,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.util.RGB
 import okhttp3.Request

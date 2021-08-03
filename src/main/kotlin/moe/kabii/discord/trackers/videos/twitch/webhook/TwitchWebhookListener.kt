@@ -11,7 +11,7 @@ import io.ktor.server.netty.*
 import io.ktor.util.pipeline.*
 import moe.kabii.LOG
 import moe.kabii.MOSHI
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.twitch.json.TwitchStreamRequest
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker

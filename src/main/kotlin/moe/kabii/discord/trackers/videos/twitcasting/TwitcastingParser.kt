@@ -6,7 +6,7 @@ import moe.kabii.JSON
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.twitcasting.json.*
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request

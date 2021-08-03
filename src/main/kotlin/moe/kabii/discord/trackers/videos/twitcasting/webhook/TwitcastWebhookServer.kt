@@ -9,7 +9,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import moe.kabii.LOG
 import moe.kabii.MOSHI
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
@@ -24,6 +24,7 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
     private val signature = Keys.config[Keys.Twitcasting.signature]
 
     private val incomingAdapter = MOSHI.adapter(TwitcastingMovieResponse::class.java)
+    // twitcasting special blend of websub
     val server = embeddedServer(Netty, port = this.port) {
         routing {
 

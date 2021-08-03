@@ -1,4 +1,4 @@
-package moe.kabii.data
+package moe.kabii.data.flat
 
 import java.io.File
 

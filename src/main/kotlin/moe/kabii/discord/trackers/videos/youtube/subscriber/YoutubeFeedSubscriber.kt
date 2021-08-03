@@ -2,7 +2,7 @@ package moe.kabii.discord.trackers.videos.youtube.subscriber
 
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import okhttp3.FormBody
 import okhttp3.Request
 

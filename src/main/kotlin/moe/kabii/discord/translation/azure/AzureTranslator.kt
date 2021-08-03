@@ -4,7 +4,7 @@ import moe.kabii.JSON
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.translation.SupportedLanguages
 import moe.kabii.discord.translation.TranslationLanguage
 import moe.kabii.discord.translation.TranslationResult

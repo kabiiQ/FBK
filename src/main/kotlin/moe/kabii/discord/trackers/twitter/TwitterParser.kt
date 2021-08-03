@@ -3,7 +3,7 @@ package moe.kabii.discord.trackers.twitter
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterStreamRule
 import moe.kabii.discord.trackers.twitter.json.*

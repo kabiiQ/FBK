@@ -8,7 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import reactor.core.publisher.Flux
 
 class MemberPermissionsException(vararg val perms: Permission) : RuntimeException()

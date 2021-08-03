@@ -4,7 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.errorColor
 import moe.kabii.discord.util.fbkColor

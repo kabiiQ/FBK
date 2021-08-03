@@ -5,7 +5,7 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.util.extensions.snowflake
