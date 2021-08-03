@@ -25,7 +25,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
             get {
                 // GET - subscription validation
-                log("GET", this)
+                log("GET:$port")
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)
@@ -57,7 +57,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
             post {
                 // POST - feed updates
-                log("POST", this)
+                log("POST:$port")
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)
@@ -93,9 +93,5 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 manager.checker.ytTick()
             }
         }
-    }
-
-    private fun log(type: String, ctx: PipelineContext<Unit, ApplicationCall>) {
-        LOG.info("$type:$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
     }
 }
