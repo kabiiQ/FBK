@@ -1,16 +1,14 @@
 package moe.kabii.discord.event.user
 
+//import moe.kabii.discord.auditlog.LogWatcher
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.LogSettings
-//import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.util.fbkColor

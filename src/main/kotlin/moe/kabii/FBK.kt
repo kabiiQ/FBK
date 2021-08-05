@@ -7,8 +7,9 @@ import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
-import moe.kabii.data.GQLQueries
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.GQLQueries
+import moe.kabii.data.flat.Keys
+import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
@@ -25,6 +26,7 @@ import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
 import moe.kabii.net.NettyFileServer
+import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
@@ -60,9 +62,11 @@ fun main() {
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initalization") {
         runBlocking {
+            DiscordOAuthRedirectServer.server.start()
             val translator = Translator.detector.detectLanguageOf("initalizing translator")
             val welcomer = WelcomeImageGenerator
             TwitterFeedSubscriber.verifySubscriptions()
+            val streamers = KnownStreamers
         }
     }
 

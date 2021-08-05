@@ -110,15 +110,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     try {
                                         val callReason = targetLookup.getValue(videoId)
 
-                                        val ytVideoInfo = when (ytVideo) {
-                                            is Ok -> ytVideo.value.also { video ->
-                                                // if youtube call succeeded, reflect this in db
-                                                with(callReason.video) {
-                                                    lastAPICall = DateTime.now()
-                                                    lastTitle = video.title
-                                                    ytChannel.lastKnownUsername = video.channel.name
-                                                }
-                                            }
+                                        val ytVideoInfo = when(ytVideo) {
+                                            is Ok -> ytVideo.value
                                             is Err -> {
                                                 when (ytVideo.value) {
                                                     // do not process video if this was an IO issue on our end
@@ -133,6 +126,15 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
                                             is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
                                             is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                        }
+
+                                        // if youtube call + processing succeeded, reflect this in db
+                                        if(ytVideoInfo != null) {
+                                            with(callReason.video) {
+                                                lastAPICall = DateTime.now()
+                                                lastTitle = ytVideoInfo.title
+                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                            }
                                         }
                                     } catch (e: Exception) {
                                         LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")

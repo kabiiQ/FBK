@@ -8,9 +8,9 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.util.pipeline.*
 import moe.kabii.LOG
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
+import moe.kabii.util.extensions.log
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
 
@@ -19,12 +19,13 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
     private val signingKey = Keys.config[Keys.Youtube.signingKey]
     private val port = Keys.config[Keys.Youtube.callbackPort]
 
+    // pubsubhubbub 0.3
     val server = embeddedServer(Netty, port = port) {
         routing {
 
             get {
                 // GET - subscription validation
-                log("GET", this)
+                log("GET:$port")
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)
@@ -56,7 +57,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
             post {
                 // POST - feed updates
-                log("POST", this)
+                log("POST:$port")
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)
@@ -92,9 +93,5 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 manager.checker.ytTick()
             }
         }
-    }
-
-    private fun log(type: String, ctx: PipelineContext<Unit, ApplicationCall>) {
-        LOG.info("$type:$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
     }
 }

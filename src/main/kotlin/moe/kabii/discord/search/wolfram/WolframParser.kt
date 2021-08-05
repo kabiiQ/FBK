@@ -2,8 +2,8 @@ package moe.kabii.discord.search.wolfram
 
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
 import moe.kabii.newRequestBuilder
+import moe.kabii.data.flat.Keys
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 

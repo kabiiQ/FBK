@@ -2,7 +2,7 @@ package moe.kabii.discord.trackers.videos.twitch.webhook
 
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody

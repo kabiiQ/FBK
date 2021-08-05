@@ -1,20 +1,19 @@
 package moe.kabii.discord.trackers.videos.twitch.webhook
 
 import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.util.pipeline.*
 import moe.kabii.LOG
 import moe.kabii.MOSHI
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.videos.twitch.json.TwitchStreamRequest
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
+import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.codec.digest.HmacAlgorithms
@@ -26,12 +25,13 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
     private val port = Keys.config[Keys.Twitch.webhookPort]
     private val payloadAdapter = MOSHI.adapter(TwitchStreamRequest::class.java)
 
+    // w3c websub
     val server = embeddedServer(Netty, port = port) {
         routing {
 
             get {
                 // subscription validation
-                log("GET", this)
+                log("GET:$port")
                 val mode = call.parameters["hub.mode"]
                 val channelTopic = call.parameters["hub.topic"]
                 when(mode) {
@@ -55,7 +55,7 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
 
             post {
                 // webhook push from Twitch
-                log("POST", this)
+                log("POST:$port")
 
                 // return 2xx per websub spec
                 call.response.status(HttpStatusCode.OK)
@@ -100,9 +100,5 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
                 }
             }
         }
-    }
-
-    private fun log(type: String, ctx: PipelineContext<Unit, ApplicationCall>) {
-        LOG.trace("$type:$port - to ${ctx.call.request.origin.uri} - from ${ctx.call.request.origin.remoteHost}")
     }
 }

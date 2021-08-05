@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.JSON
 import moe.kabii.MOSHI
-import moe.kabii.data.GQLQueries
+import moe.kabii.data.flat.GQLQueries
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
