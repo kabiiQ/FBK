@@ -29,6 +29,7 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant
@@ -199,7 +200,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         val author = (if(tweet.retweet) referenceUser else user) ?: user
                         embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
 
-                        embed.setDescription(tweet.text)
+                        val text = StringEscapeUtils.unescapeHtml4(tweet.text)
+                        embed.setDescription(text)
 
                         val tlDetail = if(translation != null) {
                             embed.addField("**Tweet Translation**", StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.FIELD.VALUE), false)
