@@ -19,7 +19,7 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership") {
+object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership", "linkytmembers", "linkytmembership") {
 
     override val wikiPath: String? = null
 

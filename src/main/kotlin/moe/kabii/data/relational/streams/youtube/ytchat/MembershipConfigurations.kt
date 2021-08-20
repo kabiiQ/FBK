@@ -19,6 +19,7 @@ object MembershipConfigurations : IntIdTable() {
     val discordServer = reference("membership_connection_discord_server", DiscordObjects.Guilds, ReferenceOption.CASCADE).uniqueIndex()
     val streamChannel = reference("membership_connection_stream_channel", TrackedStreams.StreamChannels, ReferenceOption.RESTRICT)
     val membershipRole = long("membership_connection_generated_role_id")
+    val logChannel = reference("membership_connection_logging_channel", DiscordObjects.Channels, ReferenceOption.SET_NULL).nullable()
 
     @WithinExposedContext
     fun getForChannel(ytChan: TrackedStreams.StreamChannel) = MembershipConfigurations.select { streamChannel eq ytChan.id }
@@ -37,6 +38,7 @@ class MembershipConfiguration(id: EntityID<Int>) : IntEntity(id) {
     var discordServer by DiscordObjects.Guild referencedOn MembershipConfigurations.discordServer
     var streamChannel by TrackedStreams.StreamChannel referencedOn MembershipConfigurations.streamChannel
     var membershipRole by MembershipConfigurations.membershipRole
+    var logChannel by DiscordObjects.Channel optionalReferencedOn MembershipConfigurations.logChannel
 
     fun utils(client: GatewayDiscordClient) = YoutubeMembershipUtil.forConfig(client, this)
     fun utils(guild: Guild) = YoutubeMembershipUtil.forConfig(guild, this)

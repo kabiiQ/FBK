@@ -13,7 +13,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.userAddress
 
-object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin") {
+object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin", "manuallink") {
     override val wikiPath: String? = null
 
     init {
@@ -36,9 +36,10 @@ object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin") {
                 return@discord
             }
 
-            val targetUser = Search.user(this, noCmd, guild!!)
+            val userArg = args.drop(1).joinToString(" ")
+            val targetUser = Search.user(this, userArg, guild!!)
             if(targetUser == null) {
-                error("Unable to find Discord user **$noCmd**.").awaitSingle()
+                error("Unable to find Discord user **$userArg**.").awaitSingle()
                 return@discord
             }
 

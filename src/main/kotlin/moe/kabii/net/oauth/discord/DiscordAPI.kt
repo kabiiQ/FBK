@@ -19,5 +19,4 @@ object DAPI {
             fun fromJson(json: String) = adapter.fromJson(json)
         }
     }
-
 }
