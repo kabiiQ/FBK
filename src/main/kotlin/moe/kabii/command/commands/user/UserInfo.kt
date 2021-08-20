@@ -1,8 +1,10 @@
 package moe.kabii.command.commands.user
 
+import discord4j.common.util.TimestampFormat
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Search
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -24,12 +26,11 @@ object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
 
             val guildMember = guild?.run { targetUser.asMember(guild.id) }?.tryAwait()?.orNull()
             embed(targetUser) {
-                val accountCreation = targetUser.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
-                addField("Account created", formatter.format(accountCreation), false)
+                addField("Account created", TimestampFormat.LONG_DATE_TIME.format(targetUser.id.timestamp), false)
 
-                if(guildMember != null) {
-                    val guildJoin = guildMember.joinTime.get().atZone(ZoneOffset.UTC).toLocalDateTime()
-                    addField("Joined ${guild!!.name}", formatter.format(guildJoin), false)
+                val joinTime = guildMember?.joinTime?.orNull()
+                if(joinTime != null) {
+                    addField("Joined ${guild!!.name}", TimestampFormat.LONG_DATE_TIME.format(joinTime), false)
                 }
             }.awaitSingle()
         }

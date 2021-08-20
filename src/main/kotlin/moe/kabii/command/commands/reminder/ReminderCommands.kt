@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.reminder
 
+import discord4j.common.util.TimestampFormat
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
@@ -16,6 +17,7 @@ import moe.kabii.util.extensions.userAddress
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 object ReminderCommands : CommandContainer {
@@ -97,13 +99,16 @@ object ReminderCommands : CommandContainer {
                 }
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
                 val reminderID = reminder.id
+                val reminderTarget = TimestampFormat.SHORT_DATE_TIME.format(Instant.now().plus(time))
                 val embed: EmbedBlock = {
                     reminderColor(this)
-                    setAuthor(author.userAddress(), null, author.avatarUrl)
-                    setDescription("Reminder created! You will be sent a $location in **$length**.")
+                    setDescription("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.")
                     setFooter("Reminder ID: $reminderID", null)
                 }
-                chan.createEmbed(embed).awaitSingle()
+                chan.createMessage { spec ->
+                    spec.addEmbed(embed)
+                    spec.setMessageReference(event.message.id)
+                }.awaitSingle()
             }
         }
     }

@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.utility
 
+import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Guild
 import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
@@ -27,8 +28,7 @@ object GuildUtil : CommandContainer {
                     ?.tryAwait()?.orNull()
                     ?: target
 
-                val createdDateTime = targetGuild.id.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
-                val creation = formatter.format(createdDateTime)
+                val creation = TimestampFormat.LONG_DATE_TIME.format(targetGuild.id.timestamp)
                 val description = targetGuild.description.orNull()
                 val guildOwner = targetGuild.owner.tryAwait().orNull()
                 val memberCount = targetGuild.memberCount.toString()
@@ -41,17 +41,15 @@ object GuildUtil : CommandContainer {
                     Guild.NotificationLevel.ONLY_MENTIONS -> "Mentions Only"
                     else -> "Error"
                 }
-                val region = targetGuild.regionId
                 val boosts = targetGuild.premiumSubscriptionCount.orElse(0)
 
                 val owner = if(guildOwner != null) "${guildOwner.userAddress()}(${guildOwner.id.asString()})" else "Unknown"
 
-                val more = StringBuilder()
-                more.append("This guild was created $creation.")
+                val more = StringBuilder("This Discord server was created $creation.")
 
                 val large = targetGuild.isLarge
-                if(large) more.append("\nThis guild is considered \"large\" by Discord.")
                 val features = targetGuild.features
+                if(large) features.add("LARGE")
 
                 embed {
                     fbkColor(this)
