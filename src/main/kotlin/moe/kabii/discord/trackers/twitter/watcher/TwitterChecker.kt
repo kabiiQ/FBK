@@ -31,6 +31,7 @@ import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -104,14 +105,14 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             val age = Duration.between(tweet.createdAt, Instant.now())
 
                             // if already handled or too old, skip, but do not pull tweet ID again
-                            if(feed.lastPulledTweet ?: 0 >= tweet.id
+                            if((feed.lastPulledTweet ?: 0) >= tweet.id
                                 || age > Duration.ofHours(2)
                                 || cache.seenTweets.contains(tweet.id)
                             ) return@maxOf tweet.id
 
                             notifyTweet(user, tweet, targets)
                         }
-                        if(latest > feed.lastPulledTweet ?: 0L) {
+                        if(latest > (feed.lastPulledTweet ?: 0L)) {
                             newSuspendedTransaction {
                                 feed.lastPulledTweet = latest
                             }
@@ -188,8 +189,49 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     }
                 } else null
 
+                var editedThumb: ByteArrayInputStream? = null
                 var attachedVideo: String? = null
-                val notif = channel.createMessage { spec ->
+                val attachment = tweet.attachments.firstOrNull()
+                val attachType = attachment?.type
+                val size = tweet.attachments.size
+                var attachInfo = ""
+
+                when {
+                    attachType == TwitterMediaType.VID || attachType == TwitterMediaType.GIF -> {
+                        attachInfo = "(Open on Twitter to view video)\n"
+                        // process video attachment
+                        attachedVideo = try {
+                            TwitterParser.getV1Tweet(tweet.id.toString())?.findAttachedVideo()
+                        } catch(e: Exception) {
+                            LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
+                            null
+                        }
+
+                        if(attachedVideo == null) {
+                            // if we can't provide video, revert to notifying user/regular thumbnail attachment
+                            if(attachment.url != null) {
+                                editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment.url, video = true)
+                            }
+                        }
+                    }
+                    size > 1 -> {
+                        attachInfo = "(Open on Twitter to view $size images)\n"
+                        // tag w/ number of photos
+                        if(attachment?.url != null) {
+                            editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment.url, imageCount = size)
+                        }
+                    }
+                }
+
+                // only use a static thumbnail if a video is not attached
+                val thumbnail = if(attachedVideo == null) {
+                    attachment?.url
+                        ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
+                        ?: tweet.references.firstOrNull()?.attachments?.firstOrNull()?.url
+                        ?: tweet.references.firstOrNull()?.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url
+                } else null
+
+                val notifSpec = channel.createMessage { spec ->
                     // todo channel setting for custom message ?
                     val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
                     spec.setContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
@@ -204,52 +246,22 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         embed.setDescription(text)
 
                         val tlDetail = if(translation != null) {
-                            embed.addField("**Tweet Translation**", StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.FIELD.VALUE), false)
+                            val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
+                            embed.addField("**Tweet Translation**", tlText, false)
                             "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
                         } else ""
 
-                        val attachment = tweet.attachments.firstOrNull()
-                        val attachType = attachment?.type
-                        val size = tweet.attachments.size
-                        var attachInfo = ""
-                        var thumbnail: String? = null
-
-                        when {
-                            attachType == TwitterMediaType.VID || attachType == TwitterMediaType.GIF -> {
-                                attachInfo = "(Open on Twitter to view video)\n"
-                                // process video attachment
-                                attachedVideo = try {
-                                    TwitterParser.getV1Tweet(tweet.id.toString())?.findAttachedVideo()
-                                } catch(e: Exception) {
-                                    LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
-                                    null
-                                }
-
-                                if(attachedVideo == null) {
-                                    // if we can't provide video, revert to notifying user/regular thumbnail attachment
-                                    if(attachment.url != null) {
-                                        thumbnail = TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, video = true)
-                                    }
-                                }
-                            }
-                            size > 1 -> {
-                                attachInfo = "(Open on Twitter to view $size images)\n"
-                                // tag w/ number of photos
-                                if(attachment?.url != null) {
-                                    thumbnail = TwitterThumbnailGenerator.attachInfoTag(attachment.url, spec, imageCount = size)
-                                }
-                            }
-
-                        }
-
-                        if(thumbnail == null && attachedVideo == null) {
-                            thumbnail = attachment?.url ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
-                        }
-                        thumbnail?.run(embed::setImage)
+                        if(editedThumb != null) {
+                            // always use our edited thumbnail if we produced one for this
+                            spec.addFile("thumbnail_edit.png", editedThumb)
+                            embed.setImage("attachment://thumbnail_edit.png")
+                        } else thumbnail?.run(embed::setImage)
                         val footer = "$attachInfo$tlDetail"
                         if(footer.isNotBlank()) embed.setFooter(footer, NettyFileServer.twitterLogo)
                     }
-                }.awaitSingle()
+                }
+
+                val notif = if(twitter.mediaOnly && editedThumb == null && thumbnail == null) return@target else notifSpec.awaitSingle()
 
                 if(attachedVideo != null) {
                     channel.createMessage { spec ->

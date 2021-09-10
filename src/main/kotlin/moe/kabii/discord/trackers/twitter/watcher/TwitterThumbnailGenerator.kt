@@ -19,8 +19,8 @@ object TwitterThumbnailGenerator {
     private val fontDir = File("files/font/")
     private val infoFont = Font.createFont(Font.TRUETYPE_FONT, File(fontDir, "Prompt-Bold.ttf"))
 
-    fun attachInfoTag(thumbnailUrl: String, target: MessageCreateSpec, imageCount: Int = 1, video: Boolean = false): String? {
-        var attachUrl: String? = null
+    fun attachInfoTag(thumbnailUrl: String, imageCount: Int = 1, video: Boolean = false): ByteArrayInputStream? {
+        var thumbnailStream: ByteArrayInputStream? = null
         var graphics: Graphics2D? = null
 
         try {
@@ -65,14 +65,10 @@ object TwitterThumbnailGenerator {
             }
 
             // attach completed image to message
-            val stream = ByteArrayOutputStream().use { os ->
+            thumbnailStream = ByteArrayOutputStream().use { os ->
                 ImageIO.write(image, "png", os)
                 ByteArrayInputStream(os.toByteArray())
             }
-            target.addFile("thumbnail_edit.png", stream)
-
-            // provide url to attached image
-            attachUrl = "attachment://thumbnail_edit.png"
 
         } catch(e: Exception) {
             LOG.warn("Unable to generate Twitter thumbnail for attachment $thumbnailUrl + $imageCount:$video :: ${e.message}")
@@ -80,6 +76,6 @@ object TwitterThumbnailGenerator {
         } finally {
             graphics?.dispose()
         }
-        return attachUrl
+        return thumbnailStream
     }
 }

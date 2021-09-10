@@ -31,9 +31,12 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
             listOf("reply", "replies", "directreply"),
             TwitterSettings::displayReplies
         ),
+        BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
+            listOf("mediaonly", "onlymedia", "limittext"),
+            TwitterSettings::mediaOnly
+        ),
         BooleanElement("Automatically request a translation for posted tweets",
-            listOf(
-                "translate", "translations", "tl", "t"),
+            listOf("translate", "translations", "tl", "t"),
             TwitterSettings::autoTranslate
         ),
         BooleanElement("Receive Tweet updates faster (for high priority feeds)",
