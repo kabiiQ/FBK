@@ -6,7 +6,6 @@ import moe.kabii.command.Command
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {

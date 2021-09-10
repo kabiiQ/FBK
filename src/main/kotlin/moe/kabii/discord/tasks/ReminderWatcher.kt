@@ -18,7 +18,6 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
-import org.postgresql.jdbc.TimestampUtils
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max

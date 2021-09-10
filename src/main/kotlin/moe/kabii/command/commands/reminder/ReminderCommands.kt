@@ -13,7 +13,6 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.tryAwait
-import moe.kabii.util.extensions.userAddress
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration

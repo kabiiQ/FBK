@@ -11,7 +11,6 @@ import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object GuildUtil : CommandContainer {

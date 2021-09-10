@@ -2,7 +2,6 @@ package moe.kabii.util
 
 import moe.kabii.rusty.Try
 import java.time.Duration
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
