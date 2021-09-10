@@ -42,7 +42,7 @@ object DurationParser {
                 } ?: 0
                 if(inputYears > 0) {
                     val future = LocalDateTime.now().plusYears(inputYears)
-                    days += Duration.between(Instant.now(), future).toDays()
+                    days += Duration.between(LocalDateTime.now(), future).toDays()
                 }
 
                 val inputMonths = patternMonths.find(str)?.run {
@@ -51,7 +51,7 @@ object DurationParser {
                 } ?: 0L
                 if(inputMonths > 0) {
                     val future = LocalDateTime.now().plusMonths(inputMonths)
-                    days += Duration.between(Instant.now(), future).toDays()
+                    days += Duration.between(LocalDateTime.now(), future).toDays()
                 }
 
                 val patternWeeks = Regex("([0-9]+)W(?:EEKS?)?") // match 2W, 2WEEK, 2WEEKS
