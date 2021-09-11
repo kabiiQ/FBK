@@ -7,7 +7,6 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
-import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -16,8 +15,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
-import java.time.Instant
-import kotlin.math.max
 
 class YoutubeMembershipMaintainer(val discord: GatewayDiscordClient): Runnable {
 

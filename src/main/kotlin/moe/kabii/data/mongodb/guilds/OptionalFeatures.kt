@@ -105,6 +105,7 @@ data class TwitterSettings(
     var displayReplies: Boolean = false,
     var displayQuote: Boolean = true,
     var displayRetweet: Boolean = false,
+    var mediaOnly: Boolean = false,
     var autoTranslate: Boolean = false,
     var streamFeeds: Boolean = false
 )

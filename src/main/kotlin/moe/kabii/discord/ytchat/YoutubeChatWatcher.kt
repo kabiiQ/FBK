@@ -91,10 +91,11 @@ class YoutubeChatWatcher(discord: GatewayDiscordClient) : Runnable {
                     LOG.info("Subscribing to YT chat: $newChatId")
                     // launch thread for each chat connection/process
                     thread(start = true) {
-                        val subprocess = ProcessBuilder("python", scriptName, newChatId)
+                        val subprocess = ProcessBuilder("python3", scriptName, newChatId)
                             .directory(scriptDir)
                             .start()
 
+                        println("1: $newChatId")
                         activeChats[newChatId] = subprocess
 
                         subprocess.inputStream
@@ -104,11 +105,15 @@ class YoutubeChatWatcher(discord: GatewayDiscordClient) : Runnable {
                                 parseQueue.trySend(YTChatData(chatRoom, chatData))
                             }
 
+                        println("2: $newChatId")
+
                         // if outputstream ends, this process should be ending (or unresponsive?)
                         subprocess.destroy()
                         if(subprocess.waitFor() != 0) {
                             activeChats.remove(newChatId)
+                            println("lost chat $newChatId")
                         }
+                        println("3: $newChatId")
                     }
                 }
             delay(Duration.ofSeconds(5))

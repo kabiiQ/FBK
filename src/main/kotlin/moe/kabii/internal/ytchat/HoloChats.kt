@@ -20,19 +20,22 @@ class HoloChats(val discord: GatewayDiscordClient) {
         .ofType(MessageChannel::class.java)
         .tryBlock().orNull()
 
+    private val irysId = "UC8rcEBzJSleTkf_-agPM20g"
+
     suspend fun handleHoloChat(data: YoutubeChatWatcher.YTMessageData) {
         val (room, chat) = data
         // send Hololive messages to stream chat
-        if(room.channelId != "UC8rcEBzJSleTkf_-agPM20g") return
+        if(room.channelId != irysId) return
         try {
             val member = hololive[chat.author.channelId]
             if(member != null) {
                 streamChatChannel!!.createEmbed { spec ->
-                    val gen = member.generation?.run { " ($this)" } ?: ""
+                    fbkColor(spec)
+                    val gen = if(chat.author.channelId == irysId) "" else member.generation?.run { " ($this)" } ?: ""
                     val name = "${member.names.first()}$gen"
                     spec.setAuthor(name, chat.author.channelUrl, chat.author.imageUrl)
-                    fbkColor(spec)
-                    spec.setDescription(chat.message)
+                    val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
+                    spec.setDescription("$info: ${chat.message}")
                 }.awaitSingle()
             }
         } catch(e: Exception) {

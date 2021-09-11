@@ -14,7 +14,6 @@ import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookMana
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchFeedSubscriber
 import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchSubscriptionManager
-import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeFeedPuller
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.discord.ytchat.YoutubeChatWatcher
@@ -75,11 +74,11 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
         val ytMembershipMaintainer = YoutubeMembershipMaintainer(discord)
 
-        val pullDelay = ServiceRequestCooldownSpec(
+        /*val pullDelay = ServiceRequestCooldownSpec(
             callDelay = 5_000L,
             minimumRepeatTime = 120_000L
         )
-        val ytManualPuller = YoutubeFeedPuller(pullDelay)
+        val ytManualPuller = YoutubeFeedPuller(pullDelay)*/
 
 
         val malDelay = ServiceRequestCooldownSpec(
@@ -116,7 +115,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             Thread(twitchSubs, "TwitchSubscriptionManager"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
-            Thread(ytManualPuller, "YT-ManualFeedPull"),
+            //Thread(ytManualPuller, "YT-ManualFeedPull"),
             Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
             malThread,
             kitsuThread,
