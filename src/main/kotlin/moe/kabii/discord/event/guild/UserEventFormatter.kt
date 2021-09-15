@@ -1,5 +1,6 @@
 package moe.kabii.discord.event.user
 
+import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
@@ -88,18 +89,12 @@ class UserEventFormatter(val user: User) {
         // *joinDate="dd MM yyyy HH:mm:ss"
         val matchJoinDate = paramMatcher(format, "joinDate")
         if (matchJoinDate != null) {
-            format = if (member != null) {
-                val dateFormatParam = matchJoinDate.groups[1]
-                val joinDateFormat = if (dateFormatParam != null) {
-                    SimpleDateFormat(dateFormatParam.value)
-                } else {
-                    // default format
-                    SimpleDateFormat("dd MMMM yyyy")
-                }
-                format.replace(matchJoinDate.value, joinDateFormat.format(member.joinTime))
-            } else {
-                format.replace(matchJoinDate.value, "")
-            }
+            val joinTime = member?.joinTime?.orNull()
+            format = if(joinTime != null) {
+
+                format.replace(matchJoinDate.value, TimestampFormat.SHORT_DATE_TIME.format(joinTime))
+
+            } else format.replace(matchJoinDate.value, "")
         }
 
         val matchDuration = paramMatcher(format, "joinDuration")

@@ -1,6 +1,8 @@
 # BLANK CONFIG
 [discord]
 token = ''
+discord_client_id = ''
+discord_client_secret = ''
 
 [osu]
 token = ''
@@ -31,7 +33,6 @@ domain = 'http://public_path_to_server'
 [twitch]
 client_id = ''
 client_secret = ''
-chat_oauth_token = 'oauth:'
 app_access_token = ''
 callback = ''
 twitch_signing_key = ''
@@ -77,3 +78,8 @@ deepl_key = ''
 
 [wolfram]
 wolfram_appid = ''
+
+[oauth]
+root_oauth_uri = ''
+port_block_start = ''
+oauth_signing_key = ''

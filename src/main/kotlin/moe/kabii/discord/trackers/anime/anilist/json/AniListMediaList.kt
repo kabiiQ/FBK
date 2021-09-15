@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.JSON
 import moe.kabii.MOSHI
-import moe.kabii.data.GQLQueries
+import moe.kabii.data.flat.GQLQueries
 import moe.kabii.discord.trackers.anime.ConsumptionStatus
 import moe.kabii.discord.trackers.anime.MediaType
 import okhttp3.RequestBody

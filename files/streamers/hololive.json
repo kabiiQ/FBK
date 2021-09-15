@@ -1,0 +1,387 @@
+{
+  "groupName": "Hololive",
+  "streamers": [
+    {
+      "names": [
+        "AZKi"
+      ],
+      "youtubeId": "UC0TXe_LYZ4scaW2XMyi5_kw",
+      "generation": "Gen 0"
+    },
+    {
+      "names": [
+        "Suisei",
+        "Hoshimachi Suisei"
+      ],
+      "youtubeId": "UC5CwaMl1eIgY8h02uZw7u8A",
+      "generation": "Gen 0"
+    },
+    {
+      "names": [
+        "Sakura Miko",
+        "Miko"
+      ],
+      "youtubeId": "UC-hM6YJuNYVAmUWxeIr9FeA",
+      "twitchId": 557359020,
+      "generation": "Gen 0"
+    },
+    {
+      "names": [
+        "Tokino Sora",
+        "Sora"
+      ],
+      "youtubeId": "UCp6993wxpyDPHUpavwDFqgg",
+      "generation": "Gen 0"
+    },
+    {
+      "names": [
+        "Roboco-san",
+        "Roboco"
+      ],
+      "youtubeId": "UCDqI2jOz0weumE8s7paEk6g",
+      "generation": "Gen 0"
+    },
+    {
+      "names": [
+        "Mel",
+        "Yozora Mel"
+      ],
+      "youtubeId": "UCD8HOxPs4Xvsm8H0ZxXGiBw",
+      "generation": "Gen 1"
+    },
+    {
+      "names": [
+        "Fubuki",
+        "Shirakami Fubuki"
+      ],
+      "youtubeId": "UCdn5BQ06XqgXoAxIhbqw5Rg",
+      "generation": "Gen 1"
+    },
+    {
+      "names": [
+        "Matsuri",
+        "Natsuiro Matsuri"
+      ],
+      "youtubeId": "UCQ0UDLQCjY0rmuxCDE38FGg",
+      "generation": "Gen 1"
+    },
+    {
+      "names": [
+        "Akirose",
+        "Aki Rosenthal"
+      ],
+      "youtubeId": "UCFTLzh12_nrtzqBPsTCqenA",
+      "generation": "Gen 1"
+    },
+    {
+      "names": [
+        "Haachama",
+        "Akai Haato"
+      ],
+      "youtubeId": "UC1CfXB_kRs3C-zaeTG3oGyg",
+      "generation": "Gen 1"
+    },
+    {
+      "names": [
+        "Aqua",
+        "Minato Aqua"
+      ],
+      "youtubeId": "UC1opHUrw8rvnsadT-iGp7Cg",
+      "generation": "Gen 2"
+    },
+    {
+      "names": [
+        "Shion",
+        "Murasaki Shion"
+      ],
+      "youtubeId": "UCXTpFs_3PqI41qX2d9tL2Rw",
+      "generation": "Gen 2"
+    },
+    {
+      "names": [
+        "Ayame",
+        "Nakiri Ayame"
+      ],
+      "youtubeId": "UC7fk0CB07ly8oSl0aqKkqFg",
+      "generation": "Gen 2"
+    },
+    {
+      "names": [
+        "Choco",
+        "Yuzuki Choco"
+      ],
+      "youtubeId": "UC1suqwovbL1kzsoaZgFZLKg",
+      "generation": "Gen 2"
+    },
+    {
+      "names": [
+        "Subaru",
+        "Oozora Subaru"
+      ],
+      "youtubeId": "UCvzGlP9oQwU--Y0r9id_jnA",
+      "generation": "Gen 2"
+    },
+    {
+      "names": [
+        "Mio",
+        "Ookami Mio"
+      ],
+      "youtubeId": "UCp-5t9SrOQwXMU7iIjQfARg",
+      "generation": "Hololive GAMERS"
+    },
+    {
+      "names": [
+        "Okayu",
+        "Nekomata Okayu"
+      ],
+      "youtubeId": "UCvaTdHTWBGv3MKj3KVqJVCw",
+      "generation": "Hololive GAMERS"
+    },
+    {
+      "names": [
+        "Korone",
+        "Inugami Korone"
+      ],
+      "youtubeId": "UChAnqc_AY5_I3Px5dig3X1Q",
+      "generation": "Hololive GAMERS"
+    },
+    {
+      "names": [
+        "Pekora",
+        "Usada Pekora"
+      ],
+      "youtubeId": "UC1DCedRgGHBdm81E1llLhOQ",
+      "generation": "Gen 3"
+    },
+    {
+      "names": [
+        "Rushia",
+        "Uruha Rushia"
+      ],
+      "youtubeId": "UCl_gCybOJRIgOXw6Qb4qJzQ",
+      "generation": "Gen 3"
+    },
+    {
+      "names": [
+        "Flare",
+        "Shiranui Flare"
+      ],
+      "youtubeId": "UCvInZx9h3jC2JzsIzoOebWg",
+      "generation": "Gen 3"
+    },
+    {
+      "names": [
+        "Noel",
+        "Shirogane Noel"
+      ],
+      "youtubeId": "UCdyqAaZDKHXg4Ahi7VENThQ",
+      "generation": "Gen 3"
+    },
+    {
+      "names": [
+        "Marine",
+        "Houshou Marine"
+      ],
+      "youtubeId": "UCCzUftO8KOVkV4wQG1vkUvg",
+      "generation": "Gen 3"
+    },
+    {
+      "names": [
+        "Kanata",
+        "Amane Kanata"
+      ],
+      "youtubeId": "UCZlDXzGoo7d44bwdNObFacg",
+      "generation": "Gen 4"
+    },
+    {
+      "names": [
+        "Towa",
+        "Tokoyami Towa"
+      ],
+      "youtubeId": "UC1uv2Oq6kNxgATlCiez59hw",
+      "generation": "Gen 4"
+    },
+    {
+      "names": [
+        "Luna",
+        "Himemori Luna"
+      ],
+      "youtubeId": "UCa9Y57gfeY0Zro_noHRVrnw",
+      "generation": "Gen 4"
+    },
+    {
+      "names": [
+        "Watame",
+        "Tsunomaki Watame"
+      ],
+      "youtubeId": "UCqm3BQLlJfvkTsX_hvm0UmA",
+      "generation": "Gen 4"
+    },
+    {
+      "names": [
+        "Lamy",
+        "Yukihana Lamy"
+      ],
+      "youtubeId": "UCFKOVgVbGmX65RxO3EtH3iw",
+      "generation": "Gen 5"
+    },
+    {
+      "names": [
+        "Nenechi",
+        "Momosuzu Nene"
+      ],
+      "youtubeId": "UCAWSyEs_Io8MtpY3m-zqILA",
+      "generation": "Gen 5"
+    },
+    {
+      "names": [
+        "Botan",
+        "Shishiro Botan"
+      ],
+      "youtubeId": "UCUKD-uaobj9jiqB-VXt71mA",
+      "generation": "Gen 5"
+    },
+    {
+      "names": [
+        "Polka",
+        "Omaru Polka"
+      ],
+      "youtubeId": "UCK9V2B22uJYu3N7eR_BT9QA",
+      "generation": "Gen 5"
+    },
+    {
+      "names": [
+        "Risu",
+        "Ayunda Risu"
+      ],
+      "youtubeId": "UCOyYb1c43VlX9rc_lT6NKQw",
+      "generation": "ID Gen 1"
+    },
+    {
+      "names": [
+        "Moona",
+        "Moona Hoshinova"
+      ],
+      "youtubeId": "UCP0BspO_AMEe3aQqqpo89Dg",
+      "generation": "ID Gen 1"
+    },
+    {
+      "names": [
+        "Iofi",
+        "Airani Iofifteen"
+      ],
+      "youtubeId": "UCAoy6rzhSf4ydcYjJw3WoVg",
+      "generation": "ID Gen 1"
+    },
+    {
+      "names": [
+        "Ollie",
+        "Kureiji Ollie"
+      ],
+      "youtubeId": "UCYz_5n-uDuChHtLo7My1HnQ",
+      "generation": "ID Gen 2"
+    },
+    {
+      "names": [
+        "Anya",
+        "Anya Melfissa"
+      ],
+      "youtubeId": "UC727SQYUvx5pDDGQpTICNWg",
+      "generation": "ID Gen 2"
+    },
+    {
+      "names": [
+        "Reine",
+        "Pavolia Reine"
+      ],
+      "youtubeId": "UChgTyjG-pdNvxxhdsXfHQ5Q",
+      "generation": "ID Gen 2"
+    },
+    {
+      "names": [
+        "Calli",
+        "Mori Calliope"
+      ],
+      "youtubeId": "UCL_qhgtOy0dy1Agp8vkySQg",
+      "generation": "HoloMyth"
+    },
+    {
+      "names": [
+        "Kiara",
+        "Takanashi Kiara"
+      ],
+      "youtubeId": "UCHsx4Hqa-1ORjQTh9TYDhww",
+      "generation": "HoloMyth"
+    },
+    {
+      "names": [
+        "Ina",
+        "Ninomae Ina'nis"
+      ],
+      "youtubeId": "UCMwGHR0BTZuLsmjY_NT5Pwg",
+      "generation": "HoloMyth"
+    },
+    {
+      "names": [
+        "Gura",
+        "Gawr Gura"
+      ],
+      "youtubeId": "UCoSrY_IQQVpmIRZ9Xf-y93g",
+      "generation": "HoloMyth"
+    },
+    {
+      "names": [
+        "Ame",
+        "Watson Amelia"
+      ],
+      "youtubeId": "UCyl1z3jo3XHR1riLFKG5UAg",
+      "twitchId": 602713894,
+      "generation": "HoloMyth"
+    },
+    {
+      "names": [
+        "IRyS"
+      ],
+      "youtubeId": "UC8rcEBzJSleTkf_-agPM20g",
+      "generation": "Project: HOPE"
+    },
+    {
+      "names": [
+        "Sana",
+        "Tsukumo Sana"
+      ],
+      "youtubeId": "UCsUj0dszADCGbF3gNrQEuSQ",
+      "generation": "HoloCouncil"
+    },
+    {
+      "names": [
+        "Ceres Fauna"
+      ],
+      "youtubeId": "UCO_aKKYxn4tvrqPjcTzZ6EQ",
+      "generation": "HoloCouncil"
+    },
+    {
+      "names": [
+        "Kronii",
+        "Ouro Kronii"
+      ],
+      "youtubeId": "UCmbs8T6MWqUHP1tIQvSgKrg",
+      "generation": "HoloCouncil"
+    },
+    {
+      "names": [
+        "Mumei",
+        "Nanashi Mumei"
+      ],
+      "youtubeId": "UC3n5uGu18FoCy23ggWWp8tA",
+      "generation": "HoloCouncil"
+    },
+    {
+      "names": [
+        "Hakos Baelz"
+      ],
+      "youtubeId": "UCgmPnx-EEeOrZSg5Tiw7ZRQ",
+      "generation": "HoloCouncil"
+    }
+  ]
+}

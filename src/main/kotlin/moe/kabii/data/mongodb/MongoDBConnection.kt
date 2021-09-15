@@ -6,7 +6,7 @@ import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.model.UpdateOptions
 import discord4j.core.`object`.entity.Message
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine

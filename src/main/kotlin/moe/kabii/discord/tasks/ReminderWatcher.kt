@@ -1,5 +1,6 @@
 package moe.kabii.discord.tasks
 
+import discord4j.common.util.TimestampFormat
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -73,7 +74,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
             reminderColor(this)
             val clock = EmojiCharacters.alarm
             setAuthor("$clock Reminder for ${user.userAddress()} $clock", null, user.avatarUrl)
-            val created = "Reminder created $createdTime ago."
+            val created = "Reminder created at ${TimestampFormat.SHORT_DATE_TIME.format(reminder.created.javaInstant)}"
             val desc = if(reminder.originMessage != null) {
                 "[$created](${reminder.originMessage!!.jumpLink})"
             } else created
@@ -82,8 +83,6 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
             if(content.isNotBlank()) {
                 addField("Reminder:", content, false)
             }
-            setFooter("Reminder created", null)
-            setTimestamp(reminder.created.javaInstant)
         }
 
         suspend fun sendReminder(target: MessageChannel) {

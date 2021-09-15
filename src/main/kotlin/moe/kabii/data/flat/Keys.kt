@@ -1,4 +1,4 @@
-package moe.kabii.data
+package moe.kabii.data.flat
 
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
@@ -14,6 +14,8 @@ object Keys : ConfigSpec("") {
 
     object Discord : ConfigSpec() {
         val token by required<String>()
+        val clientId by required<String>("discord_client_id")
+        val clientSecret by required<String>("discord_client_secret")
     }
     object Osu : ConfigSpec() {
         val token by required<String>()
@@ -46,6 +48,7 @@ object Keys : ConfigSpec("") {
     }
     object Netty : ConfigSpec() {
         val port by required<Int>()
+        val host by required<Boolean>()
         val domain by required<String>()
     }
     object Admin : ConfigSpec() {
@@ -72,6 +75,7 @@ object Keys : ConfigSpec("") {
         val clientSecret by required<String>("twitcast_client_secret")
         val webhookPort by required<Int>("twitcast_webhook_port")
         val signature by required<String>("twitcast_webhook_signature")
+        val listen by required<Boolean>("twitcast_webhook_listen")
     }
     object DeepL : ConfigSpec("deepl") {
         val authKey by required<String>("deepl_key")
@@ -79,8 +83,10 @@ object Keys : ConfigSpec("") {
     object Wolfram : ConfigSpec("wolfram") {
         val appId by required<String>("wolfram_appid")
     }
-    object Dev : ConfigSpec() {
-        val host by required<Boolean>("host_internal_servers")
+    object OAuth : ConfigSpec("oauth") {
+        val rootOauthUri by required<String>("root_oauth_uri")
+        val portBlock by required<Int>("port_block_start")
+        val stateKey by required<String>("oauth_signing_key")
     }
 
     fun saveConfigFile() {

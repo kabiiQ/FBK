@@ -20,6 +20,7 @@ import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
@@ -70,7 +71,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             // delete streamchannels with no assocaiated targets
             // this will also work later and untrack if we have a function to remove targets that are disabled
             if(channel.site != TrackedStreams.DBSite.YOUTUBE ||
-                    YoutubeVideoTrack.getForChannel(channel).empty()) {
+                (YoutubeVideoTrack.getForChannel(channel).empty() && MembershipConfigurations.getForChannel(channel).empty())
+            ) {
 
                 channel.delete()
                 LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")

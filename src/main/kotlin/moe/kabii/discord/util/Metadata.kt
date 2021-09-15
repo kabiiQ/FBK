@@ -2,7 +2,7 @@ package moe.kabii.discord.util
 
 import discord4j.common.util.Snowflake
 import discord4j.common.util.TokenUtil
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.util.extensions.snowflake
 import java.time.Instant
 

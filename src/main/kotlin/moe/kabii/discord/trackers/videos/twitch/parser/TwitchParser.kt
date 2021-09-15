@@ -5,7 +5,7 @@ import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.twitch.TwitchGameInfo
 import moe.kabii.discord.trackers.videos.twitch.TwitchStreamInfo

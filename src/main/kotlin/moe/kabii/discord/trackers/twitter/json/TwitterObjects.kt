@@ -43,8 +43,8 @@ data class TwitterTweet(
     private val rtRegex = Regex("RT @${TwitterParser.twitterUsernameRegex}: ")
     @Transient val text = _text.replaceFirst(rtRegex, "")
 
-    @Transient lateinit var attachments: MutableList<TwitterMediaObject>
-    @Transient lateinit var references: MutableList<TwitterTweet>
+    @Transient var attachments: MutableList<TwitterMediaObject> = mutableListOf()
+    @Transient var references: MutableList<TwitterTweet> = mutableListOf()
     @Transient var author: TwitterUser? = null
 
     @Transient val notifyOption = when {
