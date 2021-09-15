@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.5.10"
+    val kotlinVer = "1.5.30"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -49,17 +49,17 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.5.0"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    val coroutinesVer = "1.5.1"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.3") // can update once d4j 3.2 is available
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.4") // can update once d4j 3.2 is available
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.0-M4") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.0-RC3") // discord websocket and api
 
     // music bot
     implementation("com.sedmelluq:lavaplayer:1.3.77") // discord audio library
@@ -68,7 +68,7 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.20")
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
 
     // other api - json response parsing
     val moshiVer = "1.12.0"
@@ -87,8 +87,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor")
 
     // ps2 websocket
-    implementation("org.java-websocket:Java-WebSocket:1.5.1")
-    implementation("com.googlecode.json-simple:json-simple:1.1.1")
+    implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     // welcome banner image processing
     val imageIO = "3.7.0"
@@ -98,11 +97,11 @@ dependencies {
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.2.7")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.3.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.32.1"
+    val exposedVer = "0.34.2"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
@@ -154,9 +153,9 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "16"
     }
-    java.targetCompatibility = JavaVersion.VERSION_15
+    java.targetCompatibility = JavaVersion.VERSION_16
 
     build {
         dependsOn(updateVersion)
