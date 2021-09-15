@@ -7,6 +7,9 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.EmbedCreateFields
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageCreateMono
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.runBlocking
@@ -20,9 +23,7 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.message.MessageHandler
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
-import moe.kabii.discord.util.specColor
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -93,58 +94,23 @@ data class DiscordParameters (
         } // else this is pm, allow
     }
 
-    private fun reference(spec: MessageCreateSpec) = spec.setMessageReference(event.message.id)
+    // create a message that mentions the command-runner
+    fun reply(vararg embeds: EmbedCreateSpec) = chan
+        .createMessage(*embeds)
+        .run(::withReference)
 
-    fun error(block: EmbedSuspension) = chan.createMessage { spec ->
-        spec.setEmbed { embed ->
-            errorColor(embed)
-            runBlocking {
-                block(embed)
-            }
+    // Create a 'usage info' embed
+    fun usage(commandError: String, linkText: String?, user: User? = null) = EmbedCreateSpec.create()
+        .withColor(MessageColors.spec)
+        .run {
+            val link = if(linkText != null) {
+                if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
+            } else ""
+            withDescription("$commandError$link")
         }
-        reference(spec)
-    }
+        .withUser(user)
 
-    fun error(author: User, block: EmbedSuspension) = this.error {
-        block(this)
-        setAuthor(author.userAddress(), null, author.avatarUrl)
-    }
-
-    fun embed(block: EmbedSuspension) = chan.createMessage { spec ->
-        spec.setEmbed { embed ->
-            fbkColor(embed)
-            runBlocking {
-                block(embed)
-            }
-        }
-        reference(spec)
-    }
-
-    fun embed(author: User, block: EmbedSuspension) = this.embed {
-        block(this)
-        setAuthor(author.userAddress(), null, author.avatarUrl)
-    }
-
-    fun embedBlock(block: EmbedBlock) = chan.createMessage { spec ->
-        spec.setEmbed { embed ->
-            fbkColor(embed)
-            block(embed)
-        }
-        reference(spec)
-    }
-
-    fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->
-        specColor(embed)
-        val link = if(linkText != null) {
-            if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
-        } else ""
-        embed.setDescription("$commandError$link")
-    }
-
-    fun error(error: String) = error { setDescription(error) }
-    fun error(user: User, error: String) = error(user) { setDescription(error) }
-    fun embed(info: String) = embed { setDescription(info) }
-    fun embed(user: User, info: String) = embed(user) { setDescription(info) }
+    private fun withReference(spec: MessageCreateMono) = spec.withMessageReference(event.message.id)
 
     suspend fun getMessage(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<Message?> {
         var (user, channel) = Criteria defaultFor this
