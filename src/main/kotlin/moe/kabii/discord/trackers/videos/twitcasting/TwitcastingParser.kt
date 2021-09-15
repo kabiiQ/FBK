@@ -3,7 +3,7 @@ package moe.kabii.discord.trackers.videos.twitcasting
 import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.*
-import moe.kabii.data.Keys
+import moe.kabii.data.flat.Keys
 import moe.kabii.discord.trackers.videos.twitcasting.json.*
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request

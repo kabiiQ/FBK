@@ -14,6 +14,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.net.oauth.discord.DiscordAuthorization
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.FormBody
@@ -104,9 +105,8 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                         .add("client_secret", DiscordAuthorization.discordClientSecret)
                         .build()
 
-                    val request = Request.Builder()
+                    val request = newRequestBuilder()
                         .url(tokenUrl)
-                        .header("User-Agent", "srkmfbk/1.0")
                         .post(body)
                         .build()
                     val response = OkHTTP.newCall(request).execute()

@@ -2,6 +2,7 @@ package moe.kabii.net.oauth.discord
 
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import java.io.IOException
@@ -9,10 +10,9 @@ import java.io.IOException
 object DiscordParser {
 
     fun getUserConnections(token: String): List<DAPI.UserConnection> {
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .url("https://discord.com/api/users/@me/connections")
             .get()
-            .header("User-Agent", "srkmfbk/1.0")
             .header("Authorization", "Bearer $token")
             .build()
         return try {

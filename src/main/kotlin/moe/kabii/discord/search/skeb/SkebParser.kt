@@ -3,6 +3,7 @@ package moe.kabii.discord.search.skeb
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 
@@ -14,7 +15,7 @@ object SkebParser {
 
     @Throws(SkebIOException::class)
     private inline fun <reified R: Any> request(requestPart: String): R? {
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
             .url("https://skeb.jp/api/$requestPart")
             .header("User-Agent", "srkmfbk/1.0")
