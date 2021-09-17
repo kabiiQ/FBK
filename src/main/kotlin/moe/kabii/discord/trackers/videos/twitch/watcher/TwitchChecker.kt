@@ -156,7 +156,8 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                                     user!!,
                                     features
                                 ).statistics(dbStream)
-                                discordMessage.edit { spec -> spec.setEmbed(specEmbed.create) }
+                                discordMessage.edit()
+                                    .withEmbeds(specEmbed.create())
                             } else {
                                 discordMessage.delete()
                             }.thenReturn(Unit).tryAwait()
@@ -236,16 +237,15 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                     } else null
 
                     val newNotification = try {
-                        chan.createMessage { spec ->
-                            if(mention != null) {
-                                if(mention.db.lastMention == null
-                                    || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6)) {
-                                    spec.setContent(mention.discord.mention)
-                                    mention.db.lastMention = DateTime.now()
-                                }
-                            }
-                            spec.setEmbed(embed.block)
-                        }.awaitSingle()
+                        val mentionMessage = if(mention != null
+                            && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+
+                            mention.db.lastMention = DateTime.now()
+                            chan.createMessage(mention.discord.mention)
+                        } else chan.createMessage()
+
+                        mentionMessage.withEmbeds(embed.create()).awaitSingle()
+
                     } catch (ce: ClientException) {
                         val err = ce.status.code()
                         if (err == 403) {
@@ -272,7 +272,9 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                 } else {
                     val existingNotif = getDiscordMessage(existing, channel)
                     if (existingNotif != null && changed) {
-                        existingNotif.edit { msg -> msg.setEmbed(embed.block) }.tryAwait()
+                        existingNotif.edit()
+                            .withEmbeds(embed.create())
+                            .tryAwait()
                     }
                 }
             } catch(e: Exception) {

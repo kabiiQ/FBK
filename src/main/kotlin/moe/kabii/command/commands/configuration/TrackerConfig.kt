@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.util.Embeds
 
 object TrackerConfig : CommandContainer {
     object SetDefaultTracker : Command("usetracker", "settracker", "usetrack", "settrack", "usefeature", "usetarget", "settarget", "setfeature", "tracker") {
@@ -26,20 +27,20 @@ object TrackerConfig : CommandContainer {
                     supportedSite.alias.contains(trackerArg)
                 }
                 if (tracker == null) {
-                    error("Unknown/unsupported target **${args[0]}**.").awaitSingle()
+                    reply(Embeds.error("Unknown/unsupported target **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
                 val features = config.getOrCreateFeatures(chan.id.asLong())
                 val featureEnabled = tracker.channelFeature.get(features)
                 if (!featureEnabled) {
-                    error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.").awaitSingle()
+                    reply(Embeds.error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.")).awaitSingle()
                     return@discord
                 }
 
                 features.trackerDefault = tracker.alias.first()
                 config.save()
-                embed("The default track target for **#${guildChan.name}** has been set to **${tracker.full}**.").awaitSingle()
+                reply(Embeds.fbk("The default track target for **#${guildChan.name}** has been set to **${tracker.full}**.")).awaitSingle()
             }
         }
     }

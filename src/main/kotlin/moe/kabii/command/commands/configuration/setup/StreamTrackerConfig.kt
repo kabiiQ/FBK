@@ -9,6 +9,7 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.videos.StreamWatcher
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.propagateTransaction
@@ -75,7 +76,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             val features = features()
 
             if(!features.streamTargetChannel) {
-                error("**#${guildChan.name}** does not have stream tracking enabled.").awaitSingle()
+                reply(Embeds.error("**#${guildChan.name}** does not have stream tracking enabled.")).awaitSingle()
                 return@discord
             }
 
@@ -84,7 +85,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                 "set" -> {
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.").awaitSingle()
+                        reply(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
                         return@discord
                     }
 
@@ -107,14 +108,14 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     }
 
                     if (siteTarget.site !is StreamingTarget) {
-                        error("The **streamcfg set** command is only supported for **livestream** sources.").awaitSingle()
+                        reply(Embeds.error("The **streamcfg set** command is only supported for **livestream** sources.")).awaitSingle()
                         return@discord
                     }
 
                     val streamInfo = when (val streamCall = siteTarget.site.getChannel(siteTarget.identifier)) {
                         is Ok -> streamCall.value
                         is Err -> {
-                            error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.").awaitSingle()
+                            reply(Embeds.error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.")).awaitSingle()
                             return@discord
                         }
                     }
@@ -125,7 +126,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         feature.marks.removeIf { existing ->
                             existing.channel == dbChannel
                         }
-                        embed("The live mark for **${streamInfo.displayName}** has been removed.").awaitSingle()
+                        reply(Embeds.fbk("The live mark for **${streamInfo.displayName}** has been removed.")).awaitSingle()
                     } else {
                         val newMark = ChannelMark(dbChannel, mark)
                         feature.marks.removeIf { existing ->
@@ -133,9 +134,9 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         }
                         feature.marks.add(newMark)
 
-                        embed("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
+                        reply(Embeds.fbk("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
                                 "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
-                                "Note that it is **impossible** to use uploaded/custom emojis in a channel name.").awaitSingle()
+                                "Note that it is **impossible** to use uploaded/custom emojis in a channel name.")).awaitSingle()
                     }
                     true
                 }
@@ -143,22 +144,19 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     // rename marks -> list configured channel marks
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.").awaitSingle()
+                        reply(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
                         return@discord
                     }
 
                     if(feature.marks.isEmpty()) {
-                        embed("There are no configured channel marks in **#${guildChan.name}**.")
+                        reply(Embeds.fbk("There are no configured channel marks in **#${guildChan.name}**."))
                     } else {
-
                         val allMarks = feature.marks.joinToString("\n") { mark ->
                             "${mark.channel.site.targetType.full}/${mark.channel.identifier}: ${mark.mark}"
                         }
-                        embed {
-                            setTitle("Configured stream markers in **#${guildChan.name}**")
-                            setDescription(allMarks)
-                        }
-
+                        reply(
+                            Embeds.fbk(allMarks).withTitle("Configured stream markers in **#${guildChan.name}**")
+                        )
                     }.awaitSingle()
                     false
                 }

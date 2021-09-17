@@ -4,6 +4,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.PermissionUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -24,7 +25,7 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
             }
             val role = Search.roleByNameOrID(this, noCmd)
             if(role == null) {
-                error("Can not find role **$noCmd**.").awaitSingle()
+                reply(Embeds.error("Can not find role **$noCmd**.")).awaitSingle()
                 return@discord
             }
             val selfAssignable =
@@ -34,17 +35,17 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
             val response = if(selfAssignable) {
                 if(member.roleIds.contains(role.id)) {
                     when(member.removeRole(role.id).success().tryAwait()) {
-                        is Ok -> embed(member,"You have been removed from the **${role.name}** role.")
-                        is Err -> error(member, "I tried to remove the **${role.name}** role from you, but I can not manage that role.")
+                        is Ok -> reply(Embeds.fbk("You have been removed from the **${role.name}** role."))
+                        is Err -> reply(Embeds.error("I tried to remove the **${role.name}** role from you, but I can not manage that role."))
                     }
                 } else {
                     when(member.addRole(role.id).success().tryAwait()) {
-                        is Ok -> embed(member, "You have been given the **${role.name}** role.")
-                        is Err -> error(member, "I tried to give you the **${role.name}** but I can not manage that role.")
+                        is Ok -> reply(Embeds.fbk("You have been given the **${role.name}** role."))
+                        is Err -> reply(Embeds.error("I tried to give you the **${role.name}** but I can not manage that role."))
                     }
                 }
             } else {
-                error(member, "You can not give yourself the **${role.name}** role.")
+                reply(Embeds.error("You can not give yourself the **${role.name}** role."))
             }
             response.awaitSingle()
         }

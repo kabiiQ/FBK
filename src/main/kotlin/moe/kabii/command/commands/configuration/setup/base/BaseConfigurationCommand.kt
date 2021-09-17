@@ -1,16 +1,19 @@
 package moe.kabii.command.commands.configuration.setup
 
 import discord4j.core.`object`.entity.Message
+import discord4j.core.spec.EmbedCreateFields
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageCreateMono
+import discord4j.core.spec.MessageEditSpec
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.EmbedBlock
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import kotlin.reflect.KMutableProperty1
@@ -96,25 +99,29 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
     private val reset = Regex("reset", RegexOption.IGNORE_CASE)
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
-        fun updatedEmbed(element: ConfigurationElement<T>, new: Any) = origin.embed {
-            setTitle("Configuration Updated")
+        fun updatedEmbed(element: ConfigurationElement<T>, new: Any): MessageCreateMono {
             val property = element.aliases.first()
             val newState = when(element) {
                 is BooleanElement -> if(new as Boolean) "**enabled**" else "**disabled**"
                 else -> "set to **${new.toString().ifBlank { "empty" }}**"
             }
-            setDescription("The option **$property** has been $newState.")
+            return origin.reply(
+                Embeds.fbk("The option **$property** has been $newState.").withTitle("Configuration Updated")
+            )
         }
 
         // <command> (no args) -> full menu embed
 
         if(origin.args.isEmpty()) {
-            val configEmbed: EmbedBlock = {
-                fbkColor(this)
-                setAuthor(name, null, null)
+            fun configEmbed(): EmbedCreateSpec {
+                var embed = Embeds.fbk()
+                    .withAuthor(EmbedCreateFields.Author.of(name, null, null))
+
+                val configFields = mutableListOf<EmbedCreateFields.Field>()
+
                 // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
                 if(module.elements.any { element -> element is BooleanElement }) {
-                    setTitle("Select the feature to be toggled/edited using its ID or bolded name.")
+                    embed = embed.withTitle("Select the feature to be toggled/edited using its ID or bolded name.")
                     // feature toggles - these can be made into FeatureElements if we have other toggles later on
                     val enabled = module.elements.mapIndexedNotNull { id, element ->
                         if(element is BooleanElement && element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
@@ -122,23 +129,28 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     val available = module.elements.mapIndexedNotNull { id, element ->
                         if(element is BooleanElement && !element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
                     }.joinToString("\n").ifEmpty { "All ${module.name} features are enabled." }
-                    addField("Enabled Features", enabled, true)
-                    addField("Available (Disabled) Features", available, true)
+                    configFields.add(EmbedCreateFields.Field.of("Enabled Features", enabled, true))
+                    configFields.add(EmbedCreateFields.Field.of("Available (Disabled) Features", available, true))
                 }
+
                 module.elements.mapIndexedNotNull { id, element ->
                     if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${EmojiCharacters.spacer}**=** ${getValue(element)}" else null
                 }.run {
                     if(isNotEmpty())
-                        addField(
+                        configFields.add(EmbedCreateFields.Field.of(
                             "Custom Settings:",
                             StringUtils.abbreviate(joinToString("\n"), MagicNumbers.Embed.FIELD.VALUE),
                             false
-                        )
+                        ))
                 }
-                setFooter("\"exit\" to save and exit immediately.", null)
+
+                return embed
+                    .withFields(configFields)
+                    .withFooter(EmbedCreateFields.Footer.of("\"exit\" to save and exit immediately.", null))
             }
 
-            val menu = origin.embedBlock(configEmbed).awaitSingle()
+            val menu = origin.reply(configEmbed()).awaitSingle()
+
             while(true) {
                 val inputStr = origin.getString(timeout = embedTimeout) ?: break
 
@@ -154,7 +166,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
                     is StringElement -> {
                         // prompt user for new value
-                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getString(timeout = null)
                         if(response != null) {
                             if(response.matches(reset)) {
@@ -166,25 +178,25 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         prompt.delete().subscribe()
                     }
                     is DoubleElement -> {
-                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getDouble(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is LongElement -> {
-                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getLong(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is DurationElement -> {
-                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getDuration(timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response.toString())
                         prompt.delete().subscribe()
                     }
                     is CustomElement<T, *> -> {
-                        val prompt = origin.embed(element.prompt).awaitSingle()
+                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getMessage(timeout = embedTimeout)
                         if(response != null) {
                             val parsed = element.parser(origin, response, response.content)
@@ -193,13 +205,14 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         prompt.delete().subscribe()
                     }
                     is ViewElement<*, *> -> {
-                        origin.error(element.redirection).awaitSingle()
+                        origin.reply(Embeds.error(element.redirection)).awaitSingle()
                         continue
                     }
                 }
-                menu.edit { message ->
-                    message.setEmbed(configEmbed)
-                }.awaitSingle()
+                menu.edit(
+                    MessageEditSpec.create()
+                        .withEmbeds(configEmbed())
+                ).awaitSingle()
             }
             menu.delete().subscribe()
             return true
@@ -210,30 +223,33 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         // <command> list/all -> list current config
 
         if(targetElement == "list") {
-            origin.embed {
-                setTitle("Current ${module.name} configuration:")
-                module.elements.forEach { element ->
-                    val raw = getValue(element)
-                    val value = if(raw.isBlank()) "<NONE>" else StringUtils.abbreviate(raw, MagicNumbers.Embed.FIELD.VALUE)
-                    addField(getName(element), value, true)
-                }
-            }.awaitSingle()
+            val fields = module.elements.map { element ->
+                val raw = getValue(element)
+                val value = if(raw.isBlank()) "<NONE>" else StringUtils.abbreviate(raw, MagicNumbers.Embed.FIELD.VALUE)
+                EmbedCreateFields.Field.of(getName(element), value, true)
+            }
+            origin.reply(
+                Embeds.fbk()
+                    .withTitle("Current ${module.name} configuration:")
+                    .withFields(fields)
+            ).awaitSingle()
             return false
         }
 
         val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.lowercase() == targetElement.lowercase() } }
         if(element == null) {
-            origin.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.").awaitSingle()
+            origin.reply(Embeds.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.")).awaitSingle()
             return false
         }
         val tag = element.aliases.first()
         // <command> prop -> manual get
         // dont run this if this is a custom element w/ attachment
         if(origin.args.size == 1 && !(element is CustomElement<T, *> && origin.event.message.attachments.isNotEmpty())) {
-            origin.embed {
-                setTitle("From ${module.name} configuration:")
-                addField(getName(element), getValue(element), false)
-            }.awaitSingle()
+            origin.reply(
+                Embeds.fbk()
+                    .withTitle("From ${module.name} configuration:")
+                    .withFields(EmbedCreateFields.Field.of(getName(element), getValue(element), false))
+            ).awaitSingle()
             return false
         }
 
@@ -241,9 +257,9 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         if(origin.args.size == 2) {
             val arg = origin.args[1].lowercase()
             when {
-                arg.equals("toggle") -> {
+                arg == "toggle" -> {
                     if(element !is BooleanElement) {
-                        origin.error("The setting **$tag** is not a toggle.").awaitSingle()
+                        origin.reply(Embeds.error("The setting **$tag** is not a toggle.")).awaitSingle()
                         return false
                     }
                     val new = !element.prop.get(instance)
@@ -257,7 +273,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         is DurationElement -> element.prop.set(instance, element.default?.toString())
                         is CustomElement<T, *> -> element.prop.set(instance, element.default)
                         else -> {
-                            origin.error("The setting **$tag** is not a resettable custom value.").awaitSingle()
+                            origin.reply(Embeds.error("The setting **$tag** is not a resettable custom value.")).awaitSingle()
                             return false
                         }
                     }
@@ -288,7 +304,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     else -> null
                 }
                 if(bool == null) {
-                    origin.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**").awaitSingle()
+                    origin.reply(Embeds.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, bool)
@@ -304,7 +320,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is DoubleElement -> {
                 val input = origin.args[1].toDoubleOrNull()
                 if(input == null) {
-                    origin.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**").awaitSingle()
+                    origin.reply(Embeds.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)
@@ -314,7 +330,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is LongElement -> {
                 val input = origin.args[1].toLongOrNull()
                 if(input == null) {
-                    origin.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**").awaitSingle()
+                    origin.reply(Embeds.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)
@@ -324,7 +340,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is DurationElement -> {
                 val input = origin.args.drop(1).joinToString(" ").run(DurationParser::tryParse)
                 if(input == null) {
-                    origin.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h").awaitSingle()
+                    origin.reply(Embeds.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input.toString())
@@ -342,7 +358,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 } else false
             }
             is ViewElement<*, *> -> {
-                origin.error(element.redirection).awaitSingle()
+                origin.reply(Embeds.error(element.redirection)).awaitSingle()
                 return false
             }
         }

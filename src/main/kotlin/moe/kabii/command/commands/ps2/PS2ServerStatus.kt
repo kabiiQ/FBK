@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.ps2
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.GuildSettings
@@ -7,6 +8,7 @@ import moe.kabii.discord.trackers.ps2.polling.FisuPS2Parser
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.trackers.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.discord.trackers.ps2.store.PS2Faction
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 
 object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psservers", "pservers", "psstatus", "psserver") {
@@ -19,7 +21,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
             val servers = try {
                 PS2Parser.getServers()
             } catch(e: Exception) {
-                error("Unable to reach PS2 API.").awaitSingle()
+                reply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
                 return@discord
             }
 
@@ -61,10 +63,9 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
                     "**${server.name}**: $state"
                 }
 
-            embed {
-                setAuthor("PlanetSide 2 Server Status", null, null)
-                setDescription(serverList)
-            }.awaitSingle()
+            reply(
+                Embeds.fbk(serverList).withAuthor(EmbedCreateFields.Author.of("PlanetSide 2 Server Status", null, null))
+            ).awaitSingle()
         }
     }
 }

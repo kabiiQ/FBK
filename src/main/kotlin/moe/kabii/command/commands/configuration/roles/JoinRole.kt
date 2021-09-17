@@ -8,6 +8,7 @@ import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -45,20 +46,20 @@ object JoinRole : CommandContainer {
 
                 // verify targets
                 if(role == null) {
-                    error("Unable to find the role **$roleArg**.").awaitSingle()
+                    reply(Embeds.error("Unable to find the role **$roleArg**.")).awaitSingle()
                     return@discord
                 }
 
                 val safe = PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    error("You can not manage the role **${role.name}**.").awaitSingle()
+                    reply(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
                     return@discord
                 }
 
                 if(inviteArg != null) {
                     val invite = target.invites.filter { invite -> invite.code ==  inviteArg }.hasElements().awaitSingle()
                     if(!invite) {
-                        error("Invalid invite: **$inviteArg**.").awaitSingle()
+                        reply(Embeds.error("Invalid invite: **$inviteArg**.")).awaitSingle()
                         return@discord
                     }
                 }
@@ -71,7 +72,7 @@ object JoinRole : CommandContainer {
                     } else false
                 }
                 if(find != null) {
-                    error("An existing autorole already exists matching this configuration.").awaitSingle()
+                    reply(Embeds.error("An existing autorole already exists matching this configuration.")).awaitSingle()
                     return@discord
                 }
                 val new =
@@ -79,7 +80,7 @@ object JoinRole : CommandContainer {
                 configs.add(new)
                 config.save()
                 val describe = if(inviteArg == null) "all users joining **${target.name}**" else "users joining **${target.name}** with invite code **$inviteArg** will be given"
-                embed("Autorole added for $describe: **${role.name}**.").awaitSingle()
+                reply(Embeds.fbk("Autorole added for $describe: **${role.name}**.")).awaitSingle()
             }
         }
     }
@@ -99,7 +100,7 @@ object JoinRole : CommandContainer {
                 val (roleArg, inviteArg) = getArgs(args)
                 val role = Search.roleByNameOrID(this, roleArg)
                 if(role == null) {
-                    error("Unable to find the role **$roleArg**.").awaitSingle()
+                    reply(Embeds.error("Unable to find the role **$roleArg**.")).awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -111,7 +112,7 @@ object JoinRole : CommandContainer {
                 }
                 if(find) {
                     val describe = if(inviteArg == null) "role **${role.name}**, for all invites" else "role **${role.name}**, for invite code $inviteArg"
-                    embed("The autorole for $describe has been removed.").awaitSingle()
+                    reply(Embeds.fbk("The autorole for $describe has been removed.")).awaitSingle()
                     config.save()
                 } else error("No autorole found matching this configuration.").awaitSingle()
             }
@@ -142,7 +143,7 @@ object JoinRole : CommandContainer {
                     }
                 }
                 if (validConfig.isEmpty()) {
-                    embed("There are no join autoroles set for **${target.name}**.").awaitSingle()
+                    reply(Embeds.fbk("There are no join autoroles set for **${target.name}**.")).awaitSingle()
                     return@discord
                 }
 

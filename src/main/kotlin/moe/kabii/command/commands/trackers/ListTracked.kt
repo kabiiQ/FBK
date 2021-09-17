@@ -13,6 +13,7 @@ import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.trackers.PS2Target
 import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2StaticData
+import moe.kabii.discord.util.Embeds
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
@@ -35,7 +36,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.firstOrNull()
 
                 if(dbChannel == null) {
-                    error("There are no trackers enabled in this channel.").awaitSingle()
+                    reply(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
                     return@newSuspendedTransaction
                 }
 
@@ -91,7 +92,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
             }
 
             if(tracks.isEmpty()) {
-                error("There are no tracked targets in this channel.").awaitSingle()
+                reply(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
                 return@discord
             }
 

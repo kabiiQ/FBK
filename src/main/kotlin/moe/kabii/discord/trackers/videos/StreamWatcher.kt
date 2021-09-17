@@ -24,8 +24,7 @@ import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
-import moe.kabii.discord.util.EditableChannelWrapper
-import moe.kabii.discord.util.errorColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.constants.MagicNumbers
@@ -213,27 +212,22 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             if(newName == currentName) return
 
             LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
-            val wrapper = EditableChannelWrapper(
-                name = newName
-            )
             renameScope.launch {
                 try {
                     when (guildChan) {
-                        is TextChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
-                        is NewsChannel -> guildChan.edit(wrapper::applyTo).awaitSingle()
+                        is TextChannel -> guildChan.edit().withName(newName).awaitSingle()
+                        is NewsChannel -> guildChan.edit().withName(newName).awaitSingle()
                         else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
                     }
                 } catch(ce: ClientException) {
                     if(ce.status.code() == 403) {
-                        guildChan.createEmbed { spec ->
-                            errorColor(spec)
-                            spec.setDescription("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
-                        }.awaitSingle()
+                        guildChan.createMessage(
+                            Embeds.error("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
+                        ).awaitSingle()
                     } else if(ce.status.code() == 400) {
-                        guildChan.createEmbed { spec ->
-                            errorColor(spec)
-                            spec.setDescription("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
-                        }.awaitSingle()
+                        guildChan.createMessage(
+                            Embeds.error("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
+                        ).awaitSingle()
                     } else throw ce
                 }
             }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.success
 
@@ -24,7 +25,7 @@ object TemporaryChannels : CommandContainer {
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()
                 if(voice == null) {
-                    error("You must be in a voice channel in order to create a temporary channel.").awaitSingle()
+                    reply(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
                     return@discord
                 }
 
@@ -44,15 +45,15 @@ object TemporaryChannels : CommandContainer {
                 }.awaitSingle()
 
                 try {
-                    member.edit { member -> member.setNewVoiceChannel(newChannel.id) }.awaitSingle()
+                    member.edit().withNewVoiceChannelOrNull(newChannel.id).awaitSingle()
                 } catch(ce: ClientException) {
-                    error("Unable to move user into their temporary channel. Please check my permissions within this category.").awaitSingle()
+                    reply(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
                     newChannel.delete("Unable to move user into their temporary channel.").success().awaitSingle()
                     return@discord
                 }
                 config.tempVoiceChannels.tempChannels.add(newChannel.id.asLong())
                 config.save()
-                embed("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.").awaitSingle()
+                reply(Embeds.fbk("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.")).awaitSingle()
             }
         }
     }

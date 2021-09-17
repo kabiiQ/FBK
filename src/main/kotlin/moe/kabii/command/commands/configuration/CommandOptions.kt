@@ -6,6 +6,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.discord.util.DiscordBot
+import moe.kabii.discord.util.Embeds
 
 object CommandOptions : CommandContainer {
     object Prefix : Command("prefix", "setprefix", "prefix-set", "set-prefix", "changeprefix") {
@@ -17,13 +18,13 @@ object CommandOptions : CommandContainer {
                 if(args.isEmpty()) {
                     // display current prefix
                     val prefix = config.prefix
-                    embed("The current command prefix for **${target.name}** is **$prefix**. Command example for changing prefix: **prefix $prefix**.").awaitSingle()
+                    reply(Embeds.fbk("The current command prefix for **${target.name}** is **$prefix**. Command example for changing prefix: **prefix $prefix**.")).awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
                 config.prefix = args[0]
                 config.save()
-                embed("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible by using a mention as the prefix: <@${DiscordBot.selfId.asString()}>").awaitSingle()
+                reply(Embeds.fbk("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible by using a mention as the prefix: <@${DiscordBot.selfId.asString()}>")).awaitSingle()
             }
         }
     }
@@ -36,7 +37,7 @@ object CommandOptions : CommandContainer {
             discord {
                 if(args.isEmpty()) {
                     val suffix = config.suffix
-                    embed("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix none**.").awaitSingle()
+                    reply(Embeds.fbk("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix none**.")).awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
@@ -47,9 +48,9 @@ object CommandOptions : CommandContainer {
                 config.suffix = suffix
                 config.save()
                 if(suffix == null) {
-                    embed("The command suffix for **${target.name}** has been removed.")
+                    reply(Embeds.fbk("The command suffix for **${target.name}** has been removed."))
                 } else {
-                    embed("The command suffix for **${target.name}** has been set to **$suffix**.")
+                    reply(Embeds.fbk("The command suffix for **${target.name}** has been set to **$suffix**."))
                 }.awaitSingle()
             }
         }

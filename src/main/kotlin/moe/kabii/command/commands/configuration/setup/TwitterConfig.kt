@@ -8,6 +8,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 
 object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
@@ -51,7 +52,7 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
 
             val features = features()
             if(!features.twitterTargetChannel) {
-                error("**#${guildChan.name}** does not have Twitter tracking enabled.").awaitSingle()
+                reply(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
                 return@discord
             }
             val twitter = features.twitterSettings

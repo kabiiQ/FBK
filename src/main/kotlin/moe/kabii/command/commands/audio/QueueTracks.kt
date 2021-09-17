@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.*
+import moe.kabii.discord.util.Embeds
 
 object QueueTracks : AudioCommandContainer {
     object PlaySong : Command("play", "addsong", "queuesong", "p") {
@@ -15,7 +16,7 @@ object QueueTracks : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                     return@discord
                 }
                 // add a song to the end of the queue
@@ -37,7 +38,7 @@ object QueueTracks : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -75,14 +76,14 @@ object QueueTracks : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                     return@discord
                 }
                 // re-queue current song at the end of the queue
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val track = audio.player.playingTrack
                 if(track == null) {
-                    error("Nothing is currently playing to be re-queued.").awaitSingle()
+                    reply(Embeds.error("Nothing is currently playing to be re-queued.")).awaitSingle()
                     return@discord
                 }
                 val newTrack = track.makeClone()
@@ -90,11 +91,11 @@ object QueueTracks : AudioCommandContainer {
                 val add = audio.tryAdd(track, member)
                 if(!add) {
                     val maxTracksUser = config.musicBot.maxTracksUser
-                    error(author, "You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${target.name}.")
+                    reply(Embeds.error("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${target.name}."))
                     return@discord
                 }
                 val position = audio.queue.size
-                embed("Added the current track **${trackString(track)}** to the end of the queue, position **$position**.").awaitSingle()
+                reply(Embeds.fbk("Added the current track **${trackString(track)}** to the end of the queue, position **$position**.")).awaitSingle()
             }
         }
     }
@@ -107,7 +108,7 @@ object QueueTracks : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                     return@discord
                 }
                 // add a song to the front of the queue

@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.discord.translation.Translator
+import moe.kabii.discord.util.Embeds
 
 object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "translateto", "tltarget", "setlocale") {
     override val wikiPath = "Translator#set-the-default-target-language-with-setlang"
@@ -28,14 +29,14 @@ object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "t
                 else -> "**$noCmd** matched ${matchLang.size} languages. See [this link](${service.languageHelp}) for find the language code for your specific desired language."
             }
             if(error != null) {
-                error(error).awaitSingle()
+                reply(Embeds.error(error)).awaitSingle()
                 return@discord
             }
             val (langTag, newLang) = matchLang.entries.single()
 
             config.translator.defaultTargetLanguage = langTag
             config.save()
-            embed("Translation language for **${target.name}** has been changed to **${newLang.fullName}**.").awaitSingle()
+            reply(Embeds.fbk("Translation language for **${target.name}** has been changed to **${newLang.fullName}**.")).awaitSingle()
         }
     }
 }

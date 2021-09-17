@@ -28,11 +28,7 @@ object Say : Command("botsay", "say") {
                 return@terminal
             }
             val content = args.drop(1).joinToString(" ")
-            channel.createMessage { spec ->
-                spec.setContent(content)
-            }.tryAwait().ifErr { t ->
-                println(t.message)
-            }
+            channel.createMessage(content).tryAwait()
         }
     }
 }

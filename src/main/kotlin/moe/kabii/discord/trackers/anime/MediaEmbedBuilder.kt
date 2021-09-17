@@ -1,8 +1,9 @@
 package moe.kabii.discord.trackers.anime
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.EmbedCreateFields
 import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.URLUtil
 
 class MediaEmbedBuilder(val media: Media) {
@@ -18,26 +19,24 @@ class MediaEmbedBuilder(val media: Media) {
     var oldScore: String? = null
     var descriptionFmt = ""
 
-    fun createEmbedConsumer(site: ListSite, id: String) = fun(spec: EmbedCreateSpec) {
-        val url = URLUtil.MediaListSite.url(site, id, media.type)
-        spec.setColor(media.status.color)
-        spec.setThumbnail(media.image)
-        spec.setAuthor(username, url, avatar)
-
-        val footer = StringBuilder("Progress: ")
-        if (oldProgress != null) {
-            footer.append(oldProgress)
+    fun createEmbed(site: ListSite, id: String) = Embeds.other(descriptionFmt.format("[${media.title}](${media.url})"), media.status.color)
+        .withThumbnail(media.image)
+        .run {
+            val url = URLUtil.MediaListSite.url(site, id, media.type)
+            withAuthor(EmbedCreateFields.Author.of(username, url, avatar))
+        }
+        .run {
+            val footer = StringBuilder("Progress: ")
+            if (oldProgress != null) {
+                footer.append(oldProgress)
                     .append(" -> ")
-        }
-        footer.append(media.progressStr())
+            }
+            footer.append(media.progressStr())
                 .append(" Score: ")
-        if (oldScore != null) {
-            footer.append(oldScore).append(" -> ")
+            if (oldScore != null) {
+                footer.append(oldScore).append(" -> ")
+            }
+            footer.append(media.scoreStr())
+            withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))
         }
-        footer.append(media.scoreStr())
-        spec.setFooter(footer.toString(), null)
-
-        val title = "[${media.title}](${media.url})"
-        spec.setDescription(descriptionFmt.format(title))
-    }
 }

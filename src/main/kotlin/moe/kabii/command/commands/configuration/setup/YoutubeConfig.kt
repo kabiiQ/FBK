@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.BaseConfigurationParsers
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
+import moe.kabii.discord.util.Embeds
 import kotlin.reflect.KMutableProperty1
 
 object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "youtubeconfig") {
@@ -51,7 +52,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
 
             val features = features()
             if(!features.streamTargetChannel) {
-                error("**#${guildChan.name}** does not have livestream tracking enabled.").awaitSingle()
+                reply(Embeds.error("**#${guildChan.name}** does not have livestream tracking enabled.")).awaitSingle()
                 return@discord
             }
             val youtube = features.youtubeSettings

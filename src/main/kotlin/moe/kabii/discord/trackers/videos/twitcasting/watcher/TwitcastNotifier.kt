@@ -1,9 +1,10 @@
 package moe.kabii.discord.trackers.videos.twitcasting.watcher
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -15,10 +16,14 @@ import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.discord.trackers.videos.twitcasting.json.TwitcastingMovieResponse
+import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.*
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import java.time.Duration
@@ -74,21 +79,20 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                         .run(::DurationFormatter)
                         .colonTime
 
-                    existingNotif.edit { spec ->
-                        spec.setEmbed { embed ->
-                            embed.setColor(inactiveColor)
-                            embed.setAuthor("${user.screenId} was live.", movie.link, user.imageUrl)
-                            embed.addField("Views", movie.views.toString(), true)
-                            embed.setUrl(movie.link)
-                            embed.setFooter("Stream ended", NettyFileServer.twitcastingLogo)
-                            embed.setTimestamp(Instant.now())
-                            embed.setDescription("${user.screenId} was live for [$duration]")
-                            embed.setTitle(movie.title)
-                            embed.setThumbnail(movie.thumbnailUrl)
-                        }
-                    }.then(mono {
-                        TrackerUtil.checkUnpin(existingNotif)
-                    })
+                    val endedEmbed = Embeds.other("${user.screenId} was live for [$duration]", inactiveColor)
+                        .withAuthor(EmbedCreateFields.Author.of("${user.screenId} was live.", movie.link, user.imageUrl))
+                        .withFields(EmbedCreateFields.Field.of("Views", movie.views.toString(), true))
+                        .withUrl(movie.link)
+                        .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.twitcastingLogo))
+                        .withTimestamp(Instant.now())
+                        .withTitle(movie.title)
+                        .withThumbnail(movie.thumbnailUrl)
+
+                    existingNotif.edit()
+                        .withEmbeds(endedEmbed)
+                        .then(mono {
+                            TrackerUtil.checkUnpin(existingNotif)
+                        })
 
                 } else {
                     existingNotif.delete()
@@ -130,27 +134,25 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
             val title = StringUtils.abbreviate(movie.title, MagicNumbers.Embed.TITLE)
             val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.NORM_DESC) ?: ""
 
-            val newNotification = chan.createMessage { spec ->
-                if(mention != null) {
-                    if(mention.db.lastMention == null
-                        || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6)) {
-                        spec.setContent(mention.discord.mention)
-                        mention.db.lastMention = DateTime.now()
-                    }
+            val embed = Embeds.other(desc, liveColor)
+                .withAuthor(EmbedCreateFields.Author.of("${user.name} (${user.screenId}) went live!", movie.link, user.imageUrl))
+                .withUrl(movie.link)
+                .withTitle(title)
+                .withFooter(EmbedCreateFields.Footer.of("TwitCasting now! Since ", NettyFileServer.twitcastingLogo))
+                .withTimestamp(movie.created)
+                .run {
+                    if(features.thumbnails) withImage(movie.thumbnailUrl) else withThumbnail(movie.thumbnailUrl)
                 }
+            val mentionMessage = if(mention != null
+                && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
-                val embed: EmbedBlock = {
-                    setColor(liveColor)
-                    setAuthor("${user.name} (${user.screenId}) went live!", movie.link, user.imageUrl)
-                    setUrl(movie.link)
-                    setTitle(title)
-                    setDescription(desc)
-                    if(features.thumbnails) setImage(movie.thumbnailUrl)else setThumbnail(movie.thumbnailUrl)
-                    setFooter("TwitCasting now! Since ", NettyFileServer.twitcastingLogo)
-                    setTimestamp(movie.created)
-                }
-                spec.setEmbed(embed)
-            }.awaitSingle()
+                    mention.db.lastMention = DateTime.now()
+                    chan.createMessage(mention.discord.mention)
+                } else chan.createMessage()
+
+            val newNotification = mentionMessage
+                .withEmbeds(embed)
+                .awaitSingle()
 
             TrackerUtil.pinActive(discord, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)

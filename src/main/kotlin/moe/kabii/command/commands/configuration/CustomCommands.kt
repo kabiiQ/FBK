@@ -7,6 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.CustomCommand
+import moe.kabii.discord.util.Embeds
 
 object CustomCommands : CommandContainer {
     private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
@@ -31,7 +32,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd)
-                    embed(add).awaitSingle()
+                    reply(Embeds.fbk(add)).awaitSingle()
                 } else {
                     usage("Add or edit a text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
@@ -47,7 +48,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd, restrict = true)
-                    embed(add).awaitSingle()
+                    reply(Embeds.fbk(add)).awaitSingle()
                 } else {
                     usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
@@ -72,7 +73,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.isNotEmpty()) {
                     val remove = removeCommand(config, args[0])
-                    embed(remove).awaitSingle()
+                    reply(Embeds.fbk(remove)).awaitSingle()
                 } else {
                     usage("Remove a text command. To see the commands created for **${target.name}**, use the **listcommands** command.", "removecommand <command name>").awaitSingle()
                 }
@@ -92,10 +93,10 @@ object CustomCommands : CommandContainer {
                     error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**.")
                 } else {
                     val commandList = config.customCommands.commands.joinToString(", ", transform = CustomCommand::command)
-                    embed {
-                        setTitle("Custom commands for ${target.name}")
-                        setDescription(commandList)
-                    }
+                    reply(
+                        Embeds.fbk(commandList)
+                            .withTitle("Custom commands for ${target.name}")
+                    )
                 }.awaitSingle()
             }
         }

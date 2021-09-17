@@ -7,6 +7,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.discord.util.Embeds
 
 object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
     override val wikiPath = "Lookup-Commands#twitch-stream-lookup"
@@ -21,21 +22,19 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
             }
             val twitchUser = TwitchParser.getUser(args[0]).orNull()
             if(twitchUser == null) {
-                error("Invalid Twitch username **${args[0]}**").awaitSingle()
+                reply(Embeds.error("Invalid Twitch username **${args[0]}**")).awaitSingle()
                 return@discord
             }
             val twitchStream = TwitchParser.getStream(twitchUser.userID).orNull()
             if(twitchStream == null) {
-                embed("**${twitchUser.displayName}** is not currently live.").awaitSingle()
+                reply(Embeds.fbk("**${twitchUser.displayName}** is not currently live.")).awaitSingle()
                 return@discord
             }
             val settings = guild?.run {
                 GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings
             } ?: StreamSettings()
-            val stream = TwitchEmbedBuilder(twitchUser, settings)
-                .stream(twitchStream)
-                .block
-            embedBlock(stream).awaitSingle()
+            val stream = TwitchEmbedBuilder(twitchUser, settings).stream(twitchStream)
+            reply(stream.create()).awaitSingle()
         }
     }
 }

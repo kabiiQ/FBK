@@ -11,6 +11,7 @@ import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.trackers.YoutubeTarget
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -46,7 +47,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
                 try {
                     YoutubeParser.getVideo(videoId)
                 } catch(e: IOException) {
-                    error("There was an error reaching YouTube.").awaitSingle()
+                    reply(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
                     LOG.debug("Error getting YTVideo in trackvideo command: ${e.message}")
                     LOG.debug(e.stackTraceString)
                     return@discord
@@ -54,12 +55,12 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             } else null
 
             if(ytVideo == null) {
-                error("Invalid YouTube video ID **$videoId**.").awaitSingle()
+                reply(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
                 return@discord
             }
 
             if(!ytVideo.upcoming) {
-                error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.").awaitSingle()
+                reply(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
                 return@discord
             }
 
@@ -78,7 +79,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             }
 
             val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."
-            embed("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning").awaitSingle()
+            reply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
         }
     }
 }

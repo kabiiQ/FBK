@@ -8,6 +8,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.VoiceConfiguration
 import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.snowflake
@@ -43,7 +44,7 @@ object VoiceRole : CommandContainer {
                 if(existing != null) {
                     val role = target.getRoleById(existing.role.snowflake).tryAwait()
                     if(role is Ok) {
-                        error("There is already an existing auto role **${role.value.name}** for this channel.").awaitSingle()
+                        reply(Embeds.error("There is already an existing auto role **${role.value.name}** for this channel.")).awaitSingle()
                         return@discord
                     }
                     configs.remove(existing)
@@ -61,9 +62,7 @@ object VoiceRole : CommandContainer {
                 configs.add(roleSetup)
                 config.save()
                 val describe = if(channelTarget == null) "users in any voice channel" else "users in the voice channel **${channelTarget.name}**"
-                embed {
-                    setDescription("Voice autorole configuration added: $describe will be given the role **${newRole.name}**.")
-                }.awaitSingle()
+                reply(Embeds.fbk("Voice autorole configuration added: $describe will be given the role **${newRole.name}**.")).awaitSingle()
             }
         }
     }
@@ -75,7 +74,7 @@ object VoiceRole : CommandContainer {
             discord {
                 member.verify(Permission.MANAGE_ROLES)
                 if(args.isEmpty()) {
-                    error("This command is used to remove an automatic voice role setup. **autorole voice remove <voice channel ID or \"all\"> **You can view the currently active voicerole channels in the **autorole voice list** command.").awaitSingle()
+                    reply(Embeds.error("This command is used to remove an automatic voice role setup. **autorole voice remove <voice channel ID or \"all\"> **You can view the currently active voicerole channels in the **autorole voice list** command.")).awaitSingle()
                     return@discord
                 }
 
@@ -84,7 +83,7 @@ object VoiceRole : CommandContainer {
                     else -> {
                         val channel = args[0].toLongOrNull()
                         if(channel != null) channel else {
-                            error("Invalid channel ID **${args[0]}**. Please specify the voice channel ID to remove the automatic role setup from or \"all\" for the voice role for all channels.").awaitSingle()
+                            reply(Embeds.error("Invalid channel ID **${args[0]}**. Please specify the voice channel ID to remove the automatic role setup from or \"all\" for the voice role for all channels.")).awaitSingle()
                             return@discord
                         }
                     }
@@ -100,12 +99,12 @@ object VoiceRole : CommandContainer {
                     val linkedRole = target.getRoleById(existing.role.snowflake).tryAwait()
                     if(linkedRole is Ok) {
                         linkedRole.value.delete().tryAwait()
-                        embed(configRemoved)
+                        reply(Embeds.fbk(configRemoved))
                     } else {
-                        embed("$configRemoved Could not find the linked role for this configuration.")
+                        reply(Embeds.error("$configRemoved Could not find the linked role for this configuration."))
                     }.awaitSingle()
                 } else {
-                    error("There is not an existing automatic voice role for $channel.").awaitSingle()
+                    reply(Embeds.error("There is not an existing automatic voice role for $channel.")).awaitSingle()
                     return@discord
                 }
             }
@@ -120,7 +119,7 @@ object VoiceRole : CommandContainer {
                 member.verify(Permission.MANAGE_ROLES)
 
                 if(config.autoRoles.voiceConfigurations.isEmpty()) {
-                    embed("There are no voice role rules set for **${target.name}**.").awaitSingle()
+                    reply(Embeds.error("There are no voice role rules set for **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 val title = "Voice role configuration for **${target.name}**"

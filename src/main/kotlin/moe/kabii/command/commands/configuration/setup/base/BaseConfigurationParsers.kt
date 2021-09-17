@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -23,7 +24,7 @@ object BaseConfigurationParsers {
         }
         val matchChannel = Search.channelByID<GuildMessageChannel>(origin, input)
         if(matchChannel == null) {
-            origin.error("Unable to find the channel **$input**.").awaitSingle()
+            origin.reply(Embeds.error("Unable to find the channel **$input**.")).awaitSingle()
             return Err(Unit)
         }
         return Ok(matchChannel.id.asLong())
@@ -33,7 +34,7 @@ object BaseConfigurationParsers {
         if(resetEmoji.matches(value)) return@parser Ok(null)
         val emoji = EmojiUtil.parseEmoji(value)
         return@parser if(emoji == null) {
-            origin.error("$value is not a usable emoji.").awaitSingle()
+            origin.reply(Embeds.error("$value is not a usable emoji.")).awaitSingle()
             Err(Unit)
         } else Ok(emoji)
     }

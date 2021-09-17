@@ -8,6 +8,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.discord.trackers.StreamingTarget
 import moe.kabii.discord.trackers.TargetArguments
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -42,14 +43,14 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             }
 
             if (siteTarget.site !is StreamingTarget) {
-                error("The **setmention** command is only supported for **livestream sources**.").awaitSingle()
+                reply(Embeds.error("The **setmention** command is only supported for **livestream sources**.")).awaitSingle()
                 return@discord
             }
 
             val streamInfo = when (val streamCall = siteTarget.site.getChannel(siteTarget.identifier)) {
                 is Ok -> streamCall.value
                 is Err -> {
-                    error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.").awaitSingle()
+                    reply(Embeds.error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.")).awaitSingle()
                     return@discord
                 }
             }
@@ -69,7 +70,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                 ).firstOrNull()
             }
             if (matchingTarget == null) {
-                error("**${streamInfo.displayName}** is not being tracked in **${target.name}**.").awaitSingle()
+                reply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${target.name}**.")).awaitSingle()
                 return@discord
             }
 
@@ -79,7 +80,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                 else -> {
                     val search = Search.roleByNameOrID(this, roleArg)
                     if(search == null) {
-                        error("Unable to find the role **$roleArg** in **${target.name}**.").awaitSingle()
+                        reply(Embeds.error("Unable to find the role **$roleArg** in **${target.name}**.")).awaitSingle()
                         return@discord
                     } else search
                 }
@@ -114,7 +115,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                 }
             }
 
-            embed("The mention role for **${streamInfo.displayName}** has been $updateStr.").awaitSingle()
+            reply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
         }
     }
 }

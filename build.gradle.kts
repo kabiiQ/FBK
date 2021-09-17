@@ -55,7 +55,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.4") // can update once d4j 3.2 is available
-    //implementation("io.projectreactor:reactor-core")
+    implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.sedmelluq:lavaplayer:1.3.77") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
     implementation("com.github.kokorin.jaffree:jaffree:2021.05.31")
-    implementation("org.apache.commons:commons-compress:1.20")
+    implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
@@ -106,7 +106,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.2.19")
+    implementation("org.postgresql:postgresql:42.2.23")
 
     // language detection
     implementation("com.github.pemistahl:lingua:1.1.0")

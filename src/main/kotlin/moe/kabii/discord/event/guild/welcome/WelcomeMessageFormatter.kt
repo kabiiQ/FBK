@@ -1,10 +1,13 @@
 package moe.kabii.discord.event.guild.welcome
 
 import discord4j.core.`object`.entity.Member
+import discord4j.core.spec.EmbedCreateFields
+import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.userAddress
 
 object WelcomeMessageFormatter {
@@ -25,30 +28,29 @@ object WelcomeMessageFormatter {
         return format
     }
 
-    suspend fun createWelcomeMessage(config: WelcomeSettings, member: Member): MessageCreateSpec.() -> Unit {
+    suspend fun createWelcomeMessage(config: WelcomeSettings, member: Member): MessageCreateSpec {
         // apply plain-text message in all cases
         val message = if(config.message.isBlank()) null
         else format(member, config.message, rich = true)
 
         val image = WelcomeImageGenerator.generate(config, member)
         val subText = if(config.imageText != null) format(member, config.imageText!!, rich = true) else null
-        return {
-            if(message != null) this.setContent(message)
+        return MessageCreateSpec.create()
+            .run { if(message != null) withContent(message) else this }
+            .run {
+                // add either image (if enabled) else embed (if some rich content is enabled)
+                if(image != null) {
+                    withFiles(MessageCreateFields.File.of("welcome.png", image))
+                } else if(config.includeUsername || config.includeAvatar || config.welcomeTagLine != null || config.imageText != null) {
 
-            // add either image (if enabled) else embed (if some rich content is enabled)
-            if(image != null) {
-
-                this.addFile("welcome.png", image)
-            } else if(config.includeUsername || config.includeAvatar || config.welcomeTagLine != null || config.imageText != null) {
-
-                this.setEmbed { embed ->
-                    embed.setColor(Color.of(6750056))
-                    if(config.includeAvatar) embed.setImage(member.avatarUrl)
-                    if(config.includeUsername) embed.setAuthor(member.userAddress(), null, member.avatarUrl)
-                    if(config.welcomeTagLine != null) embed.setTitle(config.welcomeTagLine!!)
-                    subText?.run(embed::setDescription)
-                }
+                    withEmbeds(
+                        Embeds.other(Color.of(6750056))
+                            .run { if(config.includeAvatar) withImage(member.avatarUrl) else this }
+                            .run { if(config.includeUsername) withAuthor(EmbedCreateFields.Author.of(member.username, null, member.avatarUrl)) else this }
+                            .run { if(config.welcomeTagLine != null) withTitle(config.welcomeTagLine!!) else this }
+                            .run { if(subText != null) withDescription(subText) else this }
+                    )
+                } else this
             }
-        }
     }
 }

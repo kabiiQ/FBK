@@ -1,8 +1,10 @@
 package moe.kabii.command.commands.user
 
 import discord4j.common.util.TimestampFormat
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
@@ -18,20 +20,22 @@ object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
             val targetUser = if(args.isNotEmpty()) {
                 val searchResult = Search.user(this@discord, noCmd, guild)
                 if(searchResult != null) searchResult else {
-                    error("Unable to find user **$noCmd**.").awaitSingle()
+                    reply(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
                     return@discord
                 }
             } else author
 
             val guildMember = guild?.run { targetUser.asMember(guild.id) }?.tryAwait()?.orNull()
-            embed(targetUser) {
-                addField("Account created", TimestampFormat.LONG_DATE_TIME.format(targetUser.id.timestamp), false)
-
-                val joinTime = guildMember?.joinTime?.orNull()
-                if(joinTime != null) {
-                    addField("Joined ${guild!!.name}", TimestampFormat.LONG_DATE_TIME.format(joinTime), false)
-                }
-            }.awaitSingle()
+            val joinTime = guildMember?.joinTime?.orNull()?.run {
+                EmbedCreateFields.Field.of("Joined ${guild!!.name}", TimestampFormat.LONG_DATE_TIME.format(this), false)
+            }
+            reply(
+                Embeds.fbk(targetUser)
+                    .withFields(mutableListOf(
+                        EmbedCreateFields.Field.of("Account created", TimestampFormat.LONG_DATE_TIME.format(targetUser.id.timestamp), false),
+                        joinTime
+                    ).filterNotNull())
+            ).awaitSingle()
         }
     }
 }

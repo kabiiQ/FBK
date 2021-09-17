@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.audio.search
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
@@ -8,6 +9,7 @@ import moe.kabii.command.commands.audio.ParseUtil
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.tryAwait
 
@@ -30,7 +32,7 @@ object SearchTracks : AudioCommandContainer {
                 val query = args.joinToString(" ")
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
-                    error("No results found searching **${source.fullName}** for **$query**.").awaitSingle()
+                    reply(Embeds.error("No results found searching **${source.fullName}** for **$query**.")).awaitSingle()
                     return@discord
                 }
                 // build search selection menu until 10 songs or 2000 chars
@@ -44,11 +46,11 @@ object SearchTracks : AudioCommandContainer {
                     menu.append(entry)
                 }
                 // technically should keep track of which ones aren't printed but it's not a big deal if the user queues something that isn't displayed. we just can't send the name.
-                val embed = embed {
-                    setAuthor("Results from ${source.fullName} for \"$query\"", null, null)
-                    setTitle("Select track to be played or \"exit\"")
-                    setDescription(menu.toString())
-                }.awaitSingle()
+                val embed = reply(
+                    Embeds.fbk(menu.toString())
+                        .withAuthor(EmbedCreateFields.Author.of("Results from ${source.fullName} for \"$query\"", null, null))
+                        .withTitle("Select track to be played or \"exit\"")
+                ).awaitSingle()
                 var selected = listOf<Int>()
                 for(attempt in 0..25) { // after 25 messages or 2 minutes we'll stop listening
                     val input = getString(timeout = 120_000L)
@@ -62,7 +64,7 @@ object SearchTracks : AudioCommandContainer {
                             // join voice channel if not within
                             val voice = AudioStateUtil.checkAndJoinVoice(this)
                             if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                                error(voice.error).awaitSingle()
+                                reply(Embeds.error(voice.error)).awaitSingle()
                                 return@discord
                             }
                             break
@@ -77,7 +79,7 @@ object SearchTracks : AudioCommandContainer {
                 }
                 embed.delete().tryAwait()
                 if(silent) {
-                    embed(author, "Adding **${selected.size}** tracks to queue.").awaitSingle()
+                    reply(Embeds.fbk("Adding **${selected.size}** tracks to queue.")).awaitSingle()
                 }
             }
         }
@@ -91,7 +93,7 @@ object SearchTracks : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                     return@discord
                 }
                 if(args.size < 2) {
@@ -100,13 +102,13 @@ object SearchTracks : AudioCommandContainer {
                 }
                 val source = AudioSource.parse(args[0])
                 if(source == null) {
-                    error("Unknown source **${args[0]}**. Currently valid sources are YouTube (yt) or SoundCloud (sc).").awaitSingle()
+                    reply(Embeds.error("Unknown source **${args[0]}**. Currently valid sources are YouTube (yt) or SoundCloud (sc).")).awaitSingle()
                     return@discord
                 }
                 val query = args.drop(1).joinToString("")
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
-                    error("No results found searching **${source.fullName}** for **$query**.").awaitSingle()
+                    reply(Embeds.error("No results found searching **${source.fullName}** for **$query**.")).awaitSingle()
                     return@discord
                 }
                 val track = search[0]

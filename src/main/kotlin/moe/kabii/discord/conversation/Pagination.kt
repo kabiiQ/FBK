@@ -1,8 +1,10 @@
 package moe.kabii.discord.conversation
 
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.mod
 
@@ -28,29 +30,27 @@ object PaginationUtil {
         yield(page.toString().dropLast(1))
     }.toList()
 
-    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: ((EmbedCreateSpec) -> Unit)? = null) {
+    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: (EmbedCreateSpec.() -> EmbedCreateSpec)? = null) {
         val pages = partition(MagicNumbers.Embed.NORM_DESC, elements)
         var page: Page? = Page(pages.size, 0)
         var first = true
 
-        fun applyPageContent(spec: EmbedCreateSpec) {
+        fun pageContent(): EmbedCreateSpec {
             val thisPage = page!!
-            if(embedTitle != null) spec.setTitle(embedTitle)
-            spec.setDescription("$descHeader\n\n${pages[thisPage.current]}")
-            spec.setFooter("Page ${thisPage.current + 1}/${thisPage.pageCount}", null)
-            if(detail != null) {
-                detail(spec)
-            }
+            return Embeds.fbk("$descHeader\n\n${pages[thisPage.current]}")
+                .run { if(embedTitle != null) withTitle(embedTitle) else this }
+                .withFooter(EmbedCreateFields.Footer.of("Page ${thisPage.current + 1}/${thisPage.pageCount}", null))
+                .run { if(detail != null) detail(this) else this }
         }
 
-        val message = origin.embed(::applyPageContent).awaitSingle()
+        val message = origin.reply(pageContent()).awaitSingle()
 
         if(page!!.pageCount > 1) {
             while(page != null) {
                 if(!first) {
-                    message.edit { spec ->
-                        spec.setEmbed(::applyPageContent)
-                    }.awaitSingle()
+                    message.edit()
+                        .withEmbeds(pageContent())
+                        .awaitSingle()
                 }
                 page = origin.getPage(page, message, add = first)
                 first = false

@@ -8,6 +8,7 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccount
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
@@ -39,7 +40,7 @@ object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin", "
             val userArg = args.drop(1).joinToString(" ")
             val targetUser = Search.user(this, userArg, guild!!)
             if(targetUser == null) {
-                error("Unable to find Discord user **$userArg**.").awaitSingle()
+                reply(Embeds.error("Unable to find Discord user **$userArg**.")).awaitSingle()
                 return@discord
             }
 
@@ -49,7 +50,7 @@ object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin", "
                 LinkedYoutubeAccount.link(event.client, args[0], dbUser)
             }
 
-            embed("Discord user **${targetUser.userAddress()}** (${targetUser.id.asString()} has been linked to YouTube account ID **${args[0]}** (unverified).").awaitSingle()
+            reply(Embeds.fbk("Discord user **${targetUser.userAddress()}** (${targetUser.id.asString()} has been linked to YouTube account ID **${args[0]}** (unverified).")).awaitSingle()
         }
     }
 }

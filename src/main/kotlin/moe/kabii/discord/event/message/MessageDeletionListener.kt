@@ -4,13 +4,14 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageDeleteEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -67,14 +68,13 @@ object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDelete
                     .getChannelById(targetLog.channelID.snowflake)
                     .ofType(GuildMessageChannel::class.java)
                     .flatMap { logChan ->
-                        logChan.createEmbed { spec ->
-                            fbkColor(spec)
-                            spec.setAuthor(embedAuthor, null, author?.avatarUrl)
-                            val deletedContent = if(content.isNullOrBlank()) "The deleted message had no message. (file/embed)" else "Deleted message: $content"
-                            spec.setDescription(deletedContent)
-                            spec.setFooter("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null)
-                            spec.setTimestamp(event.messageId.timestamp)
-                        }
+                        val deletedContent = if(content.isNullOrBlank()) "The deleted message had no message. (file/embed)" else "Deleted message: $content"
+                        logChan.createMessage(
+                            Embeds.fbk(deletedContent)
+                                .withAuthor(EmbedCreateFields.Author.of(embedAuthor, null, author?.avatarUrl))
+                                .withFooter(EmbedCreateFields.Footer.of("Deleted Message ID: ${event.messageId.asString()} - Original message timestamp", null))
+                                .withTimestamp(event.messageId.timestamp)
+                        )
                     }
 
                 try {

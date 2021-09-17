@@ -9,8 +9,7 @@ import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.discord.trackers.PS2Target
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 
@@ -25,7 +24,7 @@ object PS2TrackerCommand : TrackerCommand {
         val input = target.identifier
         val typeName = target.site.alias.firstOrNull()
 
-        val notice = origin.embed("Searching for $typeName **$input**.").awaitSingle()
+        val notice = origin.reply(Embeds.fbk("Searching for $typeName **$input**.")).awaitSingle()
         val censusId = try {
             getCensusId(ps2Target, input)
         } catch(e: Exception) {
@@ -34,10 +33,9 @@ object PS2TrackerCommand : TrackerCommand {
             return
         }
         if(censusId == null) {
-            notice.edit { spec -> spec.setEmbed { embed ->
-                errorColor(embed)
-                embed.setDescription("Unable to find PS2 $typeName **$input**.")
-            } }
+            notice.edit().withEmbeds(
+                Embeds.error("Unable to find PS2 $typeName **$input**.")
+            ).awaitSingle()
             return
         }
 
@@ -46,10 +44,9 @@ object PS2TrackerCommand : TrackerCommand {
             // track if not already
             val existing = PS2Tracks.TrackTarget.getExisting(censusId, origin.chan.id.asLong())
             if(existing != null) {
-                notice.edit { spec -> spec.setEmbed {embed ->
-                    errorColor(embed)
-                    embed.setDescription("$typeName/$input is already tracked in this channel.")
-                } }.awaitSingle()
+                notice.edit().withEmbeds(
+                    Embeds.error("$typeName/$input is already tracked in this channel.")
+                ).awaitSingle()
                 return@propagateTransaction
             }
             PS2Tracks.TrackTarget.new {
@@ -57,10 +54,9 @@ object PS2TrackerCommand : TrackerCommand {
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.type = ps2Target.dbType
             }
-            notice.edit { spec -> spec.setEmbed { embed ->
-                fbkColor(embed)
-                embed.setDescription("Now tracking $typeName **$input**.")
-            } }.awaitSingle()
+            notice.edit().withEmbeds(
+                Embeds.fbk("Now tracking $typeName **$input**.")
+            ).awaitSingle()
         }
     }
 
@@ -69,7 +65,7 @@ object PS2TrackerCommand : TrackerCommand {
         val typeName = target.site.alias.firstOrNull()
         val input = target.identifier
 
-        val notice = origin.embed("Searching for $typeName **$input**.").awaitSingle()
+        val notice = origin.reply(Embeds.fbk("Searching for $typeName **$input**.")).awaitSingle()
         val censusId = try {
             getCensusId(ps2Target, input)
         } catch(e: Exception) {
@@ -78,28 +74,25 @@ object PS2TrackerCommand : TrackerCommand {
             return
         }
         if(censusId == null) {
-            notice.edit { spec -> spec.setEmbed { embed ->
-                errorColor(embed)
-                embed.setDescription("Unable to find PS2 $typeName **$input**.")
-            } }.awaitSingle()
+            notice.edit().withEmbeds(
+                Embeds.error("Unable to find PS2 $typeName **$input**.")
+            ).awaitSingle()
             return
         }
 
         propagateTransaction {
             val existing = PS2Tracks.TrackTarget.getExisting(censusId, origin.chan.id.asLong())
             if(existing == null) {
-                notice.edit { spec -> spec.setEmbed { embed ->
-                    errorColor(embed)
-                    embed.setDescription("$typeName **$input** is not tracked in this channel.")
-                } }.awaitSingle()
+                notice.edit().withEmbeds(
+                    Embeds.error("$typeName **$input** is not tracked in this channel.")
+                ).awaitSingle()
                 return@propagateTransaction
             }
 
             existing.delete()
-            notice.edit { spec -> spec.setEmbed { embed ->
-                fbkColor(embed)
-                embed.setDescription("No longer tracking $typeName **$input**.")
-            } }.awaitSingle()
+            notice.edit().withEmbeds(
+                Embeds.fbk("No longer tracking $typeName **$input**.")
+            ).awaitSingle()
         }
     }
 

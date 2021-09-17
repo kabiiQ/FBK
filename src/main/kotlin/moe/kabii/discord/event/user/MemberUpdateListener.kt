@@ -4,6 +4,7 @@ package moe.kabii.discord.event.user
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.guild.MemberUpdateEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -11,7 +12,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.trackers.TrackerUtil
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -36,21 +37,19 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                                 .getChannelById(targetLog.channelID.snowflake)
                                 .ofType(MessageChannel::class.java)
                                 .flatMap { chan ->
-                                    chan.createEmbed { spec ->
-                                        fbkColor(spec)
-                                        spec.setAuthor(member.userAddress(), null, member.avatarUrl)
-
-                                        val changeType = when {
-                                            old.nickname.isPresent && member.nickname.isEmpty -> "Removed nickname"
-                                            old.nickname.isEmpty && member.nickname.isPresent -> "Added nickname"
-                                            old.nickname.isEmpty && member.nickname.isEmpty -> "Changed username"
-                                            else -> "Changed nickname"
-                                        }
-                                        spec.setTitle(changeType)
-                                        spec.setDescription("**Old:** $oldName\n**New:** $newName")
-
-                                        spec.setFooter("User ID: ${member.id.asString()}", null)
+                                    val changeType = when {
+                                        old.nickname.isPresent && member.nickname.isEmpty -> "Removed nickname"
+                                        old.nickname.isEmpty && member.nickname.isPresent -> "Added nickname"
+                                        old.nickname.isEmpty && member.nickname.isEmpty -> "Changed username"
+                                        else -> "Changed nickname"
                                     }
+                                    chan.createMessage(
+                                        Embeds.fbk()
+                                            .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+                                            .withTitle(changeType)
+                                            .withDescription("**Old:** $oldName\n**New:** $newName")
+                                            .withFooter(EmbedCreateFields.Footer.of("User ID: ${member.id.asString()}", null))
+                                    )
                                 }.awaitSingle()
                         } catch(ce: ClientException) {
                             LOG.warn("Unable to send display name update to channel: ${targetLog.channelID}. Disabling feature in channel.")
@@ -116,12 +115,12 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         if(added.isNotEmpty()) {
                             val addedStr = added.joinToString(", ")
 
-                            logChan.createEmbed { spec ->
-                                fbkColor(spec)
-                                spec.setAuthor(member.userAddress(), null, member.avatarUrl)
-                                spec.setDescription("Added to role **$addedStr**")
-                                spec.setFooter("User ID: ${member.id.asString()}", null)
-                            }.awaitSingle()
+                            logChan.createMessage(
+                                Embeds.fbk()
+                                    .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+                                    .withDescription("Added to role **$addedStr**")
+                                    .withFooter(EmbedCreateFields.Footer.of("User ID: ${member.id.asString()}", null))
+                            ).awaitSingle()
                         }
 
                         // ignore deleted roles due to spam concerns. however, would like to somehow listen for this event in a future log message
@@ -132,13 +131,11 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                         if(removed.isNotEmpty()) {
                             val removedStr = removed.joinToString(", ")
 
-                            logChan.createEmbed { spec ->
-                                fbkColor(spec)
-                                spec.setAuthor(member.userAddress(), null, member.avatarUrl)
-                                spec.setDescription("Removed from role **$removedStr**")
-                                spec.setFooter("User ID: ${member.id.asString()}", null)
-
-                            }.awaitSingle()
+                            logChan.createMessage(
+                                Embeds.fbk("Removed from role **$removedStr**")
+                                    .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+                                    .withFooter(EmbedCreateFields.Footer.of("User ID: ${member.id.asString()}", null))
+                            ).awaitSingle()
                         }
 
                     } catch(ce: ClientException) {

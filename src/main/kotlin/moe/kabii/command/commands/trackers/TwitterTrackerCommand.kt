@@ -11,6 +11,7 @@ import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -22,14 +23,14 @@ object TwitterTrackerCommand : TrackerCommand {
         origin.channelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", allowOverride = false)
 
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
-            origin.error("Invalid Twitter username **${target.identifier}**.").awaitSingle()
+            origin.reply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
             return
         }
 
         // convert input @username -> twitter user ID
         val twitterUser = TwitterParser.getUser(target.identifier)
         if(twitterUser == null) {
-            origin.error("Unable to find Twitter user **${target.identifier}**.").awaitSingle()
+            origin.reply(Embeds.error("Unable to find Twitter user **${target.identifier}**.")).awaitSingle()
             return
         }
 
@@ -39,7 +40,7 @@ object TwitterTrackerCommand : TrackerCommand {
             val existingTrack = TwitterTarget.getExistingTarget(twitterUser.id, channelId)
 
             if (existingTrack != null) {
-                origin.error("**Twitter/${twitterUser.username}** is already tracked in this channel.").awaitSingle()
+                origin.reply(Embeds.error("**Twitter/${twitterUser.username}** is already tracked in this channel.")).awaitSingle()
                 return@propagateTransaction
             }
 
@@ -57,7 +58,7 @@ object TwitterTrackerCommand : TrackerCommand {
                 this.shouldStream = shouldStream
             }
 
-            origin.embed("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!").awaitSingle()
+            origin.reply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!")).awaitSingle()
             if(shouldStream) {
                 TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))
             }
@@ -66,14 +67,14 @@ object TwitterTrackerCommand : TrackerCommand {
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
         if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
-            origin.error("Invalid Twitter username **${target.identifier}**.").awaitSingle()
+            origin.reply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
             return
         }
 
         // convert input @username -> twitter user ID
         val twitterUser = TwitterParser.getUser(target.identifier)
         if(twitterUser == null) {
-            origin.error("Unable to find Twitter user **${target.identifier}**.").awaitSingle()
+            origin.reply(Embeds.error("Unable to find Twitter user **${target.identifier}**.")).awaitSingle()
             return
         }
 
@@ -83,7 +84,7 @@ object TwitterTrackerCommand : TrackerCommand {
             val existingTrack = TwitterTarget.getExistingTarget(twitterUser.id, channelId)
 
             if(existingTrack == null) {
-                origin.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.").awaitSingle()
+                origin.reply(Embeds.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
                 return@propagateTransaction
             }
 
@@ -96,13 +97,13 @@ object TwitterTrackerCommand : TrackerCommand {
                 val feed = existingTrack.twitterFeed
 
                 propagateTransaction { existingTrack.delete() }
-                origin.embed("No longer tracking **Twitter/${twitterUser.username}**.").awaitSingle()
+                origin.reply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
                 TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
             } else {
                 val tracker = origin.chan.client
                     .getUserById(existingTrack.tracker.userID.snowflake).tryAwait().orNull()
                     ?.username ?: "invalid-user"
-                origin.error("You may not untrack **Twitter/${twitterUser.username}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission)").awaitSingle()
+                origin.reply(Embeds.error("You may not untrack **Twitter/${twitterUser.username}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
             }
         }
     }

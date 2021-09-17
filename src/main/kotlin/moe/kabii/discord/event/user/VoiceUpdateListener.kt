@@ -4,6 +4,7 @@ import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -15,6 +16,7 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.DiscordBot
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.logColor
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
@@ -61,11 +63,10 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
                     .getChannelById(targetLog.channelID.snowflake)
                     .ofType(MessageChannel::class.java)
                     .flatMap { logChan ->
-                        logChan.createEmbed { spec ->
-                            spec.setAuthor(user.userAddress(), null, user.avatarUrl)
-                            spec.setDescription(status)
-                            logColor(member, spec)
-                        }
+                        logChan.createMessage(
+                            Embeds.other(status, logColor(member))
+                                .withAuthor(EmbedCreateFields.Author.of(user.userAddress(), null, user.avatarUrl))
+                        )
                     }
 
                 try {

@@ -178,9 +178,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                                 }
                             }
                             .flatMap { chan ->
-                                chan.createEmbed { spec ->
-                                    builder.createEmbedConsumer(site, trackedList.siteListId)(spec)
-                                }
+                                chan.createMessage(builder.createEmbed(site, trackedList.siteListId))
                             }
 
                         try {

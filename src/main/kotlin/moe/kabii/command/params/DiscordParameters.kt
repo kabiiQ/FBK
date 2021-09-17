@@ -7,12 +7,10 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
-import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateMono
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
@@ -23,9 +21,12 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.message.MessageHandler
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.EmojiCharacters
-import moe.kabii.util.extensions.*
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryBlock
+import moe.kabii.util.extensions.withUser
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import kotlin.reflect.KProperty1
@@ -99,16 +100,16 @@ data class DiscordParameters (
         .createMessage(*embeds)
         .run(::withReference)
 
-    // Create a 'usage info' embed
-    fun usage(commandError: String, linkText: String?, user: User? = null) = EmbedCreateSpec.create()
-        .withColor(MessageColors.spec)
-        .run {
-            val link = if(linkText != null) {
-                if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
-            } else ""
-            withDescription("$commandError$link")
-        }
-        .withUser(user)
+    fun reply(message: MessageCreateSpec) = chan
+        .createMessage(message.withMessageReference(event.message.id))
+
+    // Create a 'usage info' message
+    fun usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {
+        val link = if(linkText != null) {
+            if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
+        } else ""
+        return chan.createMessage(Embeds.other("$commandError$link", MessageColors.spec).withUser(user))
+    }
 
     private fun withReference(spec: MessageCreateMono) = spec.withMessageReference(event.message.id)
 

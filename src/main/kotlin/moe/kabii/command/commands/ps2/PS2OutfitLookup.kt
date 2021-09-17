@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.ps2
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
@@ -9,6 +10,7 @@ import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.trackers.ps2.polling.json.PS2Outfit
 import moe.kabii.discord.trackers.ps2.polling.json.PS2OutfitMember
+import moe.kabii.discord.util.Embeds
 
 object PS2OutfitLookupCommands : CommandContainer {
 
@@ -46,11 +48,11 @@ object PS2OutfitLookupCommands : CommandContainer {
         val outfit = try {
             search(query)
         } catch(e: Exception) {
-            origin.error("Unable to reach PS2 API.").awaitSingle()
+            origin.reply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
             return
         }
         if(outfit != null) displayOutfit(origin, outfit)
-        else origin.error("Unable to find PS2 outfit **'$query'**.").awaitSingle()
+        else origin.reply(Embeds.error("Unable to find PS2 outfit **'$query'**.")).awaitSingle()
     }
 
     private suspend fun displayOutfit(origin: DiscordParameters, outfit: PS2Outfit) {
@@ -64,10 +66,10 @@ object PS2OutfitLookupCommands : CommandContainer {
         val count = "${onlineMembers.count()}/${outfit.memberCount}"
         val header = "Outfit leader: ${leader.name?.first} - $status\n\nOnline members ($count):"
 
-        PaginationUtil.paginateListAsDescription(origin, onlineMembers, descHeader = header) { spec ->
-            spec.setColor(outfit.leader.faction.color)
-            spec.setAuthor("[${outfit.tag.orEmpty()}] ${outfit.name}", null, outfit.leader.faction.image)
-
+        PaginationUtil.paginateListAsDescription(origin, onlineMembers, descHeader = header) {
+            this
+                .withColor(outfit.leader.faction.color)
+                .withAuthor(EmbedCreateFields.Author.of("[${outfit.tag.orEmpty()}] ${outfit.name}", null, outfit.leader.faction.image))
         }
     }
 }

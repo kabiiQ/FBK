@@ -8,6 +8,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.filterNot
 import moe.kabii.util.extensions.snowflake
 import reactor.core.publisher.Flux
@@ -36,7 +37,7 @@ object Purge : CommandContainer {
             .collectList()
             .awaitSingle()
         val warnSkip = if(skipped.isNotEmpty()) " ${skipped.size} messages were skipped as they were [too old](https://github.com/discord/discord-api-docs/issues/208) to be purged." else ""
-        origin.embed("Deleted $messageCount messages from ${users.size} users.$warnSkip").awaitSingle()
+        origin.reply(Embeds.fbk("Deleted $messageCount messages from ${users.size} users.$warnSkip")).awaitSingle()
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
@@ -54,7 +55,7 @@ object Purge : CommandContainer {
                 }
                 val messageCount = args[0].toShortOrNull()
                 if(messageCount == null) {
-                    error("Invalid message count **${args[0]}**.").awaitSingle()
+                    reply(Embeds.error("Invalid message count **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
@@ -77,7 +78,7 @@ object Purge : CommandContainer {
                 }
                 val startMessage = args[0].toLongOrNull()?.minus(1)?.snowflake
                 if(startMessage == null || startMessage.asLong() < SMALL_MESSAGEID) {
-                    error("Invalid beginning message ID **${args[0]}**.").awaitSingle()
+                    reply(Embeds.error("Invalid beginning message ID **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
@@ -105,7 +106,7 @@ object Purge : CommandContainer {
                 if(startMessage == null || endMessage == null
                     || startMessage.asLong() < SMALL_MESSAGEID || endMessage.asLong() < SMALL_MESSAGEID
                     || startMessage > endMessage) {
-                    error("Invalid purge range between **${args[0]}** and **${args[1]}**.").awaitSingle()
+                    reply(Embeds.error("Invalid purge range between **${args[0]}** and **${args[1]}**.")).awaitSingle()
                     return@discord
                 }
 

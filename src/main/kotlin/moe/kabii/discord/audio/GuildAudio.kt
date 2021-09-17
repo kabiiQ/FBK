@@ -40,7 +40,7 @@ data class GuildAudio(
     private val queueMutex = Mutex()
 
     val playing: Boolean
-        get() = player.playingTrack != null || queue.isNotEmpty()
+        get() = (player.playingTrack != null && player.playingTrack.position > 0L) || queue.isNotEmpty()
 
     // queue with the track currently being played at the front.
     val playlist: List<AudioTrack>

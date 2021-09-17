@@ -5,15 +5,15 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.discord.games.DiscordGame
 import moe.kabii.discord.games.GameManager
-import moe.kabii.discord.util.errorColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
@@ -76,10 +76,7 @@ class Connect4Game(
         val circle = gameGrid.validateDrop(target)
         if(circle == null) {
             try {
-                reply.createEmbed { spec ->
-                    errorColor(spec)
-                    spec.setDescription("Unable to drop into column **$target**.")
-                }.awaitSingle()
+                reply.createMessage(Embeds.error("Unable to drop into column **$target**.")).awaitSingle()
             } catch (ce: ClientException) {
                 // unable to send a response to the game in this channel. bot is lacking permissions or channel was deleted
                 LOG.debug("Connect4 game unable to reply to game message in channel '${reply.id.asString()}'. Game has been cancelled.")
@@ -154,7 +151,7 @@ class Connect4Game(
         val updated = gameEmbeds.filter { (channelId, messageId) ->
             try {
                 val message = discord.getMessageById(channelId, messageId).awaitSingle()
-                message.edit(::messageEditor).awaitSingle()
+                message.edit(messageEditor()).awaitSingle()
 
                 if(currentTurn == CircleState.VICTOR) {
                     message.removeAllReactions().success().tryAwait()
@@ -170,15 +167,13 @@ class Connect4Game(
         gameEmbeds = updated
     }
 
-    fun messageEditor(spec: MessageEditSpec) {
-        spec.setContent(generateGameContent())
-        spec.setEmbed(::generateGameEmbed)
-    }
+    fun messageCreator() = MessageCreateSpec.create()
+        .withContent(generateGameContent())
+        .withEmbeds(generateGameEmbed())
 
-    fun messageCreator(spec: MessageCreateSpec) {
-        spec.setContent(generateGameContent())
-        spec.setEmbed(::generateGameEmbed)
-    }
+    fun messageEditor() = MessageEditSpec.create()
+        .withContentOrNull(generateGameContent())
+        .withEmbeds(generateGameEmbed())
 
     private fun generateGameContent(): String = when(currentTurn) {
         CircleState.RED -> "Current turn: <@$redId>"
@@ -186,10 +181,9 @@ class Connect4Game(
         else -> ""
     }
 
-    private fun generateGameEmbed(spec: EmbedCreateSpec) {
-        spec.setDescription(gameGrid.drawGrid())
-        spec.setColor(currentTurn.turnColor)
-        spec.addField(EmojiCharacters.redSquare, redDisplayName, true)
-        spec.addField(EmojiCharacters.blueSquare, blueDisplayName, true)
-    }
+    private fun generateGameEmbed() = Embeds.other(gameGrid.drawGrid(), currentTurn.turnColor)
+        .withFields(listOf(
+            EmbedCreateFields.Field.of(EmojiCharacters.redSquare, redDisplayName, true),
+            EmbedCreateFields.Field.of(EmojiCharacters.blueSquare, blueDisplayName, true)
+        ))
 }

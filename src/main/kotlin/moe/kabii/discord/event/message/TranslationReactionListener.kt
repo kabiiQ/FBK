@@ -2,6 +2,7 @@ package moe.kabii.discord.event.message
 
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.ReactionAddEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.hasPermissions
@@ -9,7 +10,7 @@ import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.translation.Translator
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.createJumpLink
@@ -61,19 +62,13 @@ object TranslationReactionListener : EventListener<ReactionAddEvent>(ReactionAdd
         val translator = Translator.getService(contents, defaultLang.tag)
         val translation = translator.translate(from = null, to = defaultLang, text = contents)
         val jumpLink = message.createJumpLink()
-        channel.createMessage { spec ->
-            spec.setEmbed { embed ->
-                fbkColor(embed)
-                embed.setAuthor("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl)
-
-                val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
-                else "<No translation performed>"
-                embed.setDescription(text)
-
-                embed.setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null)
-            }
-            spec.setMessageReference(message.id)
-        }.awaitSingle()
+        val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
+        else "<No translation performed>"
+        channel.createMessage(
+            Embeds.fbk(text)
+                .withAuthor(EmbedCreateFields.Author.of("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl))
+                .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null))
+        ).awaitSingle()
 
         /*ReactionListener(
             MessageInfo.of(notice),

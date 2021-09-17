@@ -4,6 +4,9 @@ import discord4j.common.util.TimestampFormat
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.spec.EmbedCreateFields
+import discord4j.core.spec.MessageCreateFields
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
@@ -24,7 +27,7 @@ import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.trackers.twitter.json.TwitterTweet
 import moe.kabii.discord.trackers.twitter.json.TwitterUser
 import moe.kabii.discord.translation.Translator
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
@@ -164,10 +167,9 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     // filter potentially nsfw tweets in guilds
                     val guildChan = channel as? TextChannel // will fail for news channels as they can not be marked nsfw
                     if(guildChan?.isNsfw != true) {
-                        channel.createEmbed { embed ->
-                            fbkColor(embed)
-                            embed.setDescription("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
-                        }.awaitSingle()
+                        channel.createMessage(
+                            Embeds.fbk("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
+                        ).awaitSingle()
                         return@target
                     }
                 }
@@ -231,43 +233,48 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         ?: tweet.references.firstOrNull()?.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url
                 } else null
 
-                val notifSpec = channel.createMessage { spec ->
+                val notifSpec = MessageCreateSpec.create()
                     // todo channel setting for custom message ?
-                    val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
-                    spec.setContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
-
-                    spec.setEmbed { embed ->
-                        val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
-                        embed.setColor(Color.of(color))
-                        val author = (if(tweet.retweet) referenceUser else user) ?: user
-                        embed.setAuthor("${author.name} (@${author.username})", author.url, author.profileImage)
-
-                        val text = StringEscapeUtils.unescapeHtml4(tweet.text)
-                        embed.setDescription(text)
-
-                        val tlDetail = if(translation != null) {
-                            val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
-                            embed.addField("**Tweet Translation**", tlText, false)
-                            "Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n"
-                        } else ""
-
-                        if(editedThumb != null) {
-                            // always use our edited thumbnail if we produced one for this
-                            spec.addFile("thumbnail_edit.png", editedThumb)
-                            embed.setImage("attachment://thumbnail_edit.png")
-                        } else thumbnail?.run(embed::setImage)
-                        val footer = "$attachInfo$tlDetail"
-                        if(footer.isNotBlank()) embed.setFooter(footer, NettyFileServer.twitterLogo)
+                    .run {
+                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
+                        withContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
                     }
-                }
+                    .run {
+                        if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
+                    }
+                    .run {
+                        val footer = StringBuilder(attachInfo)
+                        val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
+                        val author = (if(tweet.retweet) referenceUser else user) ?: user
 
-                val notif = if(twitter.mediaOnly && editedThumb == null && thumbnail == null) return@target else notifSpec.awaitSingle()
+                        val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
+                            .withAuthor(EmbedCreateFields.Author.of("${author.name} (@${author.username})", author.url, author.profileImage))
+                            .run {
+                                if(translation != null) {
+                                    val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
+                                    footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
+                                    withFields(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                } else this
+                            }
+                            .run {
+                                if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
+                            }
+                            .run {
+                                if(editedThumb != null) {
+                                    // always use our edited thumbnail if we produced one for this
+                                    withImage("attachment://thumbnail_edit.png")
+                                } else if(thumbnail != null) withImage(thumbnail)
+                                else this
+                            }
+                        withEmbeds(embed)
+                    }
+
+                val notif = if(twitter.mediaOnly && editedThumb == null && thumbnail == null) return@target else channel.createMessage(notifSpec).awaitSingle()
 
                 if(attachedVideo != null) {
-                    channel.createMessage { spec ->
-                        spec.setContent(attachedVideo!!)
-                        spec.setMessageReference(notif.id)
-                    }.tryAwait()
+                    channel.createMessage(attachedVideo)
+                        .withMessageReference(notif.id)
+                        .tryAwait()
                 }
 
                 TrackerUtil.checkAndPublish(notif)

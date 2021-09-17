@@ -4,7 +4,6 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 object DiscordParser {

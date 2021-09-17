@@ -7,15 +7,15 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.NewsChannel
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.mongodb.guilds.StreamSettings
-import moe.kabii.discord.util.errorColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -75,10 +75,7 @@ object TrackerUtil {
                 .flatMap(Guild::getOwner)
                 .flatMap(Member::getPrivateChannel)
                 .flatMap { pm ->
-                    pm.createEmbed { spec ->
-                        errorColor(spec)
-                        spec.setDescription(message)
-                    }
+                    pm.createMessage(Embeds.error(message))
                 }.awaitSingle()
         } catch(e: Exception) {
             LOG.warn("Unable to send notification to $guildId owner regarding feature disabled. Disabling feature silently: $message :: ${e.message}")

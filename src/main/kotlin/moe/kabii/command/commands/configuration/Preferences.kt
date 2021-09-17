@@ -1,12 +1,14 @@
 package moe.kabii.command.commands.configuration
 
 import discord4j.core.`object`.entity.User
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.util.BotUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -27,11 +29,11 @@ object Preferences : CommandContainer {
                             try {
                                 event.client.getGuildById(id).awaitSingle()
                             } catch (ce: ClientException) {
-                                error("Unknown guild ID **${id.asString()}** specified.").subscribe()
+                                reply(Embeds.error("Unknown guild ID **${id.asString()}** specified.")).subscribe()
                                 return@discord
                             }
                         } else {
-                            error("Invalid guild ID **${args[0]}** specified.").subscribe()
+                            reply(Embeds.error("Invalid guild ID **${args[0]}** specified.")).subscribe()
                             return@discord
                         }
                     }
@@ -47,11 +49,11 @@ object Preferences : CommandContainer {
                             }.joinToString("\n")
                             val servers = StringUtils.abbreviate(serversLong, MagicNumbers.Embed.MAX_DESC)
                             val botAvatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
-                            val prompt = embed {
-                                setAuthor("Mutual Servers with ${author.userAddress()}:", null, botAvatar)
-                                setTitle("Select a server number to set as the target for DM commands or \"exit\" to cancel.")
-                                setDescription(servers)
-                            }.awaitSingle()
+                            val prompt = reply(
+                                Embeds.fbk(servers)
+                                    .withAuthor(EmbedCreateFields.Author.of("Mutual Servers with ${author.userAddress()}:", null, botAvatar))
+                                    .withTitle("Select a server number to set as the target for DM commands or \"exit\" to cancel.")
+                            ).awaitSingle()
                             getLong(1..mutual.size.toLong(), prompt, timeout = 90000L)?.let { response -> mutual[response.toInt() - 1] }
                         }
                     }
@@ -64,7 +66,7 @@ object Preferences : CommandContainer {
                     val user = DiscordObjects.User.getOrInsert(author.id.asLong())
                     user.target = guildTarget.id.asLong()
                 }
-                embed("Commands through PM will target the guild **${guildTarget.name}**.").awaitSingle()
+                reply(Embeds.fbk("Commands through PM will target the guild **${guildTarget.name}**.")).awaitSingle()
             }
         }
     }

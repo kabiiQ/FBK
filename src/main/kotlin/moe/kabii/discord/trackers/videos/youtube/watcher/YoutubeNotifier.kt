@@ -2,9 +2,10 @@ package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -18,11 +19,15 @@ import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
+import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.*
+import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import java.time.Duration
@@ -95,28 +100,28 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 val action = if(features.summaries) {
 
-                    existingNotif.edit { edit ->
-                        edit.setEmbed { spec ->
-                            spec.setColor(if(dbStream.premiere) uploadColor else inactiveColor)
+                    val embed = Embeds.other(if(dbStream.premiere) uploadColor else inactiveColor)
+                        .run {
                             val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                            if(features.viewers && dbStream.peakViewers > 0) spec.addField("Viewers", viewers, true)
+                            if(features.viewers && dbStream.peakViewers > 0) withFields(EmbedCreateFields.Field.of("Viewers", viewers, true)) else this
+                        }
+                        .run {
+                            if(video != null) {
 
-                            if (video != null) {
                                 // stream has ended and vod is available - edit notifications to reflect
-                                val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!"
-                                else " was live."
-                                spec.setAuthor("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar)
-
-                                spec.setUrl(video.url)
-
-                                spec.setFooter("Stream ended", NettyFileServer.youtubeLogo)
-                                val timestamp = video.liveInfo?.endTime
-                                timestamp?.run(spec::setTimestamp)
-
+                                val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
                                 val durationStr = DurationFormatter(video.duration).colonTime
-                                spec.setDescription("Video available: [$durationStr]")
-                                spec.setTitle(video.title)
-                                spec.setThumbnail(video.thumbnail)
+
+                                withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
+                                    .withUrl(video.url)
+                                    .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.youtubeLogo))
+                                    .run {
+                                        val timestamp = video.liveInfo?.endTime
+                                        if(timestamp != null) withTimestamp(timestamp) else this
+                                    }
+                                    .withDescription("Video available: [$durationStr]")
+                                    .withTitle(video.title)
+                                    .withThumbnail(video.thumbnail)
                             } else {
                                 // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
                                 // here, we can only provide information from our database
@@ -125,20 +130,22 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                                 val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
                                 val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
 
-                                spec.setAuthor("$channelName was live.", channelLink, null)
-                                spec.setUrl(videoLink)
-
-                                spec.setFooter("Stream ended (approximate)", NettyFileServer.youtubeLogo)
-                                spec.setTimestamp(Instant.now())
-
-                                spec.setTitle("No VOD is available.")
-                                spec.setThumbnail(dbStream.lastThumbnail)
-                                spec.setDescription("Last video title: $lastTitle")
+                                withAuthor(EmbedCreateFields.Author.of("$channelName was live.", channelLink, null))
+                                    .withUrl(videoLink)
+                                    .withFooter(EmbedCreateFields.Footer.of("Stream ended (approximate)", NettyFileServer.youtubeLogo))
+                                    .withTimestamp(Instant.now())
+                                    .withTitle("No VOD is available.")
+                                    .withThumbnail(dbStream.lastThumbnail)
+                                    .withDescription("Last video title: $lastTitle")
                             }
                         }
-                    }.then(mono {
-                        TrackerUtil.checkUnpin(existingNotif)
-                    })
+
+
+                    existingNotif.edit()
+                        .withEmbeds(embed)
+                        .then(mono {
+                            TrackerUtil.checkUnpin(existingNotif)
+                        })
                 } else {
 
                     existingNotif.delete()
@@ -243,15 +250,14 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         val message = try {
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
-            chan.createEmbed { embed ->
-                embed.setColor(scheduledColor)
-                embed.setAuthor("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar)
-                embed.setUrl(video.url)
-                embed.setTitle(shortTitle)
-                embed.setThumbnail(video.thumbnail)
-                embed.setFooter("Scheduled start time ", NettyFileServer.youtubeLogo)
-                embed.setTimestamp(time)
-            }.awaitSingle()
+            val embed = Embeds.other(scheduledColor)
+                .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar))
+                .withUrl(video.url)
+                .withTitle(shortTitle)
+                .withThumbnail(video.thumbnail)
+                .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
+                .withTimestamp(time)
+            chan.createMessage(embed).awaitSingle()
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -284,20 +290,18 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val shortDescription = StringUtils.abbreviate(video.description, 200)
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-            chan.createMessage { spec ->
-                if(mentionRole != null) spec.setContent(mentionRole.discord.mention)
-                val embed: EmbedBlock = {
-                    setColor(uploadColor)
-                    setAuthor("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar)
-                    setUrl(video.url)
-                    setTitle(shortTitle)
-                    setDescription("Video description: $shortDescription")
-                    if(features.thumbnails) setImage(video.thumbnail) else setThumbnail(video.thumbnail)
+            val embed = Embeds.other("Video description: $shortDescription", uploadColor)
+                .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar))
+                .withUrl(video.url)
+                .withTitle(shortTitle)
+                .run { if(features.thumbnails) withImage(video.thumbnail) else withThumbnail(video.thumbnail) }
+                .run {
                     val videoLength = DurationFormatter(video.duration).colonTime
-                    setFooter("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo)
+                    withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo))
                 }
-                spec.setEmbed(embed)
-            }.awaitSingle()
+            val mentionMessage = if(mentionRole != null) chan.createMessage(mentionRole.discord.mention) else chan.createMessage()
+            mentionMessage.withEmbeds(embed).awaitSingle()
+
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -325,18 +329,15 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val shortDescription = StringUtils.abbreviate(video.description, 200)
         val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-        val embed: EmbedBlock = {
-            setColor(creationColor)
-            setAuthor("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar)
-            setUrl(video.url)
-            setTitle(shortTitle)
-            setDescription("Stream scheduled to start in ~$eta\n\nVideo description: $shortDescription")
-            setThumbnail(video.thumbnail)
-            setFooter("Scheduled start time ", NettyFileServer.youtubeLogo)
-            setTimestamp(startTime)
-        }
+        val embed = Embeds.other("Stream scheduled to start in ~$eta\n\nVideo description: $shortDescription", creationColor)
+            .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
+            .withUrl(video.url)
+            .withTitle(shortTitle)
+            .withThumbnail(video.thumbnail)
+            .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
+            .withTimestamp(startTime)
         val new = try {
-            chan.createEmbed(embed).awaitSingle()
+            chan.createMessage(embed).awaitSingle()
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -384,34 +385,26 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val startTime = liveStream.liveInfo?.startTime
             val sinceStr = if(startTime != null) " since " else " "
 
-            val newNotification = chan.createMessage { spec ->
-                if(mention != null) {
-                    spec.setContent(mention.discord.mention)
-                    mention.db.lastMention = DateTime.now()
-                }
-                val embed: EmbedBlock = {
+            val liveMessage = when {
+                liveStream.premiere -> " is premiering a new video!"
+                new -> " went live!"
+                else -> " is live."
+            }
+            val embed = Embeds.other(shortDescription, if(liveStream.premiere) uploadColor else liveColor)
+                .withAuthor(EmbedCreateFields.Author.of("${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar))
+                .withUrl(liveStream.url)
+                .withTitle(shortTitle)
+                .withFooter(EmbedCreateFields.Footer.of("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
+                .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
+                .run { if(startTime != null) withTimestamp(startTime) else this }
 
-                    // only a slight output change if this is premiere vs. live stream
-                    val liveMessage = when {
-                        liveStream.premiere -> " is premiering a new video!"
-                        new -> " went live!"
-                        else -> " is live."
-                    }
-                    setColor(if(liveStream.premiere) uploadColor else liveColor)
+            val mentionMessage = if(mention != null) {
+                mention.db.lastMention = DateTime.now()
+                chan.createMessage(mention.discord.mention)
+            } else chan.createMessage()
 
-                    setAuthor("${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar)
-                    setUrl(liveStream.url)
-                    setColor(liveColor)
-                    setTitle(shortTitle)
-                    setDescription(shortDescription)
-                    if(features.thumbnails) setImage(liveStream.thumbnail) else setThumbnail(liveStream.thumbnail)
-                    setFooter("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo)
-                    if(startTime != null) {
-                        setTimestamp(startTime)
-                    }
-                }
-                spec.setEmbed(embed)
-            }.awaitSingle()
+            val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
+
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
             TrackerUtil.pinActive(discord, features, newNotification)
 
