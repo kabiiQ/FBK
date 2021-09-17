@@ -4,8 +4,8 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verify
-import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Embeds
+import moe.kabii.translation.Translator
 
 object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "translateto", "tltarget", "setlocale") {
     override val wikiPath = "Translator#set-the-default-target-language-with-setlang"

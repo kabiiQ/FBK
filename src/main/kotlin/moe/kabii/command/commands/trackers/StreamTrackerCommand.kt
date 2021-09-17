@@ -8,13 +8,13 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.StreamingTarget
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.YoutubeTarget
-import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.YoutubeTarget
+import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString

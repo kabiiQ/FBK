@@ -8,9 +8,9 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.discord.trackers.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.*
 
 private enum class Action { TRACK, UNTRACK }
 

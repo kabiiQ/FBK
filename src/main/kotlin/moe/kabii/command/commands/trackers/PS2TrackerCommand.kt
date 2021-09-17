@@ -6,10 +6,10 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.ps2.PS2Tracks
-import moe.kabii.discord.trackers.PS2Target
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.PS2Target
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.ps2.polling.PS2Parser
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 

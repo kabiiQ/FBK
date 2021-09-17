@@ -11,13 +11,13 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
-import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.ytchat.YoutubeMembershipUtil
+import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
+import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership", "linkytmembers", "linkytmembership") {

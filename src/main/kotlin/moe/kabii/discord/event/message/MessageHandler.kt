@@ -15,11 +15,11 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
-import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 

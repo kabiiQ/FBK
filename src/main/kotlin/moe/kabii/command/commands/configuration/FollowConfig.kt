@@ -6,12 +6,12 @@ import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.StreamingTarget
-import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TargetArguments
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select

@@ -7,8 +7,8 @@ import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
-import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 
 object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {

@@ -1,8 +1,8 @@
 package moe.kabii.data.relational.anime
 
 import moe.kabii.MOSHI
-import moe.kabii.discord.trackers.anime.ConsumptionStatus
-import moe.kabii.discord.trackers.anime.MediaType
+import moe.kabii.trackers.anime.ConsumptionStatus
+import moe.kabii.trackers.anime.MediaType
 
 data class DBMediaList(
     val items: List<DBMedia>

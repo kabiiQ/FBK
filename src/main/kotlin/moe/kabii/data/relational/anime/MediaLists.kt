@@ -1,14 +1,14 @@
 package moe.kabii.data.relational.anime
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.discord.trackers.AniListTarget
-import moe.kabii.discord.trackers.AnimeTarget
-import moe.kabii.discord.trackers.KitsuTarget
-import moe.kabii.discord.trackers.MALTarget
-import moe.kabii.discord.trackers.anime.MediaListParser
-import moe.kabii.discord.trackers.anime.anilist.AniListParser
-import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
-import moe.kabii.discord.trackers.anime.mal.MALParser
+import moe.kabii.trackers.AniListTarget
+import moe.kabii.trackers.AnimeTarget
+import moe.kabii.trackers.KitsuTarget
+import moe.kabii.trackers.MALTarget
+import moe.kabii.trackers.anime.MediaListParser
+import moe.kabii.trackers.anime.anilist.AniListParser
+import moe.kabii.trackers.anime.kitsu.KitsuParser
+import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

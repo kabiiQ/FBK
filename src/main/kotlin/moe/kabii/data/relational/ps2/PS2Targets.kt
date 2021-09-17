@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.ps2
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.discord.trackers.PS2Target
+import moe.kabii.trackers.PS2Target
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

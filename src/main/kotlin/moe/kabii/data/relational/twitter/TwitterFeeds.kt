@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.twitter
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.discord.trackers.twitter.json.TwitterUser
+import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

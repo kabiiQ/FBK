@@ -1,8 +1,8 @@
 package moe.kabii.data.relational.streams.youtube.ytchat
 
 import discord4j.core.GatewayDiscordClient
-import moe.kabii.discord.ytchat.YoutubeMembershipUtil
 import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

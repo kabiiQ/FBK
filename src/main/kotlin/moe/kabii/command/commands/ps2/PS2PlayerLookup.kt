@@ -4,8 +4,8 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.GuildSettings
-import moe.kabii.discord.trackers.ps2.polling.PS2Parser
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.ps2.polling.PS2Parser
 import moe.kabii.util.DurationFormatter
 import java.time.Duration
 import java.time.ZoneId

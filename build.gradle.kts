@@ -55,7 +55,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.4") // can update once d4j 3.2 is available
-    implementation("io.projectreactor:reactor-core")
+    //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
@@ -64,7 +64,7 @@ dependencies {
     // music bot
     implementation("com.sedmelluq:lavaplayer:1.3.77") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
-    implementation("com.github.kokorin.jaffree:jaffree:2021.05.31")
+    implementation("com.github.kokorin.jaffree:jaffree:2021.08.31")
     implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls

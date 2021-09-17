@@ -90,7 +90,7 @@ object CustomCommands : CommandContainer {
                 // list existing custom commands
                 val commands = config.customCommands.commands
                 if(commands.isEmpty()) {
-                    error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**.")
+                    reply(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**."))
                 } else {
                     val commandList = config.customCommands.commands.joinToString(", ", transform = CustomCommand::command)
                     reply(

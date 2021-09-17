@@ -4,8 +4,8 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.discord.trackers.TargetArguments
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.TargetArguments
 
 object TrackerConfig : CommandContainer {
     object SetDefaultTracker : Command("usetracker", "settracker", "usetrack", "settrack", "usefeature", "usetarget", "settarget", "setfeature", "tracker") {

@@ -9,8 +9,8 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Embeds
+import moe.kabii.translation.Translator
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.createJumpLink

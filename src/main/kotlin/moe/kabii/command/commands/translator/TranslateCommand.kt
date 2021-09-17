@@ -5,8 +5,8 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
-import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Embeds
+import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.createJumpLink
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress

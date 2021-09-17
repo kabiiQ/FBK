@@ -9,8 +9,8 @@ import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.games.GameManager
-import moe.kabii.discord.games.connect4.Connect4Game
+import moe.kabii.games.GameManager
+import moe.kabii.games.connect4.Connect4Game
 import moe.kabii.util.extensions.orNull
 import reactor.core.publisher.Mono
 

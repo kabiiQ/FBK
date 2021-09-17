@@ -45,7 +45,7 @@ object  CommandFilters : CommandContainer {
                             filter.useWhitelist()
                             config.save()
                             reply(Embeds.fbk("**${target.name}** will now use a command **whitelist**. By default most commands will be disabled. See the **whitelist** command to enable other commands."))
-                        } else error("Command whitelist is already enabled in **${target.name}**.")
+                        } else reply(Embeds.error("Command whitelist is already enabled in **${target.name}**."))
                     }
                     "toggle" -> toggleList(this, config)
                     "add", "insert" -> {

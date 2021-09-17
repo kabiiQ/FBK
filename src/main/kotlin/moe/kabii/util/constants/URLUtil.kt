@@ -1,7 +1,7 @@
 package moe.kabii.util.constants
 
 import moe.kabii.data.relational.anime.ListSite
-import moe.kabii.discord.trackers.anime.MediaType
+import moe.kabii.trackers.anime.MediaType
 
 object URLUtil {
     const val colorPicker = "https://htmlcolorcodes.com/color-picker/"

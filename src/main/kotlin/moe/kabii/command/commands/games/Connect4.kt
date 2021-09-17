@@ -5,11 +5,11 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.discord.games.GameManager
-import moe.kabii.discord.games.connect4.Connect4Game
-import moe.kabii.discord.games.connect4.EmbedInfo
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
+import moe.kabii.games.GameManager
+import moe.kabii.games.connect4.Connect4Game
+import moe.kabii.games.connect4.EmbedInfo
 import moe.kabii.util.extensions.success
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress

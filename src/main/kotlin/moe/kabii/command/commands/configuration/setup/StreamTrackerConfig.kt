@@ -6,12 +6,12 @@ import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.ChannelMark
 import moe.kabii.data.mongodb.guilds.MongoStreamChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
-import moe.kabii.discord.trackers.StreamingTarget
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.videos.StreamWatcher
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.extensions.propagateTransaction
 
 object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytcfg", "streamconfig", "twitchconfig", "streamtracker", "twitchtracker", "configtwitch", "twitchembed", "streamembed", "configstreams", "twitchsettings", "streamsettings") {

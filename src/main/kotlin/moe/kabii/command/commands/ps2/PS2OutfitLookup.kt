@@ -7,10 +7,10 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.conversation.PaginationUtil
-import moe.kabii.discord.trackers.ps2.polling.PS2Parser
-import moe.kabii.discord.trackers.ps2.polling.json.PS2Outfit
-import moe.kabii.discord.trackers.ps2.polling.json.PS2OutfitMember
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.ps2.polling.PS2Parser
+import moe.kabii.trackers.ps2.polling.json.PS2Outfit
+import moe.kabii.trackers.ps2.polling.json.PS2OutfitMember
 
 object PS2OutfitLookupCommands : CommandContainer {
 

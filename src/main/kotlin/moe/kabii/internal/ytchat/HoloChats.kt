@@ -8,9 +8,9 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.ytchat.YoutubeChatWatcher
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
+import moe.kabii.ytchat.YoutubeChatWatcher
 
 class HoloChats(val discord: GatewayDiscordClient) {
 

@@ -8,10 +8,10 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.twitter.TwitterParser
-import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.twitter.TwitterParser
+import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait

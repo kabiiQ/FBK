@@ -4,9 +4,9 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.discord.search.skeb.SkebIOException
-import moe.kabii.discord.search.skeb.SkebParser
 import moe.kabii.discord.util.Embeds
+import moe.kabii.search.skeb.SkebIOException
+import moe.kabii.search.skeb.SkebParser
 import moe.kabii.util.constants.EmojiCharacters
 
 object SkebLookup : Command("skeb") {

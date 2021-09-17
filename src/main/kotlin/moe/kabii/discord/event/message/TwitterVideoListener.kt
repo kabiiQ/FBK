@@ -10,7 +10,7 @@ import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.discord.conversation.ReactionInfo
 import moe.kabii.discord.conversation.ReactionListener
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.trackers.twitter.TwitterParser
+import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.stackTraceString

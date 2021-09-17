@@ -11,8 +11,8 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.TrackerUtil
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
