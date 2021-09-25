@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
@@ -76,7 +77,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         setTimestamp(message.timestamp)
     }
 
-    suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) {
+    suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) = starboard.starsLock.withLock {
         val starboardChannel = getStarboardChannel()
         val starCount = stars.count().toLong()
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
@@ -101,7 +102,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         starboardMessage.addReaction(starboard.useEmoji().toReactionEmoji()).success().tryAwait()
     }
 
-    suspend fun removeFromBoard(message: StarredMessage) {
+    suspend fun removeFromBoard(message: StarredMessage) = starboard.starsLock.withLock {
         val starboardChannel = getStarboardChannel()
         starboard.starred.remove(message)
         config.save()
