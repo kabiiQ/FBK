@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.*
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.DiscordBot
@@ -37,28 +38,30 @@ object StarboardEventHandler {
                 if(nsfw && !starboardCfg.includeNsfw) return
             }
 
-            val messageId = event.messageId.asLong()
-            // check if this message is already starboarded
-            // reactions can be added to either the starboard post itself or the original post
-            val existing = starboardCfg.findAssociated(messageId)
+            starboardCfg.starsLock.withLock {
+                val messageId = event.messageId.asLong()
+                // check if this message is already starboarded
+                // reactions can be added to either the starboard post itself or the original post
+                val existing = starboardCfg.findAssociated(messageId)
 
-            if(existing != null) {
-                val addedStar = existing.stars.add(event.userId.asLong())
-                if(addedStar) {
-                    val guild = event.guild.awaitSingle()
-                    val starboard = starboardCfg.asStarboard(guild, config)
-                    starboard.updateCount(existing)
-                } // else, user already has this message starred
-            } else {
-                // not already on the starboard, check the new star count
-                val message = event.message.awaitSingle()
-                val userStars = message.getReactors(event.emoji).collectList().awaitSingle()
-                if(userStars.size >= starboardCfg.starsAdd) {
-                    // add to the starboard!
-                    val guild = event.guild.awaitSingle()
-                    val starboard = starboardCfg.asStarboard(guild, config)
-                    val stars = userStars.map { user -> user.id.asLong() }.toMutableSet()
-                    starboard.addToBoard(message, stars)
+                if(existing != null) {
+                    val addedStar = existing.stars.add(event.userId.asLong())
+                    if(addedStar) {
+                        val guild = event.guild.awaitSingle()
+                        val starboard = starboardCfg.asStarboard(guild, config)
+                        starboard.updateCount(existing)
+                    } // else, user already has this message starred
+                } else {
+                    // not already on the starboard, check the new star count
+                    val message = event.message.awaitSingle()
+                    val userStars = message.getReactors(event.emoji).collectList().awaitSingle()
+                    if(userStars.size >= starboardCfg.starsAdd) {
+                        // add to the starboard!
+                        val guild = event.guild.awaitSingle()
+                        val starboard = starboardCfg.asStarboard(guild, config)
+                        val stars = userStars.map { user -> user.id.asLong() }.toMutableSet()
+                        starboard.addToBoard(message, stars)
+                    }
                 }
             }
         }
@@ -71,22 +74,24 @@ object StarboardEventHandler {
             if (event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
 
             // only continue if guild has a starboard
-                val config = GuildConfigurations.getOrCreateGuild(guildId)
-                val starboardCfg = config.starboard ?: return
+            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val starboardCfg = config.starboard ?: return
 
-            // only continue if message is starboarded currently
-            val messageId = event.messageId.asLong()
-            val existing = starboardCfg.findAssociated(messageId) ?: return
+            starboardCfg.starsLock.withLock {
+                // only continue if message is starboarded currently
+                val messageId = event.messageId.asLong()
+                val existing = starboardCfg.findAssociated(messageId) ?: return
 
-            val removedStar = existing.stars.remove(event.userId.asLong())
-            if (removedStar) {
-                // check if this message should fall off the starboard
-                val guild = event.guild.awaitSingle()
-                val starboard = starboardCfg.asStarboard(guild, config)
-                if(existing.stars.size <= starboardCfg.starsRemove && !existing.exempt) {
-                    starboard.removeFromBoard(existing)
-                } else {
-                    starboard.updateCount(existing)
+                val removedStar = existing.stars.remove(event.userId.asLong())
+                if (removedStar) {
+                    // check if this message should fall off the starboard
+                    val guild = event.guild.awaitSingle()
+                    val starboard = starboardCfg.asStarboard(guild, config)
+                    if(existing.stars.size <= starboardCfg.starsRemove && !existing.exempt) {
+                        starboard.removeFromBoard(existing)
+                    } else {
+                        starboard.updateCount(existing)
+                    }
                 }
             }
         }
@@ -108,14 +113,16 @@ object StarboardEventHandler {
             // only continue if "remove on clear" behavior is enabled
             if(!starboardCfg.removeOnClear) return
 
-            // only continue if message is starboarded currently
-            val messageId = event.messageId.asLong()
-            val existing = starboardCfg.findAssociated(messageId) ?: return
+            starboardCfg.starsLock.withLock {
+                // only continue if message is starboarded currently
+                val messageId = event.messageId.asLong()
+                val existing = starboardCfg.findAssociated(messageId) ?: return
 
-            val guild = event.guild.awaitSingle()
-            val starboard = starboardCfg.asStarboard(guild, config)
-            if(!existing.exempt) {
-                starboard.removeFromBoard(existing)
+                val guild = event.guild.awaitSingle()
+                val starboard = starboardCfg.asStarboard(guild, config)
+                if(!existing.exempt) {
+                    starboard.removeFromBoard(existing)
+                }
             }
         }
     }
@@ -133,14 +140,16 @@ object StarboardEventHandler {
             // only continue if "remove on clear" behavior is enabled
             if(!starboardCfg.removeOnClear) return
 
-            // only continue if message is starboarded currently
-            val messageId = event.messageId.asLong()
-            val existing = starboardCfg.findAssociated(messageId) ?: return
+            starboardCfg.starsLock.withLock {
+                // only continue if message is starboarded currently
+                val messageId = event.messageId.asLong()
+                val existing = starboardCfg.findAssociated(messageId) ?: return
 
-            val guild = event.guild.awaitSingle()
-            val starboard = starboardCfg.asStarboard(guild, config)
-            if(!existing.exempt) {
-                starboard.removeFromBoard(existing)
+                val guild = event.guild.awaitSingle()
+                val starboard = starboardCfg.asStarboard(guild, config)
+                if(!existing.exempt) {
+                    starboard.removeFromBoard(existing)
+                }
             }
         }
     }
@@ -158,14 +167,16 @@ object StarboardEventHandler {
             // continue if "remove on delete" behavior is enabled
             if(!starboardCfg.removeOnDelete) return
 
-            // continue if message is starboarded
-            val messageId = event.messageId.asLong()
-            val existing = starboardCfg.findAssociated(messageId) ?: return
+            starboardCfg.starsLock.withLock {
+                // continue if message is starboarded
+                val messageId = event.messageId.asLong()
+                val existing = starboardCfg.findAssociated(messageId) ?: return
 
-            // if "original" message deleted, delete the starboard copy. if starboard message is deleted, just still from db
-            val guild = channel.guild.awaitSingle()
-            val starboard = starboardCfg.asStarboard(guild, config)
-            starboard.removeFromBoard(existing)
+                // if "original" message deleted, delete the starboard copy. if starboard message is deleted, just still from db
+                val guild = channel.guild.awaitSingle()
+                val starboard = starboardCfg.asStarboard(guild, config)
+                starboard.removeFromBoard(existing)
+            }
         }
     }
 }

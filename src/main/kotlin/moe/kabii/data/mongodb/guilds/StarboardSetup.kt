@@ -22,9 +22,7 @@ data class StarboardSetup(
 ) {
     @Transient val starsLock = Mutex()
 
-    suspend fun findAssociated(messageId: Long) = starsLock.withLock {
-        starred.find { starred ->  starred.starboardMessageId == messageId || starred.messageId == messageId }
-    }
+    suspend fun findAssociated(messageId: Long) = starred.find { starred ->  starred.starboardMessageId == messageId || starred.messageId == messageId }
 
     fun asStarboard(guild: Guild, config: GuildConfiguration) = Starboard(this, guild, config)
     fun useEmoji() = emoji ?: UnicodeEmoji(EmojiCharacters.star)
