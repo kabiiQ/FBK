@@ -2,7 +2,7 @@ package moe.kabii.command.commands.moderation
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -16,7 +16,7 @@ object Purge : CommandContainer {
     const val SMALL_MESSAGEID = 100_000_000_000_000_000L
 
     private suspend fun purgeAndNotify(origin: DiscordParameters, userArgs: List<String>, messages: Flux<Message>) {
-        origin.chan as TextChannel
+        origin.chan as GuildMessageChannel
         val limitUsers = userArgs
             .mapNotNull(String::toLongOrNull)
             .map(Long::snowflake)
