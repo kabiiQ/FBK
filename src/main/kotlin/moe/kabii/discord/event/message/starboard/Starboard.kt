@@ -6,7 +6,6 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration

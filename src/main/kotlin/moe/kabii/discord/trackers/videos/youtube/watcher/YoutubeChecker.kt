@@ -14,6 +14,7 @@ import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionM
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -29,7 +30,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 }
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions) {
-    private val cleanInterval = 240 // only clean db approx every 2 hours
+    private val cleanInterval = 180 // only clean db approx every 1.5 hours
     private val repeatTimeMillis = cooldowns.minimumRepeatTime
     private val tickDelay = cooldowns.callDelay
 
@@ -131,9 +132,11 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         // if youtube call + processing succeeded, reflect this in db
                                         if(ytVideoInfo != null) {
                                             with(callReason.video) {
-                                                lastAPICall = DateTime.now()
-                                                lastTitle = ytVideoInfo.title
-                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                                propagateTransaction {
+                                                    lastAPICall = DateTime.now()
+                                                    lastTitle = ytVideoInfo.title
+                                                    ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                                }
                                             }
                                         }
                                     } catch (e: Exception) {
@@ -145,15 +148,24 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         }.forEach { job -> job.join() }
 
                     // clean up videos db
-                    if(tickId == 0) {
+                    if(tickId == 10) {
                         LOG.info("Executing YouTube DB cleanup")
+                         // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
                             YoutubeVideos.lastAPICall lessEq old
                         }
+                        // streams which never went live (with 1 day of leniency)
                         val overdue = DateTime.now().minusDays(1)
                         YoutubeScheduledEvents.deleteWhere {
                             YoutubeScheduledEvents.scheduledStart less overdue
+                        }
+                        /* strange streams which youtube sometimes creates - it does not seem possible to distinguish these from brand
+                        new stream entries. They are 'upcoming' streams with no scheduled start time
+                         */
+                        YoutubeVideos.deleteWhere {
+                            YoutubeVideos.lastAPICall eq null and
+                                    (YoutubeVideos.apiAttempts greater 10)
                         }
                     }
                 } catch (e: Exception) {
@@ -250,7 +262,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         propagateTransaction {
             when {
                 ytVideo.upcoming -> {
-                    val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) { "YouTube provided UPCOMING video with no start time" }
+                    val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) {
+                        dbVideo.apiAttempts += 1
+                        "YouTube provided UPCOMING video with no start time"
+                    }
                     // assign video 'scheduled' status
                     val dbScheduled = propagateTransaction {
                         val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)

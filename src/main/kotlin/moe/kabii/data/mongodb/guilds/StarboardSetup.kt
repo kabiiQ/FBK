@@ -2,7 +2,6 @@ package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.Guild
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.event.message.starboard.Starboard
 import moe.kabii.util.DiscordEmoji
