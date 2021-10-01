@@ -42,9 +42,9 @@ object Keys : ConfigSpec("") {
         val client by required<String>("client_id")
         val secret by required<String>("client_secret")
         val token by required<String>("app_access_token")
-        val callback by required<String>()
+        val callback by required<String>("twitch_callback_url")
+        val listenPort by required<Int>("twitch_callback_internal_port")
         val signingKey by required<String>("twitch_signing_key")
-        val webhookPort by required<Int>("twitch_webhook_port")
     }
     object Netty : ConfigSpec() {
         val port by required<Int>()

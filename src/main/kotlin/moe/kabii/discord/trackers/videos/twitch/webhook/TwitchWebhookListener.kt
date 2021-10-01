@@ -11,7 +11,10 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.videos.twitch.json.TwitchStreamRequest
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
+import moe.kabii.discord.trackers.videos.twitch.json.TwitchEvents
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
@@ -21,82 +24,99 @@ import org.apache.commons.codec.digest.HmacUtils
 
 class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker: TwitchChecker) {
 
-    private val signingKey = Keys.config[Keys.Twitch.signingKey]
-    private val port = Keys.config[Keys.Twitch.webhookPort]
-    private val payloadAdapter = MOSHI.adapter(TwitchStreamRequest::class.java)
+    private val hmac256 = HmacUtils(HmacAlgorithms.HMAC_SHA_256, Keys.config[Keys.Twitch.signingKey])
+    private val eventAdapter = MOSHI.adapter(TwitchEvents.Response.EventNotification::class.java)
+    private val port = Keys.config[Keys.Twitch.listenPort]
 
     // w3c websub
     val server = embeddedServer(Netty, port = port) {
         routing {
 
-            get {
-                // subscription validation
-                log("GET:$port")
-                val mode = call.parameters["hub.mode"]
-                val channelTopic = call.parameters["hub.topic"]
-                when(mode) {
-                    "subscribe", "unsubscribe" -> {}
-                    "denied" -> {
-                        LOG.warn("Twitch subscription denied: ${call.parameters}")
-                        return@get // return 500
-                    }
-                    else -> {
-                        call.response.status(HttpStatusCode.BadRequest)
-                        return@get
-                    }
-                }
-
-                val challenge = call.parameters["hub.challenge"]
-                if(challenge != null) {
-                    call.respondText(challenge, status = HttpStatusCode.OK)
-                    LOG.info("$mode validated: $channelTopic")
-                }
-            }
-
             post {
-                // webhook push from Twitch
+
                 log("POST:$port")
 
-                // return 2xx per websub spec
-                call.response.status(HttpStatusCode.OK)
-
-                val userId = call.request.queryParameters["userId"]?.toLongOrNull()
-                    .also { LOG.trace("POST channel: $it") }
-                    ?: return@post // validate userId provided
-
                 try {
+
+                    val signature = call.request.header("Twitch-Eventsub-Message-Signature")
+
                     // allows proper utf 8 interpretation
                     val body = call.receiveStream().bufferedReader().readText()
-
-                    val signature = call.request.header("X-Hub-Signature")
-                    val computed = HmacUtils(HmacAlgorithms.HMAC_SHA_256, signingKey).hmacHex(body)
-                    if(computed == null || signature != "sha256=$computed") {
-                        LOG.warn("Unable to verify payload signature: $body\nX-Hub-Signature: $signature\nExpected: $computed")
-                        return@post
-                    } else LOG.trace("verified payload signature")
-
-                    val payload = payloadAdapter.fromJson(body)
-                    if(payload == null) {
-                        LOG.warn("Invalid livestream payload from Twitch: $body")
+                    val message = call.request.header("Twitch-Eventsub-Message-Id") +
+                            call.request.header("Twitch-Eventsub-Message-Timestamp") +
+                            body
+                    if(signature != "sha256=${hmac256.hmacHex(message)}") {
+                        LOG.warn("Unable to verify payload signature: $body :: ${call.request.headers}")
+                        call.response.status(HttpStatusCode.Forbidden)
                         return@post
                     }
+                    call.response.status(HttpStatusCode.OK)
 
-                    val twitchStream = payload.data.firstOrNull()?.asStreamInfo()
+                    val event = checkNotNull(eventAdapter.fromJson(body)) // may throw error, 400 error is ok
+                    val eventType = call.request.header("Twitch-Eventsub-Subscription-Type")
+                        ?.run { TwitchEventSubscriptions.Type.values().find { type -> type.apiType == this } }
+                        ?: return@post // unhandled event type
 
-                    propagateTransaction {
-                        val channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, userId.toString())
-                        val targets = channel?.run { checker.getActiveTargets(this) }
-                        if(channel == null || targets == null) {
-                            LOG.debug("Payload received for untracked channel: $channel + targets: $targets + payload: $payload")
-                            return@propagateTransaction
+                    when(call.request.header("Twitch-Eventsub-Message-Type")) {
+
+                        "webhook_callback_verification" -> {
+
+                            val challenge = checkNotNull(event.challenge) { "verification requires challenge" }
+                            propagateTransaction {
+                                val subscription = TwitchEventSubscription.new {
+                                    this.twitchChannel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, event.subscription.condition.broadcasterUserId)
+                                    this.eventType =  eventType
+                                    this.subscriptionId = event.subscription.id
+                                }
+                                manager.subscriptionComplete(subscription)
+                            }
+                            call.respondText(challenge, status = HttpStatusCode.OK)
+                            LOG.info("Twitch event verified: $body")
                         }
+                        "notification" -> {
 
-                        checker.updateChannel(channel, twitchStream, targets)
+                            val notification = checkNotNull(event.event) { "notification requires event" }
+
+                            when(eventType) {
+
+                                TwitchEventSubscriptions.Type.START_STREAM -> {
+
+                                    val twitchStream = TwitchParser.getStream(notification.userId.toLong()).orNull()
+                                    if(twitchStream == null) {
+                                        LOG.warn("Twitch stream started: ${notification.userLogin} but there was an error retrieving the live stream info!")
+                                        return@post
+                                    }
+                                    propagateTransaction {
+                                        val channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, notification.userId)
+                                        val targets = channel?.run { checker.getActiveTargets(this) }
+                                        if(channel == null || targets == null) {
+                                            LOG.warn("Payload received for untracked channel: $channel + targets: $targets + payload: $body")
+                                            return@propagateTransaction
+                                        }
+                                        checker.updateChannel(channel, twitchStream, targets)
+                                    }
+                                }
+                            }
+                        }
+                        "revocation" -> {
+
+                            propagateTransaction {
+                                val existing = TwitchEventSubscription.find {
+                                    TwitchEventSubscriptions.subscriptionId eq event.subscription.id
+                                }.firstOrNull()
+                                if(existing != null) {
+                                    manager.subscriptionRevoked(existing.id.value)
+                                    existing.delete()
+                                }
+                            }
+                        }
+                        else -> return@post // unhandled message type
                     }
 
                 } catch(e: Exception) {
-                    LOG.warn("Error while parsing Twitch webhook payload: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+                    LOG.warn("Error while processing Twitch webhook: ${e.message}")
+                    LOG.trace(e.stackTraceString)
+                    if(call.response.status() == null) call.response.status(HttpStatusCode.InternalServerError)
                 }
             }
         }

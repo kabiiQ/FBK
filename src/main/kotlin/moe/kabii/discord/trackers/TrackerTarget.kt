@@ -8,6 +8,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.discord.trackers.videos.StreamErr
 import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
@@ -86,7 +87,7 @@ object TwitchTarget : StreamingTarget(
         val targets = twitch.getActiveTargets(channel) ?: return@callback
         val stream = TwitchParser.getStream(channel.siteChannelID.toLong()).orNull()
         twitch.updateChannel(channel, stream, targets)
-        services.twitchFeedSub.subscribe(channel.siteChannelID)
+        TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
     }
 }
 

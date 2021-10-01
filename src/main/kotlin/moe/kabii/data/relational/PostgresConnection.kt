@@ -9,8 +9,10 @@ import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.WebSubSubscriptions
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
@@ -39,6 +41,7 @@ internal object PostgresConnection {
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
                 TrackedStreams.Mentions,
+                TwitchEventSubscriptions,
                 DBTwitchStreams.TwitchStreams,
                 DBTwitchStreams.Notifications,
                 WebSubSubscriptions,

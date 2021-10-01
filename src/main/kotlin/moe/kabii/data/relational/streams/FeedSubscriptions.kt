@@ -1,6 +1,5 @@
-package moe.kabii.data.relational.streams.youtube
+package moe.kabii.data.relational.streams
 
-import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -36,5 +35,15 @@ class WebSubSubscription(id: EntityID<Int>) : IntEntity(id) {
                     }
             )
         }
+
+        @WithinExposedContext
+        fun getSite(site: TrackedStreams.DBSite): SizedIterable<WebSubSubscription> =
+            WebSubSubscription.wrapRows(
+                WebSubSubscriptions
+                    .innerJoin(TrackedStreams.StreamChannels)
+                    .select {
+                        TrackedStreams.StreamChannels.site eq site
+                    }
+            )
     }
 }

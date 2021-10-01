@@ -13,7 +13,6 @@ import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
-import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchFeedSubscriber
 import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
@@ -32,7 +31,6 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
     val twitcastChecker: TwitcastChecker
     val twitch: TwitchChecker
-    val twitchFeedSub: TwitchFeedSubscriber
 
     init {
         val reminderDelay = ServiceRequestCooldownSpec(
@@ -49,15 +47,14 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
         val twitchDelay = ServiceRequestCooldownSpec(
             callDelay = 0L,
-            minimumRepeatTime = 900_000L
+            minimumRepeatTime = 120_000L
         )
         twitch = TwitchChecker(discord, twitchDelay)
         val twitchSubDelay = ServiceRequestCooldownSpec(
             callDelay = 0L,
-            minimumRepeatTime = 12_000L
+            minimumRepeatTime = 20_000L
         )
         val twitchSubs = TwitchSubscriptionManager(discord, twitch, twitchSubDelay)
-        twitchFeedSub = twitchSubs.subscriber
 
         val subsDelay = ServiceRequestCooldownSpec(
             callDelay = 0L,

@@ -34,9 +34,10 @@ domain = 'http://public_path_to_server'
 client_id = ''
 client_secret = ''
 app_access_token = ''
-callback = ''
+twitch_callback_url = 'https://'
+twitch_callpath_path = '/twitch'
+twitch_callback_internal_port = 8003 # Twitch requires :443, must reroute to this internal port
 twitch_signing_key = ''
-twitch_webhook_port = 8003
 
 [censor]
 ip_services = [
