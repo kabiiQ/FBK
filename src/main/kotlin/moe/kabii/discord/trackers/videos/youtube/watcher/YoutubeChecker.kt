@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -99,15 +99,18 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     }
 
                     // main IO call, process as we go
+                    LOG.debug("yt expected calls: ${targetLookup.keys}")
+                    var first = true
                     targetLookup.keys
-                        .asSequence()
                         .chunked(50)
                         .flatMap { chunk ->
-                            LOG.debug("yt api call: $chunk")
+                            LOG.info("yt api call: $chunk")
+                            if(first) first = false
+                            else Thread.sleep(800L)
                             YoutubeParser.getVideos(chunk).entries
                         }.map { (videoId, ytVideo) ->
                             taskScope.launch {
-                                newSuspendedTransaction {
+                                propagateTransaction inner@{
                                     try {
                                         val callReason = targetLookup.getValue(videoId)
 
@@ -116,7 +119,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             is Err -> {
                                                 when (ytVideo.value) {
                                                     // do not process video if this was an IO issue on our end
-                                                    is StreamErr.IO -> return@newSuspendedTransaction
+                                                    is StreamErr.IO -> return@inner
                                                     is StreamErr.NotFound -> null
                                                 }
                                             }
@@ -132,7 +135,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         // if youtube call + processing succeeded, reflect this in db
                                         if(ytVideoInfo != null) {
                                             with(callReason.video) {
-                                                propagateTransaction {
+                                                transaction {
                                                     lastAPICall = DateTime.now()
                                                     lastTitle = ytVideoInfo.title
                                                     ytChannel.lastKnownUsername = ytVideoInfo.channel.name
@@ -145,7 +148,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     }
                                 }
                             }
-                        }.forEach { job -> job.join() }
+                        }
+                    LOG.debug("yt exit")
 
                     // clean up videos db
                     if(tickId == 10) {
@@ -259,36 +263,34 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             return
         }
         val dbVideo = call.video
-        propagateTransaction {
-            when {
-                ytVideo.upcoming -> {
-                    val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) {
-                        dbVideo.apiAttempts += 1
-                        "YouTube provided UPCOMING video with no start time"
-                    }
-                    // assign video 'scheduled' status
-                    val dbScheduled = propagateTransaction {
-                        val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                            ?: YoutubeScheduledEvent.new {
-                                this.ytVideo = dbVideo
-                                this.scheduledStart = scheduled.jodaDateTime
-                                this.dataExpiration = DateTime.now() // todo move calculation to function ?
-                            }
-                        dbVideo.scheduledEvent = dbScheduled
-                        dbScheduled
-                    }
+        when {
+            ytVideo.upcoming -> {
+                val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) {
+                    dbVideo.apiAttempts += 1
+                    "YouTube provided UPCOMING video with no start time"
+                }
+                // assign video 'scheduled' status
+                val dbScheduled = transaction {
+                    val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
+                        ?: YoutubeScheduledEvent.new {
+                            this.ytVideo = dbVideo
+                            this.scheduledStart = scheduled.jodaDateTime
+                            this.dataExpiration = DateTime.now() // todo move calculation to function ?
+                        }
+                    dbVideo.scheduledEvent = dbScheduled
+                    dbScheduled
+                }
 
-                    // send 'upcoming' and/or 'creation' messages to appropriate targets
-                    streamUpcoming(dbScheduled, ytVideo, scheduled)
-                    streamCreated(dbVideo, ytVideo)
-                }
-                ytVideo.live -> {
-                    streamStart(ytVideo, dbVideo)
-                }
-                else -> {
-                    // regular video upload
-                    videoUploaded(dbVideo, ytVideo)
-                }
+                // send 'upcoming' and/or 'creation' messages to appropriate targets
+                streamUpcoming(dbScheduled, ytVideo, scheduled)
+                streamCreated(dbVideo, ytVideo)
+            }
+            ytVideo.live -> {
+                streamStart(ytVideo, dbVideo)
+            }
+            else -> {
+                // regular video upload
+                videoUploaded(dbVideo, ytVideo)
             }
         }
     }

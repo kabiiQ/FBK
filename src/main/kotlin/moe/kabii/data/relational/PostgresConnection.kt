@@ -1,5 +1,7 @@
 package moe.kabii.data.relational
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
@@ -24,10 +26,18 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal object PostgresConnection {
-    val postgres = Database.connect(
-        Keys.config[Keys.Postgres.connectionString],
-        driver = "org.postgresql.Driver"
-    ).apply { useNestedTransactions = true }
+    private fun createConnectionPool(): HikariDataSource {
+        val config = HikariConfig()
+        config.driverClassName = "org.postgresql.Driver"
+        config.jdbcUrl = Keys.config[Keys.Postgres.connectionString]
+        config.maximumPoolSize = 50
+        config.isAutoCommit = false
+        config.validate()
+        return HikariDataSource(config)
+    }
+
+    val postgres = Database.connect(createConnectionPool())
+        .apply { useNestedTransactions = true }
 
     init {
         transaction {
