@@ -47,6 +47,8 @@ class TwitchSubscriptionManager(discord: GatewayDiscordClient, checker: TwitchCh
                         if(dbSub.twitchChannel == null) {
                             LOG.info("Unsubscribing from Twitch webhook: ${dbSub.subscriptionId}")
                             TwitchParser.EventSub.deleteSubscription(dbSub.subscriptionId)
+                            subscriptionRevoked(dbSub.id.value)
+                            dbSub.delete()
                         }
                     }
 

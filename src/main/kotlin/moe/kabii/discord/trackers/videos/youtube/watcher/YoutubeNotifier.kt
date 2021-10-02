@@ -1,6 +1,7 @@
 package moe.kabii.discord.trackers.videos.youtube.watcher
 
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
@@ -89,62 +90,65 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             try {
 
                 val dbMessage = notification.messageID
-                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+                val channel = if(dbMessage != null) {
+                    val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
 
-                val features = getStreamConfig(notification.targetID)
+                    val features = getStreamConfig(notification.targetID)
 
-                val action = if(features.summaries) {
+                    val action = if(features.summaries) {
 
-                    existingNotif.edit { edit ->
-                        edit.setEmbed { spec ->
-                            spec.setColor(if(dbStream.premiere) uploadColor else inactiveColor)
-                            val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                            if(features.viewers && dbStream.peakViewers > 0) spec.addField("Viewers", viewers, true)
+                        existingNotif.edit { edit ->
+                            edit.setEmbed { spec ->
+                                spec.setColor(if(dbStream.premiere) uploadColor else inactiveColor)
+                                val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+                                if(features.viewers && dbStream.peakViewers > 0) spec.addField("Viewers", viewers, true)
 
-                            if (video != null) {
-                                // stream has ended and vod is available - edit notifications to reflect
-                                val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!"
-                                else " was live."
-                                spec.setAuthor("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar)
+                                if (video != null) {
+                                    // stream has ended and vod is available - edit notifications to reflect
+                                    val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!"
+                                    else " was live."
+                                    spec.setAuthor("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar)
 
-                                spec.setUrl(video.url)
+                                    spec.setUrl(video.url)
 
-                                spec.setFooter("Stream ended", NettyFileServer.youtubeLogo)
-                                val timestamp = video.liveInfo?.endTime
-                                timestamp?.run(spec::setTimestamp)
+                                    spec.setFooter("Stream ended", NettyFileServer.youtubeLogo)
+                                    val timestamp = video.liveInfo?.endTime
+                                    timestamp?.run(spec::setTimestamp)
 
-                                val durationStr = DurationFormatter(video.duration).colonTime
-                                spec.setDescription("Video available: [$durationStr]")
-                                spec.setTitle(video.title)
-                                spec.setThumbnail(video.thumbnail)
-                            } else {
-                                // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
-                                // here, we can only provide information from our database
-                                val lastTitle = dbStream.ytVideo.lastTitle
-                                val channelName = dbStream.lastChannelName
-                                val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
-                                val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
+                                    val durationStr = DurationFormatter(video.duration).colonTime
+                                    spec.setDescription("Video available: [$durationStr]")
+                                    spec.setTitle(video.title)
+                                    spec.setThumbnail(video.thumbnail)
+                                } else {
+                                    // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
+                                    // here, we can only provide information from our database
+                                    val lastTitle = dbStream.ytVideo.lastTitle
+                                    val channelName = dbStream.lastChannelName
+                                    val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
+                                    val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
 
-                                spec.setAuthor("$channelName was live.", channelLink, null)
-                                spec.setUrl(videoLink)
+                                    spec.setAuthor("$channelName was live.", channelLink, null)
+                                    spec.setUrl(videoLink)
 
-                                spec.setFooter("Stream ended (approximate)", NettyFileServer.youtubeLogo)
-                                spec.setTimestamp(Instant.now())
+                                    spec.setFooter("Stream ended (approximate)", NettyFileServer.youtubeLogo)
+                                    spec.setTimestamp(Instant.now())
 
-                                spec.setTitle("No VOD is available.")
-                                spec.setThumbnail(dbStream.lastThumbnail)
-                                spec.setDescription("Last video title: $lastTitle")
+                                    spec.setTitle("No VOD is available.")
+                                    spec.setThumbnail(dbStream.lastThumbnail)
+                                    spec.setDescription("Last video title: $lastTitle")
+                                }
                             }
-                        }
-                    }.then(mono {
-                        TrackerUtil.checkUnpin(existingNotif)
-                    })
-                } else {
+                        }.then(mono {
+                            TrackerUtil.checkUnpin(existingNotif)
+                        })
+                    } else {
 
-                    existingNotif.delete()
+                        existingNotif.delete()
 
-                }.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = dbStream.ytVideo.ytChannel)
+                    }.thenReturn(Unit).tryAwait()
+                    existingNotif.channel.awaitSingle()
+                } else discord.getChannelById(notification.targetID.discordChannel.channelID.snowflake).ofType(GuildMessageChannel::class.java).awaitSingle()
+                checkAndRenameChannel(channel, endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
@@ -420,7 +424,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                 this.targetID = target
                 this.videoID = dbVideo
-                this.deleted = false
             }
 
             // edit channel name if feature is enabled and stream starts
