@@ -30,7 +30,7 @@ internal object PostgresConnection {
         val config = HikariConfig()
         config.driverClassName = "org.postgresql.Driver"
         config.jdbcUrl = Keys.config[Keys.Postgres.connectionString]
-        config.maximumPoolSize = 50
+        config.maximumPoolSize = 30
         config.isAutoCommit = false
         config.validate()
         return HikariDataSource(config)

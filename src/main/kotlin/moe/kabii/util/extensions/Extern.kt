@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.request.*
 import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -68,5 +69,6 @@ class InsertOrUpdate<Key : Any>(
 
 // ktor logging
 fun PipelineContext<Unit, ApplicationCall>.log(prefix: String) {
-    LOG.info("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}")
+    val realIP = call.request.header("X-Real-IP")?.run(" :: X-Real-IP: "::plus) ?: ""
+    LOG.info("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}$realIP")
 }
