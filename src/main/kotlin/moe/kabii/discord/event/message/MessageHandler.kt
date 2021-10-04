@@ -115,10 +115,9 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                 if(!enabled) throw GuildCommandDisabledException(cmdStr)
                 val guild = event.guild.awaitFirstOrNull()
                 val targetID = (guild?.id ?: author.id).asLong()
-                val username = author.username
-                val guildName = guild?.name ?: username
+                val guildName = guild?.name ?: author.username
                 val context = if (isPM) "Private" else "Guild"
-                LOG.debug("${context}Message#${event.message.id.asLong()}:\t$guildName:\t$username:\t$content")
+                LOG.info("${context}Message:\t$guildName:\t${author.userAddress()}:\t$content")
                 val cmdArgs = content.split(" ")
                 val args = cmdArgs
                     .filter(String::isNotBlank)

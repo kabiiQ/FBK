@@ -22,7 +22,6 @@ import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2Faction
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.net.URI
 import java.time.Duration
 

@@ -14,7 +14,6 @@ import moe.kabii.discord.trackers.PS2Target
 import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2StaticData
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
     override val wikiPath = "Livestream-Tracker#listing-tracked-streams-with-tracked"

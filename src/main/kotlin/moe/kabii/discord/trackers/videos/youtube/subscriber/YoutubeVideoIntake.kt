@@ -9,7 +9,6 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.dom4j.io.SAXReader

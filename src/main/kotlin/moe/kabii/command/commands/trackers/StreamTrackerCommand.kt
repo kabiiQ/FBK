@@ -18,7 +18,6 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object StreamTrackerCommand : TrackerCommand {
