@@ -13,6 +13,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 
 // generic logic to handle tracking any stream source
 object TrackedStreams {
@@ -47,10 +48,9 @@ object TrackedStreams {
                         (StreamChannels.siteChannelID eq channelId)
             }.firstOrNull()
 
-            @WithinExposedContext
-            fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel {
+            fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel = transaction {
                 val existing = getChannel(site, channelId)
-                return if(existing != null) existing else {
+                if(existing != null) existing else {
                     val new = new {
                         this.site = site
                         this.siteChannelID = channelId

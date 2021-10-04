@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2Faction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 @JsonClass(generateAdapter = true)
 data class PS2OutfitResponse(
@@ -25,7 +26,7 @@ data class PS2Outfit(
 
     init {
         PS2DataCache.async.launch {
-            newSuspendedTransaction {
+            transaction {
                 PS2DataCache.updateOutfit(this@PS2Outfit)
             }
         }

@@ -13,6 +13,7 @@ import moe.kabii.discord.conversation.PaginationUtil
 import moe.kabii.discord.trackers.PS2Target
 import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2StaticData
+import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
@@ -29,14 +30,14 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
             // compile all targets for this channel
             val tracks = mutableListOf<String>()
 
-            newSuspendedTransaction {
+            propagateTransaction {
                 val dbChannel = DiscordObjects.Channel.find {
                     DiscordObjects.Channels.channelID eq chan.id.asLong()
                 }.firstOrNull()
 
                 if(dbChannel == null) {
                     error("There are no trackers enabled in this channel.").awaitSingle()
-                    return@newSuspendedTransaction
+                    return@propagateTransaction
                 }
 
                 // get all tracked stream channels in this channel

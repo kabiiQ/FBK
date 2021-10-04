@@ -44,9 +44,7 @@ object TwitterTrackerCommand : TrackerCommand {
             }
 
             // get the db 'twitterfeed' object, create if this is new track
-            val dbFeed = propagateTransaction {
-                TwitterFeed.getOrInsert(twitterUser)
-            }
+            val dbFeed = TwitterFeed.getOrInsert(twitterUser)
             val shouldStream = features?.twitterSettings?.streamFeeds == true
 
             TwitterTarget.new {

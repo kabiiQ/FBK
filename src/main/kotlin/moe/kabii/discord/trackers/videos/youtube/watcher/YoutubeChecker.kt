@@ -274,10 +274,12 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // assign video 'scheduled' status
                 val dbScheduled = transaction {
                     val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                        ?: YoutubeScheduledEvent.new {
-                            this.ytVideo = dbVideo
-                            this.scheduledStart = scheduled.jodaDateTime
-                            this.dataExpiration = DateTime.now() // todo move calculation to function ?
+                        ?: transaction {
+                            YoutubeScheduledEvent.new {
+                                this.ytVideo = dbVideo
+                                this.scheduledStart = scheduled.jodaDateTime
+                                this.dataExpiration = DateTime.now() // todo move calculation to function ?
+                            }
                         }
                     dbVideo.scheduledEvent = dbScheduled
                     dbScheduled

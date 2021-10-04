@@ -43,9 +43,7 @@ data class DiscordParameters (
     @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
     val target: Guild by lazy {
         if(guild != null) return@lazy guild!!
-        val user = transaction {
-            DiscordObjects.User.getOrInsert(author.id.asLong())
-        }
+        val user = DiscordObjects.User.getOrInsert(author.id.asLong())
         val userTarget = user.target
         if (userTarget != null) {
             val dGuild = event.client.getGuildById(userTarget.snowflake).tryBlock().orNull()

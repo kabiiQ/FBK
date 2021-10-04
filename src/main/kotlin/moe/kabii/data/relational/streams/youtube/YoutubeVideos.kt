@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.jodatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object YoutubeVideos : LongIdTable() {
     val videoId = char("video_id", 11).uniqueIndex()
@@ -39,13 +40,15 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
         fun getOrInsert(videoId: String, channelId: String): YoutubeVideo {
             val channel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, channelId)
 
-            return getVideo(videoId) ?: new {
-                this.videoId = videoId
-                this.ytChannel = channel
-                this.lastAPICall = null
-                this.apiAttempts = 0
-                this.liveEvent = null
-                this.scheduledEvent = null
+            return getVideo(videoId) ?: transaction {
+                new {
+                    this.videoId = videoId
+                    this.ytChannel = channel
+                    this.lastAPICall = null
+                    this.apiAttempts = 0
+                    this.liveEvent = null
+                    this.scheduledEvent = null
+                }
             }
         }
     }

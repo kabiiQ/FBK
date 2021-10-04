@@ -60,10 +60,8 @@ object YoutubeVideoIntake {
                 val channelId = entry.elements("channelId").first().text
                 LOG.trace("debug: $videoId : $channelId")
 
-                propagateTransaction {
-                    LOG.trace("taking video: $videoId")
-                    YoutubeVideo.getOrInsert(videoId, channelId)
-                }
+                LOG.trace("taking video: $videoId")
+                YoutubeVideo.getOrInsert(videoId, channelId)
             }
         } catch(e: Exception) {
             LOG.warn("Error in YouTube XML intake: ${e.message}")

@@ -18,6 +18,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership", "linkytmembers", "linkytmembership") {
 
@@ -35,7 +36,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
 
             if(args.isEmpty()) {
                 // get any active config
-                val linkedChannel = newSuspendedTransaction {
+                val linkedChannel = transaction {
                     MembershipConfigurations.getForGuild(target.id)?.run(::linkChannel)
                 }
 
@@ -100,10 +101,12 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
                     utils.unsync()
                 }
 
-                val memberConfig = MembershipConfiguration.new {
-                    this.discordServer = DiscordObjects.Guild.getOrInsert(target.id.asLong())
-                    this.streamChannel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, ytChannel.id, ytChannel.name)
-                    this.membershipRole = membershipRole.id.asLong()
+                val memberConfig = transaction {
+                    MembershipConfiguration.new {
+                        this.discordServer = DiscordObjects.Guild.getOrInsert(target.id.asLong())
+                        this.streamChannel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, ytChannel.id, ytChannel.name)
+                        this.membershipRole = membershipRole.id.asLong()
+                    }
                 }
 
                 embed("Memberships for YouTube channel **[${ytChannel.name}](${ytChannel.url})** have been linked to **${target.name}**.\n\nA role has been created for memberships: <@&${membershipRole.id.asString()}>\n\nUsers must link their Discord account with a YouTube connection to FBK using the **ytlink** command to automate membership status.").tryAwait()

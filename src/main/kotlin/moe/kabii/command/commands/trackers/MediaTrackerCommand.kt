@@ -21,6 +21,7 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object MediaTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
@@ -41,7 +42,7 @@ object MediaTrackerCommand : TrackerCommand {
 
         // check if this list is already tracked in this channel, before we download the entire list (can be slow)
         val channelId = origin.chan.id.asLong()
-        val existingTrack = newSuspendedTransaction {
+        val existingTrack = transaction {
             TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.lowercase(), channelId)
         }
 
@@ -95,10 +96,12 @@ object MediaTrackerCommand : TrackerCommand {
                         (TrackedMediaLists.MediaLists.siteChannelId eq siteListId)
             }.elementAtOrElse(0) { _ ->
                 val listJson = mediaList.toDBJson()
-                TrackedMediaLists.MediaList.new {
-                    this.site = site
-                    this.siteListId = siteListId
-                    this.lastListJson = listJson
+                transaction {
+                    TrackedMediaLists.MediaList.new {
+                        this.site = site
+                        this.siteListId = siteListId
+                        this.lastListJson = listJson
+                    }
                 }
             }
 

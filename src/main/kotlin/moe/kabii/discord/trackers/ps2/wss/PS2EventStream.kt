@@ -20,10 +20,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.ps2.store.PS2DataCache
 import moe.kabii.discord.trackers.ps2.store.PS2Faction
-import moe.kabii.util.extensions.WithinExposedContext
-import moe.kabii.util.extensions.applicationLoop
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.net.URI
@@ -57,7 +54,7 @@ class PS2EventStream(val discord: GatewayDiscordClient) : Runnable {
                 for(event in channel) {
 
                     dbScope.launch {
-                        newSuspendedTransaction {
+                        propagateTransaction {
                             try {
                                 when(event) {
                                     is WSSEvent.PlayerLog -> onPlayerLog(event)
