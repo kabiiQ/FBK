@@ -200,6 +200,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
             } else {
                 val liveMarks = liveChannels
                     .sortedBy(TrackedStreams.StreamChannel::id)
+                    .distinct()
                     .mapNotNull { liveChannel ->
                         val dbChannel = MongoStreamChannel.of(liveChannel)
                         marks.find { existing ->

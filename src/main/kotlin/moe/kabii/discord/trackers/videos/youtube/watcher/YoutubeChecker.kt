@@ -265,9 +265,11 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         val dbVideo = call.video
         when {
             ytVideo.upcoming -> {
-                val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) {
+                val scheduled = ytVideo.liveInfo?.scheduledStart
+                if(scheduled == null) {
                     dbVideo.apiAttempts += 1
-                    "YouTube provided UPCOMING video with no start time"
+                    LOG.debug("YouTube provided UPCOMING video with no start time")
+                    return
                 }
                 // assign video 'scheduled' status
                 val dbScheduled = transaction {

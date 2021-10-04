@@ -69,7 +69,6 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                         .forEach { line ->
 
                         // process data
-                        LOG.info("TwitterStream: $line")
                         intakeContext.launch {
                             try {
                                 val response = tweetAdapter.fromJson(line)

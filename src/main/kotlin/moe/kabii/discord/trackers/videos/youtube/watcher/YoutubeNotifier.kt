@@ -25,6 +25,7 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -48,14 +49,16 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // create live stats object for video
         // should not already exist
         if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        val liveEvent = YoutubeLiveEvent.new {
-            this.ytVideo = dbVideo
-            this.lastThumbnail = video.thumbnail
-            this.lastChannelName = video.channel.name
-            this.peakViewers = viewers
-            this.uptimeTicks = 1
-            this.averageViewers = viewers
-            this.premiere = video.premiere
+        val liveEvent = transaction {
+            YoutubeLiveEvent.new {
+                this.ytVideo = dbVideo
+                this.lastThumbnail = video.thumbnail
+                this.lastChannelName = video.channel.name
+                this.peakViewers = viewers
+                this.uptimeTicks = 1
+                this.averageViewers = viewers
+                this.premiere = video.premiere
+            }
         }
         dbVideo.liveEvent = liveEvent
 

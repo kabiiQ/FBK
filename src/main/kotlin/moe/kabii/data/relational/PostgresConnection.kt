@@ -26,15 +26,13 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal object PostgresConnection {
-    private fun createConnectionPool(): HikariDataSource {
-        val config = HikariConfig()
-        config.driverClassName = "org.postgresql.Driver"
-        config.jdbcUrl = Keys.config[Keys.Postgres.connectionString]
-        config.maximumPoolSize = 30
-        config.isAutoCommit = false
-        config.validate()
-        return HikariDataSource(config)
-    }
+    private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
+        driverClassName = "org.postgresql.Driver"
+        jdbcUrl = Keys.config[Keys.Postgres.connectionString]
+        maximumPoolSize = 30
+        isAutoCommit = false
+        validate()
+    }.run(::HikariDataSource)
 
     val postgres = Database.connect(createConnectionPool())
         .apply { useNestedTransactions = true }
