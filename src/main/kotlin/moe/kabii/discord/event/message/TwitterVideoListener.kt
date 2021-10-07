@@ -31,11 +31,11 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
         if(config?.guildSettings?.twitterVideoLinks == false) return // continue if enabled or PM
 
         // check message for twitter url
-        val tweetId = twitterUrl.find(content)?.groups?.get(1) ?: return
+        val tweetId = content.split(" ").map { arg -> twitterUrl.find(arg)?.groups?.get(1)?.value }.firstOrNull() ?: return
 
         // request tweet info
         val videoUrl = try {
-            TwitterParser.getV1Tweet(tweetId.value)?.findAttachedVideo() ?: return
+            TwitterParser.getV1Tweet(tweetId)?.findAttachedVideo() ?: return
         } catch(e: Exception) {
             LOG.warn("Error getting linked Tweet: ${e.message}")
             LOG.debug(e.stackTraceString)

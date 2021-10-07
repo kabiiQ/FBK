@@ -68,7 +68,7 @@ class InsertOrUpdate<Key : Any>(
 }
 
 // ktor logging
-fun PipelineContext<Unit, ApplicationCall>.log(prefix: String) {
+fun PipelineContext<Unit, ApplicationCall>.log(prefix: String, callback: (String) -> Unit = LOG::info) {
     val realIP = call.request.header("X-Real-IP")?.run(" :: X-Real-IP: "::plus) ?: ""
-    LOG.info("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}$realIP")
+    callback("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}$realIP")
 }
