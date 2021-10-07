@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.event.domain.message.*
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.sync.withLock
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
@@ -34,7 +35,7 @@ object StarboardEventHandler {
                 if(!starboarded) return
                 // if this channel is nsfw, starboard must also be nsfw.
                 val nsfw = event.channel.ofType(TextChannel::class.java)
-                    .map(TextChannel::isNsfw).awaitSingle()
+                    .map(TextChannel::isNsfw).awaitSingleOrNull() ?: false
                 if(nsfw && !starboardCfg.includeNsfw) return
             }
 

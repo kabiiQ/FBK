@@ -19,6 +19,7 @@ object GuildFeatures : Command("serverconfig", "configserver", "guildconfig", "c
         BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", listOf("reactiontl", "reactiontranslations"), GuildSettings::reactionTranslations),
         BooleanElement("Provide a playable video when users post a Twitter link containing a video.", listOf("twittervids", "twittervid", "twitterlinks", "twitterurls"), GuildSettings::twitterVideoLinks),
         BooleanElement("Enable PS2 commands", listOf("ps2", "planetside2", "ps2commands"), GuildSettings::ps2Commands),
+        LongElement("Retrieve full images from Pixiv when users post pixiv links (0 to disable, max 5)", listOf("pixiv", "pixivimg"), GuildSettings::pixivImages, 0L..5L, "Enter the maximum number of Pixiv images to retrieve and embed from user posts. 0 to disable, maximum 5.")
     )
 
     init {
