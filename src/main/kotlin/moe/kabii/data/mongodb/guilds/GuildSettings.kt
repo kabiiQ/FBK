@@ -11,7 +11,8 @@ data class GuildSettings(
     var publishTrackerMessages: Boolean = false,
     var reactionTranslations: Boolean = true,
     var twitterVideoLinks: Boolean = false,
-    var ps2Commands: Boolean = false
+    var ps2Commands: Boolean = false,
+    var pixivImages: Long = 0
 )
 
 data class StreamInfo(

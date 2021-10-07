@@ -1,6 +1,7 @@
 package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.Guild
+import kotlinx.coroutines.sync.Mutex
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.event.message.starboard.Starboard
 import moe.kabii.util.DiscordEmoji
@@ -18,9 +19,11 @@ data class StarboardSetup(
     var emoji: DiscordEmoji? = null,
     val starred: MutableList<StarredMessage> = mutableListOf()
 ) {
-    fun asStarboard(guild: Guild, config: GuildConfiguration) = Starboard(this, guild, config)
-    fun findAssociated(messageId: Long) = starred.find { starred -> starred.starboardMessageId == messageId || starred.messageId == messageId }
+    @Transient val starsLock = Mutex()
 
+    suspend fun findAssociated(messageId: Long) = starred.find { starred ->  starred.starboardMessageId == messageId || starred.messageId == messageId }
+
+    fun asStarboard(guild: Guild, config: GuildConfiguration) = Starboard(this, guild, config)
     fun useEmoji() = emoji ?: UnicodeEmoji(EmojiCharacters.star)
 }
 

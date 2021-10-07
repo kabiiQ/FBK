@@ -14,7 +14,6 @@ class YoutubeChatParser(val discord: GatewayDiscordClient, val watcher: YoutubeC
     private val chatAdapter = MOSHI.adapter<List<YTChatMessage>>(chatDataType)
 
     suspend fun handleChatData(data: YoutubeChatWatcher.YTChatData) {
-        LOG.debug("chatdata $data")
         val (room, json) = data
 
         val messages = try {

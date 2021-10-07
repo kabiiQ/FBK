@@ -64,11 +64,9 @@ object YoutubeParser {
         else youtubeVideoUrlPattern.find(input)?.groups?.get(1)?.value
     }
 
-    @Throws(YoutubeAPIException::class)
     fun getVideo(videoId: String): YoutubeVideoInfo? =
         getVideos(listOf(videoId)).values.single().orNull()
 
-    @Throws(YoutubeAPIException::class)
     fun getVideos(videoIds: List<String>): Map<String, Result<YoutubeVideoInfo, StreamErr>> {
         // we are able to chunk request up to 50 video IDs from 1 API call (yt limit for non-paginated endpoint)
         return videoIds.chunked(50).map { idChunk ->

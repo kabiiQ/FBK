@@ -23,7 +23,6 @@ import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -188,16 +187,18 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
         val changed = if(find != null) {
             find.run {
                 // update stream stats
-                updateViewers(stream.viewers)
-                if(stream.title != lastTitle || stream.game.name != lastGame) {
-                    lastTitle = stream.title
-                    lastGame = stream.game.name
-                    true
-                } else false
+                propagateTransaction {
+                    updateViewers(stream.viewers)
+                    if(stream.title != lastTitle || stream.game.name != lastGame) {
+                        lastTitle = stream.title
+                        lastGame = stream.game.name
+                        true
+                    } else false
+                }
             }
         } else {
             // create stream stats
-            transaction {
+            propagateTransaction {
                 DBTwitchStreams.TwitchStream.new {
                     this.channelID = channel
                     this.startTime = stream.startedAt.jodaDateTime
@@ -212,7 +213,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
         }
 
         if(user == null) return
-        channel.lastKnownUsername = user!!.username
+        if(user!!.username != channel.lastKnownUsername) channel.lastKnownUsername = user!!.username
         filteredTargets.forEach { target ->
             try {
                 val existing = DBTwitchStreams.Notification

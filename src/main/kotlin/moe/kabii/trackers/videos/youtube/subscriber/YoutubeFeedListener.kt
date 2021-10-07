@@ -57,7 +57,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
             post {
                 // POST - feed updates
-                log("POST:$port")
+                log("POST:$port", LOG::debug)
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)

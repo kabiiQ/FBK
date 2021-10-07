@@ -4,10 +4,10 @@ import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
+import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "ytrefresh") {
     override val commandExempt = true
@@ -31,7 +31,7 @@ object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "yt
     suspend fun pullYoutubeFeeds(args: List<String>) {
         val arg = args[0]
 
-        newSuspendedTransaction {
+        propagateTransaction {
             when (arg.lowercase()) {
                 "any", "all", "full" -> TrackedStreams.StreamChannel.getActive {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
@@ -54,6 +54,7 @@ object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "yt
             }
                 .map(TrackedStreams.StreamChannel::siteChannelID)
                 .forEach { feed ->
+                    Thread.sleep(500L)
                     println("Manually pulling YT updates for '$feed'")
                     YoutubeVideoIntake.intakeExisting(feed)
                 }

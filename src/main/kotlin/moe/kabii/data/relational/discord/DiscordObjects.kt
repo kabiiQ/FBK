@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object DiscordObjects {
     internal object Users : IntIdTable() {
@@ -21,7 +22,9 @@ object DiscordObjects {
         companion object : IntEntityClass<User>(Users) {
             fun getOrInsert(newUserID: Long): User = find { Users.userID eq newUserID }
                 .elementAtOrElse(0) { _ ->
-                    new { userID = newUserID }
+                    transaction {
+                        new { userID = newUserID }
+                    }
                 }
         }
     }
@@ -36,7 +39,9 @@ object DiscordObjects {
         companion object : IntEntityClass<Guild>(Guilds) {
             fun getOrInsert(newGuildID: Long): Guild = find { Guilds.guildID eq newGuildID }
                 .elementAtOrElse(0) { _ ->
-                    new { guildID = newGuildID }
+                    transaction {
+                        new { guildID = newGuildID }
+                    }
                 }
         }
     }
@@ -53,9 +58,11 @@ object DiscordObjects {
         companion object : IntEntityClass<Channel>(Channels) {
             fun getOrInsert(newChannelID: Long, newGuildID: Long?): Channel = find { Channels.channelID eq newChannelID }
                 .elementAtOrElse(0) { _ ->
-                    new {
-                        channelID = newChannelID
-                        guild = newGuildID?.let { id -> Guild.getOrInsert(id) }
+                    transaction {
+                        new {
+                            channelID = newChannelID
+                            guild = newGuildID?.let { id -> Guild.getOrInsert(id) }
+                        }
                     }
                 }
         }

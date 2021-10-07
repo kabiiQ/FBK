@@ -107,6 +107,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
     implementation("org.postgresql:postgresql:42.2.23")
+    implementation("com.zaxxer:HikariCP:5.0.0")
 
     // language detection
     implementation("com.github.pemistahl:lingua:1.1.0")

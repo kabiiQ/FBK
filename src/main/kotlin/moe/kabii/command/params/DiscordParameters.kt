@@ -24,10 +24,7 @@ import moe.kabii.discord.event.message.MessageHandler
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.EmojiCharacters
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.tryBlock
-import moe.kabii.util.extensions.withUser
-import org.jetbrains.exposed.sql.transactions.transaction
+import moe.kabii.util.extensions.*
 import java.time.Duration
 import kotlin.reflect.KProperty1
 
@@ -46,9 +43,7 @@ data class DiscordParameters (
     @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
     val target: Guild by lazy {
         if(guild != null) return@lazy guild!!
-        val user = transaction {
-            DiscordObjects.User.getOrInsert(author.id.asLong())
-        }
+        val user = DiscordObjects.User.getOrInsert(author.id.asLong())
         val userTarget = user.target
         if (userTarget != null) {
             val dGuild = event.client.getGuildById(userTarget.snowflake).tryBlock().orNull()

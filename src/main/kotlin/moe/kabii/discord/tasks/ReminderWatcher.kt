@@ -41,7 +41,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
 
                     reminders.map { reminder ->
                         discordScope.launch {
-                            newSuspendedTransaction {
+                            propagateTransaction {
                                 scheduleReminder(reminder)
                             }
                         }

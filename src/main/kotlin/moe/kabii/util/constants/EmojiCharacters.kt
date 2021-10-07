@@ -13,6 +13,7 @@ object EmojiCharacters {
     const val play = "▶"
     const val wave = "\uD83D\uDC4B"
     const val mailbox = "\uD83D\uDCEC"
+    const val ageLimit = "\uD83D\uDD1E"
 
     const val liveCircle = "\uD83D\uDD34"
 

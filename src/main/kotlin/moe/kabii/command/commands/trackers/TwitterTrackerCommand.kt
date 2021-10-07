@@ -15,6 +15,7 @@ import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitterTrackerCommand : TrackerCommand {
 
@@ -36,19 +37,21 @@ object TwitterTrackerCommand : TrackerCommand {
 
         // check if this user is already tracked
         val channelId = origin.chan.id.asLong()
-        propagateTransaction {
-            val existingTrack = TwitterTarget.getExistingTarget(twitterUser.id, channelId)
 
-            if (existingTrack != null) {
-                origin.reply(Embeds.error("**Twitter/${twitterUser.username}** is already tracked in this channel.")).awaitSingle()
-                return@propagateTransaction
-            }
+        val existingTrack = transaction {
+            TwitterTarget.getExistingTarget(twitterUser.id, channelId)
+        }
 
+        if(existingTrack != null) {
+            origin.error("**Twitter/${twitterUser.username}** is already tracked in this channel.").awaitSingle()
+            return
+        }
+
+        var shouldStream = false
+        val dbFeed = transaction {
             // get the db 'twitterfeed' object, create if this is new track
-            val dbFeed = propagateTransaction {
-                TwitterFeed.getOrInsert(twitterUser)
-            }
-            val shouldStream = features?.twitterSettings?.streamFeeds == true
+            val dbFeed = TwitterFeed.getOrInsert(twitterUser)
+            shouldStream = features?.twitterSettings?.streamFeeds == true
 
             TwitterTarget.new {
                 this.twitterFeed = dbFeed
@@ -57,9 +60,12 @@ object TwitterTrackerCommand : TrackerCommand {
                 this.mentionRole = null
                 this.shouldStream = shouldStream
             }
+            dbFeed
+        }
 
-            origin.reply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!")).awaitSingle()
-            if(shouldStream) {
+        origin.embed("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!").awaitSingle()
+        if(shouldStream) {
+            propagateTransaction {
                 TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))
             }
         }

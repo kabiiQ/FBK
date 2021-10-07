@@ -12,6 +12,7 @@ import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.Instant
 
@@ -140,7 +141,9 @@ object TwitterParser {
         val ruleId = twitterRule?.data?.firstOrNull()?.ruleId
         if(twitterRule == null || ruleId == null) throw TwitterIOException("Twitter rule creation failed: $feeds")
         propagateTransaction {
-            val dbRule = TwitterStreamRule.insert(ruleId)
+            val dbRule = transaction {
+                TwitterStreamRule.insert(ruleId)
+            }
 
             feeds.onEach { feed ->
                 feed.streamRule = dbRule

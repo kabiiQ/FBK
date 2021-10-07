@@ -34,6 +34,7 @@ import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
@@ -116,7 +117,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             notifyTweet(user, tweet, targets)
                         }
                         if(latest > (feed.lastPulledTweet ?: 0L)) {
-                            newSuspendedTransaction {
+                            transaction {
                                 feed.lastPulledTweet = latest
                             }
                         }
@@ -124,7 +125,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     }
 
                     requireUpdate.forEach { feed ->
-                        newSuspendedTransaction {
+                        transaction {
                             feed.lastPulledTweet = maxId
                         }
                     }

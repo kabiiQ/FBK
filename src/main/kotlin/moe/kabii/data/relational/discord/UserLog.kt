@@ -37,10 +37,12 @@ object UserLog {
                                 (DiscordObjects.Guilds.guildID eq guildId)
                     }
             ).elementAtOrElse(0) { _ ->
-                new {
-                    user = transaction { DiscordObjects.User.getOrInsert(userId) }
-                    guild = transaction { DiscordObjects.Guild.getOrInsert(guildId) }
-                    currentMember = true
+                transaction {
+                    new {
+                        user = DiscordObjects.User.getOrInsert(userId)
+                        guild = DiscordObjects.Guild.getOrInsert(guildId)
+                        currentMember = true
+                    }
                 }
             }
 

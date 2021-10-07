@@ -14,9 +14,9 @@ import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -29,7 +29,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 }
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions) {
-    private val cleanInterval = 240 // only clean db approx every 2 hours
+    private val cleanInterval = 180 // only clean db approx every 1.5 hours
     private val repeatTimeMillis = cooldowns.minimumRepeatTime
     private val tickDelay = cooldowns.callDelay
 
@@ -98,15 +98,18 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     }
 
                     // main IO call, process as we go
+                    LOG.debug("yt expected calls: ${targetLookup.keys}")
+                    var first = true
                     targetLookup.keys
-                        .asSequence()
                         .chunked(50)
                         .flatMap { chunk ->
-                            LOG.debug("yt api call: $chunk")
+                            LOG.info("yt api call: $chunk")
+                            if(first) first = false
+                            else Thread.sleep(800L)
                             YoutubeParser.getVideos(chunk).entries
                         }.map { (videoId, ytVideo) ->
                             taskScope.launch {
-                                newSuspendedTransaction {
+                                propagateTransaction inner@{
                                     try {
                                         val callReason = targetLookup.getValue(videoId)
 
@@ -115,7 +118,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             is Err -> {
                                                 when (ytVideo.value) {
                                                     // do not process video if this was an IO issue on our end
-                                                    is StreamErr.IO -> return@newSuspendedTransaction
+                                                    is StreamErr.IO -> return@inner
                                                     is StreamErr.NotFound -> null
                                                 }
                                             }
@@ -131,9 +134,11 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         // if youtube call + processing succeeded, reflect this in db
                                         if(ytVideoInfo != null) {
                                             with(callReason.video) {
-                                                lastAPICall = DateTime.now()
-                                                lastTitle = ytVideoInfo.title
-                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                                propagateTransaction {
+                                                    lastAPICall = DateTime.now()
+                                                    lastTitle = ytVideoInfo.title
+                                                    ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                                }
                                             }
                                         }
                                     } catch (e: Exception) {
@@ -142,18 +147,28 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     }
                                 }
                             }
-                        }.forEach { job -> job.join() }
+                        }
+                    LOG.debug("yt exit")
 
                     // clean up videos db
-                    if(tickId == 0) {
+                    if(tickId == 10) {
                         LOG.info("Executing YouTube DB cleanup")
+                         // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
                             YoutubeVideos.lastAPICall lessEq old
                         }
+                        // streams which never went live (with 1 day of leniency)
                         val overdue = DateTime.now().minusDays(1)
                         YoutubeScheduledEvents.deleteWhere {
                             YoutubeScheduledEvents.scheduledStart less overdue
+                        }
+                        /* strange streams which youtube sometimes creates - it does not seem possible to distinguish these from brand
+                        new stream entries. They are 'upcoming' streams with no scheduled start time
+                         */
+                        YoutubeVideos.deleteWhere {
+                            YoutubeVideos.lastAPICall eq null and
+                                    (YoutubeVideos.apiAttempts greater 10)
                         }
                     }
                 } catch (e: Exception) {
@@ -218,13 +233,15 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // event still exists and is not live yet
                 val scheduled = ytVideo.liveInfo?.scheduledStart
                 if(scheduled != null) {
-                    dbEvent.scheduledStart = scheduled.jodaDateTime
+                    propagateTransaction {
+                        dbEvent.scheduledStart = scheduled.jodaDateTime
 
-                    // set next update time to 1/2 time until stream start
-                    val untilStart = Duration.between(Instant.now(), scheduled)
-                    val updateInterval =  untilStart.toMillis() / 2
-                    val nextUpdate = DateTime.now().plus(updateInterval)
-                    dbEvent.dataExpiration = nextUpdate
+                        // set next update time to 1/2 time until stream start
+                        val untilStart = Duration.between(Instant.now(), scheduled)
+                        val updateInterval = untilStart.toMillis() / 2
+                        val nextUpdate = DateTime.now().plus(updateInterval)
+                        dbEvent.dataExpiration = nextUpdate
+                    }
 
                     // send out 'upcoming' notifications
                     streamUpcoming(dbEvent, ytVideo, scheduled)
@@ -247,33 +264,38 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             return
         }
         val dbVideo = call.video
-        propagateTransaction {
-            when {
-                ytVideo.upcoming -> {
-                    val scheduled = checkNotNull(ytVideo.liveInfo?.scheduledStart) { "YouTube provided UPCOMING video with no start time" }
-                    // assign video 'scheduled' status
-                    val dbScheduled = propagateTransaction {
-                        val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                            ?: YoutubeScheduledEvent.new {
+        when {
+            ytVideo.upcoming -> {
+                val scheduled = ytVideo.liveInfo?.scheduledStart
+                if(scheduled == null) {
+                    dbVideo.apiAttempts += 1
+                    LOG.debug("YouTube provided UPCOMING video with no start time")
+                    return
+                }
+                // assign video 'scheduled' status
+                val dbScheduled = propagateTransaction {
+                    val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
+                        ?: propagateTransaction {
+                            YoutubeScheduledEvent.new {
                                 this.ytVideo = dbVideo
                                 this.scheduledStart = scheduled.jodaDateTime
                                 this.dataExpiration = DateTime.now() // todo move calculation to function ?
                             }
-                        dbVideo.scheduledEvent = dbScheduled
-                        dbScheduled
-                    }
+                        }
+                    dbVideo.scheduledEvent = dbScheduled
+                    dbScheduled
+                }
 
-                    // send 'upcoming' and/or 'creation' messages to appropriate targets
-                    streamUpcoming(dbScheduled, ytVideo, scheduled)
-                    streamCreated(dbVideo, ytVideo)
-                }
-                ytVideo.live -> {
-                    streamStart(ytVideo, dbVideo)
-                }
-                else -> {
-                    // regular video upload
-                    videoUploaded(dbVideo, ytVideo)
-                }
+                // send 'upcoming' and/or 'creation' messages to appropriate targets
+                streamUpcoming(dbScheduled, ytVideo, scheduled)
+                streamCreated(dbVideo, ytVideo)
+            }
+            ytVideo.live -> {
+                streamStart(ytVideo, dbVideo)
+            }
+            else -> {
+                // regular video upload
+                videoUploaded(dbVideo, ytVideo)
             }
         }
     }

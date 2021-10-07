@@ -10,6 +10,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
@@ -29,13 +30,14 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
     companion object : IntEntityClass<TwitterFeed>(TwitterFeeds) {
-        @WithinExposedContext
         fun getOrInsert(user: TwitterUser): TwitterFeed = find { TwitterFeeds.userId eq user.id }
             .elementAtOrElse(0) { _ ->
-                new {
-                    this.userId = user.id
-                    this.lastPulledTweet = null
-                    this.lastKnownUsername = user.username
+                transaction {
+                    new {
+                        this.userId = user.id
+                        this.lastPulledTweet = null
+                        this.lastKnownUsername = user.username
+                    }
                 }
             }
     }
@@ -64,6 +66,8 @@ object TwitterTargets : IntIdTable() {
 
     val mentionRole = long("discord_mention_role_id").nullable()
     val shouldStream = bool("twitter_streaming_feed").default(false)
+
+    override val primaryKey = PrimaryKey(twitterFeed, discordChannel)
 }
 
 class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {

@@ -13,6 +13,7 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 
@@ -29,7 +30,7 @@ class YoutubeMembershipMaintainer(val discord: GatewayDiscordClient): Runnable {
 
                     // remove any old expired youtube memberships
                     val cutoff = DateTime.now().minusWeeks(3)
-                    newSuspendedTransaction {
+                    transaction {
                         YoutubeMembers.deleteWhere {
                             YoutubeMembers.lastUpdate lessEq cutoff
                         }

@@ -19,7 +19,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object StreamTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
@@ -47,7 +47,7 @@ object StreamTrackerCommand : TrackerCommand {
         val streamId = streamInfo.accountId
 
         // get db 'target' object if it exists
-        val dbTarget = newSuspendedTransaction {
+        val dbTarget = transaction {
             TrackedStreams.Target.getForChannel(origin.chan.id, site, streamId)
         }
 
@@ -58,11 +58,9 @@ object StreamTrackerCommand : TrackerCommand {
         }
 
         // get the db 'channel' object or create if this is a new stream channel
-        val dbChannel = newSuspendedTransaction {
-            TrackedStreams.StreamChannel.getOrInsert(site, streamId, streamInfo.displayName)
-        }
+        val dbChannel = TrackedStreams.StreamChannel.getOrInsert(site, streamId, streamInfo.displayName)
 
-        newSuspendedTransaction {
+        propagateTransaction {
             TrackedStreams.Target.new { // record the track in db
                 this.streamChannel = dbChannel
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
@@ -109,7 +107,7 @@ object StreamTrackerCommand : TrackerCommand {
             if (
                 origin.isPM
                         || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
-                        || origin.author.id.asLong() == newSuspendedTransaction { dbTarget.tracker.userID }
+                        || origin.author.id.asLong() == dbTarget.tracker.userID
             ) {
                 dbTarget.delete()
                 origin.reply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()

@@ -1,5 +1,7 @@
 package moe.kabii.data.relational
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
@@ -9,8 +11,10 @@ import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.WebSubSubscriptions
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
@@ -22,10 +26,14 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal object PostgresConnection {
-    val postgres = Database.connect(
-        Keys.config[Keys.Postgres.connectionString],
-        driver = "org.postgresql.Driver"
-    ).apply { useNestedTransactions = true }
+    private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
+        driverClassName = "org.postgresql.Driver"
+        jdbcUrl = Keys.config[Keys.Postgres.connectionString]
+        maximumPoolSize = 30
+        validate()
+    }.run(::HikariDataSource)
+
+    val postgres = Database.connect(createConnectionPool())
 
     init {
         transaction {
@@ -39,6 +47,7 @@ internal object PostgresConnection {
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
                 TrackedStreams.Mentions,
+                TwitchEventSubscriptions,
                 DBTwitchStreams.TwitchStreams,
                 DBTwitchStreams.Notifications,
                 WebSubSubscriptions,
