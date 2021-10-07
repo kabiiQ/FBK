@@ -48,8 +48,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // create live stats object for video
         // should not already exist
-        if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        val liveEvent = transaction {
+        if(transaction { YoutubeLiveEvent.liveEventFor(dbVideo) != null }) return
+        val liveEvent = propagateTransaction {
             YoutubeLiveEvent.new {
                 this.ytVideo = dbVideo
                 this.lastThumbnail = video.thumbnail

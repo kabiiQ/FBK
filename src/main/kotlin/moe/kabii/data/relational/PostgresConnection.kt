@@ -30,12 +30,10 @@ internal object PostgresConnection {
         driverClassName = "org.postgresql.Driver"
         jdbcUrl = Keys.config[Keys.Postgres.connectionString]
         maximumPoolSize = 30
-        isAutoCommit = false
         validate()
     }.run(::HikariDataSource)
 
     val postgres = Database.connect(createConnectionPool())
-        .apply { useNestedTransactions = true }
 
     init {
         transaction {

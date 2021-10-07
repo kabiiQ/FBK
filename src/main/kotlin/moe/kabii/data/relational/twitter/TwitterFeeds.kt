@@ -66,6 +66,8 @@ object TwitterTargets : IntIdTable() {
 
     val mentionRole = long("discord_mention_role_id").nullable()
     val shouldStream = bool("twitter_streaming_feed").default(false)
+
+    override val primaryKey = PrimaryKey(twitterFeed, discordChannel)
 }
 
 class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {

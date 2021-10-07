@@ -50,13 +50,10 @@ object TrackedStreams {
 
             fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel = transaction {
                 val existing = getChannel(site, channelId)
-                if(existing != null) existing else {
-                    val new = new {
-                        this.site = site
-                        this.siteChannelID = channelId
-                        if(username != null) this.lastKnownUsername = username
-                    }
-                    new
+                existing ?: new {
+                    this.site = site
+                    this.siteChannelID = channelId
+                    if(username != null) this.lastKnownUsername = username
                 }
             }
 

@@ -17,7 +17,6 @@ import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -135,7 +134,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         // if youtube call + processing succeeded, reflect this in db
                                         if(ytVideoInfo != null) {
                                             with(callReason.video) {
-                                                transaction {
+                                                propagateTransaction {
                                                     lastAPICall = DateTime.now()
                                                     lastTitle = ytVideoInfo.title
                                                     ytChannel.lastKnownUsername = ytVideoInfo.channel.name
@@ -234,13 +233,15 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // event still exists and is not live yet
                 val scheduled = ytVideo.liveInfo?.scheduledStart
                 if(scheduled != null) {
-                    dbEvent.scheduledStart = scheduled.jodaDateTime
+                    propagateTransaction {
+                        dbEvent.scheduledStart = scheduled.jodaDateTime
 
-                    // set next update time to 1/2 time until stream start
-                    val untilStart = Duration.between(Instant.now(), scheduled)
-                    val updateInterval =  untilStart.toMillis() / 2
-                    val nextUpdate = DateTime.now().plus(updateInterval)
-                    dbEvent.dataExpiration = nextUpdate
+                        // set next update time to 1/2 time until stream start
+                        val untilStart = Duration.between(Instant.now(), scheduled)
+                        val updateInterval = untilStart.toMillis() / 2
+                        val nextUpdate = DateTime.now().plus(updateInterval)
+                        dbEvent.dataExpiration = nextUpdate
+                    }
 
                     // send out 'upcoming' notifications
                     streamUpcoming(dbEvent, ytVideo, scheduled)
@@ -272,9 +273,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     return
                 }
                 // assign video 'scheduled' status
-                val dbScheduled = transaction {
+                val dbScheduled = propagateTransaction {
                     val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                        ?: transaction {
+                        ?: propagateTransaction {
                             YoutubeScheduledEvent.new {
                                 this.ytVideo = dbVideo
                                 this.scheduledStart = scheduled.jodaDateTime

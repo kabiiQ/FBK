@@ -40,8 +40,8 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
         fun getOrInsert(videoId: String, channelId: String): YoutubeVideo {
             val channel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, channelId)
 
-            return getVideo(videoId) ?: transaction {
-                new {
+            return transaction {
+                getVideo(videoId) ?: new {
                     this.videoId = videoId
                     this.ytChannel = channel
                     this.lastAPICall = null
