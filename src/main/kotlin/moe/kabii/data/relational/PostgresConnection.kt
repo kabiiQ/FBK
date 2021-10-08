@@ -29,7 +29,8 @@ internal object PostgresConnection {
     private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
         driverClassName = "org.postgresql.Driver"
         jdbcUrl = Keys.config[Keys.Postgres.connectionString]
-        maximumPoolSize = 30
+        isAutoCommit = true
+        maximumPoolSize = 60
         validate()
     }.run(::HikariDataSource)
 

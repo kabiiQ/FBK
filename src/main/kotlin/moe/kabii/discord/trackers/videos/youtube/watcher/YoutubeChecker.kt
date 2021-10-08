@@ -17,6 +17,7 @@ import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -101,7 +102,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     LOG.debug("yt expected calls: ${targetLookup.keys}")
                     var first = true
                     targetLookup.keys
-                        .chunked(50)
+                        .chunked(25)
                         .flatMap { chunk ->
                             LOG.info("yt api call: $chunk")
                             if(first) first = false
@@ -124,22 +125,21 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             }
                                         }
 
-                                        // call specific handlers for each type of content
-                                        when (callReason) {
-                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                        }
-
-                                        // if youtube call + processing succeeded, reflect this in db
                                         if(ytVideoInfo != null) {
                                             with(callReason.video) {
-                                                propagateTransaction {
+                                                transaction {
                                                     lastAPICall = DateTime.now()
                                                     lastTitle = ytVideoInfo.title
                                                     ytChannel.lastKnownUsername = ytVideoInfo.channel.name
                                                 }
                                             }
+                                        }
+
+                                        // call specific handlers for each type of content
+                                        when (callReason) {
+                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                         }
                                     } catch (e: Exception) {
                                         LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
@@ -241,11 +241,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val updateInterval = untilStart.toMillis() / 2
                         val nextUpdate = DateTime.now().plus(updateInterval)
                         dbEvent.dataExpiration = nextUpdate
+
+                        // send out 'upcoming' notifications
+                        streamUpcoming(dbEvent, ytVideo, scheduled)
                     }
-
-                    // send out 'upcoming' notifications
-                    streamUpcoming(dbEvent, ytVideo, scheduled)
-
                 } else {
                     LOG.warn("YouTube returned SCHEDULED stream with no start time: $ytVideo")
                 }
@@ -275,12 +274,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // assign video 'scheduled' status
                 val dbScheduled = propagateTransaction {
                     val dbScheduled = YoutubeScheduledEvent.getScheduled(dbVideo)
-                        ?: propagateTransaction {
-                            YoutubeScheduledEvent.new {
-                                this.ytVideo = dbVideo
-                                this.scheduledStart = scheduled.jodaDateTime
-                                this.dataExpiration = DateTime.now() // todo move calculation to function ?
-                            }
+                        ?: YoutubeScheduledEvent.new {
+                            this.ytVideo = dbVideo
+                            this.scheduledStart = scheduled.jodaDateTime
+                            this.dataExpiration = DateTime.now() // todo move calculation to function ?
                         }
                     dbVideo.scheduledEvent = dbScheduled
                     dbScheduled
