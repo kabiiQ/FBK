@@ -23,6 +23,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
+        <filter class="moe.kabii.util.logging.ExposedFilter" />
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -36,6 +37,7 @@
             <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %-40.40logger{39} : %msg%n</Pattern>
         </encoder>
         <prudent>true</prudent>
+        <filter class="moe.kabii.util.logging.ExposedFilter" />
     </appender>
 
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
