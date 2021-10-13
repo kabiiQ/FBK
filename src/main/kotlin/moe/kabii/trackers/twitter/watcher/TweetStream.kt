@@ -82,6 +82,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
 
                                     val user = response.includes.users.first()
                                     val tweet = response.data
+                                    LOG.info("TwitterStream: @${tweet.author?.username}/${tweet.url}")
 
                                     propagateTransaction {
                                         val feed = TwitterFeed
