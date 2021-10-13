@@ -211,10 +211,10 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 if(new.isBlank()) "\uD83D\uDD34-live" else new
             }
 
-            // discord channel renaming is HEAVILY rate-limited - careful to not request same name
+            // do not request unless name changed
             if(newName == currentName) return
 
-            LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
+            LOG.info("Renaming channel: ${guildChan.id.asString()}")
             val wrapper = EditableChannelWrapper(
                 name = newName
             )
