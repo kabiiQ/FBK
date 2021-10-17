@@ -54,15 +54,15 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     suspend fun ytTick() {
         if(!lock.tryLock()) return // discard tick if one is already in progress
         try {
-            propagateTransaction {
-                try {
-                    // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
-                    // gather all youtube IDs that need to be checked in the API
+            try {
+                // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
+                // gather all youtube IDs that need to be checked in the API
 
-                    // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
-                    // <video id, target list>
-                    val targetLookup = mutableMapOf<String, YoutubeCall>()
+                // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
+                // <video id, target list>
+                val targetLookup = mutableMapOf<String, YoutubeCall>()
 
+                propagateTransaction {
                     val currentTime = DateTime.now()
 
                     // 1: collect all videos we have as 'currently live' - don't recheck within 3 minutes-ish
@@ -97,62 +97,62 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val callReason = YoutubeCall.New(new)
                         targetLookup[callReason.video.videoId] = callReason
                     }
+                }
 
-                    // main IO call, process as we go
-                    LOG.debug("yt expected calls: ${targetLookup.keys}")
-                    var first = true
-                    targetLookup.keys
-                        .chunked(25)
-                        .flatMap { chunk ->
-                            LOG.info("yt api call: $chunk")
-                            if(first) first = false
-                            else Thread.sleep(800L)
-                            YoutubeParser.getVideos(chunk).entries
-                        }.map { (videoId, ytVideo) ->
-                            taskScope.launch {
-                                propagateTransaction inner@{
-                                    try {
-                                        val callReason = targetLookup.getValue(videoId)
+                // main IO call, process as we go
+                LOG.debug("yt expected calls: ${targetLookup.keys}")
+                var first = true
+                targetLookup.keys
+                    .chunked(20)
+                    .flatMap { chunk ->
+                        LOG.info("yt api call: $chunk")
+                        if(first) first = false
+                        else Thread.sleep(500L)
+                        YoutubeParser.getVideos(chunk).entries
+                    }.map { (videoId, ytVideo) ->
+                        propagateTransaction inner@{
+                            try {
+                                val callReason = targetLookup.getValue(videoId)
 
-                                        val ytVideoInfo = when(ytVideo) {
-                                            is Ok -> ytVideo.value
-                                            is Err -> {
-                                                when (ytVideo.value) {
-                                                    // do not process video if this was an IO issue on our end
-                                                    is StreamErr.IO -> return@inner
-                                                    is StreamErr.NotFound -> null
-                                                }
-                                            }
+                                val ytVideoInfo = when(ytVideo) {
+                                    is Ok -> ytVideo.value
+                                    is Err -> {
+                                        when (ytVideo.value) {
+                                            // do not process video if this was an IO issue on our end
+                                            is StreamErr.IO -> return@inner
+                                            is StreamErr.NotFound -> null
                                         }
-
-                                        if(ytVideoInfo != null) {
-                                            with(callReason.video) {
-                                                transaction {
-                                                    lastAPICall = DateTime.now()
-                                                    lastTitle = ytVideoInfo.title
-                                                    ytChannel.lastKnownUsername = ytVideoInfo.channel.name
-                                                }
-                                            }
-                                        }
-
-                                        // call specific handlers for each type of content
-                                        when (callReason) {
-                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                        }
-                                    } catch (e: Exception) {
-                                        LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
-                                        LOG.debug(e.stackTraceString)
                                     }
                                 }
+
+                                if(ytVideoInfo != null) {
+                                    with(callReason.video) {
+                                        transaction {
+                                            lastAPICall = DateTime.now()
+                                            lastTitle = ytVideoInfo.title
+                                            ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                        }
+                                    }
+                                }
+
+                                // call specific handlers for each type of content
+                                when (callReason) {
+                                    is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                }
+                            } catch (e: Exception) {
+                                LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
                             }
                         }
-                    LOG.debug("yt exit")
+                    }
+                LOG.debug("yt exit")
 
-                    // clean up videos db
-                    if(tickId == 10) {
-                        LOG.info("Executing YouTube DB cleanup")
+                // clean up videos db
+                if(tickId == 10) {
+                    LOG.info("Executing YouTube DB cleanup")
+                    propagateTransaction {
                          // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
@@ -171,10 +171,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     (YoutubeVideos.apiAttempts greater 10)
                         }
                     }
-                } catch (e: Exception) {
-                    LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
                 }
+            } catch (e: Exception) {
+                LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
             tickId = (tickId + 1) mod cleanInterval
         } finally {
