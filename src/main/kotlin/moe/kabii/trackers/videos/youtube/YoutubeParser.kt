@@ -69,7 +69,7 @@ object YoutubeParser {
 
     fun getVideos(videoIds: List<String>): Map<String, Result<YoutubeVideoInfo, StreamErr>> {
         // we are able to chunk request up to 50 video IDs from 1 API call (yt limit for non-paginated endpoint)
-        return videoIds.chunked(25).map { idChunk ->
+        return videoIds.chunked(20).map { idChunk ->
             val idsPart = idChunk.joinToString(",")
             val request = try {
                 requestJson<YoutubeVideoResponse>("videos?part=snippet,contentDetails,liveStreamingDetails&id=$idsPart")
