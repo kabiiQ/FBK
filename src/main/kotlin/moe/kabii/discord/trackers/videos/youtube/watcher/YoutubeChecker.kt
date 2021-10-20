@@ -4,6 +4,7 @@ import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.time.withTimeout
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
@@ -43,7 +44,12 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             val start = Instant.now()
             // call yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
             if(start >= nextCall) {
-                this.ytTick()
+                try {
+                    this.ytTick()
+                } catch(e: Exception) {
+                    LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                }
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = repeatTimeMillis - runDuration.toMillis()
@@ -52,7 +58,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     }
 
     suspend fun ytTick() {
-        if(!lock.tryLock()) return // discard tick if one is already in progress
+        if(!lock.tryLock() && Instant.now() < nextCall) return // discard tick if one is already in progress
         try {
             try {
                 // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
@@ -101,52 +107,56 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
 
                 // main IO call, process as we go
                 LOG.debug("yt expected calls: ${targetLookup.keys}")
-                var first = true
-                targetLookup.keys
-                    .chunked(20)
-                    .flatMap { chunk ->
-                        LOG.info("yt api call: $chunk")
-                        if(first) first = false
-                        else Thread.sleep(500L)
-                        YoutubeParser.getVideos(chunk).entries
-                    }.map { (videoId, ytVideo) ->
-                        propagateTransaction inner@{
-                            try {
-                                val callReason = targetLookup.getValue(videoId)
+                withTimeout(Duration.ofSeconds(
+                    (((targetLookup.size / 20) + 1) * 15).toLong()
+                )) {
+                    var first = true
+                    targetLookup.keys
+                        .chunked(20)
+                        .flatMap { chunk ->
+                            LOG.info("yt api call: $chunk")
+                            if(first) first = false
+                            else Thread.sleep(500L)
+                            YoutubeParser.getVideos(chunk).entries
+                        }.map { (videoId, ytVideo) ->
+                            propagateTransaction inner@{
+                                try {
+                                    val callReason = targetLookup.getValue(videoId)
 
-                                val ytVideoInfo = when(ytVideo) {
-                                    is Ok -> ytVideo.value
-                                    is Err -> {
-                                        when (ytVideo.value) {
-                                            // do not process video if this was an IO issue on our end
-                                            is StreamErr.IO -> return@inner
-                                            is StreamErr.NotFound -> null
+                                    val ytVideoInfo = when(ytVideo) {
+                                        is Ok -> ytVideo.value
+                                        is Err -> {
+                                            when (ytVideo.value) {
+                                                // do not process video if this was an IO issue on our end
+                                                is StreamErr.IO -> return@inner
+                                                is StreamErr.NotFound -> null
+                                            }
                                         }
                                     }
-                                }
 
-                                if(ytVideoInfo != null) {
-                                    with(callReason.video) {
-                                        transaction {
-                                            lastAPICall = DateTime.now()
-                                            lastTitle = ytVideoInfo.title
-                                            ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                    if(ytVideoInfo != null) {
+                                        with(callReason.video) {
+                                            transaction {
+                                                lastAPICall = DateTime.now()
+                                                lastTitle = ytVideoInfo.title
+                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                            }
                                         }
                                     }
-                                }
 
-                                // call specific handlers for each type of content
-                                when (callReason) {
-                                    is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                    is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                    is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                    // call specific handlers for each type of content
+                                    when (callReason) {
+                                        is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                        is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                        is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                    }
+                                } catch (e: Exception) {
+                                    LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                    LOG.debug(e.stackTraceString)
                                 }
-                            } catch (e: Exception) {
-                                LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
-                                LOG.debug(e.stackTraceString)
                             }
                         }
-                    }
+                }
                 LOG.debug("yt exit")
 
                 // clean up videos db
