@@ -5,8 +5,10 @@ import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter
+import com.sedmelluq.discord.lavaplayer.filter.ResamplingPcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.Equalizer
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat
+import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import java.text.DecimalFormat
 
@@ -33,10 +35,15 @@ sealed class FilterType {
         private val format = DecimalFormat("0.##")
         override fun asString(): String = "Rotation: ${format.format(speed)}Hz"
     }
+
+    data class Pool(val sampleRate: Int = 750) : FilterType() {
+        override fun asString(): String = "Pool"
+    }
 }
 
 class FilterFactory {
     val filters = mutableListOf<FilterType>()
+    private val defaultAudioConfiguration = AudioConfiguration()
 
     inline fun <reified T: FilterType> addExclusiveFilter(filter: T) {
         filters.removeIf { it is T }
@@ -71,6 +78,7 @@ class FilterFactory {
                 is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
                     setRotationSpeed(filter.speed.toDouble())
                 }
+                is FilterType.Pool -> ResamplingPcmAudioFilter(defaultAudioConfiguration, format.channelCount, output, format.sampleRate, filter.sampleRate)
             }
         }
 

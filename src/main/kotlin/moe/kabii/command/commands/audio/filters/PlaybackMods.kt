@@ -46,4 +46,23 @@ object PlaybackMods : AudioCommandContainer {
             }
         }
     }
+
+    object PoolFilter : Command("pool") {
+        override val wikiPath: String = "Music-Player#audio-manipulationfilters"
+
+        init {
+            discord {
+                val arg = args.getOrNull(0)
+                val default = 750
+                val targetSampleRate = when(val sampleRate = arg?.toIntOrNull()) {
+                    null -> default
+                    in 500..5000 -> sampleRate
+                    else -> default
+                }
+                validateAndAlterFilters(this) {
+                    addExclusiveFilter(FilterType.Pool(targetSampleRate))
+                }
+            }
+        }
+    }
 }
