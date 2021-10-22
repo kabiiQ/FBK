@@ -43,7 +43,11 @@ sealed class FilterType {
 
 class FilterFactory {
     val filters = mutableListOf<FilterType>()
-    private val defaultAudioConfiguration = AudioConfiguration()
+    private val audioConfiguration = AudioConfiguration()
+
+    constructor() {
+        audioConfiguration.resamplingQuality = AudioConfiguration.ResamplingQuality.HIGH
+    }
 
     inline fun <reified T: FilterType> addExclusiveFilter(filter: T) {
         filters.removeIf { it is T }
@@ -78,7 +82,7 @@ class FilterFactory {
                 is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
                     setRotationSpeed(filter.speed.toDouble())
                 }
-                is FilterType.Pool -> ResamplingPcmAudioFilter(defaultAudioConfiguration, format.channelCount, output, format.sampleRate, filter.sampleRate)
+                is FilterType.Pool -> ResamplingPcmAudioFilter(audioConfiguration, format.channelCount, output, format.sampleRate, filter.sampleRate)
             }
         }
 
