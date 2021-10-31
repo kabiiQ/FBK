@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    html {
+        margin-top: 24px;
+    }
+    p {
+        font-size: 18px;
+    }
+    p.sub {
+        text-indent: 2em;
+    }
+    p.ok {
+        color: #009933;
+    }
+    p.err {
+        color: #ff6666;
+    }
+</style>
+<head>
+    <meta charset="UTF-8">
+    <title>FBK YoutubeVideos API</title>
+</head>
+<body>
+    <p style="text-decoration: underline; font-size: 24px">Endpoints</p>
+    <p><span class="path">GET https://yt.kabii.moe/{youtube channel ID}</span>: Checking if channel is tracked</p>
+    <p class="sub ok">200 OK + JSON object (YoutubeChannelResponse): Channel found in database</p>
+    <p class="sub err">404 Not Found + Text Error: Channel is not tracked</p>
+    <p><br /><span class="path">PUT https://yt.kabii.moe/{youtube channel ID}</span>: Tracking a channel</p>
+    <p class="sub">Note: "tracking" is guaranteed before this returns, but video retrieval is async and independent, this endpoint does not block until complete. Video retrieval is handled by FBK's normal processes and is not prioritized here.</p>
+    <p class="sub">As a result: after a new channel track, /videos endpoint will contain recent video IDs typically within 1 second, full video updates with "live" status and video names should be retrieved within 30 seconds.</p>
+    <p class="sub ok">200 OK + JSON object (YoutubeChannelResponse): Channel was already tracked</p>
+    <p class="sub ok">201 Created + JSON object (YoutubeChannelResponse): Tracking channel successful</p>
+    <p class="sub err">404 Not Found + Text Error: YouTube returned 404 for channel ID</p>
+    <p class="sub err">502 Bad Gateway + Text Error: YouTube API/network error (tracking requires YouTube API for verification)</p>
+    <p><br /><span class="path">GET https://yt.kabii.moe/{youtube channel ID}/videos</span>: Retrieve known videos from tracked channel</p>
+    <p class="sub ok">200 OK + JSON object (YoutubeVideoResponse): Successful query</p>
+    <p class="sub err">404 Not Found + Text Error: Channel is not tracked</p>
+    <br />
+    <p style="text-decoration: underline; font-size: 24px">Other Errors</p>
+    <p>Access must be over HTTPS, client must support SSL</p>
+    <p class="err">400 Bad Request: Typically when an obviously invalid YouTube channel ID is specified</p>
+    <p class="err">401 Unauthorized: IP must be manually registered or assigned auth token presented in header Videos-Access-Token</p>
+    <p class="err">500 Internal Server Error: Database or other internal bot error, contact kabii</p>
+</body>
+</html>

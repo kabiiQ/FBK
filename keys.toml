@@ -16,6 +16,7 @@ app_name = ''
 callback_address = 'http://public_path_to_server'
 callback_port = 8001
 signing_key = 'any_secret_string'
+internal_video_api_port = 8010
 
 [postgres]
 connection_string = 'jdbc:postgresql://127.0.0.1/database?user=username&password=password'

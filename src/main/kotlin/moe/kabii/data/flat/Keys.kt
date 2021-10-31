@@ -26,6 +26,7 @@ object Keys : ConfigSpec("") {
         val callbackAddress by required<String>("callback_address")
         val callbackPort by required<Int>("callback_port")
         val signingKey by required<String>("signing_key")
+        val videoApiPort by required<Int>("internal_video_api_port")
     }
     object Postgres : ConfigSpec() {
         val connectionString by required<String>("connection_string")
