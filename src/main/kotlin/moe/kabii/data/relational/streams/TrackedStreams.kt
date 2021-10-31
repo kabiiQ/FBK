@@ -14,6 +14,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.joda.time.DateTime
 
 // generic logic to handle tracking any stream source
 object TrackedStreams {
@@ -28,12 +29,18 @@ object TrackedStreams {
         val site = enumeration("site_id", DBSite::class)
         val siteChannelID = varchar("site_channel_id", 64).uniqueIndex()
         val lastKnownUsername = varchar("last_known_username", 64).nullable()
+
+        val apiUse = bool("tracked_for_external_usage").default(false)
+        val lastApiUsage = datetime("last_external_api_usage").nullable()
     }
 
     class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
         var site by StreamChannels.site
         var siteChannelID by StreamChannels.siteChannelID
         var lastKnownUsername by StreamChannels.lastKnownUsername
+
+        var apiUse by StreamChannels.apiUse
+        var lastApiUsage by StreamChannels.lastApiUsage
 
         val targets by Target referrersOn Targets.streamChannel
         val mentionRoles by Mention referrersOn Mentions.streamChannel
@@ -57,8 +64,17 @@ object TrackedStreams {
                 }
             }
 
+            @WithinExposedContext
+            fun insertApiChannel(site: DBSite, channelId: String, username: String): StreamChannel = new {
+                this.site = site
+                this.siteChannelID= channelId
+                this.lastKnownUsername = username
+                this.apiUse = true
+                this.lastApiUsage = DateTime.now()
+            }
+
             fun getActive(op: SqlExpressionBuilder.()-> Op<Boolean>) = find(op)
-                .filter { chan -> !chan.targets.empty() }
+                .filter { chan -> chan.apiUse || !chan.targets.empty() }
         }
     }
 

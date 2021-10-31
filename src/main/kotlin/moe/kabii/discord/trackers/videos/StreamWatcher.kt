@@ -69,22 +69,25 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 target.streamChannel.site.targetType.channelFeature.get(featureChannel)
             }
         } else {
-            // delete streamchannels with no assocaiated targets
+            // delete streamchannels with no associated targets
             // this will also work later and untrack if we have a function to remove targets that are disabled
-            if(channel.site != TrackedStreams.DBSite.YOUTUBE ||
-                (YoutubeVideoTrack.getForChannel(channel).empty() && MembershipConfigurations.getForChannel(channel).empty())
-            ) {
 
-                channel.delete()
-                LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
+            if(channel.apiUse) return emptyList()
+            if(channel.site == TrackedStreams.DBSite.YOUTUBE) {
 
-                // todo definitely extract/encapsulate this behavior (using TrackerTarget?) if we add any more side effects like this
-                if(channel.site == TrackedStreams.DBSite.TWITCASTING) {
-                    TwitcastWebhookManager.unregister(channel.siteChannelID)
-                }
+                if(!YoutubeVideoTrack.getForChannel(channel).empty() || !MembershipConfigurations.getForChannel(channel).empty()) return emptyList()
 
-                null
-            } else emptyList()
+            }
+
+            channel.delete()
+            LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
+
+            // todo definitely extract/encapsulate this behavior (using TrackerTarget?) if we add any more side effects like this
+            if(channel.site == TrackedStreams.DBSite.TWITCASTING) {
+                TwitcastWebhookManager.unregister(channel.siteChannelID)
+            }
+
+            null
         }
     }
 

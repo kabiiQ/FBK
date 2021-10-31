@@ -26,6 +26,7 @@ import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
 import moe.kabii.net.NettyFileServer
+import moe.kabii.net.api.videos.YoutubeVideosService
 import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
 import moe.kabii.terminal.TerminalListener
 import moe.kabii.util.extensions.stackTraceString
@@ -63,10 +64,11 @@ fun main() {
     thread(start = true, name = "Initalization") {
         runBlocking {
             DiscordOAuthRedirectServer.server.start()
-            val translator = Translator.detector.detectLanguageOf("initalizing translator")
             val welcomer = WelcomeImageGenerator
             TwitterFeedSubscriber.verifySubscriptions()
             val streamers = KnownStreamers
+            YoutubeVideosService.server.start()
+            val translator = Translator.detector.detectLanguageOf("initalizing translator")
         }
     }
 
