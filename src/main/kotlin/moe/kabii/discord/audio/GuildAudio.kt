@@ -80,9 +80,7 @@ data class GuildAudio(
      suspend fun joinChannel(channel: VoiceChannel): Result<VoiceConnection, Throwable> {
          discord.mutex.withLock {
              val config = GuildConfigurations.getOrCreateGuild(channel.guildId.asLong())
-             val join = channel.join { spec ->
-                 spec.setProvider(this.provider)
-             }.tryAwait()
+             val join = channel.join().withProvider(this.provider).tryAwait()
              if (join is Ok) {
                  discord.connection = join.value
                  config.musicBot.lastChannel = channel.id.asLong()

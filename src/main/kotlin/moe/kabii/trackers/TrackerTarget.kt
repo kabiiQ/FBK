@@ -6,8 +6,8 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
-import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -86,7 +86,7 @@ object TwitchTarget : StreamingTarget(
         val targets = twitch.getActiveTargets(channel) ?: return@callback
         val stream = TwitchParser.getStream(channel.siteChannelID.toLong()).orNull()
         twitch.updateChannel(channel, stream, targets)
-        services.twitchFeedSub.subscribe(channel.siteChannelID)
+        TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
     }
 }
 
@@ -222,38 +222,6 @@ object TwitterTarget : TrackerTarget(
     "twitter", "tweets", "twit", "twitr", "tr"
 ) {
     override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
-}
-
-sealed class PS2Target(
-    full: String,
-    vararg alias: String
-) : TrackerTarget(full, FeatureChannel::ps2Channel, "ps2", listOf(), *alias) {
-
-    override fun feedById(id: String): String = ""
-    abstract val dbType: PS2Tracks.PS2EventType
-
-    sealed class Outfit(vararg alias: String) : PS2Target("Outfit member logins", *alias) {
-        object OutfitById : Outfit("ps2outfit:id")
-        object OutfitByName : Outfit("ps2outfit:name")
-        object OutfitByTag : Outfit("ps2outfit:tag", "ps2outfit", "psoutfit")
-
-        override val dbType: PS2Tracks.PS2EventType
-            get() = PS2Tracks.PS2EventType.OUTFIT
-    }
-    object Player : PS2Target("Player logins", "ps2player", "ps2players", "psplayer", "psplayers") {
-        override val dbType: PS2Tracks.PS2EventType
-            get() = PS2Tracks.PS2EventType.PLAYER
-
-        override fun feedById(id: String): String = "https://www.planetside2.com/players/#!/$id"
-    }
-    object ContinentEvent : PS2Target("Continent events", "ps2continent", "ps2cont", "ps2continents", "pscontinent", "pscontinents", "pscont") {
-        override val dbType: PS2Tracks.PS2EventType
-            get() = PS2Tracks.PS2EventType.CONTINENT
-    }
-    object OutfitCaptures : PS2Target("Outfit base captures", "ps2caps", "ps2outfitcap", "ps2outfitbasecap", "ps2outfitbase", "ps2basecap", "pscap", "psoutfitcap", "psoutfitbasecap", "psoutfitbase", "psbasecap") {
-        override val dbType: PS2Tracks.PS2EventType
-            get() = PS2Tracks.PS2EventType.OUTFITCAP
-    }
 }
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {

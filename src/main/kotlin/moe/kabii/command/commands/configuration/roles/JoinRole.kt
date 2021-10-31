@@ -114,7 +114,7 @@ object JoinRole : CommandContainer {
                     val describe = if(inviteArg == null) "role **${role.name}**, for all invites" else "role **${role.name}**, for invite code $inviteArg"
                     reply(Embeds.fbk("The autorole for $describe has been removed.")).awaitSingle()
                     config.save()
-                } else error("No autorole found matching this configuration.").awaitSingle()
+                } else reply(Embeds.error("No autorole found matching this configuration.")).awaitSingle()
             }
         }
     }

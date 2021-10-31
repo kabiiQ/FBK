@@ -37,12 +37,11 @@ object TemporaryChannels : CommandContainer {
                         PermissionSet.none()) // denied
                 )
 
-                val newChannel = target.createVoiceChannel { vc ->
-                    vc.reason = "${author.username} (${author.id.asString()}) self-created temporary voice channel."
-                    vc.setName(channelName)
-                    if(categoryID != null) vc.setParentId(categoryID)
-                    vc.setPermissionOverwrites(ownerPermissions)
-                }.awaitSingle()
+                val newChannel = target.createVoiceChannel(channelName)
+                    .withReason("${author.username} (${author.id.asString()}) self-created temporary voice channel.")
+                    .withPermissionOverwrites(ownerPermissions)
+                    .run { if(categoryID != null) withParentId(categoryID) else this }
+                    .awaitSingle()
 
                 try {
                     member.edit().withNewVoiceChannelOrNull(newChannel.id).awaitSingle()

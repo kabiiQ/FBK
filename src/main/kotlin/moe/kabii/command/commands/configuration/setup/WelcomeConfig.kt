@@ -2,6 +2,8 @@ package moe.kabii.command.commands.configuration.setup
 
 import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.entity.Message
+import discord4j.core.spec.MessageCreateFields
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -125,9 +127,9 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
                     val banner = File(WelcomeImageGenerator.bannerRoot, "${target.id.asString()}.png")
 
                     if(banner.exists()) {
-                        chan.createMessage { spec ->
-                            spec.addFile("welcome_banner.png", banner.inputStream())
-                        }.awaitSingle()
+                        chan.createMessage(
+                            MessageCreateSpec.create().withFiles(MessageCreateFields.File.of("welcome_banner.png", banner.inputStream()))
+                        ).awaitSingle()
                     } else {
                         reply(Embeds.error("Welcome banner image is not set for this server.")).awaitSingle()
                     }

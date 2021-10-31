@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.5.30"
+    val kotlinVer = "1.5.31"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -12,31 +12,17 @@ plugins {
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        name = "jcenter-snapshot"
-        url = uri("https://oss.jfrog.org/artifactory/libs-release")
-    }
+    // personal libs: rusty
     maven {
         name = "jitpack.io"
         url = uri("https://jitpack.io")
     }
-    maven {
-        name = "sonatype-snapshots"
-        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
-    }
-    // reactor-kotlin-extensions
-    maven {
-        name = "spring.io-snapshots"
-        url = uri("https://repo.spring.io/snapshot")
-    }
-    maven {
-        name = "exposed-bintray"
-        url = uri("https://dl.bintray.com/kotlin/exposed")
-    }
+    // kotlinx coroutines-core
     maven {
         name = "kotlinx-bintray"
         url = uri("https://kotlin.bintray.com/kotlinx")
     }
+    // lavaplayer-natives
     maven {
         name = "lavaplayer"
         url = uri("https://m2.dv8tion.net/releases")
@@ -50,21 +36,21 @@ dependencies {
 
     // kotlin libs
     val coroutinesVer = "1.5.2"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.4") // can update once d4j 3.2 is available
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.5") // can update once d4j 3.2 is available
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.0-RC3") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.0") // discord websocket and api
 
     // music bot
-    implementation("com.github.walkyst:lavaplayer-fork:1.3.95") // discord audio library
+    implementation("com.github.walkyst:lavaplayer-fork:1.3.96") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
-    implementation("com.github.kokorin.jaffree:jaffree:2021.08.31")
+    implementation("com.github.kokorin.jaffree:jaffree:2021.10.19")
     implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls
@@ -101,12 +87,12 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.34.2"
+    val exposedVer = "0.36.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.2.23")
+    implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.0")
 
     // language detection

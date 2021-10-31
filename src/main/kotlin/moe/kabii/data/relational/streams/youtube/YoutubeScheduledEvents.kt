@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
@@ -32,7 +32,8 @@ class YoutubeScheduledEvent(id: EntityID<Long>) : LongEntity(id) {
     }
 }
 
-object YoutubeScheduledNotifications : IntIdTable() {
+object YoutubeScheduledNotifications : IdTable<Int>() {
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val ytScheduled = reference("yt_scheduled_event", YoutubeScheduledEvents, ReferenceOption.CASCADE)
     val target = reference("discord_target", TrackedStreams.Targets, ReferenceOption.CASCADE)
 

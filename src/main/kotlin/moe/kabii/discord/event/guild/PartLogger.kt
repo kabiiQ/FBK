@@ -14,6 +14,7 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.long
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
@@ -45,13 +46,12 @@ object PartLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
-                    logChan.createEmbed { spec ->
-                        spec.setDescription(formatted)
-                        spec.setColor(Color.of(16739688))
-                        if (targetLog.partFormat.contains("&avatar")) {
-                            spec.setImage(user.avatarUrl)
-                        }
-                    }.awaitSingle()
+                    logChan.createMessage(
+                        Embeds.other(formatted, Color.of(16739688))
+                            .run {
+                                if(targetLog.partFormat.contains("&avatar")) withImage(user.avatarUrl) else this
+                            }
+                    ).awaitSingle()
 
                 } catch (ce: ClientException) {
                     val err = ce.status.code()
@@ -65,8 +65,7 @@ object PartLogger {
             }
 
         transaction {
-            val logUser = UserLog.GuildRelationship.getOrInsert(user.id.asLong(), guild.long)
-            logUser.currentMember = false
+            UserLog.GuildRelationship.delete(user.id.long, guild.long)
         }
     }
 }

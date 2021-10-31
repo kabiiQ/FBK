@@ -2,8 +2,6 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.streams.youtube.WebSubSubscription
-import moe.kabii.data.relational.streams.youtube.WebSubSubscriptions
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TwitcastingTarget
 import moe.kabii.trackers.TwitchTarget
@@ -12,6 +10,7 @@ import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
@@ -118,7 +117,8 @@ object TrackedStreams {
         }
     }
 
-    object Mentions : IntIdTable() {
+    object Mentions : IdTable<Int>() {
+        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id")

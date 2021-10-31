@@ -43,7 +43,7 @@ object TwitterTrackerCommand : TrackerCommand {
         }
 
         if(existingTrack != null) {
-            origin.error("**Twitter/${twitterUser.username}** is already tracked in this channel.").awaitSingle()
+            origin.reply(Embeds.error("**Twitter/${twitterUser.username}** is already tracked in this channel.")).awaitSingle()
             return
         }
 
@@ -63,7 +63,7 @@ object TwitterTrackerCommand : TrackerCommand {
             dbFeed
         }
 
-        origin.embed("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!").awaitSingle()
+        origin.reply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!")).awaitSingle()
         if(shouldStream) {
             propagateTransaction {
                 TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))

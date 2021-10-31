@@ -59,7 +59,6 @@ data class FeatureChannel(
             streamTargetChannel && type.isSuperclassOf(StreamingTarget::class) -> TwitchTarget
             twitterTargetChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
             animeTargetChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
-            ps2Channel && type.isSuperclassOf(PS2Target::class) -> PS2Target.Player
             else -> null
         }
     }

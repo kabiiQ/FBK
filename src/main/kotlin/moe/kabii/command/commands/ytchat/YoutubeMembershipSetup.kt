@@ -17,6 +17,7 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
+import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership", "linkytmembers", "linkytmembership") {

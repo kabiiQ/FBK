@@ -96,7 +96,7 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                 call.respondFile(webResponse)
                 // exchange access code for user token
                 apiScope.launch {
-                    val body = FormBody.Builder()
+                    val formBody = FormBody.Builder()
                         .add("grant_type", "authorization_code")
                         .add("code", code)
                         .add("redirect_uri", address)
@@ -106,15 +106,15 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
 
                     val request = newRequestBuilder()
                         .url(tokenUrl)
-                        .post(body)
+                        .post(formBody)
                         .build()
                     val response = OkHTTP.newCall(request).execute()
                     response.use { rs ->
                         LOG.debug("Requesting OAuth $service token: ${rs.code}")
                         if(response.isSuccessful) {
                             try {
-                                val response = rs.body!!.string()
-                                val token = OAuthTokenResponse.fromJson(response)!!
+                                val body = rs.body!!.string()
+                                val token = OAuthTokenResponse.fromJson(body)!!
                                 process.token(token.token)
                                 process.tokenCallback(process)
                                 oauthStates.remove(state)

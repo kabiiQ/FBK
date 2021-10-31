@@ -6,20 +6,20 @@ By adding this bot (FBK) to a Discord server, it is  accept and understand the p
 
 # Data Collected
 
-## Command Contents
+## Command Requests
 
-As with any bot, any content provided specifically in a command or conversation with this bot will be analyzed and may be stored in some form. Storage is required for any functionality of the bot that is configurable. This includes:
+As with any bot, any content provided specifically in a command or conversation with this bot will be analyzed and may be stored for debugging. Storage of preferences is required for any functionality of the bot that is configurable. This includes:
 
 - Per-server configurations/settings
 - Any additional information provided directly in a command or conversation to the bot
 
 ## Message Contents
 
-The bot can see any message sent in your server available to it, and will scan it for a command directed at itself. Beyond this, contents of arbitrary messages will **not** be stored. Full message contents are only ever stored if one of the following applies:
+The bot can see any message sent in your server available to it, and if any message-based features are enabled (such as Twitter or Pixiv link embedding) messages will be processed in order to provide this functionality. Beyond this, contents of arbitrary messages will **not** be stored. Full message contents are only ever stored if one of the following applies:
 
 - The message was sent by the bot itself
-- The message is a command directed at the bot and the full contents are required (reminders)
-- **Message "edit" or "delete" logging is enabled in that server**
+- The message is directed at FBK though the use of its commands
+- Message "edit" or "delete" logging is enabled in that server
 
 ## Discord IDs Collected Automatically
 
@@ -27,7 +27,7 @@ IDs (snowflakes) specific to Discord objects (guilds, users, channels) within yo
 
 ## Other Data Collected if Enabled
 
-If the "service integration" features including and not limited to the Twitter, YouTube, Twitch, MyAnimeList "trackers" are used, additionally information will necessarily be obtained and stored from these platforms.
+If the "service integration" features including and not limited to the Twitter, YouTube, Twitch, MyAnimeList "trackers" are used, additionally information will necessarily be obtained and stored from these platforms. Any other "trackers" that may be added following a similar design pattern will similarly collect similar neccesary unique data.
 
 - Corresponding Account username or ID required for operation 
 
@@ -45,4 +45,4 @@ Information collected is used purely to provide you with the services and functi
 
 ## Data Storage and Security
 
-Stored data is located on a secured server using well-known, secure database softwares PostgreSQL and MongoDB. No other users than myself (kabii) have access to the resources to directly access these databases. As with any database of this nature, absolute security can not be guaranteed. 
+Stored data is located on a secured server using well-known, secure database softwares PostgreSQL and MongoDB. No other users than myself (kabii) have access to the resources to directly access these databases. As with any database of this nature, absolute security can not be guaranteed. In the unlikely event of a data breach, and the nature of a Discord bot lacking a real direct notification system, any concern over data security would be reported on the bot Discord server.

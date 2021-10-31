@@ -6,12 +6,13 @@ import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.joda.time.DateTime
 
-object YoutubeMembers : LongIdTable() {
+object YoutubeMembers : IdTable<Long>() {
+    override val id = long("id").autoIncrement().entityId().uniqueIndex()
     val channelOwnerId = char("yt_chat_owner_id", 24)
     val chatterId = char("yt_chatter_id", 24)
     val lastUpdate = datetime("last_confirmed_membership_dt")

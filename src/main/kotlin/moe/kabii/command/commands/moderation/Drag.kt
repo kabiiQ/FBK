@@ -31,9 +31,7 @@ object Drag : Command("drag", "move", "pull") {
                                 .flatMap(VoiceState::getUser)
                                 .flatMap { user -> user.asMember(target.id) }
                                 .flatMap { member ->
-                                    member.edit { spec ->
-                                        spec.setNewVoiceChannel(targetChannel.id)
-                                    }
+                                    member.edit().withNewVoiceChannelOrNull(targetChannel.id)
                                 }.onErrorResume { _ -> Mono.empty() }
                                 .blockLast()
                     } else {

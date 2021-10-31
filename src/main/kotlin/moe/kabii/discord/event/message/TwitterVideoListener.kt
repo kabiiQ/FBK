@@ -43,10 +43,7 @@ object TwitterVideoListener : EventListener<MessageCreateEvent>(MessageCreateEve
         }
 
         val channel = event.message.channel.awaitSingle()
-        val video = channel.createMessage { spec ->
-            spec.setMessageReference(event.message.id)
-            spec.setContent(videoUrl)
-        }.awaitSingle()
+        val video = channel.createMessage(videoUrl).withMessageReference(event.message.id).awaitSingle()
 
         val reaction = ReactionInfo(EmojiCharacters.cancel, "cancel")
         ReactionListener(

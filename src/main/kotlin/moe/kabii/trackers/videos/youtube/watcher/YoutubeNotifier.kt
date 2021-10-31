@@ -1,6 +1,7 @@
 package moe.kabii.trackers.videos.youtube.watcher
 
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
@@ -24,11 +25,9 @@ import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -51,15 +50,17 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // create live stats object for video
         // should not already exist
-        if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) return
-        val liveEvent = YoutubeLiveEvent.new {
-            this.ytVideo = dbVideo
-            this.lastThumbnail = video.thumbnail
-            this.lastChannelName = video.channel.name
-            this.peakViewers = viewers
-            this.uptimeTicks = 1
-            this.averageViewers = viewers
-            this.premiere = video.premiere
+        if(transaction { YoutubeLiveEvent.liveEventFor(dbVideo) != null }) return
+        val liveEvent = propagateTransaction {
+            YoutubeLiveEvent.new {
+                this.ytVideo = dbVideo
+                this.lastThumbnail = video.thumbnail
+                this.lastChannelName = video.channel.name
+                this.peakViewers = viewers
+                this.uptimeTicks = 1
+                this.averageViewers = viewers
+                this.premiere = video.premiere
+            }
         }
         dbVideo.liveEvent = liveEvent
 
@@ -94,64 +95,67 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             try {
 
                 val dbMessage = notification.messageID
-                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+                val channel = if(dbMessage != null) {
+                    val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
 
-                val features = getStreamConfig(notification.targetID)
+                    val features = getStreamConfig(notification.targetID)
 
-                val action = if(features.summaries) {
+                    if(features.summaries) {
 
-                    val embed = Embeds.other(if(dbStream.premiere) uploadColor else inactiveColor)
-                        .run {
-                            val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                            if(features.viewers && dbStream.peakViewers > 0) withFields(EmbedCreateFields.Field.of("Viewers", viewers, true)) else this
-                        }
-                        .run {
-                            if(video != null) {
-
-                                // stream has ended and vod is available - edit notifications to reflect
-                                val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
-                                val durationStr = DurationFormatter(video.duration).colonTime
-
-                                withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
-                                    .withUrl(video.url)
-                                    .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.youtubeLogo))
-                                    .run {
-                                        val timestamp = video.liveInfo?.endTime
-                                        if(timestamp != null) withTimestamp(timestamp) else this
-                                    }
-                                    .withDescription("Video available: [$durationStr]")
-                                    .withTitle(video.title)
-                                    .withThumbnail(video.thumbnail)
-                            } else {
-                                // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
-                                // here, we can only provide information from our database
-                                val lastTitle = dbStream.ytVideo.lastTitle
-                                val channelName = dbStream.lastChannelName
-                                val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
-                                val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
-
-                                withAuthor(EmbedCreateFields.Author.of("$channelName was live.", channelLink, null))
-                                    .withUrl(videoLink)
-                                    .withFooter(EmbedCreateFields.Footer.of("Stream ended (approximate)", NettyFileServer.youtubeLogo))
-                                    .withTimestamp(Instant.now())
-                                    .withTitle("No VOD is available.")
-                                    .withThumbnail(dbStream.lastThumbnail)
-                                    .withDescription("Last video title: $lastTitle")
+                        val embed = Embeds.other(if(dbStream.premiere) uploadColor else inactiveColor)
+                            .run {
+                                val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+                                if(features.viewers && dbStream.peakViewers > 0) withFields(EmbedCreateFields.Field.of("Viewers", viewers, true)) else this
                             }
-                        }
+                            .run {
+                                if(video != null) {
+
+                                    // stream has ended and vod is available - edit notifications to reflect
+                                    val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
+                                    val durationStr = DurationFormatter(video.duration).colonTime
+
+                                    withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
+                                        .withUrl(video.url)
+                                        .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.youtubeLogo))
+                                        .run {
+                                            val timestamp = video.liveInfo?.endTime
+                                            if(timestamp != null) withTimestamp(timestamp) else this
+                                        }
+                                        .withDescription("Video available: [$durationStr]")
+                                        .withTitle(video.title)
+                                        .withThumbnail(video.thumbnail)
+                                } else {
+                                    // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
+                                    // here, we can only provide information from our database
+                                    val lastTitle = dbStream.ytVideo.lastTitle
+                                    val channelName = dbStream.lastChannelName
+                                    val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
+                                    val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
+
+                                    withAuthor(EmbedCreateFields.Author.of("$channelName was live.", channelLink, null))
+                                        .withUrl(videoLink)
+                                        .withFooter(EmbedCreateFields.Footer.of("Stream ended (approximate)", NettyFileServer.youtubeLogo))
+                                        .withTimestamp(Instant.now())
+                                        .withTitle("No VOD is available.")
+                                        .withThumbnail(dbStream.lastThumbnail)
+                                        .withDescription("Last video title: $lastTitle")
+                                }
+                            }
 
 
-                    existingNotif.edit()
-                        .withEmbeds(embed)
-                        .then(mono {
-                            TrackerUtil.checkUnpin(existingNotif)
-                        })
-                } else {
+                        existingNotif.edit()
+                            .withEmbeds(embed)
+                            .then(mono {
+                                TrackerUtil.checkUnpin(existingNotif)
+                            })
+                    } else {
 
-                    existingNotif.delete()
+                        existingNotif.delete()
 
-                }.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = dbStream.ytVideo.ytChannel)
+                    }.thenReturn(Unit).tryAwait()
+                    existingNotif.channel.awaitSingle()
+                } else discord.getChannelById(notification.targetID.discordChannel.channelID.snowflake).ofType(GuildMessageChannel::class.java).awaitSingle()
+                checkAndRenameChannel(channel, endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
@@ -413,7 +417,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                 this.targetID = target
                 this.videoID = dbVideo
-                this.deleted = false
             }
 
             // edit channel name if feature is enabled and stream starts

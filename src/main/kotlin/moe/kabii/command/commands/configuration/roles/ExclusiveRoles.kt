@@ -105,7 +105,7 @@ object ExclusiveRoles : CommandContainer {
                         } else {
                             val find = sets.find { existing -> existing.roles.contains(targetID) }
                             val existsInSet = if(find != null) " However, I did find the role in the configuration named **${find.name}**." else ""
-                            error("The role **${targetRole.name}** is not part of the exclusive role configuration **${targetSet.name}**.$existsInSet").awaitSingle()
+                            reply(Embeds.error("The role **${targetRole.name}** is not part of the exclusive role configuration **${targetSet.name}**.$existsInSet")).awaitSingle()
                         }
                     }
                 }

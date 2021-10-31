@@ -3,11 +3,13 @@ package moe.kabii.discord.event.bot
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.GuildCreateEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 
@@ -24,11 +26,10 @@ object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::clas
             event.client.getChannelById(metaChanId.snowflake)
                 .ofType(GuildMessageChannel::class.java)
                 .flatMap { metaChan ->
-                    metaChan.createEmbed { spec ->
-                        spec.setColor(Color.of(6750056))
-                        spec.setAuthor("New server", null, avatarUrl)
-                        spec.setDescription("Config created for server: ${event.guild.name} (${event.guild.id.asString()})")
-                    }
+                    metaChan.createMessage(
+                        Embeds.other("Config created for server: ${event.guild.name} (${event.guild.id.asString()})", Color.of(6750056))
+                            .withAuthor(EmbedCreateFields.Author.of("New server", null, avatarUrl))
+                    )
                 }.awaitSingle()
         }
     }

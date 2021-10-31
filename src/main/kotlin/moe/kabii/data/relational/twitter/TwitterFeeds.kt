@@ -6,6 +6,7 @@ import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
@@ -59,7 +60,8 @@ class TwitterStreamRule(id: EntityID<Int>) : IntEntity(id) {
     }
 }
 
-object TwitterTargets : IntIdTable() {
+object TwitterTargets : IdTable<Int>() {
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracker", DiscordObjects.Users, ReferenceOption.CASCADE)

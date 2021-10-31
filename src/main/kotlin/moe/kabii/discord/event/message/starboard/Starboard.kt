@@ -124,8 +124,8 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val starboardMessage = getStarboardMessage(starboardChannel, message)
 
         val starCount = message.stars.count().toLong()
-        starboardMessage.edit { spec ->
-            spec.setContent(starboardContent(starCount, message.originalAuthorId, message.originalChannelId))
-        }.awaitSingle()
+        starboardMessage.edit()
+            .withContentOrNull(starboardContent(starCount, message.originalAuthorId, message.originalChannelId))
+            .awaitSingle()
     }
 }

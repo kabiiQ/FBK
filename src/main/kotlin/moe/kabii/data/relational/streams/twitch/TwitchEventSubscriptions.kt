@@ -5,15 +5,16 @@ import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 
-object TwitchEventSubscriptions : IntIdTable() {
+object TwitchEventSubscriptions : IdTable<Int>() {
     enum class Type(val apiType: String) {
         START_STREAM("stream.online")
     }
 
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val twitchChannel = reference("subscribed_twitch_channel", TrackedStreams.StreamChannels, ReferenceOption.SET_NULL).nullable()
     val eventType = enumeration("eventsub_type", Type::class)
     val subscriptionId = text("eventsub_id")

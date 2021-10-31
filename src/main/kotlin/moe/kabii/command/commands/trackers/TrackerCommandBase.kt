@@ -10,7 +10,10 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.trackers.*
+import moe.kabii.trackers.AnimeTarget
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.TwitterTarget
 
 private enum class Action { TRACK, UNTRACK }
 
@@ -69,7 +72,6 @@ object TrackerCommandBase : CommandContainer {
                     is StreamingTarget -> StreamTrackerCommand
                     is AnimeTarget -> MediaTrackerCommand
                     is TwitterTarget -> TwitterTrackerCommand
-                    is PS2Target -> PS2TrackerCommand
                 }
                 when(action) {
                     Action.TRACK -> tracker.track(this, targetArgs, features)

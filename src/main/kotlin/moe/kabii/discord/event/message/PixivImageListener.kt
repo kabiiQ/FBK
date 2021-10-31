@@ -9,6 +9,7 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.OkHTTP
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.success
@@ -56,13 +57,9 @@ object PixivImageListener : EventListener<MessageCreateEvent>(MessageCreateEvent
                 false
             }
             if(!success) break
-            channel.createMessage { spec ->
-                spec.setEmbed { embed ->
-                    spec.setMessageReference(event.message.id)
-                    embed.setImage(imageUrl)
-                    embed.setColor(Color.of(40191))
-                }
-            }.awaitSingle()
+            channel.createMessage(
+                Embeds.other(Color.of(40191)).withImage(imageUrl)
+            ).withMessageReference(event.message.id).awaitSingle()
         }
     }
 }

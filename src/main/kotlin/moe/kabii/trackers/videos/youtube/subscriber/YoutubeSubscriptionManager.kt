@@ -4,7 +4,7 @@ import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.youtube.WebSubSubscription
+import moe.kabii.data.relational.streams.WebSubSubscription
 import moe.kabii.discord.util.Metadata
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher

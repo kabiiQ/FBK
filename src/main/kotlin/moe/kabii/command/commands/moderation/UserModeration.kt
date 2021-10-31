@@ -24,9 +24,7 @@ object UserModeration : CommandContainer {
                     usage("Sets the slowmode for this channel in seconds (0-21600)", "slowmode <time in seconds 0-21600>").awaitSingle()
                     return@discord
                 }
-                (chan as TextChannel).edit { channel ->
-                    channel.setRateLimitPerUser(cooldown)
-                }.awaitSingle()
+                (chan as TextChannel).edit().withRateLimitPerUser(cooldown).awaitSingle()
                 reply(Embeds.fbk("Set the slowmode for **${chan.name}** to **$cooldown** seconds.")).awaitSingle()
             }
         }
@@ -84,7 +82,7 @@ object UserModeration : CommandContainer {
                     usage("Unable to find user **${args[0]}**.", "ban userID").awaitSingle()
                     return@discord
                 }
-                val ban = target.ban(targetUser.id) { ban -> ban.reason = "Ban command issued by ${author.id.asString()}."}
+                val ban = target.ban(targetUser.id).withReason("Ban command issued by ${author.id.asString()}.")
                 val response = if(ban.success().awaitSingle())
                     reply(Embeds.fbk("**${targetUser.username} (${targetUser.id.asString()})** has been banned from **${target.name}**."))
                 else reply(Embeds.fbk("Unable to ban **${targetUser.username} (${targetUser.id.asString()}}**."))

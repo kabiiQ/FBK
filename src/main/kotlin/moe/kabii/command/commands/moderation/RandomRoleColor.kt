@@ -59,9 +59,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                 when (response) {
                     true -> { // set color
                         val oldColor = ColorUtil.hexString(role.color)
-                        val edit = role.edit { spec ->
-                            spec.setColor(currColor)
-                        }.tryAwait().orNull()
+                        val edit = role.edit().withColor(currColor).tryAwait().orNull()
                         if (edit != null) {
                             prompt.edit()
                                 .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $hex. (Previously $oldColor)", currColor))
