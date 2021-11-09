@@ -10,6 +10,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateMono
 import discord4j.core.spec.MessageCreateSpec
+import discord4j.rest.util.AllowedMentions
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.command.*
@@ -93,12 +94,10 @@ data class DiscordParameters (
     }
 
     // create a message that mentions the command-runner
-    fun reply(vararg embeds: EmbedCreateSpec) = chan
+    fun reply(vararg embeds: EmbedCreateSpec, withMention: Boolean = false) = chan
         .createMessage(*embeds)
         .run(::withReference)
-
-    fun reply(message: MessageCreateSpec) = chan
-        .createMessage(message.withMessageReference(event.message.id))
+        .run { if(!withMention) withAllowedMentions(AllowedMentions.builder().repliedUser(false).build()) else this }
 
     // Create a 'usage info' message
     fun usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {

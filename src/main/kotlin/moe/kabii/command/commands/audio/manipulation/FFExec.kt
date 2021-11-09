@@ -58,7 +58,7 @@ object FFExec : Command("ffmpeg") {
                     .execute()
 
                 val stream = ByteArrayInputStream(os.array())
-                reply(
+                chan.createMessage(
                     MessageCreateSpec.create().withFiles(MessageCreateFields.File.of(outname, stream))
                 ).awaitSingle()
             } finally {
