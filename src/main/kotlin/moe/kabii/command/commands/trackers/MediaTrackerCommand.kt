@@ -1,6 +1,6 @@
 package moe.kabii.command.commands.trackers
 
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -51,7 +51,7 @@ object MediaTrackerCommand : TrackerCommand {
         }
 
         val notice = origin.embed("Retrieving **$siteName** list...").awaitSingle()
-        suspend fun editNotice(spec: (EmbedCreateSpec.() -> Unit)) {
+        suspend fun editNotice(spec: (LegacyEmbedCreateSpec.() -> Unit)) {
             notice.edit { message -> message.setEmbed(spec) }.awaitSingle()
         }
 

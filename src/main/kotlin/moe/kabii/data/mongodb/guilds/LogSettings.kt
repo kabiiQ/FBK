@@ -11,6 +11,8 @@ data class LogSettings(
     var joinLog: Boolean = false,
     var joinFormat: String = defaultJoin,
     var partLog: Boolean = false,
+    var kickLogs: Boolean = false,
+    var banLogs: Boolean = false,
     var partFormat: String = defaultPart,
     var avatarLog: Boolean = false,
     var displayNameLog: Boolean = false,
