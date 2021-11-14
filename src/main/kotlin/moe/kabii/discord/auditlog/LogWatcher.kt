@@ -6,6 +6,8 @@ import discord4j.core.`object`.audit.AuditLogPart
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactor.awaitSingle
@@ -93,12 +95,11 @@ object LogWatcher {
 
                     discord.getMessageById(auditTask.logChannel, auditTask.logMessage)
                         .flatMap { logMessage ->
-                            logMessage.edit()
                             val logEmbed = logMessage.embeds.firstOrNull() ?: return@flatMap Mono.empty<Message>()
                             logMessage.edit { spec ->
+                                val original = logEmbed.description.orElse("")
                                 spec.addEmbed { embed ->
-                                    val original = logEmbed.description.orElse("")
-                                    embed.setDescription("$original $append")
+                                    embed.from(logEmbed.data).setDescription("$original$append")
                                 }
                             }
                         }.awaitSingle()

@@ -12,6 +12,8 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
+import moe.kabii.discord.auditlog.LogWatcher
+import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.util.extensions.long
@@ -45,13 +47,17 @@ object PartLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
-                    logChan.createEmbed { spec ->
+                    val log = logChan.createEmbed { spec ->
                         spec.setDescription(formatted)
                         spec.setColor(Color.of(16739688))
                         if (targetLog.partFormat.contains("&avatar")) {
                             spec.setImage(user.avatarUrl)
                         }
                     }.awaitSingle()
+
+                    if(targetLog.kickLogs) {
+                        LogWatcher.auditEvent(user.client, AuditKick(log, guild, user.id))
+                    }
 
                 } catch (ce: ClientException) {
                     val err = ce.status.code()
