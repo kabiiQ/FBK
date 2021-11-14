@@ -59,7 +59,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.0-M4") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.0") // discord websocket and api
 
     // music bot
     implementation("com.github.walkyst:lavaplayer-fork:1.3.95") // discord audio library
