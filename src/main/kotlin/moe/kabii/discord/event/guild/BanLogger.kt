@@ -44,7 +44,7 @@ object BanLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
                     val event = when(action) { Action.BAN -> "banned"; Action.UNBAN -> "unbanned" }
-                    logChan.createEmbed { spec ->
+                    val log = logChan.createEmbed { spec ->
                         spec.setDescription("**${user.userAddress()}** has been $event.")
                         spec.setColor(Color.of(16739688))
                     }.awaitSingle()
