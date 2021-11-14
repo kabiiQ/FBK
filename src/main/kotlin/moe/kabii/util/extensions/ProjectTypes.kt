@@ -1,9 +1,9 @@
 package moe.kabii.util.extensions
 
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 
-typealias EmbedBlock = EmbedCreateSpec.() -> Unit
-typealias EmbedSuspension = suspend EmbedCreateSpec.() -> Unit
+typealias EmbedBlock = LegacyEmbedCreateSpec.() -> Unit
+typealias EmbedSuspension = suspend LegacyEmbedCreateSpec.() -> Unit
 
 typealias UserID = Long
 typealias GuildID = Long

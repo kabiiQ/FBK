@@ -1,7 +1,7 @@
 package moe.kabii.discord.trackers.anime
 
 import discord4j.core.`object`.entity.User
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.util.constants.URLUtil
 
@@ -18,7 +18,7 @@ class MediaEmbedBuilder(val media: Media) {
     var oldScore: String? = null
     var descriptionFmt = ""
 
-    fun createEmbedConsumer(site: ListSite, id: String) = fun(spec: EmbedCreateSpec) {
+    fun createEmbedConsumer(site: ListSite, id: String) = fun(spec:LegacyEmbedCreateSpec) {
         val url = URLUtil.MediaListSite.url(site, id, media.type)
         spec.setColor(media.status.color)
         spec.setThumbnail(media.image)

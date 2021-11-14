@@ -3,7 +3,7 @@ package moe.kabii.discord.event.message.starboard
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.spec.MessageCreateSpec
+import discord4j.core.spec.legacy.LegacyMessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -47,7 +47,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${starboard.useEmoji().string()} $stars <#$channel>$mention"
     }
 
-    private fun starboardEmbed(message: Message, jumpLink: String, newSpec: MessageCreateSpec): EmbedBlock = {
+    private fun starboardEmbed(message: Message, jumpLink: String, newSpec: LegacyMessageCreateSpec): EmbedBlock = {
         val author = message.author.orNull()
         setAuthor(author?.username ?: "Unknown", null, author?.avatarUrl)
         starColor(this)

@@ -1,6 +1,6 @@
 package moe.kabii.discord.conversation
 
-import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.util.constants.MagicNumbers
@@ -28,12 +28,12 @@ object PaginationUtil {
         yield(page.toString().dropLast(1))
     }.toList()
 
-    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: ((EmbedCreateSpec) -> Unit)? = null) {
+    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: ((LegacyEmbedCreateSpec) -> Unit)? = null) {
         val pages = partition(MagicNumbers.Embed.DESC, elements)
         var page: Page? = Page(pages.size, 0)
         var first = true
 
-        fun applyPageContent(spec: EmbedCreateSpec) {
+        fun applyPageContent(spec:LegacyEmbedCreateSpec) {
             val thisPage = page!!
             if(embedTitle != null) spec.setTitle(embedTitle)
             spec.setDescription("$descHeader\n\n${pages[thisPage.current]}")

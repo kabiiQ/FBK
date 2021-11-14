@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild.welcome
 
 import discord4j.core.`object`.entity.Member
-import discord4j.core.spec.MessageCreateSpec
+import discord4j.core.spec.legacy.LegacyMessageCreateSpec
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
@@ -25,7 +25,7 @@ object WelcomeMessageFormatter {
         return format
     }
 
-    suspend fun createWelcomeMessage(config: WelcomeSettings, member: Member): MessageCreateSpec.() -> Unit {
+    suspend fun createWelcomeMessage(config: WelcomeSettings, member: Member): LegacyMessageCreateSpec.() -> Unit {
         // apply plain-text message in all cases
         val message = if(config.message.isBlank()) null
         else format(member, config.message, rich = true)

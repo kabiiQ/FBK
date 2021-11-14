@@ -5,9 +5,9 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageCreateSpec
-import discord4j.core.spec.MessageEditSpec
+import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
+import discord4j.core.spec.legacy.LegacyMessageCreateSpec
+import discord4j.core.spec.legacy.LegacyMessageEditSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -172,14 +172,14 @@ class Connect4Game(
         gameEmbeds = updated
     }
 
-    fun messageEditor(spec: MessageEditSpec) {
+    fun messageEditor(spec: LegacyMessageEditSpec) {
         spec.setContent(generateGameContent())
-        spec.setEmbed(::generateGameEmbed)
+        spec.addEmbed(::generateGameEmbed)
     }
 
-    fun messageCreator(spec: MessageCreateSpec) {
+    fun messageCreator(spec: LegacyMessageCreateSpec) {
         spec.setContent(generateGameContent())
-        spec.setEmbed(::generateGameEmbed)
+        spec.addEmbed(::generateGameEmbed)
     }
 
     private fun generateGameContent(): String = when(currentTurn) {
@@ -188,7 +188,7 @@ class Connect4Game(
         else -> ""
     }
 
-    private fun generateGameEmbed(spec: EmbedCreateSpec) {
+    private fun generateGameEmbed(spec:LegacyEmbedCreateSpec) {
         spec.setDescription(gameGrid.drawGrid())
         spec.setColor(currentTurn.turnColor)
         spec.addField(EmojiCharacters.redSquare, redDisplayName, true)
