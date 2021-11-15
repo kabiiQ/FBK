@@ -155,6 +155,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     LOG.debug(e.stackTraceString)
                                 }
                             }
+                            // TODO if live/scheduled&feature enabled, check if discord event should be created/updated
                         }
                 }
                 LOG.debug("yt exit")

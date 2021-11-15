@@ -45,6 +45,10 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             listOf("pin", "pins"),
             StreamSettings::pinActive
         ),
+        BooleanElement("Schedule an event on Discord for upcoming livestreams",
+            listOf("events", "scheduleevents", "event"),
+            StreamSettings::discordEvents
+        ),
         StringElement(
             "Channel name when no streams are live",
             listOf("notlive", "nolive", "nonelive", "not-live"),
