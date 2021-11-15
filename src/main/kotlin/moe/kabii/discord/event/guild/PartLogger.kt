@@ -12,6 +12,8 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.UserLog
+import moe.kabii.discord.auditlog.LogWatcher
+import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.discord.util.Embeds
@@ -52,6 +54,10 @@ object PartLogger {
                                 if(targetLog.partFormat.contains("&avatar")) withImage(user.avatarUrl) else this
                             }
                     ).awaitSingle()
+
+                    if(targetLog.kickLogs) {
+                        LogWatcher.auditEvent(user.client, AuditKick(log, guild, user.id))
+                    }
 
                 } catch (ce: ClientException) {
                     val err = ce.status.code()

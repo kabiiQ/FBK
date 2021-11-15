@@ -219,8 +219,14 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // check if any targets would like notification for this video upload
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
             .forEach { target ->
+                if(!YoutubeNotification.getExisting(target, dbVideo).empty()) return@forEach
                 try {
-                    createVideoNotification(ytVideo, target)
+                    val new = createVideoNotification(ytVideo, target) ?: return@forEach
+                    YoutubeNotification.new {
+                        this.messageID = MessageHistory.Message.getOrInsert(new)
+                        this.targetID = target
+                        this.videoID = dbVideo
+                    }
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                     LOG.warn("Error while creating 'upload' notification for stream: $ytVideo :: ${e.message}")

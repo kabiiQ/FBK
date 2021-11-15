@@ -18,6 +18,7 @@ object YoutubeVideos : LongIdTable() {
     val lastTitle = text("last_title").nullable()
     val liveEvent = reference("live_event", YoutubeLiveEvents, ReferenceOption.SET_NULL).nullable()
     val scheduledEvent = reference("scheduled_event", YoutubeScheduledEvents, ReferenceOption.SET_NULL).nullable()
+    val discordEvent = long("discord_event_id").nullable()
 }
 
 class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
@@ -28,6 +29,7 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     var lastTitle by YoutubeVideos.lastTitle
     var liveEvent by YoutubeLiveEvent optionalReferencedOn YoutubeVideos.liveEvent
     var scheduledEvent by YoutubeScheduledEvent optionalReferencedOn YoutubeVideos.scheduledEvent
+    var discordEvent by YoutubeVideos.discordEvent
 
     val notifications by YoutubeNotification referrersOn YoutubeNotifications.videoID
 

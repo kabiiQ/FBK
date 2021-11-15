@@ -28,6 +28,16 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
             LogSettings::partLog
         ),
         BooleanElement(
+            "User kick log",
+            listOf("kicks", "kick"),
+            LogSettings::kickLogs
+        ),
+        BooleanElement(
+            "User ban log",
+            listOf("bans", "ban"),
+            LogSettings::banLogs
+        ),
+        BooleanElement(
             "Avatar log",
             listOf("avatars", "avatar"),
             LogSettings::avatarLog
