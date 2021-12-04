@@ -26,6 +26,7 @@ import moe.kabii.discord.trackers.TrackerUtil
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.discord.util.EditableChannelWrapper
 import moe.kabii.discord.util.errorColor
+import moe.kabii.net.api.videos.YoutubeVideoResponse
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.constants.MagicNumbers
@@ -34,6 +35,7 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
+import java.util.*
 import kotlin.reflect.KMutableProperty1
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
@@ -189,6 +191,9 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                     if(endingStream != null) {
                         notif.videoID.ytChannel.id != endingStream.id
                     } else true
+                }
+                .filter { notif ->
+                    notif.videoID.liveEvent != null
                 }
                 .mapTo(liveChannels) { it.videoID.ytChannel }
 
