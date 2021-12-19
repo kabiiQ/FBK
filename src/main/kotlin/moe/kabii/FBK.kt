@@ -110,17 +110,17 @@ fun main() {
                 return@map Mono.empty<Unit>()
             }
             LOG.debug("Registering EventHandler: ${instance.eventType} :: $clazz")
-            gateway.on(instance.eventType.java)
-                .flatMap(instance::wrapAndHandle)
+            gateway.on(instance.eventType.java, instance::wrapAndHandle)
         }
 
     val allListeners = eventListeners + listOf(offlineChecks, onDiscordMessage)
 
     // subscribe to bot lifetime discord events
     Mono.`when`(allListeners)
-        .onErrorContinue { t, _ ->
+        .onErrorResume { t ->
             LOG.error("Uncaught exception in event handler: ${t.message}")
             LOG.warn(t.stackTraceString)
+            Mono.empty()
         }
         .subscribe()
 }
