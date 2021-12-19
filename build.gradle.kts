@@ -30,16 +30,16 @@ repositories {
         url = uri("https://repo.spring.io/snapshot")
     }
     maven {
+        name = "lavaplayer"
+        url = uri("https://m2.dv8tion.net/releases")
+    }
+    maven {
         name = "exposed-bintray"
         url = uri("https://dl.bintray.com/kotlin/exposed")
     }
     maven {
         name = "kotlinx-bintray"
         url = uri("https://kotlin.bintray.com/kotlinx")
-    }
-    maven {
-        name = "lavaplayer"
-        url = uri("https://m2.dv8tion.net/releases")
     }
 }
 
