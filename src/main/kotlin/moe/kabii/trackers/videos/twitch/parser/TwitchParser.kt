@@ -132,8 +132,8 @@ object TwitchParser {
             val call = request<TwitchStreamRequest>(request)
             if(call is Ok) {
                 val responseStreams = call.value.data
-                ids.map { requestID ->
-                    // find the stream for each user in the request
+                chunk.map { requestID ->
+                    // find the stream for each user in the requestH
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
                         Ok(match.asStreamInfo())

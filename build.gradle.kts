@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.5.31"
+    val kotlinVer = "1.6.0"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -45,7 +45,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.0") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.1") // discord websocket and api
 
     // music bot
     implementation("com.github.walkyst:lavaplayer-fork:1.3.96") // discord audio library
