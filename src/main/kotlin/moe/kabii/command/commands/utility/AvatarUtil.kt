@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.utility
 
+import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
@@ -27,7 +28,7 @@ object AvatarUtil : CommandContainer {
                     return@discord
                 }
                 // uses new embed spec to send 2 in one message though we are typically not converting to this style until 1.1
-                val member = guild?.run { targetUser.asMember(id).tryAwait().orNull() }
+                val member = guild?.run { targetUser.asMember(id, EntityRetrievalStrategy.REST).tryAwait().orNull() }
                 val avatars = sequence {
                     val globalAvatar = EmbedCreateSpec.create()
                         .withTitle("Avatar for **${targetUser.userAddress()}**")
