@@ -114,7 +114,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     targetLookup.keys
                         .chunked(20)
                         .flatMap { chunk ->
-                            LOG.info("yt api call: $chunk")
+                            LOG.debug("yt api call: $chunk")
                             if(first) first = false
                             else Thread.sleep(500L)
                             YoutubeParser.getVideos(chunk).entries
@@ -162,7 +162,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
 
                 // clean up videos db
                 if(tickId == 10) {
-                    LOG.info("Executing YouTube DB cleanup")
+                    LOG.debug("Executing YouTube DB cleanup")
                     propagateTransaction {
                          // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
