@@ -23,6 +23,8 @@ import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.trackers.twitter.json.TwitterTweet
 import moe.kabii.discord.trackers.twitter.json.TwitterUser
+import moe.kabii.discord.translation.TranslationLanguage
+import moe.kabii.discord.translation.TranslationResult
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
@@ -141,6 +143,10 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
     suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
         // send discord notifs - check if any channels request
         TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
+
+        // cache to not repeat translation for same tweet across multiple channels/servers
+        val translations = mutableMapOf<TranslationLanguage, TranslationResult>()
+
         targets.forEach target@{ target ->
             try {
                 // post a notif to this target
@@ -181,9 +187,19 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             .translator.defaultTargetLanguage
                             .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
                         val translator = Translator.getService(tweet.text, defaultLang.tag)
-                        val translation = translator.translate(from = null, to = defaultLang, text = tweet.text)
+
+                        // check cache for existing translation of this tweet
+                        val existingTl = translations[defaultLang]
+                        val translation = if(existingTl != null) existingTl else {
+
+                            val tl = translator.translate(from = null, to = defaultLang, text = tweet.text)
+                            translations[tl.targetLanguage] = tl
+                            tl
+                        }
+
                         if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
                         else null
+
                     } catch(e: Exception) {
                         LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
                         null
