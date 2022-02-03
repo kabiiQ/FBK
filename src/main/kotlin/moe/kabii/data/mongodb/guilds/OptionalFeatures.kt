@@ -80,6 +80,7 @@ data class StreamSettings(
     var thumbnails: Boolean = true,
     var viewers: Boolean = true,
     var endGame: Boolean = true,
+    var mentionRoles: Boolean = true,
 
     var renameEnabled: Boolean = false,
     var pinActive: Boolean = false,

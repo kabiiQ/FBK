@@ -95,7 +95,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 
     data class MentionRole(val db: TrackedStreams.Mention, val discord: Role)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel): MentionRole? {
+    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings): MentionRole? {
+        if(!streamCfg.mentionRoles) return null
         val dbRole = dbStream.mentionRoles
             .firstOrNull { men -> men.guild.guildID == guildId }
         return if(dbRole != null) {

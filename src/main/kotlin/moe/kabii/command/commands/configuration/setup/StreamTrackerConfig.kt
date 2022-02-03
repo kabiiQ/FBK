@@ -37,6 +37,10 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             listOf("game", "endgame"),
             StreamSettings::endGame
         ),
+        BooleanElement("Use the `setmention` config in this channel",
+            listOf("pingRoles", "pings", "ping", "mentions", "mention", "mentionroles"),
+            StreamSettings::mentionRoles
+        ),
         BooleanElement("Rename this channel based on live channels",
             listOf("rename", "renamechannel", "renaming", "renam"),
             StreamSettings::renameEnabled
@@ -45,10 +49,10 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             listOf("pin", "pins"),
             StreamSettings::pinActive
         ),
-        BooleanElement("Schedule an event on Discord for upcoming livestreams",
+        /*BooleanElement("Schedule an event on Discord for upcoming livestreams",
             listOf("events", "scheduleevents", "event"),
             StreamSettings::discordEvents
-        ),
+        ),*/
         StringElement(
             "Channel name when no streams are live",
             listOf("notlive", "nolive", "nonelive", "not-live"),
