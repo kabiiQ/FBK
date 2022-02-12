@@ -2,6 +2,10 @@
 <br> FBK (Fubuki) </br>
 </h1>
 
+### Support the Developer
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E5AF13X)
+
 FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server. 
 
 # Add FBK to your Discord server
@@ -17,10 +21,6 @@ FBK is now available for invite and public use as of December 2020. I have not d
 # Suggestion/Support Discord Server
 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
-
-### Support the Developer
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E5AF13X)
 
 # Features
 FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
