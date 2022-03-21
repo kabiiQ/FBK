@@ -51,5 +51,6 @@ object URLUtil {
     object Twitter {
         fun feed(id: String) = "https://twitter.com/i/user/$id"
         fun tweet(id: String) = "https://twitter.com/FBK/status/$id"
+        fun space(id: String) = "https://twitter.com/i/spaces/$id"
     }
 }

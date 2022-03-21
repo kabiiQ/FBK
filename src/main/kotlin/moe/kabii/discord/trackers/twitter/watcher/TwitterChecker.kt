@@ -1,7 +1,10 @@
 package moe.kabii.discord.trackers.twitter.watcher
 
+import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.entity.Role
+import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
@@ -14,6 +17,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
 import moe.kabii.discord.trackers.TrackerUtil
@@ -23,23 +27,27 @@ import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
 import moe.kabii.discord.trackers.twitter.json.TwitterTweet
 import moe.kabii.discord.trackers.twitter.json.TwitterUser
+import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.discord.translation.TranslationLanguage
 import moe.kabii.discord.translation.TranslationResult
 import moe.kabii.discord.translation.Translator
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.net.NettyFileServer
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
+class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec, val spaceChecker: SpaceChecker) : Runnable {
 
     override fun run() {
         applicationLoop {
@@ -47,21 +55,25 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
             newSuspendedTransaction {
                 try {
+                    LOG.debug("TwitterChecker :: start: $start")
                     // get all tracked twitter feeds
                     val feeds = TwitterFeed.all()
+                    LOG.debug("2")
 
-                    // feeds who are completely inactive and since_id has fallen out of the valid range
+                        // feeds who are completely inactive and since_id has fallen out of the valid range
                     val requireUpdate = mutableListOf<TwitterFeed>()
                     var maxId = 0L
 
                     var first = true
                     feeds.forEach { feed ->
+                        LOG.debug("${feed.lastKnownUsername}: start")
                         if(!first) {
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+                        LOG.debug("targets: returned")
 
                         val cache = TwitterFeedCache.getOrPut(feed)
 
@@ -76,12 +88,14 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             if(twitter.displayRetweet) pullRetweets = true
                             if(twitter.displayQuote) pullQuotes = true
                         }
+                        LOG.debug("target iter: return")
 
                         val limits = TwitterParser.TwitterQueryLimits(
                             sinceId = feed.lastPulledTweet,
                             includeRT = pullRetweets,
                             includeQuote = pullQuotes
                         )
+                        LOG.debug("getting tweets: start")
                         val recent = try {
                             TwitterParser.getRecentTweets(feed.userId, limits)
                         } catch(sinceId: TwitterDateTimeUpdateException) {
@@ -99,6 +113,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             delay(Duration.ofMillis(100L))
                             null
                         }
+                        LOG.debug("tweets returned")
                         recent ?: return@forEach
                         val (user, tweets) = recent
                         feed.lastKnownUsername = user.username
@@ -121,6 +136,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             }
                         }
                         if(latest > maxId) maxId = latest
+                        LOG.debug("latest tweets: checked")
                     }
 
                     requireUpdate.forEach { feed ->
@@ -128,6 +144,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             feed.lastPulledTweet = maxId
                         }
                     }
+                    LOG.debug("twitter exit")
                 } catch(e: Exception) {
                     LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                     LOG.debug(e.stackTraceString)
@@ -141,8 +158,12 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
     @WithinExposedContext
     suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
+        LOG.debug("notify ${user.username} tweet: $tweet :: begin")
         // send discord notifs - check if any channels request
         TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
+
+        // check for twitter space info from tweet
+        //spaceChecker.intakeSpaceFromTweet(tweet)
 
         // cache to not repeat translation for same tweet across multiple channels/servers
         val translations = mutableMapOf<TranslationLanguage, TranslationResult>()
@@ -179,6 +200,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     }
                 }
 
+                LOG.debug("translation stage")
                 val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                     try {
                         val baseService = Translator.defaultService
@@ -248,10 +270,20 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         ?: tweet.references.firstOrNull()?.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url
                 } else null
 
+                LOG.debug("roles phase")
+                // mention roles
+                val guildId = target.discordChannel.guild?.guildID
+                val mention = guildId
+                    ?.run { getMentionRoleFor(target, this.snowflake, channel, tweet, twitter) }
+                    ?.discord?.mention
+                    ?.plus(" ")
+                    ?: ""
+
+                LOG.debug("message stage")
                 val notifSpec = channel.createMessage { spec ->
-                    // todo channel setting for custom message ?
+
                     val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
-                    spec.setContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
+                    spec.setContent("$mention**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
 
                     spec.setEmbed { embed ->
                         val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
@@ -298,6 +330,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                 }
             }
         }
+        LOG.debug("$tweet :: complete??")
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
@@ -334,6 +367,31 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
             feed.delete()
             LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
             null
+        }
+    }
+
+    data class TwitterMentionRole(val db: TwitterMention, val discord: Role)
+    @WithinExposedContext
+    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, guildId: Snowflake, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
+        if(tweet.retweet) return null
+        if(!twitterCfg.mentionRoles) return null
+        val dbMentionRole = TwitterMention.getRoleFor(guildId, dbTarget.twitterFeed.userId)
+            .firstOrNull() ?: return null
+        val dRole = targetChannel.toMono()
+            .ofType(GuildChannel::class.java)
+            .flatMap(GuildChannel::getGuild)
+            .flatMap { guild -> guild.getRoleById(dbMentionRole.mentionRole.snowflake) }
+            .tryAwait()
+        return when(dRole) {
+            is Ok -> TwitterMentionRole(dbMentionRole, dRole.value)
+            is Err -> {
+                val err = dRole.value
+                if(err is ClientException && err.status.code() == 404) {
+                    // role has been deleted, remove configuration
+                    dbMentionRole.delete()
+                }
+                null
+            }
         }
     }
 }

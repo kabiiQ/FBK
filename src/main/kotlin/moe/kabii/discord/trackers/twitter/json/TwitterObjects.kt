@@ -104,6 +104,7 @@ data class TwitterEntities(
 
 @JsonClass(generateAdapter = true)
 data class TwitterUrlEntity(
+    @Json(name = "expanded_url") val expanded: String?,
     val images: List<TwitterUrlImage>?
 )
 

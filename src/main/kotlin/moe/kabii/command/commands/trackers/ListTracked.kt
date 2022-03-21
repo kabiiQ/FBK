@@ -5,14 +5,10 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.ps2.PS2Tracks
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.PaginationUtil
-import moe.kabii.discord.trackers.PS2Target
-import moe.kabii.discord.trackers.ps2.store.PS2DataCache
-import moe.kabii.discord.trackers.ps2.store.PS2StaticData
 import moe.kabii.util.extensions.propagateTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
@@ -64,29 +60,6 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                     val feed = target.twitterFeed
                     val url = moe.kabii.discord.trackers.TwitterTarget.feedById(feed.userId.toString())
                     "[Twitter/${feed.lastKnownUsername ?: feed.userId}]($url) by <@${target.tracker.userID}>"
-                }
-
-                PS2Tracks.TrackTarget.find {
-                    PS2Tracks.TrackTargets.discordChannel eq dbChannel.id
-                }.mapTo(tracks) { target ->
-                    when(target.type) {
-                        PS2Tracks.PS2EventType.PLAYER -> {
-                            val player = PS2DataCache.characterById(target.censusId)?.lastKnownName ?: target.censusId
-                            "[PS2Player/$player](${PS2Target.Player.feedById(target.censusId)})"
-                        }
-                        PS2Tracks.PS2EventType.OUTFIT -> {
-                            val outfit = PS2DataCache.outfitById(target.censusId)?.lastKnownTag ?: target.censusId
-                            "PS2Outfit/$outfit"
-                        }
-                        PS2Tracks.PS2EventType.OUTFITCAP -> {
-                            val outfit = PS2DataCache.outfitById(target.censusId)?.lastKnownTag ?: target.censusId
-                            "PS2OutfitCaps/$outfit"
-                        }
-                        PS2Tracks.PS2EventType.CONTINENT -> {
-                            val server = PS2StaticData.getServerNames()?.find { server -> server.worldIdStr == target.censusId } ?: target.censusId
-                            "PS2Cont/$server"
-                        }
-                    }
                 }
             }
 

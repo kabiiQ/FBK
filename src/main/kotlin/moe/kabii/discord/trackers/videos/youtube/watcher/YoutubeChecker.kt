@@ -48,6 +48,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     LOG.debug("start: $start :: nextCall : $nextCall")
                     this.ytTick()
                 } catch(e: Exception) {
+
                     LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
                     LOG.debug(e.stackTraceString)
                 }

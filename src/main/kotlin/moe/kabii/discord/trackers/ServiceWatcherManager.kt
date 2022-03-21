@@ -10,6 +10,7 @@ import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.discord.trackers.ps2.wss.PS2EventStream
 import moe.kabii.discord.trackers.twitter.watcher.TweetStream
 import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
+import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
@@ -31,6 +32,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
 
     val twitcastChecker: TwitcastChecker
     val twitch: TwitchChecker
+    val spaceChecker: SpaceChecker
 
     init {
         val reminderDelay = ServiceRequestCooldownSpec(
@@ -56,6 +58,12 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         )
         val twitchSubs = TwitchSubscriptionManager(discord, twitch, twitchSubDelay)
 
+        val spacesDelay = ServiceRequestCooldownSpec(
+            callDelay = 0L,
+            minimumRepeatTime = 60_000L
+        )
+        spaceChecker = SpaceChecker(discord, spacesDelay)
+
         val subsDelay = ServiceRequestCooldownSpec(
             callDelay = 0L,
             minimumRepeatTime = 12_000L
@@ -73,11 +81,10 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         val ytMembershipMaintainer = YoutubeMembershipMaintainer(discord)
 
         /*val pullDelay = ServiceRequestCooldownSpec(
-            callDelay = 5_000L,
+            callDelay = 2_000L,
             minimumRepeatTime = 120_000L
         )
         val ytManualPuller = YoutubeFeedPuller(pullDelay)*/
-
 
         val malDelay = ServiceRequestCooldownSpec(
             callDelay = MALParser.callCooldown,
@@ -101,10 +108,10 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
         val twitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 3_000L,
+            callDelay = 2_000L,
             minimumRepeatTime = 30_000L
         )
-        val twitter = TwitterChecker(discord, twitterDelay)
+        val twitter = TwitterChecker(discord, twitterDelay, spaceChecker)
         val twitterStream = TweetStream(twitter)
 
         val ps2Websocket = PS2EventStream(discord)
@@ -113,6 +120,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
             Thread(twitchSubs, "TwitchSubscriptionManager"),
+            //Thread(spaceChecker, "TwitterSpacesChecker"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),
