@@ -2,10 +2,6 @@
 <br> FBK (Fubuki) </br>
 </h1>
 
-### Support the Developer
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E5AF13X)
-
 FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server. 
 
 # Add FBK to your Discord server
@@ -18,7 +14,7 @@ FBK is now available for invite and public use as of December 2020. I have not d
 
 ##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=314672047718531072&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
 
-# Suggestion/Support Discord Server
+# Join our Discord server
 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
@@ -57,6 +53,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 - ## **General Utility**
   - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
   - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
+  - [Access server voice channel screenshare](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
 
 - ## Game(s)
   - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games-(Connect-4))
@@ -81,7 +78,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 
 # Development 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.6.0-blue.svg?logo=Kotlin)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 

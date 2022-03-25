@@ -25,7 +25,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
             get {
                 // GET - subscription validation
-                log("GET:$port", LOG::debug)
+                log("GET:$port")
 
                 if(!call.request.origin.remoteHost.endsWith("google.com")) {
                     call.response.status(HttpStatusCode.Forbidden)
@@ -51,7 +51,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 val challenge = call.parameters["hub.challenge"]
                 if(challenge != null) {
                     call.respondText(challenge, status = HttpStatusCode.OK)
-                    LOG.debug("$mode validated: $channelTopic")
+                    LOG.info("$mode validated: $channelTopic")
                 }
             }
 

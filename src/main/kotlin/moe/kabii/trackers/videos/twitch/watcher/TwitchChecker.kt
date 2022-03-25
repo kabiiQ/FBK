@@ -234,7 +234,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         .awaitSingle()
                     // get mention role from db
                     val mention = if (guildId != null) {
-                        getMentionRoleFor(target.streamChannel, guildId, chan, settings)
+                        getMentionRoleFor(target.streamChannel, guildId, chan)
                     } else null
 
                     val newNotification = try {

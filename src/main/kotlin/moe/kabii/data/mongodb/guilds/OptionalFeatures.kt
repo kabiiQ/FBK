@@ -79,7 +79,6 @@ data class StreamSettings(
     var thumbnails: Boolean = true,
     var viewers: Boolean = true,
     var endGame: Boolean = true,
-    var mentionRoles: Boolean = true,
 
     var renameEnabled: Boolean = false,
     var pinActive: Boolean = false,
@@ -106,7 +105,6 @@ data class TwitterSettings(
     var displayReplies: Boolean = false,
     var displayQuote: Boolean = true,
     var displayRetweet: Boolean = false,
-    var mentionRoles: Boolean = true,
     var mediaOnly: Boolean = false,
     var autoTranslate: Boolean = false,
     var streamFeeds: Boolean = false

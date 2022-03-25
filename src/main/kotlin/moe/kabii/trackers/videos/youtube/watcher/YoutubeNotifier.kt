@@ -293,7 +293,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // get mention role from db if one is registered
         val mentionRole = if(guildId != null) {
-            getMentionRoleFor(target.streamChannel, guildId, chan, features)
+            getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
         val new = try {
@@ -386,7 +386,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // get mention role from db if one is registered
         val mention = if(guildId != null) {
-            getMentionRoleFor(target.streamChannel, guildId, chan, features)
+            getMentionRoleFor(target.streamChannel, guildId, chan)
         } else null
 
         try {

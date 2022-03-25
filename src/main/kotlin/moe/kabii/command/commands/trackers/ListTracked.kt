@@ -9,10 +9,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.PaginationUtil
-<<<<<<< HEAD
 import moe.kabii.discord.util.Embeds
-=======
->>>>>>> master
 import moe.kabii.util.extensions.propagateTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {

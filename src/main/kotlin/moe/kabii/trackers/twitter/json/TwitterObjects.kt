@@ -39,7 +39,6 @@ data class TwitterTweet(
     @Transient val retweet = _reference?.type == "retweeted"
     @Transient val reply = _reference?.type == "replied_to"
     @Transient val quote = _reference?.type == "quoted"
-    @Transient val normal = !(reply || quote || retweet)
 
     private val rtRegex = Regex("RT @${TwitterParser.twitterUsernameRegex}: ")
     @Transient val text = _text.replaceFirst(rtRegex, "")
@@ -104,7 +103,6 @@ data class TwitterEntities(
 
 @JsonClass(generateAdapter = true)
 data class TwitterUrlEntity(
-    @Json(name = "expanded_url") val expanded: String?,
     val images: List<TwitterUrlImage>?
 )
 

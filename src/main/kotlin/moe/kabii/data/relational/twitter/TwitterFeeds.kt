@@ -1,6 +1,5 @@
 package moe.kabii.data.relational.twitter
 
-import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.util.extensions.WithinExposedContext
@@ -70,9 +69,7 @@ object TwitterTargets : IdTable<Int>() {
     val mentionRole = long("discord_mention_role_id").nullable()
     val shouldStream = bool("twitter_streaming_feed").default(false)
 
-    init {
-        index(isUnique = true, twitterFeed, discordChannel)
-    }
+    override val primaryKey = PrimaryKey(twitterFeed, discordChannel)
 }
 
 class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
@@ -80,6 +77,7 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     var discordChannel by DiscordObjects.Channel referencedOn TwitterTargets.discordChannel
     var tracker by DiscordObjects.User referencedOn TwitterTargets.tracker
 
+    var mentionRole by TwitterTargets.mentionRole
     var shouldStream by TwitterTargets.shouldStream
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
@@ -93,32 +91,5 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
                             (DiscordObjects.Channels.channelID eq channelId)
                 }
         ).firstOrNull()
-    }
-}
-
-object TwitterMentions : IntIdTable() {
-    val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
-    val guild = reference("assoc_feed_mention_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
-    val mentionRole = long("discord_feed_mention_role_id")
-
-    override val primaryKey = PrimaryKey(twitterFeed, guild)
-}
-
-class TwitterMention(id: EntityID<Int>) : IntEntity(id) {
-    var twitterFeed by TwitterFeed referencedOn TwitterMentions.twitterFeed
-    var guild by DiscordObjects.Guild referencedOn TwitterMentions.guild
-    var mentionRole by TwitterMentions.mentionRole
-
-    companion object : IntEntityClass<TwitterMention>(TwitterMentions) {
-        @WithinExposedContext
-        fun getRoleFor(guildId: Snowflake, twitterId: Long) = TwitterMention.wrapRows(
-            TwitterMentions
-                .innerJoin(TwitterFeeds)
-                .innerJoin(DiscordObjects.Guilds)
-                .select {
-                    DiscordObjects.Guilds.guildID eq guildId.asLong() and
-                            (TwitterFeeds.userId eq twitterId)
-                }
-        )
     }
 }
