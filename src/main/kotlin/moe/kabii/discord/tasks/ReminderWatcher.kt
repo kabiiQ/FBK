@@ -5,15 +5,16 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.relational.discord.Reminder
 import moe.kabii.data.relational.discord.Reminders
-import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
-import moe.kabii.discord.util.reminderColor
-import moe.kabii.util.DurationFormatter
+import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
+import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -68,28 +69,23 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
         }
 
         // try to send reminder, send in PM if failed
-        val age = Duration.between(reminder.created.javaInstant, Instant.now())
-        val createdTime = DurationFormatter(age).fullTime
-        val embed: EmbedBlock = {
-            reminderColor(this)
-            val clock = EmojiCharacters.alarm
-            setAuthor("$clock Reminder for ${user.userAddress()} $clock", null, user.avatarUrl)
-            val created = "Reminder created at ${TimestampFormat.SHORT_DATE_TIME.format(reminder.created.javaInstant)}"
-            val desc = if(reminder.originMessage != null) {
-                "[$created](${reminder.originMessage!!.jumpLink})"
-            } else created
-            setDescription(desc)
-            val content = reminder.content
-            if(content.isNotBlank()) {
-                addField("Reminder:", content, false)
+        val clock = EmojiCharacters.alarm
+        val created = "Reminder created at ${TimestampFormat.SHORT_DATE_TIME.format(reminder.created.javaInstant)}"
+        val desc = if(reminder.originMessage != null) {
+            "[$created](${reminder.originMessage!!.jumpLink})"
+        } else created
+
+        val embed = Embeds.other(desc, MessageColors.reminder)
+            .withAuthor(EmbedCreateFields.Author.of("$clock Reminder for ${user.userAddress()} $clock", null, user.avatarUrl))
+            .run {
+                val content = reminder.content
+                if(content.isNotBlank()) withFields(EmbedCreateFields.Field.of("Reminder:", content, false)) else this
             }
-        }
 
         suspend fun sendReminder(target: MessageChannel) {
-            target.createMessage { spec ->
-                spec.setContent(user.mention)
-                spec.setEmbed(embed)
-            }.awaitSingle()
+            target.createMessage(user.mention)
+                .withEmbeds(embed)
+                .awaitSingle()
         }
 
         suspend fun dmFallback() {

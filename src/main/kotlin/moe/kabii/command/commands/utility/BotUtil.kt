@@ -4,6 +4,7 @@ import discord4j.core.`object`.VoiceState
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.discord.util.Embeds
 
 object BotUtil : CommandContainer {
     object Screenshare : Command("screenshare", "screen-share", "share", "sharescreen", "screanshare") {
@@ -15,9 +16,9 @@ object BotUtil : CommandContainer {
                     .flatMap(VoiceState::getChannel)
                     .flatMap { channel ->
                         val link = "https://discord.com/channels/${target.id.asString()}/${channel.id.asString()}/"
-                        embed("[Screenshare channel for **${channel.name}**]($link)")
+                        reply(Embeds.fbk("[Screenshare channel for **${channel.name}**]($link)"))
                     }
-                    .switchIfEmpty(embed("You need to be in a voice channel in this guild to use screenshare."))
+                    .switchIfEmpty(reply(Embeds.fbk("You need to be in a voice channel in this guild to use screenshare.")))
                     .awaitSingle()
             }
         }
@@ -29,7 +30,7 @@ object BotUtil : CommandContainer {
         init {
             discord {
                 val link = "https://discord.com/channels/${target.id.asString()}/${chan.id.asString()}/1"
-                embed("[;)]($link)").awaitSingle()
+                reply(Embeds.fbk("[;)]($link)")).awaitSingle()
             }
         }
     }

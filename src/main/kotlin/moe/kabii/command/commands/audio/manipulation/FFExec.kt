@@ -3,9 +3,12 @@ package moe.kabii.command.commands.audio.manipulation
 import com.github.kokorin.jaffree.ffmpeg.ChannelOutput
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg
 import com.github.kokorin.jaffree.ffmpeg.UrlInput
+import discord4j.core.spec.MessageCreateFields
+import discord4j.core.spec.MessageCreateSpec
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin
+import moe.kabii.discord.util.Embeds
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import org.apache.commons.io.FilenameUtils
 import java.io.ByteArrayInputStream
@@ -18,7 +21,7 @@ object FFExec : Command("ffmpeg") {
         discord {
             event.verifyBotAdmin()
             if(args.isEmpty()) {
-                error("No arguments specified.").awaitSingle()
+                reply(Embeds.error("No arguments specified.")).awaitSingle()
                 return@discord
             }
 
@@ -32,7 +35,7 @@ object FFExec : Command("ffmpeg") {
                     arguments.removeFirst()
                     url to path
                 } catch(e: Exception) {
-                    error("Unable to get audio attachment.").awaitSingle()
+                    reply(Embeds.error("Unable to get audio attachment.")).awaitSingle()
                     return@discord
                 }
             }
@@ -55,9 +58,9 @@ object FFExec : Command("ffmpeg") {
                     .execute()
 
                 val stream = ByteArrayInputStream(os.array())
-                chan.createMessage { spec ->
-                    spec.addFile(outname, stream)
-                }.awaitSingle()
+                chan.createMessage(
+                    MessageCreateSpec.create().withFiles(MessageCreateFields.File.of(outname, stream))
+                ).awaitSingle()
             } finally {
                 os.close()
             }

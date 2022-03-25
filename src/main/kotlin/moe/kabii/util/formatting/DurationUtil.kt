@@ -28,7 +28,7 @@ object DurationParser {
         if(components.isNotEmpty()) return components.reduce(Duration::plus)
         // if no components specified in first format, try to parse as "20 seconds", "20s"
         return input.trim()
-            .toUpperCase()
+            .uppercase()
             .replace(" ", "") // remove spaces
             .let { string -> // parse weeks and days
                 var str = string

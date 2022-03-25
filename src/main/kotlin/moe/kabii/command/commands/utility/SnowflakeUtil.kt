@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.DateValidation
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
@@ -62,7 +63,7 @@ object SnowflakeUtil : CommandContainer {
                 targetFile.writeText(output.toString())
                 val url = NettyFileServer.ids(targetId)
                 warning?.delete()?.subscribe()
-                embed("[List of IDs for ${target.name}]($url)").awaitSingle()
+                reply(Embeds.fbk("[List of IDs for ${target.name}]($url)")).awaitSingle()
             }
         }
     }
@@ -79,7 +80,7 @@ object SnowflakeUtil : CommandContainer {
                 }
                 val id = args[0].toLongOrNull()
                 if(id == null) {
-                    error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.").awaitSingle()
+                    reply(Embeds.error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.")).awaitSingle()
                     return@discord
                 }
                 val snowflake = SnowflakeParser.of(id)
@@ -90,7 +91,7 @@ object SnowflakeUtil : CommandContainer {
                 }.orEmpty()
 
                 val formatted = TimestampFormat.LONG_DATE_TIME.format(snowflake.instant)
-                embed("${validation}The snowflake **$id** would represent a Discord object created: **$formatted**").awaitSingle()
+                reply(Embeds.fbk("${validation}The snowflake **$id** would represent a Discord object created: **$formatted**")).awaitSingle()
             }
         }
     }
@@ -106,10 +107,10 @@ object SnowflakeUtil : CommandContainer {
                 }
                 val targetUser = Search.user(this, noCmd, target)
                 if(targetUser == null) {
-                    error("Unable to find user **$noCmd**.")
+                    reply(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
                     return@discord
                 }
-                embed(targetUser, "ID: ${targetUser.id.asString()}").awaitSingle()
+                reply(Embeds.fbk("ID: ${targetUser.id.asString()}", targetUser)).awaitSingle()
             }
         }
     }

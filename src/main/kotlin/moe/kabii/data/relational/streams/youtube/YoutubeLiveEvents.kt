@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
@@ -53,7 +53,8 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
     }
 }
 
-object YoutubeNotifications : IntIdTable() {
+object YoutubeNotifications : IdTable<Int>() {
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val targetID = reference("assoc_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE)
     val videoID = reference("yt_video_id", YoutubeVideos, ReferenceOption.CASCADE)
     val message = reference("message_id", MessageHistory.Messages, ReferenceOption.SET_NULL).nullable()

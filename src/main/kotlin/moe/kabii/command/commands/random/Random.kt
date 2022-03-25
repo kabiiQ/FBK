@@ -1,8 +1,10 @@
 package moe.kabii.command.commands.random
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.mapToNotNull
 import moe.kabii.util.extensions.orNull
 
@@ -35,11 +37,11 @@ object Random : CommandContainer {
                         val desc = rolls
                             .mapIndexed { index, roll -> "Roll #${index+1}: $roll\n" }
                             .joinToString("")
-                        embed {
-                            setTitle("Rolling ${diceCount}x $diceSides-sided dice:")
-                            setDescription(desc)
-                            setFooter("Total value: ${rolls.sum()}", null)
-                        }.awaitSingle()
+                        reply(
+                            Embeds.fbk(desc)
+                                .withFooter(EmbedCreateFields.Footer.of("Total value: ${rolls.sum()}", null))
+                                .withTitle("Rolling ${diceCount}x $diceSides-sided dice:")
+                        ).awaitSingle()
                         return@discord
                     }
                 }
@@ -48,10 +50,9 @@ object Random : CommandContainer {
                 val (range, result) = roll(
                     args
                 )
-                embed {
-                    setTitle("Roll: $range")
-                    setDescription("Result: $result")
-                }.awaitSingle()
+                reply(
+                    Embeds.fbk("Result: $result").withTitle("Roll: $range")
+                ).awaitSingle()
             }
         }
     }
@@ -70,10 +71,10 @@ object Random : CommandContainer {
                         .collectList()
                         .awaitSingle()
                 } else args
-                embed {
-                    val choice = options.random()
-                    setDescription("Result: $choice")
-                }.subscribe()
+                val choice = options.random()
+                reply(
+                    Embeds.fbk("Result: $choice")
+                ).awaitSingle()
             }
         }
     }
@@ -106,7 +107,7 @@ object Random : CommandContainer {
 
         init {
             discord {
-                embed(magicball.random()).awaitSingle()
+                reply(Embeds.fbk(magicball.random())).awaitSingle()
             }
         }
     }
@@ -126,9 +127,7 @@ object Random : CommandContainer {
 
         init {
             discord {
-                embed {
-                    setDescription(flip(author.username))
-                }.awaitSingle()
+                reply(Embeds.fbk(flip(author.username))).awaitSingle()
             }
         }
     }

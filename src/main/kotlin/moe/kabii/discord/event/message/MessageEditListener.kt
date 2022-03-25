@@ -2,6 +2,7 @@ package moe.kabii.discord.event.message
 
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.message.MessageUpdateEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -9,7 +10,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -54,13 +55,12 @@ object MessageEditListener : EventListener<MessageUpdateEvent>(MessageUpdateEven
                 .getChannelById(targetLog.channelID.snowflake)
                 .ofType(GuildMessageChannel::class.java)
                 .flatMap { logChan ->
-                    logChan.createEmbed { spec ->
-                        fbkColor(spec)
-                        spec.setAuthor("${author.userAddress()} edited a message in #${logChan.name}:", jumpLink, author.avatarUrl)
-                        spec.setDescription("$oldContent\n\nNew message: $new")
-                        spec.setFooter("User ID: ${author.id.asString()} - Message ID: ${event.messageId.asString()} - Original message timestamp", null)
-                        spec.setTimestamp(event.messageId.timestamp)
-                    }
+                    logChan.createMessage(
+                        Embeds.fbk("$oldContent\n\nNew message: $new")
+                            .withAuthor(EmbedCreateFields.Author.of("${author.userAddress()} edited a message in #${logChan.name}:", jumpLink, author.avatarUrl))
+                            .withFooter(EmbedCreateFields.Footer.of("User ID: ${author.id.asString()} - Message ID: ${event.messageId.asString()} - Original message timestamp", null))
+                            .withTimestamp(event.messageId.timestamp)
+                    )
                 }
 
             try {

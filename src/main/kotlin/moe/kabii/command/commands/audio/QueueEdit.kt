@@ -8,6 +8,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.withEach
 import moe.kabii.util.formatting.NumberUtil
@@ -22,13 +23,13 @@ object QueueEdit : AudioCommandContainer {
                 channelVerify(Permission.MANAGE_MESSAGES)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(audio.queue.isEmpty()) {
-                    error("There are no tracks currently in queue to shuffle.").awaitSingle()
+                    reply(Embeds.error("There are no tracks currently in queue to shuffle.")).awaitSingle()
                     return@discord
                 }
                 audio.editQueue {
                     shuffle()
                 }
-                embed("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}").awaitSingle()
+                reply(Embeds.fbk("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}")).awaitSingle()
             }
         }
     }
@@ -57,7 +58,7 @@ object QueueEdit : AudioCommandContainer {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val queue = audio.queue
                 if (queue.isEmpty()) {
-                    embed("The queue is currently empty.").awaitSingle() // technically not necessary
+                    reply(Embeds.fbk("The queue is currently empty.")).awaitSingle() // technically not necessary
                     return@discord
                 }
                 if (args.isEmpty()) {
@@ -112,7 +113,7 @@ object QueueEdit : AudioCommandContainer {
                     if (notRemoved.isNotEmpty()) {
                         outputMessage.append("You can not skip tracks: ${formatRanges(notRemoved)}")
                     }
-                    embed(author, outputMessage.toString()).awaitSingle()
+                    reply(Embeds.fbk(outputMessage.toString())).awaitSingle()
                 }
             }
         }

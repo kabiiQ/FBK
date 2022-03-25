@@ -7,8 +7,11 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageCreateMono
+import discord4j.core.spec.MessageCreateSpec
+import discord4j.rest.util.AllowedMentions
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
@@ -19,11 +22,12 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.conversation.*
 import moe.kabii.discord.event.message.MessageHandler
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
-import moe.kabii.discord.util.specColor
+import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.EmojiCharacters
-import moe.kabii.util.extensions.*
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.tryBlock
+import moe.kabii.util.extensions.withUser
 import java.time.Duration
 import kotlin.reflect.KProperty1
 
@@ -89,47 +93,21 @@ data class DiscordParameters (
         } // else this is pm, allow
     }
 
-    fun error(block: EmbedSuspension) = chan.createEmbed { embed ->
-        errorColor(embed)
-        runBlocking {
-            block(embed)
-        }
-    }
+    // create a message that mentions the command-runner
+    fun reply(vararg embeds: EmbedCreateSpec, withMention: Boolean = false) = chan
+        .createMessage(*embeds)
+        .run(::withReference)
+        .run { if(!withMention) withAllowedMentions(AllowedMentions.builder().repliedUser(false).build()) else this }
 
-    fun error(author: User, block: EmbedSuspension) = this.error {
-        block(this)
-        setAuthor(author.userAddress(), null, author.avatarUrl)
-    }
-
-    fun embed(block: EmbedSuspension) = chan.createEmbed { embed ->
-        fbkColor(embed)
-        runBlocking {
-            block(embed)
-        }
-    }
-
-    fun embed(author: User, block: EmbedSuspension) = this.embed {
-        block(this)
-        setAuthor(author.userAddress(), null, author.avatarUrl)
-    }
-
-    fun embedBlock(block: EmbedBlock) = chan.createEmbed { embed ->
-        fbkColor(embed)
-        block(embed)
-    }
-
-    fun usage(commandError: String, linkText: String?) = chan.createEmbed { embed ->
-        specColor(embed)
+    // Create a 'usage info' message
+    fun usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {
         val link = if(linkText != null) {
             if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
         } else ""
-        embed.setDescription("$commandError$link")
+        return chan.createMessage(Embeds.other("$commandError$link", MessageColors.spec).withUser(user))
     }
 
-    fun error(error: String) = error { setDescription(error) }
-    fun error(user: User, error: String) = error(user) { setDescription(error) }
-    fun embed(info: String) = embed { setDescription(info) }
-    fun embed(user: User, info: String) = embed(user) { setDescription(info) }
+    private fun withReference(spec: MessageCreateMono) = spec.withMessageReference(event.message.id)
 
     suspend fun getMessage(limitDifferentUser: Long?=null, timeout: Long? = 40000) = suspendCancellableCoroutine<Message?> {
         var (user, channel) = Criteria defaultFor this

@@ -4,7 +4,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
+import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select

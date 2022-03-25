@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.QueueTracks
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.URLUtil
@@ -22,7 +23,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     get() {
         // no match found. error on URL messages are they are clearly not intended to be searched.
         if (Try { URL(extract.url) }.result.ok) {
-            origin.error("No playable audio source found for URL **${extract.url}**").block()
+            origin.reply(Embeds.error("No playable audio source found for URL **${extract.url}**")).block()
             return null
         }
         // try to load youtube track from text search
@@ -56,7 +57,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             if(silent) return // don't send any messages for this track
             if(!add) {
                 val maxTracksUser = origin.config.musicBot.maxTracksUser
-                origin.error(origin.author, "Your track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.").block()
+                origin.reply(Embeds.error("Your track was not added to queue because you reached the $maxTracksUser track queue limit set in ${origin.target.name}.")).block()
                 return
             }
 
@@ -70,10 +71,11 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
 
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
-            origin.embed {
-                if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
-                setDescription("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
-            }.doOnNext { queued -> data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
+            origin.reply(
+                Embeds.fbk("Added **${QueueTracks.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
+                    .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
+            ).doOnNext { queued ->
+                data.associatedMessages.add(QueueData.BotMessage.TrackQueued(queued.channelId, queued.id))
             }.block()
         }
     }
@@ -98,7 +100,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         }
         val location = if(position != null) "" else " end of the "
         val skipWarn = if(skipped == 0) "" else " $skipped tracks were not queued because you reached the $maxTracksUser track queue limit currently set in ${origin.target.name}"
-        origin.embed("${tracks.size - skipped} tracks were added to the $location queue.$skipWarn").block()
+        origin.reply(Embeds.fbk("${tracks.size - skipped} tracks were added to the $location queue.$skipWarn")).block()
     }
 
     override fun loadFailed(exception: FriendlyException) {
@@ -109,7 +111,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         }
         LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
         exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)
-        origin.error("Unable to load audio track$error").block()
+        origin.reply(Embeds.error("Unable to load audio track$error")).block()
     }
 }
 
@@ -124,7 +126,7 @@ open class SingleTrackLoader(origin: DiscordParameters, private val position: In
 class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : SingleTrackLoader(origin, position, extract) {
     // after a youtube search is attempted, load a single track if it succeeded. if it failed, we don't want to search again.
     override fun noMatches() {
-        origin.error("No YouTube video found matching **${extract.url}**.").block()
+        origin.reply(Embeds.error("No YouTube video found matching **${extract.url}**.")).block()
     }
 
     override fun playlistLoaded(playlist: AudioPlaylist) = trackLoadedModifiers(playlist.tracks.first(), warnPlaylist = false)
@@ -132,7 +134,7 @@ class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract:
 
 class PlaylistTrackLoader(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : BaseLoader(origin, position, extract) {
     override fun noMatches() {
-        origin.error("${extract.url} is not a valid playlist. If you want to search for a YouTube track make sure to use the **play** command.").block()
+        origin.reply(Embeds.error("${extract.url} is not a valid playlist. If you want to search for a YouTube track make sure to use the **play** command.")).block()
     }
 }
 
@@ -166,6 +168,6 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
 
 class ForcePlayFallbackLoader(origin: DiscordParameters, extract: ExtractedQuery) : ForcePlayTrackLoader(origin, extract) {
     override fun noMatches() {
-        origin.error("No YouTube video found matching **${extract.url}**.").block()
+        origin.reply(Embeds.error("No YouTube video found matching **${extract.url}**.")).block()
     }
 }

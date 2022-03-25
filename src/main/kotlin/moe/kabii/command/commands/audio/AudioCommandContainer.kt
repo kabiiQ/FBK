@@ -15,6 +15,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.BotUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.extensions.filterNot
 import moe.kabii.util.extensions.tryAwait
@@ -72,11 +73,11 @@ internal interface AudioCommandContainer : CommandContainer {
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            origin.error("There is no track currently playing.").awaitSingle()
+            origin.reply(Embeds.error("There is no track currently playing.")).awaitSingle()
             return
         }
         if(!canFSkip(origin, track)) {
-            origin.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.").awaitSingle()
+            origin.reply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.")).awaitSingle()
             return
         }
         val data = track.userData as QueueData

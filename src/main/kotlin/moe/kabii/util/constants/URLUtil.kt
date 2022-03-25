@@ -1,7 +1,7 @@
 package moe.kabii.util.constants
 
 import moe.kabii.data.relational.anime.ListSite
-import moe.kabii.discord.trackers.anime.MediaType
+import moe.kabii.trackers.anime.MediaType
 
 object URLUtil {
     const val colorPicker = "https://htmlcolorcodes.com/color-picker/"
@@ -51,6 +51,5 @@ object URLUtil {
     object Twitter {
         fun feed(id: String) = "https://twitter.com/i/user/$id"
         fun tweet(id: String) = "https://twitter.com/FBK/status/$id"
-        fun space(id: String) = "https://twitter.com/i/spaces/$id"
     }
 }

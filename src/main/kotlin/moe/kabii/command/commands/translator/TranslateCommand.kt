@@ -1,10 +1,12 @@
 package moe.kabii.command.commands.translator
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
-import moe.kabii.discord.translation.Translator
+import moe.kabii.discord.util.Embeds
+import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.createJumpLink
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
@@ -50,17 +52,17 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
             } catch(e: Exception) {
                 LOG.info("Translation request failed: ${e.message}")
                 LOG.debug(e.stackTraceString)
-                error("Text translation failed.").awaitSingle()
+                reply(Embeds.error("Text translation failed.")).awaitSingle()
                 return@discord
             }
             val confidence = if(translation.confidence != null && translation.confidence < .8) ", ${(translation.confidence * 100).toInt()}%" else ""
             val detected = if(translation.detected) " (detected$confidence)" else ""
 
-            embed {
-                setAuthor("Translation for ${author.userAddress()}", event.message.createJumpLink(), author.avatarUrl)
-                setDescription(translation.translatedText)
-                setFooter("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null)
-            }.awaitSingle()
+            reply(
+                Embeds.fbk(translation.translatedText)
+                    .withAuthor(EmbedCreateFields.Author.of("Translation for ${author.userAddress()}", event.message.createJumpLink(), author.avatarUrl))
+                    .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null))
+            ).awaitSingle()
         }
     }
 }

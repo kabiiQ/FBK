@@ -8,12 +8,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.runBlocking
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.snowflake
@@ -47,12 +47,11 @@ object AudioEventHandler : AudioEventAdapter() {
                     .hasElements().tryBlock().orNull()
                 if(userPresent == false) {  // abandon this if it errors, but the bot should definitely be in a voice channel if this is reached
                     originChan.flatMap { chan ->
-                        chan.createEmbed { embed ->
-                            val title = AudioCommandContainer.trackString(track, includeAuthor = false)
-                            val author = data.author_name
-                            fbkColor(embed)
-                            embed.setDescription("Skipping **$title** because **$author** left the channel.")
-                        }
+                        val title = AudioCommandContainer.trackString(track, includeAuthor = false)
+                        val author = data.author_name
+                        chan.createMessage(
+                            Embeds.fbk("Skipping **$title** because **$author** left the channel.")
+                        )
                     }.subscribe()
                     track.stop()
                     return
@@ -64,14 +63,13 @@ object AudioEventHandler : AudioEventAdapter() {
             originChan
                 .flatMap { chan ->
                     val paused = if(player.isPaused) "\n\n**The bot is currently paused.**" else ""
-                    chan.createEmbed { embed ->
-                        val title = AudioCommandContainer.trackString(track)
-                        fbkColor(embed)
-                        val now = if(track.position > 0) "Resuming" else "Now playing"
-                        val looping = if(data.audio.looping) "\n\n**The queue is currently configured to loop tracks.**" else ""
-                        embed.setDescription("$now **$title**. $paused$looping")
-                        if(track is YoutubeAudioTrack) embed.setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
-                    }
+                    val title = AudioCommandContainer.trackString(track)
+                    val now = if(track.position > 0) "Resuming" else "Now playing"
+                    val looping = if(data.audio.looping) "\n\n**The queue is currently configured to loop tracks.**" else ""
+                    chan.createMessage(
+                        Embeds.fbk("$now **$title**. $paused$looping")
+                            .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
+                    )
                 }.map { np ->
                     QueueData.BotMessage.NPEmbed(np.channelId, np.id)
                 }.subscribe { np -> data.associatedMessages.add(np) }
@@ -79,10 +77,7 @@ object AudioEventHandler : AudioEventAdapter() {
             data.apply = false
             val filters = data.audioFilters.asString()
             originChan.flatMap { chan ->
-                chan.createEmbed { embed ->
-                    fbkColor(embed)
-                    embed.setDescription("Applying filters:\n\n$filters")
-                }
+                chan.createMessage(Embeds.fbk("Applying filters:\n\n$filters"))
             }.subscribe()
         }
 
@@ -169,13 +164,15 @@ object AudioEventHandler : AudioEventAdapter() {
         data.discord.getChannelById(data.originChannel)
             .ofType(GuildMessageChannel::class.java)
             .flatMap { chan ->
-                chan.createEmbed { embed ->
-                    val title = AudioCommandContainer.trackString(track)
-                    errorColor(embed)
-                    embed.setTitle("An error occured during audio playback")
-                    embed.addField("Track", title, false)
-                    embed.addField("Error", exception.message ?: "broken", false)
-                }
+                val title = AudioCommandContainer.trackString(track)
+                chan.createMessage(
+                    Embeds.error()
+                        .withTitle("An error occured during audio playback")
+                        .withFields(mutableListOf(
+                            EmbedCreateFields.Field.of("Track", title, false),
+                            EmbedCreateFields.Field.of("Error", exception.message ?: "broken", false)
+                        ))
+                )
             }.subscribe()
     }
 

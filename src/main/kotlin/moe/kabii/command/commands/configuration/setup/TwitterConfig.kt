@@ -7,7 +7,8 @@ import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
-import moe.kabii.discord.trackers.twitter.watcher.TwitterFeedSubscriber
+import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 
 object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
@@ -31,10 +32,6 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
             listOf("reply", "replies", "directreply"),
             TwitterSettings::displayReplies
         ),
-        BooleanElement("Use the `setmention` config in this channel",
-            listOf("pingRoles", "pings", "ping", "mentions", "mention", "mentionroles"),
-            TwitterSettings::mentionRoles
-        ),
         BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
             listOf("mediaonly", "onlymedia", "limittext"),
             TwitterSettings::mediaOnly
@@ -55,7 +52,7 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
 
             val features = features()
             if(!features.twitterTargetChannel) {
-                error("**#${guildChan.name}** does not have Twitter tracking enabled.").awaitSingle()
+                reply(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
                 return@discord
             }
             val twitter = features.twitterSettings

@@ -2,10 +2,12 @@ package moe.kabii.command.commands.audio
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import discord4j.core.`object`.entity.User
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.s
@@ -20,7 +22,7 @@ object QueueInfo : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    embed("There are no tracks currently queued.").awaitSingle()
+                    reply(Embeds.fbk("There are no tracks currently queued.")).awaitSingle()
                     return@discord
                 }
                 // list 10 tracks - take optional starting position for queue track #
@@ -41,7 +43,7 @@ object QueueInfo : AudioCommandContainer {
                         val index = queueIndex + starting + 1
                         "$index. ${trackString(queueTrack)}"
                     }.joinToString("\n")
-                    val list = StringUtils.abbreviate(listLong, MagicNumbers.Embed.DESC)
+                    val list = StringUtils.abbreviate(listLong, MagicNumbers.Embed.NORM_DESC)
                     "In queue:\n$list"
                 }
 
@@ -52,12 +54,13 @@ object QueueInfo : AudioCommandContainer {
                 val looping = if(audio.looping) " \nThe queue is currently configured to loop tracks. " else ""
                 val avatarUrl = event.client.self.map(User::getAvatarUrl).awaitSingle()
 
-                embed {
-                    if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
-                    setAuthor("Current queue for ${target.name}", null, avatarUrl)
-                    setDescription("$np\n\n$queueList$looping")
-                    setFooter("$size track${size.s()} ($duration remaining) $paused", null)
-                }.awaitSingle()
+                reply(
+                    Embeds.fbk()
+                        .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
+                        .withAuthor(EmbedCreateFields.Author.of("Current queue for ${target.name}", null, avatarUrl))
+                        .withDescription("$np\n\n$queueList$looping")
+                        .withFooter(EmbedCreateFields.Footer.of("$size track${size.s()} ($duration remaining) $paused", null))
+                ).awaitSingle()
             }
         }
     }
@@ -70,19 +73,19 @@ object QueueInfo : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    error("There is no track currently playing.").awaitSingle()
+                    reply(Embeds.error("There is no track currently playing.")).awaitSingle()
                     return@discord
                 }
                 val track = audio.player.playingTrack
                 if(track == null) {
-                    embed("Currently loading the next track!")
+                    reply(Embeds.fbk("Currently loading the next track!"))
                 } else {
                     val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
                     val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
-                    embed {
-                        if(track is YoutubeAudioTrack) setThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier))
-                        setDescription("Currently playing track **${trackString(track)}**.$paused$looping")
-                    }
+                    reply(
+                        Embeds.fbk("Currently playing track **${trackString(track)}**.$paused$looping")
+                            .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
+                    )
                 }.awaitSingle()
             }
         }

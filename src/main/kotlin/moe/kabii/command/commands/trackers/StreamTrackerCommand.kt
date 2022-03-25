@@ -8,12 +8,13 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.trackers.StreamingTarget
-import moe.kabii.discord.trackers.TargetArguments
-import moe.kabii.discord.trackers.YoutubeTarget
-import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.YoutubeTarget
+import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -39,7 +40,7 @@ object StreamTrackerCommand : TrackerCommand {
                     }
                     is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
-                origin.error(error).awaitSingle()
+                origin.reply(Embeds.error(error)).awaitSingle()
                 return
             }
         }
@@ -52,7 +53,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // already tracked. otherwise we'll create the target
         if(dbTarget != null) {
-            origin.error("**${streamInfo.displayName}** is already tracked.").awaitSingle()
+            origin.reply(Embeds.error("**${streamInfo.displayName}** is already tracked.")).awaitSingle()
             return
         }
 
@@ -67,7 +68,7 @@ object StreamTrackerCommand : TrackerCommand {
             }
         }
 
-        origin.embed("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!").awaitSingle()
+        origin.reply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
 
         // side-effects for prompt data maintenance
         try {
@@ -90,7 +91,7 @@ object StreamTrackerCommand : TrackerCommand {
         val streamInfo = streamTarget.getChannel(target.identifier).orNull()
 
         if(streamInfo == null) {
-            origin.error("Unable to find **${streamTarget.full}** stream **${target.identifier}**.").awaitSingle()
+            origin.reply(Embeds.error("Unable to find **${streamTarget.full}** stream **${target.identifier}**.")).awaitSingle()
             return
         }
         val streamId = streamInfo.accountId
@@ -99,7 +100,7 @@ object StreamTrackerCommand : TrackerCommand {
             // check db if stream is tracked in this location
             val dbTarget = TrackedStreams.Target.getForChannel(origin.chan.id, site, streamId)
             if(dbTarget == null) {
-                origin.error("**${streamInfo.displayName}** is not currently tracked in this channel.").awaitSingle()
+                origin.reply(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
                 return@propagateTransaction
             }
             // user can untrack stream if they tracked it or are channel moderator
@@ -109,12 +110,12 @@ object StreamTrackerCommand : TrackerCommand {
                         || origin.author.id.asLong() == dbTarget.tracker.userID
             ) {
                 dbTarget.delete()
-                origin.embed("No longer tracking **${streamInfo.displayName}**.").awaitSingle()
+                origin.reply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
             } else {
                 val tracker = origin.chan.client
                     .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
                     ?.username ?: "invalid-user"
-                origin.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).").awaitSingle()
+                origin.reply(Embeds.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).")).awaitSingle()
             }
         }
     }

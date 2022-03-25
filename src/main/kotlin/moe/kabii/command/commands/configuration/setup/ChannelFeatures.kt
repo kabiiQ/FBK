@@ -1,11 +1,13 @@
 package moe.kabii.command.commands.configuration.setup
 
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.snowflake
@@ -56,7 +58,7 @@ object ChannelFeatures : CommandContainer {
                     config.save()
 
                     if(notifs.isNotEmpty()) {
-                        embed(notifs.joinToString("\n\n")).awaitSingle()
+                        reply(Embeds.fbk(notifs.joinToString("\n\n"))).awaitSingle()
                     }
                 }
             }
@@ -90,21 +92,23 @@ object ChannelFeatures : CommandContainer {
                     }
 
                 if(channels.isEmpty()) {
-                    embed("There are no channel-specific features enabled in **${target.name}**.").awaitSingle()
+                    reply(Embeds.fbk("There are no channel-specific features enabled in **${target.name}**.")).awaitSingle()
                     return@discord
                 }
-                embed {
-                    setTitle("Channel-specific features in ${target.name}:")
-                    channels.forEach { (channel, features) ->
-                        val codes = StringBuilder()
-                        with(features) {
-                            if(logChannel) codes.append("Event Log Channel (log)\n")
-                            if(musicChannel) codes.append("Music Commands (music)\n")
-                            if(tempChannelCreation) codes.append("Temporary VC Commands (temp)\n")
-                        }
-                        addField("#${channel.name}", codes.toString().trim(), true)
+                val fields = channels.map { (channel, features) ->
+                    val codes = StringBuilder()
+                    with(features) {
+                        if(logChannel) codes.append("Event Log Channel (log)\n")
+                        if(musicChannel) codes.append("Music Commands (music)\n")
+                        if(tempChannelCreation) codes.append("Temporary VC Commands (temp)\n")
                     }
-                }.awaitSingle()
+                    EmbedCreateFields.Field.of("#${channel.name}", codes.toString().trim(), true)
+                }
+                reply(
+                    Embeds.fbk()
+                        .withTitle("Channel-specific features in ${target.name}:")
+                        .withFields(fields)
+                ).awaitSingle()
             }
         }
     }

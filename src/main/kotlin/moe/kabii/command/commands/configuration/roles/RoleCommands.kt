@@ -8,6 +8,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -55,12 +56,12 @@ object SelfRoleCommands : CommandContainer {
                 }
                 val safe = PermissionUtil.isSafeRole(targetRole, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    error("You can not assign the role **${targetRole.name}**.").awaitSingle()
+                    reply(Embeds.error("You can not assign the role **${targetRole.name}**.")).awaitSingle()
                     return@discord
                 }
                 commands[commandName.lowercase()] = targetRole.id.asLong()
                 config.save()
-                embed("Added command **$commandName** assigning role **${targetRole.name}**.").awaitSingle()
+                reply(Embeds.fbk("Added command **$commandName** assigning role **${targetRole.name}**.")).awaitSingle()
             }
         }
     }
@@ -79,12 +80,12 @@ object SelfRoleCommands : CommandContainer {
                 val commandName = if(args[0].startsWith(config.prefix)) args[0].drop(config.prefix.length) else args[0]
                 val existing = commands[commandName.lowercase()]
                 if(existing == null) {
-                    error("**${commandName}** is not currently a custom role command.").awaitSingle()
+                    reply(Embeds.error("**${commandName}** is not currently a custom role command.")).awaitSingle()
                     return@discord
                 }
                 commands.remove(commandName.lowercase())
                 config.save()
-                embed("Removed role assignment command **$commandName**.").awaitSingle()
+                reply(Embeds.fbk("Removed role assignment command **$commandName**.")).awaitSingle()
             }
         }
     }
@@ -101,7 +102,7 @@ object SelfRoleCommands : CommandContainer {
                 }
 
                 if(commands.isEmpty()) {
-                    embed("There are no role commands for **${target.name}**.").awaitSingle()
+                    reply(Embeds.fbk("There are no role commands for **${target.name}**.")).awaitSingle()
                     return@discord
                 }
 

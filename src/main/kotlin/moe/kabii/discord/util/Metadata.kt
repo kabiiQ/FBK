@@ -27,6 +27,8 @@ class Metadata private constructor(
             val currentFlag = if(!current.flag.isNullOrBlank()) "-${current.flag}" else ""
             "Release ${current.major}.${current.minor}$currentFlag build #${current.build}"
         }
+
+        val host = Keys.config[Keys.Dev.host]
     }
 }
 

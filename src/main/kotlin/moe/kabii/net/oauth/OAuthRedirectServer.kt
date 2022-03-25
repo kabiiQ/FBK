@@ -14,10 +14,10 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.net.oauth.discord.DiscordAuthorization
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.FormBody
-import okhttp3.Request
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -96,7 +96,7 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                 call.respondFile(webResponse)
                 // exchange access code for user token
                 apiScope.launch {
-                    val body = FormBody.Builder()
+                    val formBody = FormBody.Builder()
                         .add("grant_type", "authorization_code")
                         .add("code", code)
                         .add("redirect_uri", address)
@@ -104,18 +104,17 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                         .add("client_secret", DiscordAuthorization.discordClientSecret)
                         .build()
 
-                    val request = Request.Builder()
+                    val request = newRequestBuilder()
                         .url(tokenUrl)
-                        .header("User-Agent", "srkmfbk/1.0")
-                        .post(body)
+                        .post(formBody)
                         .build()
                     val response = OkHTTP.newCall(request).execute()
                     response.use { rs ->
                         LOG.debug("Requesting OAuth $service token: ${rs.code}")
                         if(response.isSuccessful) {
                             try {
-                                val response = rs.body!!.string()
-                                val token = OAuthTokenResponse.fromJson(response)!!
+                                val body = rs.body!!.string()
+                                val token = OAuthTokenResponse.fromJson(body)!!
                                 process.token(token.token)
                                 process.tokenCallback(process)
                                 oauthStates.remove(state)

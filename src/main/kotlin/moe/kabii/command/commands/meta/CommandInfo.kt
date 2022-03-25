@@ -1,7 +1,9 @@
 package moe.kabii.command.commands.meta
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SourcePaths
 
@@ -11,13 +13,13 @@ object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
     init {
         discord {
             if(args.isEmpty()) {
-                embed("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **help <command name>**").awaitSingle()
+                reply(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **help <command name>**")).awaitSingle()
                 return@discord
             }
             // try to match command
             val match = Search.commandByAlias(handler, args[0], bypassExempt = true)
             if(match == null) {
-                error("Can't find the command named **${args[0]}**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).").awaitSingle()
+                reply(Embeds.error("Can't find the command named **${args[0]}**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()
                 return@discord
             }
 
@@ -25,24 +27,27 @@ object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
             val source = pack.replace(".", "/")
             val sourcePath = "${SourcePaths.sourceRoot}/$source"
 
-            embed {
-                setTitle("Command information: ${match.baseName}")
-                val wikiPage = match.getHelpURL()
-                if(wikiPage != null) {
-                    setDescription("[Command Wiki Page]($wikiPage)")
-                } else {
-                    setDescription("Command wiki page not found.")
-                }
-                addField("All Command Aliases:", match.aliases.joinToString(", "), false)
-                if(!isPM) {
-                    val filter = config.commandFilter
-                    val list = if(filter.blacklisted) "blacklist" else "whitelist"
-                    val enabled = filter.isCommandEnabled(match).toString()
-                    val exempt = if(match.commandExempt) " (exempt)" else ""
-                    addField("Command enabled in server (using $list):", "$enabled$exempt", false)
-                }
-                addField("Location in Source Code:", "[$pack]($sourcePath)", false)
-            }.awaitSingle()
+            val fields = mutableListOf<EmbedCreateFields.Field>()
+            fields.add(EmbedCreateFields.Field.of("All Command Aliases:", match.aliases.joinToString(", "), false))
+            if(!isPM) {
+                val filter = config.commandFilter
+                val list = if(filter.blacklisted) "blacklist" else "whitelist"
+                val enabled = filter.isCommandEnabled(match).toString()
+                val exempt = if(match.commandExempt) " (exempt)" else ""
+                fields.add(EmbedCreateFields.Field.of("Command enabled in server (using $list):", "$enabled$exempt", false))
+            }
+            fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
+
+            reply(
+                Embeds.fbk()
+                    .withTitle("Command information: ${match.baseName}")
+                    .run {
+                        val wikiPage = match.getHelpURL()
+                        if(wikiPage != null) withDescription("[Command Wiki Page]($wikiPage)")
+                        else withDescription("Command wiki page not found.")
+                    }
+                    .withFields(fields)
+            )
         }
     }
 }

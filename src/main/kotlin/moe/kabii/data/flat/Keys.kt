@@ -89,6 +89,9 @@ object Keys : ConfigSpec("") {
         val portBlock by required<Int>("port_block_start")
         val stateKey by required<String>("oauth_signing_key")
     }
+    object Dev : ConfigSpec() {
+        val host by required<Boolean>("host_internal_servers")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {

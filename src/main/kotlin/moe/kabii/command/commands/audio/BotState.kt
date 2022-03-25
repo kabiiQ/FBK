@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.tryAwait
 
 object BotState : AudioCommandContainer {
@@ -30,7 +31,7 @@ object BotState : AudioCommandContainer {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    error(voice.error).awaitSingle()
+                    reply(Embeds.error(voice.error)).awaitSingle()
                 }
             }
         }

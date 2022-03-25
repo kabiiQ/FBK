@@ -1,18 +1,19 @@
 package moe.kabii.data.relational.anime
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.discord.trackers.AniListTarget
-import moe.kabii.discord.trackers.AnimeTarget
-import moe.kabii.discord.trackers.KitsuTarget
-import moe.kabii.discord.trackers.MALTarget
-import moe.kabii.discord.trackers.anime.MediaListParser
-import moe.kabii.discord.trackers.anime.anilist.AniListParser
-import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
-import moe.kabii.discord.trackers.anime.mal.MALParser
+import moe.kabii.trackers.AniListTarget
+import moe.kabii.trackers.AnimeTarget
+import moe.kabii.trackers.KitsuTarget
+import moe.kabii.trackers.MALTarget
+import moe.kabii.trackers.anime.MediaListParser
+import moe.kabii.trackers.anime.anilist.AniListParser
+import moe.kabii.trackers.anime.kitsu.KitsuParser
+import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -46,7 +47,8 @@ object TrackedMediaLists {
         companion object : IntEntityClass<MediaList>(MediaLists)
     }
 
-    object ListTargets : IntIdTable() {
+    object ListTargets : IdTable<Int>() {
+        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val mediaList = reference("assoc_media_list", MediaLists, ReferenceOption.CASCADE)
         val discord = reference("target_discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val userTracked = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)

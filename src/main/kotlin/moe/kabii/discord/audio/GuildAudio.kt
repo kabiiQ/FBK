@@ -40,7 +40,7 @@ data class GuildAudio(
     private val queueMutex = Mutex()
 
     val playing: Boolean
-        get() = player.playingTrack != null || queue.isNotEmpty()
+        get() = (player.playingTrack != null && player.playingTrack.position > 0L) || queue.isNotEmpty()
 
     // queue with the track currently being played at the front.
     val playlist: List<AudioTrack>
@@ -80,9 +80,7 @@ data class GuildAudio(
      suspend fun joinChannel(channel: VoiceChannel): Result<VoiceConnection, Throwable> {
          discord.mutex.withLock {
              val config = GuildConfigurations.getOrCreateGuild(channel.guildId.asLong())
-             val join = channel.join { spec ->
-                 spec.setProvider(this.provider)
-             }.tryAwait()
+             val join = channel.join().withProvider(this.provider).tryAwait()
              if (join is Ok) {
                  discord.connection = join.value
                  config.musicBot.lastChannel = channel.id.asLong()

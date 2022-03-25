@@ -15,6 +15,7 @@ import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.discord.invite.InviteWatcher
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
@@ -32,10 +33,7 @@ object JoinLogger {
         val memberId = member.id.asLong()
         val guildId = member.guildId.asLong()
         transaction {
-            val logUser = UserLog.GuildRelationship.getOrInsert(memberId, guildId)
-            if(!logUser.currentMember) {
-                logUser.currentMember = true
-            }
+            UserLog.GuildRelationship.getOrInsert(memberId, guildId)
         }
 
         var errorStr = ""
@@ -96,13 +94,10 @@ object JoinLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
-                    logChan.createEmbed { spec ->
-                        spec.setDescription("$formatted$errorStr")
-                        spec.setColor(Color.of(6750056))
-                        if (targetLog.joinFormat.contains("&avatar")) {
-                            spec.setImage(member.avatarUrl)
-                        }
-                    }.awaitSingle()
+                    logChan.createMessage(
+                        Embeds.other("$formatted$errorStr", Color.of(6750056))
+                            .run { if(targetLog.joinFormat.contains("&avatar")) withImage(member.avatarUrl) else this }
+                    ).awaitSingle()
 
                 } catch(ce: ClientException) {
                     val err = ce.status.code()

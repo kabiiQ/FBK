@@ -7,6 +7,7 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
+import moe.kabii.discord.util.Embeds
 
 object PlaybackState : AudioCommandContainer {
     object PausePlayback : Command("pause", "pausequeue") {
@@ -17,7 +18,7 @@ object PlaybackState : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.isPaused = true
-                embed("Audio playback is now paused. You can resume playback with the **resume** command.").awaitSingle()
+                reply(Embeds.fbk("Audio playback is now paused. You can resume playback with the **resume** command.")).awaitSingle()
             }
         }
     }
@@ -31,7 +32,7 @@ object PlaybackState : AudioCommandContainer {
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 audio.player.volume
                 audio.player.isPaused = false
-                embed("Audio playback resumed.").awaitSingle()
+                reply(Embeds.fbk("Audio playback resumed.")).awaitSingle()
             }
         }
     }
@@ -46,7 +47,7 @@ object PlaybackState : AudioCommandContainer {
                 val track = audio.player.playingTrack
                 if(track == null) {
                     val default = config.musicBot.startingVolume
-                    error("There is no track currently playing. New tracks will start at **$default%** volume.").awaitSingle()
+                    reply(Embeds.error("There is no track currently playing. New tracks will start at **$default%** volume.")).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -54,7 +55,7 @@ object PlaybackState : AudioCommandContainer {
                     return@discord
                 }
                 if(!canFSkip(this, track)) {
-                    error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.").awaitSingle()
+                    reply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.")).awaitSingle()
                     return@discord
                 }
                 val data = track.userData as QueueData
@@ -62,12 +63,12 @@ object PlaybackState : AudioCommandContainer {
                 val maximum = config.musicBot.volumeLimit
                 when {
                     targetVolume == null || targetVolume < 1 -> {
-                        error("**${args[0]}** is not a valid volume value.").awaitSingle()
+                        reply(Embeds.error("**${args[0]}** is not a valid volume value.")).awaitSingle()
                         return@discord
                     }
                     targetVolume > maximum -> {
                         val tip = if(member.hasPermissions(Permission.MANAGE_CHANNELS)) " This can be overridden with the **musicbot** configure command." else ""
-                        error("The volume limit is set at **$maximum**.$tip").awaitSingle()
+                        reply(Embeds.error("The volume limit is set at **$maximum**.$tip")).awaitSingle()
                         return@discord
                     }
                 }
@@ -76,7 +77,7 @@ object PlaybackState : AudioCommandContainer {
                 audio.player.volume = targetVolume
                 data.volume = targetVolume
                 config.save()
-                embed("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort").awaitSingle()
+                reply(Embeds.fbk("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort")).awaitSingle()
             }
         }
     }

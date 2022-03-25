@@ -2,11 +2,15 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.discord.trackers.*
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TwitcastingTarget
+import moe.kabii.trackers.TwitchTarget
+import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
@@ -19,21 +23,16 @@ object TrackedStreams {
     enum class DBSite(val targetType: StreamingTarget) {
         TWITCH(TwitchTarget),
         YOUTUBE(YoutubeTarget),
-        TWITCASTING(TwitcastingTarget),
-        SPACES(TwitterSpaceTarget)
+        TWITCASTING(TwitcastingTarget)
     }
 
     object StreamChannels : IntIdTable() {
         val site = enumeration("site_id", DBSite::class)
-        val siteChannelID = varchar("site_channel_id", 64)
+        val siteChannelID = varchar("site_channel_id", 64).uniqueIndex()
         val lastKnownUsername = varchar("last_known_username", 64).nullable()
 
         val apiUse = bool("tracked_for_external_usage").default(false)
         val lastApiUsage = datetime("last_external_api_usage").nullable()
-
-        init {
-            index(isUnique = true, site, siteChannelID)
-        }
     }
 
     class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
@@ -118,7 +117,8 @@ object TrackedStreams {
         }
     }
 
-    object Mentions : IntIdTable() {
+    object Mentions : IdTable<Int>() {
+        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id")

@@ -7,6 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.util.extensions.snowflake
@@ -26,12 +27,12 @@ object SelfRoles : CommandContainer {
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    error("Could not find role matching **$noCmd**.").awaitSingle()
+                    reply(Embeds.error("Could not find role matching **$noCmd**.")).awaitSingle()
                     return@discord
                 }
                 // perm checks
                 if(!PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)) {
-                    error("You can only unlock roles which you can normally assign.").awaitSingle()
+                    reply(Embeds.error("You can only unlock roles which you can normally assign.")).awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -39,9 +40,9 @@ object SelfRoles : CommandContainer {
                 if(!roleConfig.contains(roleID)) {
                     roleConfig.add(roleID)
                     config.save()
-                    embed("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.").awaitSingle()
+                    reply(Embeds.fbk("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.")).awaitSingle()
                 } else {
-                    error("**${role.name}** is already a self-assignable role.").awaitSingle()
+                    reply(Embeds.error("**${role.name}** is already a self-assignable role.")).awaitSingle()
                     return@discord
                 }
             }
@@ -61,7 +62,7 @@ object SelfRoles : CommandContainer {
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    error("Could not find role matching **$noCmd**").awaitSingle()
+                    reply(Embeds.error("Could not find role matching **$noCmd**")).awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -69,9 +70,9 @@ object SelfRoles : CommandContainer {
                 if(roleConfig.contains(roleID)) {
                     roleConfig.remove(roleID)
                     config.save()
-                    embed("**${role.name}** has been locked and is no longer self-assignable.").awaitSingle()
+                    reply(Embeds.fbk("**${role.name}** has been locked and is no longer self-assignable.")).awaitSingle()
                 } else {
-                    error("${role.name} is not an unlocked role.").awaitSingle()
+                    reply(Embeds.error("${role.name} is not an unlocked role.")).awaitSingle()
                 }
             }
         }
@@ -91,15 +92,18 @@ object SelfRoles : CommandContainer {
                         }
                         role.orNull()
                     }
-                embed {
-                    if(enabled.isNotEmpty()) {
-                        val roles = enabled.joinToString("\n", transform = Role::getName)
-                        setTitle("Self-assignable roles in ${target.name}:")
-                        setDescription(roles)
-                    } else {
-                        setDescription("There are no self-assignable roles in **${target.name}**.")
-                    }
-                }.awaitSingle()
+                reply(
+                    Embeds.fbk()
+                        .run {
+                            if(enabled.isNotEmpty()) {
+                                val roles = enabled.joinToString("\n", transform = Role::getName)
+                                withTitle("Self-assignable roles in ${target.name}:")
+                                    .withDescription(roles)
+                            } else {
+                                withDescription("There are no self-assignable roles in **${target.name}**.")
+                            }
+                        }
+                ).awaitSingle()
             }
         }
     }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.orNull
@@ -23,7 +24,7 @@ object AvatarUtil : CommandContainer {
             discord {
                 val targetUser = if (args.isEmpty()) author else Search.user(this, noCmd, guild)
                 if (targetUser == null) {
-                    error("Unable to find user **$noCmd**").awaitSingle()
+                    reply(Embeds.error("Unable to find user **$noCmd**")).awaitSingle()
                     return@discord
                 }
                 // uses new embed spec to send 2 in one message though we are typically not converting to this style until 1.1
@@ -61,12 +62,13 @@ object AvatarUtil : CommandContainer {
             discord {
                 val iconUrl = target.getIconUrl(Image.Format.PNG).orNull()
                 if(iconUrl != null) {
-                    embed {
-                        setTitle("Guild icon for **${target.name}**")
-                        setImage(iconUrl)
-                    }
+                    reply(
+                        Embeds.fbk()
+                            .withTitle("Guild icon for **${target.name}**")
+                            .withImage(iconUrl)
+                    )
                 } else {
-                    error("Icon not available for **${target.name}**.")
+                    reply(Embeds.error("Icon not available for **${target.name}**."))
                 }.tryAwait()
             }
         }

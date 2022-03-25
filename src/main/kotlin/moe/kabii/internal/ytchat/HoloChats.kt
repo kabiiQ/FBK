@@ -3,13 +3,14 @@ package moe.kabii.internal.ytchat
 import discord4j.common.util.Snowflake
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
-import moe.kabii.discord.util.fbkColor
-import moe.kabii.discord.ytchat.YoutubeChatWatcher
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
+import moe.kabii.ytchat.YoutubeChatWatcher
 
 class HoloChats(val discord: GatewayDiscordClient) {
 
@@ -29,14 +30,18 @@ class HoloChats(val discord: GatewayDiscordClient) {
         try {
             val member = hololive[chat.author.channelId]
             if(member != null) {
-                streamChatChannel!!.createEmbed { spec ->
-                    fbkColor(spec)
-                    val gen = if(chat.author.channelId == irysId) "" else member.generation?.run { " ($this)" } ?: ""
-                    val name = "${member.names.first()}$gen"
-                    spec.setAuthor(name, chat.author.channelUrl, chat.author.imageUrl)
-                    val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
-                    spec.setDescription("$info: ${chat.message}")
-                }.awaitSingle()
+                streamChatChannel!!.createMessage(
+                    Embeds.fbk()
+                        .run {
+                            val gen = if(chat.author.channelId == irysId) "" else member.generation?.run { " ($this)" } ?: ""
+                            val name = "${member.names.first()}$gen"
+                            withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
+                        }
+                        .run {
+                            val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
+                            withDescription("$info: ${chat.message}")
+                        }
+                ).awaitSingle()
             }
         } catch(e: Exception) {
             LOG.warn("Problem processing holochat: ${e.message}")

@@ -7,6 +7,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.logColor
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -38,10 +39,9 @@ object MessageBulkDeletionListener : EventListener<MessageBulkDeleteEvent>(Messa
                     .getChannelById(targetLog.channelID.snowflake)
                     .ofType(GuildMessageChannel::class.java)
                     .flatMap { logChan ->
-                        logChan.createEmbed { spec ->
-                            logColor(null, spec)
-                            spec.setDescription("$messageCount messages from $authorCount users were bulk-deleted in ${eventChannel.name}.")
-                        }
+                        logChan.createMessage(
+                            Embeds.other("$messageCount messages from $authorCount users were bulk-deleted in ${eventChannel.name}.", logColor(null))
+                        )
                     }
                 try {
                     logMessage.awaitSingle()

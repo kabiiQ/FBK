@@ -16,6 +16,7 @@ import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.user.UserEventFormatter
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.long
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
@@ -47,13 +48,12 @@ object PartLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
-                    val log = logChan.createEmbed { spec ->
-                        spec.setDescription(formatted)
-                        spec.setColor(Color.of(16739688))
-                        if (targetLog.partFormat.contains("&avatar")) {
-                            spec.setImage(user.avatarUrl)
-                        }
-                    }.awaitSingle()
+                    logChan.createMessage(
+                        Embeds.other(formatted, Color.of(16739688))
+                            .run {
+                                if(targetLog.partFormat.contains("&avatar")) withImage(user.avatarUrl) else this
+                            }
+                    ).awaitSingle()
 
                     if(targetLog.kickLogs) {
                         LogWatcher.auditEvent(user.client, AuditKick(log, guild, user.id))
@@ -71,8 +71,7 @@ object PartLogger {
             }
 
         transaction {
-            val logUser = UserLog.GuildRelationship.getOrInsert(user.id.asLong(), guild.long)
-            logUser.currentMember = false
+            UserLog.GuildRelationship.delete(user.id.long, guild.long)
         }
     }
 }

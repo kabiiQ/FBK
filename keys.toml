@@ -4,6 +4,9 @@ token = ''
 discord_client_id = ''
 discord_client_secret = ''
 
+[dev]
+host_internal_servers = false
+
 [osu]
 token = ''
 
@@ -28,7 +31,6 @@ bot_db = 'kizunaai'
 
 [netty]
 port = 8000
-host = true
 domain = 'http://public_path_to_server'
 
 [twitch]

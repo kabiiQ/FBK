@@ -3,6 +3,7 @@ package moe.kabii.command.commands.search
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.MOSHI
@@ -10,10 +11,10 @@ import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.conversation.Page
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 
 object Urban : Command("urbandictionary", "urban", "ud") {
@@ -25,10 +26,9 @@ object Urban : Command("urbandictionary", "urban", "ud") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
             val lookup = if (args.isEmpty()) author.username else noCmd
-            val message = embed("Searching for **$lookup**...").awaitSingle()
-            val request = Request.Builder()
+            val message = reply(Embeds.fbk("Searching for **$lookup**...")).awaitSingle()
+            val request = newRequestBuilder()
                 .get()
-                .header("User-Agent", "DiscordBot-srkmfbk/1.0")
                 .url("https://api.urbandictionary.com/v0/define?term=$lookup")
                 .build()
 
@@ -38,16 +38,15 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                     udAdapter.fromJson(body)
                 }
             } catch (e: Exception) {
-                error("Unable to reach UrbanDictionary.").awaitSingle()
+                reply(Embeds.error("Unable to reach UrbanDictionary.")).awaitSingle()
                 LOG.info(e.stackTraceString)
                 return@discord
             }
 
             if (define == null || define.list.isEmpty()) {
-                embed {
-                    setAuthor("UrbanDictionary", "https://urbandictionary.com", null)
-                    setDescription("No definitions found for **$lookup**.")
-                }.awaitSingle()
+                reply(
+                    Embeds.fbk("No definitions found for **$lookup**.").withAuthor(EmbedCreateFields.Author.of("UrbanDictionary", "https://urbandictionary.com", null))
+                ).awaitSingle()
                 return@discord
             }
             var page: Page? = Page(define.list.size, 0)
@@ -58,19 +57,18 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                 val definition = StringUtils.abbreviate(def.definition, 700)
                 val example = StringUtils.abbreviate(def.example, 350)
 
-                message.edit { editSpec ->
-                    editSpec.setEmbed { spec ->
-                        spec.apply {
-                            fbkColor(this)
-                            setAuthor("UrbanDictionary", "https://urbandictionary.com", NettyFileServer.urbanDictionary)
-                            setDescription("Lookup: [${def.word}](${def.permalink})")
-                            addField("Definition $index:", definition, false)
-                            addField("Example:", example, false)
-                            addField("Upvotes", def.up.toString(), true)
-                            addField("Downvotes", def.down.toString(), true)
-                        }
-                    }
-                }.awaitSingle()
+                message.edit()
+                    .withEmbeds(
+                        Embeds.fbk("Lookup: [${def.word}](${def.permalink})")
+                            .withAuthor(EmbedCreateFields.Author.of("UrbanDictionary", "https://urbandictionary.com", NettyFileServer.urbanDictionary))
+                            .withFields(mutableListOf(
+                                EmbedCreateFields.Field.of("Definition $index:", definition, false),
+                                EmbedCreateFields.Field.of("Example:", example, false),
+                                EmbedCreateFields.Field.of("Upvotes", def.up.toString(), true),
+                                EmbedCreateFields.Field.of("Downvotes", def.down.toString(), true)
+                            ))
+                    ).awaitSingle()
+
                 page = getPage(page, message, add = first)
                 first = false
             }

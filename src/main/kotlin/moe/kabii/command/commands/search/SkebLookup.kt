@@ -1,10 +1,12 @@
 package moe.kabii.command.commands.search
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.discord.search.skeb.SkebIOException
-import moe.kabii.discord.search.skeb.SkebParser
+import moe.kabii.discord.util.Embeds
+import moe.kabii.search.skeb.SkebIOException
+import moe.kabii.search.skeb.SkebParser
 import moe.kabii.util.constants.EmojiCharacters
 
 object SkebLookup : Command("skeb") {
@@ -24,11 +26,11 @@ object SkebLookup : Command("skeb") {
             val skebber = try {
                 val user = SkebParser.getUser(targetUsername)
                 if(user == null) {
-                    error("Unable to find skeb user **$targetUsername**.").awaitSingle()
+                    reply(Embeds.error("Unable to find skeb user **$targetUsername**.")).awaitSingle()
                     return@discord
                 } else user
             } catch(e: SkebIOException) {
-                error("Unable to reach Skeb at this time.").awaitSingle()
+                reply(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
                 return@discord
             }
 
@@ -48,11 +50,12 @@ object SkebLookup : Command("skeb") {
                 desc.append("Recommended price: JPY**${skebber.defaultAmount ?: "Unknown"}**\n")
                 desc.append("Currently accepting requests: ${flag(skebber.accepting)}")
             } else desc.append("@${skebber.username} is not a skeb creator.")
-            embed {
-                setAuthor(skebber.name, profileUrl, skebber.avatarUrl)
-                setDescription(desc.toString())
-                if(skebber.header != null) setImage(skebber.header)
-            }.awaitSingle()
+
+            reply(
+                Embeds.fbk(desc.toString())
+                    .withAuthor(EmbedCreateFields.Author.of(skebber.name, profileUrl, skebber.avatarUrl))
+                    .run { if(skebber.header != null) withImage(skebber.header) else this }
+            ).awaitSingle()
         }
     }
 

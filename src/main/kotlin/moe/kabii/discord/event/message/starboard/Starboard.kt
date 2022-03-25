@@ -3,7 +3,10 @@ package moe.kabii.discord.event.message.starboard
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.spec.legacy.LegacyMessageCreateSpec
+import discord4j.core.spec.EmbedCreateFields
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.MessageCreateFields
+import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -11,7 +14,7 @@ import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
-import moe.kabii.discord.util.starColor
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.extensions.*
 import java.net.URL
 
@@ -47,11 +50,12 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${starboard.useEmoji().string()} $stars <#$channel>$mention"
     }
 
-    private fun starboardEmbed(message: Message, jumpLink: String, newSpec: LegacyMessageCreateSpec): EmbedBlock = {
+    private suspend fun starboardEmbed(message: Message): MessageCreateSpec {
+        var spec = MessageCreateSpec.create()
+        var embed = EmbedCreateSpec.create()
+
         val author = message.author.orNull()
-        setAuthor(author?.username ?: "Unknown", null, author?.avatarUrl)
-        starColor(this)
-        setDescription(message.content)
+        val fields = mutableListOf<EmbedCreateFields.Field>()
 
         val attachment = message.attachments.firstOrNull()
         if(attachment != null && !attachment.filename.isBlank()) {
@@ -59,34 +63,38 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
             if(supportedImage) {
                 // if there is an uploaded image, put it in the embed
-                setImage(attachment.url)
+                embed = embed.withImage(attachment.url)
             } else {
                 // if this is a different type of attachment, just reattach it... (videos etc)
                 try {
                     val stream = URL(attachment.url).openStream()
-                    newSpec.addFile(attachment.url, stream)
+                    spec = spec.withFiles(MessageCreateFields.File.of(attachment.url, stream))
                 } catch (e: Exception) {
-                    addField("Attachment", attachment.url, false)
+                    fields.add(EmbedCreateFields.Field.of("Attachment", attachment.url, false))
                 }
             }
         }
 
-        addField("Link", "[Jump to message]($jumpLink)", false)
-        setFooter("Message ID: ${message.id.asString()}, sent ", null)
-        setTimestamp(message.timestamp)
+        fields.add(EmbedCreateFields.Field.of("Link", "[Jump to message](${message.createJumpLink()})", false))
+        embed = embed
+            .withAuthor(EmbedCreateFields.Author.of(author?.username ?: "Unknown", null, author?.avatarUrl))
+            .withColor(MessageColors.star)
+            .withDescription(message.content)
+            .withFooter(EmbedCreateFields.Footer.of("Message ID: ${message.id.asString()}, sent ", null))
+            .withTimestamp(message.timestamp)
+            .withFields(fields)
+        return spec.withEmbeds(embed)
     }
 
     suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) {
         val starboardChannel = getStarboardChannel()
         val starCount = stars.count().toLong()
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
-        val jumpLink = message.createJumpLink()
         val channelId = message.channelId.asLong()
         val starboardMessage = try {
-            starboardChannel.createMessage { spec ->
-                spec.setContent(starboardContent(starCount, authorId, channelId))
-                spec.setEmbed(starboardEmbed(message, jumpLink, spec))
-            }.awaitSingle()
+            starboardChannel
+                .createMessage(starboardEmbed(message).withContent(starboardContent(starCount, authorId, channelId)))
+                .awaitSingle()
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 throw BotSendMessageException("Missing permissions to post message to starboard", starboardChannel.id.long)
@@ -116,8 +124,8 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         val starboardMessage = getStarboardMessage(starboardChannel, message)
 
         val starCount = message.stars.count().toLong()
-        starboardMessage.edit { spec ->
-            spec.setContent(starboardContent(starCount, message.originalAuthorId, message.originalChannelId))
-        }.awaitSingle()
+        starboardMessage.edit()
+            .withContentOrNull(starboardContent(starCount, message.originalAuthorId, message.originalChannelId))
+            .awaitSingle()
     }
 }

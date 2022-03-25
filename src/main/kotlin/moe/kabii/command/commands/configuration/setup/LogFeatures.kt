@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.LogSettings
+import moe.kabii.discord.util.Embeds
 
 object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
     override val wikiPath = "Moderation-Logs"
@@ -96,10 +97,10 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 val any = newSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    embed("${chan.mention} is no longer a mod log channel.").subscribe()
+                    reply(Embeds.fbk("${chan.mention} is no longer a mod log channel.")).subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    embed("${chan.mention} is now a mod log channel.").subscribe()
+                    reply(Embeds.fbk("${chan.mention} is now a mod log channel.")).subscribe()
                 }
                 if(newSettings.joinFormat.contains("&invite")) {
                     config.guildSettings.utilizeInvites = true
@@ -107,7 +108,7 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 config.save()
 
                 if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
-                    embed("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.").awaitSingle()
+                    reply(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.")).awaitSingle()
                 }
             }
         }

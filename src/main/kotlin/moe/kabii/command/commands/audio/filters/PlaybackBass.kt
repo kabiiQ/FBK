@@ -3,7 +3,7 @@ package moe.kabii.command.commands.audio.filters
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
-import moe.kabii.discord.util.specColor
+import moe.kabii.discord.util.Embeds
 
 object PlaybackBass : AudioCommandContainer {
     object SetBass : Command("bass", "bassboost", "bboost") {
@@ -13,10 +13,7 @@ object PlaybackBass : AudioCommandContainer {
             discord {
                 validateAndAlterFilters(this) {
                     if(args.size != 1) {
-                        chan.createEmbed { spec ->
-                            specColor(spec)
-                            spec.setDescription("**bass** is used to adjust the bass of a track on the music bot, for \"bass boosting\". **bass 100** or **bass 1** will apply a 100% bass \"boost\" where **bass 0** represents the normal level.")
-                        }.awaitSingle()
+                        usage("**bass** is used to adjust the bass of a track on the music bot, for \"bass boosting\". **bass 100** or **bass 1** will apply a 100% bass \"boost\" where **bass 0** represents the normal level.", "bass <boost %>").awaitSingle()
                         return@validateAndAlterFilters
                     }
                     val arg = args[0].replace("%", "")
@@ -27,7 +24,7 @@ object PlaybackBass : AudioCommandContainer {
                         else -> null
                     }
                     if(targetBass == null) {
-                        error("Invalid bass level **$arg**. Value should be between 0% (0) and 100% (1/100)").awaitSingle()
+                        reply(Embeds.error("Invalid bass level **$arg**. Value should be between 0% (0) and 100% (1/100)")).awaitSingle()
                         return@validateAndAlterFilters
                     }
                     addExclusiveFilter(FilterType.Bass(targetBass))

@@ -1,15 +1,15 @@
 package moe.kabii.command.commands.search
 
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
+import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
-import okhttp3.Request
 import java.io.IOException
 
 object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "evaluate") {
@@ -29,14 +29,10 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
 
             val response = query(noCmd)
             val output = response.output ?: "Unknown"
-            chan.createMessage { spec ->
-                spec.setEmbed { embed ->
-                    if(response.success) fbkColor(embed) else errorColor(embed)
-                    embed.setDescription(output)
-                    if(output.contains(wysi)) embed.setFooter("(wysi)", null)
-                }
-                spec.setMessageReference(event.message.id)
-            }.awaitSingle()
+            reply(
+                (if(response.success) Embeds.fbk(output) else Embeds.error(output))
+                    .run { if(output.contains(wysi)) withFooter(EmbedCreateFields.Footer.of("(wysi)", null)) else this }
+            ).awaitSingle()
         }
     }
 
@@ -45,9 +41,8 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
     @Throws(IOException::class)
     fun query(raw: String): WolframResponse {
         val query = raw.replace("+", "plus")
-        val request = Request.Builder()
+        val request = newRequestBuilder()
             .get()
-            .header("User-Agent", "srkmfbk/1.0")
             .url("https://api.wolframalpha.com/v1/result?appid=$appId&i=$query")
             .build()
 

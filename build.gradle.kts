@@ -12,34 +12,20 @@ plugins {
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        name = "jcenter-snapshot"
-        url = uri("https://oss.jfrog.org/artifactory/libs-release")
-    }
+    // personal libs: rusty
     maven {
         name = "jitpack.io"
         url = uri("https://jitpack.io")
     }
-    maven {
-        name = "sonatype-snapshots"
-        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
-    }
-    // reactor-kotlin-extensions
-    maven {
-        name = "spring.io-snapshots"
-        url = uri("https://repo.spring.io/snapshot")
-    }
-    maven {
-        name = "lavaplayer"
-        url = uri("https://m2.dv8tion.net/releases")
-    }
-    maven {
-        name = "exposed-bintray"
-        url = uri("https://dl.bintray.com/kotlin/exposed")
-    }
+    // kotlinx coroutines-core
     maven {
         name = "kotlinx-bintray"
         url = uri("https://kotlin.bintray.com/kotlinx")
+    }
+    // lavaplayer-natives
+    maven {
+        name = "lavaplayer"
+        url = uri("https://m2.dv8tion.net/releases")
     }
 }
 
@@ -49,12 +35,12 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.5.0"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    val coroutinesVer = "1.5.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.3") // can update once d4j 3.2 is available
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.5") // can update once d4j 3.2 is available
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
@@ -64,11 +50,11 @@ dependencies {
     // music bot
     implementation("com.github.walkyst:lavaplayer-fork:1.3.96") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
-    implementation("com.github.kokorin.jaffree:jaffree:2021.05.31")
-    implementation("org.apache.commons:commons-compress:1.20")
+    implementation("com.github.kokorin.jaffree:jaffree:2021.10.19")
+    implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:4.10.0-RC1")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
 
     // other api - json response parsing
     val moshiVer = "1.12.0"
@@ -87,8 +73,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor")
 
     // ps2 websocket
-    implementation("org.java-websocket:Java-WebSocket:1.5.1")
-    implementation("com.googlecode.json-simple:json-simple:1.1.1")
+    implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     // welcome banner image processing
     val imageIO = "3.7.0"
@@ -98,16 +83,16 @@ dependencies {
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.2.7")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.3.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.32.1"
+    val exposedVer = "0.36.1"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.2.19")
+    implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.0")
 
     // language detection
@@ -155,9 +140,9 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "16"
     }
-    java.targetCompatibility = JavaVersion.VERSION_15
+    java.targetCompatibility = JavaVersion.VERSION_16
 
     build {
         dependsOn(updateVersion)

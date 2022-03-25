@@ -2,13 +2,13 @@ package moe.kabii.command.commands.meta
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.User
+import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Metadata
 import moe.kabii.discord.util.Uptime
-import moe.kabii.discord.util.fbkColor
-import moe.kabii.util.extensions.EmbedBlock
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
@@ -23,18 +23,19 @@ object BotStats : CommandContainer {
         init {
             discord {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
-                val ping = embed("Pong!").awaitSingle()
+                val ping = reply(Embeds.fbk("Pong!")).awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
                 val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
-                val pingEmbed: EmbedBlock = {
-                    fbkColor(this)
-                    setAuthor("Ping Test", null, avatar)
-                    addField("Ping Command Response Time", "${commandPing}ms", false)
-                    if(heartbeat != null) {
-                        addField("Heartbeat Response Time", "${heartbeat}ms", false)
-                    }
-                }
-                ping.edit { spec -> spec.setEmbed(pingEmbed) }.awaitSingle()
+                val pingEmbed = Embeds.fbk()
+                    .withAuthor(EmbedCreateFields.Author.of("Ping Test", null, avatar))
+                    .withFields(
+                        mutableListOf(
+                            EmbedCreateFields.Field.of("Ping Command Response Time", "${commandPing}ms", false),
+                            heartbeat?.run { EmbedCreateFields.Field.of("Heartbeat Response Time", "${heartbeat}ms", false) }
+                        ).filterNotNull()
+                    )
+
+                ping.edit().withEmbeds(pingEmbed).awaitSingle()
             }
 
             terminal {
@@ -51,7 +52,6 @@ object BotStats : CommandContainer {
 
         init {
             discord {
-                val botUser = event.client.self.awaitSingle()
                 val guilds = event.client.guilds
                     .map(Guild::getMemberCount)
                     .collectList()
@@ -67,14 +67,14 @@ object BotStats : CommandContainer {
                 val connection = DurationFormatUtils.formatDuration(connect.toMillis(), uptimeFormat, false)
                 val reconnection = DurationFormatUtils.formatDuration(reconnect.toMillis(), uptimeFormat, false)
 
-                embed(botUser) {
-                    addField("Process Uptime", connection, true)
-                    addField("Connection Uptime", reconnection, true)
-                    addField("Discord Shards", shards.toString(), false)
-                    addField("Guild Count", guildCount, true)
-                    addField("Users Served", users, true)
-                    addField("Build Info", build, false)
-                }.subscribe()
+                reply(Embeds.fbk().withFields(mutableListOf(
+                    EmbedCreateFields.Field.of("Process Uptime", connection, true),
+                    EmbedCreateFields.Field.of("Connection Uptime", reconnection, true),
+                    EmbedCreateFields.Field.of("Discord Shards", shards.toString(), false),
+                    EmbedCreateFields.Field.of("Guild Count", guildCount, true),
+                    EmbedCreateFields.Field.of("Users Served", users, true),
+                    EmbedCreateFields.Field.of("Build Info", build, false)
+                ))).awaitSingle()
             }
         }
     }

@@ -2,6 +2,7 @@ package moe.kabii.discord.event.message
 
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
@@ -14,12 +15,11 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.discord.conversation.Conversation
-import moe.kabii.discord.trackers.ServiceWatcherManager
 import moe.kabii.discord.util.DiscordBot
-import moe.kabii.discord.util.errorColor
-import moe.kabii.discord.util.fbkColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -96,11 +96,10 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                                 val member = event.member.get()
                                 member.addRole(role.snowflake).success().awaitSingle()
                                 event.message.channel.flatMap { chan ->
-                                    chan.createEmbed { spec ->
-                                        fbkColor(spec)
-                                        spec.setAuthor(member.userAddress(), null, member.avatarUrl)
-                                        spec.setDescription("You have been given the **${guildRole.value.name}** role.")
-                                    }
+                                    chan.createMessage(
+                                        Embeds.fbk("You have been given the **${guildRole.value.name}** role.")
+                                            .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+                                    )
                                 }.awaitSingle()
                             }
                         }
@@ -135,12 +134,12 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                         command.executeDiscord!!(param)
 
                 } catch (parse: GuildTargetInvalidException) {
-                    param.error("${parse.string} Execute this command while in a guild channel or first use the **setguild** command to set your desired guild target.").subscribe()
+                    param.reply(Embeds.error("${parse.string} Execute this command while in a guild channel or first use the **setguild** command to set your desired guild target.")).subscribe()
 
                 } catch (perms: MemberPermissionsException) {
                     val s = if(perms.perms.size > 1) "s" else ""
                     val reqs = perms.perms.joinToString(", ")
-                    param.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).").subscribe()
+                    param.reply(Embeds.error("The **${param.alias}** command is restricted. (Requires the **$reqs** permission$s).")).subscribe()
 
                 } catch (feat: ChannelFeatureDisabledException) {
                     //val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
@@ -156,23 +155,22 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                     val enabledIn = if(channels != null) "\n**${feat.feature}** is currently enabled in the following channels: $channels"
                     else ""
 
-                    param.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn")
+                    param.reply(Embeds.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn"))
                         .awaitSingle()
 
                 } catch (guildFeature: GuildFeatureDisabledException) {
 
                     val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
                     val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
-                    param.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.").awaitSingle()
+                    param.reply(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
 
                 } catch (cmd: GuildCommandDisabledException) {
 
                     author.privateChannel
                         .flatMap { pm ->
-                            pm.createEmbed { spec ->
-                                errorColor(spec)
-                                spec.setDescription("I tried to respond to your command **$cmdStr** in channel ${chan.mention} but that command has been disabled by the staff of **$guildName**.")
-                            }
+                            pm.createMessage(
+                                Embeds.error("I tried to respond to your command **$cmdStr** in channel ${chan.mention} but that command has been disabled by the staff of **$guildName**.")
+                            )
                         }.awaitSingle()
 
                 } catch (ba: BotAdminException) {
@@ -195,10 +193,9 @@ class MessageHandler(val manager: CommandManager, val services: ServiceWatcherMa
                                 .joinToString("\n")
                             author.privateChannel
                                     .flatMap { pm ->
-                                        pm.createEmbed { spec ->
-                                            errorColor(spec)
-                                            spec.setDescription("I tried to respond to your command **${command.baseName}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
-                                        }
+                                        pm.createMessage(
+                                            Embeds.error("I tried to respond to your command **${command.baseName}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
+                                        )
                                     }.awaitSingle()
                         }
                         else -> {

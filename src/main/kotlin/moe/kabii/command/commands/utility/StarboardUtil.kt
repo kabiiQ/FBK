@@ -6,6 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 
 object StarboardUtil : CommandContainer {
@@ -18,7 +19,7 @@ object StarboardUtil : CommandContainer {
 
                 val starboardCfg = config.starboard
                 if(starboardCfg == null) {
-                    error("**${target.name}** does not have a starboard to add a message to. See the **starboard set** command to create a starboard for this server.").awaitSingle()
+                    reply(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **starboard set** command to create a starboard for this server.")).awaitSingle()
                     return@discord
                 }
 
@@ -37,12 +38,12 @@ object StarboardUtil : CommandContainer {
                 val targetMessage = try {
                     chan.getMessageById(targetId).awaitSingle()
                 } catch(ce: ClientException) {
-                    error("Unable to find the message with ID **$targetId** in ${guildChan.name}.").awaitSingle()
+                    reply(Embeds.error("Unable to find the message with ID **$targetId** in ${guildChan.name}.")).awaitSingle()
                     return@discord
                 }
 
                 if(starboardCfg.findAssociated(targetId.asLong()) != null) {
-                    error("Message **${targetId}** is already starboarded.").awaitSingle()
+                    reply(Embeds.error("Message **${targetId}** is already starboarded.")).awaitSingle()
                     return@discord
                 }
 

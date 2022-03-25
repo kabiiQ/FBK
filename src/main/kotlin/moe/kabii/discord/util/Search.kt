@@ -5,8 +5,8 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.event.message.MessageHandler
@@ -40,10 +40,9 @@ object Search {
                 .filter { role -> !role.isEveryone } // never put @everyone in a prompt as even sending it plaintext seems to cause a mention? - this is specific to @everyone
                 .mapIndexed { id, role -> "${id + 1}: ${role.name} (${role.id.asString()})" }
                 .joinToString("\n")
-            val prompt = param.embed {
-                setTitle("Multiple roles found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
-                setDescription(roles)
-            }.awaitSingle()
+            val prompt = param.reply(
+                Embeds.fbk(roles).withTitle("Multiple roles found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
+            ).awaitSingle()
             val range = 0L..options.size // adding/subtracting here to give the user a 1-indexed interface
             val input = param.getLong(range, prompt, timeout = 240000L)
             prompt.delete().subscribe()
@@ -136,17 +135,17 @@ object Search {
             return target.members
                 .filter { member ->
                     member.username == username && member.discriminator == discrim
-                }.take(1).awaitSingleOrNull()
+                }.take(1).awaitFirstOrNull()
         }
 
         suspend fun prompt(options: List<Member>): Member? {
             val members = options
                 .mapIndexed { id, member -> "${id + 1}: ${member.userAddress()} (${member.id.asString()})" }
                 .joinToString("\n")
-            val prompt = param.embed {
-                setTitle("Multiple members found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
-                setDescription(members)
-            }.awaitSingle()
+            val prompt = param.reply(
+                Embeds.fbk(members)
+                    .withTitle("Multiple members found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
+            ).awaitSingle()
             val range = 0L..options.size
             val input = param.getLong(range, prompt, timeout = 240000L)
             return if(input != null) {

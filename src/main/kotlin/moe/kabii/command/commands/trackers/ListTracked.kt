@@ -9,6 +9,7 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 
 object ListTracked : Command("tracked", "listtracked", "whotracked") {
@@ -31,7 +32,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.firstOrNull()
 
                 if(dbChannel == null) {
-                    error("There are no trackers enabled in this channel.").awaitSingle()
+                    reply(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
                     return@propagateTransaction
                 }
 
@@ -58,13 +59,13 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                     TwitterTargets.discordChannel eq dbChannel.id
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
-                    val url = moe.kabii.discord.trackers.TwitterTarget.feedById(feed.userId.toString())
+                    val url = moe.kabii.trackers.TwitterTarget.feedById(feed.userId.toString())
                     "[Twitter/${feed.lastKnownUsername ?: feed.userId}]($url) by <@${target.tracker.userID}>"
                 }
             }
 
             if(tracks.isEmpty()) {
-                error("There are no tracked targets in this channel.").awaitSingle()
+                reply(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
                 return@discord
             }
 
