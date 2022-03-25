@@ -15,7 +15,7 @@ import moe.kabii.util.extensions.success
 import okhttp3.Request
 
 object PixivImageListener : EventListener<MessageCreateEvent>(MessageCreateEvent::class) {
-    private val pixivUrl = Regex("https://(?:www.)?pixiv.net/(?:en/)?artworks/(\\d{8,10})(\\|\\|)")
+    private val pixivUrl = Regex("https://(?:www.)?pixiv.net/(?:en/)?artworks/(\\d{8,10})(\\|\\|)?")
 
     override suspend fun handle(event: MessageCreateEvent) {
         val content = event.message.content
