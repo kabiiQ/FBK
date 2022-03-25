@@ -22,14 +22,7 @@ import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.discord.tasks.DiscordTaskPool
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/videos/StreamWatcher.kt
 import moe.kabii.discord.util.Embeds
-=======
-import moe.kabii.discord.trackers.TrackerUtil
-import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
-import moe.kabii.discord.util.EditableChannelWrapper
-import moe.kabii.discord.util.errorColor
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/videos/StreamWatcher.kt
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
@@ -40,10 +33,7 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/videos/StreamWatcher.kt
-=======
 import kotlin.reflect.KMutableProperty1
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/videos/StreamWatcher.kt
 
 abstract class StreamWatcher(val discord: GatewayDiscordClient) {
 

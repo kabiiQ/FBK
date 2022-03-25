@@ -8,18 +8,10 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/TrackerTarget.kt
-=======
-import moe.kabii.discord.trackers.twitter.TwitterParser
-import moe.kabii.discord.trackers.videos.StreamErr
-import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
-import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
-import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
-import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/TrackerTarget.kt
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
+import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
@@ -185,8 +177,8 @@ object TwitterSpaceTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.SPACES
 
-    override suspend fun getChannel(username: String): Result<BasicStreamChannel, StreamErr> = try {
-        val user = TwitterParser.getUser(username)
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> = try {
+        val user = TwitterParser.getUser(id)
         if(user != null) {
             Ok(BasicStreamChannel(TwitterSpaceTarget, user.id.toString(), user.username, user.url))
         } else Err(StreamErr.NotFound)

@@ -6,13 +6,14 @@ import discord4j.core.`object`.audit.AuditLogPart
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.TextChannel
+import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.discord.util.errorColor
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import reactor.core.publisher.Mono
@@ -73,10 +74,10 @@ object LogWatcher {
                     discord.getChannelById(errorChannel)
                         .ofType(TextChannel::class.java)
                         .flatMap { chan ->
-                            chan.createEmbed { spec ->
-                                errorColor(spec)
-                                spec.setDescription("I am missing permissions to view the Audit Log! Enhanced logging has been disabled. After you grant this permission in Discord, enhanced logging can be re-enabled by using **guildcfg audit enable**")
-                            }
+                            chan.createMessage()
+                                .withEmbeds(
+                                    Embeds.error("I am missing permissions to view the Audit Log! Enhanced logging has been disabled. After you grant this permission in Discord, enhanced logging can be re-enabled by using **guildcfg audit enable**"
+                                ))
                         }.awaitSingle()
                     return
                 } else throw ce

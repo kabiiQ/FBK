@@ -96,7 +96,8 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     }
 }
 
-object TwitterMentions : IntIdTable() {
+object TwitterMentions : IdTable<Int>() {
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val guild = reference("assoc_feed_mention_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
     val mentionRole = long("discord_feed_mention_role_id")

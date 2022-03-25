@@ -48,7 +48,7 @@ object PartLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
 
-                    logChan.createMessage(
+                    val log = logChan.createMessage(
                         Embeds.other(formatted, Color.of(16739688))
                             .run {
                                 if(targetLog.partFormat.contains("&avatar")) withImage(user.avatarUrl) else this

@@ -12,6 +12,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
+import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
@@ -44,10 +45,9 @@ object BanLogger {
                         .ofType(GuildMessageChannel::class.java)
                         .awaitSingle()
                     val event = when(action) { Action.BAN -> "banned"; Action.UNBAN -> "unbanned" }
-                    val log = logChan.createEmbed { spec ->
-                        spec.setDescription("**${user.userAddress()}** has been $event.")
-                        spec.setColor(Color.of(16739688))
-                    }.awaitSingle()
+                    logChan.createMessage(
+                        Embeds.other("**${user.userAddress()}** has been $event.", Color.of(16739688))
+                    ).awaitSingle()
                 } catch(ce: ClientException) {
                     val err = ce.status.code()
                     if(err == 404 || err == 403) {

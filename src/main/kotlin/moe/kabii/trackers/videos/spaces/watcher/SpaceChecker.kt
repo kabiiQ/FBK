@@ -1,4 +1,4 @@
-package moe.kabii.discord.trackers.videos.spaces.watcher
+package moe.kabii.trackers.videos.spaces.watcher
 
 import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.CoroutineName
@@ -10,11 +10,12 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.spaces.TwitterSpaces
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
-import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.json.TwitterSpace
 import moe.kabii.discord.trackers.twitter.json.TwitterSpaceState
-import moe.kabii.discord.trackers.twitter.json.TwitterTweet
+import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceNotifier
+import moe.kabii.trackers.ServiceRequestCooldownSpec
+import moe.kabii.trackers.twitter.TwitterParser
+import moe.kabii.trackers.twitter.json.TwitterTweet
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction

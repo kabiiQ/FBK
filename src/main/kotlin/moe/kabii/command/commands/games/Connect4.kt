@@ -154,7 +154,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                         false -> {
                             reply(Embeds.fbk("**${p2Target.username}** declined the challenge.")).awaitSingle()
                         }
-                        // else -> user did not respond to the challenge within 10 minutes
+                        null -> Unit // user did not respond to the challenge within 10 minutes
                     }
                     prompt.delete().success().awaitSingle()
                 }

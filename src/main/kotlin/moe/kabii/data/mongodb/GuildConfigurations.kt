@@ -24,13 +24,13 @@ object GuildConfigurations {
 
     @Synchronized fun getOrCreateGuild(id: Long) = guildConfigurations.getOrPut(id) { GuildConfiguration(guildid = id) }
 
-    @Synchronized suspend fun findFeatures(guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
+    suspend fun findFeatures(guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
         if(guildId == null || channelId == null) return null to null
         val guildConfig = getOrCreateGuild(guildId)
         return guildConfig to guildConfig.getOrCreateFeatures(channelId)
     }
 
-    @Synchronized suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
+    suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
         val guildId = target.discordChannel.guild?.guildID ?: return null
         val guildConfig = getOrCreateGuild(guildId)
         return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)

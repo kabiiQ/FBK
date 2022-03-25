@@ -143,7 +143,7 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
                         audio.discord.cancelPendingTimeout()
                     } // otherwise, let the timeout continue. we leave the vc if not in use
                 }
-                // else -> the bot is not in a voice channel (empty)
+                null -> Unit // the bot is not in a voice channel (empty)
             }
 
             val eventMember = member ?: return // kicked

@@ -1,6 +1,7 @@
 package moe.kabii.discord.trackers.videos.spaces.watcher
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
@@ -11,11 +12,12 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.spaces.TwitterSpaces
-import moe.kabii.discord.trackers.TrackerUtil
-import moe.kabii.discord.trackers.twitter.TwitterParser
 import moe.kabii.discord.trackers.twitter.json.TwitterSpace
-import moe.kabii.discord.trackers.videos.StreamWatcher
+import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
+import moe.kabii.trackers.TrackerUtil
+import moe.kabii.trackers.twitter.TwitterParser
+import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
@@ -57,7 +59,7 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
     suspend fun createSpaceNotification(space: TwitterSpace, dbSpace: TwitterSpaces.Space, target: TrackedStreams.Target) {
         // get discord channel
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, FeatureChannel::streamTargetChannel, target)
+        val chan = getChannel(guildId, target.discordChannel.channelID, target)
 
         val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
         val features = getStreamConfig(target)
@@ -65,32 +67,34 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
         val mention = guildId?.run { getMentionRoleFor(target.streamChannel, this, chan, features) }
 
         try {
-            val title = StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE)
+            val hosts = space.hosts - space.creator
 
-            val newNotification = chan.createMessage { spec ->
-                if(mention != null) {
-                    if(mention.db.lastMention == null
-                        || Duration(mention.db.lastMention, Instant.now()) > Duration.standardHours(6)) {
-                        spec.setContent(mention.discord.mention)
-                        mention.db.lastMention = DateTime.now()
-                    }
+            val newNotification = chan.createMessage()
+                .run {
+                    if(mention != null) {
+                        if(mention.db.lastMention == null
+                            || Duration(mention.db.lastMention, Instant.now()) > Duration.standardHours(6)) {
+                            mention.db.lastMention = DateTime.now()
+                            withContent(mention.discord.mention)
+                        } else this
+                    } else this
                 }
-
-                val hosts = space.hosts - space.creator
-
-                spec.setEmbed { embed ->
-                    embed.setColor(liveColor)
-                    embed.setAuthor("@${space.creator?.username} started a Space!", space.url, space.creator?.profileImage)
-                    embed.setTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
-                    embed.setUrl(space.url)
-                    if(hosts.isNotEmpty()) {
-                        val hostUsers = hosts.joinToString("\n") { host -> "@${host!!.username}"}
-                        embed.setDescription("Other Space hosts:\n$hostUsers")
-                    }
-                    embed.setFooter("Live now! Since ", NettyFileServer.twitterLogo)
-                    space.startedAt?.run(embed::setTimestamp)
-                }
-            }.awaitSingle()
+                .withEmbeds(
+                    Embeds.other(liveColor)
+                        .withAuthor(EmbedCreateFields.Author.of("@${space.creator?.username} started a Space!", space.url, space.creator?.profileImage))
+                        .withTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
+                        .withUrl(space.url)
+                        .withFooter(EmbedCreateFields.Footer.of("Live now! Since ", NettyFileServer.twitterLogo))
+                        .run {
+                            if(hosts.isNotEmpty()) {
+                                val hostUsers = hosts.joinToString("\n") { host -> "@${host!!.username}"}
+                                withDescription("Other Space hosts:\n$hostUsers")
+                            } else this
+                        }
+                        .run {
+                            if(space.startedAt != null) withTimestamp(space.startedAt) else this
+                        }
+                ).awaitSingle()
 
             TrackerUtil.pinActive(discord, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
@@ -127,28 +131,24 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
                 val features = getStreamConfig(notification.targetId)
 
                 val action = if(features.summaries) {
-                    existingNotif.edit { spec ->
-                        spec.setEmbed { embed ->
+                    val duration = java.time.Duration
+                        .between(space.startedAt, space.endedAt)
+                        .run(::DurationFormatter)
+                        .colonTime
+                    val description = "@${space.creator?.username} was live for [$duration]"
 
-                            embed.setColor(inactiveColor)
-                            embed.setAuthor("@${space.creator?.username} was live.", space.url, space.creator?.profileImage)
-                            embed.addField("Participants ", space.participants.toString(), true)
-                            embed.setUrl(space.url)
-                            embed.setFooter("Space ended", NettyFileServer.twitterLogo)
-                            space.endedAt?.run(embed::setTimestamp)
-                            embed.setTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
-
-                            if(space.startedAt != null && space.endedAt != null) {
-                                val duration = java.time.Duration
-                                    .between(space.startedAt, space.endedAt)
-                                    .run(::DurationFormatter)
-                                    .colonTime
-                                embed.setDescription("@${space.creator?.username} was live for [$duration]")
-                            }
-                        }
-                    }.then(mono {
-                        TrackerUtil.checkUnpin(existingNotif)
-                    })
+                    existingNotif.edit()
+                        .withEmbeds(
+                            Embeds.other(description, inactiveColor)
+                                .withAuthor(EmbedCreateFields.Author.of("@${space.creator?.username} was live.", space.url, space.creator?.profileImage))
+                                .withFields(EmbedCreateFields.Field.of("Participants ", space.participants.toString(), true))
+                                .withUrl(space.url)
+                                .withFooter(EmbedCreateFields.Footer.of("Space ended", NettyFileServer.twitterLogo))
+                                .withTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
+                                .run { if(space.endedAt != null) withTimestamp(space.endedAt) else this }
+                        ).then(mono {
+                            TrackerUtil.checkUnpin(existingNotif)
+                        })
                 } else {
                     existingNotif.delete()
                 }

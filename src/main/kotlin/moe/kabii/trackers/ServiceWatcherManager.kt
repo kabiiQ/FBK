@@ -3,7 +3,7 @@ package moe.kabii.trackers
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/ServiceWatcherManager.kt
+import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
@@ -18,24 +18,6 @@ import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.ytchat.YoutubeChatWatcher
 import moe.kabii.ytchat.YoutubeMembershipMaintainer
-=======
-import moe.kabii.discord.trackers.anime.anilist.AniListParser
-import moe.kabii.discord.trackers.anime.kitsu.KitsuParser
-import moe.kabii.discord.trackers.anime.mal.MALParser
-import moe.kabii.discord.trackers.anime.watcher.ListServiceChecker
-import moe.kabii.discord.trackers.ps2.wss.PS2EventStream
-import moe.kabii.discord.trackers.twitter.watcher.TweetStream
-import moe.kabii.discord.trackers.twitter.watcher.TwitterChecker
-import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceChecker
-import moe.kabii.discord.trackers.videos.twitcasting.watcher.TwitcastChecker
-import moe.kabii.discord.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
-import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
-import moe.kabii.discord.trackers.videos.twitch.webhook.TwitchSubscriptionManager
-import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
-import moe.kabii.discord.trackers.videos.youtube.watcher.YoutubeChecker
-import moe.kabii.discord.ytchat.YoutubeChatWatcher
-import moe.kabii.discord.ytchat.YoutubeMembershipMaintainer
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/ServiceWatcherManager.kt
 
 data class ServiceRequestCooldownSpec(
     val callDelay: Long,

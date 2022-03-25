@@ -18,16 +18,10 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/videos/twitch/webhook/TwitchWebhookListener.kt
 import moe.kabii.trackers.videos.twitch.json.TwitchEvents
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
-=======
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.trackers.videos.twitch.json.TwitchEvents
-import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
-import moe.kabii.discord.trackers.videos.twitch.watcher.TwitchChecker
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/videos/twitch/webhook/TwitchWebhookListener.kt
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString

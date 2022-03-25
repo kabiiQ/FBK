@@ -2,6 +2,9 @@ package moe.kabii.discord.trackers.twitter.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import moe.kabii.trackers.twitter.json.TwitterExpandedResponse
+import moe.kabii.trackers.twitter.json.TwitterResponse
+import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.util.constants.URLUtil
 import java.time.Instant
 

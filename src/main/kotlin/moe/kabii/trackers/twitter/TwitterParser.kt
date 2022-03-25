@@ -7,6 +7,9 @@ import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterStreamRule
+import moe.kabii.discord.trackers.twitter.json.TwitterSpace
+import moe.kabii.discord.trackers.twitter.json.TwitterSpaceMultiResponse
+import moe.kabii.discord.trackers.twitter.json.TwitterSpaceSingleResponse
 import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.twitter.json.*
 import moe.kabii.util.extensions.WithinExposedContext
@@ -154,25 +157,21 @@ object TwitterParser {
         return twitterRule
     }
 
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/twitter/TwitterParser.kt
     fun getV1Tweet(tweetId: String): TwitterV1Status? = get("https://api.twitter.com/1.1/statuses/show/$tweetId.json")
-=======
-    fun getV1Tweet(tweetId: String): TwitterV1Status? = request("https://api.twitter.com/1.1/statuses/show/$tweetId.json")
 
     const val spaceQueryParams = "space.fields=creator_id,scheduled_start,started_at,ended_at,title,participant_count&expansions=host_ids&user.fields=profile_image_url"
 
-    fun getSpace(spaceId: String?): TwitterSpace? = request<TwitterSpaceSingleResponse>("https://api.twitter.com/2/spaces/$spaceId?$spaceQueryParams")?.data
+    fun getSpace(spaceId: String?): TwitterSpace? = get<TwitterSpaceSingleResponse>("https://api.twitter.com/2/spaces/$spaceId?$spaceQueryParams")?.data
 
     fun getSpaces(spaceIds: List<String>): List<TwitterSpace> {
         if(spaceIds.size > 100) throw IllegalArgumentException("max ids: 100")
         val ids = spaceIds.joinToString(",")
-        return request<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces?ids=$ids&$spaceQueryParams")?.data.orEmpty()
+        return get<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces?ids=$ids&$spaceQueryParams")?.data.orEmpty()
     }
 
     fun getSpacesByCreators(creatorIds: List<String>): List<TwitterSpace> {
         if(creatorIds.size > 100) throw IllegalArgumentException("max ids: 100")
         val ids = creatorIds.joinToString(",")
-        return request<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces/by/creator_ids?user_ids=$ids&$spaceQueryParams")?.data.orEmpty()
+        return get<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces/by/creator_ids?user_ids=$ids&$spaceQueryParams")?.data.orEmpty()
     }
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/twitter/TwitterParser.kt
 }

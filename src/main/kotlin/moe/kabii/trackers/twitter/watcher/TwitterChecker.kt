@@ -22,7 +22,6 @@ import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/twitter/watcher/TwitterChecker.kt
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.ServiceRequestCooldownSpec
@@ -34,24 +33,11 @@ import moe.kabii.trackers.twitter.json.TwitterMediaType
 import moe.kabii.trackers.twitter.json.TwitterTweet
 import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.translation.Translator
-=======
-import moe.kabii.discord.trackers.ServiceRequestCooldownSpec
-import moe.kabii.discord.trackers.TrackerUtil
-import moe.kabii.discord.trackers.twitter.TwitterDateTimeUpdateException
-import moe.kabii.discord.trackers.twitter.TwitterParser
-import moe.kabii.discord.trackers.twitter.TwitterRateLimitReachedException
-import moe.kabii.discord.trackers.twitter.json.TwitterMediaType
-import moe.kabii.discord.trackers.twitter.json.TwitterTweet
-import moe.kabii.discord.trackers.twitter.json.TwitterUser
-import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceChecker
-import moe.kabii.discord.translation.TranslationLanguage
-import moe.kabii.discord.translation.TranslationResult
-import moe.kabii.discord.translation.Translator
-import moe.kabii.discord.util.fbkColor
-import moe.kabii.net.NettyFileServer
+import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/twitter/watcher/TwitterChecker.kt
+import moe.kabii.translation.TranslationLanguage
+import moe.kabii.translation.TranslationResult
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
@@ -286,19 +272,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         ?: tweet.references.firstOrNull()?.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url
                 } else null
 
-<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/twitter/watcher/TwitterChecker.kt
-                val notifSpec = MessageCreateSpec.create()
-                    // todo channel setting for custom message ?
-                    .run {
-                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
-                        withContent("**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
-                    }
-                    .run {
-                        if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
-                    }
-                    .run {
-                        val footer = StringBuilder(attachInfo)
-=======
                 LOG.debug("roles phase")
                 // mention roles
                 val guildId = target.discordChannel.guild?.guildID
@@ -308,14 +281,18 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     ?.plus(" ")
                     ?: ""
 
-                LOG.debug("message stage")
-                val notifSpec = channel.createMessage { spec ->
+                val notifSpec = MessageCreateSpec.create()
+                    // todo channel setting for custom message ?
+                    .run {
+                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
+                        withContent("$mention**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
+                    }
+                    .run {
+                        if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
+                    }
+                    .run {
+                        val footer = StringBuilder(attachInfo)
 
-                    val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
-                    spec.setContent("$mention**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
-
-                    spec.setEmbed { embed ->
->>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/twitter/watcher/TwitterChecker.kt
                         val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
                         val author = (if(tweet.retweet) referenceUser else user) ?: user
 

@@ -11,7 +11,6 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
-import moe.kabii.discord.util.fbkColor
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
