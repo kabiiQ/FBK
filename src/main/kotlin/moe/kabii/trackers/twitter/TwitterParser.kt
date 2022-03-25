@@ -1,5 +1,6 @@
 package moe.kabii.trackers.twitter
 
+import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
@@ -23,6 +24,7 @@ class TwitterDateTimeUpdateException(val snowflake: Long) : TwitterIOException("
 class TwitterRateLimitReachedException(val reset: Duration, message: String) : TwitterIOException(message)
 
 object TwitterParser {
+    val color = Color.of(1942002)
 
     val token = Keys.config[Keys.Twitter.token]
 
@@ -152,5 +154,25 @@ object TwitterParser {
         return twitterRule
     }
 
+<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/twitter/TwitterParser.kt
     fun getV1Tweet(tweetId: String): TwitterV1Status? = get("https://api.twitter.com/1.1/statuses/show/$tweetId.json")
+=======
+    fun getV1Tweet(tweetId: String): TwitterV1Status? = request("https://api.twitter.com/1.1/statuses/show/$tweetId.json")
+
+    const val spaceQueryParams = "space.fields=creator_id,scheduled_start,started_at,ended_at,title,participant_count&expansions=host_ids&user.fields=profile_image_url"
+
+    fun getSpace(spaceId: String?): TwitterSpace? = request<TwitterSpaceSingleResponse>("https://api.twitter.com/2/spaces/$spaceId?$spaceQueryParams")?.data
+
+    fun getSpaces(spaceIds: List<String>): List<TwitterSpace> {
+        if(spaceIds.size > 100) throw IllegalArgumentException("max ids: 100")
+        val ids = spaceIds.joinToString(",")
+        return request<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces?ids=$ids&$spaceQueryParams")?.data.orEmpty()
+    }
+
+    fun getSpacesByCreators(creatorIds: List<String>): List<TwitterSpace> {
+        if(creatorIds.size > 100) throw IllegalArgumentException("max ids: 100")
+        val ids = creatorIds.joinToString(",")
+        return request<TwitterSpaceMultiResponse>("https://api.twitter.com/2/spaces/by/creator_ids?user_ids=$ids&$spaceQueryParams")?.data.orEmpty()
+    }
+>>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/twitter/TwitterParser.kt
 }

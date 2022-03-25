@@ -45,8 +45,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             // call yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
             if(start >= nextCall) {
                 try {
+                    LOG.debug("start: $start :: nextCall : $nextCall")
                     this.ytTick()
                 } catch(e: Exception) {
+
                     LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
                     LOG.debug(e.stackTraceString)
                 }
@@ -58,7 +60,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     }
 
     suspend fun ytTick() {
-        if(!lock.tryLock() && Instant.now() < nextCall) return // discard tick if one is already in progress
+        if(!lock.tryLock() /* && Instant.now() < nextCall */) return // discard tick if one is already in progress
+        this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
         try {
             try {
                 // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
@@ -108,7 +111,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // main IO call, process as we go
                 LOG.debug("yt expected calls: ${targetLookup.keys}")
                 withTimeout(Duration.ofSeconds(
-                    (((targetLookup.size / 20) + 1) * 15).toLong()
+                    (((targetLookup.size / 20) + 1) * 20).toLong()
                 )) {
                     var first = true
                     targetLookup.keys
@@ -193,7 +196,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 delay(tickDelay)
                 lock.unlock()
             }
-            this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
         }
     }
 

@@ -8,6 +8,15 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
+<<<<<<< HEAD:src/main/kotlin/moe/kabii/trackers/TrackerTarget.kt
+=======
+import moe.kabii.discord.trackers.twitter.TwitterParser
+import moe.kabii.discord.trackers.videos.StreamErr
+import moe.kabii.discord.trackers.videos.twitcasting.TwitcastingParser
+import moe.kabii.discord.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.discord.trackers.videos.youtube.YoutubeParser
+import moe.kabii.discord.trackers.videos.youtube.subscriber.YoutubeVideoIntake
+>>>>>>> master:src/main/kotlin/moe/kabii/discord/trackers/TrackerTarget.kt
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
@@ -163,6 +172,40 @@ object TwitcastingTarget : StreamingTarget(
         origin.handler.services.twitcastChecker.checkUserForMovie(channel)
         TwitcastingParser.registerWebhook(channel.siteChannelID)
     }
+}
+
+object TwitterSpaceTarget : StreamingTarget(
+    TwitterParser.color,
+    "Twitter Spaces",
+    FeatureChannel::streamTargetChannel,
+    "spaces",
+    listOf(),
+    "spaces", "twitterspace", "twitterspaces", "twitter_space", "twitter_spaces", "space"
+) {
+    override val dbSite: TrackedStreams.DBSite
+        get() = TrackedStreams.DBSite.SPACES
+
+    override suspend fun getChannel(username: String): Result<BasicStreamChannel, StreamErr> = try {
+        val user = TwitterParser.getUser(username)
+        if(user != null) {
+            Ok(BasicStreamChannel(TwitterSpaceTarget, user.id.toString(), user.username, user.url))
+        } else Err(StreamErr.NotFound)
+    } catch(e: Exception) {
+        LOG.debug("Error getting Twitter user (Spaces): ${e.message}")
+        LOG.debug(e.stackTraceString)
+        Err(StreamErr.IO)
+    }
+
+    override val onTrack: TrackCallback = { origin, channel ->
+        val twitterId = listOf(channel.siteChannelID)
+        val space = TwitterParser.getSpacesByCreators(twitterId).firstOrNull()
+        if(space != null) {
+            origin.handler.services.spaceChecker.updateSpace(channel, space)
+        }
+    }
+
+    override suspend fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr> = error("twitter ids not supported")
+    override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
 }
 
 // anime targets

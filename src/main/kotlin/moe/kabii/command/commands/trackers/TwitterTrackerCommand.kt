@@ -57,7 +57,6 @@ object TwitterTrackerCommand : TrackerCommand {
                 this.twitterFeed = dbFeed
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
-                this.mentionRole = null
                 this.shouldStream = shouldStream
             }
             dbFeed

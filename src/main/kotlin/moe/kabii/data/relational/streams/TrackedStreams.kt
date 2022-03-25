@@ -6,6 +6,7 @@ import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TwitcastingTarget
 import moe.kabii.trackers.TwitchTarget
 import moe.kabii.trackers.YoutubeTarget
+import moe.kabii.discord.trackers.*
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -23,16 +24,21 @@ object TrackedStreams {
     enum class DBSite(val targetType: StreamingTarget) {
         TWITCH(TwitchTarget),
         YOUTUBE(YoutubeTarget),
-        TWITCASTING(TwitcastingTarget)
+        TWITCASTING(TwitcastingTarget),
+        SPACES(TwitterSpaceTarget)
     }
 
     object StreamChannels : IntIdTable() {
         val site = enumeration("site_id", DBSite::class)
-        val siteChannelID = varchar("site_channel_id", 64).uniqueIndex()
+        val siteChannelID = varchar("site_channel_id", 64)
         val lastKnownUsername = varchar("last_known_username", 64).nullable()
 
         val apiUse = bool("tracked_for_external_usage").default(false)
         val lastApiUsage = datetime("last_external_api_usage").nullable()
+
+        init {
+            index(isUnique = true, site, siteChannelID)
+        }
     }
 
     class StreamChannel(id: EntityID<Int>) : IntEntity(id) {
