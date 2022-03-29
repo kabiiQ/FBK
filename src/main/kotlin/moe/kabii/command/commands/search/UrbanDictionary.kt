@@ -10,7 +10,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.discord.conversation.Page
+import moe.kabii.discord.pagination.Page
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.newRequestBuilder

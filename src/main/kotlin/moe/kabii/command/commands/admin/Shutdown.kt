@@ -3,7 +3,7 @@ package moe.kabii.command.commands.admin
 import moe.kabii.command.Command
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
-import moe.kabii.discord.conversation.Conversation
+import moe.kabii.discord.pagination.Conversation
 import kotlin.system.exitProcess
 
 object Shutdown : Command("stop", "shutdown", "end") {

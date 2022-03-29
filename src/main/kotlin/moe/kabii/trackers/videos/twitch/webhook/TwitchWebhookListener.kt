@@ -18,10 +18,10 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.trackers.videos.twitch.json.TwitchEvents
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
-import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString

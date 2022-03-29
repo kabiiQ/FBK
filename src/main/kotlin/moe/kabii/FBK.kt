@@ -1,6 +1,7 @@
 package moe.kabii
 
 import discord4j.core.DiscordClientBuilder
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
@@ -15,7 +16,7 @@ import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
-import moe.kabii.discord.event.message.MessageHandler
+import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
@@ -84,7 +85,7 @@ fun main() {
     val services = ServiceWatcherManager(gateway)
     services.launch()
 
-    val discordHandler = MessageHandler(manager, services)
+    val discordHandler = ChatCommandHandler(manager, services)
 
     // perform initial offline checks
     val offlineChecks = gateway.guilds
@@ -98,7 +99,7 @@ fun main() {
         }
 
     // primary message listener uses specific instance and is manually set up
-    val onDiscordMessage = gateway.on(MessageCreateEvent::class.java)
+    val onDiscordMessage = gateway.on(ChatInputInteractionEvent::class.java)
         .map { event -> discordHandler.handle(event) }
 
     // all other event handlers simply recieve the event

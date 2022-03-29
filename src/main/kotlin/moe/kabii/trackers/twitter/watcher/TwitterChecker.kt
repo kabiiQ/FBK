@@ -24,6 +24,8 @@ import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.twitter.TwitterDateTimeUpdateException
@@ -32,12 +34,10 @@ import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.trackers.twitter.json.TwitterMediaType
 import moe.kabii.trackers.twitter.json.TwitterTweet
 import moe.kabii.trackers.twitter.json.TwitterUser
-import moe.kabii.translation.Translator
 import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
 import moe.kabii.translation.TranslationLanguage
 import moe.kabii.translation.TranslationResult
+import moe.kabii.translation.Translator
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils

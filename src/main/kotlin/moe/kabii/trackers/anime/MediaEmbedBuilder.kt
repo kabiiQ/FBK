@@ -2,7 +2,6 @@ package moe.kabii.trackers.anime
 
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
-import discord4j.core.spec.legacy.LegacyEmbedCreateSpec
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.URLUtil

@@ -18,6 +18,7 @@ object SkebParser {
             .get()
             .url("https://skeb.jp/api/$requestPart")
             .header("User-Agent", "srkmfbk/1.0")
+            .header("Authorization", "Bearer null")
             .build()
         try {
             return OkHTTP.newCall(request).execute().use { response ->

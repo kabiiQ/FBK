@@ -11,7 +11,7 @@ import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
-import moe.kabii.discord.conversation.PaginationUtil
+import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err

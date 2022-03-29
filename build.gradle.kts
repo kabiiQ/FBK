@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.6.0"
+    val kotlinVer = "1.6.10"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -17,15 +17,15 @@ repositories {
         name = "jitpack.io"
         url = uri("https://jitpack.io")
     }
-    // kotlinx coroutines-core
-    maven {
-        name = "kotlinx-bintray"
-        url = uri("https://kotlin.bintray.com/kotlinx")
-    }
     // lavaplayer-natives
     maven {
         name = "lavaplayer"
         url = uri("https://m2.dv8tion.net/releases")
+    }
+    // kotlinx coroutines-core
+    maven {
+        name = "kotlinx-bintray"
+        url = uri("https://kotlin.bintray.com/kotlinx")
     }
 }
 
@@ -35,29 +35,28 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.5.2"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+    val coroutinesVer = "1.6.0"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.5") // can update once d4j 3.2 is available
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.6")
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.1") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.2") // discord websocket and api
 
     // music bot
     implementation("com.github.walkyst:lavaplayer-fork:1.3.96") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
-    implementation("com.github.kokorin.jaffree:jaffree:2021.10.19")
     implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.6")
 
     // other api - json response parsing
-    val moshiVer = "1.12.0"
+    val moshiVer = "1.13.0"
     implementation("com.squareup.moshi:moshi:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
@@ -76,27 +75,27 @@ dependencies {
     implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     // welcome banner image processing
-    val imageIO = "3.7.0"
+    val imageIO = "3.8.2"
     implementation("com.twelvemonkeys.imageio:imageio-jpeg:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-psd:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-bmp:$imageIO")
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.3.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.5.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.36.1"
+    val exposedVer = "0.37.3"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.3.1")
-    implementation("com.zaxxer:HikariCP:5.0.0")
+    implementation("org.postgresql:postgresql:42.3.3")
+    implementation("com.zaxxer:HikariCP:5.0.1")
 
     // language detection
-    implementation("com.github.pemistahl:lingua:1.1.0")
+    implementation("com.github.pemistahl:lingua:1.1.1")
 
     // .toml token configuration
     implementation("com.uchuhimo:konf:1.1.2")
@@ -110,7 +109,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("org.apache.commons:commons-text:1.9")
 
-    implementation("org.reflections:reflections:0.9.12") // command detection and registration
+    implementation("org.reflections:reflections:0.10.2") // command detection and registration
 
     // youtube xml parsing
     // https://github.com/gradle/gradle/issues/13656#issuecomment-658873625

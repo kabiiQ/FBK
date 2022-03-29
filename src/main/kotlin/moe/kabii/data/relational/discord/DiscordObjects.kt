@@ -10,14 +10,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object DiscordObjects {
     internal object Users : IntIdTable() {
         val userID = long("discord_user_id").uniqueIndex()
-        val target = long("guild_target").nullable()
     }
 
     class User(id: EntityID<Int>) : IntEntity(id) {
         var userID by Users.userID
-        var target by Users.target
-
-        val reminders by Reminder referrersOn Reminders.user
 
         companion object : IntEntityClass<User>(Users) {
             fun getOrInsert(newUserID: Long): User = find { Users.userID eq newUserID }

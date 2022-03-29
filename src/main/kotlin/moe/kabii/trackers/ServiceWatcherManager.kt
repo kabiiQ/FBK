@@ -3,13 +3,13 @@ package moe.kabii.trackers
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
-import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.trackers.twitter.watcher.TweetStream
 import moe.kabii.trackers.twitter.watcher.TwitterChecker
+import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker

@@ -6,7 +6,6 @@ import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds

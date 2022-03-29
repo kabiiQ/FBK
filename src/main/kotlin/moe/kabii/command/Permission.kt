@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirst
@@ -16,8 +17,8 @@ class BotAdminException : RuntimeException()
 class BotSendMessageException(override val message: String, val channel: Long) : RuntimeException()
 
 @Throws(BotAdminException::class)
-fun MessageCreateEvent.verifyBotAdmin() {
-    val admin = BotAdmin.check(message.author.get().id.asLong(), message.channelId.asLong())
+fun ChatInputInteractionEvent.verifyBotAdmin() {
+    val admin = BotAdmin.check(interaction.user.id.asLong(), interaction.channelId.asLong())
     if(!admin) throw BotAdminException()
 }
 

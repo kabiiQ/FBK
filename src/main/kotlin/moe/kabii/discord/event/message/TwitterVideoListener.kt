@@ -7,8 +7,8 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.discord.conversation.ReactionInfo
-import moe.kabii.discord.conversation.ReactionListener
+import moe.kabii.discord.pagination.ReactionInfo
+import moe.kabii.discord.pagination.ReactionListener
 import moe.kabii.discord.event.EventListener
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.constants.EmojiCharacters

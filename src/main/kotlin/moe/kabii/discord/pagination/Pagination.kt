@@ -1,4 +1,4 @@
-package moe.kabii.discord.conversation
+package moe.kabii.discord.pagination
 
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
@@ -43,7 +43,8 @@ object PaginationUtil {
                 .run { if(detail != null) detail(this) else this }
         }
 
-        val message = origin.reply(pageContent()).awaitSingle()
+        origin.reply(pageContent()).awaitSingle()
+        // TODO button pagination
 
         if(page!!.pageCount > 1) {
             while(page != null) {

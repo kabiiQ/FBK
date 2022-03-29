@@ -6,92 +6,25 @@ import discord4j.core.`object`.presence.ClientPresence
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.verifyBotAdmin
 
 // Generally very lax argument and error handling in these commands. they are not used often and even then by only a handlful of people.
 // intentionally undocumented commands
-object BotStatusCommands : CommandContainer {
-    object Playing : Command("playing") {
-        override val wikiPath: String? = null
-        override val commandExempt = true
+object Status : Command("status") {
+    override val wikiPath: String? = null
 
-        init {
-            discord {
-                event.verifyBotAdmin()
-                setPlaying(event.client, noCmd)
+    init {
+        discord {
+            val args = subArgs(subCommand)
+            val activity = when(subCommand.name) {
+                "playing" -> ClientActivity.playing(args.string("GameText"))
+                "watching" -> ClientActivity.watching(args.string("WatchingText"))
+                "listening" -> ClientActivity.listening(args.string("ListeningText"))
+                "streaming" -> ClientActivity.streaming(args.string("StreamName"), args.string("StreamURL"))
+                else -> return@discord
             }
-            terminal {
-                setPlaying(discord, noCmd)
-            }
-        }
-
-        private suspend fun setPlaying(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(ClientPresence.online(ClientActivity.playing(status))).awaitSingle()
+            event.client.updatePresence(ClientPresence.online(activity)).awaitSingle()
         }
     }
-
-    object Watching : Command("watching") {
-        override val wikiPath: String? = null
-        override val commandExempt = true
-
-        init {
-            discord {
-                event.verifyBotAdmin()
-                setWatching(event.client, noCmd)
-            }
-            terminal {
-                setWatching(discord, noCmd)
-            }
-        }
-
-        private suspend fun setWatching(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(ClientPresence.online(ClientActivity.watching(status))).awaitSingle()
-        }
-    }
-
-    object Listening : Command("listening") {
-        override val wikiPath: String? = null
-        override val commandExempt = true
-
-        init {
-            discord {
-                event.verifyBotAdmin()
-                setListening(event.client, noCmd)
-            }
-            terminal {
-                setListening(discord, noCmd)
-            }
-        }
-
-        private suspend fun setListening(discord: GatewayDiscordClient, status: String) {
-            discord.updatePresence(ClientPresence.online(ClientActivity.listening(status))).awaitSingle()
-        }
-    }
-
-     object Streaming : Command("streaming") {
-         override val wikiPath: String? = null
-         override val commandExempt = true
-
-         init {
-             discord {
-                 event.verifyBotAdmin()
-                 if(args.size < 2) {
-                     usage("**Streaming** status requires name and URL.", "streaming <stream name> <stream url>").awaitSingle()
-                     return@discord
-                 }
-                 setStreaming(event.client, args[0], args[1])
-             }
-             terminal {
-                 if(args.size < 2) {
-                     println("Streaming status requires name and URL. 'streaming <stream name> <stream url>'")
-                     return@terminal
-                 }
-                 setStreaming(discord, args[0], args[1])
-             }
-         }
-
-         private suspend fun setStreaming(discord: GatewayDiscordClient, name: String, url: String) {
-             discord.updatePresence(ClientPresence.online(ClientActivity.streaming(name, url))).awaitSingle()
-         }
-     }
 }

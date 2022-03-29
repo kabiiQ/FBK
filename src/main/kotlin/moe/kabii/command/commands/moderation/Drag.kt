@@ -9,8 +9,8 @@ import moe.kabii.command.verify
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.discord.audio.AudioManager
-import moe.kabii.discord.conversation.ReactionInfo
-import moe.kabii.discord.conversation.ReactionListener
+import moe.kabii.discord.pagination.ReactionInfo
+import moe.kabii.discord.pagination.ReactionListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.EmojiCharacters
 import reactor.core.publisher.Mono
