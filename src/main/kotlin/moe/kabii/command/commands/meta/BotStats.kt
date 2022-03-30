@@ -23,7 +23,7 @@ object BotStats : CommandContainer {
         init {
             discord {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
-                val ping = reply(Embeds.fbk("Pong!")).awaitSingle()
+                val ping = send(Embeds.fbk("Pong!")).awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.message.timestamp, ping.timestamp)
                 val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
                 val pingEmbed = Embeds.fbk()
@@ -67,7 +67,7 @@ object BotStats : CommandContainer {
                 val connection = DurationFormatUtils.formatDuration(connect.toMillis(), uptimeFormat, false)
                 val reconnection = DurationFormatUtils.formatDuration(reconnect.toMillis(), uptimeFormat, false)
 
-                reply(Embeds.fbk().withFields(mutableListOf(
+                send(Embeds.fbk().withFields(mutableListOf(
                     EmbedCreateFields.Field.of("Process Uptime", connection, true),
                     EmbedCreateFields.Field.of("Connection Uptime", reconnection, true),
                     EmbedCreateFields.Field.of("Discord Shards", shards.toString(), false),

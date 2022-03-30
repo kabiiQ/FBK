@@ -32,7 +32,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd)
-                    reply(Embeds.fbk(add)).awaitSingle()
+                    send(Embeds.fbk(add)).awaitSingle()
                 } else {
                     usage("Add or edit a text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
@@ -48,7 +48,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.size >= 2) {
                     val add = addCommand(config, args, noCmd, restrict = true)
-                    reply(Embeds.fbk(add)).awaitSingle()
+                    send(Embeds.fbk(add)).awaitSingle()
                 } else {
                     usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
                 }
@@ -73,7 +73,7 @@ object CustomCommands : CommandContainer {
                 member.verify(Permission.MANAGE_MESSAGES)
                 if (args.isNotEmpty()) {
                     val remove = removeCommand(config, args[0])
-                    reply(Embeds.fbk(remove)).awaitSingle()
+                    send(Embeds.fbk(remove)).awaitSingle()
                 } else {
                     usage("Remove a text command. To see the commands created for **${target.name}**, use the **listcommands** command.", "removecommand <command name>").awaitSingle()
                 }
@@ -90,10 +90,10 @@ object CustomCommands : CommandContainer {
                 // list existing custom commands
                 val commands = config.customCommands.commands
                 if(commands.isEmpty()) {
-                    reply(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**."))
+                    send(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**."))
                 } else {
                     val commandList = config.customCommands.commands.joinToString(", ", transform = CustomCommand::command)
-                    reply(
+                    send(
                         Embeds.fbk(commandList)
                             .withTitle("Custom commands for ${target.name}")
                     )

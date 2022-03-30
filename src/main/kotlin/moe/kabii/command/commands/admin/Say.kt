@@ -5,7 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 
-object Say : Command("botsay", "say") {
+object Say : Command("say") {
     override val wikiPath: String? = null
     override val commandExempt = true
 

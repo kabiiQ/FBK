@@ -56,12 +56,12 @@ object SelfRoleCommands : CommandContainer {
                 }
                 val safe = PermissionUtil.isSafeRole(targetRole, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    reply(Embeds.error("You can not assign the role **${targetRole.name}**.")).awaitSingle()
+                    send(Embeds.error("You can not assign the role **${targetRole.name}**.")).awaitSingle()
                     return@discord
                 }
                 commands[commandName.lowercase()] = targetRole.id.asLong()
                 config.save()
-                reply(Embeds.fbk("Added command **$commandName** assigning role **${targetRole.name}**.")).awaitSingle()
+                send(Embeds.fbk("Added command **$commandName** assigning role **${targetRole.name}**.")).awaitSingle()
             }
         }
     }
@@ -80,12 +80,12 @@ object SelfRoleCommands : CommandContainer {
                 val commandName = if(args[0].startsWith(config.prefix)) args[0].drop(config.prefix.length) else args[0]
                 val existing = commands[commandName.lowercase()]
                 if(existing == null) {
-                    reply(Embeds.error("**${commandName}** is not currently a custom role command.")).awaitSingle()
+                    send(Embeds.error("**${commandName}** is not currently a custom role command.")).awaitSingle()
                     return@discord
                 }
                 commands.remove(commandName.lowercase())
                 config.save()
-                reply(Embeds.fbk("Removed role assignment command **$commandName**.")).awaitSingle()
+                send(Embeds.fbk("Removed role assignment command **$commandName**.")).awaitSingle()
             }
         }
     }
@@ -102,7 +102,7 @@ object SelfRoleCommands : CommandContainer {
                 }
 
                 if(commands.isEmpty()) {
-                    reply(Embeds.fbk("There are no role commands for **${target.name}**.")).awaitSingle()
+                    send(Embeds.fbk("There are no role commands for **${target.name}**.")).awaitSingle()
                     return@discord
                 }
 

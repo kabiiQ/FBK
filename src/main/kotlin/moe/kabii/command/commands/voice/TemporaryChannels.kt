@@ -25,7 +25,7 @@ object TemporaryChannels : CommandContainer {
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()
                 if(voice == null) {
-                    reply(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
+                    send(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
                     return@discord
                 }
 
@@ -46,13 +46,13 @@ object TemporaryChannels : CommandContainer {
                 try {
                     member.edit().withNewVoiceChannelOrNull(newChannel.id).awaitSingle()
                 } catch(ce: ClientException) {
-                    reply(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
+                    send(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
                     newChannel.delete("Unable to move user into their temporary channel.").success().awaitSingle()
                     return@discord
                 }
                 config.tempVoiceChannels.tempChannels.add(newChannel.id.asLong())
                 config.save()
-                reply(Embeds.fbk("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.")).awaitSingle()
+                send(Embeds.fbk("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.")).awaitSingle()
             }
         }
     }

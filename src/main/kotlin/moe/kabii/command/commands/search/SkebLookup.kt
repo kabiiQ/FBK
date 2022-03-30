@@ -26,11 +26,11 @@ object SkebLookup : Command("skeb") {
             val skebber = try {
                 val user = SkebParser.getUser(targetUsername)
                 if(user == null) {
-                    reply(Embeds.error("Unable to find skeb user **$targetUsername**.")).awaitSingle()
+                    send(Embeds.error("Unable to find skeb user **$targetUsername**.")).awaitSingle()
                     return@discord
                 } else user
             } catch(e: SkebIOException) {
-                reply(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
+                send(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
                 return@discord
             }
 
@@ -51,7 +51,7 @@ object SkebLookup : Command("skeb") {
                 desc.append("Currently accepting requests: ${flag(skebber.accepting)}")
             } else desc.append("@${skebber.username} is not a skeb creator.")
 
-            reply(
+            send(
                 Embeds.fbk(desc.toString())
                     .withAuthor(EmbedCreateFields.Author.of(skebber.name, profileUrl, skebber.avatarUrl))
                     .run { if(skebber.header != null) withImage(skebber.header) else this }

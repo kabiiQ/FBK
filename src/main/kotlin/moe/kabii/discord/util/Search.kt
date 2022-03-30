@@ -40,7 +40,7 @@ object Search {
                 .filter { role -> !role.isEveryone } // never put @everyone in a prompt as even sending it plaintext seems to cause a mention? - this is specific to @everyone
                 .mapIndexed { id, role -> "${id + 1}: ${role.name} (${role.id.asString()})" }
                 .joinToString("\n")
-            val prompt = param.reply(
+            val prompt = param.send(
                 Embeds.fbk(roles).withTitle("Multiple roles found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
             ).awaitSingle()
             val range = 0L..options.size // adding/subtracting here to give the user a 1-indexed interface
@@ -142,7 +142,7 @@ object Search {
             val members = options
                 .mapIndexed { id, member -> "${id + 1}: ${member.userAddress()} (${member.id.asString()})" }
                 .joinToString("\n")
-            val prompt = param.reply(
+            val prompt = param.send(
                 Embeds.fbk(members)
                     .withTitle("Multiple members found matching \"$query\". Please select one of the following roles with its ID number (1-${options.size}):")
             ).awaitSingle()

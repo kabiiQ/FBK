@@ -43,7 +43,7 @@ object PaginationUtil {
                 .run { if(detail != null) detail(this) else this }
         }
 
-        origin.reply(pageContent()).awaitSingle()
+        origin.send(pageContent()).awaitSingle()
         // TODO button pagination
 
         if(page!!.pageCount > 1) {

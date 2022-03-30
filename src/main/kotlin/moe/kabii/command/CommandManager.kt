@@ -21,7 +21,7 @@ class CommandManager {
         if(command.executeTerminal != null) {
             command.aliases.associateWithTo(commandsTerminal) { command }
         }
-        LOG.debug("Registered command \"${command.baseName}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
+        LOG.debug("Registered command \"${command.name}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
     }
 
     fun registerClass(clazz: Class<out Command>) {

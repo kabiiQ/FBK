@@ -63,7 +63,7 @@ object SnowflakeUtil : CommandContainer {
                 targetFile.writeText(output.toString())
                 val url = NettyFileServer.ids(targetId)
                 warning?.delete()?.subscribe()
-                reply(Embeds.fbk("[List of IDs for ${target.name}]($url)")).awaitSingle()
+                send(Embeds.fbk("[List of IDs for ${target.name}]($url)")).awaitSingle()
             }
         }
     }
@@ -80,7 +80,7 @@ object SnowflakeUtil : CommandContainer {
                 }
                 val id = args[0].toLongOrNull()
                 if(id == null) {
-                    reply(Embeds.error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.")).awaitSingle()
+                    send(Embeds.error("**${args[0]}** is not a valid snowflake. Discord snowflakes are 17-18 digit integers.")).awaitSingle()
                     return@discord
                 }
                 val snowflake = SnowflakeParser.of(id)
@@ -91,7 +91,7 @@ object SnowflakeUtil : CommandContainer {
                 }.orEmpty()
 
                 val formatted = TimestampFormat.LONG_DATE_TIME.format(snowflake.instant)
-                reply(Embeds.fbk("${validation}The snowflake **$id** would represent a Discord object created: **$formatted**")).awaitSingle()
+                send(Embeds.fbk("${validation}The snowflake **$id** would represent a Discord object created: **$formatted**")).awaitSingle()
             }
         }
     }
@@ -107,10 +107,10 @@ object SnowflakeUtil : CommandContainer {
                 }
                 val targetUser = Search.user(this, noCmd, target)
                 if(targetUser == null) {
-                    reply(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
+                    send(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
                     return@discord
                 }
-                reply(Embeds.fbk("ID: ${targetUser.id.asString()}", targetUser)).awaitSingle()
+                send(Embeds.fbk("ID: ${targetUser.id.asString()}", targetUser)).awaitSingle()
             }
         }
     }

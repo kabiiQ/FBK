@@ -25,17 +25,17 @@ object RoleUtils : CommandContainer {
                     .filter { role -> !role.isEveryone }
                     .collectList().awaitSingle()
                 if(emptyRoles.isEmpty()) {
-                    reply(Embeds.error("There are not any empty roles I can delete in **${target.name}**.")).awaitSingle()
+                    send(Embeds.error("There are not any empty roles I can delete in **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 val names = emptyRoles.joinToString("\n") { role -> "${role.name} (${role.id.asString()})" }
-                val prompt = reply(Embeds.fbk("The following roles have no members listed and will be deleted.\n$names\nDelete these roles?")).awaitSingle()
+                val prompt = send(Embeds.fbk("The following roles have no members listed and will be deleted.\n$names\nDelete these roles?")).awaitSingle()
                 val response = getBool(prompt)
                 if(response == true) {
                     val deleted = emptyRoles.toFlux()
                         .filterWhen { role -> role.delete().success() }
                         .count().awaitSingle()
-                    reply(Embeds.fbk("$deleted roles were deleted."))
+                    send(Embeds.fbk("$deleted roles were deleted."))
                 } else {
                     prompt.delete()
                 }.tryAwait()

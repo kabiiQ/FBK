@@ -8,10 +8,5 @@ interface SearchHandler {
 
 enum class AudioSource(val fullName: String, val regex: Regex, val handler: SearchHandler) {
     YOUTUBE("YouTube", Regex("y(ou)?t"), YoutubeSource),
-    SOUNDCLOUD("SoundCloud", Regex("s(ound)?c"), SoundcloudSource);
-
-    companion object {
-        fun parse(input: String): AudioSource? =
-            values().firstOrNull { source -> input.matches(source.regex) }
-    }
+    SOUNDCLOUD("SoundCloud", Regex("s(ound)?c"), SoundcloudSource)
 }

@@ -14,10 +14,10 @@ object QueueLoop : Command("loop") {
             val audio = AudioManager.getGuildAudio(target.id.asLong())
             if(audio.looping) {
                 audio.looping = false
-                reply(Embeds.fbk("Queue loop has been disabled.")).awaitSingle()
+                ireply(Embeds.fbk("Queue loop has been disabled.")).awaitSingle()
             } else {
                 audio.looping = true
-                reply(Embeds.fbk("Queue loop has been enabled.")).awaitSingle()
+                ireply(Embeds.fbk("Queue loop has been enabled.")).awaitSingle()
             }
         }
     }

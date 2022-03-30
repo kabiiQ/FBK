@@ -36,7 +36,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
             }
             val safe = PermissionUtil.isSafeRole(role, member, target, managed = true, everyone = false)
             if(!safe) {
-                reply(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
+                send(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
                 return@discord
             }
             fun colorPicker(color: Color): EmbedCreateSpec {
@@ -49,7 +49,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
 
             var currColor = randomColor()
             var hex = ColorUtil.hexString(currColor)
-            val prompt = reply(colorPicker(currColor)).awaitSingle()
+            val prompt = send(colorPicker(currColor)).awaitSingle()
 
             var first = true
             loop@while(true) {
@@ -65,7 +65,7 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
                                 .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $hex. (Previously $oldColor)", currColor))
                                 .tryAwait()
                         } else {
-                            reply(Embeds.error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.")).tryAwait()
+                            send(Embeds.error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.")).tryAwait()
                             prompt.edit()
                                 .withEmbeds(Embeds.error("I am unable to edit the role **${role.name}**. I must have a role above **${role.name}** to to edit it. The hex value for the color you wanted to set was $hex."))
                                 .awaitSingle()

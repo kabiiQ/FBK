@@ -9,16 +9,11 @@ import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
-object YoutubePull : Command("pullyt", "pullyoutube", "ytpull", "refreshyt", "ytrefresh") {
+object YoutubePull : Command("ytpull") {
     override val commandExempt = true
     override val wikiPath: String? = null
 
     init {
-        discord {
-            event.verifyBotAdmin()
-            if(args.isEmpty()) return@discord
-            pullYoutubeFeeds(args)
-        }
         terminal {
             if(args.isEmpty()) {
                 println("ytpull <guild id or 'all'>")

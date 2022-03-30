@@ -14,7 +14,7 @@ import moe.kabii.util.extensions.s
 import org.apache.commons.lang3.StringUtils
 
 object QueueInfo : AudioCommandContainer {
-    object CurrentQueue : Command("queue", "listqueue", "songs", "q") {
+    object CurrentQueue : Command("queue") {
         override val wikiPath = "Music-Player#queue-information"
 
         init {
@@ -22,13 +22,13 @@ object QueueInfo : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    reply(Embeds.fbk("There are no tracks currently queued.")).awaitSingle()
+                    ereply(Embeds.fbk("There are no tracks currently queued.")).awaitSingle()
                     return@discord
                 }
                 // list 10 tracks - take optional starting position for queue track #
                 // queue, queue 10
-                val starting = args.getOrNull(0)?.toIntOrNull()?.minus(1)?.let {
-                    if(it in 1..audio.queue.size) it else null
+                val starting = args.optInt("ListFrom")?.run {
+                    if(this in 1..audio.queue.size) toInt() else null
                 } ?: 0
 
                 val track = audio.player.playingTrack
@@ -54,7 +54,7 @@ object QueueInfo : AudioCommandContainer {
                 val looping = if(audio.looping) " \nThe queue is currently configured to loop tracks. " else ""
                 val avatarUrl = event.client.self.map(User::getAvatarUrl).awaitSingle()
 
-                reply(
+                ireply(
                     Embeds.fbk()
                         .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
                         .withAuthor(EmbedCreateFields.Author.of("Current queue for ${target.name}", null, avatarUrl))
@@ -65,7 +65,7 @@ object QueueInfo : AudioCommandContainer {
         }
     }
 
-    object NowPlaying : Command("music", "np", "nowplaying", "song") {
+    object NowPlaying : Command("np") {
         override val wikiPath = "Music-Player#queue-information"
 
         init {
@@ -73,16 +73,16 @@ object QueueInfo : AudioCommandContainer {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
-                    reply(Embeds.error("There is no track currently playing.")).awaitSingle()
+                    ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
                     return@discord
                 }
                 val track = audio.player.playingTrack
                 if(track == null) {
-                    reply(Embeds.fbk("Currently loading the next track!"))
+                    ereply(Embeds.fbk("Currently loading the next track!"))
                 } else {
                     val paused = if(audio.player.isPaused) " The bot is currently paused. " else ""
                     val looping = if(audio.looping) " The queue is currently configured to loop tracks. " else ""
-                    reply(
+                    ireply(
                         Embeds.fbk("Currently playing track **${trackString(track)}**.$paused$looping")
                             .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
                     )

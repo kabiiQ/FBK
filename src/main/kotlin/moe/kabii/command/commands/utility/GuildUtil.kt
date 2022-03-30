@@ -71,7 +71,7 @@ object GuildUtil : CommandContainer {
                 if(mfa == Guild.MfaLevel.ELEVATED) fields.add(EmbedCreateFields.Field.of("Admin 2FA Required", "true", false))
                 if(description != null) fields.add(EmbedCreateFields.Field.of("Description", description, false))
 
-                reply(
+                send(
                     Embeds.fbk(more.toString())
                         .withAuthor(EmbedCreateFields.Author.of(targetGuild.name, null, targetGuild.getIconUrl(Image.Format.PNG).orNull()))
                         .withFields(fields)

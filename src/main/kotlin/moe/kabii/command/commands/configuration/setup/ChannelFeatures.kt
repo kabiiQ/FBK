@@ -58,7 +58,7 @@ object ChannelFeatures : CommandContainer {
                     config.save()
 
                     if(notifs.isNotEmpty()) {
-                        reply(Embeds.fbk(notifs.joinToString("\n\n"))).awaitSingle()
+                        send(Embeds.fbk(notifs.joinToString("\n\n"))).awaitSingle()
                     }
                 }
             }
@@ -92,7 +92,7 @@ object ChannelFeatures : CommandContainer {
                     }
 
                 if(channels.isEmpty()) {
-                    reply(Embeds.fbk("There are no channel-specific features enabled in **${target.name}**.")).awaitSingle()
+                    send(Embeds.fbk("There are no channel-specific features enabled in **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 val fields = channels.map { (channel, features) ->
@@ -104,7 +104,7 @@ object ChannelFeatures : CommandContainer {
                     }
                     EmbedCreateFields.Field.of("#${channel.name}", codes.toString().trim(), true)
                 }
-                reply(
+                send(
                     Embeds.fbk()
                         .withTitle("Channel-specific features in ${target.name}:")
                         .withFields(fields)

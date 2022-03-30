@@ -21,7 +21,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
             val servers = try {
                 PS2Parser.getServers()
             } catch(e: Exception) {
-                reply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+                send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
                 return@discord
             }
 
@@ -63,7 +63,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
                     "**${server.name}**: $state"
                 }
 
-            reply(
+            send(
                 Embeds.fbk(serverList).withAuthor(EmbedCreateFields.Author.of("PlanetSide 2 Server Status", null, null))
             ).awaitSingle()
         }

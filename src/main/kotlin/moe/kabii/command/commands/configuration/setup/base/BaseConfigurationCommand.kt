@@ -105,7 +105,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 is BooleanElement -> if(new as Boolean) "**enabled**" else "**disabled**"
                 else -> "set to **${new.toString().ifBlank { "empty" }}**"
             }
-            return origin.reply(
+            return origin.send(
                 Embeds.fbk("The option **$property** has been $newState.").withTitle("Configuration Updated")
             )
         }
@@ -149,7 +149,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     .withFooter(EmbedCreateFields.Footer.of("\"exit\" to save and exit immediately.", null))
             }
 
-            val menu = origin.reply(configEmbed()).awaitSingle()
+            val menu = origin.send(configEmbed()).awaitSingle()
 
             while(true) {
                 val inputStr = origin.getString(timeout = embedTimeout) ?: break
@@ -166,7 +166,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
                     is StringElement -> {
                         // prompt user for new value
-                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
+                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getString(timeout = null)
                         if(response != null) {
                             if(response.matches(reset)) {
@@ -178,25 +178,25 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         prompt.delete().subscribe()
                     }
                     is DoubleElement -> {
-                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
+                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getDouble(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is LongElement -> {
-                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
+                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getLong(element.range, timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response)
                         prompt.delete().subscribe()
                     }
                     is DurationElement -> {
-                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
+                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getDuration(timeout = embedTimeout)
                         if(response != null) element.prop.set(instance, response.toString())
                         prompt.delete().subscribe()
                     }
                     is CustomElement<T, *> -> {
-                        val prompt = origin.reply(Embeds.fbk(element.prompt)).awaitSingle()
+                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
                         val response = origin.getMessage(timeout = embedTimeout)
                         if(response != null) {
                             val parsed = element.parser(origin, response, response.content)
@@ -205,7 +205,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         prompt.delete().subscribe()
                     }
                     is ViewElement<*, *> -> {
-                        origin.reply(Embeds.error(element.redirection)).awaitSingle()
+                        origin.send(Embeds.error(element.redirection)).awaitSingle()
                         continue
                     }
                 }
@@ -228,7 +228,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 val value = if(raw.isBlank()) "<NONE>" else StringUtils.abbreviate(raw, MagicNumbers.Embed.FIELD.VALUE)
                 EmbedCreateFields.Field.of(getName(element), value, true)
             }
-            origin.reply(
+            origin.send(
                 Embeds.fbk()
                     .withTitle("Current ${module.name} configuration:")
                     .withFields(fields)
@@ -238,14 +238,14 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.lowercase() == targetElement.lowercase() } }
         if(element == null) {
-            origin.reply(Embeds.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.")).awaitSingle()
+            origin.send(Embeds.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.")).awaitSingle()
             return false
         }
         val tag = element.aliases.first()
         // <command> prop -> manual get
         // dont run this if this is a custom element w/ attachment
         if(origin.args.size == 1 && !(element is CustomElement<T, *> && origin.event.message.attachments.isNotEmpty())) {
-            origin.reply(
+            origin.send(
                 Embeds.fbk()
                     .withTitle("From ${module.name} configuration:")
                     .withFields(EmbedCreateFields.Field.of(getName(element), getValue(element), false))
@@ -259,7 +259,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             when {
                 arg == "toggle" -> {
                     if(element !is BooleanElement) {
-                        origin.reply(Embeds.error("The setting **$tag** is not a toggle.")).awaitSingle()
+                        origin.send(Embeds.error("The setting **$tag** is not a toggle.")).awaitSingle()
                         return false
                     }
                     val new = !element.prop.get(instance)
@@ -273,7 +273,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         is DurationElement -> element.prop.set(instance, element.default?.toString())
                         is CustomElement<T, *> -> element.prop.set(instance, element.default)
                         else -> {
-                            origin.reply(Embeds.error("The setting **$tag** is not a resettable custom value.")).awaitSingle()
+                            origin.send(Embeds.error("The setting **$tag** is not a resettable custom value.")).awaitSingle()
                             return false
                         }
                     }
@@ -304,7 +304,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     else -> null
                 }
                 if(bool == null) {
-                    origin.reply(Embeds.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**")).awaitSingle()
+                    origin.send(Embeds.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, bool)
@@ -320,7 +320,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is DoubleElement -> {
                 val input = origin.args[1].toDoubleOrNull()
                 if(input == null) {
-                    origin.reply(Embeds.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**")).awaitSingle()
+                    origin.send(Embeds.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)
@@ -330,7 +330,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is LongElement -> {
                 val input = origin.args[1].toLongOrNull()
                 if(input == null) {
-                    origin.reply(Embeds.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**")).awaitSingle()
+                    origin.send(Embeds.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input)
@@ -340,7 +340,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is DurationElement -> {
                 val input = origin.args.drop(1).joinToString(" ").run(DurationParser::tryParse)
                 if(input == null) {
-                    origin.reply(Embeds.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h")).awaitSingle()
+                    origin.send(Embeds.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h")).awaitSingle()
                     return false
                 }
                 element.prop.set(instance, input.toString())
@@ -358,7 +358,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 } else false
             }
             is ViewElement<*, *> -> {
-                origin.reply(Embeds.error(element.redirection)).awaitSingle()
+                origin.send(Embeds.error(element.redirection)).awaitSingle()
                 return false
             }
         }

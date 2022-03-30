@@ -29,7 +29,7 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
 
             val response = query(noCmd)
             val output = response.output ?: "Unknown"
-            reply(
+            send(
                 (if(response.success) Embeds.fbk(output) else Embeds.error(output))
                     .run { if(output.contains(wysi)) withFooter(EmbedCreateFields.Footer.of("(wysi)", null)) else this }
             ).awaitSingle()

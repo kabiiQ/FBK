@@ -47,7 +47,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
                 try {
                     YoutubeParser.getVideo(videoId)
                 } catch(e: IOException) {
-                    reply(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
+                    send(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
                     LOG.debug("Error getting YTVideo in trackvideo command: ${e.message}")
                     LOG.debug(e.stackTraceString)
                     return@discord
@@ -55,12 +55,12 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             } else null
 
             if(ytVideo == null) {
-                reply(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
+                send(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
                 return@discord
             }
 
             if(!ytVideo.upcoming) {
-                reply(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
+                send(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
                 return@discord
             }
 
@@ -79,7 +79,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             }
 
             val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."
-            reply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
+            send(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
         }
     }
 }

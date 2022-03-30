@@ -80,7 +80,7 @@ object TrackerCommandBase : CommandContainer {
             }
             is Err -> {
                 val err = trackTarget.value
-                usage(err, "${command.baseName} (site name) <account name/ID>").awaitSingle()
+                usage(err, "${command.name} (site name) <account name/ID>").awaitSingle()
             }
         }
     }

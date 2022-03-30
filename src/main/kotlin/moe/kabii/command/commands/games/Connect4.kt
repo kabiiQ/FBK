@@ -33,7 +33,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                 "cancel", "end" -> {
                     // cancels an ongoing game
                     if(p1Existing == null || p1Existing !is Connect4Game) {
-                        reply(Embeds.error("You have no game to cancel in this channel.")).awaitSingle()
+                        send(Embeds.error("You have no game to cancel in this channel.")).awaitSingle()
                         return@discord
                     }
                     p1Existing.cancelGame()
@@ -55,7 +55,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                 "repost", "resend" -> {
                     // resend the current game board if it was flooded away
                     if(p1Existing == null || p1Existing !is Connect4Game) {
-                        reply(Embeds.error("You have no ongoing game in this channel that I can re-post."))
+                        send(Embeds.error("You have no ongoing game in this channel that I can re-post."))
                         return@discord
                     }
                     if(guild != null) {
@@ -75,26 +75,26 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                 else -> { // check if this is a new challenge request
                     // check for conflicts with p1's (command user's) games
                     if (p1Existing != null) {
-                        reply(Embeds.error("You are currently in a game of **${p1Existing.gameNameFull}** which would conflict with a new game of **Connect 4**. You can end this game with the **c4 cancel** command.")).awaitSingle()
+                        send(Embeds.error("You are currently in a game of **${p1Existing.gameNameFull}** which would conflict with a new game of **Connect 4**. You can end this game with the **c4 cancel** command.")).awaitSingle()
                         return@discord
                     }
 
                     // verify they have challenged a real user
                     val p2Target = Search.user(this, noCmd, guild)
                     if (p2Target == null || p2Target.isBot) {
-                        reply(Embeds.error("Unable to target user **$noCmd**. Search by username or ID, or alternatively use an @mention.")).awaitSingle()
+                        send(Embeds.error("Unable to target user **$noCmd**. Search by username or ID, or alternatively use an @mention.")).awaitSingle()
                         return@discord
                     }
                     val p2Channel = if (guild != null) p1Channel else {
                         p2Target.privateChannel.tryAwait().orNull()
                     }
                     if (p2Channel == null) {
-                        reply(Embeds.error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.")).awaitSingle()
+                        send(Embeds.error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.")).awaitSingle()
                         return@discord
                     }
                     val p2Existing = GameManager.matchGame(p2Target.id, p2Channel.id)
                     if (p2Existing != null) {
-                        reply(Embeds.error("**${p2Target.userAddress()}** has an ongoing game of **${p2Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.")).awaitSingle()
+                        send(Embeds.error("**${p2Target.userAddress()}** has an ongoing game of **${p2Existing.gameNameFull}** which would conflict with a new game of **Connect 4**.")).awaitSingle()
                         return@discord
                     }
 
@@ -103,7 +103,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                         .awaitSingle()
 
                     if (guild == null) {
-                        reply(Embeds.fbk("Your challenge has been sent.")).awaitSingle()
+                        send(Embeds.fbk("Your challenge has been sent.")).awaitSingle()
                     }
 
                     val response = getBool(prompt, timeout = 600000L /* 10 minutes */, limitDifferentUser = p2Target.id.asLong())
@@ -119,7 +119,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                                     targetChan.createMessage("Connect 4 game is starting!").awaitSingle()
                                 }
                             } catch (ce: ClientException) {
-                                reply(Embeds.error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.")).awaitSingle()
+                                send(Embeds.error("I am unable to send a private message to **${p2Target.userAddress()}**. They may have their DMs closed.")).awaitSingle()
                                 return@discord
                             }
                             // challenge accepted, both users have successfully been messaged, the game can begin!
@@ -152,7 +152,7 @@ object Connect4 : Command("c4", "connect4", "1v1") {
                             }
                         }
                         false -> {
-                            reply(Embeds.fbk("**${p2Target.username}** declined the challenge.")).awaitSingle()
+                            send(Embeds.fbk("**${p2Target.username}** declined the challenge.")).awaitSingle()
                         }
                         null -> Unit // user did not respond to the challenge within 10 minutes
                     }

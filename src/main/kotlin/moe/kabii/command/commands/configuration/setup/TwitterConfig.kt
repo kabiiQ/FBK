@@ -56,7 +56,7 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
 
             val features = features()
             if(!features.twitterTargetChannel) {
-                reply(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
+                send(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
                 return@discord
             }
             val twitter = features.twitterSettings

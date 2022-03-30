@@ -27,12 +27,12 @@ object SelfRoles : CommandContainer {
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    reply(Embeds.error("Could not find role matching **$noCmd**.")).awaitSingle()
+                    send(Embeds.error("Could not find role matching **$noCmd**.")).awaitSingle()
                     return@discord
                 }
                 // perm checks
                 if(!PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)) {
-                    reply(Embeds.error("You can only unlock roles which you can normally assign.")).awaitSingle()
+                    send(Embeds.error("You can only unlock roles which you can normally assign.")).awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -40,9 +40,9 @@ object SelfRoles : CommandContainer {
                 if(!roleConfig.contains(roleID)) {
                     roleConfig.add(roleID)
                     config.save()
-                    reply(Embeds.fbk("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.")).awaitSingle()
+                    send(Embeds.fbk("**${role.name}** has been unlocked and is now self-assignable by any user using the **role** command.")).awaitSingle()
                 } else {
-                    reply(Embeds.error("**${role.name}** is already a self-assignable role.")).awaitSingle()
+                    send(Embeds.error("**${role.name}** is already a self-assignable role.")).awaitSingle()
                     return@discord
                 }
             }
@@ -62,7 +62,7 @@ object SelfRoles : CommandContainer {
                 }
                 val role = Search.roleByNameOrID(this, noCmd)
                 if(role == null) {
-                    reply(Embeds.error("Could not find role matching **$noCmd**")).awaitSingle()
+                    send(Embeds.error("Could not find role matching **$noCmd**")).awaitSingle()
                     return@discord
                 }
                 val roleID = role.id.asLong()
@@ -70,9 +70,9 @@ object SelfRoles : CommandContainer {
                 if(roleConfig.contains(roleID)) {
                     roleConfig.remove(roleID)
                     config.save()
-                    reply(Embeds.fbk("**${role.name}** has been locked and is no longer self-assignable.")).awaitSingle()
+                    send(Embeds.fbk("**${role.name}** has been locked and is no longer self-assignable.")).awaitSingle()
                 } else {
-                    reply(Embeds.error("${role.name} is not an unlocked role.")).awaitSingle()
+                    send(Embeds.error("${role.name} is not an unlocked role.")).awaitSingle()
                 }
             }
         }
@@ -92,7 +92,7 @@ object SelfRoles : CommandContainer {
                         }
                         role.orNull()
                     }
-                reply(
+                send(
                     Embeds.fbk()
                         .run {
                             if(enabled.isNotEmpty()) {

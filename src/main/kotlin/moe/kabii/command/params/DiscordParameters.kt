@@ -8,9 +8,11 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
+import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.InteractionApplicationCommandCallbackReplyMono
+import discord4j.core.spec.MessageCreateMono
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -19,8 +21,13 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.util.extensions.withUser
+import reactor.core.publisher.Mono
+import java.time.Duration
+import java.util.concurrent.TimeoutException
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 data class DiscordParameters (
@@ -30,11 +37,12 @@ data class DiscordParameters (
     val chan: MessageChannel,
     val guild: Guild?,
     val author: User,
-    val command: Command) {
+    val command: Command,
+    val args: ChatCommandArguments = ChatCommandArguments(event)
+) {
 
     val subCommand by lazy { event.options[0] }
 
-    fun baseArgs() = ChatCommandArguments(event)
     fun subArgs(sub: ApplicationCommandInteractionOption) = ChatCommandArguments(sub)
 
     // Commands which require guild context and should simply error if executed in PMs can retrieve the 'target' guild
@@ -80,15 +88,37 @@ data class DiscordParameters (
     }
 
     // basic command reply
-    fun reply(vararg embeds: EmbedCreateSpec) = event
+    fun ireply(vararg embeds: EmbedCreateSpec) = event
         .reply()
         .withEmbeds(*embeds)
 
+    fun ereply(vararg embeds: EmbedCreateSpec) = event
+        .reply()
+        .withEmbeds(*embeds)
+        .withEphemeral(true)
+
+    fun _send(vararg embeds: EmbedCreateSpec) = chan
+        .createMessage()
+        .withEmbeds(*embeds)
+
+    // listen for response to components on reply
+    suspend fun <T : ComponentInteractionEvent> awaitResponse(componentId: String, type: KClass<T>, timeout: Duration? = null): T? {
+        val messageId = event.interaction.messageId.orNull() ?: return null
+        return event.client
+            .on(type.java)
+            .filter { interact -> interact.customId == componentId }
+            .filter { interact -> interact.messageId == messageId }
+            .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
+            .run { if(timeout != null) timeout(timeout) else this }
+            .next()
+            .awaitSingleOrNull()
+    }
+
     // Create a 'usage info' message TODO this may not be needed with slash commnands
-    fun usage(commandError: String, linkText: String?, user: User? = null): InteractionApplicationCommandCallbackReplyMono {
+    fun _usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {
         val link = if(linkText != null) {
             if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
         } else ""
-        return reply(Embeds.other("$commandError$link", MessageColors.spec).withUser(user))
+        return send(Embeds.other("$commandError$link", MessageColors.spec).withUser(user))
     }
 }

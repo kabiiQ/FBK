@@ -44,12 +44,12 @@ object XKCDLookup : Command("xkcd") {
                             val body = rs.body!!.string()
                             xkcdAdapter.fromJson(body)!!
                         } else {
-                            reply(Embeds.error("Unable to find comic.")).awaitSingle()
+                            send(Embeds.error("Unable to find comic.")).awaitSingle()
                             return@discord
                         }
                     }
                 } catch (e: Exception) {
-                    reply(Embeds.error("Unable to reach xkcd.")).awaitSingle()
+                    send(Embeds.error("Unable to reach xkcd.")).awaitSingle()
                     LOG.info(e.stackTraceString)
                     return@discord
                 }
@@ -58,7 +58,7 @@ object XKCDLookup : Command("xkcd") {
                 val date = LocalDate.parse(dateStr, dateFormat).atStartOfDay().toInstant(ZoneOffset.UTC)
 
                 val title = "xkcd #${comic.num}: ${comic.title}"
-                reply(
+                send(
                     Embeds.other(StringUtils.abbreviate(comic.alt, MagicNumbers.Embed.NORM_DESC), Color.of(9873608))
                         .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(title, MagicNumbers.Embed.TITLE), "https://xkcd.com/${comic.num}", null))
                         .withImage(comic.img)

@@ -97,10 +97,10 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 val any = newSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    reply(Embeds.fbk("${chan.mention} is no longer a mod log channel.")).subscribe()
+                    send(Embeds.fbk("${chan.mention} is no longer a mod log channel.")).subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    reply(Embeds.fbk("${chan.mention} is now a mod log channel.")).subscribe()
+                    send(Embeds.fbk("${chan.mention} is now a mod log channel.")).subscribe()
                 }
                 if(newSettings.joinFormat.contains("&invite")) {
                     config.guildSettings.utilizeInvites = true
@@ -108,7 +108,7 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 config.save()
 
                 if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
-                    reply(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.")).awaitSingle()
+                    send(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.")).awaitSingle()
                 }
             }
         }

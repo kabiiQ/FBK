@@ -5,12 +5,10 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.command.*
-import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.DiscordBot
@@ -48,8 +46,7 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
             LOG.info("${context}Command:\t$guildName\t${author.userAddress()}\t:${event.commandName}\t${event.options}")
             LOG.info("Executing command ${event.commandName} on ${Thread.currentThread().name}")
             val chan = interaction.message.get().channel.awaitSingle()
-            val args = ChatCommandArguments(event)
-            val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, args, command)
+            val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command)
 
             try {
 
@@ -59,12 +56,12 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                 }
 
             } catch (parse: GuildTargetInvalidException) {
-                param.reply(Embeds.error("${parse.string} Execute this command while in a server channel.")).subscribe()
+                param.send(Embeds.error("${parse.string} Execute this command while in a server channel.")).subscribe()
 
             } catch (perms: MemberPermissionsException) {
                 val s = if(perms.perms.size > 1) "s" else ""
                 val reqs = perms.perms.joinToString(", ")
-                param.reply(Embeds.error("The **${event.commandName}** command is restricted. (Requires the **$reqs** permission$s).")).subscribe()
+                param.send(Embeds.error("The **${event.commandName}** command is restricted. (Requires the **$reqs** permission$s).")).subscribe()
 
             } catch (feat: ChannelFeatureDisabledException) {
                 //val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
@@ -80,14 +77,14 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                 val enabledIn = if(channels != null) "\n**${feat.feature}** is currently enabled in the following channels: $channels"
                 else ""
 
-                param.reply(Embeds.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn"))
+                param.send(Embeds.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn"))
                     .awaitSingle()
 
             } catch (guildFeature: GuildFeatureDisabledException) {
 
                 val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
                 val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
-                param.reply(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
+                param.send(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
 
             } catch (cmd: GuildCommandDisabledException) {
 
@@ -119,17 +116,17 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                         author.privateChannel
                             .flatMap { pm ->
                                 pm.createMessage(
-                                    Embeds.error("I tried to respond to your command **${command.baseName}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
+                                    Embeds.error("I tried to respond to your command **${command.name}** in channel ${chan.getMention()} but I am missing required permissions:\n\n**$listMissing\n\n**If you think bot commands are intended to be used in this channel, please ask the server's admins to check my permissions.")
                                 )
                             }.awaitSingle()
                     }
                     else -> {
-                        LOG.error("Uncaught client exception in command ${command.baseName} on guild $targetId: ${ce.message}")
+                        LOG.error("Uncaught client exception in command ${command.name} on guild $targetId: ${ce.message}")
                         LOG.debug(ce.stackTraceString) // these can be relatively normal - deleted channels and other weirdness
                     }
                 }
             } catch (e: Exception) {
-                LOG.error("\nUncaught (non-discord) exception in command ${command.baseName} on guild $targetId: ${e.message}\nErroring command: ${event.commandName} :: ${event.options}")
+                LOG.error("\nUncaught (non-discord) exception in command ${command.name} on guild $targetId: ${e.message}\nErroring command: ${event.commandName} :: ${event.options}")
                 LOG.warn(e.stackTraceString)
             }
         }

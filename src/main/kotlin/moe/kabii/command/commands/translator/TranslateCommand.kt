@@ -52,13 +52,13 @@ object TranslateCommand : Command("translate", "tl", "tlate", "transl", "t") {
             } catch(e: Exception) {
                 LOG.info("Translation request failed: ${e.message}")
                 LOG.debug(e.stackTraceString)
-                reply(Embeds.error("Text translation failed.")).awaitSingle()
+                send(Embeds.error("Text translation failed.")).awaitSingle()
                 return@discord
             }
             val confidence = if(translation.confidence != null && translation.confidence < .8) ", ${(translation.confidence * 100).toInt()}%" else ""
             val detected = if(translation.detected) " (detected$confidence)" else ""
 
-            reply(
+            send(
                 Embeds.fbk(translation.translatedText)
                     .withAuthor(EmbedCreateFields.Author.of("Translation for ${author.userAddress()}", event.message.createJumpLink(), author.avatarUrl))
                     .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null))

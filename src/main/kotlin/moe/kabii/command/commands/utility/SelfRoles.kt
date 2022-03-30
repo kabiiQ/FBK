@@ -25,7 +25,7 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
             }
             val role = Search.roleByNameOrID(this, noCmd)
             if(role == null) {
-                reply(Embeds.error("Can not find role **$noCmd**.")).awaitSingle()
+                send(Embeds.error("Can not find role **$noCmd**.")).awaitSingle()
                 return@discord
             }
             val selfAssignable =
@@ -35,17 +35,17 @@ object SelfRole : Command("role", "gimme", "iam", "iamnot", "give", "assign", "s
             val response = if(selfAssignable) {
                 if(member.roleIds.contains(role.id)) {
                     when(member.removeRole(role.id).success().tryAwait()) {
-                        is Ok -> reply(Embeds.fbk("You have been removed from the **${role.name}** role."))
-                        is Err -> reply(Embeds.error("I tried to remove the **${role.name}** role from you, but I can not manage that role."))
+                        is Ok -> send(Embeds.fbk("You have been removed from the **${role.name}** role."))
+                        is Err -> send(Embeds.error("I tried to remove the **${role.name}** role from you, but I can not manage that role."))
                     }
                 } else {
                     when(member.addRole(role.id).success().tryAwait()) {
-                        is Ok -> reply(Embeds.fbk("You have been given the **${role.name}** role."))
-                        is Err -> reply(Embeds.error("I tried to give you the **${role.name}** but I can not manage that role."))
+                        is Ok -> send(Embeds.fbk("You have been given the **${role.name}** role."))
+                        is Err -> send(Embeds.error("I tried to give you the **${role.name}** but I can not manage that role."))
                     }
                 }
             } else {
-                reply(Embeds.error("You can not give yourself the **${role.name}** role."))
+                send(Embeds.error("You can not give yourself the **${role.name}** role."))
             }
             response.awaitSingle()
         }

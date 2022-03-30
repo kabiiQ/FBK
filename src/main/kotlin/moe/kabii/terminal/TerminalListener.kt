@@ -45,7 +45,7 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
                 try {
                     command.executeTerminal!!(param)
                 } catch(e: Exception) {
-                    LOG.error("Uncaught exception in terminal command \"${command.baseName}\"\nErroring command: $line")
+                    LOG.error("Uncaught exception in terminal command \"${command.name}\"\nErroring command: $line")
                     LOG.warn(e.stackTraceString)
                 }
             }

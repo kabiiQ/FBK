@@ -34,7 +34,7 @@ object YoutubeLink : Command("ytlink", "linkyt", "youtubelink", "linkyoutube", "
                     event.message.addReaction(ReactionEmoji.unicode(EmojiCharacters.mailbox)).success().awaitSingle()
                     dm
                 } catch(ce: ClientException) {
-                    reply(Embeds.error("I am unable to send you a DM. Please check your privacy settings!")).awaitSingle()
+                    send(Embeds.error("I am unable to send you a DM. Please check your privacy settings!")).awaitSingle()
                     return@discord
                 }
             } else chan as PrivateChannel

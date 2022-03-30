@@ -13,13 +13,13 @@ object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
     init {
         discord {
             if(args.isEmpty()) {
-                reply(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **help <command name>**")).awaitSingle()
+                send(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **help <command name>**")).awaitSingle()
                 return@discord
             }
             // try to match command
             val match = Search.commandByAlias(handler, args[0], bypassExempt = true)
             if(match == null) {
-                reply(Embeds.error("Can't find the command named **${args[0]}**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()
+                send(Embeds.error("Can't find the command named **${args[0]}**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()
                 return@discord
             }
 
@@ -38,9 +38,9 @@ object CommandInfo : Command("help", "command", "cmd", "commandinfo") {
             }
             fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
 
-            reply(
+            send(
                 Embeds.fbk()
-                    .withTitle("Command information: ${match.baseName}")
+                    .withTitle("Command information: ${match.name}")
                     .run {
                         val wikiPage = match.getHelpURL()
                         if(wikiPage != null) withDescription("[Command Wiki Page]($wikiPage)")

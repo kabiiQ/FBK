@@ -18,13 +18,13 @@ object CommandOptions : CommandContainer {
                 if(args.isEmpty()) {
                     // display current prefix
                     val prefix = config.prefix
-                    reply(Embeds.fbk("The current command prefix for **${target.name}** is **$prefix**. Command example for changing prefix: **prefix $prefix**.")).awaitSingle()
+                    send(Embeds.fbk("The current command prefix for **${target.name}** is **$prefix**. Command example for changing prefix: **prefix $prefix**.")).awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
                 config.prefix = args[0]
                 config.save()
-                reply(Embeds.fbk("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible by using a mention as the prefix: <@${DiscordBot.selfId.asString()}>")).awaitSingle()
+                send(Embeds.fbk("Command prefix for **${target.name}** has been set to **${args[0]}** Commands are also accessible by using a mention as the prefix: <@${DiscordBot.selfId.asString()}>")).awaitSingle()
             }
         }
     }
@@ -37,7 +37,7 @@ object CommandOptions : CommandContainer {
             discord {
                 if(args.isEmpty()) {
                     val suffix = config.suffix
-                    reply(Embeds.fbk("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix none**.")).awaitSingle()
+                    send(Embeds.fbk("The current command prefix for **${target.name}** is **$suffix**. Command example for changing suffix: **suffix desu**. The suffix can be removed with **suffix none**.")).awaitSingle()
                     return@discord
                 }
                 member.verify(Permission.MANAGE_GUILD)
@@ -48,9 +48,9 @@ object CommandOptions : CommandContainer {
                 config.suffix = suffix
                 config.save()
                 if(suffix == null) {
-                    reply(Embeds.fbk("The command suffix for **${target.name}** has been removed."))
+                    send(Embeds.fbk("The command suffix for **${target.name}** has been removed."))
                 } else {
-                    reply(Embeds.fbk("The command suffix for **${target.name}** has been set to **$suffix**."))
+                    send(Embeds.fbk("The command suffix for **${target.name}** has been set to **$suffix**."))
                 }.awaitSingle()
             }
         }

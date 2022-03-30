@@ -9,29 +9,14 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.tryAwait
 
 object BotState : AudioCommandContainer {
-    object AudioReset : Command("restart", "reconnect") {
-        override val wikiPath: String? = null // intentionally undocumented command
-
-        init {
-            discord {
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
-                val botChannel = audio.discord.connection?.channelId?.awaitFirstOrNull()
-                    ?.run(target::getChannelById)
-                    ?.ofType(VoiceChannel::class.java)
-                    ?.tryAwait()?.orNull()
-                audio.refreshAudio(botChannel)
-            }
-        }
-    }
-
-    object BotSummon : Command("summon", "join") {
+    object BotSummon : Command("join") {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {
             discord {
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    reply(Embeds.error(voice.error)).awaitSingle()
+                    ereply(Embeds.error(voice.error)).awaitSingle()
                 }
             }
         }

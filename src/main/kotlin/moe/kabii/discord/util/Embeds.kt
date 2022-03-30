@@ -3,6 +3,7 @@ package moe.kabii.discord.util
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
+import moe.kabii.command.Command
 import moe.kabii.util.extensions.withUser
 
 object Embeds {
@@ -27,4 +28,9 @@ object Embeds {
     fun fbk(content: String, user: User? = null) = fbk(user).withDescription(content)
 
     fun other(content: String, color: Color, user: User? = null) = other(color, user).withDescription(content)
+
+    fun wiki(command: Command, commandError: String, user: User? = null): EmbedCreateSpec {
+        val link = if(command.wikiPath != null) " **[Command wiki page](${command.getHelpURL()})**." else ""
+        return other("$commandError$link", MessageColors.spec).withUser(user)
+    }
 }

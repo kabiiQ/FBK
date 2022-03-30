@@ -25,7 +25,7 @@ object UserModeration : CommandContainer {
                     return@discord
                 }
                 (chan as TextChannel).edit().withRateLimitPerUser(cooldown).awaitSingle()
-                reply(Embeds.fbk("Set the slowmode for **${chan.name}** to **$cooldown** seconds.")).awaitSingle()
+                send(Embeds.fbk("Set the slowmode for **${chan.name}** to **$cooldown** seconds.")).awaitSingle()
             }
         }
     }
@@ -37,7 +37,7 @@ object UserModeration : CommandContainer {
             botReqs(Permission.KICK_MEMBERS)
             discord {
                 if(!member.hasPermissions(Permission.KICK_MEMBERS)) {
-                    reply(Embeds.error("You do not have permission to kick members from **${target.name}**.")).awaitSingle()
+                    send(Embeds.error("You do not have permission to kick members from **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -47,7 +47,7 @@ object UserModeration : CommandContainer {
                 val kicked = args.mapNotNull { id -> id.toLongOrNull()?.snowflake }
                     .mapNotNull { id ->
                         val user = target.getMemberById(id).tryAwait().orNull()
-                        if(user == null) reply(Embeds.error("Unable to find user **${id.asString()}**.")).subscribe()
+                        if(user == null) send(Embeds.error("Unable to find user **${id.asString()}**.")).subscribe()
                         user
                     }
                     .map { member ->
@@ -56,7 +56,7 @@ object UserModeration : CommandContainer {
                         else "Unable to kick **${member.username} (${member.id.asString()})**"
                     }
                     .joinToString("\n")
-                reply(Embeds.fbk(kicked)).awaitSingle()
+                send(Embeds.fbk(kicked)).awaitSingle()
             }
         }
     }
@@ -68,7 +68,7 @@ object UserModeration : CommandContainer {
             botReqs(Permission.BAN_MEMBERS)
             discord {
                 if(!member.hasPermissions(Permission.BAN_MEMBERS)) {
-                    reply(Embeds.error("You do not have permission to ban users from **${target.name}**.")).awaitSingle()
+                    send(Embeds.error("You do not have permission to ban users from **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -84,8 +84,8 @@ object UserModeration : CommandContainer {
                 }
                 val ban = target.ban(targetUser.id).withReason("Ban command issued by ${author.id.asString()}.")
                 val response = if(ban.success().awaitSingle())
-                    reply(Embeds.fbk("**${targetUser.username} (${targetUser.id.asString()})** has been banned from **${target.name}**."))
-                else reply(Embeds.fbk("Unable to ban **${targetUser.username} (${targetUser.id.asString()}}**."))
+                    send(Embeds.fbk("**${targetUser.username} (${targetUser.id.asString()})** has been banned from **${target.name}**."))
+                else send(Embeds.fbk("Unable to ban **${targetUser.username} (${targetUser.id.asString()}}**."))
                 response.awaitSingle()
             }
         }
@@ -98,7 +98,7 @@ object UserModeration : CommandContainer {
             botReqs(Permission.BAN_MEMBERS)
             discord {
                 if(!member.hasPermissions(Permission.BAN_MEMBERS)) {
-                    reply(Embeds.error("You do not have permission to pardon users from **${target.name}**.")).awaitSingle()
+                    send(Embeds.error("You do not have permission to pardon users from **${target.name}**.")).awaitSingle()
                     return@discord
                 }
                 if(args.isEmpty()) {
@@ -106,8 +106,8 @@ object UserModeration : CommandContainer {
                     return@discord
                 }
                 val unban = args[0].toLongOrNull()?.snowflake?.let(target::unban)
-                val response = if(unban?.success()?.awaitSingle() == true) reply(Embeds.fbk("Removed a ban for ID **${args[0]}**."))
-                else reply(Embeds.fbk("Unable to pardon a ban for the ID **${args[0]}**."))
+                val response = if(unban?.success()?.awaitSingle() == true) send(Embeds.fbk("Removed a ban for ID **${args[0]}**."))
+                else send(Embeds.fbk("Unable to pardon a ban for the ID **${args[0]}**."))
                 response.awaitSingle()
             }
         }

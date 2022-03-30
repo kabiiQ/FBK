@@ -22,7 +22,7 @@ object AvatarUtil : CommandContainer {
             discord {
                 val targetUser = if (args.isEmpty()) author else Search.user(this, noCmd, guild)
                 if (targetUser == null) {
-                    reply(Embeds.error("Unable to find user **$noCmd**")).awaitSingle()
+                    send(Embeds.error("Unable to find user **$noCmd**")).awaitSingle()
                     return@discord
                 }
                 // uses new embed spec to send 2 in one message though we are typically not converting to this style until 1.1
@@ -60,13 +60,13 @@ object AvatarUtil : CommandContainer {
             discord {
                 val iconUrl = target.getIconUrl(Image.Format.PNG).orNull()
                 if(iconUrl != null) {
-                    reply(
+                    send(
                         Embeds.fbk()
                             .withTitle("Guild icon for **${target.name}**")
                             .withImage(iconUrl)
                     )
                 } else {
-                    reply(Embeds.error("Icon not available for **${target.name}**."))
+                    send(Embeds.error("Icon not available for **${target.name}**."))
                 }.tryAwait()
             }
         }

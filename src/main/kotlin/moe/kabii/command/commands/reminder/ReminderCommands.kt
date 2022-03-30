@@ -55,7 +55,7 @@ object ReminderCommands : CommandContainer {
                     // currently this is technically a limitation because we only pull from the database once per minute and shorter reminders will be lost as a result.
                     // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways
                     // also 2 years limit just for some arbitrary practicality
-                    reply(Embeds.error("**${args[0]}** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.")).awaitSingle()
+                    send(Embeds.error("**${args[0]}** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.")).awaitSingle()
                     return@discord
                 }
 
@@ -78,7 +78,7 @@ object ReminderCommands : CommandContainer {
                     val dmChan = author.privateChannel.tryAwait().orNull()
                     if(dmChan == null) {
                         if(!isPM) { // small optimization since we can't reply anyways :)
-                            reply(Embeds.error("I am unable to DM you at this time. Please check your privacy settings.")).awaitSingle()
+                            send(Embeds.error("I am unable to DM you at this time. Please check your privacy settings.")).awaitSingle()
                             return@discord
                         }
                         return@discord
@@ -99,7 +99,7 @@ object ReminderCommands : CommandContainer {
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
                 val reminderID = reminder.id
                 val reminderTarget = TimestampFormat.SHORT_DATE_TIME.format(Instant.now().plus(time))
-                reply(
+                send(
                     Embeds.other("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.", MessageColors.reminder)
                         .withFooter(EmbedCreateFields.Footer.of("Reminder ID: $reminderID", null))
                 ).awaitSingle()
@@ -125,10 +125,10 @@ object ReminderCommands : CommandContainer {
                         ?.also(Reminder::delete)
                 }
                 if(reminder == null) {
-                    reply(Embeds.error("You did not create the reminder with ID #**$targetReminder**.")).awaitSingle()
+                    send(Embeds.error("You did not create the reminder with ID #**$targetReminder**.")).awaitSingle()
                     return@discord
                 }
-                reply(Embeds.fbk("Your reminder with ID #**$targetReminder** has been cancelled.")).awaitSingle()
+                send(Embeds.fbk("Your reminder with ID #**$targetReminder** has been cancelled.")).awaitSingle()
             }
         }
     }

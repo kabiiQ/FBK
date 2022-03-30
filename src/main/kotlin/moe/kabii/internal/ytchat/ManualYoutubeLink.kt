@@ -40,7 +40,7 @@ object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin", "
             val userArg = args.drop(1).joinToString(" ")
             val targetUser = Search.user(this, userArg, guild!!)
             if(targetUser == null) {
-                reply(Embeds.error("Unable to find Discord user **$userArg**.")).awaitSingle()
+                send(Embeds.error("Unable to find Discord user **$userArg**.")).awaitSingle()
                 return@discord
             }
 
@@ -50,7 +50,7 @@ object ManualYoutubeLink : Command("adminlink", "manualytlink", "linkytadmin", "
                 LinkedYoutubeAccount.link(event.client, args[0], dbUser)
             }
 
-            reply(Embeds.fbk("Discord user **${targetUser.userAddress()}** (${targetUser.id.asString()} has been linked to YouTube account ID **${args[0]}** (unverified).")).awaitSingle()
+            send(Embeds.fbk("Discord user **${targetUser.userAddress()}** (${targetUser.id.asString()} has been linked to YouTube account ID **${args[0]}** (unverified).")).awaitSingle()
         }
     }
 }

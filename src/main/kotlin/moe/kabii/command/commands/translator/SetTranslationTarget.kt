@@ -29,14 +29,14 @@ object SetTranslationTarget : Command("setlang", "targetlang", "setlanguage", "t
                 else -> "**$noCmd** matched ${matchLang.size} languages. See [this link](${service.languageHelp}) for find the language code for your specific desired language."
             }
             if(error != null) {
-                reply(Embeds.error(error)).awaitSingle()
+                send(Embeds.error(error)).awaitSingle()
                 return@discord
             }
             val (langTag, newLang) = matchLang.entries.single()
 
             config.translator.defaultTargetLanguage = langTag
             config.save()
-            reply(Embeds.fbk("Translation language for **${target.name}** has been changed to **${newLang.fullName}**.")).awaitSingle()
+            send(Embeds.fbk("Translation language for **${target.name}** has been changed to **${newLang.fullName}**.")).awaitSingle()
         }
     }
 }

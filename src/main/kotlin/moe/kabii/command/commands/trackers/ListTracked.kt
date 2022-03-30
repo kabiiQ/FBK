@@ -32,7 +32,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.firstOrNull()
 
                 if(dbChannel == null) {
-                    reply(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
+                    send(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
                     return@propagateTransaction
                 }
 
@@ -65,7 +65,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
             }
 
             if(tracks.isEmpty()) {
-                reply(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
+                send(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
                 return@discord
             }
 

@@ -109,7 +109,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
                 "test" -> {
                     // test the current welcome config
                     if(!welcomer.anyElements()) {
-                        reply(Embeds.error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.")).awaitSingle()
+                        send(Embeds.error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.")).awaitSingle()
                         return@discord
                     }
 
@@ -120,7 +120,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
                     // set the current channel as the welcomer
                     welcomer.channelId = chan.id.asLong()
                     config.save()
-                    reply(Embeds.fbk("This channel (${chan.mention}) has been set the welcome message channel for **${target.name}**.")).awaitSingle()
+                    send(Embeds.fbk("This channel (${chan.mention}) has been set the welcome message channel for **${target.name}**.")).awaitSingle()
                 }
                 "getbanner", "showbanner" -> {
                     // allow downloading the existing banner
@@ -131,7 +131,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
                             MessageCreateSpec.create().withFiles(MessageCreateFields.File.of("welcome_banner.png", banner.inputStream()))
                         ).awaitSingle()
                     } else {
-                        reply(Embeds.error("Welcome banner image is not set for this server.")).awaitSingle()
+                        send(Embeds.error("Welcome banner image is not set for this server.")).awaitSingle()
                     }
                 }
                 else -> {
@@ -176,14 +176,14 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
     private suspend fun verifySaveImage(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
         if(value.matches(resetImage)) {
-            origin.reply(Embeds.fbk("Current welcome banner image has been removed.")).awaitSingle()
+            origin.send(Embeds.fbk("Current welcome banner image has been removed.")).awaitSingle()
             return Ok(null)
         }
 
         // given user message, check for attachment -> url
         val attachment = message.attachments.firstOrNull()
         if(attachment == null || supportFormat.none { attachment.filename.endsWith(it, ignoreCase = true) }) {
-            origin.reply(Embeds.error("No image attachment found. Please re-run your command with an attached .png, .jpg, .psd file. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped. Re-run and specify **remove** to remove any currently set image.")).awaitSingle()
+            origin.send(Embeds.error("No image attachment found. Please re-run your command with an attached .png, .jpg, .psd file. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped. Re-run and specify **remove** to remove any currently set image.")).awaitSingle()
             return Err(Unit)
         }
 
@@ -198,7 +198,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             val sizedImage = when {
                 image.height == targetH && image.width == targetW -> image
                 image.height < targetH || image.width < targetW -> {
-                    origin.reply(Embeds.error("Welcome banners should be exactly ${targetW}x$targetH (larger images will be resized). The image you provided is too small (${image.width}x${image.height})!")).awaitSingle()
+                    origin.send(Embeds.error("Welcome banners should be exactly ${targetW}x$targetH (larger images will be resized). The image you provided is too small (${image.width}x${image.height})!")).awaitSingle()
                     return Err(Unit)
                 }
                 else -> {
@@ -230,13 +230,13 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             origin.config.welcomer.imagePath = imagePath
             origin.config.save()
 
-            origin.reply(Embeds.fbk("New banner image accepted.")).awaitSingle()
+            origin.send(Embeds.fbk("New banner image accepted.")).awaitSingle()
             return Ok(bannerFile.name)
 
         } catch(e: Exception) {
             LOG.info("Unable to parse user welcome banner: ${attachment.url} :: ${e.message}")
             LOG.info(e.stackTraceString)
-            origin.reply(Embeds.error("An error occurred while trying to download the image you provided.")).awaitSingle()
+            origin.send(Embeds.error("An error occurred while trying to download the image you provided.")).awaitSingle()
             return Err(Unit)
         }
     }
@@ -252,7 +252,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             .replaceFirst("#", "")
             .toIntOrNull(radix = 16)
         return if(parsed == null || parsed < 0 || parsed > 16777215) {
-            origin.reply(Embeds.error("$colorArg is not a valid [hex color code.](${URLUtil.colorPicker})")).awaitSingle()
+            origin.send(Embeds.error("$colorArg is not a valid [hex color code.](${URLUtil.colorPicker})")).awaitSingle()
             Err(Unit)
         } else Ok(parsed)
     }

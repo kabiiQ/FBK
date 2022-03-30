@@ -37,7 +37,7 @@ object Random : CommandContainer {
                         val desc = rolls
                             .mapIndexed { index, roll -> "Roll #${index+1}: $roll\n" }
                             .joinToString("")
-                        reply(
+                        send(
                             Embeds.fbk(desc)
                                 .withFooter(EmbedCreateFields.Footer.of("Total value: ${rolls.sum()}", null))
                                 .withTitle("Rolling ${diceCount}x $diceSides-sided dice:")
@@ -50,7 +50,7 @@ object Random : CommandContainer {
                 val (range, result) = roll(
                     args
                 )
-                reply(
+                send(
                     Embeds.fbk("Result: $result").withTitle("Roll: $range")
                 ).awaitSingle()
             }
@@ -72,7 +72,7 @@ object Random : CommandContainer {
                         .awaitSingle()
                 } else args
                 val choice = options.random()
-                reply(
+                send(
                     Embeds.fbk("Result: $choice")
                 ).awaitSingle()
             }
@@ -107,7 +107,7 @@ object Random : CommandContainer {
 
         init {
             discord {
-                reply(Embeds.fbk(magicball.random())).awaitSingle()
+                send(Embeds.fbk(magicball.random())).awaitSingle()
             }
         }
     }
@@ -127,7 +127,7 @@ object Random : CommandContainer {
 
         init {
             discord {
-                reply(Embeds.fbk(flip(author.username))).awaitSingle()
+                send(Embeds.fbk(flip(author.username))).awaitSingle()
             }
         }
     }

@@ -84,7 +84,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
             val features = features()
 
             if(!features.streamTargetChannel) {
-                reply(Embeds.error("**#${guildChan.name}** does not have stream tracking enabled.")).awaitSingle()
+                send(Embeds.error("**#${guildChan.name}** does not have stream tracking enabled.")).awaitSingle()
                 return@discord
             }
 
@@ -93,7 +93,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                 "set" -> {
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        reply(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
+                        send(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
                         return@discord
                     }
 
@@ -116,14 +116,14 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     }
 
                     if (siteTarget.site !is StreamingTarget) {
-                        reply(Embeds.error("The **streamcfg set** command is only supported for **livestream** sources.")).awaitSingle()
+                        send(Embeds.error("The **streamcfg set** command is only supported for **livestream** sources.")).awaitSingle()
                         return@discord
                     }
 
                     val streamInfo = when (val streamCall = siteTarget.site.getChannel(siteTarget.identifier)) {
                         is Ok -> streamCall.value
                         is Err -> {
-                            reply(Embeds.error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.")).awaitSingle()
+                            send(Embeds.error("Unable to find the **${siteTarget.site.full}** stream **${siteTarget.identifier}**.")).awaitSingle()
                             return@discord
                         }
                     }
@@ -134,7 +134,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         feature.marks.removeIf { existing ->
                             existing.channel == dbChannel
                         }
-                        reply(Embeds.fbk("The live mark for **${streamInfo.displayName}** has been removed.")).awaitSingle()
+                        send(Embeds.fbk("The live mark for **${streamInfo.displayName}** has been removed.")).awaitSingle()
                     } else {
                         val newMark = ChannelMark(dbChannel, mark)
                         feature.marks.removeIf { existing ->
@@ -142,7 +142,7 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                         }
                         feature.marks.add(newMark)
 
-                        reply(Embeds.fbk("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
+                        send(Embeds.fbk("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
                                 "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
                                 "Note that it is **impossible** to use uploaded/custom emojis in a channel name.")).awaitSingle()
                     }
@@ -152,17 +152,17 @@ object StreamTrackerConfig : Command("streamcfg", "ytconfig", "youtubecfg", "ytc
                     // rename marks -> list configured channel marks
                     val feature = features.streamSettings
                     if (!feature.renameEnabled) {
-                        reply(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
+                        send(Embeds.error("The channel renaming feature is not enabled in **#${guildChan.name}**. If you wish to enable it, you can do so with **streamcfg rename enable**.")).awaitSingle()
                         return@discord
                     }
 
                     if(feature.marks.isEmpty()) {
-                        reply(Embeds.fbk("There are no configured channel marks in **#${guildChan.name}**."))
+                        send(Embeds.fbk("There are no configured channel marks in **#${guildChan.name}**."))
                     } else {
                         val allMarks = feature.marks.joinToString("\n") { mark ->
                             "${mark.channel.site.targetType.full}/${mark.channel.identifier}: ${mark.mark}"
                         }
-                        reply(
+                        send(
                             Embeds.fbk(allMarks).withTitle("Configured stream markers in **#${guildChan.name}**")
                         )
                     }.awaitSingle()

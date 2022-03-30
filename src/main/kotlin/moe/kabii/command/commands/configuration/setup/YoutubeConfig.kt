@@ -52,7 +52,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
 
             val features = features()
             if(!features.streamTargetChannel) {
-                reply(Embeds.error("**#${guildChan.name}** does not have livestream tracking enabled.")).awaitSingle()
+                send(Embeds.error("**#${guildChan.name}** does not have livestream tracking enabled.")).awaitSingle()
                 return@discord
             }
             val youtube = features.youtubeSettings

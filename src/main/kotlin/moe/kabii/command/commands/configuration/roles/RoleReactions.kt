@@ -70,19 +70,19 @@ object RoleReactions : CommandContainer {
                 val roleArg = args.drop(2).joinToString("")
                 val role = Search.roleByNameOrID(this, roleArg)
                 if(role == null) {
-                    reply(Embeds.error("Unknown role **$roleArg**.")).awaitSingle()
+                    send(Embeds.error("Unknown role **$roleArg**.")).awaitSingle()
                     return@discord
                 }
                 val safe = PermissionUtil.isSafeRole(role, member, target, managed = false, everyone = false)
                 if(!safe) {
-                    reply(Embeds.error("You can not assign the role **${role.name}**.")).awaitSingle()
+                    send(Embeds.error("You can not assign the role **${role.name}**.")).awaitSingle()
                     return@discord
                 }
 
                 val configs = config.selfRoles.reactionRoles
                 // make sure there is no conflicting info - can not have reaction role with same emoji
                 if(configs.find { cfg -> cfg.message.messageID == message.id.asLong() && cfg.reaction == reactEmoji } != null) {
-                    reply(Embeds.error("A reaction role is already set up with the same emoji on this message! I will attempt to re-add this reaction to the message.")).awaitSingle()
+                    send(Embeds.error("A reaction role is already set up with the same emoji on this message! I will attempt to re-add this reaction to the message.")).awaitSingle()
                     // due to the nature of reactions (they may be manually removed) - re-add just in case it was "remove all reactions"'d
                     message.addReaction(reactEmoji.toReactionEmoji()).success().awaitSingle()
                     return@discord
@@ -96,7 +96,7 @@ object RoleReactions : CommandContainer {
                     LOG.info("Adding reaction for reaction role failed: ${ex.message}")
                     LOG.debug(ex.stackTraceString)
                     val errMessage = if(err?.status?.code() == 403) "I am missing permissions to add reactions to that message." else "I am unable to add that reaction."
-                    reply(Embeds.error(errMessage)).awaitSingle()
+                    send(Embeds.error(errMessage)).awaitSingle()
                     return@discord
                 }
 
@@ -108,7 +108,7 @@ object RoleReactions : CommandContainer {
                 configs.add(newCfg)
                 config.save()
                 val link = message.createJumpLink()
-                reply(Embeds.fbk("A reaction role for **${role.name}** has been configured on message [${message.id.asString()}]($link).")).awaitSingle()
+                send(Embeds.fbk("A reaction role for **${role.name}** has been configured on message [${message.id.asString()}]($link).")).awaitSingle()
             }
         }
     }
@@ -133,7 +133,7 @@ object RoleReactions : CommandContainer {
                 // filter potential configuration matches
                 val messageConfigs = configs.filter { cfg -> cfg.message.messageID == messageID }
                 if(messageConfigs.isEmpty()) {
-                    reply(Embeds.error("No reaction roles exist on this message.")).awaitSingle()
+                    send(Embeds.error("No reaction roles exist on this message.")).awaitSingle()
                     return@discord
                 }
 
@@ -153,14 +153,14 @@ object RoleReactions : CommandContainer {
 
                 if(reactionConfigs.isEmpty()) {
                     val emojiName = emojiArg ?: "any"
-                    reply(Embeds.error("There are no existing reaction roles on the message **${messageID}** with emoji '$emojiName'. See **autorole reaction list** for existing configs in **${target.name}**.")).awaitSingle()
+                    send(Embeds.error("There are no existing reaction roles on the message **${messageID}** with emoji '$emojiName'. See **autorole reaction list** for existing configs in **${target.name}**.")).awaitSingle()
                     return@discord
                 }
 
                 reactionConfigs.forEach(configs::remove)
                 config.save()
                 val count = reactionConfigs.size
-                reply(Embeds.fbk("$count reaction role configuration${count.s()} removed from message **$messageID**.")).awaitSingle()
+                send(Embeds.fbk("$count reaction role configuration${count.s()} removed from message **$messageID**.")).awaitSingle()
             }
         }
     }
@@ -190,7 +190,7 @@ object RoleReactions : CommandContainer {
                 }
 
                 if(configs.isEmpty()) {
-                    reply(Embeds.fbk("There are no reaction roles configured in **${target.name}**.")).awaitSingle()
+                    send(Embeds.fbk("There are no reaction roles configured in **${target.name}**.")).awaitSingle()
                     return@discord
                 }
 
@@ -209,11 +209,11 @@ object RoleReactions : CommandContainer {
                 val configs = config.selfRoles.reactionRoles
 
                 if(configs.isEmpty()) {
-                    reply(Embeds.error("There are no reaction-role configs in **${guildChan.name}**.")).awaitSingle()
+                    send(Embeds.error("There are no reaction-role configs in **${guildChan.name}**.")).awaitSingle()
                     return@discord
                 }
 
-                reply(Embeds.fbk("I am now resetting user reactions on reaction-roles in **#${guildChan.name}**.")).awaitSingle()
+                send(Embeds.fbk("I am now resetting user reactions on reaction-roles in **#${guildChan.name}**.")).awaitSingle()
 
                 configs.toList()
                     .filter { roleCfg -> roleCfg.message.channelID == chan.id.asLong() }

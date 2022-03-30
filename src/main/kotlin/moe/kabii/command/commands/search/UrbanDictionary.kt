@@ -26,7 +26,7 @@ object Urban : Command("urbandictionary", "urban", "ud") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
             val lookup = if (args.isEmpty()) author.username else noCmd
-            val message = reply(Embeds.fbk("Searching for **$lookup**...")).awaitSingle()
+            val message = send(Embeds.fbk("Searching for **$lookup**...")).awaitSingle()
             val request = newRequestBuilder()
                 .get()
                 .url("https://api.urbandictionary.com/v0/define?term=$lookup")
@@ -38,13 +38,13 @@ object Urban : Command("urbandictionary", "urban", "ud") {
                     udAdapter.fromJson(body)
                 }
             } catch (e: Exception) {
-                reply(Embeds.error("Unable to reach UrbanDictionary.")).awaitSingle()
+                send(Embeds.error("Unable to reach UrbanDictionary.")).awaitSingle()
                 LOG.info(e.stackTraceString)
                 return@discord
             }
 
             if (define == null || define.list.isEmpty()) {
-                reply(
+                send(
                     Embeds.fbk("No definitions found for **$lookup**.").withAuthor(EmbedCreateFields.Author.of("UrbanDictionary", "https://urbandictionary.com", null))
                 ).awaitSingle()
                 return@discord

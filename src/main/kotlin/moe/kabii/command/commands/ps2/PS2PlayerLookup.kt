@@ -25,11 +25,11 @@ object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "
             val user = try {
                 PS2Parser.searchPlayerByName(args[0])
             } catch(e: Exception) {
-                reply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+                send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
                 return@discord
             }
             if(user == null) {
-                reply(Embeds.error("Unable to find PS2 user **'${args[0]}'**.")).awaitSingle()
+                send(Embeds.error("Unable to find PS2 user **'${args[0]}'**.")).awaitSingle()
                 return@discord
             }
             val outfit = if(user.outfit != null) "[${user.outfit.tag}] " else ""
@@ -40,7 +40,7 @@ object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "
                 .withZone(ZoneId.from(ZoneOffset.UTC))
                 .format(user.times.creation)
 
-            reply(
+            send(
                 Embeds.other(user.faction.color)
                     .withAuthor(EmbedCreateFields.Author.of("$outfit${user.name.first} - $asp${user.battleRank}", playersSite, user.faction.image))
                     .withTitle("Server: ${user.world?.name ?: "Unknown"}")

@@ -20,7 +20,7 @@ object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
             val targetUser = if(args.isNotEmpty()) {
                 val searchResult = Search.user(this@discord, noCmd, guild)
                 if(searchResult != null) searchResult else {
-                    reply(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
+                    send(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
                     return@discord
                 }
             } else author
@@ -29,7 +29,7 @@ object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
             val joinTime = guildMember?.joinTime?.orNull()?.run {
                 EmbedCreateFields.Field.of("Joined ${guild!!.name}", TimestampFormat.LONG_DATE_TIME.format(this), false)
             }
-            reply(
+            send(
                 Embeds.fbk(targetUser)
                     .withFields(mutableListOf(
                         EmbedCreateFields.Field.of("Account created", TimestampFormat.LONG_DATE_TIME.format(targetUser.id.timestamp), false),

@@ -73,11 +73,11 @@ internal interface AudioCommandContainer : CommandContainer {
         val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            origin.reply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            origin.ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
             return
         }
         if(!canFSkip(origin, track)) {
-            origin.reply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.")).awaitSingle()
+            origin.ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.")).awaitSingle()
             return
         }
         val data = track.userData as QueueData

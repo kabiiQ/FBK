@@ -37,7 +37,7 @@ object Purge : CommandContainer {
             .collectList()
             .awaitSingle()
         val warnSkip = if(skipped.isNotEmpty()) " ${skipped.size} messages were skipped as they were [too old](https://github.com/discord/discord-api-docs/issues/208) to be purged." else ""
-        origin.reply(Embeds.fbk("Deleted $messageCount messages from ${users.size} users.$warnSkip")).awaitSingle()
+        origin.send(Embeds.fbk("Deleted $messageCount messages from ${users.size} users.$warnSkip")).awaitSingle()
     }
 
     object PurgeCount : Command("purge", "clean", "prune") {
@@ -55,7 +55,7 @@ object Purge : CommandContainer {
                 }
                 val messageCount = args[0].toShortOrNull()
                 if(messageCount == null) {
-                    reply(Embeds.error("Invalid message count **${args[0]}**.")).awaitSingle()
+                    send(Embeds.error("Invalid message count **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
@@ -78,7 +78,7 @@ object Purge : CommandContainer {
                 }
                 val startMessage = args[0].toLongOrNull()?.minus(1)?.snowflake
                 if(startMessage == null || startMessage.asLong() < SMALL_MESSAGEID) {
-                    reply(Embeds.error("Invalid beginning message ID **${args[0]}**.")).awaitSingle()
+                    send(Embeds.error("Invalid beginning message ID **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
@@ -106,7 +106,7 @@ object Purge : CommandContainer {
                 if(startMessage == null || endMessage == null
                     || startMessage.asLong() < SMALL_MESSAGEID || endMessage.asLong() < SMALL_MESSAGEID
                     || startMessage > endMessage) {
-                    reply(Embeds.error("Invalid purge range between **${args[0]}** and **${args[1]}**.")).awaitSingle()
+                    send(Embeds.error("Invalid purge range between **${args[0]}** and **${args[1]}**.")).awaitSingle()
                     return@discord
                 }
 

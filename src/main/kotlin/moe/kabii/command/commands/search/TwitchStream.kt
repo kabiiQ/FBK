@@ -22,19 +22,19 @@ object TwitchStreamLookup : Command("twitch", "stream", "twitchstream", "ttv") {
             }
             val twitchUser = TwitchParser.getUser(args[0]).orNull()
             if(twitchUser == null) {
-                reply(Embeds.error("Invalid Twitch username **${args[0]}**")).awaitSingle()
+                send(Embeds.error("Invalid Twitch username **${args[0]}**")).awaitSingle()
                 return@discord
             }
             val twitchStream = TwitchParser.getStream(twitchUser.userID).orNull()
             if(twitchStream == null) {
-                reply(Embeds.fbk("**${twitchUser.displayName}** is not currently live.")).awaitSingle()
+                send(Embeds.fbk("**${twitchUser.displayName}** is not currently live.")).awaitSingle()
                 return@discord
             }
             val settings = guild?.run {
                 GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings
             } ?: StreamSettings()
             val stream = TwitchEmbedBuilder(twitchUser, settings).stream(twitchStream)
-            reply(stream.create()).awaitSingle()
+            send(stream.create()).awaitSingle()
         }
     }
 }

@@ -48,11 +48,11 @@ object PS2OutfitLookupCommands : CommandContainer {
         val outfit = try {
             search(query)
         } catch(e: Exception) {
-            origin.reply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+            origin.send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
             return
         }
         if(outfit != null) displayOutfit(origin, outfit)
-        else origin.reply(Embeds.error("Unable to find PS2 outfit **'$query'**.")).awaitSingle()
+        else origin.send(Embeds.error("Unable to find PS2 outfit **'$query'**.")).awaitSingle()
     }
 
     private suspend fun displayOutfit(origin: DiscordParameters, outfit: PS2Outfit) {

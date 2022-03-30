@@ -26,7 +26,7 @@ object Drag : Command("drag", "move", "pull") {
                     member.verify(Permission.MANAGE_CHANNELS)
                     val targetChannel = member.voiceState.flatMap(VoiceState::getChannel).awaitSingle()
                     if (targetChannel != null) {
-                        reply(Embeds.fbk("Moving all users to **${targetChannel.name}**.")).subscribe()
+                        send(Embeds.fbk("Moving all users to **${targetChannel.name}**.")).subscribe()
                         target.voiceStates
                                 .flatMap(VoiceState::getUser)
                                 .flatMap { user -> user.asMember(target.id) }
@@ -35,7 +35,7 @@ object Drag : Command("drag", "move", "pull") {
                                 }.onErrorResume { _ -> Mono.empty() }
                                 .blockLast()
                     } else {
-                        reply(Embeds.error("**drag all** moves ALL users in this server's voice channels to your current voice channel. You must be in a voice channel that I can move users into, to use the command.")).awaitSingle()
+                        send(Embeds.error("**drag all** moves ALL users in this server's voice channels to your current voice channel. You must be in a voice channel that I can move users into, to use the command.")).awaitSingle()
                     }
                 }
                 // normal drag command pulls users along with the bot when it moves
@@ -44,18 +44,18 @@ object Drag : Command("drag", "move", "pull") {
                     with (TempStates.dragGuilds) {
                         if (contains(target.id)) {
                             remove(target.id)
-                            reply(Embeds.fbk("Drag operation cancelled.")).awaitSingle()
+                            send(Embeds.fbk("Drag operation cancelled.")).awaitSingle()
                         } else {
                             val audio = AudioManager.getGuildAudio(target.id.asLong())
                             val vc = AudioStateUtil.checkAndJoinVoice(this@discord)
                             if(vc is AudioStateUtil.VoiceValidation.Failure) {
-                                reply(Embeds.error(vc.error)).awaitSingle()
+                                send(Embeds.error(vc.error)).awaitSingle()
                                 return@discord
                             }
                             audio.discord.startTimeout()
 
                             add(target.id)
-                            val message = reply(Embeds.fbk("Ready! Move me to drag any users in my voice channel along with me.")).awaitSingle()
+                            val message = send(Embeds.fbk("Ready! Move me to drag any users in my voice channel along with me.")).awaitSingle()
                             ReactionListener(
                                     MessageInfo.of(message),
                                     listOf(
@@ -67,7 +67,7 @@ object Drag : Command("drag", "move", "pull") {
                                 if (contains(target.id)) {
                                     remove(target.id)
                                     message.delete().subscribe()
-                                    reply(Embeds.error("Drag operation cancelled.")).subscribe()
+                                    send(Embeds.error("Drag operation cancelled.")).subscribe()
                                 }
                                 true
                             }.create(message, add = true)

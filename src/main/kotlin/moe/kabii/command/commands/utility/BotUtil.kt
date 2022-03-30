@@ -16,9 +16,9 @@ object BotUtil : CommandContainer {
                     .flatMap(VoiceState::getChannel)
                     .flatMap { channel ->
                         val link = "https://discord.com/channels/${target.id.asString()}/${channel.id.asString()}/"
-                        reply(Embeds.fbk("[Screenshare channel for **${channel.name}**]($link)"))
+                        send(Embeds.fbk("[Screenshare channel for **${channel.name}**]($link)"))
                     }
-                    .switchIfEmpty(reply(Embeds.fbk("You need to be in a voice channel in this guild to use screenshare.")))
+                    .switchIfEmpty(send(Embeds.fbk("You need to be in a voice channel in this guild to use screenshare.")))
                     .awaitSingle()
             }
         }
@@ -30,7 +30,7 @@ object BotUtil : CommandContainer {
         init {
             discord {
                 val link = "https://discord.com/channels/${target.id.asString()}/${chan.id.asString()}/1"
-                reply(Embeds.fbk("[;)]($link)")).awaitSingle()
+                send(Embeds.fbk("[;)]($link)")).awaitSingle()
             }
         }
     }

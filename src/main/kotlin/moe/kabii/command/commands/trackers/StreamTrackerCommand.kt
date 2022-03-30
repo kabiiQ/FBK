@@ -40,7 +40,7 @@ object StreamTrackerCommand : TrackerCommand {
                     }
                     is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
-                origin.reply(Embeds.error(error)).awaitSingle()
+                origin.send(Embeds.error(error)).awaitSingle()
                 return
             }
         }
@@ -53,7 +53,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // already tracked. otherwise we'll create the target
         if(dbTarget != null) {
-            origin.reply(Embeds.error("**${streamInfo.displayName}** is already tracked.")).awaitSingle()
+            origin.send(Embeds.error("**${streamInfo.displayName}** is already tracked.")).awaitSingle()
             return
         }
 
@@ -68,7 +68,7 @@ object StreamTrackerCommand : TrackerCommand {
             }
         }
 
-        origin.reply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
+        origin.send(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
 
         // side-effects for prompt data maintenance
         try {
@@ -91,7 +91,7 @@ object StreamTrackerCommand : TrackerCommand {
         val streamInfo = streamTarget.getChannel(target.identifier).orNull()
 
         if(streamInfo == null) {
-            origin.reply(Embeds.error("Unable to find **${streamTarget.full}** stream **${target.identifier}**.")).awaitSingle()
+            origin.send(Embeds.error("Unable to find **${streamTarget.full}** stream **${target.identifier}**.")).awaitSingle()
             return
         }
         val streamId = streamInfo.accountId
@@ -100,7 +100,7 @@ object StreamTrackerCommand : TrackerCommand {
             // check db if stream is tracked in this location
             val dbTarget = TrackedStreams.Target.getForChannel(origin.chan.id, site, streamId)
             if(dbTarget == null) {
-                origin.reply(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
+                origin.send(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
                 return@propagateTransaction
             }
             // user can untrack stream if they tracked it or are channel moderator
@@ -110,12 +110,12 @@ object StreamTrackerCommand : TrackerCommand {
                         || origin.author.id.asLong() == dbTarget.tracker.userID
             ) {
                 dbTarget.delete()
-                origin.reply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
+                origin.send(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
             } else {
                 val tracker = origin.chan.client
                     .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
                     ?.username ?: "invalid-user"
-                origin.reply(Embeds.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).")).awaitSingle()
+                origin.send(Embeds.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).")).awaitSingle()
             }
         }
     }

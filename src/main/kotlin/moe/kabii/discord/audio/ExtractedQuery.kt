@@ -3,6 +3,7 @@ package moe.kabii.discord.audio
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
+import moe.kabii.util.extensions.orNull
 
 data class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
     init {
@@ -16,14 +17,14 @@ data class ExtractedQuery private constructor(var url: String, val timestamp: Lo
         private val volumeRegex = Regex("[&?]volume=([0-9]{1,3})")
 
         fun from(origin: DiscordParameters): ExtractedQuery? {
-            val attachment = origin.event.message.attachments.firstOrNull()
+            val attachment = origin.event.interaction.message.map { m -> m.attachments.firstOrNull() }.orNull()
             if (attachment != null) {
                 // if attached file, try to send this through first
                 return default(attachment.url)
             }
-            if (origin.args.isEmpty()) return null
-            var url = origin.noCmd
+            val songArg = origin.args.optStr("song") ?: return null
 
+            var url = songArg
             // extract timestamp
             val matchTime = timestampRegex.find(url)
             val timestamp = matchTime?.groups?.get(1)

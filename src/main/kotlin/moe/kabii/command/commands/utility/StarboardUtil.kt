@@ -19,7 +19,7 @@ object StarboardUtil : CommandContainer {
 
                 val starboardCfg = config.starboard
                 if(starboardCfg == null) {
-                    reply(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **starboard set** command to create a starboard for this server.")).awaitSingle()
+                    send(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **starboard set** command to create a starboard for this server.")).awaitSingle()
                     return@discord
                 }
 
@@ -38,12 +38,12 @@ object StarboardUtil : CommandContainer {
                 val targetMessage = try {
                     chan.getMessageById(targetId).awaitSingle()
                 } catch(ce: ClientException) {
-                    reply(Embeds.error("Unable to find the message with ID **$targetId** in ${guildChan.name}.")).awaitSingle()
+                    send(Embeds.error("Unable to find the message with ID **$targetId** in ${guildChan.name}.")).awaitSingle()
                     return@discord
                 }
 
                 if(starboardCfg.findAssociated(targetId.asLong()) != null) {
-                    reply(Embeds.error("Message **${targetId}** is already starboarded.")).awaitSingle()
+                    send(Embeds.error("Message **${targetId}** is already starboarded.")).awaitSingle()
                     return@discord
                 }
 

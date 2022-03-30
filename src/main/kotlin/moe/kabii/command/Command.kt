@@ -10,9 +10,7 @@ import kotlin.reflect.KProperty1
 // Now purely aesthetic, Command inheritance is reflectively searched
 interface CommandContainer
 
-abstract class Command(val baseName: String, vararg alias: String) {
-    val aliases = listOf(baseName, *alias)
-
+abstract class Command(val name: String) {
     abstract val wikiPath: String?
     open val commandExempt: Boolean = false
 
@@ -23,10 +21,7 @@ abstract class Command(val baseName: String, vararg alias: String) {
 
     fun getHelpURL(): String? = wikiPath?.let { "${SourcePaths.wikiURL}/$wikiPath" }
 
-    var discordReqs: List<Permission> = listOf(
-            Permission.SEND_MESSAGES,
-            Permission.EMBED_LINKS
-        )
+    var discordReqs = defaultPerms
 
     fun botReqs(vararg permission: Permission) {
         discordReqs = discordReqs + permission.toList()
@@ -38,6 +33,13 @@ abstract class Command(val baseName: String, vararg alias: String) {
 
     fun terminal(block: suspend TerminalParameters.() -> Unit) {
         executeTerminal = block
+    }
+
+    companion object {
+        val defaultPerms = listOf(
+            Permission.SEND_MESSAGES,
+            Permission.EMBED_LINKS
+        )
     }
 }
 

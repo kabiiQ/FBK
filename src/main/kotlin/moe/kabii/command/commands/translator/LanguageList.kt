@@ -11,7 +11,7 @@ object LanguageList : Command("languages", "languagelist", "langs") {
     init {
         discord {
             val service = Translator.defaultService
-            reply(Embeds.fbk("The list of supported languages for translation can be found [here.](${service.languageHelp})")).awaitSingle()
+            send(Embeds.fbk("The list of supported languages for translation can be found [here.](${service.languageHelp})")).awaitSingle()
         }
     }
 }

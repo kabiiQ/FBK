@@ -4,7 +4,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
 
 object FilterPresets : AudioCommandContainer {
-    object DoubleTime : Command("dt", "doubletime") {
+    object DoubleTime : Command("doubletime") {
         override val wikiPath = "Music-Player#audio-manipulationfilters"
 
         init {
@@ -17,7 +17,7 @@ object FilterPresets : AudioCommandContainer {
         }
     }
 
-    object Nightcore : Command("nightcore", "nc") {
+    object Nightcore : Command("nightcore") {
         override val wikiPath = "Music-Player#audio-manipulationfilters"
 
         init {
@@ -31,7 +31,7 @@ object FilterPresets : AudioCommandContainer {
         }
     }
 
-    object Daycore : Command("daycore", "dc") {
+    object Daycore : Command("daycore") {
         override val wikiPath = "Music-Player#audio-manipulationfilters"
 
         init {

@@ -9,7 +9,6 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.verifyBotAdmin
 
-// Generally very lax argument and error handling in these commands. they are not used often and even then by only a handlful of people.
 // intentionally undocumented commands
 object Status : Command("status") {
     override val wikiPath: String? = null

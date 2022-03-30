@@ -77,7 +77,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         val channelTarget = if(channelArg != null) {
             val search = Search.channelByID<GuildChannel>(this, channelArg)
             if(search == null) {
-                reply(Embeds.error("Unable to find channel **$channelArg**.")).awaitSingle()
+                send(Embeds.error("Unable to find channel **$channelArg**.")).awaitSingle()
                 return@with
             } else search
         } else guildChan
@@ -86,7 +86,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
         val current = config.starboard
         if(current != null) {
             if(current.channel == channelTarget.id.asLong()) {
-                reply(
+                send(
                     Embeds.error("Starboard already enabled in ${channelTarget.mention}.")
                         .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
                 ).awaitSingle()
@@ -95,7 +95,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
                 // move starboard to new channel
                 current.channel = channelTarget.id.asLong()
                 config.save()
-                reply(
+                send(
                     Embeds.fbk("Starboard has been moved to ${channelTarget.mention}}.")
                         .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
                 ).awaitSingle()
@@ -105,7 +105,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
             val new = StarboardSetup(channelTarget.id.asLong())
             config.starboard = new
             config.save()
-            reply(
+            send(
                 Embeds.fbk("Starboard has been created. Messages which receive ${new.starsAdd} stars ${EmojiCharacters.star} will be placed on the starboard in ${channelTarget.mention}. This threshold can be changed by running the [**starboard stars <star requirement>**](https://github.com/kabiiQ/FBK/wiki/Starboard#starboard-configuration-starboard) command.")
                     .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
             ).awaitSingle()
@@ -115,13 +115,13 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
     private suspend fun disableStarboard(origin: DiscordParameters) = with(origin) {
         val current = config.starboard
         if(current == null) {
-            reply(Embeds.error("**${target.name}** does not currently have a starboard.")).awaitSingle()
+            send(Embeds.error("**${target.name}** does not currently have a starboard.")).awaitSingle()
             return@with
         }
 
         config.starboard = null
         config.save()
-        reply(
+        send(
             Embeds.fbk("Starboard has been disabled.")
                 .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
         ).awaitSingle()
@@ -129,7 +129,7 @@ object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard"
 
     private suspend fun configStarboard(origin: DiscordParameters) = with(origin) {
         if(config.starboard == null) {
-            reply(Embeds.error("There is no currently no starboard ${EmojiCharacters.star} for **${target.name}**. Run the **starboard set** command in a channel to make it into your server's starboard.")).awaitSingle()
+            send(Embeds.error("There is no currently no starboard ${EmojiCharacters.star} for **${target.name}**. Run the **starboard set** command in a channel to make it into your server's starboard.")).awaitSingle()
             return
         }
         val configurator = Configurator(

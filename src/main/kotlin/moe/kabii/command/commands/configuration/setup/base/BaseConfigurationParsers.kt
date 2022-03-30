@@ -24,7 +24,7 @@ object BaseConfigurationParsers {
         }
         val matchChannel = Search.channelByID<GuildMessageChannel>(origin, input)
         if(matchChannel == null) {
-            origin.reply(Embeds.error("Unable to find the channel **$input**.")).awaitSingle()
+            origin.send(Embeds.error("Unable to find the channel **$input**.")).awaitSingle()
             return Err(Unit)
         }
         return Ok(matchChannel.id.asLong())
@@ -34,7 +34,7 @@ object BaseConfigurationParsers {
         if(resetEmoji.matches(value)) return@parser Ok(null)
         val emoji = EmojiUtil.parseEmoji(value)
         return@parser if(emoji == null) {
-            origin.reply(Embeds.error("$value is not a usable emoji.")).awaitSingle()
+            origin.send(Embeds.error("$value is not a usable emoji.")).awaitSingle()
             Err(Unit)
         } else Ok(emoji)
     }

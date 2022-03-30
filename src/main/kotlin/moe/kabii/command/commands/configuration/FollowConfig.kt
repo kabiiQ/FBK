@@ -51,7 +51,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             when(siteTarget.site) {
                 is StreamingTarget -> setStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg)
                 is moe.kabii.trackers.TwitterTarget -> setTwitterMention(this, siteTarget.identifier, roleArg)
-                else -> reply(Embeds.error("The **setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
+                else -> send(Embeds.error("The **setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
             }
         }
     }
@@ -60,7 +60,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
         val streamInfo = when (val streamCall = site.getChannel(siteUserId)) {
             is Ok -> streamCall.value
             is Err -> {
-                origin.reply(Embeds.error("Unable to find the **${site.full}** stream **$siteUserId**.")).awaitSingle()
+                origin.send(Embeds.error("Unable to find the **${site.full}** stream **$siteUserId**.")).awaitSingle()
                 return
             }
         }
@@ -80,7 +80,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             ).firstOrNull()
         }
         if (matchingTarget == null) {
-            origin.reply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.send(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
             return
         }
 
@@ -89,7 +89,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             else -> {
                 val search = Search.roleByNameOrID(origin, roleArg)
                 if(search == null) {
-                    origin.reply(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
+                    origin.send(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
                     return
                 } else search
             }
@@ -122,18 +122,18 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             }
         }
 
-        origin.reply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
+        origin.send(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
     }
 
     private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: String) {
         val twitterUser = try {
             TwitterParser.getUser(twitterId)
         } catch(e: Exception) {
-            origin.reply(Embeds.error("Unable to reach Twitter.")).awaitSingle()
+            origin.send(Embeds.error("Unable to reach Twitter.")).awaitSingle()
             return
         }
         if(twitterUser == null) {
-            origin.reply(Embeds.error("Unable to find the Twitter user '$twitterId'")).awaitSingle()
+            origin.send(Embeds.error("Unable to find the Twitter user '$twitterId'")).awaitSingle()
             return
         }
 
@@ -151,7 +151,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
         }
 
         if(matchingTarget == null) {
-            origin.reply(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.send(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**.")).awaitSingle()
             return
         }
 
@@ -160,7 +160,7 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             else -> {
                 val search = Search.roleByNameOrID(origin, roleArg)
                 if(search == null) {
-                    origin.reply(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
+                    origin.send(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
                     return
                 } else search
             }
@@ -187,6 +187,6 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                 "set to **${newMentionRole.name}**"
             }
         }
-        origin.reply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()
+        origin.send(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()
     }
 }

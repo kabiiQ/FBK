@@ -27,20 +27,20 @@ object TrackerConfig : CommandContainer {
                     supportedSite.alias.contains(trackerArg)
                 }
                 if (tracker == null) {
-                    reply(Embeds.error("Unknown/unsupported target **${args[0]}**.")).awaitSingle()
+                    send(Embeds.error("Unknown/unsupported target **${args[0]}**.")).awaitSingle()
                     return@discord
                 }
 
                 val features = config.getOrCreateFeatures(chan.id.asLong())
                 val featureEnabled = tracker.channelFeature.get(features)
                 if (!featureEnabled) {
-                    reply(Embeds.error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.")).awaitSingle()
+                    send(Embeds.error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.")).awaitSingle()
                     return@discord
                 }
 
                 features.trackerDefault = tracker.alias.first()
                 config.save()
-                reply(Embeds.fbk("The default track target for **#${guildChan.name}** has been set to **${tracker.full}**.")).awaitSingle()
+                send(Embeds.fbk("The default track target for **#${guildChan.name}** has been set to **${tracker.full}**.")).awaitSingle()
             }
         }
     }

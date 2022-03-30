@@ -33,7 +33,7 @@ object MediaTrackerCommand : TrackerCommand {
         // this may (ex. for kitsu) or may not (ex. for mal) make a call to find list ID - mal we only will know when we request the full list :/
         val siteListId = parser.getListID(inputId)
         if(siteListId == null) {
-            origin.reply(Embeds.error("Unable to find **$siteName** list with identifier **$inputId**.")).awaitSingle()
+            origin.send(Embeds.error("Unable to find **$siteName** list with identifier **$inputId**.")).awaitSingle()
             return
         }
 
@@ -44,11 +44,11 @@ object MediaTrackerCommand : TrackerCommand {
         }
 
         if(existingTrack != null) {
-            origin.reply(Embeds.error("**$siteName/$inputId** is already tracked in this channel.")).awaitSingle()
+            origin.send(Embeds.error("**$siteName/$inputId** is already tracked in this channel.")).awaitSingle()
             return
         }
 
-        val notice = origin.reply(Embeds.fbk("Retrieving **$siteName** list...")).awaitSingle()
+        val notice = origin.send(Embeds.fbk("Retrieving **$siteName** list...")).awaitSingle()
 
         // download and validate list
         val mediaList = try {
@@ -117,7 +117,7 @@ object MediaTrackerCommand : TrackerCommand {
 
         val siteListId = parser.getListID(inputId)
         if(siteListId == null) {
-            origin.reply(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
+            origin.send(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
             return
         }
 
@@ -126,7 +126,7 @@ object MediaTrackerCommand : TrackerCommand {
         propagateTransaction {
             val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.lowercase(), channelId)
             if (existingTrack == null) {
-                origin.reply(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
+                origin.send(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
                 return@propagateTransaction
             }
 
@@ -135,11 +135,11 @@ object MediaTrackerCommand : TrackerCommand {
                     || origin.event.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
 
                 existingTrack.delete()
-                origin.reply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
+                origin.send(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
 
             } else {
                 val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                origin.reply(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
+                origin.send(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
             }
         }
     }

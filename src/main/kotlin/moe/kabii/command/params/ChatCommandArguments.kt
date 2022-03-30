@@ -35,6 +35,10 @@ class ChatCommandArguments(val args: (String) -> Optional<ApplicationCommandInte
     fun user(name: String) = _user(name).get()
     fun optUser(name: String) = _user(name).orNull()
 
+    fun _double(name: String) = get(name, ApplicationCommandInteractionOptionValue::asDouble)
+    fun double(name: String) = _double(name).get()
+    fun optDouble(name: String) = _double(name).orNull()
+
     fun _baseChannel(name: String) = get(name, ApplicationCommandInteractionOptionValue::asChannel)
     fun baseChannel(name: String) = _baseChannel(name).get()
     fun optBaseChannel(name: String) = _baseChannel(name).orNull()

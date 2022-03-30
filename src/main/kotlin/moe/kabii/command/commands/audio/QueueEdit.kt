@@ -1,7 +1,10 @@
 package moe.kabii.command.commands.audio
 
+import discord4j.core.`object`.command.ApplicationCommandInteractionOption
+import discord4j.core.`object`.entity.User
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -12,9 +15,10 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.withEach
 import moe.kabii.util.formatting.NumberUtil
+import java.util.Optional
 
 object QueueEdit : AudioCommandContainer {
-    object ShuffleQueue : Command("shuffle", "randomize") {
+    object ShuffleQueue : Command("shuffle") {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
@@ -23,24 +27,19 @@ object QueueEdit : AudioCommandContainer {
                 channelVerify(Permission.MANAGE_MESSAGES)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(audio.queue.isEmpty()) {
-                    reply(Embeds.error("There are no tracks currently in queue to shuffle.")).awaitSingle()
+                    ereply(Embeds.error("There are no tracks currently in queue to shuffle.")).awaitSingle()
                     return@discord
                 }
                 audio.editQueue {
                     shuffle()
                 }
-                reply(Embeds.fbk("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}")).awaitSingle()
+                ireply(Embeds.fbk("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}")).awaitSingle()
             }
         }
     }
 
-    private suspend fun parseUsers(param: DiscordParameters, audio: GuildAudio, arg: String): List<Int> {
+    private suspend fun userTracks(param: DiscordParameters, audio: GuildAudio, user: User?): List<Int> {
         val queue = audio.queue
-        // no valid tracks provided, try to take argument as a user name/id
-        // 'self' will override to removing your own tracks. slight overlap if someone was named 'self' but this is not a dangerous op
-        val user = if(arg.lowercase().trim() == "self") param.author else {
-            Search.user(param, arg, param.target)
-        }
         if(user == null) return emptyList()
         // get tracks in queue by this user
         return queue.mapIndexedNotNull { index, track -> // index + 1 needed as a side-effect because the other input type is user-friendly and 1-indexed
@@ -48,43 +47,47 @@ object QueueEdit : AudioCommandContainer {
         }
     }
 
-    object RemoveTracks : Command("remove", "unqueue", "removequeue") {
+    object RemoveTracks : Command("remove") {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
             discord {
-                // remove 1,2, 4-5 only remove tracks the user can skip normally
+                // remove (range) (user) only remove tracks the user can skip normally
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 val queue = audio.queue
                 if (queue.isEmpty()) {
-                    reply(Embeds.fbk("The queue is currently empty.")).awaitSingle() // technically not necessary
+                    ereply(Embeds.fbk("The queue is currently empty.")).awaitSingle() // technically not necessary
                     return@discord
                 }
-                if (args.isEmpty()) {
-                    usage(
-                        "**remove** is used to remove tracks from the queue.",
-                        "remove <track numbers in queue or a username/id to remove all tracks from>"
-                    ).awaitSingle()
+
+                val rangeArg = args.optStr("tracks")
+                val userArg = args.optUser("user")
+
+                if(booleanArrayOf(rangeArg != null, userArg != null).size != 1) {
+                    ereply(Embeds.wiki(command, "Provide either a track number to remove, a range of tracks, or specify the user to remove tracks from.")).awaitSingle()
                     return@discord
                 }
+
                 val outputMessage = StringBuilder()
-                val (selected, invalid) = ParseUtil.parseRanges(queue.size, args)
-                invalid.forEach { invalidArg ->
-                    outputMessage.append("Invalid range: $invalidArg\n")
-                }
-                if(selected.size == queue.size) {
-                    outputMessage.append("Clearing entire queue.\n")
-                }
-                val remove = if(selected.isNotEmpty()) selected else { // fall back to user search
-                    val users = parseUsers(this, audio, noCmd)
-                    if(users.isNotEmpty()) users else {
-                        usage(
-                            "$outputMessage\nNo track numbers provided to remove.",
-                            "remove <track numbers in queue or a username/id to remove all tracks from>"
-                        ).awaitSingle()
-                        return@discord
+                val remove = when {
+                    rangeArg != null -> {
+                        val (selected, invalid) = ParseUtil.parseRanges(queue.size, rangeArg.split(" "))
+                        invalid.forEach { invalidArg ->
+                            outputMessage.append("Invalid range: $invalidArg\n")
+                        }
+                        if(selected.size == queue.size) {
+                            outputMessage.append("Clearing entire queue.\n")
+                        }
+                        selected
                     }
+                    userArg != null -> userTracks(this, audio, userArg.awaitSingleOrNull())
+                    else -> error("impossible")
+                }
+
+                if(remove.isEmpty()) {
+                    ereply(Embeds.error("$outputMessage\nNo tracks removed. Provide track numbers or a user to remove all tracks from.")).awaitSingle()
+                    return@discord
                 }
                 val removed = mutableListOf<Int>()
                 val notRemoved = mutableListOf<Int>()
@@ -113,18 +116,19 @@ object QueueEdit : AudioCommandContainer {
                     if (notRemoved.isNotEmpty()) {
                         outputMessage.append("You can not skip tracks: ${formatRanges(notRemoved)}")
                     }
-                    reply(Embeds.fbk(outputMessage.toString())).awaitSingle()
+                    ireply(Embeds.fbk(outputMessage.toString())).awaitSingle()
                 }
             }
         }
     }
 
-    object ClearQueue : Command("clear", "empty") {
+    // TODO rewrite
+    object ClearQueue : Command("clear") {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
             discord {
-                RemoveTracks.executeDiscord!!(this.copy(args = listOf("-")))
+                ereply(Embeds.error("Did you mean: /clear - (to remove all tracks in queue) or /stop (to remove all tracks and also skip the current track)")).awaitSingle()
             }
         }
     }
