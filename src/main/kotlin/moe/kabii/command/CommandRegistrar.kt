@@ -28,7 +28,7 @@ object CommandRegistrar {
         val base =  ApplicationCommandRequest.builder()
             .name(module.command.name)
             .description("Configurable ${module.name} settings. Run '/${module.command.name} setup' to view all.")
-        val builder = module.elements.fold(base) { command, element ->
+        var builder = module.elements.fold(base) { command, element ->
             // build argument option
             val option = ApplicationCommandOptionData.builder()
                 .name(element.propertyFieldName) // "value"
@@ -87,6 +87,16 @@ object CommandRegistrar {
             .description("View all ${module.name} settings and configure.")
             .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
             .build()
-        return builder.addOption(embedSubCommand).build()
+
+        // add command-specific subcommands
+        val custom = module.subCommands
+
+        return builder
+            .addOption(embedSubCommand)
+            .run {
+                // add command-specific subcommands
+                if(module.subCommands.isNotEmpty()) addAllOptions(module.subCommands) else this
+            }
+            .build()
     }
 }

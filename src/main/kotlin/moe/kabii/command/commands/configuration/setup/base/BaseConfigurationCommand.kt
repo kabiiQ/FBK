@@ -17,6 +17,10 @@ import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
 import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.discordjson.json.ApplicationCommandData
+import discord4j.discordjson.json.ApplicationCommandOptionData
+import discord4j.discordjson.json.ImmutableApplicationCommandData
+import discord4j.discordjson.json.ImmutableApplicationCommandOptionData
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -113,8 +117,7 @@ open class CustomElement<T, VT>(
     val default: VT?,
     val parser: (DiscordParameters, String) -> Result<VT?, String>, // given input, produce value or invalid
     val value: (T) -> String, // given value, produce string for embed output
-    propertyType: ApplicationCommandOption.Type
-) : ConfigurationElement<T>(fullName, propName, propertyType)
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING)
 
 class ViewElement<T, ANY : Any?>(
     fullName: String,
@@ -123,7 +126,9 @@ class ViewElement<T, ANY : Any?>(
     val redirection: String,
 ) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING)
 
-open class ConfigurationModule<T>(val name: String, val command: Command, vararg val elements: ConfigurationElement<T>)
+open class ConfigurationModule<T>(val name: String, val command: Command, vararg val elements: ConfigurationElement<T>) {
+    var subCommands = mutableListOf<ApplicationCommandOptionData>()
+}
 
 class Configurator<T>(private val name: String, private val module: ConfigurationModule<T>, private val instance: T) {
     companion object {

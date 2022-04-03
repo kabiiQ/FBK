@@ -3,6 +3,7 @@ package moe.kabii.data.mongodb
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.discord.event.message.starboard.Starboard
 import moe.kabii.util.extensions.GuildID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
@@ -52,7 +53,10 @@ data class GuildConfiguration(
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
     val translator: TranslatorSettings = TranslatorSettings(),
-    var starboard: StarboardSetup? = null,
+
+    var starboardSetup: StarboardSetup = StarboardSetup(),
+    var starboard: StarboardSetup? = null, // TODO remove after migration
+
     val welcomer: WelcomeSettings = WelcomeSettings()
 ) {
     companion object {

@@ -7,14 +7,15 @@ import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 
-object ReactionConfig : Command("reactions", "reaction", "reactioncfg") {
+object ReactionConfig : Command("reactioncfg") {
     override val wikiPath = "Configuration-Commands#the-reactions-command"
 
     object ReactionConfigModule : ConfigurationModule<FeatureChannel>(
         "reaction role",
+        this,
         BooleanElement(
             "Remove user reactions from reaction-roles after users react and are assigned a role",
-            listOf("clean", "verification", "cleanreactions", "cleanreact", "remove", "removereactions"),
+            "clean",
             FeatureChannel::cleanReactionRoles
         )
     )

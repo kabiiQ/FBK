@@ -20,18 +20,6 @@ interface TrackerCommand {
 }
 
 object TrackerCommandBase : CommandContainer {
-    fun parseSiteArg(id: Int) = when(id) {
-        0 -> TwitterTarget
-        100 -> YoutubeTarget
-        101 -> TwitchTarget
-        102 -> TwitterSpaceTarget
-        103 -> TwitcastingTarget
-        200 -> MALTarget
-        201 -> KitsuTarget
-        202 -> AniListTarget
-        else -> error("unmapped 'site' target: $id")
-    }
-
     object TrackCommandBase : Command("track") {
         override val wikiPath = "Livestream-Tracker"
 

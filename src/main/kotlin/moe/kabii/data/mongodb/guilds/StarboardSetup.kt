@@ -9,7 +9,7 @@ import moe.kabii.util.UnicodeEmoji
 import moe.kabii.util.constants.EmojiCharacters
 
 data class StarboardSetup(
-    var channel: Long,
+    var channel: Long? = null,
     var starsAdd: Long = 3L,
     var starsRemove: Long = 0L,
     var removeOnClear: Boolean = true,
@@ -21,7 +21,7 @@ data class StarboardSetup(
 ) {
     @Transient val starsLock = Mutex()
 
-    suspend fun findAssociated(messageId: Long) = starred.find { starred ->  starred.starboardMessageId == messageId || starred.messageId == messageId }
+    fun findAssociated(messageId: Long) = starred.find { starred ->  starred.starboardMessageId == messageId || starred.messageId == messageId }
 
     fun asStarboard(guild: Guild, config: GuildConfiguration) = Starboard(this, guild, config)
     fun useEmoji() = emoji ?: UnicodeEmoji(EmojiCharacters.star)

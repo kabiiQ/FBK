@@ -11,74 +11,60 @@ import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.util.Embeds
 
-object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botlogedit", "modlog", "editmodlog", "edit-modlog", "edit-botlog") {
+object LogFeatures : Command("log") {
     override val wikiPath = "Moderation-Logs"
 
     object ChannelLogModule : ConfigurationModule<LogSettings>(
         "channel log",
+        this,
         BooleanElement(
             "Include bot actions in this channel's avatar/name/voice logs",
-            listOf("bots", "bot"),
+            "bots",
             LogSettings::includeBots
         ),
         BooleanElement(
             "User join log",
-            listOf("joins", "join", "userjoin"),
+            "joins",
             LogSettings::joinLog
         ),
         BooleanElement(
             "User part (leave) log",
-            listOf("parts", "part", "leave", "leaves", "leavers"),
+            "leaves",
             LogSettings::partLog
         ),
         BooleanElement(
             "User kick log",
-            listOf("kicks", "kick"),
+            "kicks",
             LogSettings::kickLogs
         ),
         BooleanElement(
             "User ban log",
-            listOf("bans", "ban"),
+            "bans",
             LogSettings::banLogs
         ),
         BooleanElement(
-            "Avatar log",
-            listOf("avatars", "avatar"),
-            LogSettings::avatarLog
-        ),
-        BooleanElement(
             "Username log",
-            listOf("names", "usernames", "username", "nicknames", "nickname", "nick", "nicks"),
+            "usernames",
             LogSettings::displayNameLog
         ),
         BooleanElement(
             "Voice channel activity log",
-            listOf("voice", "vc", "voiceactivity"),
+            "voice",
             LogSettings::voiceLog
         ),
         BooleanElement(
-            "Message edit log",
-            listOf("edit", "edits"),
-            LogSettings::editLog
-        ),
-        BooleanElement(
-            "Message delete log",
-            listOf("delete", "deletes"),
-            LogSettings::deleteLog
-        ),
-        BooleanElement(
             "Role update log",
-            listOf("roles", "role", "roleupdate"),
+            "roles",
             LogSettings::roleUpdateLog
         ),
         StringElement(
-            "Join message", listOf("joinMessage"), LogSettings::joinFormat,
-            prompt = "Enter a new message to be sent in this channel when users join this server and the join log is enabled. See the [wiki page](Moderation-Logs#join-and-leave-message-configuration) for available variables. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.",
+            "Join message", "joinMessage", LogSettings::joinFormat,
+            prompt = "Enter a new message to be sent in this channel when users join this server. See wiki for variables.",
             default = LogSettings.defaultJoin
         ),
         StringElement(
-            "Part (leave) message", listOf("partMessage", "leaveMessage"), LogSettings::partFormat,
-            prompt = "Enter a new message to be sent in this channel when users leave this server and the part log is enabled. See the [wiki page](Moderation-Logs#join-and-leave-message-configuration) for available variables. Enter \"reset\" to restore the default message or \"exit\" to leave the message as-is.",
+            "Part (leave) message", "leaveMessage", LogSettings::partFormat,
+            prompt = "Enter a new message to be sent in this channel when users leave this server. See wiki for variables.",
             default = LogSettings.defaultPart
         )
     )
@@ -101,10 +87,14 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 val any = newSettings.anyEnabled()
                 if(features.logChannel && !any) {
                     features.logChannel = false
-                    send(Embeds.fbk("${chan.mention} is no longer a mod log channel.")).subscribe()
+                    event.createFollowup()
+                        .withEmbeds(Embeds.fbk("${chan.mention} is no longer a mod log channel."))
+                        .subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
-                    send(Embeds.fbk("${chan.mention} is now a mod log channel.")).subscribe()
+                    event.createFollowup()
+                        .withEmbeds(Embeds.fbk("${chan.mention} is now a mod log channel."))
+                        .subscribe()
                 }
                 if(newSettings.joinFormat.contains("&invite")) {
                     config.guildSettings.utilizeInvites = true
@@ -112,7 +102,9 @@ object LogFeatures : Command("log", "botlog", "editlog", "editbotlog", "botloged
                 config.save()
 
                 if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
-                    send(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command.")).awaitSingle()
+                    event.createFollowup()
+                        .withEmbeds(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command."))
+                        .awaitSingle()
                 }
             }
         }

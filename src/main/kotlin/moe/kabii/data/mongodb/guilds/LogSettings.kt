@@ -14,11 +14,8 @@ data class LogSettings(
     var kickLogs: Boolean = false,
     var banLogs: Boolean = false,
     var partFormat: String = defaultPart,
-    var avatarLog: Boolean = false,
     var displayNameLog: Boolean = false,
     var voiceLog: Boolean = false,
-    var editLog: Boolean = false,
-    var deleteLog: Boolean = false,
     var roleUpdateLog: Boolean = false) {
 
     fun shouldInclude(user: User): Boolean = includeBots || !user.isBot
@@ -28,7 +25,7 @@ data class LogSettings(
         const val defaultPart = "**&name&discrim** left the server. (&mention)"
     }
 
-    fun anyEnabled() = booleanArrayOf(joinLog, partLog, avatarLog, displayNameLog, voiceLog, editLog, deleteLog, roleUpdateLog).any(true::equals)
+    fun anyEnabled() = booleanArrayOf(joinLog, partLog, displayNameLog, voiceLog, roleUpdateLog).any(true::equals)
     fun auditableLog() = booleanArrayOf(false).any(true::equals)
 }
 
@@ -37,9 +34,17 @@ data class WelcomeSettings(
     var includeAvatar: Boolean = true,
     var includeUsername: Boolean = true,
     var message: String = "",
-    var welcomeTagLine: String? = "WELCOME",
+
+    var welcomeTagLine: String? = "WELCOME", // TODO remove after migration
+    var includeTagline: Boolean = true,
+    var taglineValue: String = "WELCOME",
+
     var imagePath: String? = null,
-    var imageText: String? = defaultImageText,
+
+    var imageText: String? = defaultImageText, // TODO remove after migration
+    var includeImageText: Boolean = true,
+    var imageTextValue: String = defaultImageText,
+
     var imageTextColor: Int? = defaultColor,
     var emoji: DiscordEmoji? = null
 ) {

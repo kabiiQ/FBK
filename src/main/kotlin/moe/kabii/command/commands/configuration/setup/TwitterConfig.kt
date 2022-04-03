@@ -14,41 +14,42 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 
-object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
+object TwitterConfig : Command("twitter") {
     override val wikiPath = "Twitter-Tracker"
 
     object TwitterConfigModule : ConfigurationModule<TwitterSettings>(
         "twitter tracker",
+        this,
         BooleanElement("Post when tracked Twitter feeds post a normal Tweet",
-            listOf("tweets", "tweet", "regular", "normal", "basic"),
+            "tweets",
             TwitterSettings::displayNormalTweet,
         ),
         BooleanElement("Post when tracked feeds retweet other users",
-            listOf("rt", "retweet", "retweets"),
+            "retweets",
             TwitterSettings::displayRetweet
         ),
         BooleanElement("Post when tracked feeds quote tweet other users",
-            listOf("quote", "quotetweet", "quotes", "qt"),
+            "quotes",
             TwitterSettings::displayQuote
         ),
         BooleanElement("Post when tracked feeds reply to other users",
-            listOf("reply", "replies", "directreply"),
+            "replies",
             TwitterSettings::displayReplies
         ),
         BooleanElement("Use the `setmention` config in this channel",
-            listOf("pingRoles", "pings", "ping", "mentions", "mention", "mentionroles"),
+            "pings",
             TwitterSettings::mentionRoles
         ),
         BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
-            listOf("mediaonly", "onlymedia", "limittext"),
+            "mediaonly",
             TwitterSettings::mediaOnly
         ),
         BooleanElement("Automatically request a translation for posted tweets",
-            listOf("translate", "translations", "tl", "t"),
+            "translate",
             TwitterSettings::autoTranslate
         ),
         BooleanElement("Receive Tweet updates faster (for high priority feeds)",
-            listOf("stream", "streaming", "prioritize", "priority"),
+            "stream",
             TwitterSettings::streamFeeds
         )
     )
@@ -59,7 +60,7 @@ object TwitterConfig : Command("twitter", "twit", "twtr", "twitr", "twiter") {
 
             val features = features()
             if(!features.twitterTargetChannel) {
-                send(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
+                ereply(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
                 return@discord
             }
             val twitter = features.twitterSettings

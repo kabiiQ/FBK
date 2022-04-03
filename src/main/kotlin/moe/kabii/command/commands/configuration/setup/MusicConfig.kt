@@ -11,70 +11,71 @@ import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.MusicSettings
 
 object MusicConfig : CommandContainer {
-    object MusicBot : Command("musicbot", "musicconfig", "musicsetup", "musicsettings") {
+    object MusicBot : Command("musiccfg") {
         override val wikiPath = "Music-Player#configuration"
 
         object MusicSettingsModule : ConfigurationModule<MusicSettings>(
             "music bot",
+            this,
             BooleanElement(
                 "Delete old Now Playing bot messages",
-                listOf("clean", "deleteold", "delete", "removeold", "clean", "cleanold", "remove"),
+                "deleteold",
                 MusicSettings::deleteOldBotMessages
             ),
             BooleanElement(
                 """Delete old user "play" commands (requires Manage Messages)""",
-                listOf("cleanuser", "removeuser", "deleteuser"),
+                "deleteuser",
                 MusicSettings::deleteUserCommands
             ),
             BooleanElement(
                 "Song owner can force skip song with fskip",
-                listOf("ownerperms", "ownerskip", "authorskip"),
+                "ownerskip",
                 MusicSettings::queuerFSkip
             ),
             BooleanElement(
                 "Restrict the usage of audio filters (volume, bass) to users with fskip permission",
-                listOf("restrictfilters", "limitfilters"),
+                "restrictfilters",
                 MusicSettings::restrictFilters
             ),
             BooleanElement(
                 "Restrict the usage of playback manipulation (ff, seek) to users with fskip permission",
-                listOf("restrictseek", "restrictmanipulation"),
+                "restrictseek",
                 MusicSettings::restrictSeek
             ),
             BooleanElement(
                 "Skip command will force skip when permitted",
-                listOf("alwaysfskip", "forceskip", "fskip", "force-skip"),
+                "alwaysfskip",
                 MusicSettings::autoFSkip
             ),
             BooleanElement(
                 "Skip song if the requester is no longer in the voice channel",
-                listOf("skipIfAbsent"),
+                "skipIfAbsent",
                 MusicSettings::skipIfAbsent
             ),
             LongElement(
                 "User ratio needed for vote skip",
-                listOf("ratio", "skipratio"),
+                "skipRatio",
                 MusicSettings::skipRatio,
                 range = 1..100L,
-                prompt = "Enter the new value for the vote skip ratio (% of users in channel needed to vote skip). If either the user ratio or the user count votes, the current song will be skipped. For example, type 50 if you want a vote skip to require half the users in the channel."
+                prompt = "Enter the new value for the vote skip ratio (% of users in channel needed to vote skip)."
             ),
             LongElement(
                 "User count needed for skip",
-                listOf("count", "usercount", "skipcount"),
+                "skipCount",
                 MusicSettings::skipUsers,
                 range = 1..20L,
-                prompt = "Enter the new value for the minimum users to vote skip a song. If either the user ratio or the user count is reached, the current song will be skipped."
+                prompt = "Enter the new value for the minimum users to vote skip a song."
             ),
             LongElement(
                 "Max tracks in queue for one user (0 = unlimited)",
-                listOf("max", "tracks", "maxtracks"),
+                "maxTracks",
                 MusicSettings::maxTracksUser,
                 range = 0..Long.MAX_VALUE,
                 prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
             ),
             LongElement(
                 "Volume limit",
-                listOf("volumeLimit", "maxVolume", "limit"),
+                "volumeLimit",
                 MusicSettings::volumeLimit,
                 range = 0..Short.MAX_VALUE.toLong(),
                 prompt = "Enter the new absolute maximum volume that server admins can enter using the volume command. Normal users will still be limited to 5-25 volume and moderators limited within 0-100 volume."

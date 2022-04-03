@@ -22,6 +22,6 @@ object ConfigurationElementParsers {
 
     fun durationParser(): (DiscordParameters, String) -> Result<String, String> = parser@ { _, value ->
         val duration = DurationParser.tryParse(value)
-        if(duration == null) Err("$value is not a valid duration. Examples: 6h, 2m, 1h30m") else Ok(value)
+        if(duration == null) Err("$value is not a valid duration. Examples: 6h, 2m, 1h30m") else Ok(duration.toString())
     }
 }

@@ -7,44 +7,50 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.*
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.DurationFormatter
+import java.time.Duration
 import kotlin.reflect.KMutableProperty1
 
-object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "youtubeconfig") {
+object YoutubeConfig : Command("yt") {
     override val wikiPath = "Livestream-Tracker#-youtube-tracker-configuration-with-youtube"
 
     @Suppress("UNCHECKED_CAST")
     object YoutubeConfigModule : ConfigurationModule<YoutubeSettings>(
         "youtube tracker",
+        this,
         BooleanElement("Post when tracked channels are live (yt)",
-            listOf("streams", "livestreams", "live", "nowlive", "stream"),
+            "streams",
             YoutubeSettings::liveStreams
         ),
         BooleanElement("Post on video upload",
-            listOf("uploads", "upload", "video", "newvideo"),
+            "uploads",
             YoutubeSettings::uploads
         ),
         BooleanElement("Post on premiere start",
-            listOf("premieres", "premiere"),
+            "premieres",
             YoutubeSettings::premieres
         ),
         BooleanElement("Post on initial stream creation",
-            listOf("creation", "streamCreation", "initial", "scheduled"),
+            "creation",
             YoutubeSettings::streamCreation
         ),
-        DurationElement("Post when a stream is starting soon",
-            listOf("upcoming", "notice", "upcomingNotice", "startingSoon", "soon", "warning"),
-            YoutubeSettings::upcomingNotificationDuration,
-            prompt = "To enable the upcoming stream notification, enter a duration representing how far into the future streams should be notified.\nFor example, enter **1h** to include any streams going live in the next hour.\nEnter **reset** to disable the upcoming notifications.",
-            default = null
+        CustomElement("Post when a stream is starting soon",
+            "upcoming",
+            YoutubeSettings::upcomingNotificationDuration as KMutableProperty1<YoutubeSettings, Any?>,
+            prompt = "Enter a duration representing how far into the future streams should be notified to enable.",
+            default = null,
+            parser = ConfigurationElementParsers.durationParser(),
+            value = { yt ->
+                yt.upcomingNotificationDuration
+                    ?.run(Duration::parse)
+                    ?.run(::DurationFormatter)
+                    ?.inputTime ?: "disabled"
+            }
         ),
-        CustomElement("Channel to send 'upcoming' stream messages to",
-            listOf("upcomingChannel", "noticeChannel", "alternateChannel"),
-            YoutubeSettings::upcomingChannel as KMutableProperty1<YoutubeSettings, Any?>,
-            prompt = "Enter a channel to be used for upcoming stream notifications. Enter **remove** to remove this and send all notifications to the current channel.",
-            default =  null,
-            parser = ConfigurationElementParsers::textChannelParser,
-            value = { yt -> yt.upcomingChannel?.toString() ?: "current channel" },
-            ApplicationCommandOption.Type.CHANNEL
+        ChannelElement("Channel to send 'upcoming' stream messages to",
+            "upcomingChannel",
+            YoutubeSettings::upcomingChannel,
+            listOf(ChannelElement.Types.GUILD_TEXT, ChannelElement.Types.GUILD_NEWS)
         )
     )
 
@@ -54,7 +60,7 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
 
             val features = features()
             if(!features.streamTargetChannel) {
-                send(Embeds.error("**#${guildChan.name}** does not have livestream tracking enabled.")).awaitSingle()
+                ereply(Embeds.error("**#${guildChan.name}** does not have livestream tracking enabled.")).awaitSingle()
                 return@discord
             }
             val youtube = features.youtubeSettings

@@ -30,6 +30,20 @@ sealed class TrackerTarget(
     vararg val alias: String
 ) {
     abstract fun feedById(id: String): String
+
+    companion object {
+        fun parseSiteArg(id: Long) = when(id) {
+            0L -> TwitterTarget
+            100L -> YoutubeTarget
+            101L -> TwitchTarget
+            102L -> TwitterSpaceTarget
+            103L -> TwitcastingTarget
+            200L -> MALTarget
+            201L -> KitsuTarget
+            202L -> AniListTarget
+            else -> error("unmapped 'site' target: $id")
+        }
+    }
 }
 
 // streaming targets
@@ -280,23 +294,19 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             supportedSite.alias.contains(name)
         }
 
-        suspend fun parseFor(origin: DiscordParameters, inputArgs: List<String>, type: KClass<out TrackerTarget> = TrackerTarget::class): Result<TargetArguments, String> {
+        suspend fun parseFor(origin: DiscordParameters, input: String, site: TrackerTarget?): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID
-            // empty 'args' is handled by initial command call erroring and should never occur here
-            require(inputArgs.isNotEmpty()) { "Can not parse empty track target" }
-
             // get the channel features, if they exist. PMs do not require trackers to be enabled
             // thus, a URL or site name must be specified if used in PMs
             val features = if(origin.guild != null) {
                 GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
             } else null
 
-            return if(inputArgs.size == 1) {
-
+            return if(site != null) Ok(TargetArguments(site, input)) else {
                 // if 1 arg, user supplied just a username OR a url (containing site and username)
                 val urlMatch = declaredTargets.map { supportedSite ->
                     supportedSite.url.mapNotNull { exactUrl ->
-                        exactUrl.find(inputArgs[0])?.to(supportedSite)
+                        exactUrl.find(input)?.to(supportedSite)
                     }
                 }.flatten().firstOrNull()
 
@@ -308,35 +318,24 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                         )
                     )
                 } else {
-
                     // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
-                    // simple ;track <username> is not supported for PMs
+                    // simple /track <username> is not supported for PMs
                     if(features == null) {
                         return Err("You must specify the site name for tracking in PMs.")
                     }
 
-                    val default = features.findDefaultTarget(type)
+                    val default = features.findDefaultTarget()
                     if(default == null) {
                         Err("There are no website trackers enabled in **${origin.guildChan.name}**, so I can not determine the website you are trying to target. Please specify the site name.")
                     } else {
                         Ok(
                             TargetArguments(
                                 site = default,
-                                identifier = inputArgs[0]
+                                identifier = input
                             )
                         )
                     }
                 }
-            } else {
-                // 2 or more inputArgs - must be site and account id or invalid
-                val siteArg = inputArgs[0].lowercase()
-                val site = this[siteArg]
-
-                if(site == null) {
-                    return Err("Unknown/unsupported target **${inputArgs[0]}**.")
-                }
-
-                Ok(TargetArguments(site = site, identifier = inputArgs[1]))
             }
         }
     }

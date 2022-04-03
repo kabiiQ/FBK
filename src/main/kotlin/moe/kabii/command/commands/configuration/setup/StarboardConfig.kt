@@ -17,132 +17,63 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 import kotlin.reflect.KMutableProperty1
 
-object StarboardConfig : Command("starboard", "starboardsetup", "setupstarboard", "starboardconfig", "starboargcfg", "starbored", "starredboard", "starbord", "star", "sb") {
+object StarboardConfig : Command("starboard") {
     override val wikiPath = "Starboard#starboard-configuration-starboard"
 
     object StarboardModule : ConfigurationModule<StarboardSetup>(
         "starboard",
-        ViewElement("Starboard channel ID",
-            listOf("channel", "channelID", "ID"),
+        this,
+        ChannelElement("Starboard channel ID. Reset to disable starboard",
+            "channel",
             StarboardSetup::channel,
-            redirection = "To set the starboard channel, use the **starboard set** command in the desired channel."
+            listOf(ChannelElement.Types.GUILD_TEXT),
         ),
         LongElement("Stars required for a message to be put on the starboard",
-            listOf("stars", "min", "starsToAdd", "starsAdd", "minstars", "addstars", "minimumstars"),
+            "stars",
             StarboardSetup::starsAdd,
             range = 1..100_000L,
-            prompt = "Enter a new value for the number of star reactions required for a message to be put on the starboard."
+            prompt = "Enter a new value for the number of star reactions required for a message to be starboarded."
         ),
         BooleanElement("Remove a message from the starboard if the star reactions are cleared by a moderator",
-            listOf("removeOnClear", "removecleared", "removewhencleared", "reactionclear"),
+            "removeOnClear",
             StarboardSetup::removeOnClear
         ),
         BooleanElement("Remove a message from the starboard if the original message is deleted",
-            listOf("removeOnDelete", "removeIfDeleted", "removeIfDelete", "deleteremove"),
+            "removeOnDelete",
             StarboardSetup::removeOnDelete
         ),
         BooleanElement("Mention a user when their message is placed on the starboard",
-            listOf("mention", "usermention", "mentionuser", "user", "@"),
+            "mentionUser",
             StarboardSetup::mentionUser
         ),
         BooleanElement("Allow messages in NSFW-flagged channels to be starboarded",
-            listOf("nsfw", "includensfw", "nsfwinclude"),
+            "includeNSFW",
             StarboardSetup::includeNsfw
         ),
         @Suppress("UNCHECKED_CAST")
-        (CustomElement(
-        "Emoji used to add messages to the starboard",
-        listOf("emoji", "emote"),
-        StarboardSetup::emoji as KMutableProperty1<StarboardSetup, Any?>,
-        prompt = "Select an emote that users can add to messages to vote them onto the starboard. For custom emotes, I **MUST** be in the server the emote is from or things will not function as intended. Enter **reset** to restore the default star: ${EmojiCharacters.star}",
-        default = null,
-        parser = ConfigurationElementParsers.emojiParser(Regex("(reset|star)", RegexOption.IGNORE_CASE)),
-        value = { starboard -> starboard.useEmoji().string() },
-        ApplicationCommandOption.Type.STRING
-    ))
+        CustomElement(
+            "Emoji used to add messages to the starboard",
+            "emoji",
+            StarboardSetup::emoji as KMutableProperty1<StarboardSetup, Any?>,
+            prompt = "Select an emote that users can add to messages to vote them onto the starboard.",
+            default = null,
+            parser = ConfigurationElementParsers.emojiParser(),
+            value = { starboard -> starboard.useEmoji().string() }
+        )
     )
 
     init {
         discord {
             member.verify(Permission.MANAGE_CHANNELS)
-            val action = when(args.getOrNull(0)?.lowercase()) {
-                "here", "set", "create", "move", "enable", "setup", "on", "1" -> ::createStarboard
-                "disable", "unset", "remove", "delete", "off", "0" -> ::disableStarboard
-                else -> ::configStarboard // if not set/disable, run standard configurator
-            }
-            action(this)
-        }
-    }
+            val configurator = Configurator(
+                "Starboard settings for ${target.name}",
+                StarboardModule,
+                config.starboardSetup
+            )
 
-    private suspend fun createStarboard(origin: DiscordParameters) = with(origin) {
-        // get channel target (starboard create #channel)
-        val channelArg = args.getOrNull(1)
-        val channelTarget = if(channelArg != null) {
-            val search = Search.channelByID<GuildChannel>(this, channelArg)
-            if(search == null) {
-                send(Embeds.error("Unable to find channel **$channelArg**.")).awaitSingle()
-                return@with
-            } else search
-        } else guildChan
-
-        // check if guild has starboard
-        val current = config.starboard
-        if(current != null) {
-            if(current.channel == channelTarget.id.asLong()) {
-                send(
-                    Embeds.error("Starboard already enabled in ${channelTarget.mention}.")
-                        .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
-                ).awaitSingle()
-                return@with
-            } else {
-                // move starboard to new channel
-                current.channel = channelTarget.id.asLong()
+            if(configurator.run(this)) {
                 config.save()
-                send(
-                    Embeds.fbk("Starboard has been moved to ${channelTarget.mention}}.")
-                        .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
-                ).awaitSingle()
             }
-        } else {
-            // create new starboard config
-            val new = StarboardSetup(channelTarget.id.asLong())
-            config.starboard = new
-            config.save()
-            send(
-                Embeds.fbk("Starboard has been created. Messages which receive ${new.starsAdd} stars ${EmojiCharacters.star} will be placed on the starboard in ${channelTarget.mention}. This threshold can be changed by running the [**starboard stars <star requirement>**](https://github.com/kabiiQ/FBK/wiki/Starboard#starboard-configuration-starboard) command.")
-                    .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
-            ).awaitSingle()
-        }
-    }
-
-    private suspend fun disableStarboard(origin: DiscordParameters) = with(origin) {
-        val current = config.starboard
-        if(current == null) {
-            send(Embeds.error("**${target.name}** does not currently have a starboard.")).awaitSingle()
-            return@with
-        }
-
-        config.starboard = null
-        config.save()
-        send(
-            Embeds.fbk("Starboard has been disabled.")
-                .withAuthor(EmbedCreateFields.Author.of(target.name, null, target.getIconUrl(Image.Format.PNG).orNull()))
-        ).awaitSingle()
-    }
-
-    private suspend fun configStarboard(origin: DiscordParameters) = with(origin) {
-        if(config.starboard == null) {
-            send(Embeds.error("There is no currently no starboard ${EmojiCharacters.star} for **${target.name}**. Run the **starboard set** command in a channel to make it into your server's starboard.")).awaitSingle()
-            return
-        }
-        val configurator = Configurator(
-            "Starboard settings for ${target.name}",
-            StarboardModule,
-            checkNotNull(config.starboard)
-        )
-
-        if(configurator.run(this)) {
-            config.save()
         }
     }
 }
