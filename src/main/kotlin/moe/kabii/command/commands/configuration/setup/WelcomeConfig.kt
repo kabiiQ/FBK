@@ -1,6 +1,7 @@
 package moe.kabii.command.commands.configuration.setup
 
 import com.twelvemonkeys.image.ResampleOp
+import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
@@ -8,7 +9,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
-import moe.kabii.command.commands.configuration.setup.base.BaseConfigurationParsers
+import moe.kabii.command.commands.configuration.setup.base.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
@@ -35,13 +36,15 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
     @Suppress("UNCHECKED_CAST")
     object WelcomeConfigModule : ConfigurationModule<WelcomeSettings>(
         "welcome",
+        this,
         CustomElement("Channel to send welcome messages to",
             listOf("channel", "channelid", "usechannel", "welcomechannel", "welcome"),
             WelcomeSettings::channelId as KMutableProperty1<WelcomeSettings, Any?>,
             prompt = "Enter a channel to be used for welcoming new users. Enter **remove** to clear this and disable welcome messages.",
             default = null,
-            parser = BaseConfigurationParsers::textChannelParser,
-            value = { welcome -> if(welcome.channelId != null) "<#${welcome.channelId}>" else "not set" }
+            parser = ConfigurationElementParsers::textChannelParser,
+            value = { welcome -> if(welcome.channelId != null) "<#${welcome.channelId}>" else "not set" },
+            ApplicationCommandOption.Type.CHANNEL
         ),
         BooleanElement("Include new user's avatar in welcome embed or image",
             listOf("avatar", "includeavatar", "pfp"),
@@ -63,7 +66,8 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             prompt = "Enter a tagline for the image (large text placed at the top, keep it short). Only used if an image is configured. Enter **reset** to set this back to the default (WELCOME). Enter **remove** to remove the tag line.",
             default = "WELCOME",
             parser = ::setTagline,
-            value = { welcome -> if(welcome.welcomeTagLine != null) welcome.welcomeTagLine!! else "<NONE>" }
+            value = { welcome -> if(welcome.welcomeTagLine != null) welcome.welcomeTagLine!! else "<NONE>" },
+            ApplicationCommandOption.Type.STRING
         ),
         CustomElement("Banner image to use for welcoming",
             listOf("image", "banner", "bannerimage", "welcomeimage", "setbanner"),
@@ -71,7 +75,8 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             prompt = "Now setting welcome image: please upload directly to Discord. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped. Enter **remove** to remove any currently set image.",
             default = null,
             parser = ::verifySaveImage,
-            value = { welcome -> if(welcome.imagePath != null) "banner image SET: can be downloaded with **welcome getbanner** if needed." else "banner image NOT set." }
+            value = { welcome -> if(welcome.imagePath != null) "banner image SET: can be downloaded with **welcome getbanner** if needed." else "banner image NOT set." },
+            ApplicationCommandOption.Type.ATTACHMENT
         ),
         CustomElement(
             "Image message",
@@ -80,7 +85,8 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             prompt = "Enter the text which will be placed on the welcome image. See [this page]($variableWiki) for the variables you may use. Enter **reset** to restore the default (${WelcomeSettings.defaultImageText}. Enter **remove** to remove the subtext and omit this field.)",
             default = WelcomeSettings.defaultImageText,
             parser = ::setImageText,
-            value = { welcome -> if(welcome.imageText != null) welcome.imageText!! else "<NONE>" }
+            value = { welcome -> if(welcome.imageText != null) welcome.imageText!! else "<NONE>" },
+            ApplicationCommandOption.Type.STRING
         ),
         CustomElement("Text color on image",
             listOf("color", "textcolor", "colortext"),
@@ -88,15 +94,17 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
             prompt = "Enter a [hex color code](${URLUtil.colorPicker}) to be used for the text added to your banner image (i.e. #FFC082). Entering **reset** or simply **white** will return to the default white color.",
             default = WelcomeSettings.defaultColor,
             parser = ::verifyColor,
-            value = { welcome -> ColorUtil.hexString(welcome.textColor()) }
+            value = { welcome -> ColorUtil.hexString(welcome.textColor()) },
+            ApplicationCommandOption.Type.STRING
         ),
         CustomElement("Add reaction to welcome",
             listOf("emoji", "reaction", "react"),
             WelcomeSettings::emoji as KMutableProperty1<WelcomeSettings, Any?>,
             prompt = "Enter an emoji that will be added onto the welcome post that users can react to, such as ${EmojiCharacters.wave}. For custom emotes, I MUST be in the server the emote is from or this will not function. Enter **reset** to remove any currently configured emoji.",
             default = null,
-            parser = BaseConfigurationParsers.emojiParser(Regex("(reset)", RegexOption.IGNORE_CASE)),
-            value = { welcome -> welcome.emoji?.string() ?: "not set" }
+            parser = ConfigurationElementParsers.emojiParser(Regex("(reset)", RegexOption.IGNORE_CASE)),
+            value = { welcome -> welcome.emoji?.string() ?: "not set" },
+            ApplicationCommandOption.Type.STRING
         )
     )
 
@@ -174,7 +182,7 @@ object WelcomeConfig : Command("welcome", "welcomecfg", "cfgwelcome", "welcomese
 
     private val resetImage = Regex("(remove|reset|unset|none|clear)", RegexOption.IGNORE_CASE)
     private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
-    private suspend fun verifySaveImage(origin: DiscordParameters, message: Message, value: String): Result<String?, Unit> {
+    private suspend fun verifySaveImage(origin: DiscordParameters, message: Message, value: String): Result<String?, String> {
         if(value.matches(resetImage)) {
             origin.send(Embeds.fbk("Current welcome banner image has been removed.")).awaitSingle()
             return Ok(null)

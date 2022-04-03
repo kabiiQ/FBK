@@ -1,9 +1,10 @@
 package moe.kabii.command.commands.configuration.setup
 
+import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.configuration.setup.base.BaseConfigurationParsers
+import moe.kabii.command.commands.configuration.setup.base.*
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.discord.util.Embeds
 import kotlin.reflect.KMutableProperty1
@@ -41,8 +42,9 @@ object YoutubeConfig : Command("yt", "youtube", "ytconfig", "youtubeconf", "yout
             YoutubeSettings::upcomingChannel as KMutableProperty1<YoutubeSettings, Any?>,
             prompt = "Enter a channel to be used for upcoming stream notifications. Enter **remove** to remove this and send all notifications to the current channel.",
             default =  null,
-            parser = BaseConfigurationParsers::textChannelParser,
-            value = { yt -> yt.upcomingChannel?.toString() ?: "current channel" }
+            parser = ConfigurationElementParsers::textChannelParser,
+            value = { yt -> yt.upcomingChannel?.toString() ?: "current channel" },
+            ApplicationCommandOption.Type.CHANNEL
         )
     )
 

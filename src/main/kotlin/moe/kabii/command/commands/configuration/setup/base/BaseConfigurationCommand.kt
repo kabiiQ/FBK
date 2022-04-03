@@ -1,251 +1,352 @@
-package moe.kabii.command.commands.configuration.setup
+package moe.kabii.command.commands.configuration.setup.base
 
+import discord4j.core.`object`.command.ApplicationCommandInteractionOption
+import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.core.`object`.component.ActionRow
+import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.component.SelectMenu
+import discord4j.core.`object`.component.TextInput
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.channel.Channel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.NewsChannel
+import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
+import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
+import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageCreateMono
-import discord4j.core.spec.MessageEditSpec
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
+import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.util.DurationFormatter
-import moe.kabii.util.DurationParser
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.orNull
 import org.apache.commons.lang3.StringUtils
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.time.Duration
+import java.util.concurrent.TimeoutException
 import kotlin.reflect.KMutableProperty1
 
-sealed class ConfigurationElement<T>(val fullName: String, val aliases: List<String>)
-class StringElement<T>(
-    fullName: String,
-    aliases: List<String>,
-    val prop: KMutableProperty1<T, String>,
-    val prompt: String,
-    val default: String
-) : ConfigurationElement<T>(fullName, aliases)
+sealed class ConfigurationElement<T>(val fullName: String, val propName: String, propertyType: ApplicationCommandOption.Type) {
+    val propertyType = propertyType.value
+    val propertyFieldName = if(this is BooleanElement) "enabled" else "value"
 
+    companion object {
+        fun elementStringInputtable(element: ConfigurationElement<*>) = element is StringElement<*> || element is CustomElement<*, *>
+    }
+}
+
+// booleanelement: input as bool, stored as bool. presented as selectmenu by embed
 class BooleanElement<T>(
     fullName: String,
-    aliases: List<String>,
+    propName: String,
     val prop: KMutableProperty1<T, Boolean>
-) : ConfigurationElement<T>(fullName, aliases)
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.BOOLEAN)
 
-class DoubleElement<T>(
-    fullName: String,
-    aliases: List<String>,
-    val prop: KMutableProperty1<T, Double>,
-    val range: ClosedRange<Double>,
-    val prompt: String
-) : ConfigurationElement<T>(fullName, aliases)
-
+// longelement: input as integer, stored as long. not presented in embed.
 class LongElement<T>(
     fullName: String,
-    aliases: List<String>,
+    propName: String,
     val prop: KMutableProperty1<T, Long>,
     val range: LongRange,
     val prompt: String
-) : ConfigurationElement<T>(fullName, aliases)
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.INTEGER)
 
-class DurationElement<T>(
+// stringelement: input as string, stored as string. presented as modal by embed
+class StringElement<T>(
     fullName: String,
-    aliases: List<String>,
-    val prop: KMutableProperty1<T, String?>,
+    propName: String,
+    val prop: KMutableProperty1<T, String>,
     val prompt: String,
-    val default: Duration?
-) : ConfigurationElement<T>(fullName, aliases)
+    val default: String
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING)
 
-class CustomElement<T, VT>(
+// channel element: input as channel, stored as channel/snowflake. not presented in embed
+class ChannelElement<T>(
     fullName: String,
-    aliases: List<String>,
+    propName: String,
+    val prop: KMutableProperty1<T, Long?>, // stored as channel id/snowflake -> long
+    val validTypes: List<Types>
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING) {
+    enum class Types(val value: Int) {
+        GUILD_TEXT(0),
+        GUILD_VOICE(2),
+        GUILD_NEWS(5),
+        GUILD_STAGE_VOICE(13);
+
+        companion object {
+            fun getChannelSuperclass(types: List<Types>): Class<out Channel> {
+                if(types.contains(GUILD_TEXT) && types.contains(GUILD_NEWS)) return MessageChannel::class.java
+                if(types.contains(GUILD_TEXT)) return GuildMessageChannel::class.java
+                if(types.contains(GUILD_NEWS)) return NewsChannel::class.java
+                if(types.contains(GUILD_VOICE) || types.contains(GUILD_STAGE_VOICE)) return VoiceChannel::class.java
+                return Channel::class.java
+            }
+        }
+    }
+}
+
+// attachmentelement: input as attachment, stored as file path. not presented in embed
+class AttachmentElement<T>(
+    fullName: String,
+    propName: String,
+    val prop: KMutableProperty1<T, String?>, // stored as path to image
+    val validator: suspend (DiscordParameters, Message) -> Result<String, String>
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.ATTACHMENT)
+
+// customelement: elements that are input as a string, validated and stored as <PT>
+// presented as modal for string input -> parsing by embed
+// ex. emojis, durations, color codes
+open class CustomElement<T, VT>(
+    fullName: String,
+    propName: String,
     val prop: KMutableProperty1<T, Any?>,
     val prompt: String,
     val default: VT?,
-    val parser: suspend (DiscordParameters, Message, String) -> Result<VT?, Unit>, // given input, produce value or invalid
-    val value: (T) -> String // given value, produce string for embed output
-) : ConfigurationElement<T>(fullName, aliases)
+    val parser: (DiscordParameters, String) -> Result<VT?, String>, // given input, produce value or invalid
+    val value: (T) -> String, // given value, produce string for embed output
+    propertyType: ApplicationCommandOption.Type
+) : ConfigurationElement<T>(fullName, propName, propertyType)
 
 class ViewElement<T, ANY : Any?>(
     fullName: String,
-    aliases: List<String>,
+    propName: String,
     val prop: KMutableProperty1<T, ANY>,
     val redirection: String,
-) : ConfigurationElement<T>(fullName, aliases)
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING)
 
-open class ConfigurationModule<T>(val name: String, vararg val elements: ConfigurationElement<T>)
+open class ConfigurationModule<T>(val name: String, val command: Command, vararg val elements: ConfigurationElement<T>)
 
 class Configurator<T>(private val name: String, private val module: ConfigurationModule<T>, private val instance: T) {
     companion object {
         const val embedTimeout = 120_000L
     }
 
-    fun getValue(element: ConfigurationElement<T>) = when(element) {
-        is StringElement -> element.prop.get(instance)
-        is BooleanElement -> if(element.prop.get(instance)) "enabled" else "disabled"
-        is DoubleElement -> element.prop.get(instance).toString()
-        is LongElement -> element.prop.get(instance).toString()
-        is DurationElement -> {
-            val field = element.prop.get(instance)
-            val duration = field?.run(Duration::parse)
-            if(duration != null) DurationFormatter(duration).inputTime
-            else "disabled"
+    suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
+        val command = origin.subCommand
+        return when(command.name) {
+            "setup" -> embed(command, origin)
+            else -> property(command, origin)
         }
+    }
+
+    private fun getValue(element: ConfigurationElement<T>) = when(element) {
+        is BooleanElement -> if(element.prop.get(instance)) "enabled" else "disabled"
+        is LongElement -> element.prop.get(instance).toString()
+        is StringElement -> element.prop.get(instance)
+        is ChannelElement -> {
+            val value = element.prop.get(instance)
+            if(value != null) "<#$value>" else "not set"
+        }
+        is AttachmentElement -> if(element.prop.get(instance) != null) "file has been SET" else "file is NOT SET"
         is CustomElement<T, *> -> element.value(instance)
         is ViewElement<T, *> -> element.prop.get(instance).toString()
     }
-    private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.aliases.first()})**"
 
-    private val reset = Regex("reset", RegexOption.IGNORE_CASE)
-    suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
-        fun updatedEmbed(element: ConfigurationElement<T>, new: Any): MessageCreateMono {
-            val property = element.aliases.first()
-            val newState = when(element) {
-                is BooleanElement -> if(new as Boolean) "**enabled**" else "**disabled**"
-                else -> "set to **${new.toString().ifBlank { "empty" }}**"
-            }
-            return origin.send(
-                Embeds.fbk("The option **$property** has been $newState.").withTitle("Configuration Updated")
-            )
+    private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.propName})**"
+
+    private fun currentConfig(): EmbedCreateSpec {
+
+        // generate embed containing current states of properties
+        val configFields = mutableListOf<EmbedCreateFields.Field>()
+
+        val boolElements = module.elements.filterIsInstance<BooleanElement<T>>()
+        // get enabled bools
+        val enabledElements = boolElements
+            .filter { e -> e.prop.get(instance) }
+            .joinToString("\n", transform = ::getName)
+            .ifEmpty { "No ${module.name} features are enabled." }
+        configFields.add(EmbedCreateFields.Field.of("Enabled Features", enabledElements, true))
+
+        val availableElements = boolElements
+            .filter { e -> !e.prop.get(instance) }
+            .joinToString("\n", transform = ::getName)
+            .ifEmpty { "All ${module.name} features are enabled." }
+        configFields.add(EmbedCreateFields.Field.of("Available (Disabled) Features", availableElements, true))
+
+        val customElements =
+            (module.elements.toList() - boolElements)
+                .map { e -> "${getName(e)}:\n${EmojiCharacters.spacer}**=** ${getValue(e)}" }
+        if(customElements.isNotEmpty()) {
+            configFields.add(EmbedCreateFields.Field.of(
+                "Custom Settings:",
+                StringUtils.abbreviate(customElements.joinToString("\n"), MagicNumbers.Embed.FIELD.VALUE),
+                false
+            ))
         }
 
-        // <command> (no args) -> full menu embed
+        return Embeds.fbk()
+            .withAuthor(EmbedCreateFields.Author.of(name, null, null))
+            .withFields(configFields)
+    }
 
-        if(origin.args.isEmpty()) {
-            fun configEmbed(): EmbedCreateSpec {
-                var embed = Embeds.fbk()
-                    .withAuthor(EmbedCreateFields.Author.of(name, null, null))
+    suspend fun embed(command: ApplicationCommandInteractionOption, origin: DiscordParameters): Boolean {
+        // /command setup -> full menu embed
 
-                val configFields = mutableListOf<EmbedCreateFields.Field>()
-
-                // not filtering or optimizing to preserve the natural indexes here - could use manually assigned indexes otherwise
-                if(module.elements.any { element -> element is BooleanElement }) {
-                    embed = embed.withTitle("Select the feature to be toggled/edited using its ID or bolded name.")
-                    // feature toggles - these can be made into FeatureElements if we have other toggles later on
-                    val enabled = module.elements.mapIndexedNotNull { id, element ->
-                        if(element is BooleanElement && element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
-                    }.joinToString("\n").ifEmpty { "No ${module.name} features are enabled." }
-                    val available = module.elements.mapIndexedNotNull { id, element ->
-                        if(element is BooleanElement && !element.prop.get(instance)) "${id+1}. ${getName(element)}" else null
-                    }.joinToString("\n").ifEmpty { "All ${module.name} features are enabled." }
-                    configFields.add(EmbedCreateFields.Field.of("Enabled Features", enabled, true))
-                    configFields.add(EmbedCreateFields.Field.of("Available (Disabled) Features", available, true))
-                }
-
-                module.elements.mapIndexedNotNull { id, element ->
-                    if(element !is BooleanElement) "${id+1}. ${getName(element)}:\n${EmojiCharacters.spacer}**=** ${getValue(element)}" else null
-                }.run {
-                    if(isNotEmpty())
-                        configFields.add(EmbedCreateFields.Field.of(
-                            "Custom Settings:",
-                            StringUtils.abbreviate(joinToString("\n"), MagicNumbers.Embed.FIELD.VALUE),
-                            false
-                        ))
-                }
-
-                return embed
-                    .withFields(configFields)
-                    .withFooter(EmbedCreateFields.Footer.of("\"exit\" to save and exit immediately.", null))
+        // generate components for initial embed response
+        // compile boolean elements into select menu
+        val boolElements = module.elements.filterIsInstance<BooleanElement<T>>()
+        val options = boolElements
+            .map { bool ->
+                SelectMenu.Option
+                    .of(bool.propName, bool.propName)
+                    .withDescription(bool.fullName)
+                    .withDefault(bool.prop.get(instance))
             }
 
-            val menu = origin.send(configEmbed()).awaitSingle()
-
-            while(true) {
-                val inputStr = origin.getString(timeout = embedTimeout) ?: break
-
-                val inputNum = inputStr.toIntOrNull()
-                val element = if(inputNum != null) {
-                    if(inputNum !in 1..module.elements.size) break
-                    module.elements[inputNum-1]
-                } else {
-                    module.elements.find { element -> element.aliases.any { alias -> alias.equals(inputStr, ignoreCase = true) } } ?: continue
+        // register component listeners - component ids will not change so these do not need to be redone
+        val listeners = mutableListOf<Flux<*>>()
+        val menu = if(options.isNotEmpty()) {
+            val menuListener = origin.listener("toggleable", SelectMenuInteractionEvent::class)
+                .flatMap { response ->
+                    val (enabled, disabled) = boolElements
+                        .partition { e -> response.values.contains(e.propName) }
+                    enabled.forEach { e ->
+                        e.prop.set(instance, true)
+                    }
+                    disabled.forEach { e ->
+                        e.prop.set(instance, false)
+                    }
+                    origin.event.editReply()
+                        .withEmbeds(currentConfig())
                 }
+            listeners.add(menuListener)
+            SelectMenu.of("toggleable", options)
+        } else null
 
-                when(element) {
-                    is BooleanElement -> element.prop.set(instance, !element.prop.get(instance)) // toggle property
-                    is StringElement -> {
-                        // prompt user for new value
-                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
-                        val response = origin.getString(timeout = null)
-                        if(response != null) {
-                            if(response.matches(reset)) {
-                                element.prop.set(instance, element.default)
-                            } else {
-                                element.prop.set(instance, response)
-                            }
-                        }
-                        prompt.delete().subscribe()
+        // string input elements (stringelement, customelement) presented as button -> modal for text input
+        val buttons = module.elements
+            .filter(ConfigurationElement.Companion::elementStringInputtable)
+            .map { e ->
+                // listener for button creates modal for input
+                val buttonListener = origin.listener(e.propName, ButtonInteractionEvent::class)
+                    .flatMap { press ->
+                        press
+                            .presentModal()
+                            .withComponents(
+                                ActionRow.of(
+                                    TextInput.small("${e.propName}-input", e.propName)
+                                        .required()
+                                        .prefilled(getValue(e))
+                                )
+                            )
+                            .withCustomId("modal")
+                            .withTitle("New value for ${module.name} -> ${e.propName}")
+                            .thenReturn(Unit)
                     }
-                    is DoubleElement -> {
-                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
-                        val response = origin.getDouble(element.range, timeout = embedTimeout)
-                        if(response != null) element.prop.set(instance, response)
-                        prompt.delete().subscribe()
+                    .flatMap { _ ->
+                        // create listener for modal itself
+                        origin.listener("modal", ModalSubmitInteractionEvent::class)
+                            .flatMap { submission ->
+                                val raw = submission.getComponents(TextInput::class.java)[0].value.get()
+                                when(e) {
+                                    is StringElement -> {
+                                        e.prop.set(instance, raw)
+                                        val notice = submission
+                                            .reply()
+                                            .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **$raw**."))
+                                            .withEphemeral(true)
+                                            .then()
+                                        val edit = origin.event.editReply()
+                                            .withEmbeds(currentConfig())
+                                        Mono.`when`(notice, edit)
+                                    }
+                                    is CustomElement<T, *> -> {
+                                        // parse user input
+                                        val value = e.parser(origin, raw)
+                                        when(value) {
+                                            is Ok -> {
+                                                e.prop.set(instance, value)
+                                                val notice = submission
+                                                    .reply()
+                                                    .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
+                                                    .withEphemeral(true)
+                                                    .then()
+                                                val edit = origin.event.editReply()
+                                                    .withEmbeds(currentConfig())
+                                                Mono.`when`(notice, edit)
+                                            }
+                                            is Err -> {
+                                                submission
+                                                    .reply()
+                                                    .withEmbeds(Embeds.error("**$raw** is not a valid value for **${e.propName}**: ${value.value}"))
+                                                    .withEphemeral(true)
+                                            }
+                                        }
+                                    }
+                                    else -> Mono.empty()
+                                }
+
+                            }.take(1)
                     }
-                    is LongElement -> {
-                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
-                        val response = origin.getLong(element.range, timeout = embedTimeout)
-                        if(response != null) element.prop.set(instance, response)
-                        prompt.delete().subscribe()
-                    }
-                    is DurationElement -> {
-                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
-                        val response = origin.getDuration(timeout = embedTimeout)
-                        if(response != null) element.prop.set(instance, response.toString())
-                        prompt.delete().subscribe()
-                    }
-                    is CustomElement<T, *> -> {
-                        val prompt = origin.send(Embeds.fbk(element.prompt)).awaitSingle()
-                        val response = origin.getMessage(timeout = embedTimeout)
-                        if(response != null) {
-                            val parsed = element.parser(origin, response, response.content)
-                            if(parsed is Ok) element.prop.set(instance, parsed.value)
-                        }
-                        prompt.delete().subscribe()
-                    }
-                    is ViewElement<*, *> -> {
-                        origin.send(Embeds.error(element.redirection)).awaitSingle()
-                        continue
-                    }
-                }
-                menu.edit(
-                    MessageEditSpec.create()
-                        .withEmbeds(configEmbed())
-                ).awaitSingle()
+                listeners.add(buttonListener)
+                Button.primary(e.propName, e.propName)
             }
-            menu.delete().subscribe()
+
+        val components = sequence {
+            // produce layoutcomponents from menu/buttons
+            if(menu != null) yield(ActionRow.of(menu))
+            yieldAll(buttons.chunked(5).map(ActionRow::of))
+        }
+
+        origin
+            .ereply(currentConfig())
+            .withComponents(components.toList())
+            .awaitSingle()
+
+        Mono.`when`(listeners)
+            .timeout(Duration.ofMinutes(30))
+            .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
+            .thenReturn(Unit)
+            .awaitFirstOrNull()
+        origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull() // TODO test deletion of ephemeral messages. edit should work otherwise
+        return true
+    }
+
+    suspend fun property(subCommand: ApplicationCommandInteractionOption, origin: DiscordParameters): Boolean {
+        // /command <subCommand -> property> (value: T?) (reset: bool?)
+        val element = module.elements.find { e -> e.propName == subCommand.name } ?: error("mismatched property '${subCommand.name} :: $module")
+
+        val args = origin.subArgs(subCommand)
+        val reset = args.optBool("reset")
+        if(reset == true) {
+            // user requested 'reset' this should only be listed on resettable properties
+            val resetValue = when(element) {
+                is StringElement -> {
+                    element.prop.set(instance, element.default)
+                    element.default
+                }
+                is ChannelElement -> {
+                    element.prop.set(instance, null)
+                    null
+                }
+                is AttachmentElement -> {
+                    element.prop.set(instance, null)
+                    null
+                }
+                is CustomElement<T, *> -> {
+                    element.prop.set(instance, element.default)
+                    element.default
+                }
+                else -> error("mismatched property '${subCommand.name} :: not resettable")
+            }
+            val resetTo = resetValue?.toString() ?: "{empty}"
+            origin.ireply(Embeds.fbk("**${element.propName} has been reset to $resetTo.")).awaitSingle()
             return true
         }
 
-        val targetElement = origin.args[0].lowercase()
-
-        // <command> list/all -> list current config
-
-        if(targetElement == "list") {
-            val fields = module.elements.map { element ->
-                val raw = getValue(element)
-                val value = if(raw.isBlank()) "<NONE>" else StringUtils.abbreviate(raw, MagicNumbers.Embed.FIELD.VALUE)
-                EmbedCreateFields.Field.of(getName(element), value, true)
-            }
-            origin.send(
-                Embeds.fbk()
-                    .withTitle("Current ${module.name} configuration:")
-                    .withFields(fields)
-            ).awaitSingle()
-            return false
-        }
-
-        val element = module.elements.find { prop -> prop.aliases.any { alias -> alias.lowercase() == targetElement.lowercase() } }
-        if(element == null) {
-            origin.send(Embeds.error("Invalid setting **$targetElement**. The available settings can be found with **${origin.alias} list**. You can also run **${origin.alias}** without any arguments to change settings using an interactive embed.")).awaitSingle()
-            return false
-        }
-        val tag = element.aliases.first()
-        // <command> prop -> manual get
-        // dont run this if this is a custom element w/ attachment
-        if(origin.args.size == 1 && !(element is CustomElement<T, *> && origin.event.message.attachments.isNotEmpty())) {
-            origin.send(
+        val newValueArg = subCommand.getOption("value").orNull() ?: subCommand.getOption("enabled").orNull()
+        if(newValueArg == null) {
+            // display current value of property
+            origin.ireply(
                 Embeds.fbk()
                     .withTitle("From ${module.name} configuration:")
                     .withFields(EmbedCreateFields.Field.of(getName(element), getValue(element), false))
@@ -253,114 +354,54 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             return false
         }
 
-        // <command> prop <toggle/reset> -> specific actions
-        if(origin.args.size == 2) {
-            val arg = origin.args[1].lowercase()
-            when {
-                arg == "toggle" -> {
-                    if(element !is BooleanElement) {
-                        origin.send(Embeds.error("The setting **$tag** is not a toggle.")).awaitSingle()
-                        return false
+        // set property. value arg will exist here
+        val newValue: Any? = when(element) {
+            is BooleanElement -> args
+                .bool("enabled")
+                .run { element.prop.set(instance, this) }
+            is LongElement -> args
+                .int("value")
+                .run { element.prop.set(instance, this) }
+            is StringElement -> args
+                .string("value")
+                .run { element.prop.set(instance, this) }
+            is ChannelElement -> args
+                .baseChannel("value").awaitSingle().id.asLong()
+                .run { element.prop.set(instance, this) }
+            is AttachmentElement -> {
+                // get attachment, validate
+                val message = origin.interaction.message.get()
+                when(val validation = element.validator(origin, message)) {
+                    is Ok -> validation.value.run { element.prop.set(instance, this) }
+                    is Err -> {
+                        origin.ereply(Embeds.error(validation.value)).awaitSingle()
+                        null
                     }
-                    val new = !element.prop.get(instance)
-                    element.prop.set(instance, new)
-                    updatedEmbed(element, new).subscribe()
-                    return true
                 }
-                arg.matches(reset) -> {
-                    when(element) {
-                        is StringElement -> element.prop.set(instance, element.default)
-                        is DurationElement -> element.prop.set(instance, element.default?.toString())
-                        is CustomElement<T, *> -> element.prop.set(instance, element.default)
-                        else -> {
-                            origin.send(Embeds.error("The setting **$tag** is not a resettable custom value.")).awaitSingle()
-                            return false
-                        }
-                    }
-                    val value = getValue(element)
-                    updatedEmbed(element, value).subscribe()
-                    return true
-                }
-            }
-        }
-
-        // <command> prop <new value> -> manual set, check input types
-        when(element) {
-            is BooleanElement -> {
-                val input = origin.args[1].lowercase()
-                val bool = when {
-                    input.startsWith("y")
-                            || input.startsWith("en")
-                            || input.startsWith("t")
-                            || input == "1"
-                            || input == "on"
-                    -> true
-                    input.startsWith("n")
-                            || input.startsWith("dis")
-                            || input.startsWith("f")
-                            || input == "0"
-                            || input == "off"
-                    -> false
-                    else -> null
-                }
-                if(bool == null) {
-                    origin.send(Embeds.error("The setting **$tag** is a toggle, I can not set it to **$input**. Example: **${origin.alias} $tag enable**. You can also run **${origin.alias} toggle $tag**")).awaitSingle()
-                    return false
-                }
-                element.prop.set(instance, bool)
-                updatedEmbed(element, bool).awaitSingle()
-                return true
-            }
-            is StringElement -> {
-                val input = origin.args.drop(1).joinToString(" ")
-                element.prop.set(instance, input)
-                updatedEmbed(element, input).awaitSingle()
-                return true
-            }
-            is DoubleElement -> {
-                val input = origin.args[1].toDoubleOrNull()
-                if(input == null) {
-                    origin.send(Embeds.error("The setting **$tag** is a decimal value, I can not set it to **$input**. Example: **${origin.alias} $tag .5**")).awaitSingle()
-                    return false
-                }
-                element.prop.set(instance, input)
-                updatedEmbed(element, input).awaitSingle()
-                return true
-            }
-            is LongElement -> {
-                val input = origin.args[1].toLongOrNull()
-                if(input == null) {
-                    origin.send(Embeds.error("The setting **$tag** is an integer value, I can not set it to **$input**. Example: **${origin.alias} $tag 4**")).awaitSingle()
-                    return false
-                }
-                element.prop.set(instance, input)
-                updatedEmbed(element, input).awaitSingle()
-                return true
-            }
-            is DurationElement -> {
-                val input = origin.args.drop(1).joinToString(" ").run(DurationParser::tryParse)
-                if(input == null) {
-                    origin.send(Embeds.error("The setting **$tag** is a duration field, I can not set it to **$input**. Example **${origin.alias} $tag 6h")).awaitSingle()
-                    return false
-                }
-                element.prop.set(instance, input.toString())
-                val output = DurationFormatter(input).inputTime
-                updatedEmbed(element, output).awaitSingle()
-                return true
             }
             is CustomElement<T, *> -> {
-                val input = element.parser(origin, origin.event.message, origin.args.drop(1).joinToString(" "))
-                return if(input is Ok) {
-                    element.prop.set(instance, input.value)
-                    val output = element.value(instance)
-                    updatedEmbed(element, output).awaitSingle()
-                    true
-                } else false
+                val input = args.string("value")
+                when(val validation = element.parser(origin, input)) {
+                    is Ok -> validation.value.run { element.prop.set(instance, this) }
+                    is Err -> {
+                        origin.ereply(Embeds.error(validation.value)).awaitSingle()
+                        null
+                    }
+                }
             }
             is ViewElement<*, *> -> {
-                origin.send(Embeds.error(element.redirection)).awaitSingle()
-                return false
+                origin.ereply(Embeds.error(element.redirection)).awaitSingle()
             }
         }
+        return if(newValue != null) {
+            val newState = when(element) {
+                is BooleanElement -> if (newValue.toString() == "true") "**enabled**" else "**disabled**"
+                else -> "set to **${newValue.toString().ifBlank { "empty" }}"
+            }
+            origin.ireply(Embeds.fbk("The option **${element.propName} has been $newState")
+                .withTitle("Configuration Updated"))
+                .awaitSingle()
+            true
+        } else false
     }
 }

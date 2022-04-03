@@ -5,6 +5,7 @@ import discord4j.core.`object`.component.SelectMenu
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
@@ -62,7 +63,7 @@ object SearchTracks : AudioCommandContainer {
                     .withComponents(ActionRow.of(selectMenu))
                     .awaitSingle()
 
-                val response = awaitResponse("menu", SelectMenuInteractionEvent::class) ?: return@discord
+                val response = listener("menu", SelectMenuInteractionEvent::class).awaitFirstOrNull() ?: return@discord
                 val selected = response.values.map(String::toInt)
                 if(selected.isNotEmpty()) {
                     val voice = AudioStateUtil.checkAndJoinVoice(this)

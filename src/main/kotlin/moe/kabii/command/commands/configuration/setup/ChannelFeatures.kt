@@ -6,6 +6,9 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.commands.configuration.setup.base.BooleanElement
+import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
+import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
@@ -16,6 +19,7 @@ import moe.kabii.util.extensions.tryAwait
 object ChannelFeatures : CommandContainer {
     object ChannelFeatureModule : ConfigurationModule<FeatureChannel>(
         "channel",
+        ChannelFeatures,
         BooleanElement("Anime/Manga list tracking", listOf("anime", "media", "manga", "list", "lists", "animetargetchannel"), FeatureChannel::animeTargetChannel),
         BooleanElement("Livestream/video site tracking", listOf("streams", "stream", "twitch", "yt", "youtube", "twitcasting", "twitcast", "streamtargetchannel"), FeatureChannel::streamTargetChannel),
         BooleanElement("Twitter feed tracking", listOf("twitter", "tweets", "twit", "twitr", "tr", "twittertargetchannel"), FeatureChannel::twitterTargetChannel),

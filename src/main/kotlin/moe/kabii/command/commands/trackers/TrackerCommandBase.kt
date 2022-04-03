@@ -10,10 +10,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.trackers.AnimeTarget
-import moe.kabii.trackers.StreamingTarget
-import moe.kabii.trackers.TargetArguments
-import moe.kabii.trackers.TwitterTarget
+import moe.kabii.trackers.*
 
 private enum class Action { TRACK, UNTRACK }
 
@@ -23,6 +20,18 @@ interface TrackerCommand {
 }
 
 object TrackerCommandBase : CommandContainer {
+    fun parseSiteArg(id: Int) = when(id) {
+        0 -> TwitterTarget
+        100 -> YoutubeTarget
+        101 -> TwitchTarget
+        102 -> TwitterSpaceTarget
+        103 -> TwitcastingTarget
+        200 -> MALTarget
+        201 -> KitsuTarget
+        202 -> AniListTarget
+        else -> error("unmapped 'site' target: $id")
+    }
+
     object TrackCommandBase : Command("track") {
         override val wikiPath = "Livestream-Tracker"
 

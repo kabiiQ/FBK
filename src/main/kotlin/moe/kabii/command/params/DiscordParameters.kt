@@ -24,6 +24,7 @@ import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.util.extensions.withUser
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
 import java.util.concurrent.TimeoutException
@@ -102,17 +103,16 @@ data class DiscordParameters (
         .withEmbeds(*embeds)
 
     // listen for response to components on reply
-    suspend fun <T : ComponentInteractionEvent> awaitResponse(componentId: String, type: KClass<T>, timeout: Duration? = null): T? {
-        val messageId = event.interaction.messageId.orNull() ?: return null
-        return event.client
-            .on(type.java)
-            .filter { interact -> interact.customId == componentId }
-            .filter { interact -> interact.messageId == messageId }
-            .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
-            .run { if(timeout != null) timeout(timeout) else this }
-            .next()
-            .awaitSingleOrNull()
-    }
+    fun <T : ComponentInteractionEvent> listener(componentId: String, type: KClass<T>, timeout: Duration? = null): Flux<T> =
+        Mono.justOrEmpty(event.interaction.messageId)
+            .flatMapMany { messageId ->
+                event.client
+                    .on(type.java)
+                    .filter { interact -> interact.customId == componentId }
+                    .filter { interact -> interact.messageId == messageId }
+                    .run { if(timeout != null) timeout(timeout) else this }
+                    .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
+            }
 
     // Create a 'usage info' message TODO this may not be needed with slash commnands
     fun _usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {
