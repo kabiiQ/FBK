@@ -16,12 +16,12 @@ class CommandManager {
 
     private fun registerInstance(command: Command) {
         if(command.executeDiscord != null) {
-            command.aliases.associateWithTo(commandsDiscord) { command }
+            commandsDiscord[command.name] = command
         }
         if(command.executeTerminal != null) {
-            command.aliases.associateWithTo(commandsTerminal) { command }
+            commandsTerminal[command.name] = command
         }
-        LOG.debug("Registered command \"${command.name}\". Aliases: ${command.aliases.joinToString("/")}. Object: ${command::class.simpleName}")
+        LOG.debug("Registered command \"${command.name}\". Object: ${command::class.simpleName}")
     }
 
     fun registerClass(clazz: Class<out Command>) {

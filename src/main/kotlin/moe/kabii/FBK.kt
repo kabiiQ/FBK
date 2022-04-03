@@ -2,12 +2,13 @@ package moe.kabii
 
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
-import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
+import moe.kabii.command.CommandRegistrar
+import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.data.flat.GQLQueries
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
@@ -50,8 +51,9 @@ fun main() {
     val reflection = Reflections("moe.kabii")
 
     val manager = CommandManager()
-    // register all commands with the command manager
-    reflection.getSubTypesOf(Command::class.java)
+    // register all commands with the command manager (internal registration)
+    reflection
+        .getSubTypesOf(Command::class.java)
         .forEach(manager::registerClass)
 
     // establish discord connection
@@ -60,6 +62,20 @@ fun main() {
         .setEnabledIntents(IntentSet.all())
     Uptime
     val gateway = checkNotNull(discord.login().block())
+
+    // register global commands with discord (external registration)
+    // get config modules -> get instances that can be mapped into discord command json
+    val modules = reflection
+        .getSubTypesOf(ConfigurationModule::class.java)
+        .mapNotNull { clazz -> clazz.kotlin.objectInstance }
+    val globalCommands = CommandRegistrar.getAllGlobalCommands(modules)
+
+    val rest = gateway.rest()
+    val appId = checkNotNull(rest.applicationId.block())
+    rest.applicationService
+        .bulkOverwriteGlobalApplicationCommand(appId, globalCommands)
+        .then()
+        .block()
 
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initalization") {
