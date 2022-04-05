@@ -8,6 +8,7 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.*
@@ -25,15 +26,6 @@ object TrackerCommandBase : CommandContainer {
 
         init {
             discord {
-                if(args.isEmpty()) {
-                    val modErr = if(guild != null) {
-                        if(member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)) {
-                            " As a channel moderator, you can allow accounts to be tracked from [supported websites](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-features)"
-                        } else ""
-                    } else ""
-                    usage("The **track** command is used to follow a supported account in this channel.$modErr", "track (site name) <account name/id>").awaitSingle()
-                    return@discord
-                }
                 trackCommand(this, Action.TRACK)
             }
         }
@@ -44,10 +36,6 @@ object TrackerCommandBase : CommandContainer {
 
         init {
             discord {
-                if(args.isEmpty()) {
-                    usage("The **untrack** command is used to unfollow a tracked account in this channel.", "untrack (site name) <account name/id>").awaitSingle()
-                    return@discord
-                }
                 trackCommand(this, Action.UNTRACK)
             }
         }
@@ -61,10 +49,10 @@ object TrackerCommandBase : CommandContainer {
             channelVerify(Permission.MANAGE_MESSAGES)
         }
 
-        // args is known to be contain at least 1 arg here
-        when(val trackTarget = TargetArguments.parseFor(this, args)) {
+        val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
+        when(val findTarget = TargetArguments.parseFor(this, args.string("username"), target)) {
             is Ok -> {
-                val targetArgs = trackTarget.value
+                val targetArgs = findTarget.value
                 val tracker = when(targetArgs.site) {
                     is StreamingTarget -> StreamTrackerCommand
                     is AnimeTarget -> MediaTrackerCommand
@@ -76,8 +64,7 @@ object TrackerCommandBase : CommandContainer {
                 }
             }
             is Err -> {
-                val err = trackTarget.value
-                usage(err, "${command.name} (site name) <account name/ID>").awaitSingle()
+                ereply(Embeds.error("Unable to track: ${findTarget.value}")).awaitSingle()
             }
         }
     }

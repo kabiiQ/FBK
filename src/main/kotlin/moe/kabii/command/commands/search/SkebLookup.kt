@@ -17,20 +17,15 @@ object SkebLookup : Command("skeb") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
 
-            if(args.isEmpty()) {
-                usage("**skeb** pulls information on a user's skeb.jp profile.", "skeb <skeb username>").awaitSingle()
-                return@discord
-            }
-
-            val targetUsername = args[0].removePrefix("@")
+            val usernameArg = args.string("username")
             val skebber = try {
-                val user = SkebParser.getUser(targetUsername)
+                val user = SkebParser.getUser(usernameArg)
                 if(user == null) {
-                    send(Embeds.error("Unable to find skeb user **$targetUsername**.")).awaitSingle()
+                    ireply(Embeds.error("Unable to find skeb user **$usernameArg**.")).awaitSingle()
                     return@discord
                 } else user
             } catch(e: SkebIOException) {
-                send(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
+                ereply(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
                 return@discord
             }
 
@@ -51,7 +46,7 @@ object SkebLookup : Command("skeb") {
                 desc.append("Currently accepting requests: ${flag(skebber.accepting)}")
             } else desc.append("@${skebber.username} is not a skeb creator.")
 
-            send(
+            ireply(
                 Embeds.fbk(desc.toString())
                     .withAuthor(EmbedCreateFields.Author.of(skebber.name, profileUrl, skebber.avatarUrl))
                     .run { if(skebber.header != null) withImage(skebber.header) else this }

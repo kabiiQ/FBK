@@ -1,0 +1,11 @@
+{
+    "name": "ask",
+    "description": "Ask the bot a question (get a random Magic 8 Ball response)",
+    "options": [
+        {
+            "name": "question",
+            "description": "The \"question\".",
+            "required": false
+        }
+    ]
+}

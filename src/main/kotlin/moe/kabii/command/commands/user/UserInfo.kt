@@ -10,26 +10,20 @@ import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import java.time.format.DateTimeFormatter
 
-object UserInfo : Command("user", "whoami", "jointime", "whois", "who") {
+object UserInfo : Command("who") {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
 
     override val wikiPath = "Discord-Info-Commands#user-info-summary-server-join-time"
 
     init {
         discord {
-            val targetUser = if(args.isNotEmpty()) {
-                val searchResult = Search.user(this@discord, noCmd, guild)
-                if(searchResult != null) searchResult else {
-                    send(Embeds.error("Unable to find user **$noCmd**.")).awaitSingle()
-                    return@discord
-                }
-            } else author
+            val targetUser = args.optUser("user")?.awaitSingle() ?: author
 
             val guildMember = guild?.run { targetUser.asMember(guild.id) }?.tryAwait()?.orNull()
             val joinTime = guildMember?.joinTime?.orNull()?.run {
                 EmbedCreateFields.Field.of("Joined ${guild!!.name}", TimestampFormat.LONG_DATE_TIME.format(this), false)
             }
-            send(
+            ireply(
                 Embeds.fbk(targetUser)
                     .withFields(mutableListOf(
                         EmbedCreateFields.Field.of("Account created", TimestampFormat.LONG_DATE_TIME.format(targetUser.id.timestamp), false),

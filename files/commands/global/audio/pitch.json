@@ -1,0 +1,14 @@
+{
+    "name": "pitch",
+    "description": "Manipulate the pitch of the currently playing audio.",
+    "options": [
+        {
+            "name": "pitch",
+            "description": "Specify a % to manipulate the audio pitch between 10% and 200% of the original. pitch 100 or the reset command will return the pitch to normal.",
+            "type": 4,
+            "min_value": 10,
+            "max_value": 200,
+            "required": true
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+{
+    "name": "skip",
+    "description": "Vote to skip the currently playing audio track. Will instantly skip if the user has permission over the current track."
+}

@@ -9,7 +9,7 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.event.message.MessageHandler
+import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -93,7 +93,7 @@ object Search {
         return mention?.run { param.target.getChannelById(this).tryAwait().orNull() as? R? }
     }
 
-    fun commandByAlias(handler: MessageHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
+    fun commandByAlias(handler: ChatCommandHandler, name: String, bypassExempt: Boolean = false): Command? = handler.manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
         allowed && command.aliases.contains(name.lowercase())
     }

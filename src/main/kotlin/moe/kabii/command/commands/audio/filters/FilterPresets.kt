@@ -47,6 +47,7 @@ object FilterPresets : AudioCommandContainer {
 
     object NucMode : Command("nuc") {
         override val wikiPath: String? = null
+        override val skipRegistration = true
 
         init {
             discord {

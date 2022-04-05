@@ -13,10 +13,7 @@ import moe.kabii.trackers.AnimeTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.anime.MediaListDeletedException
 import moe.kabii.trackers.anime.MediaListIOException
-import moe.kabii.util.extensions.propagateTransaction
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -33,7 +30,7 @@ object MediaTrackerCommand : TrackerCommand {
         // this may (ex. for kitsu) or may not (ex. for mal) make a call to find list ID - mal we only will know when we request the full list :/
         val siteListId = parser.getListID(inputId)
         if(siteListId == null) {
-            origin.send(Embeds.error("Unable to find **$siteName** list with identifier **$inputId**.")).awaitSingle()
+            origin.ereply(Embeds.error("Unable to find **$siteName** list with identifier **$inputId**.")).awaitSingle()
             return
         }
 
@@ -44,11 +41,11 @@ object MediaTrackerCommand : TrackerCommand {
         }
 
         if(existingTrack != null) {
-            origin.send(Embeds.error("**$siteName/$inputId** is already tracked in this channel.")).awaitSingle()
+            origin.ereply(Embeds.error("**$siteName/$inputId** is already tracked in this channel.")).awaitSingle()
             return
         }
 
-        val notice = origin.send(Embeds.fbk("Retrieving **$siteName** list...")).awaitSingle()
+        origin.ireply(Embeds.fbk("Retrieving **$siteName** list...")).awaitSingle()
 
         // download and validate list
         val mediaList = try {
@@ -58,7 +55,8 @@ object MediaTrackerCommand : TrackerCommand {
         } catch(io: MediaListIOException) {
             LOG.warn("Media list IO issue: ${io.message}")
 
-            notice.edit().withEmbeds(
+
+            origin.event.editReply().withEmbeds(
                 Embeds.error("Unable to download your list from **$siteName**: ${io.message}")
             ).awaitSingle()
             return
@@ -66,14 +64,14 @@ object MediaTrackerCommand : TrackerCommand {
             LOG.warn("Caught Exception downloading media list: ${e.message}")
             LOG.trace(e.stackTraceString)
 
-            notice.edit().withEmbeds(
+            origin.event.editReply().withEmbeds(
                 Embeds.error("Unable to download your list! Possible $siteName outage.")
             ).awaitSingle()
             return
         }
 
         if(mediaList == null) {
-            notice.edit().withEmbeds(
+            origin.event.editReply().withEmbeds(
                 Embeds.error("Unable to find **$siteName** list with identifier **$inputId**.")
             ).awaitSingle()
             return
@@ -104,7 +102,7 @@ object MediaTrackerCommand : TrackerCommand {
             }
         }
 
-        notice.edit().withEmbeds(
+        origin.event.editReply().withEmbeds(
             Embeds.fbk("Now tracking **$inputId** on **$siteName**.")
         ).awaitSingle()
     }
@@ -117,7 +115,7 @@ object MediaTrackerCommand : TrackerCommand {
 
         val siteListId = parser.getListID(inputId)
         if(siteListId == null) {
-            origin.send(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
+            origin.ereply(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
             return
         }
 
@@ -126,20 +124,20 @@ object MediaTrackerCommand : TrackerCommand {
         propagateTransaction {
             val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.lowercase(), channelId)
             if (existingTrack == null) {
-                origin.send(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
+                origin.ereply(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
                 return@propagateTransaction
             }
 
             if(origin.isPM // always allow untrack in pm
                     || origin.author.id.asLong() == existingTrack.userTracked.userID // not in pm, check for same user as tracker
-                    || origin.event.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
+                    || origin.interaction.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
 
                 existingTrack.delete()
-                origin.send(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
+                origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
 
             } else {
                 val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                origin.send(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
+                origin.ereply(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
             }
         }
     }

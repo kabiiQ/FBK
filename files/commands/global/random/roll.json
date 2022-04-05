@@ -1,0 +1,51 @@
+{
+    "name": "roll",
+    "description": "Roll a random number.",
+    "options": [
+        {
+            "name": "between",
+            "description": "Roll between two numbers.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "to",
+                    "description": "The highest possible roll. Default: 100",
+                    "type": 4,
+                    "min_value": 0,
+                    "max_value": 100000000,
+                    "required": false
+                },
+                {
+                    "name": "from",
+                    "description": "The lowest possible roll. Default: 0",
+                    "type": 4,
+                    "min_value": 0,
+                    "max_value": 100000000,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "dice",
+            "description": "Roll some dice.",
+            "options": [
+                {
+                    "name": "sides",
+                    "description": "How many 'sides' are on the rolled dice. Default: 6",
+                    "type": 4,
+                    "min_value": 1,
+                    "max_value": 100000000,
+                    "required": false
+                },
+                {
+                    "name": "count",
+                    "description": "How many 'dice' to roll. Default: 1",
+                    "type": 4,
+                    "min_value": 1,
+                    "max_value": 20,
+                    "required": false
+                }
+            ]
+        }
+    ]
+}

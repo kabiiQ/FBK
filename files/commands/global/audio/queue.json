@@ -1,0 +1,13 @@
+{
+    "name": "queue",
+    "description": "View the current audio queue.",
+    "options": [
+        {
+            "name": "ListFrom",
+            "description": "If there are many tracks in queue, you can specify the track to start listing the queue from, such as queue 10.",
+            "type": 4,
+            "min_value": 1,
+            "required": false
+        }
+    ]
+}

@@ -10,46 +10,35 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 
 object StarboardUtil : CommandContainer {
-    object StarMessage : Command("starmessage", "addstar", "starboardmessage") {
+    object StarMessage : Command("starmessage") {
         override val wikiPath = "Starboard#manually-adding-a-message-to-the-starboard-starmessage"
 
         init {
             discord {
                 member.verify(Permission.MANAGE_MESSAGES)
 
-                val starboardCfg = config.starboard
-                if(starboardCfg == null) {
-                    send(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **starboard set** command to create a starboard for this server.")).awaitSingle()
+                val starboardCfg = config.starboardSetup
+                if(starboardCfg.channel == null) {
+                    ereply(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **/starboard** command to create a starboard for this server.")).awaitSingle()
                     return@discord
                 }
 
-                // starmessage <message id>
-                if(args.size != 1) {
-                    usage("**starmessage** is used to instantly add a message to your server's starboard.", "starmessage <Discord message ID>").awaitSingle()
-                    return@discord
-                }
-
-                val targetId = args[0].toLongOrNull()?.snowflake
-                if(targetId == null) {
-                    usage("Invalid message ID **${args[0]}**.", "starmessage <Discord message ID>").awaitSingle()
-                    return@discord
-                }
+                val messageArg = args.int("message").snowflake
 
                 val targetMessage = try {
-                    chan.getMessageById(targetId).awaitSingle()
+                    chan.getMessageById(messageArg).awaitSingle()
                 } catch(ce: ClientException) {
-                    send(Embeds.error("Unable to find the message with ID **$targetId** in ${guildChan.name}.")).awaitSingle()
+                    ereply(Embeds.error("Unable to find the message with ID **$messageArg** in ${guildChan.name}.")).awaitSingle()
                     return@discord
                 }
 
-                if(starboardCfg.findAssociated(targetId.asLong()) != null) {
-                    send(Embeds.error("Message **${targetId}** is already starboarded.")).awaitSingle()
+                if(starboardCfg.findAssociated(messageArg.asLong()) != null) {
+                    ereply(Embeds.error("Message **$messageArg** is already starboarded.")).awaitSingle()
                     return@discord
                 }
 
                 val starboard = starboardCfg.asStarboard(target, config)
                 starboard.addToBoard(targetMessage, mutableSetOf(), exempt = true)
-
             }
         }
     }

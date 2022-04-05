@@ -1,0 +1,4 @@
+{
+    "name": "loop",
+    "description": "Toggle audio queue repeating/looping. When enabled, tracks are re-added to the queue after they finish playing."
+}

@@ -20,11 +20,9 @@ import moe.kabii.util.extensions.tryAwait
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembershiplink", "linkyoutubemembership", "linkytmembers", "linkytmembership") {
+object YoutubeMembershipSetup : Command("linkyoutubemembers") {
 
     override val wikiPath: String? = null
-
-    private val resetArg = Regex("(reset|remove|clear|delete|none)", RegexOption.IGNORE_CASE)
 
     private fun linkChannel(memberConfig: MembershipConfiguration) = "[${memberConfig.streamChannel.lastKnownUsername}](${URLUtil.StreamingSites.Youtube.channel(memberConfig.streamChannel.siteChannelID)})"
 
@@ -34,21 +32,23 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
             // linkyoutubemembers (yt id else: get)
             member.verify(Permission.MANAGE_GUILD)
 
-            if(args.isEmpty()) {
+            val linkArg = args.optStr("YTChannel")
+            if(linkArg == null) {
                 // get any active config
                 val linkedChannel = transaction {
                     MembershipConfigurations.getForGuild(target.id)?.run(::linkChannel)
                 }
 
                 if(linkedChannel != null) {
-                    send(Embeds.fbk("**${target.name}** is currently linked to YouTube channel: $linkedChannel."))
+                    ireply(Embeds.fbk("**${target.name}** is currently linked to YouTube channel: $linkedChannel."))
                 } else {
-                    usage("**linkyoutubemembership** is used to set up a link that connects YouTube chat members to a Discord role.", "linkyoutubemembership <youtube channel ID or \"remove\" to clear>")
+                    ereply(Embeds.wiki(command, "**/linkyoutubemembership** is used to set up a link that connects YouTube chat members to a Discord role."))
                 }.awaitSingle()
                 return@discord
             }
 
-            if(args[0].matches(resetArg)) {
+            val resetArg = args.optBool("reset")
+            if(resetArg == true) {
                 // remove existing config
                 propagateTransaction {
                     val existing = MembershipConfigurations.getForGuild(target.id)
@@ -56,9 +56,9 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
                         val channelLink = linkChannel(existing)
                         val utils = existing.utils(target)
                         utils.unsync()
-                        send(Embeds.fbk("Membership link to channel $channelLink has been **removed.**")).awaitSingle()
+                        ireply(Embeds.fbk("Membership link to channel $channelLink has been **removed.**")).awaitSingle()
                     } else {
-                        send(Embeds.error("There is no active membership configuration for **${target.name}**.")).awaitSingle()
+                        ereply(Embeds.error("There is no active membership configuration for **${target.name}**.")).awaitSingle()
                     }
                 }
                 return@discord
@@ -66,15 +66,15 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
 
             // verify youtube channel exists
             val ytChannel = try {
-                val yt = YoutubeParser.getChannelFromUnknown(args[0])
+                val yt = YoutubeParser.getChannelFromUnknown(linkArg)
                 if(yt == null) {
-                    send(Embeds.error("Unable to find YouTube channel **${args[0]}**.")).awaitSingle()
+                    ereply(Embeds.error("Unable to find YouTube channel **$linkArg**.")).awaitSingle()
                     return@discord
                 } else yt
             } catch(e: Exception) {
                 LOG.info("Error calling YouTube API: ${e.message}")
                 LOG.trace(e.stackTraceString)
-                send(Embeds.error("Error reaching YouTube.")).awaitSingle()
+                ereply(Embeds.error("Error reaching YouTube.")).awaitSingle()
                 return@discord
             }
 
@@ -87,7 +87,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
                     .awaitSingle()
             } catch(ce: ClientException) {
                 if(ce.status.code() == 403) {
-                    send(Embeds.error("I am missing permission to create roles in **${target.name}**.")).awaitSingle()
+                    ereply(Embeds.error("I am missing permission to create roles in **${target.name}**.")).awaitSingle()
                     return@discord
                 } else throw ce
             }
@@ -109,7 +109,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers", "youtubemembership
                     }
                 }
 
-                send(Embeds.fbk("Memberships for YouTube channel **[${ytChannel.name}](${ytChannel.url})** have been linked to **${target.name}**.\n\nA role has been created for memberships: <@&${membershipRole.id.asString()}>\n\nUsers must link their Discord account with a YouTube connection to FBK using the **ytlink** command to automate membership status.")).tryAwait()
+                ireply(Embeds.fbk("Memberships for YouTube channel **[${ytChannel.name}](${ytChannel.url})** have been linked to **${target.name}**.\n\nA role has been created for memberships: <@&${membershipRole.id.asString()}>\n\nUsers must link their Discord account with a YouTube connection to FBK using the **ytlink** command to automate membership status.")).tryAwait()
 
                 // sync any known memberships
                 YoutubeMembershipUtil

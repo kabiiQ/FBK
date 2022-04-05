@@ -31,10 +31,12 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.orNull
 import org.apache.commons.lang3.StringUtils
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 import java.time.Duration
 import java.util.concurrent.TimeoutException
 import kotlin.reflect.KMutableProperty1
@@ -210,7 +212,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         // register component listeners - component ids will not change so these do not need to be redone
         val listeners = mutableListOf<Flux<*>>()
         val menu = if(options.isNotEmpty()) {
-            val menuListener = origin.listener("toggleable", SelectMenuInteractionEvent::class)
+            val menuListener = origin.listener(SelectMenuInteractionEvent::class, true, null, "toggleable")
                 .flatMap { response ->
                     val (enabled, disabled) = boolElements
                         .partition { e -> response.values.contains(e.propName) }
@@ -232,7 +234,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .filter(ConfigurationElement.Companion::elementStringInputtable)
             .map { e ->
                 // listener for button creates modal for input
-                val buttonListener = origin.listener(e.propName, ButtonInteractionEvent::class)
+                val buttonListener = origin.listener(ButtonInteractionEvent::class, true, null, e.propName)
                     .flatMap { press ->
                         press
                             .presentModal()
@@ -249,7 +251,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     }
                     .flatMap { _ ->
                         // create listener for modal itself
-                        origin.listener("modal", ModalSubmitInteractionEvent::class)
+                        origin.listener(ModalSubmitInteractionEvent::class, true, null, "modal")
                             .flatMap { submission ->
                                 val raw = submission.getComponents(TextInput::class.java)[0].value.get()
                                 when(e) {
@@ -302,14 +304,17 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             yieldAll(buttons.chunked(5).map(ActionRow::of))
         }
 
-        origin
-            .ereply(currentConfig())
+        origin.event
+            .reply()
+            .withEmbeds(currentConfig())
+            .withEphemeral(true)
             .withComponents(components.toList())
-            .awaitSingle()
+            .awaitAction()
 
         Mono.`when`(listeners)
             .timeout(Duration.ofMinutes(30))
             .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
+            .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null).then() }
             .thenReturn(Unit)
             .awaitFirstOrNull()
         origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull() // TODO test deletion of ephemeral messages. edit should work otherwise

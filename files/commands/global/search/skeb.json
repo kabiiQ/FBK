@@ -1,0 +1,12 @@
+{
+    "name": "skeb",
+    "description": "Search skeb.jp for a user's profile.",
+    "options": [
+        {
+            "name": "username",
+            "description": "The skeb username to look up",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

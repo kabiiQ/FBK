@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.ps2
 
+import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -11,35 +12,22 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.ps2.polling.PS2Parser
 import moe.kabii.trackers.ps2.polling.json.PS2Outfit
 import moe.kabii.trackers.ps2.polling.json.PS2OutfitMember
+import reactor.core.publisher.Mono
 
-object PS2OutfitLookupCommands : CommandContainer {
+object PS2OutfitLookup : Command("ps2outfit") {
+    override val wikiPath: String? = null
+    override val skipRegistration = true
 
-    object PS2OutfitLookupByTag : Command("ps2outfit", "ps2outfit:tag", "psoutfit", "psfit", "ps2fit") {
-        override val wikiPath: String? = null // todo
-
-        init {
-            discord {
-                guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
-                if(args.isEmpty()) {
-                    usage("**ps2outfit** is used to look up and outfit by their tag. **ps2outfit:name** can be used to look up by name.", "ps2outfit <TAG>")
-                    return@discord
+    init {
+        discord {
+            val args = subArgs(subCommand)
+            when(subCommand.name) {
+                "tag" -> {
+                    wrapLookup(this, args.string("OutfitTag"), PS2Parser::searchOutfitByTag)
                 }
-                wrapLookup(this, args[0], PS2Parser::searchOutfitByTag)
-            }
-        }
-    }
-
-    object PS2OutfitLookupByName : Command("ps2outfit:name", "psoutfit:name", "psfit:name", "ps2fit:name") {
-        override val wikiPath: String? = null // todo
-
-        init {
-            discord {
-                guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
-                if(args.isEmpty()) {
-                    usage("**ps2outfit:name is used to look up an outfit by their full name, in the event they have no tag.", "ps2outfit:name <outfit name>").awaitSingle()
-                    return@discord
+                "name" -> {
+                    wrapLookup(this, args.string("OutfitName"), PS2Parser::searchOutfitByName)
                 }
-                wrapLookup(this, noCmd, PS2Parser::searchOutfitByName)
             }
         }
     }
@@ -48,11 +36,11 @@ object PS2OutfitLookupCommands : CommandContainer {
         val outfit = try {
             search(query)
         } catch(e: Exception) {
-            origin.send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+            origin.ereply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
             return
         }
         if(outfit != null) displayOutfit(origin, outfit)
-        else origin.send(Embeds.error("Unable to find PS2 outfit **'$query'**.")).awaitSingle()
+        else origin.ereply(Embeds.error("Unable to find PS2 outfit **'$query'**.")).awaitSingle()
     }
 
     private suspend fun displayOutfit(origin: DiscordParameters, outfit: PS2Outfit) {

@@ -1,0 +1,14 @@
+{
+    "name": "purge",
+    "description": "Purge a specific number of messages from this channel.",
+    "options": [
+        {
+            "name": "count",
+            "description": "The number of messages to purge.",
+            "type": 4,
+            "min_value": 1,
+            "max_value": 1000,
+            "required": true
+        }
+    ]
+}

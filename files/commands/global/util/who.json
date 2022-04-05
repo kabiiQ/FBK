@@ -1,0 +1,12 @@
+{
+    "name": "who",
+    "description": "Pull information on user account creation and join date.",
+    "options": [
+        {
+            "name": "user",
+            "description": "The user to pull account information for.",
+            "type": 6,
+            "required": false
+        }
+    ]
+}

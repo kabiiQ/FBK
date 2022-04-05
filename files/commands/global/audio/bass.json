@@ -1,0 +1,14 @@
+{
+    "name": "bass",
+    "description": "Applies a bass boost to the currently playing audio.",
+    "options": [
+        {
+            "name": "boost",
+            "description": "% of maximum bass boost to apply (0-100). bass 0 or the reset command will remove the boost.",
+            "type": 4,
+            "min_value": 0,
+            "max_value": 100,
+            "required": false
+        }
+    ]
+}

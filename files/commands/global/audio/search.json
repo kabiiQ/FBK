@@ -1,0 +1,28 @@
+{
+    "name": "search",
+    "description": "Searches for a track by name, allowing you to select the correct track to play.",
+    "options": [
+        {
+            "name": "search",
+            "description": "The text to search for",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "site",
+            "description": "The site to search on. If not provided, default to YouTube",
+            "type": 4,
+            "required": "false",
+            "choices": [
+                {
+                    "name": "YouTube",
+                    "value": 1
+                },
+                {
+                    "name": "SoundCloud",
+                    "value": 2
+                }
+            ]
+        }
+    ]
+}

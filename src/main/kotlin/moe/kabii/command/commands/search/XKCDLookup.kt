@@ -28,47 +28,41 @@ object XKCDLookup : Command("xkcd") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
 
-            val arg = args.getOrNull(0)?.toIntOrNull()
-            if(args.isEmpty() || arg != null) {
+            val idArg = args.optInt("id")
 
-                // if no arg is provided (current comic) or a specific number is provided (lookup)
-                val comicPart = if(arg != null) "/$arg" else ""
-                val request = newRequestBuilder()
-                    .get()
-                    .url("http://xkcd.com$comicPart/info.0.json")
-                    .build()
+            // if no arg is provided (current comic) or a specific number is provided (lookup)
+            val comicPart = if(idArg != null) "/$idArg" else ""
+            val request = newRequestBuilder()
+                .get()
+                .url("http://xkcd.com$comicPart/info.0.json")
+                .build()
 
-                val comic = try {
-                    OkHTTP.newCall(request).execute().use { rs ->
-                        if(rs.isSuccessful) {
-                            val body = rs.body!!.string()
-                            xkcdAdapter.fromJson(body)!!
-                        } else {
-                            send(Embeds.error("Unable to find comic.")).awaitSingle()
-                            return@discord
-                        }
+            val comic = try {
+                OkHTTP.newCall(request).execute().use { rs ->
+                    if(rs.isSuccessful) {
+                        val body = rs.body!!.string()
+                        xkcdAdapter.fromJson(body)!!
+                    } else {
+                        ereply(Embeds.error("Unable to find comic.")).awaitSingle()
+                        return@discord
                     }
-                } catch (e: Exception) {
-                    send(Embeds.error("Unable to reach xkcd.")).awaitSingle()
-                    LOG.info(e.stackTraceString)
-                    return@discord
                 }
-
-                val dateStr = "${comic.month} ${comic.day} ${comic.year}"
-                val date = LocalDate.parse(dateStr, dateFormat).atStartOfDay().toInstant(ZoneOffset.UTC)
-
-                val title = "xkcd #${comic.num}: ${comic.title}"
-                send(
-                    Embeds.other(StringUtils.abbreviate(comic.alt, MagicNumbers.Embed.NORM_DESC), Color.of(9873608))
-                        .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(title, MagicNumbers.Embed.TITLE), "https://xkcd.com/${comic.num}", null))
-                        .withImage(comic.img)
-                        .withTimestamp(date)
-                ).awaitSingle()
-
-            } else {
-                // a non-number input was provided
-                usage("The **xkcd** command is used to pull either the current or a specific comic from xkcd.com.", "xkcd (optional: comic number)").awaitSingle()
+            } catch (e: Exception) {
+                ereply(Embeds.error("Unable to reach xkcd.")).awaitSingle()
+                LOG.info(e.stackTraceString)
+                return@discord
             }
+
+            val dateStr = "${comic.month} ${comic.day} ${comic.year}"
+            val date = LocalDate.parse(dateStr, dateFormat).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+            val title = "xkcd #${comic.num}: ${comic.title}"
+            ireply(
+                Embeds.other(StringUtils.abbreviate(comic.alt, MagicNumbers.Embed.NORM_DESC), Color.of(9873608))
+                    .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(title, MagicNumbers.Embed.TITLE), "https://xkcd.com/${comic.num}", null))
+                    .withImage(comic.img)
+                    .withTimestamp(date)
+            ).awaitSingle()
         }
     }
 

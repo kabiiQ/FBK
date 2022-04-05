@@ -1,0 +1,46 @@
+{
+    "name": "usetracker",
+    "description": "Set the default site for 'track' commands in this channel.",
+    "options": [
+        {
+            "name": "site",
+            "description": "The site name may need to be specified if it can not be inferred.",
+            "required": false,
+            "type": 4,
+            "choices": [
+                {
+                    "name": "Twitter",
+                    "value": 0
+                },
+                {
+                    "name": "YouTube",
+                    "value": 100
+                },
+                {
+                    "name": "Twitch",
+                    "value": 101
+                },
+                {
+                    "name": "Twitter Spaces",
+                    "value": 102
+                },
+                {
+                    "name": "TwitCasting",
+                    "value": 103
+                },
+                {
+                    "name": "MyAnimeList",
+                    "value": 200
+                },
+                {
+                    "name": "kitsu.io",
+                    "value": 201
+                },
+                {
+                    "name": "AniList",
+                    "value": 202
+                }
+            ]
+        }
+    ]
+}

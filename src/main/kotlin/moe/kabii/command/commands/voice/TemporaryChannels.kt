@@ -14,7 +14,7 @@ import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.success
 
 object TemporaryChannels : CommandContainer {
-    object CreateTempChannel : Command("temp", "tempchannel", "createtemp", "createtempchannel", "temporarychannel", "tempchan", "temporarychan") {
+    object CreateTempChannel : Command("temp") {
         override val wikiPath = "Utility-Commands#temporary-voice-channels"
 
         init {
@@ -25,11 +25,11 @@ object TemporaryChannels : CommandContainer {
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()
                 if(voice == null) {
-                    send(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
+                    ereply(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
                     return@discord
                 }
 
-                val channelName = if(args.isEmpty()) "${member.displayName}'s channel" else noCmd
+                val channelName = args.optStr("ChannelName") ?: "${member.displayName}'s channel"
                 val categoryID = voice.categoryId.orNull()
                 val ownerPermissions = setOf(
                     PermissionOverwrite.forMember(member.id,
@@ -46,13 +46,13 @@ object TemporaryChannels : CommandContainer {
                 try {
                     member.edit().withNewVoiceChannelOrNull(newChannel.id).awaitSingle()
                 } catch(ce: ClientException) {
-                    send(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
+                    ireply(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
                     newChannel.delete("Unable to move user into their temporary channel.").success().awaitSingle()
                     return@discord
                 }
                 config.tempVoiceChannels.tempChannels.add(newChannel.id.asLong())
                 config.save()
-                send(Embeds.fbk("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.")).awaitSingle()
+                ireply(Embeds.fbk("Temporary voice channel created: **${newChannel.name}**. This channel will exist until all users leave the channel.")).awaitSingle()
             }
         }
     }

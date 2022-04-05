@@ -34,9 +34,9 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
             ereply(Embeds.error("The channel renaming feature is not enabled in **#${origin.guildChan.name}**.If you wish to enable it, you can do so with **/streamcfg rename true**.")).awaitSingle()
             return
         }
-        val subArgs = subArgs(subCommand)
-        val target = subArgs.optInt("site")?.run(TrackerTarget::parseSiteArg)
-        val streamArg = subArgs.string("TrackedStream")
+        val args = subArgs(subCommand)
+        val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
+        val streamArg = args.string("TrackedStream")
         val siteTarget = when (val findTarget = TargetArguments.parseFor(this, streamArg, target)) {
             is Ok -> findTarget.value
             is Err -> {
@@ -54,7 +54,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
             }
         }
 
-        val mark = subArgs.optStr("character")
+        val mark = args.optStr("character")
         val dbChannel = MongoStreamChannel.of(streamInfo)
         if(mark == null) {
 

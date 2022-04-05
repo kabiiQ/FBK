@@ -1,0 +1,12 @@
+{
+    "name": "sample",
+    "description": "Play the current track for a specified amount of time and then automatically skip it. Useful for looped/extended videos.",
+    "options": [
+        {
+            "name": "duration",
+            "description": "Duration of the track to sample. For example, 'sample 2m' will play 2 more minutes of audio from the current track.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

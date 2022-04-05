@@ -1,0 +1,24 @@
+{
+    "name": "translate",
+    "description": "Translate text between languages",
+    "options": [
+        {
+            "name": "text",
+            "description": "The text to translate.",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "ToLanguage",
+            "description": "The language to translate the text into, if not specified, this server's default target will be used.",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "FromLanguage",
+            "description": "The language to translate the text from. This does not need to be specified unless the language detection is incorrect.",
+            "type": 3,
+            "required": false
+        }
+    ]
+}

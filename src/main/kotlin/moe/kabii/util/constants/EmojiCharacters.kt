@@ -10,7 +10,10 @@ object EmojiCharacters {
     const val redX = "\u274C"
     const val alarm = "\u23F0"
     const val star = "\u2B50"
+
+    const val left = "◀"
     const val play = "▶"
+
     const val wave = "\uD83D\uDC4B"
     const val mailbox = "\uD83D\uDCEC"
     const val ageLimit = "\uD83D\uDD1E"

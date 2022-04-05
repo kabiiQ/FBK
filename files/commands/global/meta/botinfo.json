@@ -1,0 +1,4 @@
+{
+    "name": "botinfo",
+    "description": "Display basic bot information: uptime, version"
+}

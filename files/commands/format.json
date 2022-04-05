@@ -1,0 +1,12 @@
+{
+    "name": "search",
+    "description": "commandDescription",
+    "options": [
+        {
+            "name": "input",
+            "description": "charactersToSearch",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

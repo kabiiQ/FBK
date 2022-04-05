@@ -3,8 +3,9 @@ package moe.kabii.command.commands.utility
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.awaitAction
 
-object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojiletters", "emojiletter", "regionalindicator", "emojitext", "textemoji", "textemojis", "textmoji", "textmojis") {
+object ToRegionalIndicator : Command("emojify") {
     override val wikiPath = "Other-Commands#text-to-regional-indicator-emoji-"
 
     private val regionalIndicators = arrayOf('\uDDE6', '\uDDE7', '\uDDE8', '\uDDE9', '\uDDEA', '\uDDEB', '\uDDEC', '\uDDED', '\uDDEE', '\uDDEF', '\uDDF0', '\uDDF1', '\uDDF2', '\uDDF3', '\uDDF4', '\uDDF5', '\uDDF6', '\uDDF7', '\uDDF8', '\uDDF9', '\uDDFA', '\uDDFB', '\uDDFC', '\uDDFD', '\uDDFE', '\uDDFF')
@@ -12,12 +13,8 @@ object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojilet
     init {
         discord {
             // convert all possible chars into regional indicator emoji
-            if(noCmd.isEmpty()) {
-                usage("No text provided to convert.", "emojify <text>").awaitSingle()
-                return@discord
-            }
             var previous = false
-            val converted = noCmd.map {char ->
+            val converted = args.string("text").map {char ->
                 val lower = char.lowercaseChar()
                 val spacer = if(previous) {
                     previous = false// reset this no matter what, we only need to apply spacer if two regional emoji characters are back to back
@@ -34,7 +31,9 @@ object ToRegionalIndicator : Command("emojify", "regional", "letters", "emojilet
                     else -> char.toString()
                 }
             }.joinToString("")
-            chan.createMessage(converted).awaitSingle()
+            event
+                .reply(converted)
+                .awaitAction()
         }
     }
 }

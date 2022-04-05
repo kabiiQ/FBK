@@ -1,0 +1,4 @@
+{
+    "name": "nuc",
+    "description": "Applies a \"nuc\" filter equivalent to: speed 75, pitch 75, bass 100, rotate .25"
+}

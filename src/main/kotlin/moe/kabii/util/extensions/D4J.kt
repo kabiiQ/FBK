@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.InteractionApplicationCommandCallbackReplyMono
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.commons.text.WordUtils

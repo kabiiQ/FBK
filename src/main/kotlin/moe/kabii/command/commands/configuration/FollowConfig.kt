@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.configuration
 
+import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -17,13 +18,14 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionrole", "setmention") {
+object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
 
     init {
@@ -32,35 +34,30 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             // verify stream is tracked, but override any existing mention role
             // mentionrole (site) <stream name> <role>
             member.verify(Permission.MANAGE_CHANNELS)
-            if (args.size < 2) {
-                usage("**mentionrole** is used to manually change the role that will be mentioned when a stream goes live or a user sends a Tweet.", "mentionrole (site name) <stream/@twitter username> <discord role ID>").awaitSingle()
-                return@discord
-            }
-            val targetCount = if(TargetArguments[args[0]] == null) 1 else 2
-            val targetArgs = args.take(targetCount)
-            val roleArg = args.drop(targetCount).joinToString(" ")
-
-            val siteTarget = when (val findTarget = TargetArguments.parseFor(this, targetArgs)) {
+            val streamArg = args.string("TrackedUsername")
+            val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
+            val siteTarget = when(val findTarget = TargetArguments.parseFor(this, streamArg, target)) {
                 is Ok -> findTarget.value
                 is Err -> {
-                    usage(findTarget.value, "setmention (site) <stream/@twitter name> <role or \"none\">").awaitSingle()
+                    ereply(Embeds.error("Unable to find livestream channel: ${findTarget.value}.")).awaitSingle()
                     return@discord
                 }
             }
 
+            val roleArg = args.optRole("role")?.awaitSingle()
             when(siteTarget.site) {
                 is StreamingTarget -> setStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg)
                 is moe.kabii.trackers.TwitterTarget -> setTwitterMention(this, siteTarget.identifier, roleArg)
-                else -> send(Embeds.error("The **setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
+                else -> ereply(Embeds.error("The **/setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
             }
         }
     }
 
-    private suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: String) {
+    private suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: Role?) {
         val streamInfo = when (val streamCall = site.getChannel(siteUserId)) {
             is Ok -> streamCall.value
             is Err -> {
-                origin.send(Embeds.error("Unable to find the **${site.full}** stream **$siteUserId**.")).awaitSingle()
+                origin.ereply(Embeds.error("Unable to find the **${site.full}** stream **$siteUserId**.")).awaitSingle()
                 return
             }
         }
@@ -80,19 +77,8 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             ).firstOrNull()
         }
         if (matchingTarget == null) {
-            origin.send(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
             return
-        }
-
-        val newMentionRole = when(roleArg.lowercase()) {
-            "none", "remove", "unset", "null", "clear" -> null
-            else -> {
-                val search = Search.roleByNameOrID(origin, roleArg)
-                if(search == null) {
-                    origin.send(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
-                    return
-                } else search
-            }
         }
 
         // create or overwrite mention for this guild
@@ -103,37 +89,37 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
                         (TrackedStreams.Mentions.guild eq dbGuild.id)
             }.firstOrNull()
 
-            if(newMentionRole == null) {
+            if(roleArg == null) {
                 // unset role
                 existingMention?.delete()
                 "**removed**"
             } else {
                 // setting new role
                 if(existingMention != null) {
-                    existingMention.mentionRole = newMentionRole.id.asLong()
+                    existingMention.mentionRole = roleArg.id.asLong()
                 } else {
                     TrackedStreams.Mention.new {
                         this.stream = matchingTarget.streamChannel
                         this.guild = dbGuild
-                        this.mentionRole = newMentionRole.id.asLong()
+                        this.mentionRole = roleArg.id.asLong()
                     }
                 }
-                "set to **${newMentionRole.name}**"
+                "set to **${roleArg.name}**"
             }
         }
 
-        origin.send(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
     }
 
-    private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: String) {
+    private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?) {
         val twitterUser = try {
             TwitterParser.getUser(twitterId)
         } catch(e: Exception) {
-            origin.send(Embeds.error("Unable to reach Twitter.")).awaitSingle()
+            origin.ereply(Embeds.error("Unable to reach Twitter.")).awaitSingle()
             return
         }
         if(twitterUser == null) {
-            origin.send(Embeds.error("Unable to find the Twitter user '$twitterId'")).awaitSingle()
+            origin.ereply(Embeds.error("Unable to find the Twitter user '$twitterId'")).awaitSingle()
             return
         }
 
@@ -151,19 +137,8 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
         }
 
         if(matchingTarget == null) {
-            origin.send(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**.")).awaitSingle()
             return
-        }
-
-        val newMentionRole = when(roleArg.lowercase()) {
-            "none", "remove", "unset", "null", "clear" -> null
-            else -> {
-                val search = Search.roleByNameOrID(origin, roleArg)
-                if(search == null) {
-                    origin.send(Embeds.error("Unable to find the role **$roleArg** in **${origin.target.name}**.")).awaitSingle()
-                    return
-                } else search
-            }
         }
 
          // create or overwrite mention for this guild
@@ -171,22 +146,22 @@ object SetMentionRole : Command("mentionrole", "setmentionrole", "modifymentionr
             val existingMention = TwitterMention.getRoleFor(origin.target.id, twitterUser.id)
                 .firstOrNull()
 
-            if(newMentionRole == null) {
+            if(roleArg == null) {
                 existingMention?.delete()
                 "**removed**"
             } else {
                 if(existingMention != null) {
-                    existingMention.mentionRole = newMentionRole.id.asLong()
+                    existingMention.mentionRole = roleArg.id.asLong()
                 } else {
                     TwitterMention.new {
                         this.twitterFeed = matchingTarget.twitterFeed
                         this.guild = DiscordObjects.Guild.getOrInsert(origin.target.id.asLong())
-                        this.mentionRole = newMentionRole.id.asLong()
+                        this.mentionRole = roleArg.id.asLong()
                     }
                 }
-                "set to **${newMentionRole.name}**"
+                "set to **${roleArg.name}**"
             }
         }
-        origin.send(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()
     }
 }

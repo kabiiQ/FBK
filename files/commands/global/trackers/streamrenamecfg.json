@@ -1,0 +1,54 @@
+{
+    "name": "streamrenamecfg",
+    "description": "Configure the 'channel rename' stream tracker feature.",
+    "options": [
+        {
+            "name": "set",
+            "description": "Set a character to represent a specific stream. See wiki for details",
+            "type": 1,
+            "options": [
+                {
+                    "name": "TrackedStream",
+                    "description": "The username/id of the tracked stream being configured.",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "character",
+                    "description": "The character/oshi mark for this channel. Will be removed if not specified",
+                    "type": 3,
+                    "required": false
+                },
+                {
+                    "name": "site",
+                    "description": "The site name may need to be specified if it can not be inferred.",
+                    "required": false,
+                    "type": 4,
+                    "choices": [
+                        {
+                            "name": "YouTube",
+                            "value": 100
+                        },
+                        {
+                            "name": "Twitch",
+                            "value": 101
+                        },
+                        {
+                            "name": "Twitter Spaces",
+                            "value": 102
+                        },
+                        {
+                            "name": "TwitCasting",
+                            "value": 103
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "list",
+            "description": "List the existing configured characters/marks.",
+            "type": 1
+        }
+    ]
+}

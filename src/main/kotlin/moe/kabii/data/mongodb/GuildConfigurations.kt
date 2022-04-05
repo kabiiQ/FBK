@@ -45,7 +45,7 @@ data class GuildConfiguration(
     var prefix: String = defaultPrefix,
     var suffix: String? = null,
     val options: OptionalFeatures = OptionalFeatures(),
-    val customCommands: CustomCommands = CustomCommands(),
+    val guildCustomCommands: CustomCommands = CustomCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
     val selfRoles: SelfRoles = SelfRoles(),
     val guildSettings: GuildSettings = GuildSettings(),

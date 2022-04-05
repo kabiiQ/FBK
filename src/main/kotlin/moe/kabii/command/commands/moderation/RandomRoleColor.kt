@@ -1,10 +1,18 @@
 package moe.kabii.command.commands.moderation
 
+import discord4j.core.`object`.component.ActionRow
+import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.command.Command
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
@@ -13,9 +21,16 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.RGB
 import moe.kabii.discord.util.Search
 import moe.kabii.net.NettyFileServer
+import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.tryAwait
+import reactor.core.publisher.Mono
+import reactor.function.TupleUtils
+import reactor.util.function.Tuple2
+import java.time.Duration
+import java.util.concurrent.TimeoutException
 
-object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
+object RandomRoleColor : Command("randomizecolorz") {
     override val wikiPath = "Moderation-Commands#randomizing-a-roles-color"
 
     private fun randomColor() = Color.of((0..0xFFFFFF).random())
@@ -24,19 +39,11 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
         botReqs(Permission.MANAGE_ROLES)
         discord {
             member.verify(Permission.MANAGE_ROLES)
-            if (args.isEmpty()) {
-                usage("**randomcolor** will pick a random color for a role.", "randomcolor <role name or ID>").awaitSingle()
-                return@discord
-            }
 
-            val role = Search.roleByNameOrID(this, noCmd)
-            if (role == null) {
-                usage("Unable to find the role **$noCmd**.", "randomcolor <role name or ID>").awaitSingle()
-                return@discord
-            }
+            val role = args.role("role").awaitSingle()
             val safe = PermissionUtil.isSafeRole(role, member, target, managed = true, everyone = false)
             if(!safe) {
-                send(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
+                ereply(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
                 return@discord
             }
             fun colorPicker(color: Color): EmbedCreateSpec {
@@ -48,41 +55,58 @@ object RandomRoleColor : Command("randomcolor", "randomizecolor", "newcolor") {
             }
 
             var currColor = randomColor()
-            var hex = ColorUtil.hexString(currColor)
-            val prompt = send(colorPicker(currColor)).awaitSingle()
+            // build color picker
+            // X <CHECK> <NEXT>
+            event
+                .reply()
+                .withEmbeds(colorPicker(currColor))
+                .withComponents(
+                    ActionRow.of(
+                        Button.danger("exit", ReactionEmoji.unicode(EmojiCharacters.redX)),
+                        Button.success("confirm", ReactionEmoji.unicode(EmojiCharacters.checkBox)),
+                        Button.primary("next", ReactionEmoji.unicode(EmojiCharacters.play))
+                    )
+                )
+                .awaitAction()
 
-            var first = true
-            loop@while(true) {
-                // y/n /exit
-                val response = getBool(prompt, timeout = 240000L, add = first)
-                first = false
-                when (response) {
-                    true -> { // set color
+            while(true) {
+
+                // listen for button press response
+                val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(15), "exit", "confirm", "next")
+                    .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
+                    .take(1).awaitFirstOrNull() ?: return@discord
+
+                when(press.customId) {
+                    "exit" -> {
+                        event.editReply()
+                            .withEmbeds(Embeds.fbk("Role edit aborted."))
+                            .awaitSingle()
+                        return@discord
+                    }
+                    "confirm" -> {
                         val oldColor = ColorUtil.hexString(role.color)
-                        val edit = role.edit().withColor(currColor).tryAwait().orNull()
-                        if (edit != null) {
-                            prompt.edit()
-                                .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $hex. (Previously $oldColor)", currColor))
-                                .tryAwait()
-                        } else {
-                            send(Embeds.error("I am unable to edit the role **${role.name}**. The hex value for the color you wanted to set was $hex.")).tryAwait()
-                            prompt.edit()
-                                .withEmbeds(Embeds.error("I am unable to edit the role **${role.name}**. I must have a role above **${role.name}** to to edit it. The hex value for the color you wanted to set was $hex."))
+                        val newColor = ColorUtil.hexString(currColor)
+                        try {
+                            role.edit().withColor(currColor).awaitSingle()
+                        } catch(ce: ClientException) {
+                            event.editReply()
+                                .withEmbeds(Embeds.error("I am unable to edit the role **${role.name}**. I must have a role above **${role.name}** to edit it. The hex value for the color you wanted to set was $newColor."))
                                 .awaitSingle()
                         }
-                        break@loop
+                        event.editReply()
+                            .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $newColor. (Previously $oldColor)", currColor))
+                            .awaitSingle()
+                        return@discord
                     }
-                    false -> { // new color
+                    "next" -> {
+                        // new color
                         currColor = randomColor()
-                        hex = ColorUtil.hexString(currColor)
-                        prompt.edit()
+                        event.editReply()
                             .withEmbeds(colorPicker(currColor))
                             .awaitSingle()
                     }
-                    null -> break@loop // exit
                 }
             }
-            prompt.removeAllReactions().subscribe()
         }
     }
 }

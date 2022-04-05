@@ -1,0 +1,12 @@
+{
+    "name": "vinglish",
+    "description": "Garble a text message like you can't consistently type.",
+    "options": [
+        {
+            "name": "text",
+            "description": "The text to garble.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

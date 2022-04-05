@@ -1,0 +1,207 @@
+{
+    "name": "autorole",
+    "description": "Set the \"playing\" status for the bot.",
+    "options": [
+        {
+            "name": "join",
+            "description": "Configures an auto-role for user \"joins\"",
+            "type": 2,
+            "options": [
+                {
+                    "name": "create",
+                    "description": "Create a join-based autorole",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "role",
+                            "description": "Role to be added to users who join your server",
+                            "type": 8,
+                            "required": true
+                        },
+                        {
+                            "name": "invite",
+                            "description": "If provided, this autorole will only apply to a specific invite code",
+                            "type": 3,
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "delete",
+                    "description": "Delete an existing join-based autorole rule",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "role",
+                            "description": "Role associated with the autorole rule to be deleted",
+                            "type": 8,
+                            "required": true
+                        },
+                        {
+                            "name": "invite",
+                            "description": "Invite code associated with the autorole rule to be deleted (optional)",
+                            "type": 3,
+                            "required": "false"
+                        }
+                    ]
+                },
+                {
+                    "name": "list",
+                    "descrption": "List all join-based autoroles",
+                    "type": 1
+                }
+            ]
+        },
+        {
+            "name": "voice",
+            "description": "Configure an autorole for users joining voice channels",
+            "type": 2,
+            "options": [
+                {
+                    "name": "create",
+                    "description": "Create a voice channel-based autorole",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "role",
+                            "description": "Role to be added to users who join a voice channel",
+                            "type": 8,
+                            "required": true
+                        },
+                        {
+                            "name": "VoiceChannel",
+                            "description": "If provided, this autorole will only be applied to users joining this SPECIFIC voice channel.",
+                            "type": 7,
+                            "channel_types": [2, 13],
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "delete",
+                    "description": "Delete an existing voice-based autorole rule",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "VoiceChannel",
+                            "description": "If provided, the voice-based autorole for a specific channel will be deleted, otherwise the autorole for any/all voice channel will be deleted.",
+                            "type": 7,
+                            "channel_types": [2, 13],
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "list",
+                    "description": "List all voice-based autorole rules.",
+                    "type": 1
+                }
+            ]
+        },
+        {
+            "name": "reaction",
+            "description": "Configure an auto-role for users reacting on a message",
+            "type": 2,
+            "options": [
+                {
+                    "name": "create",
+                    "description": "Create a reaction-based autorole",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "MessageID",
+                            "description": "ID of the Discord message to add the reaction role to",
+                            "type": 4,
+                            "required": true
+                        },
+                        {
+                            "name": "emoji",
+                            "description": "The emoji to be used for the reaction role",
+                            "type": 3,
+                            "required": true
+                        },
+                        {
+                            "name": "role",
+                            "description": "The role to be added when users react with this emoji",
+                            "type": 8,
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "delete",
+                    "description": "Delete an existing reaction-based autorole rule",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "MessageID",
+                            "description": "The ID of the Discord message to remove reaction roles from (if you do not specify an emoji, ALL reactionroles on this message will be removed)",
+                            "type": 4,
+                            "required": true
+                        },
+                        {
+                            "name": "emoji",
+                            "description": "The emoji of the reactionrole rule to remove",
+                            "type": 3,
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "list",
+                    "description": "List all reaction-based autorole rules (reactionroles).",
+                    "type": 1
+                },
+                {
+                    "name": "reset",
+                    "description": "Manually reset the reaction counts for reaction roles in this channel back to 0",
+                    "type": 1
+                }
+            ]
+        },
+        {
+            "name": "command",
+            "description": "Configure an auto-role for users running a specific command",
+            "type": 2,
+            "options": [
+                {
+                    "name": "create",
+                    "description": "Create a command-based autorole",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "name",
+                            "description": "The command name for the new autorole",
+                            "type": 3,
+                            "required": true
+                        },
+                        {
+                            "name": "role",
+                            "description": "The role that will be assigned when this command is used",
+                            "type": 8,
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "delete",
+                    "description": "Delete an existing command-based autorole",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "name",
+                            "description": "The name of the existing command autorole to be deleted",
+                            "type": 3,
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "list",
+            "description": "List all command-based autorole rules",
+            "type": 1
+        }
+    ]
+}

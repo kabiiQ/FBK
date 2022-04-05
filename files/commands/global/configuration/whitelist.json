@@ -1,0 +1,47 @@
+{
+    "name": "whitelist",
+    "description": "Configure a bot command whitelist.",
+    "options": [
+        {
+            "name": "use",
+            "description": "Enable the command whitelist and disable the blacklist. IF ENABLED, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
+            "type": 1
+        },
+        {
+            "name": "add",
+            "description": "Add a command to the whitelist by name",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The command to be added to the whitelist",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "remove",
+            "description": "Remove a command currently on the command whitelist",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The command to be removed from the whitelist",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "view",
+            "description": "View the contents of the command whitelist.",
+            "type": 1
+        },
+        {
+            "name": "clear",
+            "description": "Remove all commands currently on the command whitelist. If the whitelist is enabled, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
+            "type": 1
+        }
+    ]
+}

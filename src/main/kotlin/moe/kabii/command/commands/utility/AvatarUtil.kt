@@ -15,16 +15,12 @@ import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
 
 object AvatarUtil : CommandContainer {
-    object Avatar : Command("avatar", "getavatar", "profilepic", "pfp", "ava", "avi", "pic") {
+    object Avatar : Command("avatar") {
         override val wikiPath = "Discord-Info-Commands#get-user-avatar"
 
         init {
             discord {
-                val targetUser = if (args.isEmpty()) author else Search.user(this, noCmd, guild)
-                if (targetUser == null) {
-                    send(Embeds.error("Unable to find user **$noCmd**")).awaitSingle()
-                    return@discord
-                }
+                val targetUser = args.optUser("user")?.awaitSingle() ?: author
                 // uses new embed spec to send 2 in one message though we are typically not converting to this style until 1.1
                 val member = guild?.run { targetUser.asMember(id, EntityRetrievalStrategy.REST).tryAwait().orNull() }
                 val avatars = sequence {
@@ -53,20 +49,20 @@ object AvatarUtil : CommandContainer {
         }
     }
 
-    object GuildIcon : Command("icon", "guildicon", "guildavatar", "guildimage", "image") {
+    object GuildIcon : Command("icon") {
         override val wikiPath = "Discord-Info-Commands#get-server-icon"
 
         init {
             discord {
                 val iconUrl = target.getIconUrl(Image.Format.PNG).orNull()
                 if(iconUrl != null) {
-                    send(
+                    ireply(
                         Embeds.fbk()
                             .withTitle("Guild icon for **${target.name}**")
                             .withImage(iconUrl)
                     )
                 } else {
-                    send(Embeds.error("Icon not available for **${target.name}**."))
+                    ireply(Embeds.error("Icon not available for **${target.name}**."))
                 }.tryAwait()
             }
         }

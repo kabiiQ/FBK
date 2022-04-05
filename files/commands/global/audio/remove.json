@@ -1,0 +1,18 @@
+{
+    "name": "remove",
+    "description": "Removes tracks from the queue by their position in queue or by the user who queued them. ",
+    "options": [
+        {
+            "name": "tracks",
+            "description": "Track # in queue to remove. Accepts ranges as in examples: remove 1, remove 1-4, remove 3-, remove all",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "user",
+            "description": "Remove tracks queued by this specific user only.",
+            "type": 6,
+            "required": false
+        }
+    ]
+}

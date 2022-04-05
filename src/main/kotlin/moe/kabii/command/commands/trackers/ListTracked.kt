@@ -12,7 +12,7 @@ import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 
-object ListTracked : Command("tracked", "listtracked", "whotracked") {
+object ListTracked : Command("tracked") {
     override val wikiPath = "Livestream-Tracker#listing-tracked-streams-with-tracked"
 
     init {
@@ -32,7 +32,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
                 }.firstOrNull()
 
                 if(dbChannel == null) {
-                    send(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
+                    ireply(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
                     return@propagateTransaction
                 }
 
@@ -65,7 +65,7 @@ object ListTracked : Command("tracked", "listtracked", "whotracked") {
             }
 
             if(tracks.isEmpty()) {
-                send(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
+                ireply(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
                 return@discord
             }
 

@@ -1,0 +1,18 @@
+{
+    "name": "trackvid",
+    "description": "Track a specific upcoming YouTube live stream.",
+    "options": [
+        {
+            "name": "video",
+            "description": "The YouTube video ID or URL of an UPCOMING live stream to track.",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "role",
+            "description": "If specified, a role will be pinged when this stream goes live.",
+            "type": 8,
+            "required": false
+        }
+    ]
+}

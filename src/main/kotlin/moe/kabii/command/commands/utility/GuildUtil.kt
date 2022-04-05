@@ -17,13 +17,12 @@ import java.time.format.DateTimeFormatter
 object GuildUtil : CommandContainer {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
 
-    object GuildInfo : Command("server", "serverinfo", "guild", "guildinfo") {
+    object GuildInfo : Command("server") {
         override val wikiPath = "Discord-Info-Commands#get-server-info"
 
         init {
             discord {
-                val targetGuild = args.getOrNull(0)
-                    ?.toLongOrNull()?.snowflake
+                val targetGuild = args.optInt("GuildID")?.snowflake
                     ?.run(event.client::getGuildById)
                     ?.tryAwait()?.orNull()
                     ?: target
@@ -71,7 +70,7 @@ object GuildUtil : CommandContainer {
                 if(mfa == Guild.MfaLevel.ELEVATED) fields.add(EmbedCreateFields.Field.of("Admin 2FA Required", "true", false))
                 if(description != null) fields.add(EmbedCreateFields.Field.of("Description", description, false))
 
-                send(
+                ireply(
                     Embeds.fbk(more.toString())
                         .withAuthor(EmbedCreateFields.Author.of(targetGuild.name, null, targetGuild.getIconUrl(Image.Format.PNG).orNull()))
                         .withFields(fields)

@@ -13,146 +13,125 @@ import moe.kabii.discord.util.Search
 import reactor.core.publisher.Mono
 
 object  CommandFilters : CommandContainer {
-    suspend fun toggleList(param: DiscordParameters, config: GuildConfiguration): Mono<Message> {
-        val filter = config.commandFilter
-        return if(filter.whitelisted) {
-            filter.useBlacklist()
-            config.save()
-            param.send(Embeds.fbk("**${param.target.name}** will now use the command blacklist system (default behavior). Use the **blacklist** command to disable other commands."))
-        } else {
-            filter.useWhitelist()
-            config.save()
-            param.send(Embeds.fbk("**${param.target.name}** will now use the command whitelist system. By default most commands will be disabled. See the **whitelist** command to to enable other commands."))
-        }
-    }
-
-    object Whitelist : Command("whitelist", "white-list") {
+    object Whitelist : Command("whitelist") {
         override val wikiPath = "Configuration#using-a-command-blacklist-or-whitelist"
         override val commandExempt = true
 
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
-                if(args.isEmpty()) {
-                    usage("**whitelist** is used to set up the bot command whitelist.", "whitelist <add/remove/view/reset/toggle>").awaitSingle()
-                    return@discord
-                }
                 val filter = config.commandFilter
-                val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
-                when(args[0].lowercase()) {
+                val args = subArgs(subCommand)
+                val match by lazy { Search.commandByAlias(handler, args.string("command")) }
+                when(subCommand.name) {
                     "use" -> {
                         if(!filter.whitelisted) {
                             filter.useWhitelist()
                             config.save()
-                            send(Embeds.fbk("**${target.name}** will now use a command **whitelist**. By default most commands will be disabled. See the **whitelist** command to enable other commands."))
-                        } else send(Embeds.error("Command whitelist is already enabled in **${target.name}**."))
+                            ireply(Embeds.fbk("**${target.name}** will now use a command **whitelist**. By default most commands will be disabled. See the **whitelist** command to enable other commands."))
+                        } else ereply(Embeds.error("Command whitelist is already enabled in **${target.name}**."))
                     }
-                    "toggle" -> toggleList(this, config)
-                    "add", "insert" -> {
+                    "add" -> {
                         if(match == null) {
-                            usage("Please specify a bot command to be added to the whitelist using its name.", "whitelist add <command name>")
+                            ereply(Embeds.error("Please specify a bot command to be added to the whitelist using its name."))
                         } else {
-                            val name = match!!.baseName
+                            val name = match!!.name
                             val add = filter.whitelist.add(name)
                             if(add) {
                                 config.save()
-                                send(Embeds.fbk("Command **$name** has been added to the whitelist for **${target.name}**."))
+                                ireply(Embeds.fbk("Command **/$name** has been added to the whitelist for **${target.name}**."))
                             } else {
-                                error("The command **$name** is already in the whitelist for **${target.name}**.")
+                                error("The command **/$name** is already in the whitelist for **${target.name}**.")
                             }
                         }
                     }
-                    "remove", "delete" -> {
+                    "remove" -> {
                         if(match == null) {
-                            usage("Please specify a bot command to be removed from the whitelist using its name.", "whitelist remove <command name>")
+                            ereply(Embeds.error("Please specify a bot command to be removed from the whitelist using its name."))
                         } else {
-                            val name = match!!.baseName
+                            val name = match!!.name
                             val remove = filter.whitelist.remove(name)
                             if(remove) {
                                 config.save()
-                                send(Embeds.fbk("Command **$name** has been removed from the whitelist for **${target.name}**."))
+                                ireply(Embeds.fbk("Command **$name** has been removed from the whitelist for **${target.name}**."))
                             } else {
-                                error("The command **$name** is not in the whitelist for **${target.name}**.")
+                                ereply(Embeds.error("The command **$name** is not in the whitelist for **${target.name}**."))
                             }
                         }
                     }
-                    "view", "list", "commands" -> {
+                    "view" -> {
                         val enabled = if(filter.whitelisted) "**${target.name}** is currently using a command whitelist." else "**${target.name}** is not using a command whitelist."
                         val commands = if(filter.whitelist.isEmpty()) "No commands are on the command whitelist." else "Whitelisted Commands:\n${filter.whitelist.joinToString("\n")}"
-                        send(Embeds.fbk("$enabled\n$commands"))
+                        ireply(Embeds.fbk("$enabled\n$commands"))
                     }
-                    "clear", "reset" -> {
+                    "clear" -> {
                         filter.whitelist.clear()
                         config.save()
-                        send(Embeds.fbk("The whitelist for **${target.name}** has been reset."))
+                        ireply(Embeds.fbk("The whitelist for **${target.name}** has been reset."))
                     }
-                    else -> usage("Unknown task **${args[0]}**.", "whitelist <add/remove/view/reset/toggle>")
+                    else -> error("subcommand mismatch")
                 }.awaitSingle()
             }
         }
     }
 
-    object Blacklist : Command("blacklist", "black-list") {
+    object Blacklist : Command("blacklist") {
         override val wikiPath = "Configuration#using-a-command-blacklist-or-whitelist"
         override val commandExempt = true
 
         init {
             discord {
                 member.verify(Permission.MANAGE_CHANNELS)
-                if(args.isEmpty()) {
-                    usage("**blacklist** is used to set up the bot command blacklist.", "blacklist <add/remove/view/reset/toggle>").awaitSingle()
-                    return@discord
-                }
                 val filter = config.commandFilter
-                val match by lazy { args.getOrNull(1)?.let { arg -> Search.commandByAlias(handler, arg) } }
-                when(args[0].lowercase()) {
+                val args = subArgs(subCommand)
+                val match by lazy { Search.commandByAlias(handler, args.string("command")) }
+                when(subCommand.name) {
                     "use" -> {
                         if(!filter.blacklisted) {
                             filter.useBlacklist()
                             config.save()
-                            send(Embeds.fbk("**${target.name}** will now use a command **blacklist** (default behavior). By default most commands will be enabled. Use the **blacklist** command to disable commands."))
-                        } else send(Embeds.error("Command blacklist is already enabled in **${target.name}**."))
+                            ireply(Embeds.fbk("**${target.name}** will now use a command **blacklist** (default behavior). By default most commands will be enabled. Use the **blacklist** command to disable commands."))
+                        } else ereply(Embeds.error("Command blacklist is already enabled in **${target.name}**."))
                     }
-                    "toggle" -> toggleList(this, config)
-                    "add", "insert" -> {
+                    "add" -> {
                         if(match == null) {
-                            usage("Please specify a bot command to be added to the blacklist using its name.", "blacklist add <command name>")
+                            ereply(Embeds.error("Please specify a bot command to be added to the blacklist using its name."))
                         } else {
-                            val name = match!!.baseName
+                            val name = match!!.name
                             val add = filter.blacklist.add(name)
                             if(add) {
                                 config.save()
-                                send(Embeds.fbk("Command **$name** has been added to the blacklist for **${target.name}**."))
+                                ireply(Embeds.fbk("Command **$name** has been added to the blacklist for **${target.name}**."))
                             } else {
-                                send(Embeds.error("The command **$name** is already in the blacklist for **${target.name}**."))
+                                ereply(Embeds.error("The command **$name** is already in the blacklist for **${target.name}**."))
                             }
                         }
                     }
-                    "remove", "delete" -> {
+                    "remove" -> {
                         if(match == null) {
-                            usage("Please specify a bot command to be removed from the blacklist using its name.", "blacklist remove <command name>")
+                            ereply(Embeds.error("Please specify a bot command to be removed from the blacklist using its name."))
                         } else {
-                            val name = match!!.baseName
+                            val name = match!!.name
                             val remove = filter.blacklist.remove(name)
                             if(remove) {
                                 config.save()
-                                send(Embeds.fbk("Command **$name** has been removed from the blacklist for **${target.name}**."))
+                                ireply(Embeds.fbk("Command **$name** has been removed from the blacklist for **${target.name}**."))
                             } else {
-                                send(Embeds.error("The command **$name** is not in the blacklist for **${target.name}**."))
+                                ereply(Embeds.error("The command **$name** is not in the blacklist for **${target.name}**."))
                             }
                         }
                     }
-                    "view", "list", "commands" -> {
+                    "view" -> {
                         val enabled = if(filter.blacklisted) "**${target.name}** is currently using the command blacklist." else "**${target.name}** is not using the command blacklist. (whitelist is active)"
                         val commands = if(filter.blacklist.isEmpty()) "No commands are on the command blacklist." else "Blacklisted Commands:\n${filter.blacklist.joinToString("\n")}"
-                        send(Embeds.fbk("$enabled\n$commands"))
+                        ireply(Embeds.fbk("$enabled\n$commands"))
                     }
-                    "clear", "reset" -> {
+                    "clear" -> {
                         filter.blacklist.clear()
                         config.save()
-                        send(Embeds.fbk("The blacklist for **${target.name}** has been reset."))
+                        ireply(Embeds.fbk("The blacklist for **${target.name}** has been reset."))
                     }
-                    else -> usage("Unknown task **${args[0]}**.", "blacklist <add/remove/view/reset/toggle>")
+                    else -> error("subcommand mismatch")
                 }.awaitSingle()
             }
         }

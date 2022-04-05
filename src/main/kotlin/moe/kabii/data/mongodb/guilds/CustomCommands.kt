@@ -15,4 +15,5 @@ data class CustomCommands(
 data class CustomCommand(
         val command: String,
         var response: String,
-        var restrict: Boolean)
+        var restrictRole: Long?
+    )

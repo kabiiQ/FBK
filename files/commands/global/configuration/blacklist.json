@@ -1,0 +1,47 @@
+{
+    "name": "blacklist",
+    "description": "Configure a bot command blacklist.",
+    "options": [
+        {
+            "name": "use",
+            "description": "Enable the command blacklist and disable the whitelist. This is the default bot behavior. All commands will work unless they are on the blacklist.",
+            "type": 1
+        },
+        {
+            "name": "add",
+            "description": "Add a command to the blacklist by name",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The command to be added to the blacklist",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "remove",
+            "description": "Remove a command currently on the command blacklist",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The command to be removed from the blacklist",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "view",
+            "description": "View the contents of the command blacklist.",
+            "type": 1
+        },
+        {
+            "name": "clear",
+            "description": "Remove all commands currently on the command blacklist. If the blacklist is enabled, all commands will be enabled.",
+            "type": 1
+        }
+    ]
+}

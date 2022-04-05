@@ -1,0 +1,58 @@
+{
+    "name": "setmention",
+    "description": "Configure a role to be mentioned when a tracked channel goes live.",
+    "options": [
+        {
+            "name": "TrackedUsername",
+            "description": "The tracked stream/twitter feed that should send a ping",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "role",
+            "description": "The role that should be pinged. Leave empty to remove any existing configured ping.",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "site",
+            "description": "The site name may need to be specified if it can not be inferred.",
+            "required": false,
+            "type": 4,
+            "choices": [
+                {
+                    "name": "Twitter",
+                    "value": 0
+                },
+                {
+                    "name": "YouTube",
+                    "value": 100
+                },
+                {
+                    "name": "Twitch",
+                    "value": 101
+                },
+                {
+                    "name": "Twitter Spaces",
+                    "value": 102
+                },
+                {
+                    "name": "TwitCasting",
+                    "value": 103
+                },
+                {
+                    "name": "MyAnimeList",
+                    "value": 200
+                },
+                {
+                    "name": "kitsu.io",
+                    "value": 201
+                },
+                {
+                    "name": "AniList",
+                    "value": 202
+                }
+            ]
+        }
+    ]
+}

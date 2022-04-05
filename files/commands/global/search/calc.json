@@ -1,0 +1,12 @@
+{
+    "name": "calc",
+    "description": "Perform a calculation using the WolframAlpha knowledge engine.",
+    "options": [
+        {
+            "name": "query",
+            "description": "The calculation to perform.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

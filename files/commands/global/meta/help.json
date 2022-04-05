@@ -1,0 +1,24 @@
+{
+    "name": "help",
+    "description": "Display information about FBK's commands",
+    "options": [
+        {
+            "name": "command",
+            "description": "Display information on a specific command",
+            "type": 1,
+            "options": [
+                {
+                    "name": "CommandName",
+                    "description": "The command to look up.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "wiki",
+            "description": "Display a link to the general FBK wiki page",
+            "type": 1
+        }
+    ]
+}

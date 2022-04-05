@@ -1,0 +1,52 @@
+{
+    "name": "untrack",
+    "description": "Untrack a currently tracked channel/feed.",
+    "options": [
+        {
+            "name": "username",
+            "description": "The username to untrack. @username for Twitter, Twitch username, YouTube channel ID (see wiki)",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "site",
+            "description": "The site name may need to be specified if it can not be inferred.",
+            "required": false,
+            "type": 4,
+            "choices": [
+                {
+                    "name": "Twitter",
+                    "value": 0
+                },
+                {
+                    "name": "YouTube",
+                    "value": 100
+                },
+                {
+                    "name": "Twitch",
+                    "value": 101
+                },
+                {
+                    "name": "Twitter Spaces",
+                    "value": 102
+                },
+                {
+                    "name": "TwitCasting",
+                    "value": 103
+                },
+                {
+                    "name": "MyAnimeList",
+                    "value": 200
+                },
+                {
+                    "name": "kitsu.io",
+                    "value": 201
+                },
+                {
+                    "name": "AniList",
+                    "value": 202
+                }
+            ]
+        }
+    ]
+}

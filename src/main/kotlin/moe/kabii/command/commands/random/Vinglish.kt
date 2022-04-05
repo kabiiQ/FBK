@@ -4,7 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 
 
-object Vinglish : Command("vinglish", "garble", "pepega") {
+object Vinglish : Command("garble") {
     override val wikiPath = "Other-Commands#garble-text-"
 
     private fun random() = (1..100).random() / 100.00
@@ -35,7 +35,7 @@ object Vinglish : Command("vinglish", "garble", "pepega") {
 
     init {
         discord {
-            chan.createMessage(vinglishify(noCmd)).awaitSingle()
+            event.reply(vinglishify(args.string("text"))).awaitSingle()
         }
     }
 }

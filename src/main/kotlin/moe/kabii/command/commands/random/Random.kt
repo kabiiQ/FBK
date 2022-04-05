@@ -4,82 +4,78 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.mapToNotNull
 import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.userAddress
 
 object Random : CommandContainer {
-    @ExperimentalUnsignedTypes object Roll : Command("roll", "random") {
+    @ExperimentalUnsignedTypes object Roll : Command("roll") {
         override val wikiPath = "RNG-Commands#the-roll-command"
 
-        private fun roll(args: List<String>): Pair<String, ULong> {
-            fun arg(index: Int) = args.getOrNull(index)?.toULongOrNull()
-            val (left, right) = when {
-                args.size > 1 -> (arg(0) ?: 0UL) to (arg(1) ?: 100UL)
-                else -> 0UL to (arg(0) ?: 100UL)
-            }
+        private suspend fun rollBetween(origin: DiscordParameters) = with(origin) {
+            val args = subArgs(subCommand)
+            val lowerBound = args.optInt("from") ?: 0
+            val upperBound = args.optInt("to") ?: 100
             val (low, high) = when {
-                left > right -> right to left
-                else -> left to right
+                lowerBound > upperBound -> upperBound to lowerBound
+                else -> lowerBound to upperBound
             }
-            return "$low to $high" to (low..high).random()
+
+            val result = (low..high).random()
+            ireply(
+                Embeds.fbk("Result: $result")
+                    .withTitle("Roll: $low to $high")
+            ).awaitSingle()
         }
 
-        init {
-            discord {
-                // check if input is of style '3d20', ignore spaces
-                val rollArgs = args.joinToString("").split("d", ignoreCase = true)
-                if(rollArgs.size > 1) {
-                    val diceCount = rollArgs[0].toULongOrNull()?.toInt() ?: 1
-                    val diceSides = rollArgs[1].toULongOrNull()?.toInt()
-                    if(diceSides != null && diceCount > 0) {
-                        val rolls = (1..diceCount).map { (1..diceSides).random() }
-                        val desc = rolls
-                            .mapIndexed { index, roll -> "Roll #${index+1}: $roll\n" }
-                            .joinToString("")
-                        send(
-                            Embeds.fbk(desc)
-                                .withFooter(EmbedCreateFields.Footer.of("Total value: ${rolls.sum()}", null))
-                                .withTitle("Rolling ${diceCount}x $diceSides-sided dice:")
-                        ).awaitSingle()
-                        return@discord
-                    }
-                }
-
-
-                val (range, result) = roll(
-                    args
-                )
-                send(
-                    Embeds.fbk("Result: $result").withTitle("Roll: $range")
-                ).awaitSingle()
-            }
+        private suspend fun rollDice(origin: DiscordParameters) = with(origin) {
+            val args = subArgs(subCommand)
+            val diceCount = args.optInt("count") ?: 1
+            val sideCount = args.optInt("sides") ?: 6
+            val rolls = (1..diceCount).map { (1..sideCount).random() }
+            val summary = rolls
+                .mapIndexed { index, roll -> "Roll #${index+1}: $roll\n" }
+                .joinToString("")
+            ireply(
+                Embeds.fbk(summary)
+                    .withFooter(EmbedCreateFields.Footer.of("Total value: ${rolls.sum()}", null))
+                    .withTitle("Rolling ${diceCount}x $sideCount-sided dice:")
+            ).awaitSingle()
         }
     }
 
-    object Pick : Command("pick", "choose", "select") {
+    object Pick : Command("pick") {
         override val wikiPath = "RNG-Commands#the-pick-command"
 
         init {
             discord {
-                val options = if (args.isEmpty()) { // pick a recent user
-                    event.message.channel
-                        .flatMapMany { it.getMessagesBefore(event.message.id) }
-                        .take(100)
-                        .mapToNotNull { message -> message.author.orNull()?.username }
-                        .distinct(String::hashCode)
+                val optionArg = args.optStr("list")
+                val result = if(optionArg == null) {
+                    // pick a recent user
+                    interaction.channel
+                        .flatMapMany { chan -> chan.getMessagesBefore(interaction.messageId.get()) }
+                        .take(200)
+                        .mapToNotNull { message -> message.author.orNull() }
+                        .distinct { user -> user.id.hashCode() }
                         .collectList()
                         .awaitSingle()
-                } else args
-                val choice = options.random()
-                send(
-                    Embeds.fbk("Result: $choice")
-                ).awaitSingle()
+                        .random()
+                        .userAddress()
+                } else {
+                    optionArg
+                        .split(" ")
+                        .random()
+                }
+
+                ireply(Embeds.fbk("Result: $result"))
             }
         }
     }
 
-    object Ask : Command("ask", "question", "8ball", "magic8ball", "magic8") {
+    object Ask : Command("ask") {
         override val wikiPath = "RNG-Commands#the-ask-command"
 
         private val magicball = arrayOf(
@@ -107,27 +103,25 @@ object Random : CommandContainer {
 
         init {
             discord {
-                send(Embeds.fbk(magicball.random())).awaitSingle()
+                val question = args.optStr("question")?.run { "${author.username} asked: $this\n\n" }
+                val response = magicball.random()
+                ireply(Embeds.fbk("$question$response")).awaitSingle()
             }
         }
     }
 
-    object Coinflip : Command("coinflip", "flip", "coin", "coin-flip", "flipcoin", "headsortails") {
+    object Coinflip : Command("coinflip") {
         override val wikiPath = "RNG-Commands#the-flip-command"
-
-        private val flip = { user: String ->
-            val flip = when ((0..1000).random()) {
-                0 -> "its side!"
-                in 1..500 -> "heads."
-                in 501..1000 -> "tails."
-                else -> error("The planets have aligned")
-            }
-            "$user flipped a coin and it landed on **$flip**"
-        }
 
         init {
             discord {
-                send(Embeds.fbk(flip(author.username))).awaitSingle()
+                val flip = when((0..1000).random()) {
+                    0 -> "its side!"
+                    in 1..500 -> "heads."
+                    in 501..1000 -> "tails."
+                    else -> error("impossible")
+                }
+                ireply(Embeds.fbk("${author.username} flipped a coin and it landed on **$flip**")).awaitSingle()
             }
         }
     }

@@ -1,0 +1,75 @@
+{
+    "name": "roleset",
+    "description": "Create or modify a mutually exclusive set of roles",
+    "options": [
+        {
+            "name": "create",
+            "description": "Creates a mutually exclusive set of roles",
+            "type": 1,
+            "options": [
+                {
+                    "name": "SetName",
+                    "description": "The name of the new role set being created",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "delete",
+            "description": "Remove an existing mutually exclusive set of roles",
+            "type": 1,
+            "options": [
+                {
+                    "name": "SetName",
+                    "description": "The name of the existing role set to be removed",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "add",
+            "description": "Add a role to an existing exclusive role set",
+            "type": 1,
+            "options": [
+                {
+                    "name": "SetName",
+                    "description": "The name of the existing role set to add the role to",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "role",
+                    "description": "The role to add to this mutually exclusive role set",
+                    "type": 8,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "remove",
+            "description": "Remove a role currently part of an exclusive role set",
+            "type": 1,
+            "options": [
+                {
+                    "name": "SetName",
+                    "description": "The name of the existing role set to remove a role from",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "role",
+                    "description": "The role to remove from this mutually exclusive role set",
+                    "type": 8,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "list",
+            "description": "List existing sets of mutually exclusive roles.",
+            "type": 1
+        }
+    ]
+}

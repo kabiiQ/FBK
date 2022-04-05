@@ -12,24 +12,22 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "psplayer", "pswho") {
+object PS2PlayerLookup : Command("ps2who") {
     override val wikiPath: String? = null
+    override val skipRegistration = true
 
     init {
         discord {
             guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
-            if(args.isEmpty()) {
-                usage("**ps2who** is used to look up a player by name.", "ps2who <username>").awaitSingle()
-                return@discord
-            }
+            val userArg = args.string("username")
             val user = try {
-                PS2Parser.searchPlayerByName(args[0])
+                PS2Parser.searchPlayerByName(userArg)
             } catch(e: Exception) {
-                send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+                ereply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
                 return@discord
             }
             if(user == null) {
-                send(Embeds.error("Unable to find PS2 user **'${args[0]}'**.")).awaitSingle()
+                ireply(Embeds.error("Unable to find PS2 user **'$userArg'**.")).awaitSingle()
                 return@discord
             }
             val outfit = if(user.outfit != null) "[${user.outfit.tag}] " else ""
@@ -40,7 +38,7 @@ object PS2PlayerLookup : Command("ps2who", "ps2player", "ps2whois", "pswhois", "
                 .withZone(ZoneId.from(ZoneOffset.UTC))
                 .format(user.times.creation)
 
-            send(
+            ireply(
                 Embeds.other(user.faction.color)
                     .withAuthor(EmbedCreateFields.Author.of("$outfit${user.name.first} - $asp${user.battleRank}", playersSite, user.faction.image))
                     .withTitle("Server: ${user.world?.name ?: "Unknown"}")

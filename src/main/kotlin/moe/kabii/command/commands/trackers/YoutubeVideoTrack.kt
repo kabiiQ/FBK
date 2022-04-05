@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
-object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidtrack", "youtubevid", "youtubevideo") {
+object YoutubeVideoTrack : Command("trackvid") {
     override val wikiPath = "Livestream-Tracker#user-commands"
 
     init {
@@ -36,18 +36,12 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
                 }
             } // else this is PM, always allow
 
-            // trackvideo <id> (role)
-            if(args.isEmpty()) {
-                usage("**trackvideo** is used to track a single upcoming YouTube stream.", "trackvideo <YouTube video ID> (optional: name or ID of role to ping when live)").awaitSingle()
-                return@discord
-            }
-
-            val videoId = YoutubeParser.matchVideoId(args[0])
+            val videoId = YoutubeParser.matchVideoId(args.string("video"))
             val ytVideo = if(videoId != null) {
                 try {
                     YoutubeParser.getVideo(videoId)
                 } catch(e: IOException) {
-                    send(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
+                    ereply(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
                     LOG.debug("Error getting YTVideo in trackvideo command: ${e.message}")
                     LOG.debug(e.stackTraceString)
                     return@discord
@@ -55,21 +49,17 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             } else null
 
             if(ytVideo == null) {
-                send(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
+                ereply(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
                 return@discord
             }
 
             if(!ytVideo.upcoming) {
-                send(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
+                ereply(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
                 return@discord
             }
 
             // trackvid <id> (role...)
-            val mentionRole = args
-                .drop(1)
-                .joinToString(" ")
-                .ifBlank { null }
-                ?.let { arg -> Search.roleByNameOrID(this, arg) }
+            val mentionRole = args.optRole("role")?.awaitSingle()
 
             propagateTransaction {
                 val dbVideo = YoutubeVideo.getOrInsert(ytVideo.id, ytVideo.channel.id)
@@ -79,7 +69,7 @@ object YoutubeVideoTrack : Command("trackvideo", "videotrack", "trackvid", "vidt
             }
 
             val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."
-            send(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
+            ireply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
         }
     }
 }

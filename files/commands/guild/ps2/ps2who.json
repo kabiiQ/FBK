@@ -1,0 +1,12 @@
+{
+    "name": "ps2who",
+    "description": "Look up a PS2 player by name.",
+    "options": [
+        {
+            "name": "username",
+            "description": "The PS2 username to look up.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

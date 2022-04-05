@@ -1,0 +1,12 @@
+{
+    "name": "ud",
+    "description": "Look up a term on Urban Dictionary.",
+    "options": [
+        {
+            "name": "term",
+            "description": "The term to look up on Urban Dictionary.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

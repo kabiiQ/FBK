@@ -56,9 +56,9 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
         applicationLoop {
             val start = Instant.now()
 
+            LOG.debug("TwitterChecker :: start: $start")
             newSuspendedTransaction {
                 try {
-                    LOG.debug("TwitterChecker :: start: $start")
                     // get all tracked twitter feeds
                     val feeds = TwitterFeed.all()
                     LOG.debug("2")
@@ -69,14 +69,12 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
 
                     var first = true
                     feeds.forEach { feed ->
-                        LOG.debug("${feed.lastKnownUsername}: start")
                         if(!first) {
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
-                        LOG.debug("targets: returned")
 
                         val cache = TwitterFeedCache.getOrPut(feed)
 
@@ -91,14 +89,12 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             if(twitter.displayRetweet) pullRetweets = true
                             if(twitter.displayQuote) pullQuotes = true
                         }
-                        LOG.debug("target iter: return")
 
                         val limits = TwitterParser.TwitterQueryLimits(
                             sinceId = feed.lastPulledTweet,
                             includeRT = pullRetweets,
                             includeQuote = pullQuotes
                         )
-                        LOG.debug("getting tweets: start")
                         val recent = try {
                             TwitterParser.getRecentTweets(feed.userId, limits)
                         } catch(sinceId: TwitterDateTimeUpdateException) {
@@ -116,7 +112,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             delay(Duration.ofMillis(100L))
                             null
                         }
-                        LOG.debug("tweets returned")
                         recent ?: return@forEach
                         val (user, tweets) = recent
                         feed.lastKnownUsername = user.username
@@ -139,7 +134,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                             }
                         }
                         if(latest > maxId) maxId = latest
-                        LOG.debug("latest tweets: checked")
                     }
 
                     requireUpdate.forEach { feed ->
@@ -155,6 +149,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
+            LOG.debug("delay: $delay")
             delay(Duration.ofMillis(max(delay, 0L)))
         }
     }

@@ -12,7 +12,7 @@ import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
-object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "evaluate") {
+object WolframAlpha : Command("calc") {
 
     override val wikiPath = "Lookup-Commands#wolframalpha-queries"
     private val wysi = Regex("7\\D?27")
@@ -22,14 +22,10 @@ object WolframAlpha : Command("calc", "lookup", "calculate", "wa", "wolfram", "e
     init {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
-            if(args.isEmpty()) {
-                usage("**$alias** is used to answer a question or math input using WolframAlpha. You can also reply to the bot's response to request more information.", "$alias <search query>").awaitSingle()
-                return@discord
-            }
 
-            val response = query(noCmd)
+            val response = query(args.string("query"))
             val output = response.output ?: "Unknown"
-            send(
+            ireply(
                 (if(response.success) Embeds.fbk(output) else Embeds.error(output))
                     .run { if(output.contains(wysi)) withFooter(EmbedCreateFields.Footer.of("(wysi)", null)) else this }
             ).awaitSingle()

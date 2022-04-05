@@ -1,0 +1,18 @@
+{
+    "name": "linkyoutubemembers",
+    "description": "Link a YouTube chat's members to a Discord role on this server.",
+    "options": [
+        {
+            "name": "YTChannel",
+            "description": "The YouTube channel ID to link to.",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "reset",
+            "description": "If any current YouTube chat should be unlinked.",
+            "type": 5,
+            "required": false
+        }
+    ]
+}

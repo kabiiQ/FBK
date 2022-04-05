@@ -1,0 +1,4 @@
+{
+    "name": "daycore",
+    "description": "Applies a \"daycore\" filter equivalent to: speed 75 + pitch 75"
+}

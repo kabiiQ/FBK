@@ -1,0 +1,32 @@
+{
+    "name": "ps2outfit",
+    "description": "Look up info on a PS2 outfit by name or tag.",
+    "options": [
+        {
+            "name": "tag",
+            "description": "Look up info on a PS2 outfit by TAG.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "OutfitTag",
+                    "description": "The outfit tag to search.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "name",
+            "description": "Look up info on a PS2 outfit by NAME.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "OutfitName",
+                    "description": "The outfit name to search.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        }
+    ]
+}

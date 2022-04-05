@@ -1,0 +1,12 @@
+{
+    "name": "karaoke",
+    "description": "Applies a karaoke filter to the current audio track. EXPERIMENTAL",
+    "options": [
+        {
+            "name": "band",
+            "description": "EXPERIMENTAL",
+            "type": 3,
+            "required": false
+        }
+    ]
+}

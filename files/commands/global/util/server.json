@@ -1,0 +1,12 @@
+{
+    "name": "server",
+    "description": "Get information on this Discord server.",
+    "options": [
+        {
+            "name": "GuildID",
+            "description": "The guild to get info on. Defaults to current server if not specified.",
+            "type": 4,
+            "required": false
+        }
+    ]
+}

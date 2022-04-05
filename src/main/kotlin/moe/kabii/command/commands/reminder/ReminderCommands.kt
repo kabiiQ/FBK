@@ -21,65 +21,36 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 object ReminderCommands : CommandContainer {
-    object RemindMe : Command("remind", "reminder", "setreminder", "remindme") {
+    object RemindMe : Command("remind") {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
             discord {
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
-                if(args.isEmpty()) {
-                    usage("**remind** schedules the bot to send you a reminder in the future. If ran in DM or the reminder contains the flag !dm, the reminder will be sent via DM. Otherwise, you will be pinged in the current channel.",
-                        "remind <time until reminder, examples: 1m, 2h30m, 3d, 2 days 3 hours, 2d3h> (reminder message)").awaitSingle()
-                    return@discord
-                }
-                var time: Duration? = null
-                var argIndex = 0
-                val timeArg = StringBuilder()
-                for((index, arg) in args.withIndex()) {
-                    timeArg.append(arg)
-                    val parse = DurationParser.tryParse(timeArg.toString(), startAt = ChronoUnit.MINUTES)
-                    if(parse == null) break
-                    else {
-                        time = parse
-                        argIndex = index
-                    }
-                }
+                val timeArg = args.string("when")
+                val time = DurationParser.tryParse(timeArg, startAt = ChronoUnit.MINUTES)
 
                 if(time == null) {
-                    usage("**${args[0]}** is an invalid reminder delay.", "remindme <time until reminder> <reminder message>").awaitSingle()
+                    ereply(Embeds.error("**$timeArg** is an invalid reminder delay. Examples: 10m, 6h, 1d, 1d4h, 1w")).awaitSingle()
                     return@discord
                 }
+
                 val length = DurationFormatter(time).fullTime
                 if(time.seconds < 60 || time.toDays() > 732) {
                     // currently this is technically a limitation because we only pull from the database once per minute and shorter reminders will be lost as a result.
                     // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways
                     // also 2 years limit just for some arbitrary practicality
-                    send(Embeds.error("**${args[0]}** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.")).awaitSingle()
+                    ereply(Embeds.error("**$timeArg** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.")).awaitSingle()
                     return@discord
                 }
 
-                var replyPrivate = this.isPM
-                // remove flags from message
-                val reminderContent = args.drop(argIndex + 1).filter { arg ->
-                    when(arg.lowercase()) {
-                        "!dm", "!pm" -> {
-                            replyPrivate = true
-                            false
-                        }
-                        else -> true
-                    }
-                }
-                    .joinToString(" ")
-                    .run {
-                        if(guild != null) replace(guild.id.asString(), "") else this
-                    }
+                val replyPrivate = this.isPM || args.optBool("dm") == true
                 val replyChannel = if(replyPrivate) {
                     val dmChan = author.privateChannel.tryAwait().orNull()
                     if(dmChan == null) {
                         if(!isPM) { // small optimization since we can't reply anyways :)
-                            send(Embeds.error("I am unable to DM you at this time. Please check your privacy settings.")).awaitSingle()
-                            return@discord
+                            ereply(Embeds.error("I am unable to DM you at this time. Please check your privacy settings.")).awaitSingle()
                         }
                         return@discord
                     } else dmChan
@@ -92,43 +63,37 @@ object ReminderCommands : CommandContainer {
                         channel = replyChannel.id.asLong()
                         created = DateTime.now()
                         remind = DateTime.now().plusSeconds(time.seconds.toInt())
-                        content = reminderContent
-                        originMessage = MessageHistory.Message.getOrInsert(event.message)
+                        content = args.optStr("what") ?: ""
+                        originMessage = MessageHistory.Message.getOrInsert(interaction.message.get())
                     }
                 }
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
                 val reminderID = reminder.id
                 val reminderTarget = TimestampFormat.SHORT_DATE_TIME.format(Instant.now().plus(time))
-                send(
-                    Embeds.other("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.", MessageColors.reminder)
-                        .withFooter(EmbedCreateFields.Footer.of("Reminder ID: $reminderID", null))
-                ).awaitSingle()
+
+                val reply = Embeds.other("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.", MessageColors.reminder)
+                    .withFooter(EmbedCreateFields.Footer.of("Reminder ID: $reminderID", null))
+                val action = if(replyPrivate) ereply(reply) else ireply(reply)
+                action.awaitSingle()
             }
         }
     }
 
-    object CancelReminder : Command("cancelreminder", "remindercancel","cancel") {
+    object CancelReminder : Command("cancel") {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
             discord {
                 // cancel <reminder id>
-                val targetReminder = args.getOrNull(0)?.toLongOrNull()
-                if(targetReminder == null) {
-                    usage("**cancel** is used to cancel an active reminder early.", "cancel <reminder ID>").awaitSingle()
-                    return@discord
-                }
+                val idArg = args.int("ReminderID")
                 val reminder = transaction {
                     Reminder
-                        .find { Reminders.id eq targetReminder }
+                        .find { Reminders.id eq idArg }
                         .firstOrNull { rem -> rem.user.userID == this@discord.author.id.asLong() }
                         ?.also(Reminder::delete)
                 }
-                if(reminder == null) {
-                    send(Embeds.error("You did not create the reminder with ID #**$targetReminder**.")).awaitSingle()
-                    return@discord
-                }
-                send(Embeds.fbk("Your reminder with ID #**$targetReminder** has been cancelled.")).awaitSingle()
+                if(reminder == null) ereply(Embeds.error("You did not create the reminder with ID #**$idArg**.")).awaitSingle()
+                else ereply(Embeds.fbk("Your reminder with ID #**$idArg** has been cancelled.")).awaitSingle()
             }
         }
     }

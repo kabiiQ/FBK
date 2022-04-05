@@ -1,0 +1,12 @@
+{
+    "name": "xkcd",
+    "description": "Look up a comic from xkcd.",
+    "options": [
+        {
+            "name": "id",
+            "description": "The ID of the xkcd comic to retrieve. If not provided, returns the current comic.",
+            "type": 4,
+            "required": false
+        }
+    ]
+}

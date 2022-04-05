@@ -1,0 +1,12 @@
+{
+    "name": "seek",
+    "description": "Skip directly to a specific time in the current track.",
+    "options": [
+        {
+            "name": "timestamp",
+            "description": "Timestamp to skip playback to in this track. Example, seek 2:10",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

@@ -1,0 +1,49 @@
+{
+    "name": "customcommand",
+    "description": "Add or remove basic custom commands",
+    "options": [
+        {
+            "name": "add",
+            "description": "Add or update a custom command.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The name of the new custom command.",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "response",
+                    "description": "The response that will be sent when this command is used.",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "restrictedTo",
+                    "description": "If provided, this command will only be enabled for users with this specific role.",
+                    "type": 8,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "remove",
+            "description": "Remove an existing custom command.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "command",
+                    "description": "The name of the custom command to be removed.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "list",
+            "description": "List existing custom commands",
+            "type": 1
+        }
+    ]
+}

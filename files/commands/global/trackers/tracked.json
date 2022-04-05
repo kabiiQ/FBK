@@ -1,0 +1,4 @@
+{
+    "name": "tracked",
+    "description": "List targets that are currently tracked in this channel."
+}

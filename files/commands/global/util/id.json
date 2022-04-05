@@ -1,0 +1,12 @@
+{
+    "name": "id",
+    "description": "Get the ID of a user in your server.",
+    "options": [
+        {
+            "name": "user",
+            "description": "The user to get the ID of. Defaults to yourself.",
+            "type": 6,
+            "required": false
+        }
+    ]
+}

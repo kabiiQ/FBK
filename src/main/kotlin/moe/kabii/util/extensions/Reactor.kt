@@ -1,6 +1,7 @@
 package moe.kabii.util.extensions
 
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -41,3 +42,5 @@ fun <T> Mono<T>.filterNot(predicate: (T) -> Boolean): Mono<T> = filter { !predic
 fun <T> Flux<T>.filterNot(predicate: (T) -> Boolean): Flux<T> = filter { !predicate(it) }
 
 fun Mono<Void>.success(): Mono<Boolean> = thenReturn(true).onErrorReturn(false)
+
+suspend fun Mono<Void>.awaitAction() = thenReturn(Unit).awaitSingle()

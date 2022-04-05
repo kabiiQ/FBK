@@ -1,0 +1,64 @@
+{
+    "name": "status",
+    "description": "Set a custom status for the bot.",
+    "options": [
+        {
+            "name": "playing",
+            "description": "Sets a \"playing ____\" status for the bot.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "GameText",
+                    "description": "The name of the \"game\" for the bot status.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "watching",
+            "description": "Sets a \"watching ____\" status for the bot.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "WatchingText",
+                    "description": "The entity being \"watched\" for the bot status.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "listening",
+            "description": "Sets a \"listening to ____\" status for the bot.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "ListeningText",
+                    "description": "The entity being \"listened to\" for the bot status.",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "streaming",
+            "description": "Sets a \"streaming ____\" status for the bot.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "StreamName",
+                    "description": "The stream being \"watched\" for the bot status",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "StreamURL",
+                    "description": "A URL for the stream being \"watched\" for the bot status",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        }
+    ]
+}

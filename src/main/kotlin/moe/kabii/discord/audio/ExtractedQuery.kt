@@ -17,7 +17,7 @@ data class ExtractedQuery private constructor(var url: String, val timestamp: Lo
         private val volumeRegex = Regex("[&?]volume=([0-9]{1,3})")
 
         fun from(origin: DiscordParameters): ExtractedQuery? {
-            val attachment = origin.event.interaction.message.map { m -> m.attachments.firstOrNull() }.orNull()
+            val attachment = origin.interaction.message.map { m -> m.attachments.firstOrNull() }.orNull()
             if (attachment != null) {
                 // if attached file, try to send this through first
                 return default(attachment.url)

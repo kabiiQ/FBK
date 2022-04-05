@@ -1,0 +1,12 @@
+{
+    "name": "setlang",
+    "description": "Change the default translation \"target\" language.",
+    "options": [
+        {
+            "name": "language",
+            "description": "The new default translation \"target\" language.",
+            "type": 3,
+            "required": false
+        }
+    ]
+}

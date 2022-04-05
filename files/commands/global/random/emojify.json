@@ -1,0 +1,12 @@
+{
+    "name": "emojify",
+    "description": "Convert some text to regional indicator emojis.",
+    "options": [
+        {
+            "name": "text",
+            "description": "The text to convert to emojis.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

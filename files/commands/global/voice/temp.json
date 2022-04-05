@@ -1,0 +1,12 @@
+{
+    "name": "temp",
+    "description": "Create a temporary voice channel.",
+    "options": [
+        {
+            "name": "ChannelName",
+            "description": "The name for the new voice channel.",
+            "type": 3,
+            "required": false
+        }
+    ]
+}

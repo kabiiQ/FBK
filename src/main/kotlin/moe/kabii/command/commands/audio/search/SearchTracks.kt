@@ -16,7 +16,9 @@ import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.tryAwait
+import java.time.Duration
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search") {
@@ -59,11 +61,15 @@ object SearchTracks : AudioCommandContainer {
                     .withTitle("Select tracks to be played")
                 val selectMenu = SelectMenu.of("menu", options).withMaxValues(options.size)
 
-                ereply(embed)
+                event.reply()
+                    .withEmbeds(embed)
                     .withComponents(ActionRow.of(selectMenu))
-                    .awaitSingle()
+                    .withEphemeral(true)
+                    .awaitAction()
 
-                val response = listener("menu", SelectMenuInteractionEvent::class).awaitFirstOrNull() ?: return@discord
+                val response = listener(SelectMenuInteractionEvent::class, true, Duration.ofMinutes(5), "menu")
+                    .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
+                    .awaitFirstOrNull() ?: return@discord
                 val selected = response.values.map(String::toInt)
                 if(selected.isNotEmpty()) {
                     val voice = AudioStateUtil.checkAndJoinVoice(this)

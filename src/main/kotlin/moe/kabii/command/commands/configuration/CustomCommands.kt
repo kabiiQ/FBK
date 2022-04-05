@@ -4,101 +4,67 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.CustomCommand
 import moe.kabii.discord.util.Embeds
 
-object CustomCommands : CommandContainer {
-    private suspend fun addCommand(config: GuildConfiguration, args: List<String>, noCmd: String, restrict: Boolean = false): String {
-        val command = args[0].lowercase()
-        val response = noCmd.substring(command.length + 1)
-        val custom = CustomCommand(command, response, restrict)
+object CustomCommands : Command("customcommand") {
+    override val wikiPath = "Custom-Commands#creating-a-command-with-addcommand"
 
-        val restricted = if (restrict) "Restricted c" else "C"
+    init {
+        discord {
+            member.verify(Permission.MANAGE_MESSAGES)
+            when(subCommand.name) {
+                "add" -> addCommand(this)
+                "remove" -> removeCommand(this)
+                "list" -> listCommands(this)
+            }
+        }
+    }
+
+    private suspend fun addCommand(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val commandName = args.string("command").lowercase()
+        val commandResponse = args.string("response")
+        val restrictToRole = args.optRole("restrictedTo")?.awaitSingle()?.id?.asLong()
+
+        val custom = CustomCommand(commandName, commandResponse, restrictToRole)
+        val restricted = if (restrictToRole != null) "Restricted c" else "C"
         val reply =
-                if (config.customCommands.insertIsUpdated(custom))
-                    "${restricted}ommand \"$command\" has been updated."
-                else "${restricted}ommand \"$command\" has been added."
+            if (config.guildCustomCommands.insertIsUpdated(custom))
+                "${restricted}ommand \"$command\" has been updated."
+            else "${restricted}ommand \"$command\" has been added."
         config.save()
-        return reply
+
+        ireply(Embeds.fbk(reply)).awaitSingle()
     }
 
-    object Add : Command("addcommand", "add-command", "command-add", "commandadd", "newcommand", "editcommand", "command-edit", "edit-command") {
-        override val wikiPath = "Custom-Commands#creating-a-command-with-addcommand"
+    private suspend fun removeCommand(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val commandName = args.string("command").lowercase()
+        val reply =
+            if (config.guildCustomCommands.removeByName(commandName))
+                "Command \"$command\" removed."
+            else "Command \"$command\" does not exist."
+        config.save()
 
-        init {
-            discord {
-                member.verify(Permission.MANAGE_MESSAGES)
-                if (args.size >= 2) {
-                    val add = addCommand(config, args, noCmd)
-                    send(Embeds.fbk(add)).awaitSingle()
-                } else {
-                    usage("Add or edit a text command. Example:", "addcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
-                }
-            }
-        }
+        ireply(Embeds.fbk(reply)).awaitSingle()
     }
 
-    object Mod : Command("modcommand", "mod-command", "command-mod", "commandmod", "editmodcommand") {
-        override val wikiPath: String? = null
-
-        init {
-            discord {
-                member.verify(Permission.MANAGE_MESSAGES)
-                if (args.size >= 2) {
-                    val add = addCommand(config, args, noCmd, restrict = true)
-                    send(Embeds.fbk(add)).awaitSingle()
-                } else {
-                    usage("Add a moderator-only command. Example:", "modcommand yt My channel: https://youtube.com/mychannel").awaitSingle()
-                }
-            }
-        }
-    }
-
-    object Remove : Command("removecommand", "delcommand", "remcommand", "deletecommand", "remove-command") {
-        override val wikiPath = "Custom-Commands#removing-a-command-with-removecommand"
-
-        private suspend fun removeCommand(config: GuildConfiguration, command: String): String {
-            val reply =
-                    if (config.customCommands.removeByName(command))
-                        "Command \"$command\" removed."
-                    else "Command \"$command\" does not exist."
-            config.save()
-            return reply
-        }
-
-        init {
-            discord {
-                member.verify(Permission.MANAGE_MESSAGES)
-                if (args.isNotEmpty()) {
-                    val remove = removeCommand(config, args[0])
-                    send(Embeds.fbk(remove)).awaitSingle()
-                } else {
-                    usage("Remove a text command. To see the commands created for **${target.name}**, use the **listcommands** command.", "removecommand <command name>").awaitSingle()
-                }
-            }
-        }
-    }
-
-    object ListCommands : Command("customcommands", "list-customcommands", "customcommandlist") {
-        override val wikiPath = "Custom-Commands#listing-existing-commands-with-customcommands"
-
-        init {
-            discord {
-                member.verify(Permission.MANAGE_MESSAGES)
-                // list existing custom commands
-                val commands = config.customCommands.commands
-                if(commands.isEmpty()) {
-                    send(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**."))
-                } else {
-                    val commandList = config.customCommands.commands.joinToString(", ", transform = CustomCommand::command)
-                    send(
-                        Embeds.fbk(commandList)
-                            .withTitle("Custom commands for ${target.name}")
-                    )
-                }.awaitSingle()
-            }
+    private suspend fun listCommands(origin: DiscordParameters) = with(origin) {
+        val commands = config.guildCustomCommands.commands
+        if(commands.isEmpty()) {
+            ereply(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**.")).awaitSingle()
+        } else {
+            val commandList = commands.joinToString("\n", transform = { command ->
+                val restricted = if(command.restrictRole != null) "(restricted to: <@${command.restrictRole}>) " else ""
+                "$restricted/${command.command}-> ${command.response}"
+            })
+            ireply(
+                Embeds.fbk(commandList).withTitle("Custom commands for ${target.name}")
+            ).awaitSingle()
         }
     }
 }

@@ -1,0 +1,14 @@
+{
+    "name": "volume",
+    "description": "Set the volume for the current track.",
+    "options": [
+        {
+            "name": "volume",
+            "description": "Specify a volume level. Default is volume 15",
+            "type": 4,
+            "min_value": 1,
+            "max_value": 300,
+            "required": false
+        }
+    ]
+}

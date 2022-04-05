@@ -11,8 +11,9 @@ import moe.kabii.trackers.ps2.polling.json.PS2FisuPopulation
 import moe.kabii.trackers.ps2.store.PS2Faction
 import moe.kabii.util.constants.EmojiCharacters
 
-object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psservers", "pservers", "psstatus", "psserver") {
+object PS2ServerStatus : Command("ps2servers") {
     override val wikiPath: String? = null
+    override val skipRegistration = true
 
     init {
         discord {
@@ -21,7 +22,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
             val servers = try {
                 PS2Parser.getServers()
             } catch(e: Exception) {
-                send(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
+                ereply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
                 return@discord
             }
 
@@ -63,7 +64,7 @@ object PS2ServerStatus : Command("ps2servers", "ps2server", "ps2status", "psserv
                     "**${server.name}**: $state"
                 }
 
-            send(
+            ireply(
                 Embeds.fbk(serverList).withAuthor(EmbedCreateFields.Author.of("PlanetSide 2 Server Status", null, null))
             ).awaitSingle()
         }

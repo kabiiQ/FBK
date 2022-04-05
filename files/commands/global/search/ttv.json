@@ -1,0 +1,12 @@
+{
+    "name": "ttv",
+    "description": "Look up current information on a Twitch livestream.",
+    "options": [
+        {
+            "name": "username",
+            "description": "The Twitch username to look up.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

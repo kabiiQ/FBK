@@ -12,6 +12,7 @@ import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.MessageCreateMono
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
@@ -92,33 +93,30 @@ data class DiscordParameters (
     fun ireply(vararg embeds: EmbedCreateSpec) = event
         .reply()
         .withEmbeds(*embeds)
+        .thenReturn(Unit)
 
     fun ereply(vararg embeds: EmbedCreateSpec) = event
         .reply()
         .withEmbeds(*embeds)
         .withEphemeral(true)
+        .thenReturn(Unit)
 
     fun _send(vararg embeds: EmbedCreateSpec) = chan
         .createMessage()
         .withEmbeds(*embeds)
 
     // listen for response to components on reply
-    fun <T : ComponentInteractionEvent> listener(componentId: String, type: KClass<T>, timeout: Duration? = null): Flux<T> =
+    fun <T : ComponentInteractionEvent> listener(type: KClass<T>, restrict: Boolean = true, timeout: Duration? = null, vararg componentId: String): Flux<T> =
         Mono.justOrEmpty(event.interaction.messageId)
             .flatMapMany { messageId ->
                 event.client
                     .on(type.java)
-                    .filter { interact -> interact.customId == componentId }
+                    .filter { interact -> componentId.contains(interact.customId) }
                     .filter { interact -> interact.messageId == messageId }
+                    .run { if(restrict) filter { interact ->
+                        interact.interaction.user.id == event.interaction.user.id
+                    } else this  }
                     .run { if(timeout != null) timeout(timeout) else this }
                     .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
             }
-
-    // Create a 'usage info' message TODO this may not be needed with slash commnands
-    fun _usage(commandError: String, linkText: String?, user: User? = null): MessageCreateMono {
-        val link = if(linkText != null) {
-            if(command.wikiPath != null) " Command usage: **[$linkText](${command.getHelpURL()})**." else " Command usage: **$linkText**."
-        } else ""
-        return send(Embeds.other("$commandError$link", MessageColors.spec).withUser(user))
-    }
 }

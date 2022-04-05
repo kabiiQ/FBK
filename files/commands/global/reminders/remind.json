@@ -1,0 +1,24 @@
+{
+    "name": "remind",
+    "description": "Create a reminder to be sent to you in the near future.",
+    "options": [
+        {
+            "name": "when",
+            "description": "The time until this reminder should be sent. Examples: 2m or 6h or 1w",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "what",
+            "description": "What you would like to be reminded about.",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "dm",
+            "description": "If you would like this reminder sent via DM rather than in this channel.",
+            "type": 5,
+            "required": false
+        }
+    ]
+}

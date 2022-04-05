@@ -1,0 +1,14 @@
+{
+    "name": "rotate",
+    "description": "Applies a 3D audio effect where the audio rotates 'around' the listener.",
+    "options": [
+        {
+            "name": "speed",
+            "description": "The speed of the rotation effect. The default is .25",
+            "type": 10,
+            "min_value": 0.0,
+            "max_value": 5.0,
+            "required": false
+        }
+    ]
+}
