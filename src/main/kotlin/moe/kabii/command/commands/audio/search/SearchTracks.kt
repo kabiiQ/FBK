@@ -81,15 +81,14 @@ object SearchTracks : AudioCommandContainer {
                         return@discord
                     }
                 }
-                val silent = selected.size > 1 // if multiple are selected, don't post a message for each one.
                 selected.forEach { selection ->
                     val track = search[selection - 1]
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
                     FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true)
                 }
-                if(silent) {
-                    send(Embeds.fbk("Adding **${selected.size}** tracks to queue."))
-                }
+                event.editReply()
+                    .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))
+                    .awaitSingle()
             }
         }
     }

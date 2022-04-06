@@ -4,13 +4,15 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.event.domain.interaction.ComponentInteractionEvent
+import discord4j.core.event.domain.interaction.InteractionCreateEvent
+import moe.kabii.games.connect4.EmbedInfo
 
-abstract class DiscordGame(val gameNameFull: String) {
+abstract class DiscordGame(val gameNameFull: String, private val gameMessage: EmbedInfo) {
     abstract val users: List<Snowflake>
-    abstract val channels: List<Snowflake>
 
-    abstract suspend fun provide(user: User, response: String, reply: MessageChannel, message: Message?)
+    abstract suspend fun provide(interaction: ComponentInteractionEvent)
     abstract fun cancelGame()
 
-    fun matchGameMember(userId: Snowflake, channelId: Snowflake): Boolean = users.contains(userId) && channels.contains(channelId)
+    fun matchGame(userId: Snowflake, messageId: Snowflake): Boolean = users.contains(userId) && gameMessage.messageId == messageId
 }

@@ -2,9 +2,14 @@ package moe.kabii.games.connect4
 
 import discord4j.common.util.Snowflake
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.component.ActionRow
+import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
+import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.core.spec.MessageEditSpec
@@ -15,6 +20,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame
 import moe.kabii.games.GameManager
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
 import moe.kabii.util.extensions.tryAwait
@@ -29,14 +35,12 @@ data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake) {
 class Connect4Game(
     playerRed: User,
     playerBlue: User,
-    var gameEmbeds: List<EmbedInfo>
+    gameMessage: EmbedInfo
 ) : DiscordGame(
-    "Connect 4"
+    "Connect 4",
+    gameMessage
 ) {
-
     override val users: List<Snowflake> = listOf(playerRed.id, playerBlue.id)
-    override val channels: List<Snowflake>
-    get() = gameEmbeds.map(EmbedInfo::channelId)
 
     var inProgress = true
 
@@ -59,7 +63,11 @@ class Connect4Game(
         check if response is legal move, else reply with error
         if all good, progress the game
     */
-    override suspend fun provide(user: User, response: String, reply: MessageChannel, message: Message?) {
+    override suspend fun provide(interaction: ComponentInteractionEvent) {
+        // the only components on connect 4 embeds are number buttons
+        val press = interaction as ButtonInteractionEvent
+        val user = press.interaction.user
+
         if(!inProgress) return
         // validate it is this user's turn
         val playerTurn = when(currentTurn) {
@@ -67,44 +75,27 @@ class Connect4Game(
             CircleState.BLUE -> blueId
             else -> return
         }
-        if(user.id.asLong() != playerTurn) return
-
-        // validate response is legitimate game response
-        val target = response.toIntOrNull() ?: return
-        if(target !in 1..Connect4Grid.width) return
-
-        val circle = gameGrid.validateDrop(target)
-        if(circle == null) {
-            try {
-                reply.createMessage(Embeds.error("Unable to drop into column **$target**.")).awaitSingle()
-            } catch (ce: ClientException) {
-                // unable to send a response to the game in this channel. bot is lacking permissions or channel was deleted
-                LOG.debug("Connect4 game unable to reply to game message in channel '${reply.id.asString()}'. Game has been cancelled.")
-                cancelGame()
-            }
+        if(user.id.asLong() != playerTurn) {
+            interaction.reply()
+                .withEmbeds(Embeds.error("It is not your turn! Waiting for other player to make their move."))
+                .withEphemeral(true)
+                .awaitAction()
             return
         }
 
-        // cleaning move spam
-        if(delete) {
-            if (previousResponse != null) {
-                // todo this was an await but for some reason was killing the handler even with a catch(Error).
-                //  unsure why the error from the race to DELETE was uncatchable at this time
-                reply.getMessageById(previousResponse)
-                    .flatMap(Message::delete)
-                    .thenReturn(Unit)
-                    .doOnError {
-                        delete = false
-                    }
-                    .onErrorResume { Mono.empty() }
-                    .subscribe()
-            }
-            if (message != null) {
-                previousResponse = message.id
-            }
+        // validate response is legitimate game response
+        val target = press.customId.toInt()
+
+        val circle = gameGrid.validateDrop(target)
+        if(circle == null) {
+            interaction.reply()
+                .withEmbeds(Embeds.error("Unable to drop into column **$target**."))
+                .withEphemeral(true)
+                .awaitAction()
+            return
         }
 
-        doTurn(circle, reply.client)
+        doTurn(circle, interaction)
     }
 
     override fun cancelGame() {
@@ -116,7 +107,7 @@ class Connect4Game(
         }
     }
 
-    private suspend fun doTurn(target: GridCoordinate, discord: GatewayDiscordClient) {
+    private suspend fun doTurn(target: GridCoordinate, interaction: ButtonInteractionEvent) {
         // put the circle into the game board, and check for winners
         gameGrid.applyCircle(target, currentTurn)
         val winCondition = gameGrid.checkForWinFromCircle(target)
@@ -148,32 +139,27 @@ class Connect4Game(
         }
 
         // regardless of outcome, update the current game embed
-        val updated = gameEmbeds.filter { (channelId, messageId) ->
-            try {
-                val message = discord.getMessageById(channelId, messageId).awaitSingle()
-                message.edit(messageEditor()).awaitSingle()
-
-                if(currentTurn == CircleState.VICTOR) {
-                    message.removeAllReactions().success().tryAwait()
-                }
-
-                true
-            } catch(ce: ClientException) {
-                LOG.info("Dropping Connect4 message: $messageId :: ${ce.status.code()}")
-                LOG.trace(ce.stackTraceString)
-                return@filter false
-            }
+        val message = interaction.message.get()
+        try {
+            message
+                .edit(messageEditor())
+                .awaitSingle()
+        } catch(ce: ClientException) {
+            LOG.info("Dropping Connect4 message: ${message.id.asString()} :: ${ce.status.code()}")
+            LOG.trace(ce.stackTraceString)
+            interaction.reply()
+                .withEmbeds(Embeds.error("Unable to edit game board. There may be a problem with my permissions in this server. Game has been cancelled."))
+                .awaitAction()
+            cancelGame()
         }
-        gameEmbeds = updated
     }
-
-    fun messageCreator() = MessageCreateSpec.create()
-        .withContent(generateGameContent())
-        .withEmbeds(generateGameEmbed())
 
     fun messageEditor() = MessageEditSpec.create()
         .withContentOrNull(generateGameContent())
         .withEmbeds(generateGameEmbed())
+        .withComponentsOrNull(
+            if(currentTurn == CircleState.VICTOR) null else generateGameplayButtons()
+        )
 
     private fun generateGameContent(): String = when(currentTurn) {
         CircleState.RED -> "Current turn: <@$redId>"
@@ -186,4 +172,14 @@ class Connect4Game(
             EmbedCreateFields.Field.of(EmojiCharacters.redSquare, redDisplayName, true),
             EmbedCreateFields.Field.of(EmojiCharacters.blueSquare, blueDisplayName, true)
         ))
+
+    private fun generateGameplayButtons() = (1..Connect4Grid.width)
+        .map { column ->
+            // convert each column into a button
+            val button = Button
+                .primary(column.toString(), ReactionEmoji.unicode("$column\u20E3"))
+            if(gameGrid.validateDrop(column) == null) button.disabled() else button
+        }
+        .chunked(5)
+        .map(ActionRow::of)
 }

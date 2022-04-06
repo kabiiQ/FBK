@@ -35,13 +35,13 @@ data class WelcomeSettings(
     var includeUsername: Boolean = true,
     var message: String = "",
 
-    var welcomeTagLine: String? = "WELCOME", // TODO remove after migration
+    var _welcomeTagLine: String? = "WELCOME", // TODO remove after migration
     var includeTagline: Boolean = true,
     var taglineValue: String = "WELCOME",
 
     var imagePath: String? = null,
 
-    var imageText: String? = defaultImageText, // TODO remove after migration
+    var _imageText: String? = defaultImageText, // TODO remove after migration
     var includeImageText: Boolean = true,
     var imageTextValue: String = defaultImageText,
 
@@ -49,7 +49,7 @@ data class WelcomeSettings(
     var emoji: DiscordEmoji? = null
 ) {
     fun textColor() = imageTextColor ?: defaultColor
-    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, message.isNotBlank(), imagePath != null, welcomeTagLine != null, imageText != null).any(true::equals)
+    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, includeImageText, includeTagline, message.isNotBlank(), imagePath != null).any(true::equals)
 
     companion object {
         const val defaultImageText = "Welcome to the server!"

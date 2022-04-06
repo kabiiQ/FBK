@@ -23,7 +23,7 @@ object StarboardEventHandler {
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val starboardCfg = config.starboard ?: return
+            val starboardCfg = config.starboard() ?: return
 
             // only continue if this guild's starboard emoji
             if(event.emoji != starboardCfg.useEmoji().toReactionEmoji()) return
@@ -76,7 +76,7 @@ object StarboardEventHandler {
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val starboardCfg = config.starboard ?: return
+            val starboardCfg = config.starboard() ?: return
 
             starboardCfg.starsLock.withLock {
                 // only continue if message is starboarded currently
@@ -109,7 +109,7 @@ object StarboardEventHandler {
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val starboardCfg = config.starboard ?: return
+            val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
             if(!starboardCfg.removeOnClear) return
@@ -136,7 +136,7 @@ object StarboardEventHandler {
 
             // only continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val starboardCfg = config.starboard ?: return
+            val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
             if(!starboardCfg.removeOnClear) return
@@ -163,7 +163,7 @@ object StarboardEventHandler {
 
             // continue if guild has a starboard
             val config = GuildConfigurations.getOrCreateGuild(guildId)
-            val starboardCfg = config.starboard ?: return
+            val starboardCfg = config.starboard() ?: return
 
             // continue if "remove on delete" behavior is enabled
             if(!starboardCfg.removeOnDelete) return

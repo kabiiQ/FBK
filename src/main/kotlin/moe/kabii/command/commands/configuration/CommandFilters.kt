@@ -9,10 +9,9 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import reactor.core.publisher.Mono
 
-object  CommandFilters : CommandContainer {
+object CommandFilters : CommandContainer {
     object Whitelist : Command("whitelist") {
         override val wikiPath = "Configuration#using-a-command-blacklist-or-whitelist"
         override val commandExempt = true
@@ -22,7 +21,7 @@ object  CommandFilters : CommandContainer {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)
-                val match by lazy { Search.commandByAlias(handler, args.string("command")) }
+                val match by lazy { handler.searchCommandByAlias(args.string("command")) }
                 when(subCommand.name) {
                     "use" -> {
                         if(!filter.whitelisted) {
@@ -84,7 +83,7 @@ object  CommandFilters : CommandContainer {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)
-                val match by lazy { Search.commandByAlias(handler, args.string("command")) }
+                val match by lazy { handler.searchCommandByAlias(args.string("command")) }
                 when(subCommand.name) {
                     "use" -> {
                         if(!filter.blacklisted) {

@@ -59,20 +59,20 @@ object WelcomeImageGenerator {
             val lineSpacing = 20
             val avatarPadding = 12
             // draw tag line
-            if(config.welcomeTagLine != null) {
-                val tagBounds = taglineFont.getStringBounds(config.welcomeTagLine, frc)
+            if(config.includeTagline) {
+                val tagBounds = taglineFont.getStringBounds(config.taglineValue, frc)
 
                 val tagWidth = tagBounds.width.toFloat()
                 if(tagWidth <= image.width) {
                     val xCenter = (image.width - tagWidth) / 2
                     graphics.font = taglineFont
                     graphics.color = shadowColor
-                    graphics.drawString(config.welcomeTagLine, xCenter - 4f, y - 4f) // drop shadow up-left offset
+                    graphics.drawString(config.taglineValue, xCenter - 4f, y - 4f) // drop shadow up-left offset
                     graphics.color = textColor
-                    graphics.drawString(config.welcomeTagLine, xCenter, y)
+                    graphics.drawString(config.taglineValue, xCenter, y)
                 }
 
-                val tagMetrics = taglineFont.getLineMetrics(config.welcomeTagLine, frc)
+                val tagMetrics = taglineFont.getLineMetrics(config.taglineValue, frc)
                 y += tagMetrics.descent
             }
 
@@ -136,8 +136,8 @@ object WelcomeImageGenerator {
             }
 
             // draw caption
-            if(config.imageText != null) {
-                var str = WelcomeMessageFormatter.format(member, config.imageText!!, rich = false)
+            if(config.includeImageText) {
+                var str = WelcomeMessageFormatter.format(member, config.imageTextValue, rich = false)
 
                 val fit = GraphicsUtil.fitFontHorizontal(image.width, baseFont, textPt, str, sidePadding = 20, minPt = 16f, fallback = fallbackFont)
                 graphics.font = fit.font

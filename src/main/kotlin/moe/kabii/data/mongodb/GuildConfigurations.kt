@@ -63,6 +63,8 @@ data class GuildConfiguration(
         const val defaultPrefix = ";"
     }
 
+    fun starboard() = if(starboardSetup.channel != null) starboardSetup else null
+
     fun logChannels() = options.featureChannels.values.toList()
         .filter(FeatureChannel::logChannel)
         .map(FeatureChannel::logSettings)

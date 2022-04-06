@@ -27,7 +27,6 @@ data class ExclusiveRoleSet(
 
 data class SelfRoles(
     val enabledRoles: MutableList<Long> = mutableListOf(),
-    val roleCommands: MutableMap<String, Long> = mutableMapOf(),
     val reactionRoles: MutableList<ReactionRoleConfig> = mutableListOf()
 )
 

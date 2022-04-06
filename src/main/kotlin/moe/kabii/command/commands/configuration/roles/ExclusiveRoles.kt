@@ -6,6 +6,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.ExclusiveRoleSet
 import moe.kabii.discord.util.Embeds
@@ -14,133 +15,113 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import reactor.kotlin.core.publisher.toMono
 
-object ExclusiveRoles : CommandContainer {
-    object CreateExclusiveSet : Command("createset", "addset", "exclusiveset", "createtrack", "exclusive", "exclusiveroles") {
-        override val wikiPath: String? = null
+object ExclusiveRoleSets : Command("roleset") {
+    override val wikiPath: String? = null
 
-        init {
-            discord {
-                member.verify(Permission.MANAGE_ROLES)
-                if(args.size != 1) {
-                    usage("**createset** is used to create a set of roles that should be mutually exclusive. When one role in the set is assigned to a user, that user will be removed from any of the other roles in the set.", "createset <SetName>").awaitSingle()
-                    return@discord
-                }
-                val newSet = args[0]
-                val sets = config.autoRoles.exclusiveRoleSets
-                if(sets.find { existing -> existing.name.equals(newSet, ignoreCase = true) } != null) {
-                    send(Embeds.error("An exclusive role set named **$newSet** already exists.")).awaitSingle()
-                    return@discord
-                }
-                sets.add(ExclusiveRoleSet(newSet))
-                config.save()
-                send(Embeds.fbk("A new exclusive role set named **$newSet** has been created. To add a role to this configuration, use the command **editset $newSet add <role name or ID>**.")).awaitSingle()
+    init {
+        discord {
+            member.verify(Permission.MANAGE_ROLES)
+            val action = when(subCommand.name) {
+                "create" -> ::createExclusiveSet
+                "delete" -> ::deleteExclusiveSet
+                "add" -> ::addToExclusiveSet
+                "remove" -> ::removeFromExclusiveSet
+                "list"-> ::listExclusiveSets
+                 else -> error("subcommand mismatch")
             }
+            action(this)
         }
     }
 
-    object RemoveExclusiveSet : Command("removeset", "removeexclusiveset", "removetrack") {
-        override val wikiPath: String? = null
+    private suspend fun createExclusiveSet(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val newSetName = args.string("SetName")
+        val sets = config.autoRoles.exclusiveRoleSets
+        if(sets.find { existing -> existing.name.equals(newSetName, ignoreCase = true) } != null) {
+            ereply(Embeds.error("An exclusive role set named **$newSetName** already exists.")).awaitSingle()
+            return@with
+        }
+        sets.add(ExclusiveRoleSet(newSetName))
+        config.save()
+        ireply(Embeds.fbk("A new exclusive role set named **$newSetName** has been created. To add a role to this configuration, use the command **/roleset add $newSetName <role>**.")).awaitSingle()
+    }
 
-        init {
-            discord {
-                member.verify(Permission.MANAGE_ROLES)
-                if(args.isEmpty()) {
-                    usage("**removeset** is used to remove an exclusive role configuration.", "removeset <set name>").awaitSingle()
-                    return@discord
-                }
-                val setName = args[0]
-                val sets = config.autoRoles.exclusiveRoleSets
-                val targetSet = sets.removeIf { existing -> existing.name.equals(setName, ignoreCase = true) }
-                if(!targetSet) {
-                    send(Embeds.error("There is no existing exclusive role configuration named **$setName**.")).awaitSingle()
-                    return@discord
-                }
-                send(Embeds.fbk("The exclusive role configuration named **$setName** has been completely removed. The roles in this set will no longer be kept exclusive.")).awaitSingle()
-                config.save()
-                return@discord
-            }
+    private suspend fun deleteExclusiveSet(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val setName = args.string("SetName")
+        val sets = config.autoRoles.exclusiveRoleSets
+        val targetSet = sets.removeIf { existing -> existing.name.equals(setName, ignoreCase = true) }
+        if(!targetSet) {
+            ereply(Embeds.error("There is no existing exclusive role configuration named **$setName**.")).awaitSingle()
+            return@with
+        }
+        ireply(Embeds.fbk("The exclusive role configuration named **$setName** has been deleted. The roles in this set will no longer be kept exclusive.")).awaitSingle()
+        config.save()
+    }
+
+    private suspend fun addToExclusiveSet(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val setName = args.string("SetName")
+        val sets = config.autoRoles.exclusiveRoleSets
+        val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
+        if(targetSet == null) {
+            ereply(Embeds.error("There is no existing exclusive role set with the name **$setName**. You can a new configuration with this name using the command **/roleset create $setName**.")).awaitSingle()
+            return@with
+        }
+        val targetRole = args.role("role").awaitSingle()
+        val targetId = targetRole.id.asLong()
+        val used = sets.find { existing -> existing.roles.contains(targetId) }
+        if(used == null) {
+            targetSet.roles.add(targetId)
+            config.save()
+            ireply(Embeds.fbk("The role **${targetRole.name}** has been added as an exclusive role in the configuration **${targetSet.name}**.")).awaitSingle()
+        } else {
+            ereply(Embeds.error("The role **${targetRole.name}** is already part of the exclusive role configuration **${used.name}**.")).awaitSingle()
         }
     }
 
-    object EditExclusiveSet : Command("editset", "editexclusiveset", "edittrack") {
-        override val wikiPath: String? = null
-
-        init {
-            discord {
-                member.verify(Permission.MANAGE_ROLES)
-                if(args.size < 3) {
-                    usage("**editset** is used to add roles to an exclusive role configuration.", "editset <set name> <add/remove> <role name or ID>").awaitSingle()
-                    return@discord
-                }
-                val setName = args[0]
-                val sets = config.autoRoles.exclusiveRoleSets
-                val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
-                if(targetSet == null) {
-                    send(Embeds.error("There is no existing exclusive role set with the name **$setName**. You can a new configuration with this name using the command **createset $setName**.")).awaitSingle()
-                    return@discord
-                }
-                val roleName = args.drop(2).joinToString(" ")
-                val targetRole = Search.roleByNameOrID(this, roleName)
-                if(targetRole == null) {
-                    send(Embeds.error("Unable to find the role **$roleName**.")).awaitSingle()
-                    return@discord
-                }
-                val targetID = targetRole.id.asLong()
-                when(args[1]) {
-                    "add", "insert", "+", "plus" -> {
-                        val used = sets.find { existing -> existing.roles.contains(targetID) }
-                        if(used == null) {
-                            targetSet.roles.add(targetID)
-                            config.save()
-                            send(Embeds.fbk("The role **${targetRole.name}** has been added as an exclusive role in the configuration **${targetSet.name}**.")).awaitSingle()
-                        } else {
-                            send(Embeds.error("The role **${targetRole.name}** is already part of the exclusive role configuration **${used.name}**.")).awaitSingle()
-                        }
-                    }
-                    "remove", "-", "minus" -> {
-                        val removed = targetSet.roles.remove(targetID)
-                        if(removed) {
-                            config.save()
-                            send(Embeds.fbk("The role **${targetRole.name}** has been removed as an exclusive role.")).awaitSingle()
-                        } else {
-                            val find = sets.find { existing -> existing.roles.contains(targetID) }
-                            val existsInSet = if(find != null) " However, I did find the role in the configuration named **${find.name}**." else ""
-                            send(Embeds.error("The role **${targetRole.name}** is not part of the exclusive role configuration **${targetSet.name}**.$existsInSet")).awaitSingle()
-                        }
-                    }
-                }
-            }
+    private suspend fun removeFromExclusiveSet(origin: DiscordParameters) = with(origin) {
+        val args = subArgs(subCommand)
+        val setName = args.string("SetName")
+        val sets = config.autoRoles.exclusiveRoleSets
+        val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
+        if(targetSet == null) {
+            ereply(Embeds.error("There is no existing exclusive role set with the name **$setName**. You can a new configuration with this name using the command **/roleset create $setName**.")).awaitSingle()
+            return@with
+        }
+        val targetRole = args.role("role").awaitSingle()
+        val targetId = targetRole.id.asLong()
+        val removed = targetSet.roles.remove(targetId)
+        if(removed) {
+            config.save()
+            ireply(Embeds.fbk("The role **${targetRole.name}** has been removed as an exclusive role.")).awaitSingle()
+        } else {
+            val find = sets.find { existing -> existing.roles.contains(targetId) }
+            val existsInSet = if(find != null) " However, I did find the role in the configuration named **${find.name}**." else ""
+            ereply(Embeds.error("The role **${targetRole.name}** is not part of the exclusive role configuration **${targetSet.name}**.$existsInSet")).awaitSingle()
         }
     }
 
-    object ListExclusiveSets : Command("listsets", "listset", "listexclusivesets", "listtracks") {
-        override val wikiPath: String? = null
-
-        init {
-            discord {
-                // list the exclusive role configurations in this guild
-                member.verify(Permission.MANAGE_ROLES)
-                val sets = config.autoRoles.exclusiveRoleSets
-                if(sets.isEmpty()) {
-                    send(Embeds.fbk("There are no exclusive role configuration sets in **${target.name}**.")).awaitSingle()
-                    return@discord
-                }
-                // set name w/ roles
-                val fields = sets.map { set ->
-                    val roles = set.roles.mapNotNull { role ->
-                        role.snowflake.toMono()
-                            .flatMap(target::getRoleById)
-                            .map(Role::getName)
-                            .tryAwait().orNull()
-                    }.joinToString("\n").ifEmpty { "No roles found!" }
-                    EmbedCreateFields.Field.of("${set.name}:", roles, true)
-                }
-                send(
-                    Embeds.fbk()
-                        .withTitle("Exclusive role configurations in ${target.name}:")
-                        .withFields(fields)
-                ).awaitSingle()
-            }
+    private suspend fun listExclusiveSets(origin: DiscordParameters) = with(origin) {
+        val sets = config.autoRoles.exclusiveRoleSets
+        if(sets.isEmpty()) {
+            ereply(Embeds.fbk("There are no exclusive role configuration sets in **${target.name}**.")).awaitSingle()
+            return@with
         }
+        // set name w/ roles
+        val fields = sets.map { set ->
+            val roles = set.roles.mapNotNull { role ->
+                role.snowflake.toMono()
+                    .flatMap(target::getRoleById)
+                    .map(Role::getName)
+                    .tryAwait().orNull()
+            }.joinToString("\n").ifEmpty { "No roles found!" }
+            EmbedCreateFields.Field.of("${set.name}:", roles, true)
+        }
+        ireply(
+            Embeds.fbk()
+                .withTitle("Exclusive role configurations in ${target.name}:")
+                .withFields(fields)
+        ).awaitSingle()
     }
 }

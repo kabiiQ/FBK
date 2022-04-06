@@ -9,6 +9,7 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import moe.kabii.util.extensions.orNull
 import java.util.Optional
+import kotlin.reflect.KClass
 
 class ChatCommandArguments(val args: (String) -> Optional<ApplicationCommandInteractionOption>) {
 
@@ -47,7 +48,7 @@ class ChatCommandArguments(val args: (String) -> Optional<ApplicationCommandInte
     fun baseChannel(name: String) = _baseChannel(name).get()
     fun optBaseChannel(name: String) = _baseChannel(name).orNull()
 
-    fun <T: Channel> _channel(name: String, type: Class<T>) = _baseChannel(name).map { chan -> chan.ofType(type) }
-    fun <T: Channel> channel(name: String, type: Class<T>) = _channel(name, type).get()
-    fun <T: Channel> optChannel(name: String, type: Class<T>) = _channel(name, type).orNull()
+    fun <T: Channel> _channel(name: String, type: KClass<T>) = _baseChannel(name).map { chan -> chan.ofType(type.java) }
+    fun <T: Channel> channel(name: String, type: KClass<T>) = _channel(name, type).get()
+    fun <T: Channel> optChannel(name: String, type: KClass<T>) = _channel(name, type).orNull()
 }

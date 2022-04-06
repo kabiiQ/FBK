@@ -10,25 +10,36 @@ import java.io.File
 
 object CommandRegistrar {
 
-    fun getAllGlobalCommands(modules: List<ConfigurationModule<*>>): List<ApplicationCommandRequest> = importGlobalCommands() + modules.map(::buildConfigCommand)
+    fun getAllGlobalCommands(modules: List<ConfigurationModule<*>>): List<ApplicationCommandRequest> = importStaticCommands() + modules.map(::buildConfigCommand)
 
-    private fun importGlobalCommands(): List<ApplicationCommandRequest> {
-        // load global commands from .json files
-        val commands = File("files/commands/global/")
-            .listFiles { f -> f.extension == "json" }
-        if(commands?.isNotEmpty() != true) error("Could not get commands directory!") // propagate exceptions to main, will exit
+    /*
+    chat, message, and user commands are generated from files of their raw Discord request form
+    these all use the same json format
+     */
+    private fun importStaticCommands(): List<ApplicationCommandRequest> {
+        val commands = searchConfigFileTree(File("files/commands/global/"))
+        if(commands.isEmpty()) error("Command files not found!") // propagate exceptions to main, will exit
 
         val mapper = JacksonResources.create().objectMapper
         return commands.map { f -> mapper.readValue(f, ApplicationCommandRequest::class.java) }
     }
 
+    // recursively build configuration list
+    private fun searchConfigFileTree(root: File): List<File> {
+        val (directory, config) = root.listFiles()!!.partition { f -> f.isDirectory }
+        return config.filter { f -> f.extension == "json" } + directory.flatMap(::searchConfigFileTree)
+    }
+
+    /*
+    "config" commands are global chat commands we generate programmatically and do not use json
+     */
     private fun buildConfigCommand(module: ConfigurationModule<*>): ApplicationCommandRequest {
 
         // generate command arguments from the module's properties
         val base =  ApplicationCommandRequest.builder()
             .name(module.command.name)
             .description("Configurable ${module.name} settings. Run '/${module.command.name} setup' to view all.")
-        var builder = module.elements.fold(base) { command, element ->
+        val builder = module.elements.fold(base) { command, element ->
             // build argument option
             val option = ApplicationCommandOptionData.builder()
                 .name(element.propertyFieldName) // "value"

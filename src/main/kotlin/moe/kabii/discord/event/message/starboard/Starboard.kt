@@ -19,13 +19,14 @@ import moe.kabii.util.extensions.*
 import java.net.URL
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {
-    private suspend fun getStarboardChannel(): GuildMessageChannel {
+    private suspend fun getStarboardChannel(): GuildMessageChannel? {
+        if(starboard.channel == null) return null
         return try {
-            guild.getChannelById(starboard.channel.snowflake).awaitSingle() as GuildMessageChannel
+            guild.getChannelById(starboard.channel!!.snowflake).awaitSingle() as GuildMessageChannel
         } catch(ce: ClientException) {
             if(ce.status.code() == 404) {
                 LOG.info("Starboard for guild ${guild.id.asString()} not found. Channel ${starboard.channel} does not exist. Removing configuration.")
-                config.starboard = null
+                starboard.channel = null
                 config.save()
             } else LOG.debug("Couldn't access Starboard for guild ${guild.id.asString()}")
             throw ce
@@ -87,7 +88,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
     }
 
     suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) {
-        val starboardChannel = getStarboardChannel()
+        val starboardChannel = getStarboardChannel() ?: return
         val starCount = stars.count().toLong()
         val authorId = if(starboard.mentionUser) message.author.orNull()?.id?.asLong() else null
         val channelId = message.channelId.asLong()
@@ -110,7 +111,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
     }
 
     suspend fun removeFromBoard(message: StarredMessage) {
-        val starboardChannel = getStarboardChannel()
+        val starboardChannel = getStarboardChannel() ?: return
         starboard.starred.remove(message)
         config.save()
         val starboardMessage = getStarboardMessage(starboardChannel, message)
@@ -120,7 +121,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
     suspend fun updateCount(message: StarredMessage) {
         config.save()
-        val starboardChannel = getStarboardChannel()
+        val starboardChannel = getStarboardChannel() ?: return
         val starboardMessage = getStarboardMessage(starboardChannel, message)
 
         val starCount = message.stars.count().toLong()

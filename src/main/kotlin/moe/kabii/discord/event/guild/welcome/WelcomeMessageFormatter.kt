@@ -34,20 +34,20 @@ object WelcomeMessageFormatter {
         else format(member, config.message, rich = true)
 
         val image = WelcomeImageGenerator.generate(config, member)
-        val subText = if(config.imageText != null) format(member, config.imageText!!, rich = true) else null
+        val subText = if(config.includeImageText) format(member, config.imageTextValue, rich = true) else null
         return MessageCreateSpec.create()
             .run { if(message != null) withContent(message) else this }
             .run {
                 // add either image (if enabled) else embed (if some rich content is enabled)
                 if(image != null) {
                     withFiles(MessageCreateFields.File.of("welcome.png", image))
-                } else if(config.includeUsername || config.includeAvatar || config.welcomeTagLine != null || config.imageText != null) {
+                } else if(config.includeUsername || config.includeAvatar || config.includeTagline || config.includeImageText) {
 
                     withEmbeds(
                         Embeds.other(Color.of(6750056))
                             .run { if(config.includeAvatar) withImage(member.avatarUrl) else this }
                             .run { if(config.includeUsername) withAuthor(EmbedCreateFields.Author.of(member.username, null, member.avatarUrl)) else this }
-                            .run { if(config.welcomeTagLine != null) withTitle(config.welcomeTagLine!!) else this }
+                            .run { if(config.includeTagline) withTitle(config.taglineValue) else this }
                             .run { if(subText != null) withDescription(subText) else this }
                     )
                 } else this

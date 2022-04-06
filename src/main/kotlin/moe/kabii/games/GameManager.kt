@@ -10,7 +10,7 @@ import discord4j.common.util.Snowflake
 object GameManager {
     val ongoingGames: MutableList<DiscordGame> = mutableListOf()
 
-    fun matchGame(userId: Snowflake, channelId: Snowflake): DiscordGame? = synchronized(ongoingGames) {
-        ongoingGames.find { game -> game.matchGameMember(userId, channelId) }
+    fun findGame(userId: Snowflake, messageId: Snowflake): DiscordGame? = synchronized(ongoingGames) {
+        ongoingGames.find { game -> game.matchGame(userId, messageId) }
     }
 }

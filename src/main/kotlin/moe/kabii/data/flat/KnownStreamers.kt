@@ -33,9 +33,8 @@ object KnownStreamers {
     )
 
     private fun loadStreamerData() {
-        val dataFile = { f: File -> f.name.endsWith(".json")}
         streamers = dataDir
-            .listFiles(dataFile)!!
+            .listFiles { f -> f.extension == "json" }!!
             .mapNotNull { file ->
                 try {
                     val group = streamerAdapter.fromJson(file.readText())!!

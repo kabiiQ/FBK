@@ -5,7 +5,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SourcePaths
 
 object CommandInfo : Command("help") {
@@ -25,7 +24,7 @@ object CommandInfo : Command("help") {
     private suspend fun commandHelp(origin: DiscordParameters) = with(origin) {
         // try to match command
         val searchName = subArgs(subCommand).string("CommandName")
-        val match = Search.commandByAlias(handler, searchName, bypassExempt = true)
+        val match = handler.searchCommandByAlias(searchName, bypassExempt = true)
         if(match == null) {
             ereply(Embeds.error("Can't find the command named **$searchName**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()
             return@with

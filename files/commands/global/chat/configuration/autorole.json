@@ -158,50 +158,6 @@
                     "type": 1
                 }
             ]
-        },
-        {
-            "name": "command",
-            "description": "Configure an auto-role for users running a specific command",
-            "type": 2,
-            "options": [
-                {
-                    "name": "create",
-                    "description": "Create a command-based autorole",
-                    "type": 1,
-                    "options": [
-                        {
-                            "name": "name",
-                            "description": "The command name for the new autorole",
-                            "type": 3,
-                            "required": true
-                        },
-                        {
-                            "name": "role",
-                            "description": "The role that will be assigned when this command is used",
-                            "type": 8,
-                            "required": true
-                        }
-                    ]
-                },
-                {
-                    "name": "delete",
-                    "description": "Delete an existing command-based autorole",
-                    "type": 1,
-                    "options": [
-                        {
-                            "name": "name",
-                            "description": "The name of the existing command autorole to be deleted",
-                            "type": 3,
-                            "required": true
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "list",
-            "description": "List all command-based autorole rules",
-            "type": 1
         }
     ]
 }

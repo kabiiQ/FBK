@@ -22,11 +22,11 @@ object Drag : Command("drag") {
         discord {
             member.verify(Permission.MOVE_MEMBERS)
             val args = subArgs(subCommand)
-            val toArg = args.channel("to", VoiceChannel::class.java).awaitSingle()
+            val toArg = args.channel("to", VoiceChannel::class).awaitSingle()
             val operation = when(subCommand.name) {
                 "all" -> dragUsers(this, null, toArg)
                 "between" -> {
-                    val fromArg = args.channel("from", VoiceChannel::class.java).awaitSingle()
+                    val fromArg = args.channel("from", VoiceChannel::class).awaitSingle()
                     dragUsers(this, fromArg, toArg)
                 }
                 else -> error("subcommand mismatch")

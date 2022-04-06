@@ -21,6 +21,11 @@ import moe.kabii.util.extensions.userAddress
 
 class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) {
 
+    fun searchCommandByAlias(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
+        val allowed = if(bypassExempt) true else !command.commandExempt
+        allowed && command.name == name.lowercase()
+    }
+
     fun handle(event: ChatInputInteractionEvent) = manager.context.launch {
 
         val interaction = event.interaction
@@ -56,12 +61,12 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                 }
 
             } catch (parse: GuildTargetInvalidException) {
-                param.send(Embeds.error("${parse.string} Execute this command while in a server channel.")).subscribe()
+                param.ereply(Embeds.error("${parse.string} Execute this command while in a server channel.")).subscribe()
 
             } catch (perms: MemberPermissionsException) {
                 val s = if(perms.perms.size > 1) "s" else ""
                 val reqs = perms.perms.joinToString(", ")
-                param.send(Embeds.error("The **${event.commandName}** command is restricted. (Requires the **$reqs** permission$s).")).subscribe()
+                param.ereply(Embeds.error("The **${event.commandName}** command is restricted. (Requires the **$reqs** permission$s).")).subscribe()
 
             } catch (feat: ChannelFeatureDisabledException) {
                 //val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
@@ -77,14 +82,14 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                 val enabledIn = if(channels != null) "\n**${feat.feature}** is currently enabled in the following channels: $channels"
                 else ""
 
-                param.send(Embeds.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn"))
+                param.ereply(Embeds.error("The **${feat.feature}** feature is not enabled in this channel.$enableNotice$enabledIn"))
                     .awaitSingle()
 
             } catch (guildFeature: GuildFeatureDisabledException) {
 
                 val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
                 val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
-                param.send(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
+                param.ereply(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
 
             } catch (cmd: GuildCommandDisabledException) {
 
