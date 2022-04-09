@@ -35,13 +35,13 @@ data class WelcomeSettings(
     var includeUsername: Boolean = true,
     var message: String = "",
 
-    var _welcomeTagLine: String? = "WELCOME", // TODO remove after migration
+    var welcomeTagLine: String? = "WELCOME", // TODO remove after migration
     var includeTagline: Boolean = true,
     var taglineValue: String = "WELCOME",
 
     var imagePath: String? = null,
 
-    var _imageText: String? = defaultImageText, // TODO remove after migration
+    var imageText: String? = defaultImageText, // TODO remove after migration
     var includeImageText: Boolean = true,
     var imageTextValue: String = defaultImageText,
 

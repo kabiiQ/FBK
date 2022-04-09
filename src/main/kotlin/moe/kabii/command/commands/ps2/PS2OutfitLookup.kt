@@ -1,32 +1,27 @@
 package moe.kabii.command.commands.ps2
 
-import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.ps2.polling.PS2Parser
 import moe.kabii.trackers.ps2.polling.json.PS2Outfit
 import moe.kabii.trackers.ps2.polling.json.PS2OutfitMember
-import reactor.core.publisher.Mono
 
 object PS2OutfitLookup : Command("ps2outfit") {
     override val wikiPath: String? = null
-    override val skipRegistration = true
 
     init {
         discord {
             val args = subArgs(subCommand)
             when(subCommand.name) {
                 "tag" -> {
-                    wrapLookup(this, args.string("OutfitTag"), PS2Parser::searchOutfitByTag)
+                    wrapLookup(this, args.string("tag"), PS2Parser::searchOutfitByTag)
                 }
                 "name" -> {
-                    wrapLookup(this, args.string("OutfitName"), PS2Parser::searchOutfitByName)
+                    wrapLookup(this, args.string("name"), PS2Parser::searchOutfitByName)
                 }
             }
         }

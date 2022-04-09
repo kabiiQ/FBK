@@ -7,7 +7,7 @@ import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 
-object ReactionConfig : Command("reactioncfg") {
+object ReactionConfig : Command("cleanreactionscfg") {
     override val wikiPath = "Configuration-Commands#the-reactions-command"
 
     object ReactionConfigModule : ConfigurationModule<FeatureChannel>(

@@ -23,16 +23,22 @@ object StarboardUtil : CommandContainer {
                     return@discord
                 }
 
-                val messageArg = args.int("message").snowflake
+                val messageArg = args.string("message")
+                val messageId = messageArg.toLongOrNull()?.snowflake
+
+                if(messageId == null) {
+                    ereply(Embeds.error("Invalid Discord message ID **$messageArg**.")).awaitSingle()
+                    return@discord
+                }
 
                 val targetMessage = try {
-                    chan.getMessageById(messageArg).awaitSingle()
+                    chan.getMessageById(messageId).awaitSingle()
                 } catch(ce: ClientException) {
                     ereply(Embeds.error("Unable to find the message with ID **$messageArg** in ${guildChan.name}.")).awaitSingle()
                     return@discord
                 }
 
-                if(starboardCfg.findAssociated(messageArg.asLong()) != null) {
+                if(starboardCfg.findAssociated(messageId.asLong()) != null) {
                     ereply(Embeds.error("Message **$messageArg** is already starboarded.")).awaitSingle()
                     return@discord
                 }

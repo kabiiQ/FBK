@@ -1,13 +1,83 @@
 {
     "name": "queue",
-    "description": "View the current audio queue.",
+    "description": "(Music bot) View and edit the music queue.",
     "options": [
         {
-            "name": "ListFrom",
-            "description": "If there are many tracks in queue, you can specify the track to start listing the queue from, such as queue 10.",
-            "type": 4,
-            "min_value": 1,
-            "required": false
+            "name": "list",
+            "description": "View the current music queue.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "from",
+                    "description": "Optionally specify the track to start listing the queue from, such as queue 10.",
+                    "type": 4,
+                    "min_value": 1,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "remove",
+            "description": "Remove music from the queue.",
+            "type": 2,
+            "options": [
+                {
+                    "name": "tracks",
+                    "description": "Remove tracks by their position in the queue.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "numbers",
+                            "description": "Track # in queue to remove. Accepts ranges such as: remove 1, remove 1-4, remove 3-, remove all",
+                            "type": 3,
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "user",
+                    "description": "Remove tracks by the user who queued them.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "who",
+                            "description": "The user to remove queued tracks from.",
+                            "type": 6,
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "pause",
+            "description": "Pause audio playback indefinitely.",
+            "type": 1
+        },
+        {
+            "name": "resume",
+            "description": "Resume audio playback if paused.",
+            "type": 1
+        },
+        {
+            "name": "loop",
+            "description": "Toggle queue looping. When enabled, tracks are re-added to the queue after they finish playing.",
+            "type": 1
+        },
+        {
+            "name": "replay",
+            "description": "Re-add the currently playing audio track to the end of the queue.",
+            "type": 1
+        },
+        {
+            "name": "shuffle",
+            "description": "Shuffles the audio tracks currently in queue.",
+            "type": 1
+        },
+        {
+            "name": "clear",
+            "description": "Removes all audio tracks waiting in queue. Does not skip the current track.",
+            "type": 1
         }
     ]
 }

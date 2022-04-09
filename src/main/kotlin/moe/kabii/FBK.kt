@@ -7,8 +7,8 @@ import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
-import moe.kabii.command.CommandRegistrar
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
+import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.flat.GQLQueries
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
@@ -22,7 +22,7 @@ import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
-import moe.kabii.discord.util.Metadata
+import moe.kabii.discord.util.MetaData
 import moe.kabii.discord.util.Uptime
 import moe.kabii.net.NettyFileServer
 import moe.kabii.net.api.videos.YoutubeVideosService
@@ -42,7 +42,7 @@ fun main() {
     val threadPools = DiscordTaskPool
     val mongo = MongoDBConnection
     val postgres = PostgresConnection
-    LOG.info("FBK version: ${Metadata.buildInfo}")
+    LOG.info("FBK version: ${MetaData.buildInfo}")
 
     val gqlQueries = GQLQueries
     val keys = Keys.config
@@ -68,7 +68,7 @@ fun main() {
     val modules = reflection
         .getSubTypesOf(ConfigurationModule::class.java)
         .mapNotNull { clazz -> clazz.kotlin.objectInstance }
-    val globalCommands = CommandRegistrar.getAllGlobalCommands(modules)
+    val globalCommands = GlobalCommandRegistrar.getAllGlobalCommands(modules)
 
     val rest = gateway.rest()
     val appId = checkNotNull(rest.applicationId.block())
@@ -93,7 +93,7 @@ fun main() {
     TerminalListener(manager, gateway).launch()
 
     // start file server
-    if(Metadata.host) {
+    if(MetaData.host) {
         NettyFileServer.server.start()
     }
 

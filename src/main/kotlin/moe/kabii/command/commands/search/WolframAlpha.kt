@@ -9,6 +9,7 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.newRequestBuilder
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
@@ -23,12 +24,15 @@ object WolframAlpha : Command("calc") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
 
-            val response = query(args.string("query"))
-            val output = response.output ?: "Unknown"
-            ireply(
-                (if(response.success) Embeds.fbk(output) else Embeds.error(output))
-                    .run { if(output.contains(wysi)) withFooter(EmbedCreateFields.Footer.of("(wysi)", null)) else this }
-            ).awaitSingle()
+            event.deferReply().awaitAction()
+            val query = args.string("query")
+            val response = query(query)
+            val output = "**${author.username} searched:** $query\n\n${response.output ?: "Unknown"}"
+            val embed = if(response.success) Embeds.fbk(output) else Embeds.error(output)
+                .run { if(output.contains(wysi)) withFooter(EmbedCreateFields.Footer.of("(wysi)", null)) else this }
+            event.editReply()
+                .withEmbeds(embed)
+                .awaitSingle()
         }
     }
 

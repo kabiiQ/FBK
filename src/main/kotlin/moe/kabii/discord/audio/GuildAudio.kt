@@ -167,13 +167,7 @@ data class QueueData(
     val associatedMessages: MutableList<BotMessage> = mutableListOf(),
     val audioFilters: FilterFactory = FilterFactory()
 ) {
-    sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake, private val cfgProp: KProperty1<MusicSettings, Boolean>) {
-        class NPEmbed(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteOldBotMessages)
-        class TrackQueued(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteOldBotMessages)
-        class UserPlayCommand(chan: Snowflake, msg: Snowflake) : BotMessage(chan, msg, MusicSettings::deleteUserCommands)
-
-        fun enabledFor(config: GuildConfiguration): Boolean = cfgProp.get(config.musicBot)
-    }
+    data class BotMessage(val channelID: Snowflake, val messageID: Snowflake)
 
     var silent = false // don't post added to queue message. for bulk actions, etc
     var apply = false // if this track is stopped, restart it. for applying filters

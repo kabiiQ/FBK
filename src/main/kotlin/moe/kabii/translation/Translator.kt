@@ -16,9 +16,8 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
     @Throws(IOException::class)
     fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?, fallback: TranslationService?): TranslationResult {
-        if(suspectLanguage == to) {
-            return NoOpTranslator.doTranslation(suspectLanguage, suspectLanguage, rawText)
-        }
+        if(suspectLanguage == to) return NoOpTranslator.doTranslation(suspectLanguage, suspectLanguage, rawText)
+        if(from == to) return NoOpTranslator.doTranslation(from, from, rawText)
 
         require(rawText.length <= 1_000) { "Translation exceeds 2000 characters" }
 

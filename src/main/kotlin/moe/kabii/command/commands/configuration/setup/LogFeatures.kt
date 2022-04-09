@@ -103,7 +103,7 @@ object LogFeatures : Command("log") {
 
                 if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
                     event.createFollowup()
-                        .withEmbeds(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **guildcfg audit enable** command."))
+                        .withEmbeds(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **/servercfg audit true** command."))
                         .awaitSingle()
                 }
             }

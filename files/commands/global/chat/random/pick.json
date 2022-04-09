@@ -4,7 +4,7 @@
     "options": [
         {
             "name": "list",
-            "description": "Space-separated list of \"options\" to pick randomly from. Otherwise, a random user will be picked from recent messages in this channel.",
+            "description": "Space-separated list of \"options\" to pick randomly from.",
             "type": 3,
             "required": false
         }

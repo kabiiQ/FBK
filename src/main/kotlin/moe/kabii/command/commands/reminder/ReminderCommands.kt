@@ -16,7 +16,6 @@ import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -64,7 +63,7 @@ object ReminderCommands : CommandContainer {
                         created = DateTime.now()
                         remind = DateTime.now().plusSeconds(time.seconds.toInt())
                         content = args.optStr("what") ?: ""
-                        originMessage = MessageHistory.Message.getOrInsert(interaction.message.get())
+                        originMessage = null
                     }
                 }
                 val location = if(replyPrivate) "private message" else "reminder in this channel"
@@ -73,19 +72,26 @@ object ReminderCommands : CommandContainer {
 
                 val reply = Embeds.other("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.", MessageColors.reminder)
                     .withFooter(EmbedCreateFields.Footer.of("Reminder ID: $reminderID", null))
-                val action = if(replyPrivate) ereply(reply) else ireply(reply)
-                action.awaitSingle()
+                if(replyPrivate) {
+                    ereply(reply).awaitSingle()
+                } else {
+                    ireply(reply).awaitSingle()
+                    val replyMessage = event.reply.awaitSingle()
+                    transaction {
+                        reminder.originMessage =  MessageHistory.Message.getOrInsert(replyMessage)
+                    }
+                }
             }
         }
     }
 
-    object CancelReminder : Command("cancel") {
+    object CancelReminder : Command("remindcancel") {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
             discord {
                 // cancel <reminder id>
-                val idArg = args.int("ReminderID")
+                val idArg = args.int("reminder")
                 val reminder = transaction {
                     Reminder
                         .find { Reminders.id eq idArg }

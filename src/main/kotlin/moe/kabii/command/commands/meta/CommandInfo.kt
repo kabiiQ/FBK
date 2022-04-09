@@ -15,7 +15,7 @@ object CommandInfo : Command("help") {
             when(subCommand.name) {
                 "command" -> commandHelp(this)
                 "wiki" -> {
-                    ireply(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **/help command <command name>**")).awaitSingle()
+                    ereply(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **/help command <command name>**")).awaitSingle()
                 }
             }
         }
@@ -23,7 +23,7 @@ object CommandInfo : Command("help") {
 
     private suspend fun commandHelp(origin: DiscordParameters) = with(origin) {
         // try to match command
-        val searchName = subArgs(subCommand).string("CommandName")
+        val searchName = subArgs(subCommand).string("command")
         val match = handler.searchCommandByAlias(searchName, bypassExempt = true)
         if(match == null) {
             ereply(Embeds.error("Can't find the command named **$searchName**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()

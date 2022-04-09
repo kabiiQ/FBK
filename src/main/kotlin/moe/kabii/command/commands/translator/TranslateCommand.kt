@@ -8,7 +8,6 @@ import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.util.Embeds
 import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.createJumpLink
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
 
@@ -25,9 +24,9 @@ object TranslateCommand : Command("translate") {
             val languages = baseService.supportedLanguages
 
             val fromLang = args
-                .optStr("FromLanguage")?.run { languages.search(baseService, this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
+                .optStr("from")?.run { languages.search(baseService, this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
             val toLang = args
-                .optStr("ToLanguage")?.run { languages.search(baseService, this).values.firstOrNull() }
+                .optStr("to")?.run { languages.search(baseService, this).values.firstOrNull() }
                 ?: languages.search(baseService, toTagDefault).values.firstOrNull()
                 ?: languages[toTagDefault]
                 ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
@@ -48,7 +47,7 @@ object TranslateCommand : Command("translate") {
             val detected = if(translation.detected) " (detected$confidence)" else ""
 
             event.editReply().withEmbeds(
-                Embeds.fbk("**Original text:** `$textArg` **->**\n${translation.translatedText}")
+                Embeds.fbk("**Original text:** `$textArg` **->**\n\n${translation.translatedText}")
                     .withAuthor(EmbedCreateFields.Author.of("Translation for ${author.userAddress()}", null, author.avatarUrl))
                     .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag}$detected -> ${translation.targetLanguage.tag}", null))
             ).awaitSingle()

@@ -5,7 +5,7 @@
         {
             "name": "message",
             "description": "The message ID to be added to the starboard.",
-            "type": 4,
+            "type": 3,
             "required": true
         }
     ]

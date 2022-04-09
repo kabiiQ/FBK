@@ -9,28 +9,20 @@ import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.mono
 import moe.kabii.command.Command
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.verify
 import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.RGB
-import moe.kabii.discord.util.Search
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.tryAwait
-import reactor.core.publisher.Mono
-import reactor.function.TupleUtils
-import reactor.util.function.Tuple2
 import java.time.Duration
-import java.util.concurrent.TimeoutException
 
-object RandomRoleColor : Command("randomizecolorz") {
+object RandomRoleColor : Command("randomizecolor") {
     override val wikiPath = "Moderation-Commands#randomizing-a-roles-color"
 
     private fun randomColor() = Color.of((0..0xFFFFFF).random())
@@ -62,9 +54,9 @@ object RandomRoleColor : Command("randomizecolorz") {
                 .withEmbeds(colorPicker(currColor))
                 .withComponents(
                     ActionRow.of(
-                        Button.danger("exit", ReactionEmoji.unicode(EmojiCharacters.redX)),
+                        Button.danger("exit", "Cancel"),
                         Button.success("confirm", ReactionEmoji.unicode(EmojiCharacters.checkBox)),
-                        Button.primary("next", ReactionEmoji.unicode(EmojiCharacters.play))
+                        Button.primary("next", "Next Color ->")
                     )
                 )
                 .awaitAction()
@@ -78,9 +70,9 @@ object RandomRoleColor : Command("randomizecolorz") {
 
                 when(press.customId) {
                     "exit" -> {
-                        event.editReply()
+                        press.edit()
                             .withEmbeds(Embeds.fbk("Role edit aborted."))
-                            .awaitSingle()
+                            .awaitAction()
                         return@discord
                     }
                     "confirm" -> {
@@ -89,21 +81,21 @@ object RandomRoleColor : Command("randomizecolorz") {
                         try {
                             role.edit().withColor(currColor).awaitSingle()
                         } catch(ce: ClientException) {
-                            event.editReply()
+                            press.edit()
                                 .withEmbeds(Embeds.error("I am unable to edit the role **${role.name}**. I must have a role above **${role.name}** to edit it. The hex value for the color you wanted to set was $newColor."))
-                                .awaitSingle()
+                                .awaitAction()
                         }
-                        event.editReply()
+                        press.edit()
                             .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $newColor. (Previously $oldColor)", currColor))
-                            .awaitSingle()
+                            .awaitAction()
                         return@discord
                     }
                     "next" -> {
                         // new color
                         currColor = randomColor()
-                        event.editReply()
+                        press.edit()
                             .withEmbeds(colorPicker(currColor))
-                            .awaitSingle()
+                            .awaitAction()
                     }
                 }
             }

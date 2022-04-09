@@ -8,7 +8,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "SetName",
+                    "name": "name",
                     "description": "The name of the new role set being created",
                     "type": 3,
                     "required": true
@@ -21,7 +21,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "SetName",
+                    "name": "name",
                     "description": "The name of the existing role set to be removed",
                     "type": 3,
                     "required": true
@@ -34,7 +34,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "SetName",
+                    "name": "name",
                     "description": "The name of the existing role set to add the role to",
                     "type": 3,
                     "required": true
@@ -53,7 +53,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "SetName",
+                    "name": "name",
                     "description": "The name of the existing role set to remove a role from",
                     "type": 3,
                     "required": true

@@ -3,9 +3,9 @@
     "description": "Get information on this Discord server.",
     "options": [
         {
-            "name": "GuildID",
-            "description": "The guild to get info on. Defaults to current server if not specified.",
-            "type": 4,
+            "name": "id",
+            "description": "The server to get info on. Defaults to current server if not specified.",
+            "type": 3,
             "required": false
         }
     ]

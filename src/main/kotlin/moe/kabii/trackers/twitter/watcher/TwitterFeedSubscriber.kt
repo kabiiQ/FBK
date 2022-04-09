@@ -4,6 +4,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterStreamRule
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.discord.util.MetaData
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.propagateTransaction
@@ -17,6 +18,7 @@ object TwitterFeedSubscriber {
     private const val feedsPerRule = charPerRule / charPerFeed // 17
 
     suspend fun verifySubscriptions() {
+        if(!MetaData.host) return
         propagateTransaction {
             // get all feeds that should be streamed
             val feeds = TwitterFeed.all()

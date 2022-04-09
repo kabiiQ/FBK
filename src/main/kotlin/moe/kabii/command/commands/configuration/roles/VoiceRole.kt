@@ -4,14 +4,11 @@ import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.VoiceConfiguration
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -21,7 +18,7 @@ object VoiceRole {
     suspend fun createVoiceRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
         // voice channel target
         val args = subArgs(subCommand)
-        val channelTarget = args.optChannel("VoiceChannel", VoiceChannel::class)?.awaitSingle()
+        val channelTarget = args.optChannel("channel", VoiceChannel::class)?.awaitSingle()
 
         val configs = config.autoRoles.voiceConfigurations
         val existing = configs.find { cfg -> cfg.targetChannel == channelTarget?.id?.asLong() }
@@ -49,7 +46,7 @@ object VoiceRole {
 
     suspend fun deleteVoiceRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
         val args = subArgs(subCommand)
-        val channelTarget = args.optChannel("VoiceChannel", VoiceChannel::class)?.awaitSingle()
+        val channelTarget = args.optChannel("channel", VoiceChannel::class)?.awaitSingle()
 
         val autoRoles = config.autoRoles.voiceConfigurations
         val existing = autoRoles.find { cfg -> cfg.targetChannel == channelTarget?.id?.asLong() }

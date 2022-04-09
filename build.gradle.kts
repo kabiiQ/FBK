@@ -62,7 +62,8 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
 
     // emote parsing
-    implementation("com.kcthota:emoji4j:6.0")
+//    implementation("com.kcthota:emoji4j:6.0")
+    implementation("com.vdurmont:emoji-java:5.1.1")
 
     // thumbnail file server
     val ktor = "1.4.1" // hold - 'blocking primitive' issue on latest

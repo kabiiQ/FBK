@@ -70,15 +70,9 @@ object AudioEventHandler : AudioEventAdapter() {
                         Embeds.fbk("$now **$title**. $paused$looping")
                             .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
                     )
-                }.map { np ->
-                    QueueData.BotMessage.NPEmbed(np.channelId, np.id)
-                }.subscribe { np -> data.associatedMessages.add(np) }
+                }.subscribe()
         } else {
             data.apply = false
-            val filters = data.audioFilters.asString()
-            originChan.flatMap { chan ->
-                chan.createMessage(Embeds.fbk("Applying filters:\n\n$filters"))
-            }.subscribe()
         }
 
         // if the bot is not alone when something starts playing, cancel any inactivity timeouts
@@ -133,25 +127,17 @@ object AudioEventHandler : AudioEventAdapter() {
                 // delete old messages per guild settings
                 val guildID = data.audio.guildId
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
-                val (commandMsg, otherMsg) = data.associatedMessages.partition { it is QueueData.BotMessage.UserPlayCommand }
-                commandMsg.firstOrNull()?.let { msg ->
+                data.associatedMessages.firstOrNull()?.let { msg ->
                     data.discord.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
-                            // delete or reactor to user command depending on server settings
-                            if(msg.enabledFor(config)) {
+                            // delete or react to user command depending on server settings
+                            if(config.musicBot.deleteOldBotMessages) {
                                 discordMsg.delete("Old user music bot command")
                             } else {
                                 discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
                             }
                         }.subscribe()
                 }
-
-                // other messages, defer to server settings
-                otherMsg.toFlux()
-                    .filter { msg -> msg.enabledFor(config) }
-                    .flatMap { msg -> data.discord.getMessageById(msg.channelID, msg.messageID) }
-                    .flatMap { message -> message.delete("Old music bot command") }
-                    .subscribe()
 
                 data.associatedMessages.clear()
             }

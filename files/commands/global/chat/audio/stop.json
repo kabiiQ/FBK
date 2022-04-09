@@ -1,4 +1,4 @@
 {
     "name": "stop",
-    "description": "Combines 'clear' and 'skip'. Skips all tracks in queue (for which you havce permission)."
+    "description": "(Music bot) Combines 'clear' and 'skip'. Skips all tracks in queue (for which you have permission)."
 }

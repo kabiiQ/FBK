@@ -5,7 +5,6 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import java.time.format.DateTimeFormatter

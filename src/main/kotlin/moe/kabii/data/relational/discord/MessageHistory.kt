@@ -13,14 +13,12 @@ object MessageHistory {
         val messageID = long("discord_message_id").uniqueIndex()
         val channel = reference("channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val author = reference("author", DiscordObjects.Users, ReferenceOption.CASCADE)
-        val content = varchar("content", 2000)
     }
 
     class Message(id: EntityID<Long>) : LongEntity(id) {
         var messageID by Messages.messageID
         var channel by DiscordObjects.Channel referencedOn Messages.channel
         var author by DiscordObjects.User referencedOn Messages.author
-        var content by Messages.content
 
         val jumpLink: String
         get() = if(channel.guild != null) "https://discord.com/channels/${channel.guild!!.guildID}/${channel.channelID}/$messageID"
@@ -36,7 +34,6 @@ object MessageHistory {
                             ?.asLong()
                     )
                     author = DiscordObjects.User.getOrInsert(message.author.get().id.asLong())
-                    content = message.content.take(2000)
                 }
             }
 

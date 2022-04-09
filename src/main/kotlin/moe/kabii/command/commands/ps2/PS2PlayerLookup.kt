@@ -14,7 +14,6 @@ import java.time.format.DateTimeFormatter
 
 object PS2PlayerLookup : Command("ps2who") {
     override val wikiPath: String? = null
-    override val skipRegistration = true
 
     init {
         discord {

@@ -4,7 +4,7 @@
     "options": [
         {
             "name": "use",
-            "description": "Enable the command blacklist and disable the whitelist. This is the default bot behavior. All commands will work unless they are on the blacklist.",
+            "description": "Enable the command blacklist and disable the whitelist. This is the default bot behavior.",
             "type": 1
         },
         {
@@ -40,7 +40,7 @@
         },
         {
             "name": "clear",
-            "description": "Remove all commands currently on the command blacklist. If the blacklist is enabled, all commands will be enabled.",
+            "description": "Remove all commands currently on the command blacklist.",
             "type": 1
         }
     ]

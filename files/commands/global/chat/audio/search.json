@@ -1,6 +1,6 @@
 {
     "name": "search",
-    "description": "Searches for a track by name, allowing you to select the correct track to play.",
+    "description": "(Music bot) Searches for a track by name, allowing you to select the correct track to play.",
     "options": [
         {
             "name": "search",

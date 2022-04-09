@@ -5,7 +5,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
-import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
 
 object TrackerConfig : CommandContainer {

@@ -1,20 +1,10 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.command.ApplicationCommandOption
-import discord4j.core.`object`.entity.channel.GuildChannel
-import discord4j.core.spec.EmbedCreateFields
-import discord4j.rest.util.Image
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.*
-import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
-import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
-import moe.kabii.util.constants.EmojiCharacters
-import moe.kabii.util.extensions.orNull
 import kotlin.reflect.KMutableProperty1
 
 object StarboardConfig : Command("starboard") {

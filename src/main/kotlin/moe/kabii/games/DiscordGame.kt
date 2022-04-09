@@ -1,11 +1,7 @@
 package moe.kabii.games
 
 import discord4j.common.util.Snowflake
-import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
-import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import moe.kabii.games.connect4.EmbedInfo
 
 abstract class DiscordGame(val gameNameFull: String, private val gameMessage: EmbedInfo) {

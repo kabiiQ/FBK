@@ -1,6 +1,6 @@
 {
     "name": "play",
-    "description": "Add a song or audio clip to the queue.",
+    "description": "(Music bot) Add a song or audio clip to the queue.",
     "options": [
         {
             "name": "song",
@@ -9,9 +9,27 @@
             "required": true
         },
         {
-            "name": "PlayNext",
+            "name": "playlist",
+            "description": "Set to True to add ALL tracks from a YouTube playlist to the queue.",
+            "type": 5,
+            "required": false
+        },
+        {
+            "name": "forceplay",
+            "description": "Play this track immediately, pausing any current track until the new one ends.",
+            "type": 5,
+            "required": false
+        },
+        {
+            "name": "playnext",
             "description": "Add this track to the front of the queue rather than the end (\"skipping the line\")",
             "type": 5,
+            "required": false
+        },
+        {
+            "name": "attachment",
+            "description": "Optionally play an attached audio file directly.",
+            "type": 11,
             "required": false
         }
     ]

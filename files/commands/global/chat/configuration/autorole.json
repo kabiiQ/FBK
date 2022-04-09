@@ -47,7 +47,7 @@
                 },
                 {
                     "name": "list",
-                    "descrption": "List all join-based autoroles",
+                    "description": "List all join-based autoroles",
                     "type": 1
                 }
             ]
@@ -63,13 +63,7 @@
                     "type": 1,
                     "options": [
                         {
-                            "name": "role",
-                            "description": "Role to be added to users who join a voice channel",
-                            "type": 8,
-                            "required": true
-                        },
-                        {
-                            "name": "VoiceChannel",
+                            "name": "channel",
                             "description": "If provided, this autorole will only be applied to users joining this SPECIFIC voice channel.",
                             "type": 7,
                             "channel_types": [2, 13],
@@ -83,8 +77,8 @@
                     "type": 1,
                     "options": [
                         {
-                            "name": "VoiceChannel",
-                            "description": "If provided, the voice-based autorole for a specific channel will be deleted, otherwise the autorole for any/all voice channel will be deleted.",
+                            "name": "channel",
+                            "description": "Delete the auto-role for a specific voice channel.",
                             "type": 7,
                             "channel_types": [2, 13],
                             "required": false
@@ -109,9 +103,9 @@
                     "type": 1,
                     "options": [
                         {
-                            "name": "MessageID",
+                            "name": "message",
                             "description": "ID of the Discord message to add the reaction role to",
-                            "type": 4,
+                            "type": 3,
                             "required": true
                         },
                         {
@@ -134,14 +128,14 @@
                     "type": 1,
                     "options": [
                         {
-                            "name": "MessageID",
-                            "description": "The ID of the Discord message to remove reaction roles from (if you do not specify an emoji, ALL reactionroles on this message will be removed)",
-                            "type": 4,
+                            "name": "message",
+                            "description": "The ID of the Discord message to remove reaction roles from.",
+                            "type": 3,
                             "required": true
                         },
                         {
                             "name": "emoji",
-                            "description": "The emoji of the reactionrole rule to remove",
+                            "description": "The emoji of the reactionrole rule to remove, otherwise removes ALL reactionroles on this message.",
                             "type": 3,
                             "required": false
                         }

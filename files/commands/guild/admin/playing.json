@@ -8,7 +8,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "GameText",
+                    "name": "game",
                     "description": "The name of the \"game\" for the bot status.",
                     "type": 3,
                     "required": true
@@ -21,7 +21,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "WatchingText",
+                    "name": "watching",
                     "description": "The entity being \"watched\" for the bot status.",
                     "type": 3,
                     "required": true
@@ -34,7 +34,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "ListeningText",
+                    "name": "listening",
                     "description": "The entity being \"listened to\" for the bot status.",
                     "type": 3,
                     "required": true
@@ -47,18 +47,36 @@
             "type": 1,
             "options": [
                 {
-                    "name": "StreamName",
+                    "name": "name",
                     "description": "The stream being \"watched\" for the bot status",
                     "type": 3,
                     "required": true
                 },
                 {
-                    "name": "StreamURL",
+                    "name": "url",
                     "description": "A URL for the stream being \"watched\" for the bot status",
                     "type": 3,
                     "required": true
                 }
             ]
+        },
+        {
+            "name": "dnd",
+            "description": "Sets a \"do not distrub\" status",
+            "type": 1,
+            "options": [
+                {
+                    "name": "playing",
+                    "description": "The \"playing\" text to go with the DND status.",
+                    "type": 3,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "online",
+            "description": "Reset the status to \"online\".",
+            "type": 1
         }
     ]
 }

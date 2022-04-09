@@ -13,7 +13,6 @@ import moe.kabii.util.constants.EmojiCharacters
 
 object PS2ServerStatus : Command("ps2servers") {
     override val wikiPath: String? = null
-    override val skipRegistration = true
 
     init {
         discord {

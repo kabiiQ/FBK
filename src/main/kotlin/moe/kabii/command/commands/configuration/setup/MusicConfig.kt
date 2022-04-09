@@ -23,11 +23,6 @@ object MusicConfig : CommandContainer {
                 MusicSettings::deleteOldBotMessages
             ),
             BooleanElement(
-                """Delete old user "play" commands (requires Manage Messages)""",
-                "deleteuser",
-                MusicSettings::deleteUserCommands
-            ),
-            BooleanElement(
                 "Song owner can force skip song with fskip",
                 "ownerskip",
                 MusicSettings::queuerFSkip
@@ -70,7 +65,7 @@ object MusicConfig : CommandContainer {
                 "Max tracks in queue for one user (0 = unlimited)",
                 "maxTracks",
                 MusicSettings::maxTracksUser,
-                range = 0..Long.MAX_VALUE,
+                range = 0..Short.MAX_VALUE.toLong(),
                 prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
             ),
             LongElement(

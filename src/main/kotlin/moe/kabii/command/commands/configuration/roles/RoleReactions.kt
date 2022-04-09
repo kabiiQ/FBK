@@ -3,19 +3,14 @@ package moe.kabii.command.commands.configuration.roles
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.http.client.ClientException
-import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
 import moe.kabii.command.PermissionUtil
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.command.verify
 import moe.kabii.data.mongodb.MessageInfo
 import moe.kabii.data.mongodb.guilds.ReactionRoleConfig
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.util.EmojiUtil
 import moe.kabii.util.extensions.*
@@ -24,8 +19,15 @@ object ReactionRoles {
 
     suspend fun createReactionRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
         val args = subArgs(subCommand)
-        val messageArg = args.int("MessageID")
-        val message = messageArg.snowflake.run(chan::getMessageById).tryAwait().orNull()
+
+        val messageArg = args.string("message")
+        val messageId = messageArg.toLongOrNull()?.snowflake
+        if(messageId == null) {
+            ereply(Embeds.error("Invalid Discord message ID **$messageArg**.")).awaitSingle()
+            return@with
+        }
+
+        val message = messageId.run(chan::getMessageById).tryAwait().orNull()
         if(message == null) {
             ereply(Embeds.error("I could not find a message with the ID **$messageArg** in **${chan.mention}**.")).awaitSingle()
             return@with
@@ -80,7 +82,14 @@ object ReactionRoles {
     suspend fun deleteReactionRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
         val args = subArgs(subCommand)
         val configs = config.selfRoles.reactionRoles
-        val messageId = args.int("MessageID")
+
+        val messageArg = args.string("message")
+        val messageId = messageArg.toLongOrNull()
+        if(messageId == null) {
+            ereply(Embeds.error("Invalid Discord message ID **$messageArg**.")).awaitSingle()
+            return@with
+        }
+
         // filter potential configuration matches
         val messageConfigs = configs.filter { cfg -> cfg.message.messageID == messageId }
         if(messageConfigs.isEmpty()) {

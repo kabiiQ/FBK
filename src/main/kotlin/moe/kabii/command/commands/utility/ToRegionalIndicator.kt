@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.utility
 
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction

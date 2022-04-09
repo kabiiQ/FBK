@@ -2,8 +2,8 @@ package moe.kabii.util
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.vdurmont.emoji.EmojiManager
 import discord4j.core.`object`.reaction.ReactionEmoji
-import emoji4j.EmojiUtils
 import moe.kabii.util.extensions.snowflake
 
 @JsonTypeInfo(
@@ -64,7 +64,7 @@ object EmojiUtil {
                 CustomEmoji(id, name, animated)
             }
             // input is likely a discord-supported unicode emoji
-            EmojiUtils.isEmoji(input) -> UnicodeEmoji(EmojiUtils.getEmoji(input).emoji)
+            EmojiManager.isEmoji(input) -> UnicodeEmoji(input)
             else -> null
         }
     }

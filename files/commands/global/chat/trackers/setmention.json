@@ -3,7 +3,7 @@
     "description": "Configure a role to be mentioned when a tracked channel goes live.",
     "options": [
         {
-            "name": "TrackedUsername",
+            "name": "username",
             "description": "The tracked stream/twitter feed that should send a ping",
             "type": 3,
             "required": true

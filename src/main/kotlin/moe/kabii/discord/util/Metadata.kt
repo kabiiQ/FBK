@@ -6,16 +6,16 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.util.extensions.snowflake
 import java.time.Instant
 
-class Metadata private constructor(
+class MetaData private constructor(
     val major: Int,
     val minor: Int,
     val build: Int,
     val flag: String?) {
 
     companion object {
-        val current: Metadata? = this::class.java.classLoader.getResourceAsStream("build.version")?.run {
+        val current: MetaData? = this::class.java.classLoader.getResourceAsStream("build.version")?.run {
             val (major, minor, build, flag) = bufferedReader().readLines().map { line -> line.substring(line.indexOf(' ') + 1, line.length) }
-            Metadata(
+            MetaData(
                 major = major.toInt(),
                 minor = minor.toInt(),
                 build = build.toInt(),

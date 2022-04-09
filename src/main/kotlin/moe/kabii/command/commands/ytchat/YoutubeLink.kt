@@ -1,12 +1,6 @@
 package moe.kabii.command.commands.ytchat
 
-import discord4j.core.GatewayDiscordClient
-import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.PrivateChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.EmbedCreateFields
-import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
@@ -16,11 +10,9 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.net.oauth.discord.DAPI
 import moe.kabii.net.oauth.discord.DiscordAuthorization
 import moe.kabii.net.oauth.discord.DiscordParser
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
 import moe.kabii.util.extensions.userAddress
 
 object YoutubeLink : Command("ytlink") {
@@ -29,7 +21,7 @@ object YoutubeLink : Command("ytlink") {
     init {
         discord {
             // initiate discord-yt link process
-            val oauth = DiscordAuthorization.createNew(interaction.messageId.get(), author.id, DiscordAuthorization.DiscordScopes.CONNECTIONS) { complete ->
+            val oauth = DiscordAuthorization.createNew(interaction.id, author.id, DiscordAuthorization.DiscordScopes.CONNECTIONS) { complete ->
                 try {
                     val ytConnections = DiscordParser
                         .getUserConnections(complete.accessToken!!)

@@ -5,6 +5,7 @@
         {
             "name": "question",
             "description": "The \"question\".",
+            "type": 3,
             "required": false
         }
     ]

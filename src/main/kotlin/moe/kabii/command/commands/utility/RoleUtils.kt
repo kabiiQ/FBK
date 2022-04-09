@@ -16,7 +16,6 @@ import moe.kabii.discord.util.RoleUtil
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.success
-import moe.kabii.util.extensions.tryAwait
 import reactor.kotlin.core.publisher.toFlux
 import java.time.Duration
 
@@ -42,17 +41,18 @@ object RoleUtils : CommandContainer {
                 val names = emptyRoles.joinToString("\n") { role -> "${role.name} (${role.id.asString()})" }
 
                 val confirmButtons = ActionRow.of(
-                    Button.secondary("cancel", "Cancel Delete"),
+                    Button.secondary("cancel", ReactionEmoji.unicode(EmojiCharacters.redX), "Cancel Delete"),
                     Button.danger("continue", "DELETE ROLES")
                 )
                 event.editReply()
-                    .withEmbeds(Embeds.fbk("\"The following roles have no members listed and will be deleted.\\n$names\\nDelete these roles?\""))
+                    .withEmbeds(Embeds.fbk("The following roles have no members listed and will be deleted.\n\n$names\n\nDelete these roles?"))
                     .withComponents(confirmButtons)
                     .awaitSingle()
 
                 val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(3), "cancel", "continue")
                     .switchIfEmpty { event.deleteReply() }
                     .awaitFirstOrNull() ?: return@discord
+                press.deferEdit().awaitAction()
 
                 when(press.customId) {
                     "cancel" -> event.editReply()
@@ -64,7 +64,7 @@ object RoleUtils : CommandContainer {
                             .filterWhen { role -> role.delete().success() }
                             .count().awaitSingle()
                         event.editReply()
-                            .withEmbeds(Embeds.fbk("$deleted roles were deleted."))
+                            .withEmbeds(Embeds.fbk("$deleted role(s) were deleted."))
                             .withComponentsOrNull(null)
                             .awaitSingle()
                     }

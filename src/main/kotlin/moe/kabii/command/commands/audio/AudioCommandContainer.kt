@@ -84,5 +84,11 @@ internal interface AudioCommandContainer : CommandContainer {
         consumer(data.audioFilters)
         data.apply = true
         audio.player.stopTrack()
+        val filterStr = if(data.audioFilters.filters.isEmpty()) {
+            "Filters reset: audio restored to normal playback."
+        } else {
+            "Applying filters:\n\n${data.audioFilters.asString()}"
+        }
+        origin.ireply(Embeds.fbk(filterStr)).awaitSingle()
     }
 }

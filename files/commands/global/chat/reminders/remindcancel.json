@@ -1,9 +1,9 @@
 {
-    "name": "cancel",
+    "name": "remindcancel",
     "description": "Cancel an existing reminder that is no longer needed.",
     "options": [
         {
-            "name": "ReminderID",
+            "name": "reminder",
             "description": "The ID of the reminder you would like to cancel, found where you created the reminder.",
             "type": 4,
             "min_value": 1,

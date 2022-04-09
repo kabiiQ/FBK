@@ -55,6 +55,7 @@ object Keys : ConfigSpec("") {
     object Admin : ConfigSpec() {
         val users by required<List<Long>>("admin_user")
         val channels by required<List<Long>>("admin_channels")
+        val guilds by required<List<Long>>("admin_guilds")
         val logChannel by required<Long>("log_channel")
     }
     object Twitter : ConfigSpec() {

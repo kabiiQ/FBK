@@ -7,7 +7,8 @@ data class AutoRoles(
     val joinConfigurations: MutableList<JoinConfiguration> = mutableListOf(),
     val voiceConfigurations: MutableList<VoiceConfiguration> = mutableListOf(),
     val rejoinRoles: MutableMap<Long, LongArray> = mutableMapOf(),
-    val exclusiveRoleSets: MutableList<ExclusiveRoleSet> = mutableListOf()
+    val reactionConfigurations: MutableList<ReactionRoleConfig> = mutableListOf(),
+    val exclusiveRoleSets: MutableList<ExclusiveRoleSet> = mutableListOf(),
 )
 
 data class JoinConfiguration(
@@ -25,8 +26,8 @@ data class ExclusiveRoleSet(
     val roles: MutableSet<Long> = mutableSetOf()
 )
 
+// TODO remove after migrations complete
 data class SelfRoles(
-    val enabledRoles: MutableList<Long> = mutableListOf(),
     val reactionRoles: MutableList<ReactionRoleConfig> = mutableListOf()
 )
 

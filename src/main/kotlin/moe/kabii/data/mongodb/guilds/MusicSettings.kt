@@ -4,7 +4,6 @@ data class MusicSettings(
     var startingVolume: Int = defaultStartingVolume,
     var lastChannel: Long? = null,
     var deleteOldBotMessages: Boolean = true,
-    var deleteUserCommands: Boolean = false,
     var queuerFSkip: Boolean = true,
     var restrictFilters: Boolean = false,
     var restrictSeek: Boolean = true,

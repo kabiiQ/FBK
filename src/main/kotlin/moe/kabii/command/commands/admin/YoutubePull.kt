@@ -1,7 +1,6 @@
 package moe.kabii.command.commands.admin
 
 import moe.kabii.command.Command
-import moe.kabii.command.verifyBotAdmin
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake

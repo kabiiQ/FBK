@@ -18,13 +18,10 @@ object ChannelDeletionListener : EventListener<TextChannelDeleteEvent>(TextChann
             config.save()
         }
 
-        // delete message logs (if this server has an edited messages log)
-        if(config.logChannels().any()) {
-            transaction {
-                DiscordObjects.Channel
-                    .find { DiscordObjects.Channels.channelID eq chan }
-                    .singleOrNull()?.delete()
-            }
+        transaction {
+            DiscordObjects.Channel
+                .find { DiscordObjects.Channels.channelID eq chan }
+                .singleOrNull()?.delete()
         }
     }
 }

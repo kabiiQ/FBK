@@ -5,7 +5,7 @@ import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscription
-import moe.kabii.discord.util.Metadata
+import moe.kabii.discord.util.MetaData
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker
@@ -31,7 +31,7 @@ class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: S
 
     override fun run() {
         // start callback server
-        if(!Metadata.host) return
+        if(!MetaData.host) return
         listener.server.start()
 
         currentSubscriptions = transaction {

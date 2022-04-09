@@ -5,7 +5,7 @@ import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.orNull
 
-data class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
+class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
     init {
         // ignore <> if they surround a URL - these can be used in Discord to avoid embedding a link
         url = url.removeSurrounding("<", ">")
@@ -16,13 +16,13 @@ data class ExtractedQuery private constructor(var url: String, val timestamp: Lo
         private val sampleRegex = Regex("[&?]sample=([0-9smh]*)")
         private val volumeRegex = Regex("[&?]volume=([0-9]{1,3})")
 
-        fun from(origin: DiscordParameters): ExtractedQuery? {
-            val attachment = origin.interaction.message.map { m -> m.attachments.firstOrNull() }.orNull()
-            if (attachment != null) {
-                // if attached file, try to send this through first
+        fun from(origin: DiscordParameters): ExtractedQuery {
+            val attachment = origin.interaction.commandInteraction.orNull()?.resolved?.orNull()?.attachments?.values?.firstOrNull()
+            if(attachment != null) {
                 return default(attachment.url)
             }
-            val songArg = origin.args.optStr("song") ?: return null
+
+            val songArg = origin.args.string("song")
 
             var url = songArg
             // extract timestamp

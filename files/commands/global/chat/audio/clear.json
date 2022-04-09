@@ -1,4 +1,0 @@
-{
-    "name": "clear",
-    "description": "Removes all audio tracks waiting in queue. Does not skip the current track."
-}

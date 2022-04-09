@@ -6,7 +6,6 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.mapToNotNull
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.userAddress
@@ -14,6 +13,15 @@ import moe.kabii.util.extensions.userAddress
 object Random : CommandContainer {
     @ExperimentalUnsignedTypes object Roll : Command("roll") {
         override val wikiPath = "RNG-Commands#the-roll-command"
+
+        init {
+            discord {
+                when(subCommand.name) {
+                    "between" -> rollBetween(this)
+                    "dice" -> rollDice(this)
+                }
+            }
+        }
 
         private suspend fun rollBetween(origin: DiscordParameters) = with(origin) {
             val args = subArgs(subCommand)
@@ -53,10 +61,11 @@ object Random : CommandContainer {
         init {
             discord {
                 val optionArg = args.optStr("list")
-                val result = if(optionArg == null) {
+                if(optionArg == null) {
                     // pick a recent user
-                    interaction.channel
-                        .flatMapMany { chan -> chan.getMessagesBefore(interaction.messageId.get()) }
+                    val recent = interaction.channel.awaitSingle().lastMessageId.get()
+                    val user = interaction.channel
+                        .flatMapMany { chan -> chan.getMessagesBefore(recent) }
                         .take(200)
                         .mapToNotNull { message -> message.author.orNull() }
                         .distinct { user -> user.id.hashCode() }
@@ -64,13 +73,13 @@ object Random : CommandContainer {
                         .awaitSingle()
                         .random()
                         .userAddress()
+                    ireply(Embeds.fbk("I choose: $user")).awaitSingle()
                 } else {
-                    optionArg
-                        .split(" ")
-                        .random()
+                    val options = optionArg.split(" ")
+                    ireply(
+                        Embeds.fbk("**${options.count()} Choices:** ${options.joinToString(", ")}\n\n**Result:** ${options.random()}")
+                    ).awaitSingle()
                 }
-
-                ireply(Embeds.fbk("Result: $result"))
             }
         }
     }
@@ -103,7 +112,7 @@ object Random : CommandContainer {
 
         init {
             discord {
-                val question = args.optStr("question")?.run { "${author.username} asked: $this\n\n" }
+                val question = args.optStr("question")?.run { "**${author.username} asked:** $this\n\n" } ?: ""
                 val response = magicball.random()
                 ireply(Embeds.fbk("$question$response")).awaitSingle()
             }

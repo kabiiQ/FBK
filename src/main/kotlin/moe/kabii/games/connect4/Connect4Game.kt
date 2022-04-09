@@ -1,18 +1,17 @@
 package moe.kabii.games.connect4
 
 import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
-import discord4j.core.spec.MessageCreateSpec
+import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
 import discord4j.core.spec.MessageEditSpec
+import discord4j.discordjson.possible.Possible
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
@@ -22,9 +21,6 @@ import moe.kabii.games.GameManager
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
-import moe.kabii.util.extensions.tryAwait
-import reactor.core.publisher.Mono
 
 data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake) {
     companion object {
@@ -141,9 +137,9 @@ class Connect4Game(
         // regardless of outcome, update the current game embed
         val message = interaction.message.get()
         try {
-            message
-                .edit(messageEditor())
-                .awaitSingle()
+            interaction
+                .edit(interactionEdtior())
+                .awaitAction()
         } catch(ce: ClientException) {
             LOG.info("Dropping Connect4 message: ${message.id.asString()} :: ${ce.status.code()}")
             LOG.trace(ce.stackTraceString)
@@ -159,6 +155,13 @@ class Connect4Game(
         .withEmbeds(generateGameEmbed())
         .withComponentsOrNull(
             if(currentTurn == CircleState.VICTOR) null else generateGameplayButtons()
+        )
+
+    fun interactionEdtior() = InteractionApplicationCommandCallbackSpec.create()
+        .withContent(generateGameContent())
+        .withEmbeds(generateGameEmbed())
+        .withComponents(
+            if(currentTurn == CircleState.VICTOR) Possible.absent() else Possible.of(generateGameplayButtons())
         )
 
     private fun generateGameContent(): String = when(currentTurn) {
@@ -177,7 +180,7 @@ class Connect4Game(
         .map { column ->
             // convert each column into a button
             val button = Button
-                .primary(column.toString(), ReactionEmoji.unicode("$column\u20E3"))
+                .primary(column.toString(), column.toString())
             if(gameGrid.validateDrop(column) == null) button.disabled() else button
         }
         .chunked(5)

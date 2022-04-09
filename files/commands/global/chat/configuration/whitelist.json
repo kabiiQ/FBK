@@ -4,7 +4,7 @@
     "options": [
         {
             "name": "use",
-            "description": "Enable the command whitelist and disable the blacklist. IF ENABLED, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
+            "description": "Enable the command whitelist. IF ENABLED, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
             "type": 1
         },
         {
@@ -40,7 +40,7 @@
         },
         {
             "name": "clear",
-            "description": "Remove all commands currently on the command whitelist. If the whitelist is enabled, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
+            "description": "Clear the whitelist.If the whitelist is enabled, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST",
             "type": 1
         }
     ]

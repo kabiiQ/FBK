@@ -10,14 +10,13 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.registration.CommandRegistrar
+import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.ServiceWatcherManager
-import moe.kabii.util.extensions.friendlyName
-import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.extensions.*
 
 class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) {
 
@@ -32,11 +31,6 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
         val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
 
         // discord command handler
-
-        if(config != null) {
-            // TODO guild command handler
-        }
-
         val command = manager.commandsDiscord[event.commandName]
         if(command != null) {
 
@@ -48,9 +42,17 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
             val targetId = (guild?.id ?: author.id).asLong()
             val guildName = guild?.name ?: author.username
             val context = if (isPM) "Private" else "Guild"
-            LOG.info("${context}Command:\t$guildName\t${author.userAddress()}\t:${event.commandName}\t${event.options}")
-            LOG.info("Executing command ${event.commandName} on ${Thread.currentThread().name}")
-            val chan = interaction.message.get().channel.awaitSingle()
+            val optStr = GlobalCommandRegistrar.optionsToString(event.options)
+            LOG.info("${context}Command:\t$guildName\t${author.userAddress()}\t:${event.commandName}\t$optStr :: on ${Thread.currentThread().name}")
+            if(!enabled) {
+                event.reply()
+                    .withEmbeds(Embeds.error("The /${command.name} command has been disabled by the staff of **${guild!!.name}**."))
+                    .withEphemeral(true)
+                    .awaitSingle()
+                LOG.info("Command is disabled in guild $guildName")
+                return@launch
+            }
+            val chan = interaction.channel.awaitSingle()
             val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command)
 
             try {
@@ -88,7 +90,7 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
             } catch (guildFeature: GuildFeatureDisabledException) {
 
                 val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
-                val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **${guildFeature.adminEnable}**." else ""
+                val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **/${guildFeature.adminEnable}**." else ""
                 param.ereply(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
 
             } catch (cmd: GuildCommandDisabledException) {
@@ -133,6 +135,33 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
             } catch (e: Exception) {
                 LOG.error("\nUncaught (non-discord) exception in command ${command.name} on guild $targetId: ${e.message}\nErroring command: ${event.commandName} :: ${event.options}")
                 LOG.warn(e.stackTraceString)
+            }
+            return@launch
+        }
+
+        // check for guild 'custom' commands if a command was not found (do not allow them to override global commands)
+        if(config != null) {
+
+            val customCommand = config.guildCustomCommands.commands
+                .find { c -> c.name == event.commandName }
+
+            if(customCommand != null) {
+
+                if(customCommand.restrictRole != null) {
+                    if(!event.interaction.member.get().roleIds.contains(customCommand.restrictRole!!.snowflake)) {
+                        event
+                            .reply()
+                            .withEmbeds(Embeds.error("This command is restricted to a limited role in this server."))
+                            .withEphemeral(true)
+                            .awaitAction()
+                        return@launch
+                    }
+                }
+                event
+                    .reply()
+                    .withEmbeds(Embeds.fbk(customCommand.response))
+                    .awaitAction()
+                return@launch
             }
         }
     }

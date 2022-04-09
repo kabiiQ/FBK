@@ -2,7 +2,6 @@ package moe.kabii.command.commands.audio.search
 
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.SelectMenu
-import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -10,14 +9,12 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.commands.audio.AudioStateUtil
-import moe.kabii.command.commands.audio.ParseUtil
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.ExtractedQuery
 import moe.kabii.discord.audio.FallbackHandler
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.tryAwait
 import java.time.Duration
 
 object SearchTracks : AudioCommandContainer {
@@ -34,9 +31,12 @@ object SearchTracks : AudioCommandContainer {
                     else -> AudioSource.SOUNDCLOUD
                 }
                 val query = args.string("search")
+                event.deferReply().awaitAction()
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
-                    ereply(Embeds.error("No results found searching **${source.fullName}** for **$query**.")).awaitSingle()
+                    event.editReply()
+                        .withEmbeds(Embeds.error("No results found searching **${source.fullName}** for **$query**."))
+                        .awaitSingle()
                     return@discord
                 }
 
@@ -53,7 +53,6 @@ object SearchTracks : AudioCommandContainer {
 
                     val option = SelectMenu.Option
                         .of(id.toString(), id.toString())
-                        .withDefault(index == 0)
                     options.add(option)
                 }
                 val embed = Embeds.fbk(menu.toString())
@@ -61,22 +60,26 @@ object SearchTracks : AudioCommandContainer {
                     .withTitle("Select tracks to be played")
                 val selectMenu = SelectMenu.of("menu", options).withMaxValues(options.size)
 
-                event.reply()
+                event.editReply()
                     .withEmbeds(embed)
                     .withComponents(ActionRow.of(selectMenu))
-                    .withEphemeral(true)
-                    .awaitAction()
+                    .awaitSingle()
 
                 val response = listener(SelectMenuInteractionEvent::class, true, Duration.ofMinutes(5), "menu")
-                    .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
+                    .switchIfEmpty {
+                        event.editReply()
+                            .withEmbeds(Embeds.error("No track was selected."))
+                            .withComponentsOrNull(null)
+                    }
                     .awaitFirstOrNull() ?: return@discord
+                response.deferEdit().awaitAction()
                 val selected = response.values.map(String::toInt)
                 if(selected.isNotEmpty()) {
                     val voice = AudioStateUtil.checkAndJoinVoice(this)
                     if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                        event.createFollowup()
+                        event.editReply()
                             .withEmbeds(Embeds.error(voice.error))
-                            .withEphemeral(true)
+                            .withComponentsOrNull(null)
                             .awaitSingle()
                         return@discord
                     }
@@ -84,10 +87,11 @@ object SearchTracks : AudioCommandContainer {
                 selected.forEach { selection ->
                     val track = search[selection - 1]
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true)
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true, deletePlayReply = false)
                 }
                 event.editReply()
                     .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))
+                    .withComponentsOrNull(null)
                     .awaitSingle()
             }
         }

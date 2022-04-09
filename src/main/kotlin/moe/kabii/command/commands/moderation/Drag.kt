@@ -5,14 +5,9 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.audio.AudioStateUtil
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
-import moe.kabii.data.TempStates
-import moe.kabii.data.mongodb.MessageInfo
-import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.constants.EmojiCharacters
 import reactor.core.publisher.Mono
 
 object Drag : Command("drag") {
@@ -24,9 +19,13 @@ object Drag : Command("drag") {
             val args = subArgs(subCommand)
             val toArg = args.channel("to", VoiceChannel::class).awaitSingle()
             val operation = when(subCommand.name) {
-                "all" -> dragUsers(this, null, toArg)
+                "all" -> {
+                    ireply(Embeds.fbk("Dragging all users in voice channels to ${toArg.mention}")).awaitSingle()
+                    dragUsers(this, null, toArg)
+                }
                 "between" -> {
                     val fromArg = args.channel("from", VoiceChannel::class).awaitSingle()
+                    ireply(Embeds.fbk("Dragging users from ${fromArg.mention} -> ${toArg.mention}")).awaitSingle()
                     dragUsers(this, fromArg, toArg)
                 }
                 else -> error("subcommand mismatch")
@@ -35,7 +34,7 @@ object Drag : Command("drag") {
         }
     }
 
-    private suspend fun dragUsers(origin: DiscordParameters, from: VoiceChannel?, to: VoiceChannel) =
+    private fun dragUsers(origin: DiscordParameters, from: VoiceChannel?, to: VoiceChannel) =
         origin.target.voiceStates
             .run { if(from != null) filter { state ->
                 state.channelId.get() == from.id

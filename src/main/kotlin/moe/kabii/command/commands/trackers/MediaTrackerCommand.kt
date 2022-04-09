@@ -13,7 +13,10 @@ import moe.kabii.trackers.AnimeTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.anime.MediaListDeletedException
 import moe.kabii.trackers.anime.MediaListIOException
-import moe.kabii.util.extensions.*
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 

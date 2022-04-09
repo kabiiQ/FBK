@@ -3,7 +3,7 @@
     "description": "Link a YouTube chat's members to a Discord role on this server.",
     "options": [
         {
-            "name": "YTChannel",
+            "name": "channel",
             "description": "The YouTube channel ID to link to.",
             "type": 3,
             "required": false

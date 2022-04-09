@@ -13,7 +13,6 @@ interface CommandContainer
 abstract class Command(val name: String) {
     abstract val wikiPath: String?
     open val commandExempt: Boolean = false
-    open val skipRegistration: Boolean = false
 
     var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
     private set

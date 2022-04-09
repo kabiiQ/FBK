@@ -1,4 +1,4 @@
-package moe.kabii.discord.event.user
+package moe.kabii.discord.event.guild
 
 import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Member

@@ -2,13 +2,10 @@ package moe.kabii.command.params
 
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
-import discord4j.core.`object`.command.Interaction
 import discord4j.core.`object`.entity.channel.Channel
-import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import moe.kabii.util.extensions.orNull
-import java.util.Optional
+import java.util.*
 import kotlin.reflect.KClass
 
 class ChatCommandArguments(val args: (String) -> Optional<ApplicationCommandInteractionOption>) {

@@ -9,7 +9,7 @@
             "required": true
         },
         {
-            "name": "YouTubeID",
+            "name": "youtubeid",
             "description":" The YouTube account to link this user to.",
             "type": 3,
             "required": true

@@ -1,15 +1,11 @@
 package moe.kabii.command.commands.configuration
 
-import discord4j.core.`object`.entity.Message
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
-import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.discord.util.Embeds
-import reactor.core.publisher.Mono
 
 object CommandFilters : CommandContainer {
     object Whitelist : Command("whitelist") {

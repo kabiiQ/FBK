@@ -1,0 +1,28 @@
+{
+    "name": "pixiv",
+    "description": "A very rudimentary Pixiv image embedder.",
+    "options": [
+        {
+            "name": "url",
+            "description": "The Pixiv URL to get images from.",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "start",
+            "description": "The first image in the Pixiv album to include. Defaults to 1.",
+            "type": 4,
+            "min_value": 1,
+            "max_value": 50,
+            "required": false
+        },
+        {
+            "name": "count",
+            "description": "How many images to include. Default behavior will include up to 6 images after StartImage.",
+            "type": 4,
+            "min_value": 1,
+            "max_value": 6,
+            "required": false
+        }
+    ]
+}

@@ -1,19 +1,17 @@
-package moe.kabii.command.commands.audio
+package moe.kabii.command.commands.audio.queue
 
 object ParseUtil {
     data class RangeParse(val selected: List<Int>, val invalid: List<String>)
 
-    fun parseRanges(maxSelection: Int, args: List<String>): RangeParse {
+    fun parseRanges(maxSelection: Int, args: List<String>?): RangeParse {
         // accept multiple track selection, used in remove/search commands
         // accept single tracks as normal (3), multiple tracks (3 5 9) ranges (3-6), and selectAll (all/empty range "-")
         val invalidArg = mutableListOf<String>()
         val ranges = sequence {
             // "all" / "-"
-            when(args[0].lowercase()) {
-                "all", "-" -> {
-                    yield(1..maxSelection)
-                    return@sequence
-                }
+            if(args == null || args[0].lowercase() == "all" || args[0].lowercase() == "-") {
+                yield(1..maxSelection)
+                return@sequence
             }
             args.map { arg ->
                 val parts = arg.split("-")

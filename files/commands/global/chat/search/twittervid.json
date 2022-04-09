@@ -1,0 +1,12 @@
+{
+    "name": "twittervid",
+    "description": "Gets a playable video from a Tweet.",
+    "options": [
+        {
+            "name": "url",
+            "description": "The Tweet URL to check for a video.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

@@ -2,11 +2,12 @@ package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.rusty.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.ChannelMark
 import moe.kabii.data.mongodb.guilds.MongoStreamChannel
 import moe.kabii.discord.util.Embeds
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
@@ -36,7 +37,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
         }
         val args = subArgs(subCommand)
         val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
-        val streamArg = args.string("TrackedStream")
+        val streamArg = args.string("stream")
         val siteTarget = when (val findTarget = TargetArguments.parseFor(this, streamArg, target)) {
             is Ok -> findTarget.value
             is Err -> {

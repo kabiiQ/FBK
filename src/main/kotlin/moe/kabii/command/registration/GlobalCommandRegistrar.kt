@@ -1,33 +1,26 @@
-package moe.kabii.command
+package moe.kabii.command.registration
 
-import discord4j.common.JacksonResources
+import discord4j.core.`object`.command.ApplicationCommandInteractionOption
+import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.core.`object`.command.ApplicationCommandOptionChoice
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
+import moe.kabii.LOG
 import moe.kabii.command.commands.configuration.setup.base.*
+import moe.kabii.util.extensions.orNull
+import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
 import java.io.File
 
-object CommandRegistrar {
+object GlobalCommandRegistrar : CommandRegistrar {
 
     fun getAllGlobalCommands(modules: List<ConfigurationModule<*>>): List<ApplicationCommandRequest> = importStaticCommands() + modules.map(::buildConfigCommand)
 
-    /*
-    chat, message, and user commands are generated from files of their raw Discord request form
-    these all use the same json format
-     */
     private fun importStaticCommands(): List<ApplicationCommandRequest> {
-        val commands = searchConfigFileTree(File("files/commands/global/"))
-        if(commands.isEmpty()) error("Command files not found!") // propagate exceptions to main, will exit
-
-        val mapper = JacksonResources.create().objectMapper
-        return commands.map { f -> mapper.readValue(f, ApplicationCommandRequest::class.java) }
-    }
-
-    // recursively build configuration list
-    private fun searchConfigFileTree(root: File): List<File> {
-        val (directory, config) = root.listFiles()!!.partition { f -> f.isDirectory }
-        return config.filter { f -> f.extension == "json" } + directory.flatMap(::searchConfigFileTree)
+        val commands = loadFileCommands(File("files/commands/global/"))
+        return commands.ifEmpty { error("Command files not found!") }
     }
 
     /*
@@ -42,7 +35,7 @@ object CommandRegistrar {
         val builder = module.elements.fold(base) { command, element ->
             // build argument option
             val option = ApplicationCommandOptionData.builder()
-                .name(element.propertyFieldName) // "value"
+                .name("value")
                 .description("The new value for ${element.propName}. Leave blank to check current value.")
                 .type(element.propertyType)
                 .run {
@@ -59,6 +52,19 @@ object CommandRegistrar {
                     // apply limits if this is channel type
                     if(element is ChannelElement) {
                         this.channelTypes(element.validTypes.map(ChannelElement.Types::value))
+                    } else this
+                }
+                .run {
+
+                    // apply 'choices' for enabled/disabled if this is bool type
+                    if(element is BooleanElement) {
+                        this
+                            .addChoice(
+                                ApplicationCommandOptionChoiceData.builder().name("Enabled").value(1).build()
+                            )
+                            .addChoice(
+                                ApplicationCommandOptionChoiceData.builder().name("Disabled").value(0).build()
+                            )
                     } else this
                 }
                 .required(false)
@@ -84,7 +90,7 @@ object CommandRegistrar {
             // build subcommand for this property
             // /feature <anime> option
             val subCommand = ApplicationCommandOptionData.builder()
-                .name(element.propName)
+                .name(StringUtils.abbreviate(element.propName.lowercase(), 32))
                 .description(StringUtils.abbreviate(element.fullName, 100))
                 .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
                 .addOption(option)
@@ -99,9 +105,6 @@ object CommandRegistrar {
             .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
             .build()
 
-        // add command-specific subcommands
-        val custom = module.subCommands
-
         return builder
             .addOption(embedSubCommand)
             .run {
@@ -110,4 +113,22 @@ object CommandRegistrar {
             }
             .build()
     }
+
+    fun optionToString(opt: ApplicationCommandInteractionOption?): String = if(opt != null) {
+        fun <T> option(transform: (ApplicationCommandInteractionOptionValue) -> T) = " - Option ${opt.name} = ${opt.value.orNull()?.run(transform)}"
+        try {
+            when(opt.type) {
+                ApplicationCommandOption.Type.SUB_COMMAND, ApplicationCommandOption.Type.SUB_COMMAND_GROUP -> " - SubCommand ${opt.name} ->" + opt.options.joinToString("", transform = ::optionToString)
+                ApplicationCommandOption.Type.STRING -> option(ApplicationCommandInteractionOptionValue::asString)
+                ApplicationCommandOption.Type.INTEGER -> option(ApplicationCommandInteractionOptionValue::asLong)
+                ApplicationCommandOption.Type.BOOLEAN -> option(ApplicationCommandInteractionOptionValue::asBoolean)
+                else -> " - Option ${opt.name} -> ${opt.type.name}}"
+            }
+        } catch(e: Exception) {
+            LOG.debug(e.stackTraceString)
+            "PARSE EXCEPTION"
+        }
+    } else ""
+
+    fun optionsToString(list: List<ApplicationCommandInteractionOption>) = list.joinToString("", transform = ::optionToString)
 }

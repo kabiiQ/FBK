@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.configuration.setup
 
-import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command

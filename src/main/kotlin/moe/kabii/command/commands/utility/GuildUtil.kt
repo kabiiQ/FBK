@@ -22,7 +22,8 @@ object GuildUtil : CommandContainer {
 
         init {
             discord {
-                val targetGuild = args.optInt("GuildID")?.snowflake
+                val targetGuild = args.optStr("id")
+                    ?.toLongOrNull()?.snowflake
                     ?.run(event.client::getGuildById)
                     ?.tryAwait()?.orNull()
                     ?: target

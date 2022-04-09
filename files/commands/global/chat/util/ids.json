@@ -3,7 +3,7 @@
     "description": "Get a list of role, channel, and optionally user IDs for this server.",
     "options": [
         {
-            "name": "IncludeUsers",
+            "name": "users",
             "description": "Include all user IDs in this list.",
             "type": 5,
             "required": false

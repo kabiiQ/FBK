@@ -1,12 +1,45 @@
 {
     "name": "seek",
-    "description": "Skip directly to a specific time in the current track.",
+    "description": "(Music bot) Skip around in the currently playing audio.",
     "options": [
         {
-            "name": "timestamp",
-            "description": "Timestamp to skip playback to in this track. Example, seek 2:10",
-            "type": 3,
-            "required": true
+            "name": "time",
+            "description": "Seek to a specific timestamp in this track.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "timestamp",
+                    "description": "Timestamp to skip playback to in this track. Example, /seek time 2:10",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "forward",
+            "description": "Skip forward in this track. (Fast-forward)",
+            "type": 1,
+            "options": [
+                {
+                    "name": "time",
+                    "description": "Time to skip forwards in the current track. If no time is provided, 30 seconds will be used.",
+                    "type": 3,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "backward",
+            "description": "Skip backward in this track. (Rewind)",
+            "type": 1,
+            "options": [
+                {
+                    "name": "time",
+                    "description": "Time to skip backwards in the current track. If no time is provided, 30 seconds will be used.",
+                    "type": 3,
+                    "required": false
+                }
+            ]
         }
     ]
 }

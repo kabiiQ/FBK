@@ -4,8 +4,8 @@
     "options": [
         {
             "name": "site",
-            "description": "The site name may need to be specified if it can not be inferred.",
-            "required": false,
+            "description": "The site to use as the new default tracker.",
+            "required": true,
             "type": 4,
             "choices": [
                 {

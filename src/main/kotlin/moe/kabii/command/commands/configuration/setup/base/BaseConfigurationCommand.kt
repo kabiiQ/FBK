@@ -6,21 +6,15 @@ import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.component.SelectMenu
 import discord4j.core.`object`.component.TextInput
+import discord4j.core.`object`.entity.Attachment
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.Channel
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.NewsChannel
-import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.core.`object`.entity.channel.*
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
 import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.discordjson.json.ApplicationCommandData
 import discord4j.discordjson.json.ApplicationCommandOptionData
-import discord4j.discordjson.json.ImmutableApplicationCommandData
-import discord4j.discordjson.json.ImmutableApplicationCommandOptionData
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -43,7 +37,6 @@ import kotlin.reflect.KMutableProperty1
 
 sealed class ConfigurationElement<T>(val fullName: String, val propName: String, propertyType: ApplicationCommandOption.Type) {
     val propertyType = propertyType.value
-    val propertyFieldName = if(this is BooleanElement) "enabled" else "value"
 
     companion object {
         fun elementStringInputtable(element: ConfigurationElement<*>) = element is StringElement<*> || element is CustomElement<*, *>
@@ -55,7 +48,7 @@ class BooleanElement<T>(
     fullName: String,
     propName: String,
     val prop: KMutableProperty1<T, Boolean>
-) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.BOOLEAN)
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.INTEGER)
 
 // longelement: input as integer, stored as long. not presented in embed.
 class LongElement<T>(
@@ -81,7 +74,7 @@ class ChannelElement<T>(
     propName: String,
     val prop: KMutableProperty1<T, Long?>, // stored as channel id/snowflake -> long
     val validTypes: List<Types>
-) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING) {
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.CHANNEL) {
     enum class Types(val value: Int) {
         GUILD_TEXT(0),
         GUILD_VOICE(2),
@@ -105,7 +98,7 @@ class AttachmentElement<T>(
     fullName: String,
     propName: String,
     val prop: KMutableProperty1<T, String?>, // stored as path to image
-    val validator: suspend (DiscordParameters, Message) -> Result<String, String>
+    val validator: suspend (DiscordParameters, Attachment?) -> Result<String, String>
 ) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.ATTACHMENT)
 
 // customelement: elements that are input as a string, validated and stored as <PT>
@@ -140,7 +133,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         val command = origin.subCommand
         return when(command.name) {
-            "setup" -> embed(command, origin)
+            "setup" -> embed(origin)
             else -> property(command, origin)
         }
     }
@@ -195,7 +188,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .withFields(configFields)
     }
 
-    suspend fun embed(command: ApplicationCommandInteractionOption, origin: DiscordParameters): Boolean {
+    suspend fun embed(origin: DiscordParameters): Boolean {
         // /command setup -> full menu embed
 
         // generate components for initial embed response
@@ -262,7 +255,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                             .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **$raw**."))
                                             .withEphemeral(true)
                                             .then()
-                                        val edit = origin.event.editReply()
+                                        val edit = submission.edit()
                                             .withEmbeds(currentConfig())
                                         Mono.`when`(notice, edit)
                                     }
@@ -277,7 +270,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                                     .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
                                                     .withEphemeral(true)
                                                     .then()
-                                                val edit = origin.event.editReply()
+                                                val edit = submission.edit()
                                                     .withEmbeds(currentConfig())
                                                 Mono.`when`(notice, edit)
                                             }
@@ -353,8 +346,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             return true
         }
 
-        val newValueArg = subCommand.getOption("value").orNull() ?: subCommand.getOption("enabled").orNull()
-        if(newValueArg == null) {
+        if(subCommand.getOption("value").isEmpty) {
             // display current value of property
             origin.ireply(
                 Embeds.fbk()
@@ -365,24 +357,24 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         }
 
         // set property. value arg will exist here
-        val newValue: Any? = when(element) {
+        val newValue = when(element) {
             is BooleanElement -> args
-                .bool("enabled")
-                .run { element.prop.set(instance, this) }
+                .int("value")
+                .apply { element.prop.set(instance, this == 1L) }
             is LongElement -> args
                 .int("value")
-                .run { element.prop.set(instance, this) }
+                .apply { element.prop.set(instance, this) }
             is StringElement -> args
                 .string("value")
-                .run { element.prop.set(instance, this) }
+                .apply { element.prop.set(instance, this) }
             is ChannelElement -> args
                 .baseChannel("value").awaitSingle().id.asLong()
-                .run { element.prop.set(instance, this) }
+                .apply { element.prop.set(instance, this) }
             is AttachmentElement -> {
                 // get attachment, validate
-                val message = origin.interaction.message.get()
-                when(val validation = element.validator(origin, message)) {
-                    is Ok -> validation.value.run { element.prop.set(instance, this) }
+                val attachment = origin.interaction.commandInteraction.orNull()?.resolved?.orNull()?.attachments?.values?.firstOrNull()
+                when(val validation = element.validator(origin, attachment)) {
+                    is Ok -> validation.value.apply { element.prop.set(instance, this) }
                     is Err -> {
                         origin.ereply(Embeds.error(validation.value)).awaitSingle()
                         null
@@ -392,7 +384,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             is CustomElement<T, *> -> {
                 val input = args.string("value")
                 when(val validation = element.parser(origin, input)) {
-                    is Ok -> validation.value.run { element.prop.set(instance, this) }
+                    is Ok -> validation.value.apply { element.prop.set(instance, this) }
                     is Err -> {
                         origin.ereply(Embeds.error(validation.value)).awaitSingle()
                         null
@@ -401,14 +393,15 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             }
             is ViewElement<*, *> -> {
                 origin.ereply(Embeds.error(element.redirection)).awaitSingle()
+                null
             }
         }
         return if(newValue != null) {
             val newState = when(element) {
-                is BooleanElement -> if (newValue.toString() == "true") "**enabled**" else "**disabled**"
+                is BooleanElement -> if (newValue == 1L) "**enabled**" else "**disabled**"
                 else -> "set to **${newValue.toString().ifBlank { "empty" }}"
             }
-            origin.ireply(Embeds.fbk("The option **${element.propName} has been $newState")
+            origin.ireply(Embeds.fbk("The option **${element.propName}** has been $newState")
                 .withTitle("Configuration Updated"))
                 .awaitSingle()
             true

@@ -75,7 +75,7 @@ object LogWatcher {
                         .flatMap { chan ->
                             chan.createMessage()
                                 .withEmbeds(
-                                    Embeds.error("I am missing permissions to view the Audit Log! Enhanced logging has been disabled. After you grant this permission in Discord, enhanced logging can be re-enabled by using **guildcfg audit enable**"
+                                    Embeds.error("I am missing permissions to view the Audit Log! Enhanced logging has been disabled. After you grant this permission in Discord, enhanced logging can be re-enabled by using **/servercfg audit true**"
                                 ))
                         }.awaitSingle()
                     return

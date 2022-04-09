@@ -1,18 +1,13 @@
 package moe.kabii.internal.ytchat
 
-import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.hasPermissions
 import moe.kabii.command.verify
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccount
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
-import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.extensions.propagateTransaction
-import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.userAddress
 
 object ManualYoutubeLink : Command("manualytlink") {
@@ -24,7 +19,7 @@ object ManualYoutubeLink : Command("manualytlink") {
             member.verify(Permission.MANAGE_ROLES)
 
             val userArg = args.user("user").awaitSingle()
-            val ytArg = args.string("YouTubeID")
+            val ytArg = args.string("youtubeid")
 
             propagateTransaction {
                 val dbUser = DiscordObjects.User.getOrInsert(userArg.id.asLong())

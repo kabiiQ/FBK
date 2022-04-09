@@ -1,12 +1,20 @@
 package moe.kabii.discord.pagination
 
+import discord4j.core.`object`.component.ActionRow
+import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.mod
+import java.time.Duration
 
 /**
  * @param pageCount - the actual number of pages
@@ -32,30 +40,45 @@ object PaginationUtil {
 
     suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: (EmbedCreateSpec.() -> EmbedCreateSpec)? = null) {
         val pages = partition(MagicNumbers.Embed.NORM_DESC, elements)
-        var page: Page? = Page(pages.size, 0)
-        var first = true
 
-        fun pageContent(): EmbedCreateSpec {
-            val thisPage = page!!
-            return Embeds.fbk("$descHeader\n\n${pages[thisPage.current]}")
+        fun pageContent(page: Page): EmbedCreateSpec {
+            return Embeds.fbk("$descHeader\n\n${pages[page.current]}")
                 .run { if(embedTitle != null) withTitle(embedTitle) else this }
-                .withFooter(EmbedCreateFields.Footer.of("Page ${thisPage.current + 1}/${thisPage.pageCount}", null))
+                .withFooter(EmbedCreateFields.Footer.of("Page ${page.current + 1}/${page.pageCount}", null))
                 .run { if(detail != null) detail(this) else this }
         }
 
-        origin.send(pageContent()).awaitSingle()
-        // TODO button pagination
+        val buttons = ActionRow.of(
+            Button.primary("prev", "<-"),
+            Button.primary("next", "->")
+        )
 
-        if(page!!.pageCount > 1) {
-            while(page != null) {
-                if(!first) {
-                    message.edit()
-                        .withEmbeds(pageContent())
-                        .awaitSingle()
-                }
-                page = origin.getPage(page, message, add = first)
-                first = false
+        var currPage = Page(pages.size, 0)
+        if(currPage.pageCount == 1) {
+            origin.ireply(pageContent(currPage)).awaitSingle()
+            return
+        }
+        origin.event
+            .reply()
+            .withEmbeds(pageContent(currPage))
+            .withComponents(buttons)
+            .awaitAction()
+
+        while(true) {
+
+            val press = origin.listener(ButtonInteractionEvent::class, false, Duration.ofMinutes(30), "prev", "next")
+                .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null) }
+                .take(1).awaitFirstOrNull() ?: return
+
+            currPage = when(press.customId) {
+                "prev" -> currPage.dec()
+                "next" -> currPage.inc()
+                else -> error("component mismatch")
             }
+
+            press.edit()
+                .withEmbeds(pageContent(currPage))
+                .awaitAction()
         }
     }
 }

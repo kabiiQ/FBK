@@ -5,7 +5,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.BooleanElement
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
-import moe.kabii.command.commands.configuration.setup.base.LongElement
+import moe.kabii.command.registration.GuildCommandRegistrar
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.util.constants.EmojiCharacters
@@ -33,8 +33,15 @@ object GuildFeatures : Command("servercfg") {
                 GuildFeatureModule,
                 config.guildSettings
             )
+
+            val wasPS2Guild = config.guildSettings.ps2Commands
+
             if(configurator.run(this)) {
                 config.save()
+            }
+
+            if(wasPS2Guild != config.guildSettings.ps2Commands) {
+                GuildCommandRegistrar.updateGuildCommands(target)
             }
         }
     }

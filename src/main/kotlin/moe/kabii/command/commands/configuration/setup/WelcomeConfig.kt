@@ -2,11 +2,10 @@ package moe.kabii.command.commands.configuration.setup
 
 import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.core.`object`.entity.Attachment
 import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.MessageCreateFields
-import discord4j.core.spec.MessageCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionData
-import discord4j.discordjson.json.ImmutableApplicationCommandData
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -22,10 +21,8 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
-import java.awt.Color
 import java.io.File
 import java.net.URL
 import javax.imageio.ImageIO
@@ -191,9 +188,8 @@ object WelcomeConfig : Command("welcome") {
     }
 
     private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
-    private suspend fun verifySaveImage(origin: DiscordParameters, message: Message): Result<String, String> {
+    private suspend fun verifySaveImage(origin: DiscordParameters, attachment: Attachment?): Result<String, String> {
         // given user message, check for attachment -> url
-        val attachment = message.attachments.firstOrNull()
         if(attachment == null || supportFormat.none { attachment.filename.endsWith(it, ignoreCase = true) }) {
             return Err("No supported image attachment found. Please re-run your command with an attached .png, .jpg, .psd file. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped.")
         }

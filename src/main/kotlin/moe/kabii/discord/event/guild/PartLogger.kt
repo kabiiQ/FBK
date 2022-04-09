@@ -15,7 +15,6 @@ import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.event.user.UserEventFormatter
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.long
 import moe.kabii.util.extensions.orNull

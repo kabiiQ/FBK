@@ -5,12 +5,10 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.ExclusiveRoleSet
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import reactor.kotlin.core.publisher.toMono
@@ -35,7 +33,7 @@ object ExclusiveRoleSets : Command("roleset") {
 
     private suspend fun createExclusiveSet(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val newSetName = args.string("SetName")
+        val newSetName = args.string("name")
         val sets = config.autoRoles.exclusiveRoleSets
         if(sets.find { existing -> existing.name.equals(newSetName, ignoreCase = true) } != null) {
             ereply(Embeds.error("An exclusive role set named **$newSetName** already exists.")).awaitSingle()
@@ -48,7 +46,7 @@ object ExclusiveRoleSets : Command("roleset") {
 
     private suspend fun deleteExclusiveSet(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val setName = args.string("SetName")
+        val setName = args.string("name")
         val sets = config.autoRoles.exclusiveRoleSets
         val targetSet = sets.removeIf { existing -> existing.name.equals(setName, ignoreCase = true) }
         if(!targetSet) {
@@ -61,7 +59,7 @@ object ExclusiveRoleSets : Command("roleset") {
 
     private suspend fun addToExclusiveSet(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val setName = args.string("SetName")
+        val setName = args.string("name")
         val sets = config.autoRoles.exclusiveRoleSets
         val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
         if(targetSet == null) {
@@ -82,7 +80,7 @@ object ExclusiveRoleSets : Command("roleset") {
 
     private suspend fun removeFromExclusiveSet(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val setName = args.string("SetName")
+        val setName = args.string("name")
         val sets = config.autoRoles.exclusiveRoleSets
         val targetSet = sets.find { existing -> existing.name.equals(setName, ignoreCase = true) }
         if(targetSet == null) {

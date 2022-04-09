@@ -13,7 +13,6 @@ import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
@@ -34,7 +33,7 @@ object SetMentionRole : Command("setmention") {
             // verify stream is tracked, but override any existing mention role
             // mentionrole (site) <stream name> <role>
             member.verify(Permission.MANAGE_CHANNELS)
-            val streamArg = args.string("TrackedUsername")
+            val streamArg = args.string("username")
             val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
             val siteTarget = when(val findTarget = TargetArguments.parseFor(this, streamArg, target)) {
                 is Ok -> findTarget.value

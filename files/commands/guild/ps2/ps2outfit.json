@@ -8,7 +8,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "OutfitTag",
+                    "name": "tag",
                     "description": "The outfit tag to search.",
                     "type": 3,
                     "required": true
@@ -21,7 +21,7 @@
             "type": 1,
             "options": [
                 {
-                    "name": "OutfitName",
+                    "name": "name",
                     "description": "The outfit name to search.",
                     "type": 3,
                     "required": true

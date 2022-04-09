@@ -3,9 +3,9 @@
     "description": "Gets the timestamp from a Discord ID.",
     "options": [
         {
-            "name": "DiscordID",
+            "name": "id",
             "description": "The Discord ID/Snowflake to extract a timestamp from.",
-            "type": 4,
+            "type": 3,
             "required": true
         }
     ]

@@ -1,11 +1,6 @@
 package moe.kabii.command.commands.configuration.setup.base
 
-import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result

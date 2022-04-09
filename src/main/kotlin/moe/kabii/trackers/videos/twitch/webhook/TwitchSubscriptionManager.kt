@@ -6,7 +6,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
-import moe.kabii.discord.util.Metadata
+import moe.kabii.discord.util.MetaData
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
@@ -32,7 +32,7 @@ class TwitchSubscriptionManager(discord: GatewayDiscordClient, checker: TwitchCh
 
     override fun run() {
         // start callback server
-        if(!Metadata.host) return
+        if(!MetaData.host) return
         listener.server.start()
 
         currentSubscriptions = transaction {

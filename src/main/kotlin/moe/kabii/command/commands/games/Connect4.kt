@@ -2,28 +2,17 @@ package moe.kabii.command.commands.games
 
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
-import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
-import moe.kabii.games.DiscordGame
 import moe.kabii.games.GameManager
 import moe.kabii.games.connect4.Connect4Game
 import moe.kabii.games.connect4.EmbedInfo
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.success
-import moe.kabii.util.extensions.tryAwait
-import moe.kabii.util.extensions.userAddress
-import reactor.core.publisher.Mono
-import reactor.core.publisher.SynchronousSink
-import reactor.kotlin.core.publisher.toFlux
 import java.time.Duration
 
 object Connect4 : Command("connect4") {
@@ -31,7 +20,6 @@ object Connect4 : Command("connect4") {
 
     init {
         discord {
-            val args = subArgs(subCommand)
             val p2Target = args.user("user").awaitSingle()
 
             val confirmButtons = ActionRow.of(
@@ -39,8 +27,8 @@ object Connect4 : Command("connect4") {
                 Button.success("accept", ReactionEmoji.unicode(EmojiCharacters.checkBox), "Start Game")
             )
             // issue the challenge
-            val prompt = event
-                .reply("${p2Target.mention}, you have been challenged to a game of Connect 4 by **${author.mention}. Do you accept?")
+            event
+                .reply("${p2Target.mention}, you have been challenged to a game of Connect 4 by ${author.mention}. Do you accept?")
                 .withComponents(confirmButtons)
                 .awaitAction()
 

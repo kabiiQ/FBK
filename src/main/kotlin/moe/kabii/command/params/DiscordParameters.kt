@@ -1,19 +1,21 @@
 package moe.kabii.command.params
 
+import discord4j.common.util.Snowflake
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.Interaction
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageCreateMono
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -21,13 +23,13 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryBlock
-import moe.kabii.util.extensions.withUser
+import moe.kabii.util.extensions.userAddress
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
+import java.util.Optional
 import java.util.concurrent.TimeoutException
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -75,7 +77,7 @@ data class DiscordParameters (
     fun guildFeatureVerify(feature: KProperty1<GuildSettings, Boolean>, featureName: String? = null) {
         if(guild != null) {
             val name = featureName ?: feature.name
-            if(!feature.get(config.guildSettings)) throw GuildFeatureDisabledException(name, "guildcfg $name enable")
+            if(!feature.get(config.guildSettings)) throw GuildFeatureDisabledException(name, "servercfg $name enable")
         } // else this is pm, allow
     }
 
@@ -107,15 +109,29 @@ data class DiscordParameters (
 
     // listen for response to components on reply
     fun <T : ComponentInteractionEvent> listener(type: KClass<T>, restrict: Boolean = true, timeout: Duration? = null, vararg componentId: String): Flux<T> =
-        Mono.justOrEmpty(event.interaction.messageId)
+        event.reply
+            .map(Message::getId)
             .flatMapMany { messageId ->
                 event.client
                     .on(type.java)
                     .filter { interact -> componentId.contains(interact.customId) }
                     .filter { interact -> interact.messageId == messageId }
-                    .run { if(restrict) filter { interact ->
-                        interact.interaction.user.id == event.interaction.user.id
-                    } else this  }
+                    .filter { interact ->
+                        if(restrict) {
+                            if(interact.interaction.user.id == event.interaction.user.id) true
+                            else {
+                                // TODO nested subscribe - problematic, but I want this working for now
+                                interact.reply()
+                                    .withEmbeds(Embeds.error("Only **${event.interaction.user.userAddress()}** may respond to this prompt."))
+                                    .withEphemeral(true)
+                                    .subscribe()
+                                false
+                            }
+                        } else true
+                    }
+//                    .run { if(restrict) filter { interact ->
+//                        interact.interaction.user.id == event.interaction.user.id
+//                    } else this  }
                     .run { if(timeout != null) timeout(timeout) else this }
                     .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
             }

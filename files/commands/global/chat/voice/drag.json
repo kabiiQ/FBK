@@ -1,6 +1,6 @@
 {
     "name": "drag",
-    "description": "Mass-drag users between voice channels. Specify either a 'from' voice channel or set 'all' to true.",
+    "description": "Mass-drag users between voice channels.",
     "options": [
         {
             "name": "all",
@@ -22,15 +22,15 @@
             "type": 1,
             "options": [
                 {
-                    "name": "to",
-                    "description": "Voice channel to drag users into.",
+                    "name": "from",
+                    "description": "Voice channel to drag users FROM.",
                     "type": 7,
                     "channel_types": [2, 13],
                     "required": true
                 },
                 {
-                    "name": "from",
-                    "description": "Voice channel to drag users FROM.",
+                    "name": "to",
+                    "description": "Voice channel to drag users into.",
                     "type": 7,
                     "channel_types": [2, 13],
                     "required": true

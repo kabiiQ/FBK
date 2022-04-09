@@ -6,7 +6,6 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.DateValidation
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
 import moe.kabii.discord.util.SnowflakeParser
 import moe.kabii.net.NettyFileServer
 import moe.kabii.util.extensions.awaitAction
@@ -46,7 +45,7 @@ object SnowflakeUtil : CommandContainer {
                             .append('\n')
                     }
 
-                if(args.optBool("IncludeUsers") == true) {
+                if(args.optBool("users") == true) {
 
                     output.append("\n\nUsers: \n")
                     target.members
@@ -80,8 +79,13 @@ object SnowflakeUtil : CommandContainer {
         init {
             discord {
                 // get the timestamp for a snowflake
-                val idArg = args.int("DiscordID")
-                val snowflake = SnowflakeParser.of(idArg)
+                val idArg = args.string("id")
+                val discordId = idArg.toLongOrNull()
+                if(discordId == null) {
+                    ereply(Embeds.error("**$idArg** is not a valid Discord ID.")).awaitSingle()
+                    return@discord
+                }
+                val snowflake = SnowflakeParser.of(discordId)
                 val validation = when(snowflake.valiDate) {
                     DateValidation.NEW -> "\nThis snowflake is not valid: it represents a future date."
                     DateValidation.OLD -> "\nThis snowflake is not valid! It represents a date before the Discord epoch (2015)."

@@ -8,7 +8,7 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.util.Metadata
+import moe.kabii.discord.util.MetaData
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.twitter.json.TwitterSingleTweetData
 import moe.kabii.util.extensions.applicationLoop
@@ -27,7 +27,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
     private val tweetAdapter = MOSHI.adapter(TwitterSingleTweetData::class.java)
 
     override fun run() {
-        if(!Metadata.host) return
+        if(!MetaData.host) return
 
         var networkError = 250L
         var httpError = 5_000L

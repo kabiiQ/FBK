@@ -20,11 +20,10 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.constants.EmojiCharacters
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
-import reactor.core.publisher.Mono
 import java.time.Duration
-import java.util.concurrent.TimeoutException
 
 object Urban : Command("ud") {
     val udAdapter: JsonAdapter<Response> = MOSHI.adapter(Response::class.java)
@@ -35,7 +34,7 @@ object Urban : Command("ud") {
         discord {
             channelFeatureVerify(FeatureChannel::searchCommands, "search")
             val lookupArg = args.string("term")
-            ireply(Embeds.fbk("Searching for **$lookupArg**..."))
+            ireply(Embeds.fbk("Searching for **$lookupArg**...")).awaitSingle()
             val request = newRequestBuilder()
                 .get()
                 .url("https://api.urbandictionary.com/v0/define?term=$lookupArg")
@@ -63,11 +62,10 @@ object Urban : Command("ud") {
 
             // build pagination components
             val buttons = ActionRow.of(
-                Button.primary("prev", ReactionEmoji.unicode(EmojiCharacters.left)),
-                Button.primary("next", ReactionEmoji.unicode(EmojiCharacters.play))
+                Button.primary("prev", "<- Previous"),
+                Button.primary("next", "Next Definition ->")
             )
 
-            val messageId = interaction.messageId.get()
             var first = true
             var page = Page(define.list.size, 0)
             while(true) {
@@ -97,6 +95,7 @@ object Urban : Command("ud") {
                 val press = listener(ButtonInteractionEvent::class, false, Duration.ofMinutes(10), "prev", "next")
                     .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
                     .take(1).awaitFirstOrNull() ?: return@discord
+                press.deferEdit().awaitAction()
 
                 page = when(press.customId) {
                     "prev" -> page.dec()

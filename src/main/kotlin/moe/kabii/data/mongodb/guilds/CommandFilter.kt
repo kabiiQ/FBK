@@ -28,9 +28,9 @@ data class CommandFilter(
             // some commands can not be disabled in order to avoid being locked out of the bot
             command.commandExempt -> true
             // normal behavior, some commands might be disabled
-            blacklisted -> command.aliases.find { alias -> blacklist.contains(alias) } == null
+            blacklisted -> !blacklist.contains(command.name)
             // optional behavior, some commands might be enabled
-            whitelisted -> command.aliases.find { alias -> whitelist.contains(alias) } != null
+            whitelisted -> whitelist.contains(command.name)
             else -> error("Illegal blacklist/whitelist flag configuration")
         }
     }

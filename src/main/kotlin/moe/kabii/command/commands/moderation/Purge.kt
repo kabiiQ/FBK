@@ -10,6 +10,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.filterNot
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import reactor.core.publisher.Flux
 
@@ -42,10 +43,15 @@ object Purge : CommandContainer {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
                 // /purge <count>
+                val last = interaction.channel.awaitSingle().lastMessageId.orNull()
+                if(last == null) {
+                    ereply(Embeds.error("No messages to purge!")).awaitSingle()
+                    return@discord
+                }
                 channelVerify(Permission.MANAGE_MESSAGES)
                 val messageCount = args.int("count")
                 val delete = chan
-                    .getMessagesBefore(interaction.messageId.get())
+                    .getMessagesBefore(last)
                     .take(messageCount)
                 purgeAndNotify(this, delete)
             }
@@ -59,12 +65,12 @@ object Purge : CommandContainer {
             botReqs(Permission.MANAGE_MESSAGES)
             discord {
                 channelVerify(Permission.MANAGE_MESSAGES)
-                val startMessage = args.int("start")
-                if(startMessage < SMALL_MESSAGEID) {
+                val startMessage = args.string("start").toLongOrNull()
+                if(startMessage == null || startMessage < SMALL_MESSAGEID) {
                     ereply(Embeds.error("Invalid beginning message ID **$startMessage**.")).awaitSingle()
                     return@discord
                 }
-                val endMessage = args.optInt("end")
+                val endMessage = args.optStr("end")?.toLongOrNull()
                 if(endMessage != null && (endMessage < SMALL_MESSAGEID || endMessage < startMessage)) {
                     ereply(Embeds.error("Invalid ending message ID **$endMessage**")).awaitSingle()
                     return@discord

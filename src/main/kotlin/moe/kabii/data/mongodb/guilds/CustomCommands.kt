@@ -3,17 +3,30 @@ package moe.kabii.data.mongodb.guilds
 data class CustomCommands(
     val commands: MutableList<CustomCommand> = mutableListOf()) {
 
-    fun removeByName(command: String) = commands.removeIf { it.command == command }
+    fun removeByName(commandName: String) = commands.removeIf { c -> c.name == commandName }
 
     fun insertIsUpdated(command: CustomCommand): Boolean {
-        val replacing = commands.removeIf { it.command == command.command }
+        val replacing = commands.removeIf(command::equals)
         commands.add(command)
         return replacing
     }
 }
 
-data class CustomCommand(
-        val command: String,
+class CustomCommand(
+        val name: String,
+        val description: String,
         var response: String,
         var restrictRole: Long?
-    )
+) {
+    override fun equals(other: Any?): Boolean {
+        if(this === other) return true
+        if(javaClass != other?.javaClass) return false
+        other as CustomCommand
+        if(name != other.name) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+}

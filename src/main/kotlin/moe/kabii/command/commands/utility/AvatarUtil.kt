@@ -2,14 +2,13 @@ package moe.kabii.command.commands.utility
 
 import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
 import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.Search
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
@@ -41,10 +40,9 @@ object AvatarUtil : CommandContainer {
                         }
                     }
                 }.toList()
-                chan.createMessage(
-                    MessageCreateSpec.create()
-                        .withEmbeds(avatars)
-                ).awaitSingle()
+                event.reply()
+                    .withEmbeds(avatars)
+                    .awaitAction()
             }
         }
     }
@@ -63,7 +61,7 @@ object AvatarUtil : CommandContainer {
                     )
                 } else {
                     ireply(Embeds.error("Icon not available for **${target.name}**."))
-                }.tryAwait()
+                }.awaitSingle()
             }
         }
     }

@@ -32,7 +32,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             // linkyoutubemembers (yt id else: get)
             member.verify(Permission.MANAGE_GUILD)
 
-            val linkArg = args.optStr("YTChannel")
+            val linkArg = args.optStr("channel")
             if(linkArg == null) {
                 // get any active config
                 val linkedChannel = transaction {
