@@ -1,8 +1,6 @@
 package moe.kabii.command.registration
 
-import discord4j.common.util.Snowflake
 import discord4j.core.DiscordClient
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.discordjson.json.ApplicationCommandRequest
 import kotlinx.coroutines.reactor.awaitSingle

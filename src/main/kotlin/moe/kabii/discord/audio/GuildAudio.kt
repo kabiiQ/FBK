@@ -15,7 +15,6 @@ import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
-import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.rusty.Err
@@ -23,7 +22,6 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.extensions.tryAwait
-import kotlin.reflect.KProperty1
 
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(

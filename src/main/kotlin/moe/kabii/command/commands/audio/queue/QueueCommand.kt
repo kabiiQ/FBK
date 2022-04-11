@@ -2,7 +2,6 @@ package moe.kabii.command.commands.audio.queue
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.params.DiscordParameters
 
 object QueueCommand : Command("queue") {

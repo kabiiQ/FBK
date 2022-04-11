@@ -3,7 +3,6 @@ package moe.kabii.command.registration
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.`object`.command.ApplicationCommandOption
-import discord4j.core.`object`.command.ApplicationCommandOptionChoice
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest

@@ -5,7 +5,6 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.TrackPlay
@@ -14,10 +13,8 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.URLUtil
-import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
-import moe.kabii.util.extensions.tryBlock
 import java.net.URL
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery) : AudioLoadResultHandler {

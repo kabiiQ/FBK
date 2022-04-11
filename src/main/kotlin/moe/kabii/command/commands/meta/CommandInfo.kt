@@ -24,7 +24,7 @@ object CommandInfo : Command("help") {
     private suspend fun commandHelp(origin: DiscordParameters) = with(origin) {
         // try to match command
         val searchName = subArgs(subCommand).string("command")
-        val match = handler.searchCommandByAlias(searchName, bypassExempt = true)
+        val match = handler.searchCommandByName(searchName, bypassExempt = true)
         if(match == null) {
             ereply(Embeds.error("Can't find the command named **$searchName**. Fubuki's general command information is available on [GitHub](https://github.com/kabiiQ/FBK/wiki).")).awaitSingle()
             return@with

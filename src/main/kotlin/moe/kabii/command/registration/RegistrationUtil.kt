@@ -1,11 +1,7 @@
 package moe.kabii.command.registration
 
 import discord4j.common.JacksonResources
-import discord4j.core.`object`.command.ApplicationCommandInteractionOption
-import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.discordjson.json.ApplicationCommandRequest
-import moe.kabii.LOG
-import moe.kabii.util.extensions.orNull
 import java.io.File
 
 interface CommandRegistrar {

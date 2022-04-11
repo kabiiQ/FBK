@@ -5,7 +5,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -19,7 +18,6 @@ import moe.kabii.discord.pagination.Page
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.newRequestBuilder
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils

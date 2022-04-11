@@ -17,7 +17,7 @@ object CommandFilters : CommandContainer {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)
-                val match by lazy { handler.searchCommandByAlias(args.string("command")) }
+                val match by lazy { handler.searchCommandByName(args.string("command")) }
                 when(subCommand.name) {
                     "use" -> {
                         if(!filter.whitelisted) {
@@ -79,7 +79,7 @@ object CommandFilters : CommandContainer {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)
-                val match by lazy { handler.searchCommandByAlias(args.string("command")) }
+                val match by lazy { handler.searchCommandByName(args.string("command")) }
                 when(subCommand.name) {
                     "use" -> {
                         if(!filter.blacklisted) {

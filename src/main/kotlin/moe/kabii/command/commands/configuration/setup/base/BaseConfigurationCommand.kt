@@ -7,7 +7,6 @@ import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.component.SelectMenu
 import discord4j.core.`object`.component.TextInput
 import discord4j.core.`object`.entity.Attachment
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.*
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
@@ -26,6 +25,7 @@ import moe.kabii.rusty.Result
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.awaitAction
+import moe.kabii.util.extensions.orAbsent
 import moe.kabii.util.extensions.orNull
 import org.apache.commons.lang3.StringUtils
 import reactor.core.publisher.Flux
@@ -39,7 +39,7 @@ sealed class ConfigurationElement<T>(val fullName: String, val propName: String,
     val propertyType = propertyType.value
 
     companion object {
-        fun elementStringInputtable(element: ConfigurationElement<*>) = element is StringElement<*> || element is CustomElement<*, *>
+        fun elementStringInputtable(element: ConfigurationElement<*>) = element is StringElement<*> || element is LongElement<*> || element is CustomElement<*, *>
     }
 }
 
@@ -153,28 +153,30 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
     private fun getName(element: ConfigurationElement<*>) = "${element.fullName} **(${element.propName})**"
 
+    private fun getBoolElements() = module.elements.filterIsInstance<BooleanElement<T>>()
+
     private fun currentConfig(): EmbedCreateSpec {
 
         // generate embed containing current states of properties
         val configFields = mutableListOf<EmbedCreateFields.Field>()
 
-        val boolElements = module.elements.filterIsInstance<BooleanElement<T>>()
+        val boolElements = getBoolElements()
         // get enabled bools
         val enabledElements = boolElements
             .filter { e -> e.prop.get(instance) }
-            .joinToString("\n", transform = ::getName)
+            .joinToString("\n") { e -> "・ ${getName(e)}" }
             .ifEmpty { "No ${module.name} features are enabled." }
         configFields.add(EmbedCreateFields.Field.of("Enabled Features", enabledElements, true))
 
         val availableElements = boolElements
             .filter { e -> !e.prop.get(instance) }
-            .joinToString("\n", transform = ::getName)
+            .joinToString("\n") { e -> "・ ${getName(e)}"}
             .ifEmpty { "All ${module.name} features are enabled." }
         configFields.add(EmbedCreateFields.Field.of("Available (Disabled) Features", availableElements, true))
 
         val customElements =
-            (module.elements.toList() - boolElements)
-                .map { e -> "${getName(e)}:\n${EmojiCharacters.spacer}**=** ${getValue(e)}" }
+            (module.elements.toList() - boolElements.toSet())
+                .map { e -> "・ ${getName(e)}:\n${EmojiCharacters.spacer}**=** ${getValue(e)}" }
         if(customElements.isNotEmpty()) {
             configFields.add(EmbedCreateFields.Field.of(
                 "Custom Settings:",
@@ -188,12 +190,10 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .withFields(configFields)
     }
 
-    suspend fun embed(origin: DiscordParameters): Boolean {
-        // /command setup -> full menu embed
-
-        // generate components for initial embed response
-        // compile boolean elements into select menu
-        val boolElements = module.elements.filterIsInstance<BooleanElement<T>>()
+    private fun configComponents() = sequence {
+        // components should be generated each time: selectmenu will be updated with correct enabled options
+        // generate selectmenu for boolean
+        val boolElements = getBoolElements()
         val options = boolElements
             .map { bool ->
                 SelectMenu.Option
@@ -202,9 +202,32 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     .withDefault(bool.prop.get(instance))
             }
 
+        val menu = if(options.isNotEmpty()) {
+            SelectMenu
+                .of("toggleable", options)
+                .withMaxValues(options.size)
+        } else null
+
+        // buttons technically don't change - but components will be overwritten to update selectmenu
+        val buttons = module.elements
+            .filter(ConfigurationElement.Companion::elementStringInputtable)
+            .map { e -> Button.primary(e.propName, "Edit ${e.propName}") }
+
+        // produce layoutcomponents from menu/buttons
+        if(menu != null) yield(ActionRow.of(menu))
+        yieldAll(buttons.chunked(5).map(ActionRow::of))
+    }
+
+    suspend fun embed(origin: DiscordParameters): Boolean {
+        // /command setup -> full menu embed
+
+        // generate components for initial embed response
+        // compile boolean elements into select menu
+        val boolElements = getBoolElements()
+
         // register component listeners - component ids will not change so these do not need to be redone
         val listeners = mutableListOf<Flux<*>>()
-        val menu = if(options.isNotEmpty()) {
+        if(boolElements.isNotEmpty()) {
             val menuListener = origin.listener(SelectMenuInteractionEvent::class, true, null, "toggleable")
                 .flatMap { response ->
                     val (enabled, disabled) = boolElements
@@ -215,49 +238,74 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     disabled.forEach { e ->
                         e.prop.set(instance, false)
                     }
-                    origin.event.editReply()
+                    response.edit()
                         .withEmbeds(currentConfig())
+                        .withComponents(configComponents().toList().orAbsent())
                 }
             listeners.add(menuListener)
-            SelectMenu.of("toggleable", options)
-        } else null
+        }
 
         // string input elements (stringelement, customelement) presented as button -> modal for text input
-        val buttons = module.elements
+        module.elements
             .filter(ConfigurationElement.Companion::elementStringInputtable)
             .map { e ->
                 // listener for button creates modal for input
                 val buttonListener = origin.listener(ButtonInteractionEvent::class, true, null, e.propName)
                     .flatMap { press ->
-                        press
+                        val modal = press
                             .presentModal()
                             .withComponents(
                                 ActionRow.of(
-                                    TextInput.small("${e.propName}-input", e.propName)
+                                    TextInput.small(e.propName, "New value for ${module.name} -> ${e.propName}")
                                         .required()
                                         .prefilled(getValue(e))
                                 )
                             )
                             .withCustomId("modal")
-                            .withTitle("New value for ${module.name} -> ${e.propName}")
+                            .withTitle("Editing ${e.propName}")
+                            .thenReturn(Unit)
+                        val edit = origin.event
+                            .editReply()
+                            .withEmbeds(Embeds.fbk("Selected **${e.propName}**. Waiting for response..."))
+                            .withComponentsOrNull(null)
+                        Mono
+                            .`when`(modal, edit)
                             .thenReturn(Unit)
                     }
                     .flatMap { _ ->
                         // create listener for modal itself
                         origin.listener(ModalSubmitInteractionEvent::class, true, null, "modal")
+                            .take(1)
                             .flatMap { submission ->
                                 val raw = submission.getComponents(TextInput::class.java)[0].value.get()
                                 when(e) {
                                     is StringElement -> {
                                         e.prop.set(instance, raw)
-                                        val notice = submission
-                                            .reply()
-                                            .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **$raw**."))
-                                            .withEphemeral(true)
-                                            .then()
                                         val edit = submission.edit()
                                             .withEmbeds(currentConfig())
+                                            .withComponents(configComponents().toList().orAbsent())
+                                        val notice = submission
+                                            .createFollowup()
+                                            .withEmbeds(Embeds.fbk("**${e.propName}** has been set to `$raw`."))
+                                            .withEphemeral(true)
+                                            .then()
                                         Mono.`when`(notice, edit)
+                                    }
+                                    is LongElement<T> -> {
+                                        val value = raw.toLongOrNull()
+                                        if(value != null) {
+                                            e.prop.set(instance, value)
+                                            submission.edit()
+                                                .withEmbeds(currentConfig())
+                                                .withComponents(configComponents().toList().orAbsent())
+                                        } else {
+                                            val edit = submission.edit()
+                                                .withEmbeds(currentConfig())
+                                                .withComponents(configComponents().toList().orAbsent())
+                                            val notice = submission.createFollowup()
+                                                .withEmbeds(Embeds.error("**$raw** is not valid for **${e.propName}**. Please enter a whole number."))
+                                            Mono.`when`(edit, notice)
+                                        }
                                     }
                                     is CustomElement<T, *> -> {
                                         // parse user input
@@ -265,43 +313,33 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                         when(value) {
                                             is Ok -> {
                                                 e.prop.set(instance, value)
-                                                val notice = submission
-                                                    .reply()
+                                                val edit = submission.edit()
+                                                    .withEmbeds(currentConfig())
+                                                    .withComponents(configComponents().toList().orAbsent())
+                                                val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
                                                     .withEphemeral(true)
                                                     .then()
-                                                val edit = submission.edit()
-                                                    .withEmbeds(currentConfig())
                                                 Mono.`when`(notice, edit)
                                             }
                                             is Err -> {
-                                                submission
-                                                    .reply()
+                                                submission.createFollowup()
                                                     .withEmbeds(Embeds.error("**$raw** is not a valid value for **${e.propName}**: ${value.value}"))
-                                                    .withEphemeral(true)
                                             }
                                         }
                                     }
                                     else -> Mono.empty()
                                 }
-
-                            }.take(1)
+                            }
                     }
                 listeners.add(buttonListener)
-                Button.primary(e.propName, e.propName)
             }
-
-        val components = sequence {
-            // produce layoutcomponents from menu/buttons
-            if(menu != null) yield(ActionRow.of(menu))
-            yieldAll(buttons.chunked(5).map(ActionRow::of))
-        }
 
         origin.event
             .reply()
             .withEmbeds(currentConfig())
             .withEphemeral(true)
-            .withComponents(components.toList())
+            .withComponents(configComponents().toList().orAbsent())
             .awaitAction()
 
         Mono.`when`(listeners)
@@ -310,13 +348,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null).then() }
             .thenReturn(Unit)
             .awaitFirstOrNull()
-        origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull() // TODO test deletion of ephemeral messages. edit should work otherwise
+        origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull()
         return true
     }
 
     suspend fun property(subCommand: ApplicationCommandInteractionOption, origin: DiscordParameters): Boolean {
         // /command <subCommand -> property> (value: T?) (reset: bool?)
-        val element = module.elements.find { e -> e.propName == subCommand.name } ?: error("mismatched property '${subCommand.name} :: $module")
+        val element = module.elements.find { e -> e.propName.lowercase() == subCommand.name } ?: error("mismatched property '${subCommand.name} :: $module")
 
         val args = origin.subArgs(subCommand)
         val reset = args.optBool("reset")
@@ -342,7 +380,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 else -> error("mismatched property '${subCommand.name} :: not resettable")
             }
             val resetTo = resetValue?.toString() ?: "{empty}"
-            origin.ireply(Embeds.fbk("**${element.propName} has been reset to $resetTo.")).awaitSingle()
+            origin.ireply(Embeds.fbk("**${element.propName}** has been reset to $resetTo.")).awaitSingle()
             return true
         }
 

@@ -3,7 +3,6 @@ package moe.kabii.command.commands.audio.queue
 import discord4j.core.`object`.entity.User
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.command.Command
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.commands.audio.AudioStateUtil

@@ -10,7 +10,6 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import moe.kabii.LOG
 import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.command.registration.CommandRegistrar
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.DiscordBot
@@ -20,7 +19,7 @@ import moe.kabii.util.extensions.*
 
 class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) {
 
-    fun searchCommandByAlias(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
+    fun searchCommandByName(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
         allowed && command.name == name.lowercase()
     }

@@ -2,7 +2,6 @@ package moe.kabii.discord.pagination
 
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
@@ -10,7 +9,6 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.mod

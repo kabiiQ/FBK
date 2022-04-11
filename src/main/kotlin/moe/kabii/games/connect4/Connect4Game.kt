@@ -5,7 +5,6 @@ import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
@@ -13,7 +12,6 @@ import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
 import discord4j.core.spec.MessageEditSpec
 import discord4j.discordjson.possible.Possible
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame

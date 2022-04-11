@@ -42,7 +42,6 @@ data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
     val guildid: Long,
     var prefix: String = defaultPrefix,
-    var suffix: String? = null,
     val options: OptionalFeatures = OptionalFeatures(),
     val guildCustomCommands: CustomCommands = CustomCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
