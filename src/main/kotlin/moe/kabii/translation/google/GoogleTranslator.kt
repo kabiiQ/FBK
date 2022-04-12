@@ -29,6 +29,16 @@ object GoogleTranslator : TranslationService(
         this.supportedLanguages = pullLanguages()
     }
 
+    override fun tagAlias(input: String): String {
+        return when(input.lowercase()) {
+            "ch", "cn", "zh" -> "zh-CN"
+            "kr" -> "ko"
+            "jp" -> "ja"
+            "iw" -> "he"
+            else -> input
+        }
+    }
+
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
 
@@ -77,10 +87,12 @@ object GoogleTranslator : TranslationService(
             val adapter = MOSHI.adapter(GoogleLanguagesResponse::class.java)
             val languages = adapter.fromJson(body)
             if(languages != null) {
-                val googleLanguages = languages.data.languages.map { (language, name) ->
+                val googleLanguages = languages.data.languages.associate { (language, name) ->
                     language.lowercase() to TranslationLanguage(language, name, name)
-                }.toMap()
-                SupportedLanguages(googleLanguages)
+                }
+                    .toMap()
+                    .filterNot { (tag, _) -> tag == "zh" || tag == "iw" } // google duplicates some languages, these can still be used i.e "zh-CN"
+                SupportedLanguages(this, googleLanguages)
             } else throw IOException("Invalid JSON provided from Google response: $body")
         } finally {
             response.close()

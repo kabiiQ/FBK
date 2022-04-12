@@ -33,8 +33,8 @@ object TranslateMessage : Command("Translate Message") {
             if(contents.isBlank()) return@messageInteraction
 
             val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }?.orNull()
-            val baseService = Translator.defaultService
-            val defaultLang = config?.translator?.defaultTargetLanguage?.run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
+            val service = Translator.service
+            val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
             val translator = Translator.getService(contents, defaultLang.tag)
             val translation = translator.translate(from = null, to = defaultLang, text = contents)
             val jumpLink = resolvedMessage.createJumpLink()

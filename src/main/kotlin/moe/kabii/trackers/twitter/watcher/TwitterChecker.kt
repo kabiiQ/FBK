@@ -200,11 +200,11 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                 LOG.debug("translation stage")
                 val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                     try {
-                        val baseService = Translator.defaultService
+                        val service = Translator.service
                         val defaultLang = GuildConfigurations
                             .getOrCreateGuild(target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
-                            .run(baseService.supportedLanguages::get) ?: baseService.defaultLanguage()
+                            .run(service.supportedLanguages::get) ?: service.defaultLanguage()
                         val translator = Translator.getService(tweet.text, defaultLang.tag)
 
                         // check cache for existing translation of this tweet

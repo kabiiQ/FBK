@@ -89,7 +89,7 @@ object DeepLTranslator : TranslationService(
                 val deepLanguages = languages.associate { (language, name) ->
                     language.lowercase() to TranslationLanguage(language, name, name)
                 }
-                SupportedLanguages(deepLanguages)
+                SupportedLanguages(this, deepLanguages)
             } else throw IOException("Invalid JSON provided from DeepL response: $body")
         } finally {
             response.close()

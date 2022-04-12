@@ -24,6 +24,15 @@ object AzureTranslator : TranslationService(
         this.supportedLanguages = pullLanguages()
     }
 
+    override fun tagAlias(input: String): String = when(input.lowercase()) {
+        "zh", "ch", "cn" -> "zh-Hans"
+        "kr" -> "ko"
+        "pt" -> "pt-br"
+        "sr" -> "sr-Cyrl"
+        "jp" -> "ja"
+        else -> input
+    }
+
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val text = rawText
             .filterNot('#'::equals)
@@ -76,7 +85,7 @@ object AzureTranslator : TranslationService(
                 val azureLanguages = languages.translation.map { (tag, lang) ->
                     tag.lowercase() to TranslationLanguage(tag, lang.name, lang.nativeName)
                 }.toMap()
-                SupportedLanguages(azureLanguages)
+                SupportedLanguages(this, azureLanguages)
             } else throw IOException("Invalid JSON provided from Azure response: $body")
         } finally {
             response.close()

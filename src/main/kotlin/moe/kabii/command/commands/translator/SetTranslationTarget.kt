@@ -13,12 +13,12 @@ object SetTranslationTarget : Command("setlang") {
     init {
         chat {
             member.verify(Permission.MANAGE_MESSAGES)
-            val service = Translator.defaultService
+            val service = Translator.baseService
 
             // setlang <language>
 
             val languageArg = args.string("language")
-            val matchLang = service.supportedLanguages.search(service, languageArg)
+            val matchLang = service.supportedLanguages.search(languageArg)
             val error = when(matchLang.size) {
                 0 -> "Unknown/unsupported language **$languageArg**. See [this link](${service.languageHelp}) for supported languages and their associated language codes."
                 1 -> null

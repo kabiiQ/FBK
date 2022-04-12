@@ -37,21 +37,14 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
     fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 
-    open fun tagAlias(input: String): String = when(input.lowercase()) {
-        "zh", "ch", "cn" -> "zh-Hans"
-        "kr" -> "ko"
-        "pt" -> "pt-br"
-        "sr" -> "sr-Cyrl"
-        "jp" -> "ja"
-        else -> input
-    }
+    open fun tagAlias(input: String) = input
 }
 
 object NoOpTranslator : TranslationService("None", "") {
      override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
         = TranslationResult(this, from!!, from, rawText)
 
-    override val supportedLanguages = SupportedLanguages(mapOf())
+    override val supportedLanguages = SupportedLanguages(this, mapOf())
 }
 
 object Translator {
@@ -61,7 +54,8 @@ object Translator {
         AzureTranslator
     )
 
-    val defaultService = services.first()
+    val baseService = services.first()
+    val service = services.first(TranslationService::available)
 
     val detector = LanguageDetectorBuilder.fromAllSpokenLanguages().build()
 

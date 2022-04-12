@@ -1,6 +1,7 @@
 package moe.kabii.command.commands.translator
 
 import discord4j.core.spec.EmbedCreateFields
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
@@ -10,24 +11,40 @@ import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
+import org.apache.commons.lang3.StringUtils
 
 object TranslateCommand : Command("translate") {
     override val wikiPath = "Translator#simple-translation-to-your-default-language-with-translate-most-common"
     private val langRegex = Regex("(![^,<#]{2,25})?([,<#].{2,25})?")
 
     init {
+        autoComplete {
+
+            // "from" and "to" autocomplete supported languages (and provide same information)
+            // get languages from current available translator
+            val supported = Translator.service.supportedLanguages
+            val languages = if(value.isBlank()) supported.languages else supported.search(value)
+            val matches = languages.values.sortedBy { it } // prioritized sort
+            val suggestions = matches.map { lang ->
+                ApplicationCommandOptionChoiceData.builder()
+                    .name(StringUtils.abbreviate("${lang.fullName} (${lang.tag})", 100))
+                    .value(lang.tag)
+                    .build()
+            }
+            respond(suggestions)
+        }
+
         chat {
             event.deferReply().awaitAction()
             val toTagDefault = if(isPM) "en" else config.translator.defaultTargetLanguage
             // translate
-            val baseService = Translator.defaultService
-            val languages = baseService.supportedLanguages
+            val languages = Translator.service.supportedLanguages
 
             val fromLang = args
-                .optStr("from")?.run { languages.search(baseService, this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
+                .optStr("from")?.run { languages.search(this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
             val toLang = args
-                .optStr("to")?.run { languages.search(baseService, this).values.firstOrNull() }
-                ?: languages.search(baseService, toTagDefault).values.firstOrNull()
+                .optStr("to")?.run { languages.search(this).values.firstOrNull() }
+                ?: languages.search(toTagDefault).values.firstOrNull()
                 ?: languages[toTagDefault]
                 ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
 
