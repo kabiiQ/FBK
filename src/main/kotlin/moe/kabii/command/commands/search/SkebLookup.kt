@@ -3,7 +3,6 @@ package moe.kabii.command.commands.search
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.search.skeb.SkebIOException
 import moe.kabii.search.skeb.SkebParser
@@ -14,19 +13,17 @@ object SkebLookup : Command("skeb") {
     override val wikiPath: String? = null // TODO
 
     init {
-        discord {
-            channelFeatureVerify(FeatureChannel::searchCommands, "search")
-
+        chat {
             val usernameArg = args.string("username")
             val skebber = try {
                 val user = SkebParser.getUser(usernameArg)
                 if(user == null) {
                     ireply(Embeds.error("Unable to find skeb user **$usernameArg**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 } else user
             } catch(e: SkebIOException) {
                 ereply(Embeds.error("Unable to reach Skeb at this time.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val profileUrl = "https://skeb.jp/@${skebber.username}"

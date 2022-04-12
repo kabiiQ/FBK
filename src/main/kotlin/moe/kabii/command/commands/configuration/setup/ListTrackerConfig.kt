@@ -30,8 +30,8 @@ object ListTrackerConfig : Command("animeconfig") {
     )
 
     init {
-        discord {
-            if(isPM) return@discord
+        chat {
+            if(isPM) return@chat
             channelVerify(Permission.MANAGE_CHANNELS)
 
             val configurator = Configurator(

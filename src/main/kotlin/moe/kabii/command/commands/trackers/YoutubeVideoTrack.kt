@@ -20,7 +20,7 @@ object YoutubeVideoTrack : Command("trackvid") {
     override val wikiPath = "Livestream-Tracker#user-commands"
 
     init {
-        discord {
+        chat {
             // make sure feature is enabled or this channel is private
             if(guild != null) {
                 val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
@@ -43,18 +43,18 @@ object YoutubeVideoTrack : Command("trackvid") {
                     ereply(Embeds.error("There was an error reaching YouTube.")).awaitSingle()
                     LOG.debug("Error getting YTVideo in trackvideo command: ${e.message}")
                     LOG.debug(e.stackTraceString)
-                    return@discord
+                    return@chat
                 }
             } else null
 
             if(ytVideo == null) {
                 ereply(Embeds.error("Invalid YouTube video ID **$videoId**.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             if(!ytVideo.upcoming) {
                 ereply(Embeds.error("YouTube video with ID **$videoId** does not seem to be a scheduled stream.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             // trackvid <id> (role...)

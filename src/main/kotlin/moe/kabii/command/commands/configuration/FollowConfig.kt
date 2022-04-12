@@ -28,7 +28,7 @@ object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
 
     init {
-        discord {
+        chat {
             // manually set mention role for a followed stream - for servers where a role already exists
             // verify stream is tracked, but override any existing mention role
             // mentionrole (site) <stream name> <role>
@@ -39,7 +39,7 @@ object SetMentionRole : Command("setmention") {
                 is Ok -> findTarget.value
                 is Err -> {
                     ereply(Embeds.error("Unable to find livestream channel: ${findTarget.value}.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
             }
 

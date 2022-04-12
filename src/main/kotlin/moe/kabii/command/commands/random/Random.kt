@@ -15,9 +15,9 @@ object Random : CommandContainer {
         override val wikiPath = "RNG-Commands#the-roll-command"
 
         init {
-            discord {
+            chat {
                 when(subCommand.name) {
-                    "between" -> rollBetween(this)
+                    "range" -> rollBetween(this)
                     "dice" -> rollDice(this)
                 }
             }
@@ -59,7 +59,7 @@ object Random : CommandContainer {
         override val wikiPath = "RNG-Commands#the-pick-command"
 
         init {
-            discord {
+            chat {
                 val optionArg = args.optStr("list")
                 if(optionArg == null) {
                     // pick a recent user
@@ -111,7 +111,7 @@ object Random : CommandContainer {
         )
 
         init {
-            discord {
+            chat {
                 val question = args.optStr("question")?.run { "**${author.username} asked:** $this\n\n" } ?: ""
                 val response = magicball.random()
                 ireply(Embeds.fbk("$question$response")).awaitSingle()
@@ -123,7 +123,7 @@ object Random : CommandContainer {
         override val wikiPath = "RNG-Commands#the-flip-command"
 
         init {
-            discord {
+            chat {
                 val flip = when((0..1000).random()) {
                     0 -> "its side!"
                     in 1..500 -> "heads."

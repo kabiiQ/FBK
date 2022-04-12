@@ -12,7 +12,7 @@ object TrackerConfig : CommandContainer {
         override val wikiPath = "Configuration#overriding-the-default-website-for-track-with-the-usetracker-command"
 
         init {
-            discord {
+            chat {
                 // override the tracker that will be used in the current channel if ;track <username> is ran without a channel specified.
                 channelVerify(Permission.MANAGE_CHANNELS)
 
@@ -24,7 +24,7 @@ object TrackerConfig : CommandContainer {
                 val featureEnabled = tracker.channelFeature.get(features)
                 if (!featureEnabled) {
                     ereply(Embeds.error("The **${tracker.full}** tracker is not enabled in **#${guildChan.name}**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 features.trackerDefault = tracker.alias.first()

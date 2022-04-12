@@ -27,7 +27,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
     private fun linkChannel(memberConfig: MembershipConfiguration) = "[${memberConfig.streamChannel.lastKnownUsername}](${URLUtil.StreamingSites.Youtube.channel(memberConfig.streamChannel.siteChannelID)})"
 
     init {
-        discord {
+        chat {
 
             // linkyoutubemembers (yt id else: get)
             member.verify(Permission.MANAGE_GUILD)
@@ -44,7 +44,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
                 } else {
                     ereply(Embeds.wiki(command, "**/linkyoutubemembership** is used to set up a link that connects YouTube chat members to a Discord role."))
                 }.awaitSingle()
-                return@discord
+                return@chat
             }
 
             val resetArg = args.optBool("reset")
@@ -61,7 +61,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
                         ereply(Embeds.error("There is no active membership configuration for **${target.name}**.")).awaitSingle()
                     }
                 }
-                return@discord
+                return@chat
             }
 
             // verify youtube channel exists
@@ -69,13 +69,13 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
                 val yt = YoutubeParser.getChannelFromUnknown(linkArg)
                 if(yt == null) {
                     ereply(Embeds.error("Unable to find YouTube channel **$linkArg**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 } else yt
             } catch(e: Exception) {
                 LOG.info("Error calling YouTube API: ${e.message}")
                 LOG.trace(e.stackTraceString)
                 ereply(Embeds.error("Error reaching YouTube.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             // create membership role
@@ -88,7 +88,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             } catch(ce: ClientException) {
                 if(ce.status.code() == 403) {
                     ereply(Embeds.error("I am missing permission to create roles in **${target.name}**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 } else throw ce
             }
 

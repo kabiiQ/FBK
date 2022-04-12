@@ -14,7 +14,7 @@ object PS2OutfitLookup : Command("ps2outfit") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             val args = subArgs(subCommand)
             when(subCommand.name) {
                 "tag" -> {

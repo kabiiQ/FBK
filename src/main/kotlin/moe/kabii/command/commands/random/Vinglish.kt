@@ -34,7 +34,7 @@ object Vinglish : Command("garble") {
     }
 
     init {
-        discord {
+        chat {
             event.reply(vinglishify(args.string("text"))).awaitSingle()
         }
     }

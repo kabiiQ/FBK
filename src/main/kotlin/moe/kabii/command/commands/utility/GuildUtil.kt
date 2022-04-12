@@ -21,7 +21,7 @@ object GuildUtil : CommandContainer {
         override val wikiPath = "Discord-Info-Commands#get-server-info"
 
         init {
-            discord {
+            chat {
                 val targetGuild = args.optStr("id")
                     ?.toLongOrNull()?.snowflake
                     ?.run(event.client::getGuildById)

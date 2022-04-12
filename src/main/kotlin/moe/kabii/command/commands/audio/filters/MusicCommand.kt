@@ -8,7 +8,7 @@ object MusicCommand : Command("music") {
     override val wikiPath = "Music-Player#audio-manipulationfilters"
 
     init {
-        discord {
+        chat {
             val action = when(subCommand.name) {
                 "volume" -> PlaybackMods::volume
                 "sample" -> PlaybackSample::sample

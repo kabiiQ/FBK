@@ -50,7 +50,7 @@ object TrackSkip : AudioCommandContainer {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
-            discord {
+            chat {
                 skip(this)
             }
         }

@@ -16,7 +16,7 @@ object SnowflakeUtil : CommandContainer {
         override val wikiPath = "Discord-Info-Commands#get-all-ids-in-a-server"
 
         init {
-            discord {
+            chat {
                 val targetId = target.id.asString()
                 val targetFile = File(NettyFileServer.idRoot, "$targetId.txt")
                 event.deferReply().awaitAction()
@@ -77,13 +77,13 @@ object SnowflakeUtil : CommandContainer {
         override val wikiPath = "Discord-Info-Commands#-get-the-timestamp-for-any-discord-id-snowflake"
 
         init {
-            discord {
+            chat {
                 // get the timestamp for a snowflake
                 val idArg = args.string("id")
                 val discordId = idArg.toLongOrNull()
                 if(discordId == null) {
                     ereply(Embeds.error("**$idArg** is not a valid Discord ID.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 val snowflake = SnowflakeParser.of(discordId)
                 val validation = when(snowflake.valiDate) {
@@ -102,7 +102,7 @@ object SnowflakeUtil : CommandContainer {
         override val wikiPath = "Discord-Info-Commands#get-a-users-discord-id"
 
         init {
-            discord {
+            chat {
                 val targetUser = args.optUser("user")?.awaitSingle() ?: author
                 ereply(Embeds.fbk("ID: ${targetUser.id.asString()}", targetUser)).awaitSingle()
             }

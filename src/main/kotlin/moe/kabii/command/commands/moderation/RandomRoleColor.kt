@@ -29,14 +29,14 @@ object RandomRoleColor : Command("randomizecolor") {
 
     init {
         botReqs(Permission.MANAGE_ROLES)
-        discord {
+        chat {
             member.verify(Permission.MANAGE_ROLES)
 
             val role = args.role("role").awaitSingle()
             val safe = PermissionUtil.isSafeRole(role, member, target, managed = true, everyone = false)
             if(!safe) {
                 ereply(Embeds.error("You can not manage the role **${role.name}**.")).awaitSingle()
-                return@discord
+                return@chat
             }
             fun colorPicker(color: Color): EmbedCreateSpec {
                 val rgb = RGB(color)
@@ -66,14 +66,14 @@ object RandomRoleColor : Command("randomizecolor") {
                 // listen for button press response
                 val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(15), "exit", "confirm", "next")
                     .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
-                    .take(1).awaitFirstOrNull() ?: return@discord
+                    .take(1).awaitFirstOrNull() ?: return@chat
 
                 when(press.customId) {
                     "exit" -> {
                         press.edit()
                             .withEmbeds(Embeds.fbk("Role edit aborted."))
                             .awaitAction()
-                        return@discord
+                        return@chat
                     }
                     "confirm" -> {
                         val oldColor = ColorUtil.hexString(role.color)
@@ -88,7 +88,7 @@ object RandomRoleColor : Command("randomizecolor") {
                         press.edit()
                             .withEmbeds(Embeds.other("**${role.name}**'s color has been changed to $newColor. (Previously $oldColor)", currColor))
                             .awaitAction()
-                        return@discord
+                        return@chat
                     }
                     "next" -> {
                         // new color

@@ -15,8 +15,9 @@ object ConfigurationElementParsers {
         if(emoji == null) Err("$value is not a usable emoji.") else Ok(emoji)
     }
 
-    fun durationParser(): (DiscordParameters, String) -> Result<String, String> = parser@ { _, value ->
+    fun durationParser(): (DiscordParameters, String) -> Result<String?, String> = parser@ { _, value ->
+        if(value.lowercase() == "reset" || value.lowercase() == "disabled") return@parser Ok(null)
         val duration = DurationParser.tryParse(value)
-        if(duration == null) Err("$value is not a valid duration. Examples: 6h, 2m, 1h30m") else Ok(duration.toString())
+        if(duration == null) Err("$value is not a valid duration. Examples: 6h, 2m, 1h30m\nTo remove, use 'reset' or 'disabled'") else Ok(duration.toString())
     }
 }

@@ -3,7 +3,6 @@ package moe.kabii.command.commands.search
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
@@ -13,19 +12,18 @@ object TwitchStreamLookup : Command("ttv") {
     override val wikiPath = "Lookup-Commands#twitch-stream-lookup"
 
     init {
-        discord {
+        chat {
             // manually post a Twitch stream
-            channelFeatureVerify(FeatureChannel::searchCommands, "search")
             val usernameArg = args.string("username")
             val twitchUser = TwitchParser.getUser(usernameArg).orNull()
             if(twitchUser == null) {
                 ereply(Embeds.error("Invalid Twitch username **$usernameArg**")).awaitSingle()
-                return@discord
+                return@chat
             }
             val twitchStream = TwitchParser.getStream(twitchUser.userID).orNull()
             if(twitchStream == null) {
                 ireply(Embeds.fbk("**${twitchUser.displayName}** is not currently live.")).awaitSingle()
-                return@discord
+                return@chat
             }
             val settings = guild?.run {
                 GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings

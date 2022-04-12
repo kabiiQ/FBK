@@ -10,7 +10,7 @@ object BotUtil : CommandContainer {
         override val wikiPath: String? = null // yeah
 
         init {
-            discord {
+            chat {
                 val link = "https://discord.com/channels/${target.id.asString()}/${chan.id.asString()}/1"
                 ereply(Embeds.fbk("[Jump to top of channel]($link)")).awaitSingle()
             }

@@ -24,7 +24,7 @@ object TrackerCommandBase : CommandContainer {
         override val wikiPath = "Livestream-Tracker"
 
         init {
-            discord {
+            chat {
                 trackCommand(this, Action.TRACK)
             }
         }
@@ -34,7 +34,7 @@ object TrackerCommandBase : CommandContainer {
         override val wikiPath: String? = null // undocumented 'base' command
 
         init {
-            discord {
+            chat {
                 trackCommand(this, Action.UNTRACK)
             }
         }

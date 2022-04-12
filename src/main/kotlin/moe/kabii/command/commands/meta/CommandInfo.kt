@@ -11,7 +11,7 @@ object CommandInfo : Command("help") {
     override val wikiPath = "Bot-Meta-Commands#command-information"
 
     init {
-        discord {
+        chat {
             when(subCommand.name) {
                 "command" -> commandHelp(this)
                 "wiki" -> {

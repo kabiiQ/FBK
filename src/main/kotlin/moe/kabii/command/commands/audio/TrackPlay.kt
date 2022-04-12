@@ -14,12 +14,12 @@ object TrackPlay : AudioCommandContainer {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {
-            discord {
+            chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
                     ereply(Embeds.error(voice.error)).awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 // grab attachment or "song"
                 val query = ExtractedQuery.from(this)
@@ -29,7 +29,7 @@ object TrackPlay : AudioCommandContainer {
                         channelVerify(Permission.MANAGE_MESSAGES)
                         if(!member.hasPermissions(guildChan, Permission.MANAGE_MESSAGES)) {
                             ereply(Embeds.error("You must be a channel moderator to force-play tracks.")).awaitSingle()
-                            return@discord
+                            return@chat
                         }
                         event.deferReply().awaitAction()
                         AudioManager.manager.loadItem(query.url, ForcePlayTrackLoader(this, query))

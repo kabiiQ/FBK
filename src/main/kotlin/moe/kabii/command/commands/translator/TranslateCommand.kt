@@ -16,7 +16,7 @@ object TranslateCommand : Command("translate") {
     private val langRegex = Regex("(![^,<#]{2,25})?([,<#].{2,25})?")
 
     init {
-        discord {
+        chat {
             event.deferReply().awaitAction()
             val toTagDefault = if(isPM) "en" else config.translator.defaultTargetLanguage
             // translate
@@ -41,7 +41,7 @@ object TranslateCommand : Command("translate") {
                 LOG.debug(e.stackTraceString)
                 event.editReply()
                     .withEmbeds(Embeds.error("Text translation failed.")).awaitSingle()
-                return@discord
+                return@chat
             }
             val confidence = if(translation.confidence != null && translation.confidence < .8) ", ${(translation.confidence * 100).toInt()}%" else ""
             val detected = if(translation.detected) " (detected$confidence)" else ""

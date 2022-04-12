@@ -47,7 +47,7 @@ class ExtractedQuery private constructor(var url: String, val timestamp: Long, v
                 url = url,
                 timestamp = time?.toMillis() ?: 0L,
                 sample = sample?.toMillis(),
-                volume = volume ?: origin.config.musicBot.startingVolume
+                volume = volume ?: origin.config.musicBot.startingVolume.toInt()
             )
         }
 

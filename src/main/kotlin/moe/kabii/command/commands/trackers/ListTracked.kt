@@ -16,7 +16,7 @@ object ListTracked : Command("tracked") {
     override val wikiPath = "Livestream-Tracker#listing-tracked-streams-with-tracked"
 
     init {
-        discord {
+        chat {
             // ;tracked
             // MAL/$id: by @user
             if(guild != null) {
@@ -66,7 +66,7 @@ object ListTracked : Command("tracked") {
 
             if(tracks.isEmpty()) {
                 ireply(Embeds.error("There are no tracked targets in this channel.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val channelName = if(guild != null) "#${guildChan.name}" else "this channel"

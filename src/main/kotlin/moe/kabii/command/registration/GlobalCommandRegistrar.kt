@@ -113,7 +113,7 @@ object GlobalCommandRegistrar : CommandRegistrar {
             .build()
     }
 
-    fun optionToString(opt: ApplicationCommandInteractionOption?): String = if(opt != null) {
+    private fun optionToString(opt: ApplicationCommandInteractionOption?): String = if(opt != null) {
         fun <T> option(transform: (ApplicationCommandInteractionOptionValue) -> T) = " - Option ${opt.name} = ${opt.value.orNull()?.run(transform)}"
         try {
             when(opt.type) {

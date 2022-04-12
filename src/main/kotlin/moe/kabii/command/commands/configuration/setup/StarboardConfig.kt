@@ -1,10 +1,17 @@
 package moe.kabii.command.commands.configuration.setup
 
+import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.discordjson.json.ApplicationCommandOptionData
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.*
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.StarboardSetup
+import moe.kabii.discord.util.Embeds
+import moe.kabii.util.extensions.createJumpLink
+import moe.kabii.util.extensions.snowflake
 import kotlin.reflect.KMutableProperty1
 
 object StarboardConfig : Command("starboard") {
@@ -50,19 +57,75 @@ object StarboardConfig : Command("starboard") {
             parser = ConfigurationElementParsers.emojiParser(),
             value = { starboard -> starboard.useEmoji().string() }
         )
-    )
+    ) {
+        init {
+            val messageOption = ApplicationCommandOptionData.builder()
+                .name("id")
+                .description("The Discord ID of the message to add to the starboard.")
+                .type(ApplicationCommandOption.Type.STRING.value)
+                .required(true)
+                .build()
+
+            val starSubCommand = ApplicationCommandOptionData.builder()
+                .name("message")
+                .description("Manually add a message to the Starboard.")
+                .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
+                .addOption(messageOption)
+                .build()
+            subCommands.add(starSubCommand)
+        }
+    }
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_CHANNELS)
-            val configurator = Configurator(
-                "Starboard settings for ${target.name}",
-                StarboardModule,
-                config.starboardSetup
-            )
 
-            if(configurator.run(this)) {
-                config.save()
+            when(subCommand.name) {
+                "message" -> {
+                    val args = subArgs(subCommand)
+
+                    val starboardCfg = config.starboardSetup
+                    if(starboardCfg.channel == null) {
+                        ereply(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **/starboard** command to create a starboard for this server.")).awaitSingle()
+                        return@chat
+                    }
+
+                    val messageArg = args.string("id")
+                    val messageId = messageArg.toLongOrNull()?.snowflake
+
+                    if(messageId == null) {
+                        ereply(Embeds.error("Invalid Discord message ID **$messageArg**.")).awaitSingle()
+                        return@chat
+                    }
+
+                    val targetMessage = try {
+                        chan.getMessageById(messageId).awaitSingle()
+                    } catch(ce: ClientException) {
+                        ereply(Embeds.error("Unable to find the message with ID **$messageArg** in ${guildChan.name}.")).awaitSingle()
+                        return@chat
+                    }
+
+                    if(starboardCfg.findAssociated(messageId.asLong()) != null) {
+                        ereply(Embeds.error("Message **$messageArg** is already starboarded.")).awaitSingle()
+                        return@chat
+                    }
+
+                    val starboard = starboardCfg.asStarboard(target, config)
+                    starboard.addToBoard(targetMessage, mutableSetOf(), exempt = true)
+                    ereply(Embeds.fbk("[Message](${targetMessage.createJumpLink()}) sent to Starboard.")).awaitSingle()
+
+                } else -> {
+
+                    val configurator = Configurator(
+                        "Starboard settings for ${target.name}",
+                        StarboardModule,
+                        config.starboardSetup
+                    )
+
+                    if(configurator.run(this)) {
+                        config.save()
+                    }
+                }
             }
         }
     }

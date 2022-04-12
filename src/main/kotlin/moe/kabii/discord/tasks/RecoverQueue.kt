@@ -57,7 +57,7 @@ object RecoverQueue {
                                         author_name = track.author_name,
                                         author = track.author.snowflake,
                                         originChannel = track.originChannel.snowflake,
-                                        volume = config.musicBot.startingVolume
+                                        volume = config.musicBot.startingVolume.toInt()
                                     )
                                     add(loaded)
                                 }

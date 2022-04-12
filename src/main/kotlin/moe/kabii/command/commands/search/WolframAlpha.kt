@@ -6,7 +6,6 @@ import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
 import moe.kabii.data.flat.Keys
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.awaitAction
@@ -21,9 +20,7 @@ object WolframAlpha : Command("calc") {
     private val appId = Keys.config[Keys.Wolfram.appId]
 
     init {
-        discord {
-            channelFeatureVerify(FeatureChannel::searchCommands, "search")
-
+        chat {
             event.deferReply().awaitAction()
             val query = args.string("query")
             val response = query(query)

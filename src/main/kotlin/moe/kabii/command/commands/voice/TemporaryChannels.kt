@@ -19,14 +19,14 @@ object TemporaryChannels : CommandContainer {
 
         init {
             botReqs(Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS)
-            discord {
+            chat {
                 // feature must be manually enabled at this time. not likely to be something server owners want without knowing
                 channelFeatureVerify(FeatureChannel::tempChannelCreation, "tempvc", allowOverride = false)
                 // user must be in a voice channel so they can be moved immediately into the temp channel, then record the channel
                 val voice = member.voiceState.flatMap { voice -> voice.channel }.awaitFirstOrNull()
                 if(voice == null) {
                     ereply(Embeds.error("You must be in a voice channel in order to create a temporary channel.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val channelName = args.optStr("name") ?: "${member.displayName}'s channel"
@@ -48,7 +48,7 @@ object TemporaryChannels : CommandContainer {
                 } catch(ce: ClientException) {
                     ireply(Embeds.error("Unable to move user into their temporary channel. Please check my permissions within this category.")).awaitSingle()
                     newChannel.delete("Unable to move user into their temporary channel.").success().awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 config.tempVoiceChannels.tempChannels.add(newChannel.id.asLong())
                 config.save()

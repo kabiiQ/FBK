@@ -15,7 +15,7 @@ object UserInfo : Command("who") {
     override val wikiPath = "Discord-Info-Commands#user-info-summary-server-join-time"
 
     init {
-        discord {
+        chat {
             val targetUser = args.optUser("user")?.awaitSingle() ?: author
 
             val guildMember = guild?.run { targetUser.asMember(guild.id) }?.tryAwait()?.orNull()

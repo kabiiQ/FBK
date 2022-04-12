@@ -19,7 +19,7 @@ object YoutubeLink : Command("ytlink") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             // initiate discord-yt link process
             val oauth = DiscordAuthorization.createNew(interaction.id, author.id, DiscordAuthorization.DiscordScopes.CONNECTIONS) { complete ->
                 try {

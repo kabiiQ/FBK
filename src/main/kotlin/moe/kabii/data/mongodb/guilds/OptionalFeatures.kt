@@ -29,7 +29,6 @@ data class FeatureChannel(
     var musicChannel: Boolean = false,
     var logChannel: Boolean = false,
     var tempChannelCreation: Boolean = false,
-    var searchCommands: Boolean = false,
 
     var allowStarboarding: Boolean = true,
     var cleanReactionRoles: Boolean = false,

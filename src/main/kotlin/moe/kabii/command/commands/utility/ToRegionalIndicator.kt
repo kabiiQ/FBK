@@ -10,7 +10,7 @@ object ToRegionalIndicator : Command("emojify") {
     private val regionalIndicators = arrayOf('\uDDE6', '\uDDE7', '\uDDE8', '\uDDE9', '\uDDEA', '\uDDEB', '\uDDEC', '\uDDED', '\uDDEE', '\uDDEF', '\uDDF0', '\uDDF1', '\uDDF2', '\uDDF3', '\uDDF4', '\uDDF5', '\uDDF6', '\uDDF7', '\uDDF8', '\uDDF9', '\uDDFA', '\uDDFB', '\uDDFC', '\uDDFD', '\uDDFE', '\uDDFF')
 
     init {
-        discord {
+        chat {
             // convert all possible chars into regional indicator emoji
             var previous = false
             val converted = args.string("text").map {char ->

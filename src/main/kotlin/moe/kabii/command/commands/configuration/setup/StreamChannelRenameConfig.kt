@@ -18,8 +18,8 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
     override val wikiPath = "Livestream-Tracker#configuration"
 
     init {
-        discord {
-            if(isPM) return@discord
+        chat {
+            if(isPM) return@chat
             when(subCommand.name) {
                 "set" -> setOshiMark(this)
                 "list" -> listOshiMarks(this)

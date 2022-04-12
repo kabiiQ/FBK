@@ -25,7 +25,7 @@ object RoleUtils : CommandContainer {
 
         init {
             botReqs(Permission.MANAGE_ROLES)
-            discord {
+            chat {
                 member.verify(Permission.MANAGE_ROLES)
                 event.deferReply().awaitAction()
                 val emptyRoles = RoleUtil.emptyRoles(target)
@@ -36,7 +36,7 @@ object RoleUtils : CommandContainer {
                     event.editReply()
                         .withEmbeds(Embeds.error("There are not any empty roles I can delete in **${target.name}**."))
                         .awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 val names = emptyRoles.joinToString("\n") { role -> "${role.name} (${role.id.asString()})" }
 
@@ -51,7 +51,7 @@ object RoleUtils : CommandContainer {
 
                 val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(3), "cancel", "continue")
                     .switchIfEmpty { event.deleteReply() }
-                    .awaitFirstOrNull() ?: return@discord
+                    .awaitFirstOrNull() ?: return@chat
                 press.deferEdit().awaitAction()
 
                 when(press.customId) {

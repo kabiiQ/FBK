@@ -28,18 +28,18 @@ object MusicConfig : CommandContainer {
                 MusicSettings::queuerFSkip
             ),
             BooleanElement(
-                "Restrict the usage of audio filters (volume, bass) to users with fskip permission",
+                "Restrict the usage of audio filters (volume, bass) to users who queued the track",
                 "restrictfilters",
                 MusicSettings::restrictFilters
             ),
             BooleanElement(
-                "Restrict the usage of playback manipulation (ff, seek) to users with fskip permission",
+                "Restrict the usage of playback manipulation (ff, seek) to users who queued the track",
                 "restrictseek",
                 MusicSettings::restrictSeek
             ),
             BooleanElement(
-                "Skip command will force skip when permitted",
-                "alwaysfskip",
+                "Skip command will instantly skip when permitted",
+                "forceskip",
                 MusicSettings::autoFSkip
             ),
             BooleanElement(
@@ -68,6 +68,12 @@ object MusicConfig : CommandContainer {
                 range = 0..Short.MAX_VALUE.toLong(),
                 prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
             ),
+            LongElement("Default playback volume",
+                "initialVolume",
+                MusicSettings::startingVolume,
+                range = 1L..100L,
+                prompt = "Enter the new starting volume for tracks."
+            ),
             LongElement(
                 "Volume limit",
                 "volumeLimit",
@@ -78,7 +84,7 @@ object MusicConfig : CommandContainer {
         )
 
         init {
-            discord {
+            chat {
                 member.verify(Permission.MANAGE_CHANNELS)
 
                 val configurator = Configurator(

@@ -14,14 +14,14 @@ object TwitterVid : Command("twittervid") {
     private val twitterUrl = Regex("https://(?:mobile\\.)?twitter\\.com/.{4,15}/status/(\\d{19,20})")
 
     init {
-        discord {
+        chat {
 
             val tweetArg = args.string("url")
             val tweetId = twitterUrl.find(tweetArg)?.groups?.get(1)?.value
 
             if(tweetId == null) {
                 ereply(Embeds.error("That does not seem to be a valid Twitter URL.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val videoUrl = try {
@@ -30,12 +30,12 @@ object TwitterVid : Command("twittervid") {
                 LOG.warn("Error getting linked Tweet: ${e.message}")
                 LOG.debug(e.stackTraceString)
                 ereply(Embeds.error("There was an error getting information on this Tweet.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             if(videoUrl == null) {
                 ereply(Embeds.error("This Tweet does not contain an embeddable video.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             event.reply("Tweet: $tweetArg").awaitAction()

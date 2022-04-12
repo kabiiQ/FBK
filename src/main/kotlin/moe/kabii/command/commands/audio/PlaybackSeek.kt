@@ -20,7 +20,7 @@ object PlaybackSeek : AudioCommandContainer {
         override val wikiPath = "Music-Player#playback-manipulation"
 
         init {
-            discord {
+            chat {
                 val action = when(subCommand.name) {
                     "time" -> ::time
                     "forward" -> ::forward

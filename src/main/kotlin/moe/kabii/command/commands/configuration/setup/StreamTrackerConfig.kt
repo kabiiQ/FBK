@@ -77,14 +77,14 @@ object StreamTrackerConfig : Command("streamcfg") {
     )
 
     init {
-        discord {
-            if(isPM) return@discord
+        chat {
+            if(isPM) return@chat
             channelVerify(Permission.MANAGE_CHANNELS)
             val features = features()
 
             if(!features.streamTargetChannel) {
                 ereply(Embeds.error("**#${guildChan.name}** does not have stream tracking enabled.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val wasRename = features.streamSettings.renameEnabled

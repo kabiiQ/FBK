@@ -1,0 +1,32 @@
+package moe.kabii.discord.event.interaction
+
+import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
+import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent
+import kotlinx.coroutines.launch
+import moe.kabii.LOG
+import moe.kabii.command.CommandManager
+import moe.kabii.util.extensions.stackTraceString
+
+class AutoCompleteHandler(val manager: CommandManager) {
+
+    data class Request(val event: ChatInputAutoCompleteEvent, val input: String)
+
+    fun handle(event: ChatInputAutoCompleteEvent) {
+
+        val command = manager.commandsDiscord[event.commandName]
+        if(command?.autoComplete == null) error("AutoComplete specified, handler missing: ${event.commandName}")
+
+        val text = event.focusedOption.value
+            .map(ApplicationCommandInteractionOptionValue::asString)
+            .orElse("")
+
+        manager.context.launch {
+            try {
+                command.autoComplete!!(Request(event, text))
+            } catch(e: Exception) {
+                LOG.error("Uncaught exception in chat autocomplete event: ${command.name}: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            }
+        }
+    }
+}

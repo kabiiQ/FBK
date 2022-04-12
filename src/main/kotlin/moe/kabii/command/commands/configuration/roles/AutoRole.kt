@@ -8,7 +8,7 @@ object AutoRole : Command("autorole")  {
     override val wikiPath = "Auto-Roles"
 
     init {
-        discord {
+        chat {
             // autorole <category> <action> (stuff)
             member.verify(Permission.MANAGE_ROLES)
             val group = subCommand

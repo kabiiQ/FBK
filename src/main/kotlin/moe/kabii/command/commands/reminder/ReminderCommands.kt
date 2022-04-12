@@ -24,7 +24,7 @@ object ReminderCommands : CommandContainer {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
-            discord {
+            chat {
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
                 val timeArg = args.string("when")
@@ -32,7 +32,7 @@ object ReminderCommands : CommandContainer {
 
                 if(time == null) {
                     ereply(Embeds.error("**$timeArg** is an invalid reminder delay. Examples: 10m, 6h, 1d, 1d4h, 1w")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val length = DurationFormatter(time).fullTime
@@ -41,7 +41,7 @@ object ReminderCommands : CommandContainer {
                     // there would be easy to work around BUT I felt reminders < 1 minute are probably in error or at best a joke anyways
                     // also 2 years limit just for some arbitrary practicality
                     ereply(Embeds.error("**$timeArg** interpreted as **$length**. Please specify a reminder time between 1 minute and 2 years.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val replyPrivate = this.isPM || args.optBool("dm") == true
@@ -51,7 +51,7 @@ object ReminderCommands : CommandContainer {
                         if(!isPM) { // small optimization since we can't reply anyways :)
                             ereply(Embeds.error("I am unable to DM you at this time. Please check your privacy settings.")).awaitSingle()
                         }
-                        return@discord
+                        return@chat
                     } else dmChan
                 } else chan
 
@@ -89,7 +89,7 @@ object ReminderCommands : CommandContainer {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
-            discord {
+            chat {
                 // cancel <reminder id>
                 val idArg = args.int("reminder")
                 val reminder = transaction {

@@ -10,7 +10,7 @@ object BotState : AudioCommandContainer {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {
-            discord {
+            chat {
                 event.deferReply().awaitAction()
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {

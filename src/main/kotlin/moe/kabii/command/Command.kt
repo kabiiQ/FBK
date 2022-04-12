@@ -1,9 +1,12 @@
 package moe.kabii.command
 
+import discord4j.core.event.domain.interaction.MessageInteractionEvent
+import discord4j.core.event.domain.interaction.UserInteractionEvent
 import discord4j.rest.util.Permission
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.params.TerminalParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.discord.util.SourcePaths
 import kotlin.reflect.KProperty1
 
@@ -14,8 +17,15 @@ abstract class Command(val name: String) {
     abstract val wikiPath: String?
     open val commandExempt: Boolean = false
 
-    var executeDiscord: (suspend (DiscordParameters) -> Unit)? = null
+    var executeChat: (suspend (DiscordParameters) -> Unit)? = null
     private set
+    var executeUser: (suspend (UserInteractionEvent) -> Unit)? = null
+    private set
+    var executeMessage: (suspend (MessageInteractionEvent) -> Unit)? = null
+    private set
+    var autoComplete: (suspend (AutoCompleteHandler.Request) -> Unit)? = null
+    private set
+
     var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
     private set
 
@@ -27,8 +37,20 @@ abstract class Command(val name: String) {
         discordReqs = discordReqs + permission.toList()
     }
 
-    fun discord(block: suspend DiscordParameters.() -> Unit) {
-        executeDiscord = block
+    fun chat(block: suspend DiscordParameters.() -> Unit) {
+        executeChat = block
+    }
+
+    fun userInteraction(block: suspend UserInteractionEvent.() -> Unit) {
+        executeUser = block
+    }
+
+    fun messageInteraction(block: suspend MessageInteractionEvent.() -> Unit) {
+        executeMessage = block
+    }
+
+    fun autoComplete(block: suspend AutoCompleteHandler.Request.() -> Unit) {
+        autoComplete = block
     }
 
     fun terminal(block: suspend TerminalParameters.() -> Unit) {

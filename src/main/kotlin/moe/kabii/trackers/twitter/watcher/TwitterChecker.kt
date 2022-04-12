@@ -277,7 +277,6 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     ?: ""
 
                 val notifSpec = MessageCreateSpec.create()
-                    // todo channel setting for custom message ?
                     .run {
                         val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
                         withContent("$mention**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")

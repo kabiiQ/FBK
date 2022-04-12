@@ -8,7 +8,6 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.constants.MagicNumbers
@@ -25,9 +24,7 @@ object XKCDLookup : Command("xkcd") {
     private val dateFormat = DateTimeFormatter.ofPattern("M d yyyy")
 
     init {
-        discord {
-            channelFeatureVerify(FeatureChannel::searchCommands, "search")
-
+        chat {
             val idArg = args.optInt("id")
 
             // if no arg is provided (current comic) or a specific number is provided (lookup)
@@ -44,13 +41,13 @@ object XKCDLookup : Command("xkcd") {
                         xkcdAdapter.fromJson(body)!!
                     } else {
                         ereply(Embeds.error("Unable to find comic.")).awaitSingle()
-                        return@discord
+                        return@chat
                     }
                 }
             } catch (e: Exception) {
                 ereply(Embeds.error("Unable to reach xkcd.")).awaitSingle()
                 LOG.info(e.stackTraceString)
-                return@discord
+                return@chat
             }
 
             val dateStr = "${comic.month} ${comic.day} ${comic.year}"

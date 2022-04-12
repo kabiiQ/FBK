@@ -8,7 +8,7 @@ object QueueCommand : Command("queue") {
     override val wikiPath = "Music-Player#queue-manipulation"
 
     init {
-        discord {
+        chat {
             when(subCommand.name) {
                 "list" -> QueueInfo.list(this)
                 "pause" -> QueueState.pause(this)

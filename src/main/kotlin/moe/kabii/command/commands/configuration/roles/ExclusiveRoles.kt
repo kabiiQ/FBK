@@ -17,7 +17,7 @@ object ExclusiveRoleSets : Command("roleset") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_ROLES)
             val action = when(subCommand.name) {
                 "create" -> ::createExclusiveSet

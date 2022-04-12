@@ -13,7 +13,7 @@ object Status : Command("status") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             event.verifyBotAdmin()
             val args = subArgs(subCommand)
             val activity = when(subCommand.name) {
@@ -26,7 +26,7 @@ object Status : Command("status") {
                     if(playing != null) ClientPresence.doNotDisturb(ClientActivity.playing(playing)) else ClientPresence.doNotDisturb()
                 }
                 "online" -> ClientPresence.online()
-                else -> return@discord
+                else -> return@chat
             }
             event.client.updatePresence(activity).awaitAction()
             ereply(Embeds.fbk("Status set!")).awaitSingle()

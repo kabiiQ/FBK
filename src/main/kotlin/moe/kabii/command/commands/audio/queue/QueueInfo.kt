@@ -66,12 +66,12 @@ object QueueInfo : AudioCommandContainer {
         override val wikiPath = "Music-Player#queue-information"
 
         init {
-            discord {
+            chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val audio = AudioManager.getGuildAudio(target.id.asLong())
                 if(!audio.playing) {
                     ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 val track = audio.player.playingTrack
                 if(track == null) {

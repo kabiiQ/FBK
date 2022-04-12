@@ -14,7 +14,7 @@ object ManualYoutubeLink : Command("manualytlink") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             // permission restricted to hope server admins
             member.verify(Permission.MANAGE_ROLES)
 

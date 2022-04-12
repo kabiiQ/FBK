@@ -25,7 +25,6 @@ object ChannelFeatures : CommandContainer {
         BooleanElement("Twitter feed tracking", "twitter", FeatureChannel::twitterTargetChannel),
         BooleanElement("Event log (See **log** command)", "logs", FeatureChannel::logChannel),
         BooleanElement("Music bot commands", "music", FeatureChannel::musicChannel),
-        BooleanElement("Enable internet search commands", "search", FeatureChannel::searchCommands),
         BooleanElement("Temporary voice channel creation", "tempvc", FeatureChannel::tempChannelCreation),
         BooleanElement("Limit track command usage to moderators", "restricted", FeatureChannel::locked),
         BooleanElement("Allow this channel's messages in your starboard (if enabled)", "allowstarboarding", FeatureChannel::allowStarboarding),
@@ -35,8 +34,8 @@ object ChannelFeatures : CommandContainer {
         override val wikiPath= "Configuration-Commands#the-config-command-channel-features"
 
         init {
-            discord {
-                if(isPM) return@discord
+            chat {
+                if(isPM) return@chat
                 channelVerify(Permission.MANAGE_CHANNELS)
                 val features = features()
 
@@ -73,7 +72,7 @@ object ChannelFeatures : CommandContainer {
         override val wikiPath = "Configuration-Commands#listing-enabled-channel-features-in-the-server"
 
         init {
-            discord {
+            chat {
                 // list active feature channels in this guild
                 channelVerify(Permission.MANAGE_CHANNELS)
                 val features = config.options.featureChannels
@@ -97,7 +96,7 @@ object ChannelFeatures : CommandContainer {
 
                 if(channels.isEmpty()) {
                     ereply(Embeds.fbk("There are no channel-specific features enabled in **${target.name}**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
                 val fields = channels.map { (channel, features) ->
                     val codes = StringBuilder()

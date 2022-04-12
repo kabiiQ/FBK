@@ -22,6 +22,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.constants.URLUtil
+import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.File
 import java.net.URL
@@ -118,7 +119,7 @@ object WelcomeConfig : Command("welcome") {
     }
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_CHANNELS)
 
             val welcomer = config.welcomer
@@ -127,14 +128,17 @@ object WelcomeConfig : Command("welcome") {
                     // test the current welcome config
                     if(!welcomer.anyElements()) {
                         ereply(Embeds.error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.")).awaitSingle()
-                        return@discord
+                        return@chat
                     }
 
                     val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, member)
-                    chan.createMessage(
-                        welcomeMessage
-                            .withContent("TEST WELCOME MESSAGE\n${welcomeMessage.contentOrElse("")}")
-                    )
+                    event.reply()
+                        .withContent(welcomeMessage.contentOrElse("TEST WELCOME MESSAGE"))
+                        .withEmbeds(welcomeMessage.embeds())
+                        .awaitAction()
+                    event.editReply()
+                        .withFiles(welcomeMessage.files())
+                        .awaitSingle()
                 }
                 "getbanner" -> {
                     // allow downloading the existing banner
@@ -143,6 +147,7 @@ object WelcomeConfig : Command("welcome") {
                     if(banner.exists()) {
                         ereply(Embeds.fbk("Retrieving banner image.")).awaitSingle()
                         event.editReply()
+                            .withEmbedsOrNull(null)
                             .withFiles(MessageCreateFields.File.of("welcome_banner.png", banner.inputStream()))
                             .awaitSingle()
                     } else {

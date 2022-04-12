@@ -16,7 +16,7 @@ class CustomCommand(
         val name: String,
         val description: String,
         var response: String,
-        var restrictRole: Long?
+        var ephemeral: Boolean
 ) {
     override fun equals(other: Any?): Boolean {
         if(this === other) return true

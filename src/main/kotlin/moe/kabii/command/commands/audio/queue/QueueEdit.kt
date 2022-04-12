@@ -132,7 +132,7 @@ object QueueEdit : AudioCommandContainer {
         override val wikiPath = "Music-Player#queue-manipulation"
 
         init {
-            discord {
+            chat {
                 remove(this)
                 TrackSkip.skip(this)
             }

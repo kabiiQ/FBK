@@ -11,7 +11,7 @@ object SetTranslationTarget : Command("setlang") {
     override val wikiPath = "Translator#set-the-default-target-language-with-setlang"
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_MESSAGES)
             val service = Translator.defaultService
 
@@ -26,7 +26,7 @@ object SetTranslationTarget : Command("setlang") {
             }
             if(error != null) {
                 ereply(Embeds.error(error)).awaitSingle()
-                return@discord
+                return@chat
             }
             val (langTag, newLang) = matchLang.entries.single()
 

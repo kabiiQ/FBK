@@ -15,14 +15,14 @@ object PS2ServerStatus : Command("ps2servers") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
             // get all servers and list status
             val servers = try {
                 PS2Parser.getServers()
             } catch(e: Exception) {
                 ereply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val populations = try {

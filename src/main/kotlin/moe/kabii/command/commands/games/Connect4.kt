@@ -19,7 +19,7 @@ object Connect4 : Command("connect4") {
     override val wikiPath = "Games-(Connect-4)#connect-4"
 
     init {
-        discord {
+        chat {
             val p2Target = args.user("user").awaitSingle()
 
             val confirmButtons = ActionRow.of(
@@ -47,7 +47,7 @@ object Connect4 : Command("connect4") {
                         .withComponentsOrNull(null)
                         .withContentOrNull("The challenge was not responded to.")
                 }
-                .awaitFirstOrNull() ?: return@discord
+                .awaitFirstOrNull() ?: return@chat
 
             when(press.customId) {
                 "cancel" -> {

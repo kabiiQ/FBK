@@ -2,6 +2,8 @@ package moe.kabii
 
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
+import discord4j.core.event.domain.interaction.MessageInteractionEvent
+import discord4j.core.event.domain.interaction.UserInteractionEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
@@ -19,6 +21,8 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.event.interaction.ChatCommandHandler
+import moe.kabii.discord.event.interaction.MessageCommandHandler
+import moe.kabii.discord.event.interaction.UserCommandHandler
 import moe.kabii.discord.event.message.MessageTemporaryRedirectionHandler
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.DiscordTaskPool
@@ -103,8 +107,6 @@ fun main() {
     val services = ServiceWatcherManager(gateway)
     services.launch()
 
-    val discordHandler = ChatCommandHandler(manager, services)
-
     // perform initial offline checks
     val offlineChecks = gateway.guilds
         .flatMap { guild ->
@@ -117,8 +119,17 @@ fun main() {
         }
 
     // primary message listener uses specific instance and is manually set up
-    val onCommand = gateway.on(ChatInputInteractionEvent::class.java)
+    val discordHandler = ChatCommandHandler(manager, services)
+    val onChatCommand = gateway.on(ChatInputInteractionEvent::class.java)
         .map { event -> discordHandler.handle(event) }
+
+    val userCommandHandler = UserCommandHandler(manager)
+    val onUserCommand = gateway.on(UserInteractionEvent::class.java)
+        .map { event -> userCommandHandler.handle(event) }
+
+    val messageCommandHandler = MessageCommandHandler(manager)
+    val onMessageCommand = gateway.on(MessageInteractionEvent::class.java)
+        .map { event -> messageCommandHandler.handle(event) }
 
     // temporary listener to redirect users to slash commands
     val redirectionHandler = MessageTemporaryRedirectionHandler(manager)
@@ -137,7 +148,7 @@ fun main() {
             gateway.on(instance.eventType.java, instance::wrapAndHandle)
         }
 
-    val allListeners = eventListeners + listOf(offlineChecks, onCommand, onMessage)
+    val allListeners = eventListeners + listOf(offlineChecks, onChatCommand, onUserCommand, onMessageCommand, onMessage)
 
     // subscribe to bot lifetime discord events
     Mono.`when`(allListeners)

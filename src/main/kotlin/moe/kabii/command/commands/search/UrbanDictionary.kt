@@ -13,7 +13,6 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.command.Command
-import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.pagination.Page
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
@@ -29,8 +28,7 @@ object Urban : Command("ud") {
     override val wikiPath = "Lookup-Commands#urbandictionary-lookup"
 
     init {
-        discord {
-            channelFeatureVerify(FeatureChannel::searchCommands, "search")
+        chat {
             val lookupArg = args.string("term")
             ireply(Embeds.fbk("Searching for **$lookupArg**...")).awaitSingle()
             val request = newRequestBuilder()
@@ -48,14 +46,14 @@ object Urban : Command("ud") {
                     .withEmbeds(Embeds.error("Unable to reach UrbanDictionary."))
                     .awaitSingle()
                 LOG.info(e.stackTraceString)
-                return@discord
+                return@chat
             }
 
             if (define == null || define.list.isEmpty()) {
                 event.editReply()
                     .withEmbeds(Embeds.fbk("No definitions found for **$lookupArg**.").withAuthor(EmbedCreateFields.Author.of("UrbanDictionary", "https://urbandictionary.com", null)))
                     .awaitSingle()
-                return@discord
+                return@chat
             }
 
             // build pagination components
@@ -92,7 +90,7 @@ object Urban : Command("ud") {
                 // listen for button press response
                 val press = listener(ButtonInteractionEvent::class, false, Duration.ofMinutes(10), "prev", "next")
                     .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
-                    .take(1).awaitFirstOrNull() ?: return@discord
+                    .take(1).awaitFirstOrNull() ?: return@chat
                 press.deferEdit().awaitAction()
 
                 page = when(press.customId) {

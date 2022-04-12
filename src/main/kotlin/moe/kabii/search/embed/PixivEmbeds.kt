@@ -14,13 +14,13 @@ object PixivEmbeds : Command("pixiv") {
     private val pixivUrl = Regex("https://(?:www.)?pixiv.net/(?:en/)?artworks/(\\d{8,10})(\\|\\|)?")
 
     init {
-        discord {
+        chat {
 
             val urlArg = args.string("url")
             val pid = pixivUrl.find(urlArg)?.groups?.get(1)?.value
             if(pid == null) {
                 ereply(Embeds.error("This does not seem to be a valid Pixiv URL.")).awaitSingle()
-                return@discord
+                return@chat
             }
 
             val startIndex = args.optInt("start")?.minus(1) ?: 0

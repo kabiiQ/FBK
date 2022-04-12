@@ -14,13 +14,13 @@ object StarboardUtil : CommandContainer {
         override val wikiPath = "Starboard#manually-adding-a-message-to-the-starboard-starmessage"
 
         init {
-            discord {
+            chat {
                 member.verify(Permission.MANAGE_MESSAGES)
 
                 val starboardCfg = config.starboardSetup
                 if(starboardCfg.channel == null) {
                     ereply(Embeds.error("**${target.name}** does not have a starboard to add a message to. See the **/starboard** command to create a starboard for this server.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val messageArg = args.string("message")
@@ -28,19 +28,19 @@ object StarboardUtil : CommandContainer {
 
                 if(messageId == null) {
                     ereply(Embeds.error("Invalid Discord message ID **$messageArg**.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val targetMessage = try {
                     chan.getMessageById(messageId).awaitSingle()
                 } catch(ce: ClientException) {
                     ereply(Embeds.error("Unable to find the message with ID **$messageArg** in ${guildChan.name}.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 if(starboardCfg.findAssociated(messageId.asLong()) != null) {
                     ereply(Embeds.error("Message **$messageArg** is already starboarded.")).awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 val starboard = starboardCfg.asStarboard(target, config)

@@ -21,7 +21,7 @@ object BotStats : CommandContainer {
         override val wikiPath = "Bot-Meta-Commands#ping"
 
         init {
-            discord {
+            chat {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
                 ireply(Embeds.fbk("Pong!")).awaitSingle()
                 val reply = event.reply.awaitSingle()
@@ -52,7 +52,7 @@ object BotStats : CommandContainer {
         override val wikiPath = "Bot-Meta-Commands#bot-info-command"
 
         init {
-            discord {
+            chat {
                 val guilds = event.client.guilds
                     .map(Guild::getMemberCount)
                     .collectList()

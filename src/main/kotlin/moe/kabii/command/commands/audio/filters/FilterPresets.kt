@@ -33,7 +33,7 @@ object FilterPresets : AudioCommandContainer {
         override val wikiPath: String? = null
 
         init {
-            discord {
+            chat {
                 validateAndAlterFilters(this) {
                     reset()
                     addExclusiveFilter(FilterType.Speed(0.75))

@@ -22,7 +22,7 @@ object SearchTracks : AudioCommandContainer {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {
-            discord {
+            chat {
                 // /search <text> (youtube/soundcloud)
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val site = args.optInt("site")?.toInt() ?: 1
@@ -37,7 +37,7 @@ object SearchTracks : AudioCommandContainer {
                     event.editReply()
                         .withEmbeds(Embeds.error("No results found searching **${source.fullName}** for **$query**."))
                         .awaitSingle()
-                    return@discord
+                    return@chat
                 }
 
                 // build search selection menu until 10 songs or 2000 chars
@@ -71,7 +71,7 @@ object SearchTracks : AudioCommandContainer {
                             .withEmbeds(Embeds.error("No track was selected."))
                             .withComponentsOrNull(null)
                     }
-                    .awaitFirstOrNull() ?: return@discord
+                    .awaitFirstOrNull() ?: return@chat
                 response.deferEdit().awaitAction()
                 val selected = response.values.map(String::toInt)
                 if(selected.isNotEmpty()) {
@@ -81,13 +81,13 @@ object SearchTracks : AudioCommandContainer {
                             .withEmbeds(Embeds.error(voice.error))
                             .withComponentsOrNull(null)
                             .awaitSingle()
-                        return@discord
+                        return@chat
                     }
                 }
                 selected.forEach { selection ->
                     val track = search[selection - 1]
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true, deletePlayReply = false)
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true)
                 }
                 event.editReply()
                     .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))

@@ -13,7 +13,7 @@ object CustomCommands : Command("customcommand") {
     override val wikiPath = "Custom-Commands#creating-a-command-with-addcommand"
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_MESSAGES)
             when(subCommand.name) {
                 "add" -> addCommand(this)
@@ -25,10 +25,10 @@ object CustomCommands : Command("customcommand") {
 
     private suspend fun addCommand(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val commandName = args.string("command").lowercase()
+        val commandName = args.string("command").split(" ")[0].lowercase()
         val commandResponse = args.string("response")
         val commandDescription = args.optStr("description") ?: "Custom '$commandName' command."
-        val restrictToRole = args.optRole("restrictedto")?.awaitSingle()?.id?.asLong()
+        val ephemeral = args.optBool("private") ?: false
 
         if(commandName.length !in 1..32) {
             ereply(Embeds.error("Command **name** must be 1-32 characters.")).awaitSingle()
@@ -39,8 +39,8 @@ object CustomCommands : Command("customcommand") {
             return@with
         }
 
-        val custom = CustomCommand(commandName, commandResponse, commandDescription, restrictToRole)
-        val restricted = if (restrictToRole != null) "Restricted c" else "C"
+        val custom = CustomCommand(commandName, commandDescription, commandResponse, ephemeral)
+        val restricted = if (ephemeral) "Private c" else "C"
         val reply =
             if (config.guildCustomCommands.insertIsUpdated(custom))
                 "${restricted}ommand \"$commandName\" has been updated."
@@ -70,7 +70,7 @@ object CustomCommands : Command("customcommand") {
             ireply(Embeds.error("There are no [custom commands](https://github.com/kabiiQ/FBK/wiki/Custom-Commands) for **${target.name}**.")).awaitSingle()
         } else {
             val commandList = commands.joinToString("\n", transform = { command ->
-                val restricted = if(command.restrictRole != null) "(restricted to: <@${command.restrictRole}>) " else ""
+                val restricted = if(command.ephemeral) "(sent privately) " else ""
                 "$restricted**/${command.name}**: ${command.description} **->** ${command.response}"
             })
             ireply(

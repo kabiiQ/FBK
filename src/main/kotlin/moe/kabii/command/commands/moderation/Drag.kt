@@ -14,7 +14,7 @@ object Drag : Command("drag") {
     override val wikiPath = "Moderation-Commands#mass-drag-users-in-voice-channels"
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MOVE_MEMBERS)
             val args = subArgs(subCommand)
             val toArg = args.channel("to", VoiceChannel::class).awaitSingle()

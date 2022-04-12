@@ -13,7 +13,7 @@ object CommandFilters : CommandContainer {
         override val commandExempt = true
 
         init {
-            discord {
+            chat {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)
@@ -75,7 +75,7 @@ object CommandFilters : CommandContainer {
         override val commandExempt = true
 
         init {
-            discord {
+            chat {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
                 val args = subArgs(subCommand)

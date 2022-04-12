@@ -41,7 +41,7 @@ object Purge : CommandContainer {
 
         init {
             botReqs(Permission.MANAGE_MESSAGES)
-            discord {
+            chat {
                 channelVerify(Permission.MANAGE_MESSAGES)
                 when(subCommand.name) {
                     "count" -> purge(this)

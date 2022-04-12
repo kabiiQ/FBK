@@ -16,18 +16,18 @@ object PS2PlayerLookup : Command("ps2who") {
     override val wikiPath: String? = null
 
     init {
-        discord {
+        chat {
             guildFeatureVerify(GuildSettings::ps2Commands, "PS2")
             val userArg = args.string("username")
             val user = try {
                 PS2Parser.searchPlayerByName(userArg)
             } catch(e: Exception) {
                 ereply(Embeds.error("Unable to reach PS2 API.")).awaitSingle()
-                return@discord
+                return@chat
             }
             if(user == null) {
                 ireply(Embeds.error("Unable to find PS2 user **'$userArg'**.")).awaitSingle()
-                return@discord
+                return@chat
             }
             val outfit = if(user.outfit != null) "[${user.outfit.tag}] " else ""
             val asp = if(user.prestige) "ASP" else "BR"

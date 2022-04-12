@@ -1,7 +1,7 @@
 package moe.kabii.data.mongodb.guilds
 
 data class MusicSettings(
-    var startingVolume: Int = defaultStartingVolume,
+    var startingVolume: Long = defaultStartingVolume.toLong(),
     var lastChannel: Long? = null,
     var deleteOldBotMessages: Boolean = true,
     var queuerFSkip: Boolean = true,

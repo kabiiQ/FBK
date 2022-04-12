@@ -29,7 +29,7 @@ object PlaybackMods : AudioCommandContainer {
             return@with
         }
         // if volume specified, attempt to change current volume
-        if(!canFSkip(this, track)) {
+        if(config.musicBot.restrictFilters && !canFSkip(this, track)) {
             ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.")).awaitSingle()
             return@with
         }
@@ -95,7 +95,7 @@ object PlaybackMods : AudioCommandContainer {
         override val wikiPath: String? = null
 
         init {
-            discord {
+            chat {
                 // /music karaoke
                 val arg = args.optStr("band")?.lowercase()
                 val custom = arg?.toFloatOrNull()

@@ -70,9 +70,9 @@ object LogFeatures : Command("log") {
     )
 
     init {
-        discord {
+        chat {
             // editlog #channel
-            if(isPM) return@discord
+            if(isPM) return@chat
             member.verify(Permission.MANAGE_GUILD)
             val features = features()
 

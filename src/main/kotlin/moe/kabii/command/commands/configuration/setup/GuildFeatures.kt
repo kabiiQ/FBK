@@ -26,7 +26,7 @@ object GuildFeatures : Command("servercfg") {
     )
 
     init {
-        discord {
+        chat {
             member.verify(Permission.MANAGE_GUILD)
             val configurator = Configurator(
                 "Feature configuration for ${target.name}",

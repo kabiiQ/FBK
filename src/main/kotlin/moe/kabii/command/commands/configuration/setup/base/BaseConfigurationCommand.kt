@@ -141,7 +141,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     private fun getValue(element: ConfigurationElement<T>) = when(element) {
         is BooleanElement -> if(element.prop.get(instance)) "enabled" else "disabled"
         is LongElement -> element.prop.get(instance).toString()
-        is StringElement -> element.prop.get(instance)
+        is StringElement -> element.prop.get(instance).ifEmpty { " " }
         is ChannelElement -> {
             val value = element.prop.get(instance)
             if(value != null) "<#$value>" else "not set"
@@ -312,19 +312,21 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                         val value = e.parser(origin, raw)
                                         when(value) {
                                             is Ok -> {
-                                                e.prop.set(instance, value)
+                                                e.prop.set(instance, value.value)
                                                 val edit = submission.edit()
                                                     .withEmbeds(currentConfig())
                                                     .withComponents(configComponents().toList().orAbsent())
                                                 val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
-                                                    .withEphemeral(true)
-                                                    .then()
                                                 Mono.`when`(notice, edit)
                                             }
                                             is Err -> {
-                                                submission.createFollowup()
+                                                val edit = submission.edit()
+                                                    .withEmbeds(currentConfig())
+                                                    .withComponents(configComponents().toList().orAbsent())
+                                                val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.error("**$raw** is not a valid value for **${e.propName}**: ${value.value}"))
+                                                Mono.`when`(edit, notice)
                                             }
                                         }
                                     }
@@ -437,7 +439,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         return if(newValue != null) {
             val newState = when(element) {
                 is BooleanElement -> if (newValue == 1L) "**enabled**" else "**disabled**"
-                else -> "set to **${newValue.toString().ifBlank { "empty" }}"
+                else -> "set to **${newValue.toString().ifBlank { "empty" }}**"
             }
             origin.ireply(Embeds.fbk("The option **${element.propName}** has been $newState")
                 .withTitle("Configuration Updated"))

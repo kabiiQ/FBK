@@ -8,6 +8,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
+import moe.kabii.discord.util.MetaData
 import moe.kabii.internal.ytchat.HoloChats
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
@@ -51,7 +52,7 @@ class YoutubeChatWatcher(discord: GatewayDiscordClient) : Runnable {
     }
 
     override fun run() {
-        // todo disable with internal servers setting for 1.1
+        if(!MetaData.host) return
 
         // launch thread to parse/handle db ops with
         val parserThread = Thread(parserTask, "YTChatParser")

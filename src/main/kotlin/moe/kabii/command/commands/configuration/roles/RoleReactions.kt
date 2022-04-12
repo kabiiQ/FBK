@@ -50,7 +50,7 @@ object ReactionRoles {
         val configs = config.selfRoles.reactionRoles
         // make sure there is no conflicting info - can not have reaction role with same emoji
         if(configs.find { cfg -> cfg.message.messageID == message.id.asLong() && cfg.reaction == reactEmoji } != null) {
-            ireply(Embeds.fbk("A reaction role is already set up with the same emoji on this message! I will attempt to re-add this reaction to the message.")).awaitSingle()
+            ereply(Embeds.fbk("A reaction role is already set up with the same emoji on this message! I will attempt to re-add this reaction to the message.")).awaitSingle()
             // due to the nature of reactions (they may be manually removed) - re-add just in case it was "remove all reactions"'d
             message.addReaction(reactEmoji.toReactionEmoji()).success().awaitSingle()
             return@with
@@ -76,7 +76,7 @@ object ReactionRoles {
         configs.add(newCfg)
         config.save()
         val link = message.createJumpLink()
-        ireply(Embeds.fbk("A reaction role for **${role.name}** has been configured on message [${message.id.asString()}]($link).")).awaitSingle()
+        ereply(Embeds.fbk("A reaction role for **${role.name}** has been configured on message [${message.id.asString()}]($link).")).awaitSingle()
     }
 
     suspend fun deleteReactionRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
@@ -120,7 +120,7 @@ object ReactionRoles {
         reactionConfigs.forEach(configs::remove)
         config.save()
         val count = reactionConfigs.size
-        ireply(Embeds.fbk("$count reaction role configuration${count.s()} removed from message **$messageId**.")).awaitSingle()
+        ereply(Embeds.fbk("$count reaction role configuration${count.s()} removed from message **$messageId**.")).awaitSingle()
     }
 
     suspend fun listReactionRoles(origin: DiscordParameters) = with(origin) {
