@@ -12,19 +12,20 @@ import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.*
 
-class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) {
+class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) : EventListener<ChatInputInteractionEvent>(ChatInputInteractionEvent::class) {
 
     fun searchCommandByName(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
         allowed && command.name == name.lowercase()
     }
 
-    fun handle(event: ChatInputInteractionEvent) {
+    override suspend fun handle(event: ChatInputInteractionEvent) {
 
         val interaction = event.interaction
         val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
@@ -136,8 +137,8 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                     LOG.error("\nUncaught (non-discord) exception in command ${command.name} on guild $targetId: ${e.message}\nErroring command: ${event.commandName} :: ${event.options}")
                     LOG.warn(e.stackTraceString)
                 }
-                return@launch
             }
+            return
         }
 
         // check for guild 'custom' commands if a command was not found (do not allow them to override global commands)
@@ -153,9 +154,9 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                         .withEmbeds(Embeds.fbk(customCommand.response))
                         .withEphemeral(customCommand.ephemeral)
                         .awaitAction()
-                    return@launch
                 }
             }
+            return
         }
         error("Chat Command missing: ${event.commandName}")
     }

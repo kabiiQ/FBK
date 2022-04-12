@@ -15,7 +15,7 @@ abstract class EventListener <E: Event> (val eventType: KClass<E>) {
     fun wrapAndHandle(event: Event): Mono<Unit> {
         return mono {
             @Suppress("UNCHECKED_CAST")
-            val casted = requireNotNull(event as? E) { "Handler ${event::class.jvmName} recieved an incorrect event :: $event" }
+            val casted = requireNotNull(event as? E) { "Handler ${event::class.jvmName} received an incorrect event :: $event" }
             val scope = CoroutineScope(SupervisorJob())
             withContext(scope.coroutineContext) {
                 handle(casted)

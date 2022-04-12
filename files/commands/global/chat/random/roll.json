@@ -3,7 +3,7 @@
     "description": "Roll a random number.",
     "options": [
         {
-            "name": "between",
+            "name": "range",
             "description": "Roll between two numbers.",
             "type": 1,
             "options": [

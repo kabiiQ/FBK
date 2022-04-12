@@ -1,10 +1,6 @@
 package moe.kabii
 
 import discord4j.core.DiscordClientBuilder
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
-import discord4j.core.event.domain.interaction.MessageInteractionEvent
-import discord4j.core.event.domain.interaction.UserInteractionEvent
-import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
@@ -20,6 +16,7 @@ import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
+import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.event.interaction.MessageCommandHandler
 import moe.kabii.discord.event.interaction.UserCommandHandler
@@ -118,25 +115,7 @@ fun main() {
             }
         }
 
-    // primary message listener uses specific instance and is manually set up
-    val discordHandler = ChatCommandHandler(manager, services)
-    val onChatCommand = gateway.on(ChatInputInteractionEvent::class.java)
-        .map { event -> discordHandler.handle(event) }
-
-    val userCommandHandler = UserCommandHandler(manager)
-    val onUserCommand = gateway.on(UserInteractionEvent::class.java)
-        .map { event -> userCommandHandler.handle(event) }
-
-    val messageCommandHandler = MessageCommandHandler(manager)
-    val onMessageCommand = gateway.on(MessageInteractionEvent::class.java)
-        .map { event -> messageCommandHandler.handle(event) }
-
-    // temporary listener to redirect users to slash commands
-    val redirectionHandler = MessageTemporaryRedirectionHandler(manager)
-    val onMessage = gateway.on(MessageCreateEvent::class.java)
-        .map { event -> redirectionHandler.handle(event) }
-
-    // all other event handlers simply recieve the event
+    // register general event handlers
     val eventListeners = reflection.getSubTypesOf(EventListener::class.java)
         .map { clazz ->
             val instance = clazz.kotlin.objectInstance
@@ -148,7 +127,17 @@ fun main() {
             gateway.on(instance.eventType.java, instance::wrapAndHandle)
         }
 
-    val allListeners = eventListeners + listOf(offlineChecks, onChatCommand, onUserCommand, onMessageCommand, onMessage)
+    // Interaction listeners use instance of command handler and are manually set up
+    fun listen(listener: EventListener<*>) = gateway.on(listener.eventType.java).flatMap(listener::wrapAndHandle)
+    val interactionListeners = listOf(
+        ChatCommandHandler(manager, services),
+        UserCommandHandler(manager),
+        MessageCommandHandler(manager),
+        AutoCompleteHandler(manager),
+        MessageTemporaryRedirectionHandler(manager) // temporary listener to redirect users to slash commands
+    )
+
+    val allListeners = eventListeners + interactionListeners.map(::listen)
 
     // subscribe to bot lifetime discord events
     Mono.`when`(allListeners)

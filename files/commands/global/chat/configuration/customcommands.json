@@ -26,9 +26,9 @@
                     "required": false
                 },
                 {
-                    "name": "restrictedto",
-                    "description": "If provided, this command will only be enabled for users with this specific role.",
-                    "type": 8,
+                    "name": "private",
+                    "description": "If True, this command will be sent as a message that only the user running it can view.",
+                    "type": 5,
                     "required": false
                 }
             ]

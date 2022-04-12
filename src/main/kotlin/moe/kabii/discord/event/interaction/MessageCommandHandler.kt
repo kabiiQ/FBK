@@ -4,12 +4,13 @@ import discord4j.core.event.domain.interaction.MessageInteractionEvent
 import kotlinx.coroutines.launch
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
+import moe.kabii.discord.event.EventListener
 import moe.kabii.util.extensions.stackTraceString
 
 // "Message commands" are executed in Discord from the message context/right-click menu
-class MessageCommandHandler(val manager: CommandManager) {
+class MessageCommandHandler(val manager: CommandManager): EventListener<MessageInteractionEvent>(MessageInteractionEvent::class) {
 
-    fun handle(event: MessageInteractionEvent) {
+    override suspend fun handle(event: MessageInteractionEvent) {
 
         val command = manager.commandsDiscord[event.commandName]
         if(command?.executeMessage == null) error("Message Command missing: ${event.commandName}")

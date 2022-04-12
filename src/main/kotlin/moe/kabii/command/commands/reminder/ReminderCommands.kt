@@ -95,7 +95,7 @@ object ReminderCommands : CommandContainer {
                 val reminder = transaction {
                     Reminder
                         .find { Reminders.id eq idArg }
-                        .firstOrNull { rem -> rem.user.userID == this@discord.author.id.asLong() }
+                        .firstOrNull { rem -> rem.user.userID == this@chat.author.id.asLong() }
                         ?.also(Reminder::delete)
                 }
                 if(reminder == null) ereply(Embeds.error("You did not create the reminder with ID #**$idArg**.")).awaitSingle()

@@ -28,7 +28,7 @@
                 },
                 {
                     "name": "delete",
-                    "description": "Delete an existing join-based autorole rule",
+                    "description": "Delete an existing join-based autorole rule. By default deletes the rule for \"all\" channels",
                     "type": 1,
                     "options": [
                         {
