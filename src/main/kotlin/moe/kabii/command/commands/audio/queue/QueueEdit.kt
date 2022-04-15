@@ -134,7 +134,7 @@ object QueueEdit : AudioCommandContainer {
         init {
             chat {
                 remove(this)
-                TrackSkip.skip(this)
+                TrackSkip.skip(this, silent = true)
             }
         }
     }

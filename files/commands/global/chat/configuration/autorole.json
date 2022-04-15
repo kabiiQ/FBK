@@ -1,6 +1,6 @@
 {
     "name": "autorole",
-    "description": "Set the \"playing\" status for the bot.",
+    "description": "Configure automatic role assignment rules.",
     "options": [
         {
             "name": "join",

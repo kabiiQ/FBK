@@ -1,0 +1,16 @@
+{
+    "name": "datadeletionrequest",
+    "description": "(Privacy) Delete any collected data on your Discord user account or server.",
+    "options": [
+        {
+            "name": "user",
+            "description": "Delete ALL INFORMATION concerning your USER ACCOUNT. Irreversible, breaking operation.",
+            "type": 1
+        },
+        {
+            "name": "server",
+            "description": "Delete ALL INFORMATION concerning this Discord server. Irreversible, breaking operation.",
+            "type": 1
+        }
+    ]
+}

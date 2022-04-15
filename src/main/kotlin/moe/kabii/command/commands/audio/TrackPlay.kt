@@ -14,6 +14,7 @@ object TrackPlay : AudioCommandContainer {
         override val wikiPath = "Music-Player#playing-audio"
 
         init {
+
             chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
@@ -43,7 +44,7 @@ object TrackPlay : AudioCommandContainer {
                     else -> {
                         event.deferReply().awaitAction()
                         // adds a song to the end of queue (front if next=true)
-                        val playNextArg = args.optBool("playnext")
+                        val playNextArg = args.optBool("next")
                         val position = if(playNextArg == true) 0 else null // default (null) -> false
                         AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, position, query))
                     }

@@ -108,6 +108,7 @@ object MediaTrackerCommand : TrackerCommand {
         origin.event.editReply().withEmbeds(
             Embeds.fbk("Now tracking **$inputId** on **$siteName**.")
         ).awaitSingle()
+        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
@@ -137,6 +138,7 @@ object MediaTrackerCommand : TrackerCommand {
 
                 existingTrack.delete()
                 origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
+                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
 
             } else {
                 val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"

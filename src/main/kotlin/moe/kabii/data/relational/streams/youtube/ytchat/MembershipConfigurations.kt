@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.select
 
 object MembershipConfigurations : IntIdTable() {
 
-    val discordServer = reference("membership_connection_discord_server", DiscordObjects.Guilds, ReferenceOption.CASCADE).uniqueIndex()
+    val discordServer = reference("membership_connection_discord_server", DiscordObjects.Guilds, ReferenceOption.CASCADE).uniqueIndex("membershipconfigurations_membership_connection_discord_server_u")
     val streamChannel = reference("membership_connection_stream_channel", TrackedStreams.StreamChannels, ReferenceOption.RESTRICT)
     val membershipRole = long("membership_connection_generated_role_id")
     val logChannel = reference("membership_connection_logging_channel", DiscordObjects.Channels, ReferenceOption.SET_NULL).nullable()

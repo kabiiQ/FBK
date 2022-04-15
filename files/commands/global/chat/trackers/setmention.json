@@ -6,7 +6,8 @@
             "name": "username",
             "description": "The tracked stream/twitter feed that should send a ping",
             "type": 3,
-            "required": true
+            "required": true,
+            "autocomplete": true
         },
         {
             "name": "role",

@@ -2,6 +2,7 @@ package moe.kabii.command.commands.reminder
 
 import discord4j.common.util.TimestampFormat
 import discord4j.core.spec.EmbedCreateFields
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
@@ -13,7 +14,9 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Instant
@@ -89,6 +92,43 @@ object ReminderCommands : CommandContainer {
         override val wikiPath = "Utility-Commands#commands"
 
         init {
+            autoComplete {
+                // get all the user's reminders
+                val userId = event.interaction.user.id.asLong()
+                val reminderOptions = propagateTransaction {
+                    val reminders = Reminder.wrapRows(
+                        Reminders
+                            .innerJoin(DiscordObjects.Users)
+                            .select {
+                                DiscordObjects.Users.userID eq userId
+                            }
+                    ).toList()
+                    if(reminders.isNotEmpty()) {
+                        // prioritize the ones from this server
+                        val channelId = event.interaction.channelId.asLong()
+                        val channelPriority = Comparator<Reminder> { o1, o2 ->
+                            when {
+                                o1.channel == channelId && o2.channel == channelId -> 0
+                                o1.channel == channelId -> -1
+                                o2.channel == channelId -> 1
+                                else -> o1.channel.compareTo(o2.channel)
+                            }
+                        }
+                        reminders
+                            .sortedWith(channelPriority)
+                            .map { reminder ->
+                                val content = if(reminder.content.isNotBlank()) ": ${reminder.content}" else ""
+                                val channel = if(reminder.channel != channelId) " (different channel)" else ""
+                                ApplicationCommandOptionChoiceData.builder()
+                                    .name("#${reminder.id.value}$channel$content")
+                                    .value(reminder.id.value)
+                                    .build()
+                            }
+                    } else listOf()
+                }
+                suggest(reminderOptions)
+            }
+
             chat {
                 // cancel <reminder id>
                 val idArg = args.int("reminder")

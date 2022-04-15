@@ -87,7 +87,7 @@ object SearchTracks : AudioCommandContainer {
                 selected.forEach { selection ->
                     val track = search[selection - 1]
                     // fallback handler = don't search or try to resolve a different track if videos is unavailable
-                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true)
+                    FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true, deletePlayReply = false)
                 }
                 event.editReply()
                     .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))

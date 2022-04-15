@@ -13,7 +13,7 @@ import moe.kabii.util.extensions.userAddress
 import org.apache.commons.lang3.StringUtils
 
 object TranslateMessage : Command("Translate Message") {
-    override val wikiPath: String? = null
+    override val wikiPath: String? = null // TODO
 
     init {
         messageInteraction {

@@ -12,7 +12,8 @@
                     "description": "Optionally specify the track to start listing the queue from, such as queue 10.",
                     "type": 4,
                     "min_value": 1,
-                    "required": false
+                    "required": false,
+                    "autocomplete": true
                 }
             ]
         },
@@ -30,7 +31,8 @@
                             "name": "numbers",
                             "description": "Track # in queue to remove. Accepts ranges such as: remove 1, remove 1-4, remove 3-, remove all",
                             "type": 3,
-                            "required": true
+                            "required": true,
+                            "autocomplete": true
                         }
                     ]
                 },

@@ -61,7 +61,7 @@ object WelcomeConfig : Command("welcome") {
         StringElement("Text message sent when welcoming new user",
             "message",
             WelcomeSettings::message,
-            prompt = "Enter the plain-text message that will be sent when welcoming a new user. See wiki for variables.",
+            prompt = "Enter the plain-text message that will be sent when welcoming a new user. See [wiki](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables) for variables.",
             default = ""
         ),
         StringElement("Welcome Tagline (included in image or embed)",
@@ -74,7 +74,7 @@ object WelcomeConfig : Command("welcome") {
             "Image message",
             "imagetext",
             WelcomeSettings::imageTextValue,
-            prompt = "Enter the text which will be placed on the welcome image. See wiki for variables.",
+            prompt = "Enter the text which will be placed on the welcome image. See [wiki](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables) for variables.",
             default = WelcomeSettings.defaultImageText
         ),
         AttachmentElement("Banner image to use for welcoming",

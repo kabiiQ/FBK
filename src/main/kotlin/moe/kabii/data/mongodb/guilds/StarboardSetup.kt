@@ -30,7 +30,7 @@ data class StarboardSetup(
 class StarredMessage(
     val messageId: Long,
     val starboardMessageId: Long,
-    val originalAuthorId: Long?,
+    var originalAuthorId: Long?,
     val originalChannelId: Long = 0L,
     val stars: MutableSet<Long>,
     val exempt: Boolean = false

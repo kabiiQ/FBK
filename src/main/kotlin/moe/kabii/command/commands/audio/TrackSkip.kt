@@ -10,7 +10,7 @@ import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.Embeds
 
 object TrackSkip : AudioCommandContainer {
-    suspend fun skip(origin: DiscordParameters) = with(origin) {
+    suspend fun skip(origin: DiscordParameters, silent: Boolean = false) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val audio = AudioManager.getGuildAudio(target.id.asLong())
         val track = audio.player.playingTrack
@@ -20,7 +20,9 @@ object TrackSkip : AudioCommandContainer {
         }
         if(config.musicBot.autoFSkip && canFSkip(this, track)) {
             audio.player.stopTrack()
-            ireply(Embeds.fbk("Force-skipped **${track.info.title}**.")).awaitSingle()
+            if(!silent) {
+                ireply(Embeds.fbk("Force-skipped **${track.info.title}**.")).awaitSingle()
+            }
             return@with
         }
         if(!canVoteSkip(this, track)) {

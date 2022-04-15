@@ -29,7 +29,7 @@ object StarboardConfig : Command("starboard") {
             "stars",
             StarboardSetup::starsAdd,
             range = 1..100_000L,
-            prompt = "Enter a new value for the number of star reactions required for a message to be starboarded."
+            prompt = "Enter a new value for the number of reactions required for a message to be added to the Starboard."
         ),
         BooleanElement("Remove a message from the starboard if the star reactions are cleared by a moderator",
             "removeOnClear",

@@ -5,6 +5,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import moe.kabii.LOG
 import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.util.extensions.CommandOptionSuggestions
+import moe.kabii.util.extensions.toAutoCompleteSuggestions
 
 class CommandManager {
     internal val commandsDiscord = mutableMapOf<String, Command>()
@@ -28,5 +30,14 @@ class CommandManager {
         val instance = clazz.kotlin.objectInstance
         if(instance != null) registerInstance(instance)
         else LOG.debug("Skipping static registration of command: $clazz")
+    }
+
+    fun generateSuggestions(input: String, filter: ((Command) -> Boolean)? = null): CommandOptionSuggestions {
+        val matches = if(input.isBlank()) commandsDiscord
+        else commandsDiscord.filterKeys { cmd -> cmd.contains(input, ignoreCase = true) }
+        return matches
+            .run { if(filter != null) filter { (_, cmd) -> filter(cmd) } else this }
+            .values.map(Command::name)
+            .sorted().toAutoCompleteSuggestions()
     }
 }

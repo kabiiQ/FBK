@@ -24,7 +24,8 @@
                     "name": "name",
                     "description": "The name of the existing role set to be removed",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 }
             ]
         },
@@ -37,7 +38,8 @@
                     "name": "name",
                     "description": "The name of the existing role set to add the role to",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 },
                 {
                     "name": "role",
@@ -56,7 +58,8 @@
                     "name": "name",
                     "description": "The name of the existing role set to remove a role from",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 },
                 {
                     "name": "role",

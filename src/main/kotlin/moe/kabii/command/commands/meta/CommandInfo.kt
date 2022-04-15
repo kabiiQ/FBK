@@ -11,6 +11,11 @@ object CommandInfo : Command("help") {
     override val wikiPath = "Bot-Meta-Commands#command-information"
 
     init {
+        autoComplete {
+            // only "command"
+            suggest(manager.generateSuggestions(value))
+        }
+
         chat {
             when(subCommand.name) {
                 "command" -> commandHelp(this)

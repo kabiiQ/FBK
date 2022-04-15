@@ -21,7 +21,7 @@
             "required": false
         },
         {
-            "name": "playnext",
+            "name": "next",
             "description": "Add this track to the front of the queue rather than the end (\"skipping the line\")",
             "type": 5,
             "required": false

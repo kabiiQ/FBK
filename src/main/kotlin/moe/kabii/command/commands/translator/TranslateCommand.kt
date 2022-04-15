@@ -1,7 +1,6 @@
 package moe.kabii.command.commands.translator
 
 import discord4j.core.spec.EmbedCreateFields
-import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
@@ -11,7 +10,6 @@ import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
-import org.apache.commons.lang3.StringUtils
 
 object TranslateCommand : Command("translate") {
     override val wikiPath = "Translator#simple-translation-to-your-default-language-with-translate-most-common"
@@ -22,16 +20,8 @@ object TranslateCommand : Command("translate") {
 
             // "from" and "to" autocomplete supported languages (and provide same information)
             // get languages from current available translator
-            val supported = Translator.service.supportedLanguages
-            val languages = if(value.isBlank()) supported.languages else supported.search(value)
-            val matches = languages.values.sortedBy { it } // prioritized sort
-            val suggestions = matches.map { lang ->
-                ApplicationCommandOptionChoiceData.builder()
-                    .name(StringUtils.abbreviate("${lang.fullName} (${lang.tag})", 100))
-                    .value(lang.tag)
-                    .build()
-            }
-            respond(suggestions)
+            val service = Translator.service
+            suggest(LanguageSuggestionGenerator.languageSuggestions(service, value))
         }
 
         chat {

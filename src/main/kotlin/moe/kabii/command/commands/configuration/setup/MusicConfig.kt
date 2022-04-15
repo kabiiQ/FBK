@@ -20,7 +20,7 @@ object MusicConfig : CommandContainer {
             BooleanElement(
                 "Delete old Now Playing bot messages",
                 "deleteold",
-                MusicSettings::deleteOldBotMessages
+                MusicSettings::deleteNowPlaying
             ),
             BooleanElement(
                 "Song owner can force skip song with fskip",
@@ -66,7 +66,7 @@ object MusicConfig : CommandContainer {
                 "maxTracks",
                 MusicSettings::maxTracksUser,
                 range = 0..Short.MAX_VALUE.toLong(),
-                prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value 0 represents unlimited."
+                prompt = "Enter the new value for the maximum tracks one user can have in queue at a time. The default value (0) represents no track limit."
             ),
             LongElement("Default playback volume",
                 "initialVolume",
@@ -79,7 +79,7 @@ object MusicConfig : CommandContainer {
                 "volumeLimit",
                 MusicSettings::volumeLimit,
                 range = 0..Short.MAX_VALUE.toLong(),
-                prompt = "Enter the new absolute maximum volume that server admins can enter using the volume command. Normal users will still be limited to 5-25 volume and moderators limited within 0-100 volume."
+                prompt = "Enter the new absolute maximum volume that can be used in the volume command."
             )
         )
 

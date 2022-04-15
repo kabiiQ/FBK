@@ -63,6 +63,7 @@ object TwitterTrackerCommand : TrackerCommand {
         }
 
         origin.ireply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!")).awaitSingle()
+        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
         if(shouldStream) {
             propagateTransaction {
                 TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))
@@ -103,6 +104,7 @@ object TwitterTrackerCommand : TrackerCommand {
 
                 propagateTransaction { existingTrack.delete() }
                 origin.ireply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
+                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
                 TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
             } else {
                 val tracker = origin.chan.client

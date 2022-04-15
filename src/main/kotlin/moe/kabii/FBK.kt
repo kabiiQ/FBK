@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
+import moe.kabii.command.documentation.CommandDocumentor
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.flat.GQLQueries
 import moe.kabii.data.flat.Keys
@@ -73,6 +74,10 @@ fun main() {
         .mapNotNull { clazz -> clazz.kotlin.objectInstance }
     val globalCommands = GlobalCommandRegistrar.getAllGlobalCommands(modules)
 
+    // generate command self-documentation
+    CommandDocumentor.writeCommandDoc(manager, globalCommands)
+    LOG.info("Command List.md updated.")
+
     val rest = gateway.rest()
     val appId = checkNotNull(rest.applicationId.block())
     rest.applicationService
@@ -118,11 +123,7 @@ fun main() {
     // register general event handlers
     val eventListeners = reflection.getSubTypesOf(EventListener::class.java)
         .map { clazz ->
-            val instance = clazz.kotlin.objectInstance
-            if(instance == null) {
-                LOG.error("KClass provided with no static instance: $clazz")
-                return@map Mono.empty<Unit>()
-            }
+            val instance = clazz.kotlin.objectInstance ?: return@map Mono.empty()
             LOG.debug("Registering EventHandler: ${instance.eventType} :: $clazz")
             gateway.on(instance.eventType.java, instance::wrapAndHandle)
         }

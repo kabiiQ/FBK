@@ -16,7 +16,8 @@
                     "name": "command",
                     "description": "The command to be added to the whitelist",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 }
             ]
         },
@@ -29,7 +30,8 @@
                     "name": "command",
                     "description": "The command to be removed from the whitelist",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 }
             ]
         },

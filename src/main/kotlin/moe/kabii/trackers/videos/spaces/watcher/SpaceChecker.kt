@@ -15,6 +15,7 @@ import moe.kabii.discord.trackers.twitter.json.TwitterSpaceState
 import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceNotifier
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.twitter.TwitterParser
+import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.trackers.twitter.json.TwitterTweet
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.applicationLoop
@@ -28,6 +29,20 @@ class SpaceChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestC
 
     private val spacePattern = Regex("twitter.com/i/spaces/([a-zA-Z0-9]{13})")
     private val spaceContext = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("TwitterChecker-SpaceIntake") + SupervisorJob())
+
+    private suspend fun <R> wrapAndTry(query: () -> R): R? {
+        return try {
+            query()
+        } catch(rate: TwitterRateLimitReachedException) {
+            val reset = rate.reset
+            LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
+            delay(reset)
+            wrapAndTry(query)
+        } catch(e: Exception) {
+            LOG.error("Error getting chunk of Spaces: ${e.message}")
+            return null
+        }
+    }
 
     override fun run() {
         applicationLoop {
@@ -45,24 +60,35 @@ class SpaceChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestC
                         liveSpaces.find { live -> live.channel == channel } == null
                     }
 
+                    var first = true
                     checkUsers.chunked(100).forEach { userChunk ->
-                        // TODO implement api call delays for twitter (not needed until some level of scale)
-                        TwitterParser
-                            .getSpacesByCreators(userChunk.map { chan -> chan.siteChannelID })
-                            .forEach { liveSpace ->
-                                val channel = userChunk.find { user -> user.siteChannelID == liveSpace._creatorId }
-                                updateSpace(checkNotNull(channel), liveSpace)
-                            }
+                        if(!first) {
+                            delay(Duration.ofMillis(cooldowns.callDelay))
+                        }  else first = false
+
+                        wrapAndTry {
+                            TwitterParser
+                                .getSpacesByCreators(userChunk.map { chan -> chan.siteChannelID })
+                        }?.forEach { liveSpace ->
+                            val channel = userChunk.find { user -> user.siteChannelID == liveSpace._creatorId }
+                            updateSpace(checkNotNull(channel), liveSpace)
+                        }
                     }
 
                     // then, check all 'live' spaces to verify they are still live
+                    first = true
                     liveSpaces.chunked(100).forEach { spaceChunk ->
-                        TwitterParser
-                            .getSpaces(spaceChunk.map { space -> space.spaceId })
-                            .forEach { checkSpace ->
-                                val dbSpace = spaceChunk.find { space -> space.spaceId == checkSpace.id }
-                                updateSpace(checkNotNull(dbSpace).channel, checkSpace)
-                            }
+                        if(!first) {
+                            delay(Duration.ofMillis(cooldowns.callDelay))
+                        } else first = false
+
+                        wrapAndTry {
+                            TwitterParser
+                                .getSpaces(spaceChunk.map { space -> space.spaceId })
+                        }?.forEach { checkSpace ->
+                            val dbSpace = spaceChunk.find { space -> space.spaceId == checkSpace.id }
+                            updateSpace(checkNotNull(dbSpace).channel, checkSpace)
+                        }
                     }
                 } catch(e: Exception) {
                     LOG.warn("Exception in SpaceChecker : ${e.message}")

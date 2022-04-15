@@ -29,6 +29,8 @@ sealed class TrackerTarget(
     val url: List<Regex>,
     vararg val alias: String
 ) {
+    open val mentionable: Boolean = false
+
     abstract fun feedById(id: String): String
 
     companion object {
@@ -65,6 +67,8 @@ sealed class StreamingTarget(
     abstract val dbSite: TrackedStreams.DBSite
 
     abstract val onTrack: TrackCallback
+
+    override val mentionable = true
 
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
     abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
@@ -271,6 +275,8 @@ object TwitterTarget : TrackerTarget(
     "twitter", "tweets", "twit", "twitr", "tr"
 ) {
     override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
+
+    override val mentionable = true
 }
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {
@@ -302,7 +308,14 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
             } else null
 
-            return if(site != null) Ok(TargetArguments(site, input)) else {
+            val colonArgs = input.split(":")
+            return if(colonArgs.size == 2 && !colonArgs[1].startsWith("/")) {
+                // siteName:username autocomplete variant
+                val match = TargetArguments[colonArgs[0]]
+                if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
+
+            } else if(site != null) Ok(TargetArguments(site, input)) else {
+
                 // if 1 arg, user supplied just a username OR a url (containing site and username)
                 val urlMatch = declaredTargets.map { supportedSite ->
                     supportedSite.url.mapNotNull { exactUrl ->

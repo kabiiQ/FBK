@@ -4,6 +4,8 @@ import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.command.commands.trackers.TargetSuggestionGenerator
+import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.discord.DiscordObjects
@@ -28,6 +30,13 @@ object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
 
     init {
+        autoComplete {
+            val channelId = event.interaction.channelId.asLong()
+            val siteArg = ChatCommandArguments(event).optInt("site")
+            val matches = TargetSuggestionGenerator.getTargets(channelId, value, siteArg, TrackerTarget::mentionable)
+            suggest(matches)
+        }
+
         chat {
             // manually set mention role for a followed stream - for servers where a role already exists
             // verify stream is tracked, but override any existing mention role

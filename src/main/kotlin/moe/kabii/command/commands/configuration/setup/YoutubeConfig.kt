@@ -36,7 +36,7 @@ object YoutubeConfig : Command("yt") {
         CustomElement("Post when a stream is starting soon",
             "upcoming",
             YoutubeSettings::upcomingNotificationDuration as KMutableProperty1<YoutubeSettings, Any?>,
-            prompt = "Enter a duration representing how far into the future streams should be notified to enable.",
+            prompt = "Enter a duration representing how far into the future streams should be notified to enable. For example: `1h` to include any streams going live in the next hour.",
             default = null,
             parser = ConfigurationElementParsers.durationParser(),
             value = { yt ->

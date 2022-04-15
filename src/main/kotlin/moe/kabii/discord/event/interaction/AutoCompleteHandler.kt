@@ -10,19 +10,37 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.stackTraceString
+import org.apache.commons.lang3.StringUtils
 
 class AutoCompleteHandler(val manager: CommandManager): EventListener<ChatInputAutoCompleteEvent>(ChatInputAutoCompleteEvent::class) {
 
     data class Request(
+        val manager: CommandManager,
         val event: ChatInputAutoCompleteEvent,
         val guildId: Long?
     ) {
-        val value: String = event.focusedOption.value
-            .map(ApplicationCommandInteractionOptionValue::asString)
-            .orElse("")
+        val value: String by lazy {
+            event.focusedOption.value
+                .map(ApplicationCommandInteractionOptionValue::asString)
+                .orElse("")
+        }
 
-        suspend fun respond(choices: Iterable<ApplicationCommandOptionChoiceData>) = event.respondWithSuggestions(
-            choices.take(25)
+        fun <R> typedValue(transform: (ApplicationCommandInteractionOptionValue) -> R) = event
+            .focusedOption.value.map(transform).orNull()
+
+        suspend fun suggest(choices: Iterable<ApplicationCommandOptionChoiceData>) = event.respondWithSuggestions(
+            choices
+                .map { choice ->
+                    val nameLen = choice.name().length > 100
+                    val valueLen = choice.value().toString().length > 100
+                    if(nameLen || valueLen) {
+                        ApplicationCommandOptionChoiceData.builder()
+                            .name(if(nameLen) StringUtils.abbreviate(choice.name(), 100) else choice.name())
+                            .value(if(valueLen) StringUtils.abbreviate(choice.value().toString(), 100) else choice.value())
+                            .build()
+                    } else choice
+                }
+                .take(25)
         ).awaitAction()
     }
 
@@ -34,7 +52,7 @@ class AutoCompleteHandler(val manager: CommandManager): EventListener<ChatInputA
         manager.context.launch {
             val guildId = event.interaction.guildId.orNull()?.asLong()
             try {
-                command.autoComplete!!(Request(event, guildId))
+                command.autoComplete!!(Request(manager, event, guildId))
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in chat autocomplete event: ${command.name}: ${e.message}")
                 LOG.debug(e.stackTraceString)

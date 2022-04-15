@@ -69,6 +69,7 @@ object StreamTrackerCommand : TrackerCommand {
         }
 
         origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
+        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
 
         // side-effects for prompt data maintenance
         try {
@@ -111,6 +112,7 @@ object StreamTrackerCommand : TrackerCommand {
             ) {
                 dbTarget.delete()
                 origin.ireply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
+                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
             } else {
                 val tracker = origin.chan.client
                     .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()

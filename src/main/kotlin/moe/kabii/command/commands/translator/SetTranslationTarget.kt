@@ -11,6 +11,12 @@ object SetTranslationTarget : Command("setlang") {
     override val wikiPath = "Translator#set-the-default-target-language-with-setlang"
 
     init {
+        autoComplete {
+            // get languages from base translator (google)
+            val service = Translator.baseService
+            suggest(LanguageSuggestionGenerator.languageSuggestions(service, value))
+        }
+
         chat {
             member.verify(Permission.MANAGE_MESSAGES)
             val service = Translator.baseService

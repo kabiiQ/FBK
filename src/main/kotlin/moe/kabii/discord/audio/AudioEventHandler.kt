@@ -69,6 +69,8 @@ object AudioEventHandler : AudioEventAdapter() {
                         Embeds.fbk("$now **$title**. $paused$looping")
                             .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
                     )
+                }.doOnNext { msg ->
+                    data.associatedMessages.add(QueueData.NowPlaying(msg.channelId, msg.id))
                 }.subscribe()
         } else {
             data.apply = false
@@ -126,19 +128,20 @@ object AudioEventHandler : AudioEventAdapter() {
                 // delete old messages per guild settings
                 val guildID = data.audio.guildId
                 val config = GuildConfigurations.getOrCreateGuild(guildID)
-                data.associatedMessages.firstOrNull()?.let { msg ->
+                data.associatedMessages.forEach { msg ->
                     data.discord.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
-                            // delete or react to user command depending on server settings
-                            if(config.musicBot.deleteOldBotMessages) {
-                                discordMsg.delete("Old user music bot command")
-                            } else {
-                                discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                            when(msg) {
+                                is QueueData.NowPlaying -> {
+                                    if(config.musicBot.deleteNowPlaying) discordMsg.delete("old music bot now playing message")
+                                    else discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                                }
+                                is QueueData.Queue -> {
+                                    discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                                }
                             }
                         }.subscribe()
                 }
-
-                data.associatedMessages.clear()
             }
             else -> return
         }

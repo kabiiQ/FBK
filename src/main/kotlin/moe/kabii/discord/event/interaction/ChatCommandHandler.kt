@@ -22,7 +22,7 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
 
     fun searchCommandByName(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
-        allowed && command.name == name.lowercase()
+        allowed && command.name.equals(name, ignoreCase = true)
     }
 
     override suspend fun handle(event: ChatInputInteractionEvent) {
@@ -93,15 +93,6 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                     val serverAdmin = param.member.hasPermissions(guildFeature.enablePermission)
                     val enableNotice = if(serverAdmin) "\nServer staff (${guildFeature.enablePermission.friendlyName} permission) can enable this feature using **/${guildFeature.adminEnable}**." else ""
                     param.ereply(Embeds.error("The **${guildFeature.featureName}** feature is not enabled in **$guildName**.$enableNotice.")).awaitSingle()
-
-                } catch (cmd: GuildCommandDisabledException) {
-
-                    author.privateChannel
-                        .flatMap { pm ->
-                            pm.createMessage(
-                                Embeds.error("I tried to respond to your command **${event.commandName}** in channel ${chan.mention} but that command has been disabled by the staff of **$guildName**.")
-                            )
-                        }.awaitSingle()
 
                 } catch (ba: BotAdminException) {
                     LOG.info("Bot admin check failed: $param")

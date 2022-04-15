@@ -14,6 +14,7 @@ import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionData
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -38,8 +39,11 @@ import kotlin.reflect.KMutableProperty1
 sealed class ConfigurationElement<T>(val fullName: String, val propName: String, propertyType: ApplicationCommandOption.Type) {
     val propertyType = propertyType.value
 
-    companion object {
-        fun elementStringInputtable(element: ConfigurationElement<*>) = element is StringElement<*> || element is LongElement<*> || element is CustomElement<*, *>
+    fun elementIsStringInputtable() = this is StringElement<*> || this is LongElement<*> || this is CustomElement<*, *>
+    fun getElementPrompt() = when(this) {
+        is StringElement<*> -> prompt
+        is LongElement<*> -> prompt
+        else -> null
     }
 }
 
@@ -210,7 +214,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         // buttons technically don't change - but components will be overwritten to update selectmenu
         val buttons = module.elements
-            .filter(ConfigurationElement.Companion::elementStringInputtable)
+            .filter(ConfigurationElement<*>::elementIsStringInputtable)
             .map { e -> Button.primary(e.propName, "Edit ${e.propName}") }
 
         // produce layoutcomponents from menu/buttons
@@ -247,7 +251,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
 
         // string input elements (stringelement, customelement) presented as button -> modal for text input
         module.elements
-            .filter(ConfigurationElement.Companion::elementStringInputtable)
+            .filter(ConfigurationElement<*>::elementIsStringInputtable)
             .map { e ->
                 // listener for button creates modal for input
                 val buttonListener = origin.listener(ButtonInteractionEvent::class, true, null, e.propName)
@@ -264,10 +268,14 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                             .withCustomId("modal")
                             .withTitle("Editing ${e.propName}")
                             .thenReturn(Unit)
+                        val prompt = e.getElementPrompt() ?: "Waiting for response..."
+                        val reselectButton = ActionRow.of(
+                            Button.primary(e.propName, "Edit ${e.propName}")
+                        )
                         val edit = origin.event
                             .editReply()
-                            .withEmbeds(Embeds.fbk("Selected **${e.propName}**. Waiting for response..."))
-                            .withComponentsOrNull(null)
+                            .withEmbeds(Embeds.fbk("Selected **${e.propName}**. $prompt"))
+                            .withComponentsOrNull(listOf(reselectButton))
                         Mono
                             .`when`(modal, edit)
                             .thenReturn(Unit)
@@ -280,10 +288,12 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                 val raw = submission.getComponents(TextInput::class.java)[0].value.get()
                                 when(e) {
                                     is StringElement -> {
-                                        e.prop.set(instance, raw)
+                                        e.prop.set(instance, raw.ifBlank { "" })
                                         val edit = submission.edit()
                                             .withEmbeds(currentConfig())
                                             .withComponents(configComponents().toList().orAbsent())
+                                            // may result in multiple reactions due to some weirdness with discord sending cancelled modals(?) when submit finally pressed
+                                            .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                         val notice = submission
                                             .createFollowup()
                                             .withEmbeds(Embeds.fbk("**${e.propName}** has been set to `$raw`."))
@@ -298,6 +308,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                             submission.edit()
                                                 .withEmbeds(currentConfig())
                                                 .withComponents(configComponents().toList().orAbsent())
+                                                .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                         } else {
                                             val edit = submission.edit()
                                                 .withEmbeds(currentConfig())
@@ -316,6 +327,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                                 val edit = submission.edit()
                                                     .withEmbeds(currentConfig())
                                                     .withComponents(configComponents().toList().orAbsent())
+                                                    .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                                 val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
                                                 Mono.`when`(notice, edit)
@@ -382,13 +394,13 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 else -> error("mismatched property '${subCommand.name} :: not resettable")
             }
             val resetTo = resetValue?.toString() ?: "{empty}"
-            origin.ireply(Embeds.fbk("**${element.propName}** has been reset to $resetTo.")).awaitSingle()
+            origin.ereply(Embeds.fbk("**${element.propName}** has been reset to $resetTo.")).awaitSingle()
             return true
         }
 
         if(subCommand.getOption("value").isEmpty) {
             // display current value of property
-            origin.ireply(
+            origin.ereply(
                 Embeds.fbk()
                     .withTitle("From ${module.name} configuration:")
                     .withFields(EmbedCreateFields.Field.of(getName(element), getValue(element), false))
@@ -441,7 +453,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 is BooleanElement -> if (newValue == 1L) "**enabled**" else "**disabled**"
                 else -> "set to **${newValue.toString().ifBlank { "empty" }}**"
             }
-            origin.ireply(Embeds.fbk("The option **${element.propName}** has been $newState")
+            origin.ereply(Embeds.fbk("The option **${element.propName}** has been $newState")
                 .withTitle("Configuration Updated"))
                 .awaitSingle()
             true

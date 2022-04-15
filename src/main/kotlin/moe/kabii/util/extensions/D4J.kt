@@ -7,10 +7,13 @@ import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import discord4j.discordjson.possible.Possible
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.commons.text.WordUtils
+
+typealias CommandOptionSuggestions = List<ApplicationCommandOptionChoiceData>
 
 suspend fun Message.createJumpLink(): String {
     val guild = guild.awaitFirstOrNull()
@@ -42,4 +45,9 @@ fun EmbedCreateSpec.withUser(user: User?) =
     if(user == null) this
     else withAuthor(EmbedCreateFields.Author.of(user.userAddress(), null, user.avatarUrl))
 
-fun List<LayoutComponent>.orAbsent() = if(isEmpty()) Possible.absent() else Possible.of(this)
+fun List<LayoutComponent>.orAbsent(): Possible<List<LayoutComponent>> = if(isEmpty()) Possible.absent() else Possible.of(this)
+
+fun List<String>.toAutoCompleteSuggestions() = map { str ->
+    ApplicationCommandOptionChoiceData.builder()
+        .name(str).value(str).build()
+}

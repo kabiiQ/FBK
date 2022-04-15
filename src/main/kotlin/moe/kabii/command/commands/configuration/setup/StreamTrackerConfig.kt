@@ -64,14 +64,14 @@ object StreamTrackerConfig : Command("streamcfg") {
             "Channel name prefix",
             "prefix",
             StreamSettings::livePrefix,
-            prompt = "Enter a prefix that will be included at the beginning of the channel name when streams are live. Use **reset** to remove the prefix.",
+            prompt = "Enter a prefix that will be included at the beginning of the channel name when streams are live. This can be sent to a blank value to remove it entirely, or use /streamcfg prefix reset:True.",
             default = ""
         ),
         StringElement(
             "Channel name suffix",
             "suffix",
             StreamSettings::liveSuffix,
-            prompt = "Enter a suffix that will be included at the end of the channel name when streams are live. This is less common than using a prefix. Use **reset** to remove the suffix.",
+            prompt = "Enter a suffix that will be included at the end of the channel name when streams are live. This is less common than using a prefix. This can be sent to a blank value to remove it entirely, or use /streamcfg suffix reset:True.",
             default = ""
         )
     )

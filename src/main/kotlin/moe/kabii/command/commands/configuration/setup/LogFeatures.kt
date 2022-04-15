@@ -59,12 +59,12 @@ object LogFeatures : Command("log") {
         ),
         StringElement(
             "Join message", "joinMessage", LogSettings::joinFormat,
-            prompt = "Enter a new message to be sent in this channel when users join this server. See wiki for variables.",
+            prompt = "Enter a new message to be sent in this channel when users join this server. See [wiki](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs#variables-available-for-both-join-and-leave-messages) for variables.",
             default = LogSettings.defaultJoin
         ),
         StringElement(
             "Part (leave) message", "leaveMessage", LogSettings::partFormat,
-            prompt = "Enter a new message to be sent in this channel when users leave this server. See wiki for variables.",
+            prompt = "Enter a new message to be sent in this channel when users leave this server. See [wiki](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs#variables-available-for-both-join-and-leave-messages) for variables.",
             default = LogSettings.defaultPart
         )
     )

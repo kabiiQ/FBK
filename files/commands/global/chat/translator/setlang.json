@@ -6,7 +6,8 @@
             "name": "language",
             "description": "The new default translation \"target\" language.",
             "type": 3,
-            "required": false
+            "required": true,
+            "autocomplete": true
         }
     ]
 }

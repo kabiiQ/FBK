@@ -312,7 +312,8 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         withEmbeds(embed)
                     }
 
-                val notif = if(twitter.mediaOnly && editedThumb == null && thumbnail == null) return@target else channel.createMessage(notifSpec).awaitSingle()
+                if(twitter.mediaOnly && attachment?.url == null) return@target
+                val notif = channel.createMessage(notifSpec).awaitSingle()
 
                 if(attachedVideo != null) {
                     channel.createMessage(attachedVideo)

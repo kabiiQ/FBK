@@ -14,7 +14,6 @@ import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
 import java.net.URL
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery) : AudioLoadResultHandler {
@@ -80,11 +79,19 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
-            data.associatedMessages.add(QueueData.BotMessage(reply.channelId, reply.id))
+            data.associatedMessages.add(QueueData.Queue(reply.channelId, reply.id))
         } else {
-            if(deletePlayReply) {
-                origin.event.deleteReply().success().block()
-            }
+
+            val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
+            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, use the **playlist** command rather than **play**." else ""
+            val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
+
+
+            val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
+            val reply = origin.event.editReply()
+                .withEmbeds(addedEmbed)
+                .block()
+            data.associatedMessages.add(QueueData.Queue(reply.channelId, reply.id))
         }
     }
 

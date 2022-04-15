@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.Embeds
 
 object CommandFilters : CommandContainer {
@@ -13,6 +14,19 @@ object CommandFilters : CommandContainer {
         override val commandExempt = true
 
         init {
+            autoComplete {
+                // only "command"
+                val guildId = event.interaction.guildId.get().asLong()
+                val config = GuildConfigurations.getOrCreateGuild(guildId)
+                val subCommand = event.options[0]
+                val commands = when(subCommand.name) {
+                    "add" -> manager.generateSuggestions(value)
+                    "remove" -> manager.generateSuggestions(value) { cmd -> config.commandFilter.whitelist.contains(cmd.name) }
+                    else -> return@autoComplete
+                }
+                suggest(commands)
+            }
+
             chat {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter
@@ -75,6 +89,19 @@ object CommandFilters : CommandContainer {
         override val commandExempt = true
 
         init {
+            autoComplete {
+                // only "command"
+                val guildId = event.interaction.guildId.get().asLong()
+                val config = GuildConfigurations.getOrCreateGuild(guildId)
+                val subCommand = event.options[0]
+                val commands = when(subCommand.name) {
+                    "add" -> manager.generateSuggestions(value)
+                    "remove" -> manager.generateSuggestions(value) { cmd -> config.commandFilter.blacklist.contains(cmd.name) }
+                    else -> return@autoComplete
+                }
+                suggest(commands)
+            }
+
             chat {
                 member.verify(Permission.MANAGE_CHANNELS)
                 val filter = config.commandFilter

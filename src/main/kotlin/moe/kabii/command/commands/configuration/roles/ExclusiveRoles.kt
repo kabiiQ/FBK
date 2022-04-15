@@ -7,9 +7,11 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.ExclusiveRoleSet
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
+import moe.kabii.util.extensions.toAutoCompleteSuggestions
 import moe.kabii.util.extensions.tryAwait
 import reactor.kotlin.core.publisher.toMono
 
@@ -17,6 +19,16 @@ object ExclusiveRoleSets : Command("roleset") {
     override val wikiPath: String? = null
 
     init {
+        autoComplete {
+            // suggest existing set names for set editing operations
+            // only editing operations will have autocomplete enabled, checking not required
+            val sets = GuildConfigurations
+                .getOrCreateGuild(guildId!!) // command will only be executed in guild
+                .autoRoles.exclusiveRoleSets
+                .map(ExclusiveRoleSet::name)
+            suggest(sets.toAutoCompleteSuggestions())
+        }
+
         chat {
             member.verify(Permission.MANAGE_ROLES)
             val action = when(subCommand.name) {

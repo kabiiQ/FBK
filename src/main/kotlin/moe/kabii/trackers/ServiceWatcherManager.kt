@@ -58,7 +58,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
         val twitchSubs = TwitchSubscriptionManager(discord, twitch, twitchSubDelay)
 
         val spacesDelay = ServiceRequestCooldownSpec(
-            callDelay = 0L,
+            callDelay = 3_500L,
             minimumRepeatTime = 60_000L
         )
         spaceChecker = SpaceChecker(discord, spacesDelay)
@@ -117,7 +117,7 @@ class ServiceWatcherManager(val discord: GatewayDiscordClient) {
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
             Thread(twitchSubs, "TwitchSubscriptionManager"),
-            //Thread(spaceChecker, "TwitterSpacesChecker"),
+            Thread(spaceChecker, "TwitterSpacesChecker"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),

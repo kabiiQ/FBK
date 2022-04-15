@@ -7,7 +7,8 @@
             "description": "The ID of the reminder you would like to cancel, found where you created the reminder.",
             "type": 4,
             "min_value": 1,
-            "required": true
+            "required": true,
+            "autocomplete": true
         }
     ]
 }
