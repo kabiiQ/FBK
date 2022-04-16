@@ -54,6 +54,10 @@ admin_user = [
 admin_channels = [
     582802415057633281
 ]
+admin_guilds = [
+    314662502204047361,
+    581785820156002304
+]
 log_channel = 0
 
 [twitter]
@@ -75,7 +79,6 @@ twitcast_client_id = ''
 twitcast_client_secret = ''
 twitcast_webhook_port = 8002
 twitcast_webhook_signature = ''
-twitcast_webhook_listen = true
 
 [deepl]
 deepl_key = ''
