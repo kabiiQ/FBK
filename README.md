@@ -10,7 +10,7 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 # Add FBK to your Discord server
 
-FBK is now available for invite and public use as of December 2020. I have not done any sort of advertising yet, but feel free to use it or share it.
+FBK is now available for invite and public use, I have not done any sort of advertising yet, but feel free to use it or share it.
 
 #### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=314672047718531072&permissions=288681168&scope=applications.commands%20bot)
 
@@ -35,7 +35,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Livestream/Video notifications](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
     - Post information on specific streams while they are live
     - Optionally mention a role when they become live
-    - Currently supports **Twitch** and **TwitCasting** livestreams, and **YouTube** livestreams/video uploads.
+    - Currently supports **Twitch**, **TwitCasting**, **Twitter Spaces** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
@@ -43,20 +43,20 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
     - Post information when specific users post a Tweet!
 
 - ## **[Music Player](https://github.com/kabiiQ/FBK/wiki/Music-Player)**
-  - [Play songs from multiple locations](https://github.com/kabiiQ/FBK/wiki/Music-Player#playing-audio)
-  - [Song queue with vote-skip and force-skip](https://github.com/kabiiQ/FBK/wiki/Music-Player#queue-manipulation)
-    - Moderator commands: [*Temporarily interrupt a song already playing, or add to the front of the queue*](https://github.com/kabiiQ/FBK/wiki/Music-Player#playing-audio)
+  - [Play songs from multiple locations](https://github.com/kabiiQ/FBK/wiki/Music-Player#playing-music-with-the-play-command)
+  - [Song queue with vote-skip and force-skip](https://github.com/kabiiQ/FBK/wiki/Music-Player#skipping-tracks-in-queue-with-skip)
+    - Moderator commands: [*Temporarily interrupt a song already playing, or add to the front of the queue*](https://github.com/kabiiQ/FBK/wiki/Music-Player#--play-is-the-primary-command-for-adding-music-to-the-queue)
   - [**Fast forward/rewind/skip** to timestamp in songs at will](https://github.com/kabiiQ/FBK/wiki/Music-Player#playback-manipulation)
   - [**Speed up songs**, change their pitch, or apply a bass boost](https://github.com/kabiiQ/FBK/wiki/Music-Player#audio-manipulationfilters)
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
-- ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#reminders)
+- ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Reminders)
 - ## [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
 
 - ## **General Utility**
   - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
-  - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time)
+  - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar-with-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time-with-who)
 
 - ## Game(s)
   - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games-(Connect-4))
@@ -65,27 +65,25 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [User joining server (per invite code if needed)](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-joining-your-server)
   - [User joining/leaving voice channels](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-in-a-voice-channel)
   - [User **reactions** on a specific message **(reaction roles)**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-reacting-to-a-specific-message)
-  - [User running a custom command](https://github.com/kabiiQ/FBK/wiki/Command-Roles#custom-role-commands)
   - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
 - ## General Configurability
-  - [Change bot prefix freely or add a command suffix instead](https://github.com/kabiiQ/FBK/wiki/Configuration#changing-command-prefix-andor-suffix)
   - Targeted functionality such as music bot commands and service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
   - [Blacklist specific bot commands or require commands to be whitelisted](https://github.com/kabiiQ/FBK/wiki/Configuration#using-a-command-blacklist-or-whitelist) if further usage restriction is required
 
 
 - Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
-  - [**Configurable, ~~comprehensive~~ (WIP) moderation logs**](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
+  - [**Configurable moderation logs (WIP)**](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
   - [Purging messages from a chat](https://github.com/kabiiQ/FBK/wiki/Purge-Messages)
-  - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels)
+  - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels-with-drag)
 
 
 # Development 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.6.0-blue.svg?logo=Kotlin)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.6.20-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 
-... and more to come! There is plenty planned for when I have time and motivation (university student + PT work + the hustle).
+... and more to come! There is plenty planned for when I have time and motivation (university student + work + the hustle).
 
 Current feature/issue plans are tracked on my [Glo Board](https://app.gitkraken.com/glo/board/XRmi8OAM1wAPgyBv).
 
@@ -101,6 +99,9 @@ The big libraries making my work on FBK doable are [Discord4J](https://github.co
 
 This Discord bot is named after, but has no association to the virtual YouTuber [Shirakami Fubuki](https://www.youtube.com/channel/UCdn5BQ06XqgXoAxIhbqw5Rg), a streamer with [Hololive](https://www.youtube.com/channel/UCJFZiqLMntJufDCHc6bQixg).
 
-FBK is licensed under the GPL 3.0 license, viewable in the ``LICENSE`` file. 
+FBK is licensed under the GPL 3.0 license, viewable in the [LICENSE](https://github.com/kabiiQ/FBK/blob/master/LICENSE) file. 
 
- Some commands may echo user input. No user-created content should be considered as an opinion or statement from myself. 
+ Some commands may echo user input. No user-created content should be considered as an opinion or statement from mysel
+ 
+ ## [Privacy Policy](https://github.com/kabiiQ/FBK/blob/master/PRIVACY.md)
+ ## [Terms of Service](https://github.com/kabiiQ/FBK/blob/master/TERMS.md)
