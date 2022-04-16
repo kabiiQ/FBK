@@ -25,7 +25,7 @@ import java.time.Duration
 object Urban : Command("ud") {
     val udAdapter: JsonAdapter<Response> = MOSHI.adapter(Response::class.java)
 
-    override val wikiPath = "Lookup-Commands#urbandictionary-lookup"
+    override val wikiPath = "Lookup-Commands#urbandictionary-lookup-ud"
 
     init {
         chat {

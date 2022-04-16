@@ -27,7 +27,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SetMentionRole : Command("setmention") {
-    override val wikiPath = "Livestream-Tracker#content-creator-example-setting-a-default-channel"
+    override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
         autoComplete {

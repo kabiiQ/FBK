@@ -13,7 +13,7 @@ import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.extensions.propagateTransaction
 
 object StreamTrackerConfig : Command("streamcfg") {
-    override val wikiPath = "Livestream-Tracker#configuration"
+    override val wikiPath = "Livestream-Tracker#stream-notification-configuration-with-streamcfg"
 
     object StreamTrackerModule : ConfigurationModule<StreamSettings>(
         "livestream tracker",

@@ -7,7 +7,7 @@ import moe.kabii.discord.util.Embeds
 
 object BotUtil : CommandContainer {
     object GlitchLink : Command("top") {
-        override val wikiPath: String? = null // yeah
+        override val wikiPath: String? = null
 
         init {
             chat {

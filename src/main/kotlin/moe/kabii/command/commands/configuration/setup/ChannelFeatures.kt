@@ -31,7 +31,7 @@ object ChannelFeatures : CommandContainer {
     )
 
     object ChannelFeatures : Command("feature") {
-        override val wikiPath= "Configuration-Commands#the-config-command-channel-features"
+        override val wikiPath= "Configuration-Commands#the-feature-command-channel-features"
 
         init {
             chat {
@@ -69,7 +69,7 @@ object ChannelFeatures : CommandContainer {
     }
 
     object ListFeatureChannels : Command("channels") {
-        override val wikiPath = "Configuration-Commands#listing-enabled-channel-features-in-the-server"
+        override val wikiPath = "Configuration-Commands#the-feature-command-channel-features"
 
         init {
             chat {

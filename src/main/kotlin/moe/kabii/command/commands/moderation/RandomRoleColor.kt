@@ -23,7 +23,7 @@ import moe.kabii.util.extensions.awaitAction
 import java.time.Duration
 
 object RandomRoleColor : Command("randomizecolor") {
-    override val wikiPath = "Moderation-Commands#randomizing-a-roles-color"
+    override val wikiPath = "Moderation-Commands#randomizing-a-roles-color-with-randomizecolor"
 
     private fun randomColor() = Color.of((0..0xFFFFFF).random())
 

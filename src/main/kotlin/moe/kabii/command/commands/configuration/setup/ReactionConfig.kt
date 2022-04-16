@@ -8,7 +8,7 @@ import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 
 object ReactionConfig : Command("cleanreactionscfg") {
-    override val wikiPath = "Configuration-Commands#the-reactions-command"
+    override val wikiPath = "Configuration-Commands#the-cleanreactionscfg-command"
 
     object ReactionConfigModule : ConfigurationModule<FeatureChannel>(
         "reaction role",

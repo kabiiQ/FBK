@@ -14,7 +14,7 @@ import java.io.IOException
 
 object WolframAlpha : Command("calc") {
 
-    override val wikiPath = "Lookup-Commands#wolframalpha-queries"
+    override val wikiPath = "Lookup-Commands#wolframalpha-queries-calc"
     private val wysi = Regex("7\\D?27")
 
     private val appId = Keys.config[Keys.Wolfram.appId]

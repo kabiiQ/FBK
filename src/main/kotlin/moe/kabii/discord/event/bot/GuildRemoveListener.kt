@@ -20,7 +20,8 @@ object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::c
                     .withAuthor(EmbedCreateFields.Author.of("Leaving server", null, event.client.self.map(User::getAvatarUrl).tryBlock().orNull()))
             ).awaitSingle()
 
-            DataDeletionRequests.guildDataDeletion(event.guildId.asLong())
+            // disable automatic database clearing temporarily: users re-inviting bot for slash command migrations
+            // DataDeletionRequests.guildDataDeletion(event.guildId.asLong())
         }
     }
 }

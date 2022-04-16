@@ -15,7 +15,7 @@ import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
 
 object TwitterConfig : Command("twitter") {
-    override val wikiPath = "Twitter-Tracker"
+    override val wikiPath = "Twitter-Tracker#twitter-feed-notification-configuration"
 
     object TwitterConfigModule : ConfigurationModule<TwitterSettings>(
         "twitter tracker",

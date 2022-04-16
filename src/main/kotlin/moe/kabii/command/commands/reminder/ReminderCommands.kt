@@ -24,7 +24,7 @@ import java.time.temporal.ChronoUnit
 
 object ReminderCommands : CommandContainer {
     object RemindMe : Command("remind") {
-        override val wikiPath = "Utility-Commands#commands"
+        override val wikiPath = "Reminders"
 
         init {
             chat {
@@ -89,7 +89,7 @@ object ReminderCommands : CommandContainer {
     }
 
     object CancelReminder : Command("remindcancel") {
-        override val wikiPath = "Utility-Commands#commands"
+        override val wikiPath = "Reminders"
 
         init {
             autoComplete {

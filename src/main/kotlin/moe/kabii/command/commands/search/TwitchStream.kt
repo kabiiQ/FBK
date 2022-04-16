@@ -9,7 +9,7 @@ import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 
 object TwitchStreamLookup : Command("ttv") {
-    override val wikiPath = "Lookup-Commands#twitch-stream-lookup"
+    override val wikiPath = "Lookup-Commands#twitch-stream-lookup-ttv"
 
     init {
         chat {

@@ -10,7 +10,7 @@ import moe.kabii.data.mongodb.guilds.CustomCommand
 import moe.kabii.discord.util.Embeds
 
 object CustomCommands : Command("customcommand") {
-    override val wikiPath = "Custom-Commands#creating-a-command-with-addcommand"
+    override val wikiPath = "Custom-Commands"
 
     init {
         chat {

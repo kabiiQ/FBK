@@ -49,14 +49,11 @@ object CommandInfo : Command("help") {
         }
         fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
 
+        val wikiPage = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${command.name}"
         ereply(
             Embeds.fbk()
                 .withTitle("Command information: ${match.name}")
-                .run {
-                    val wikiPage = match.getHelpURL()
-                    if(wikiPage != null) withDescription("[Command Wiki Page]($wikiPage)")
-                    else withDescription("Command wiki page not found.")
-                }
+                .withDescription("Command wiki page not found.")
                 .withFields(fields)
         ).awaitSingle()
     }

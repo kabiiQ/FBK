@@ -19,7 +19,7 @@ import java.time.Duration
 
 object SearchTracks : AudioCommandContainer {
     object SearchSource : Command("search") {
-        override val wikiPath = "Music-Player#playing-audio"
+        override val wikiPath = "Music-Player#playing-music-with-the-play-command"
 
         init {
             chat {

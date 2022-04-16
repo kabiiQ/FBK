@@ -13,7 +13,7 @@ import java.io.File
 
 object SnowflakeUtil : CommandContainer {
     object GetIDs : Command("ids") {
-        override val wikiPath = "Discord-Info-Commands#get-all-ids-in-a-server"
+        override val wikiPath = "Discord-Info-Commands#get-all-ids-in-a-server-with-ids"
 
         init {
             chat {

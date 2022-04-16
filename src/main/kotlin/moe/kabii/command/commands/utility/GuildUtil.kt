@@ -18,7 +18,7 @@ object GuildUtil : CommandContainer {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
 
     object GuildInfo : Command("server") {
-        override val wikiPath = "Discord-Info-Commands#get-server-info"
+        override val wikiPath = "Discord-Info-Commands#get-server-info-with-server"
 
         init {
             chat {

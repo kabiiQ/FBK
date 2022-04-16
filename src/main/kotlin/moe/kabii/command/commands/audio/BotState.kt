@@ -7,7 +7,7 @@ import moe.kabii.util.extensions.awaitAction
 
 object BotState : AudioCommandContainer {
     object BotSummon : Command("join") {
-        override val wikiPath = "Music-Player#playing-audio"
+        override val wikiPath = "Music-Player#Music-Player#commands"
 
         init {
             chat {

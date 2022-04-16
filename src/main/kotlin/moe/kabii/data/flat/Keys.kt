@@ -49,7 +49,6 @@ object Keys : ConfigSpec("") {
     }
     object Netty : ConfigSpec() {
         val port by required<Int>()
-        val host by required<Boolean>()
         val domain by required<String>()
     }
     object Admin : ConfigSpec() {
@@ -77,7 +76,6 @@ object Keys : ConfigSpec("") {
         val clientSecret by required<String>("twitcast_client_secret")
         val webhookPort by required<Int>("twitcast_webhook_port")
         val signature by required<String>("twitcast_webhook_signature")
-        val listen by required<Boolean>("twitcast_webhook_listen")
     }
     object DeepL : ConfigSpec("deepl") {
         val authKey by required<String>("deepl_key")

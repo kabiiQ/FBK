@@ -11,7 +11,7 @@ import java.time.Duration
 import kotlin.reflect.KMutableProperty1
 
 object YoutubeConfig : Command("yt") {
-    override val wikiPath = "Livestream-Tracker#-youtube-tracker-configuration-with-youtube"
+    override val wikiPath = "Livestream-Tracker#-youtube-tracker-configuration-with-yt"
 
     @Suppress("UNCHECKED_CAST")
     object YoutubeConfigModule : ConfigurationModule<YoutubeSettings>(

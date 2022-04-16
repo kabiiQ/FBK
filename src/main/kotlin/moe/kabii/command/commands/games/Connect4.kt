@@ -16,7 +16,7 @@ import moe.kabii.util.extensions.awaitAction
 import java.time.Duration
 
 object Connect4 : Command("connect4") {
-    override val wikiPath = "Games-(Connect-4)#connect-4"
+    override val wikiPath = "Games-(Connect-4)"
 
     init {
         chat {

@@ -5,7 +5,7 @@ import moe.kabii.command.Command
 
 
 object Vinglish : Command("garble") {
-    override val wikiPath = "Other-Commands#garble-text-"
+    override val wikiPath = "RNG-Commands#garble-text-"
 
     private fun random() = (1..100).random() / 100.00
     private val vinglishify = { original: String ->

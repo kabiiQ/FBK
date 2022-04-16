@@ -15,7 +15,7 @@ import moe.kabii.util.extensions.snowflake
 import kotlin.reflect.KMutableProperty1
 
 object StarboardConfig : Command("starboard") {
-    override val wikiPath = "Starboard#starboard-configuration-starboard"
+    override val wikiPath = "Starboard"
 
     object StarboardModule : ConfigurationModule<StarboardSetup>(
         "starboard",

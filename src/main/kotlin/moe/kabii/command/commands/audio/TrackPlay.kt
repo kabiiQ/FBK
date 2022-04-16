@@ -11,7 +11,7 @@ import moe.kabii.util.extensions.awaitAction
 
 object TrackPlay : AudioCommandContainer {
     object PlaySong : Command("play") {
-        override val wikiPath = "Music-Player#playing-audio"
+        override val wikiPath = "Music-Player#Music-Player#playing-music-with-the-play-command"
 
         init {
 

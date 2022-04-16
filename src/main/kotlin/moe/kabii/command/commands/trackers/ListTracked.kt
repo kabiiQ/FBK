@@ -13,7 +13,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 
 object ListTracked : Command("tracked") {
-    override val wikiPath = "Livestream-Tracker#listing-tracked-streams-with-tracked"
+    override val wikiPath: String? = null
 
     init {
         chat {

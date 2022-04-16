@@ -18,7 +18,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import kotlin.reflect.full.isSuperclassOf
 
 object StreamChannelRenameConfig : Command("streamrenamecfg") {
-    override val wikiPath = "Livestream-Tracker#configuration"
+    override val wikiPath = "Livestream-Tracker#setting-stream-specific-charactersemoji"
 
     init {
         autoComplete {

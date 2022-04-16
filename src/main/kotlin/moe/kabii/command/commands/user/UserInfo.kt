@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 object UserInfo : Command("who") {
     private val formatter = DateTimeFormatter.ofPattern("MMMM dd yyyy @ HH:mm:ss 'UTC'")
 
-    override val wikiPath = "Discord-Info-Commands#user-info-summary-server-join-time"
+    override val wikiPath = "Discord-Info-Commands#user-info-summary-server-join-time-with-who"
 
     init {
         chat {

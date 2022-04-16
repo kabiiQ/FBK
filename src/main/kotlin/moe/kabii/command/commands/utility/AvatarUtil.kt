@@ -15,7 +15,7 @@ import moe.kabii.util.extensions.userAddress
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar") {
-        override val wikiPath = "Discord-Info-Commands#get-user-avatar"
+        override val wikiPath = "Discord-Info-Commands#get-user-avatar-with-avatar"
 
         init {
             chat {

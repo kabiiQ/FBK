@@ -11,7 +11,7 @@ import moe.kabii.discord.util.Embeds
 import reactor.core.publisher.Mono
 
 object Drag : Command("drag") {
-    override val wikiPath = "Moderation-Commands#mass-drag-users-in-voice-channels"
+    override val wikiPath = "Moderation-Commands#mass-drag-users-in-voice-channels-with-drag"
 
     init {
         chat {

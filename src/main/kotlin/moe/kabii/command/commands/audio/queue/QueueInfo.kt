@@ -63,7 +63,7 @@ object QueueInfo : AudioCommandContainer {
     }
 
     object NowPlaying : Command("np") {
-        override val wikiPath = "Music-Player#queue-information"
+        override val wikiPath = "Music-Player#--music-queue-information"
 
         init {
             chat {

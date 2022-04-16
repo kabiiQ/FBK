@@ -10,7 +10,7 @@ import moe.kabii.util.constants.EmojiCharacters
 
 object SkebLookup : Command("skeb") {
 
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Lookup-Commands#skeb-profile-lookup-skeb"
 
     init {
         chat {

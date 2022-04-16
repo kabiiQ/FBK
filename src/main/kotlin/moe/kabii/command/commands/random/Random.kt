@@ -120,7 +120,7 @@ object Random : CommandContainer {
     }
 
     object Coinflip : Command("coinflip") {
-        override val wikiPath = "RNG-Commands#the-flip-command"
+        override val wikiPath = "RNG-Commands#the-coinflip-command"
 
         init {
             chat {

@@ -12,7 +12,7 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
 
 object TranslateCommand : Command("translate") {
-    override val wikiPath = "Translator#simple-translation-to-your-default-language-with-translate-most-common"
+    override val wikiPath = "Translator#-translation-commands"
     private val langRegex = Regex("(![^,<#]{2,25})?([,<#].{2,25})?")
 
     init {
