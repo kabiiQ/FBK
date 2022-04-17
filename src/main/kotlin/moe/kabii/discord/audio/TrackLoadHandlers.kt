@@ -16,8 +16,10 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
 import java.net.URL
 
-abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery) : AudioLoadResultHandler {
+abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery, val searched: Boolean = false) : AudioLoadResultHandler {
     val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
+
+    val search = if(searched) "YouTube search: ${extract.url}\n\n" else ""
 
     internal val query: String?
     get() {
@@ -74,7 +76,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
 
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
-            val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
+            val addedEmbed = Embeds.fbk("${searched}Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
                 .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
@@ -87,7 +89,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
 
-            val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
+            val addedEmbed = Embeds.fbk("${searched}Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
@@ -129,20 +131,20 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
         exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)
         origin.event.editReply()
-            .withEmbeds(Embeds.error("Unable to load audio track$error"))
+            .withEmbeds(Embeds.error("${searched}Unable to load audio track$error"))
             .block()
     }
 }
 
-open class SingleTrackLoader(origin: DiscordParameters, private val position: Int? = null, extract: ExtractedQuery) : BaseLoader(origin, position, extract) {
+open class SingleTrackLoader(origin: DiscordParameters, private val position: Int? = null, extract: ExtractedQuery, searched: Boolean = false) : BaseLoader(origin, position, extract, searched) {
     override fun noMatches() {
-        if(query != null) AudioManager.manager.loadItem(query, FallbackHandler(origin, position, extract))
+        if(query != null) AudioManager.manager.loadItem(query, FallbackHandler(origin, position, extract, searched = true))
     }
 
     override fun playlistLoaded(playlist: AudioPlaylist) = trackLoadedModifiers(playlist.tracks.first(), warnPlaylist = true)
 }
 
-class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery) : SingleTrackLoader(origin, position, extract) {
+class FallbackHandler(origin: DiscordParameters, position: Int? = null, extract: ExtractedQuery, searched: Boolean = false) : SingleTrackLoader(origin, position, extract, searched) {
     // after a youtube search is attempted, load a single track if it succeeded. if it failed, we don't want to search again.
     override fun noMatches() {
         origin.event.editReply()

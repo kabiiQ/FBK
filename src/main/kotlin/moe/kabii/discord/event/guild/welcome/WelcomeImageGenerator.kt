@@ -57,7 +57,6 @@ object WelcomeImageGenerator {
             var y = 90f // from top to baseline first line
 
             val lineSpacing = 20
-            val avatarPadding = 12
             // draw tag line
             if(config.includeTagline) {
                 val tagBounds = taglineFont.getStringBounds(config.taglineValue, frc)
@@ -97,7 +96,9 @@ object WelcomeImageGenerator {
 
             // draw avatar
             if(config.includeAvatar) {
-                val avatarDia = 256
+                val avatarPadding = 12
+                val avatarDia = if(config.includeImageText) 256 else 320
+
                 val avatarRad = avatarDia / 2
                 val outlineD = avatarDia + 3
                 val outlineR = outlineD / 2
