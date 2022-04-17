@@ -1,0 +1,26 @@
+{
+    "name": "tl",
+    "description": "Translate text between languages",
+    "options": [
+        {
+            "name": "text",
+            "description": "The text to translate.",
+            "type": 3,
+            "required": true
+        },
+        {
+            "name": "to",
+            "description": "The language to translate the text into, if not specified, the server's default will be used.",
+            "type": 3,
+            "required": false,
+            "autocomplete": true
+        },
+        {
+            "name": "from",
+            "description": "The language to translate the text from. Only needed if the language detection is incorrect.",
+            "type": 3,
+            "required": false,
+            "autocomplete": true
+        }
+    ]
+}
