@@ -274,6 +274,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     ?.run { getMentionRoleFor(target, this.snowflake, channel, tweet, twitter) }
                     ?.discord?.mention
                     ?.plus(" ")
+                    ?.run { if(Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)) null else this }
                     ?: ""
 
                 val notifSpec = MessageCreateSpec.create()
