@@ -8,10 +8,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.tryAwait
-import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.extensions.*
 
 object AvatarUtil : CommandContainer {
     object Avatar : Command("avatar") {
@@ -57,7 +54,7 @@ object AvatarUtil : CommandContainer {
                     .withImage("${resolvedUser.avatarUrl}?size=256")
                     .withColor(Color.of(12187102))
 
-                val member = interaction.member.orNull()
+                val member = interaction.guildId.orNull()?.run(resolvedUser::asMember)?.tryBlock()?.orNull()
                 val guildAvatar = if(member != null) {
                     val guild = member.guild.awaitSingle()
                     val format = if(member.hasAnimatedGuildAvatar()) Image.Format.GIF else Image.Format.PNG

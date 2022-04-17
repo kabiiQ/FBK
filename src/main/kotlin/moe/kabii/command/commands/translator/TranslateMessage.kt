@@ -38,16 +38,30 @@ object TranslateMessage : Command("Translate Message") {
             val translator = Translator.getService(contents, defaultLang.tag)
             val translation = translator.translate(from = null, to = defaultLang, text = contents)
             val jumpLink = resolvedMessage.createJumpLink()
-            val text = if(translation.originalLanguage != translation.targetLanguage) StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
-            else "<No translation performed>"
             val user = interaction.user
-            reply()
-                .withEmbeds(
-                    Embeds.fbk(text)
-                        .withAuthor(EmbedCreateFields.Author.of("Translation requested by ${user.userAddress()}", jumpLink, user.avatarUrl))
-                        .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null))
-                )
-                .awaitAction()
+
+            if(translation.originalLanguage != translation.targetLanguage) {
+
+                val text = StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
+                reply()
+                    .withEmbeds(
+                        Embeds.fbk(text)
+                            .withAuthor(EmbedCreateFields.Author.of("Translation Requested for Message", jumpLink, user.avatarUrl))
+                            .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}\nTranslation: ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}", null))
+                    )
+                    .awaitAction()
+
+            } else {
+
+                val tag = translation.originalLanguage.tag
+                reply()
+                    .withEmbeds(
+                        Embeds.error("Translation was not performed: $tag -> $tag.")
+                    )
+                    .withEphemeral(true)
+                    .awaitAction()
+
+            }
         }
     }
 }
