@@ -79,7 +79,7 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
             .withAuthor(EmbedCreateFields.Author.of("$clock Reminder for ${user.userAddress()} $clock", null, user.avatarUrl))
             .run {
                 val content = reminder.content
-                if(content.isNotBlank()) withFields(EmbedCreateFields.Field.of("Reminder:", content, false)) else this
+                if(content != null) withFields(EmbedCreateFields.Field.of("Reminder: ", content, false)) else this
             }
 
         suspend fun sendReminder(target: MessageChannel) {

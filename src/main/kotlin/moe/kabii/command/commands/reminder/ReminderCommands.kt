@@ -30,7 +30,7 @@ object ReminderCommands : CommandContainer {
             chat {
                 // create a reminder for the current user - if pm or has pm flag, send message in pm instead
                 // remindme time message !dm
-                val timeArg = args.string("when")
+                val timeArg = args.string("time")
                 val time = DurationParser.tryParse(timeArg, startAt = ChronoUnit.MINUTES)
 
                 if(time == null) {
@@ -58,6 +58,7 @@ object ReminderCommands : CommandContainer {
                     } else dmChan
                 } else chan
 
+                val messageArg = args.optStr("message")
                 // add the reminder to the database
                 val reminder = transaction {
                     Reminder.new {
@@ -65,7 +66,7 @@ object ReminderCommands : CommandContainer {
                         channel = replyChannel.id.asLong()
                         created = DateTime.now()
                         remind = DateTime.now().plusSeconds(time.seconds.toInt())
-                        content = args.optStr("what") ?: ""
+                        content = messageArg
                         originMessage = null
                     }
                 }
@@ -75,6 +76,9 @@ object ReminderCommands : CommandContainer {
 
                 val reply = Embeds.other("Reminder created for $reminderTarget.\nYou will be sent a $location in **$length**.", MessageColors.reminder)
                     .withFooter(EmbedCreateFields.Footer.of("Reminder ID: $reminderID", null))
+                    .run {
+                        if(messageArg != null) withFields(EmbedCreateFields.Field.of("Reminder: ", messageArg, false)) else this
+                    }
                 if(replyPrivate) {
                     ereply(reply).awaitSingle()
                 } else {
@@ -117,7 +121,7 @@ object ReminderCommands : CommandContainer {
                         reminders
                             .sortedWith(channelPriority)
                             .map { reminder ->
-                                val content = if(reminder.content.isNotBlank()) ": ${reminder.content}" else ""
+                                val content = if(reminder.content != null) ": ${reminder.content}" else ""
                                 val channel = if(reminder.channel != channelId) " (different channel)" else ""
                                 ApplicationCommandOptionChoiceData.builder()
                                     .name("#${reminder.id.value}$channel$content")

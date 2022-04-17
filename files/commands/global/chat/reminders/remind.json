@@ -3,13 +3,13 @@
     "description": "Create a reminder to be sent to you in the near future.",
     "options": [
         {
-            "name": "when",
+            "name": "time",
             "description": "The time until this reminder should be sent. Examples: 2m or 6h or 1w",
             "type": 3,
             "required": true
         },
         {
-            "name": "what",
+            "name": "message",
             "description": "What you would like to be reminded about.",
             "type": 3,
             "required": false
