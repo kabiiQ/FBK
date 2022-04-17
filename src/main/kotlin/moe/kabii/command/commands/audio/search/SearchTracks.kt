@@ -31,7 +31,9 @@ object SearchTracks : AudioCommandContainer {
                     else -> AudioSource.SOUNDCLOUD
                 }
                 val query = args.string("search")
-                event.deferReply().awaitAction()
+                event.deferReply()
+                    .withEphemeral(true)
+                    .awaitAction()
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
                     event.editReply()
@@ -92,6 +94,9 @@ object SearchTracks : AudioCommandContainer {
                 event.editReply()
                     .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))
                     .withComponentsOrNull(null)
+                    .awaitSingle()
+                chan
+                    .createMessage(Embeds.fbk("${author.mention} added **${selected.size}** tracks to queue using /search."))
                     .awaitSingle()
             }
         }
