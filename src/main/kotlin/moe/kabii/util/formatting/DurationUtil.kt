@@ -2,6 +2,7 @@ package moe.kabii.util
 
 import moe.kabii.rusty.Try
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -95,6 +96,11 @@ object DurationParser {
 
 class DurationFormatter(val duration: Duration) {
     constructor(millisDuration: Long) : this(Duration.ofMillis(millisDuration))
+
+    companion object {
+        fun until(time: Instant) = DurationFormatter(Duration.between(Instant.now(), time))
+        fun since(time: Instant) = DurationFormatter(Duration.between(time, Instant.now()))
+    }
 
     private val days = duration.seconds / 86400
     private val hours = duration.seconds / 3600

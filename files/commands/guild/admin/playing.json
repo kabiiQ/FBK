@@ -1,6 +1,6 @@
 {
     "name": "status",
-    "description": "Set a custom status for the bot.",
+    "description": "(Restricted) Set a custom status for the bot.",
     "options": [
         {
             "name": "playing",

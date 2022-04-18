@@ -112,7 +112,6 @@ fun main() {
     // perform initial offline checks
     val offlineChecks = gateway.guilds
         .flatMap { guild ->
-            LOG.info("Connected to guild ${guild.name}")
             mono {
                 OfflineUpdateHandler.runChecks(guild)
                 InviteWatcher.updateGuild(guild)

@@ -20,7 +20,6 @@ import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -123,7 +122,7 @@ object ReminderCommands : CommandContainer {
                         reminders
                             .sortedWith(channelPriority)
                             .map { reminder ->
-                                val time = DurationFormatter(Duration.between(Instant.now(), reminder.remind.javaInstant)).inputTime
+                                val time = DurationFormatter.until(reminder.remind.javaInstant).inputTime
                                 val channel = if(reminder.channel != channelId) ", different channel" else ""
                                 val content = if(reminder.content != null) ": ${reminder.content}" else ""
                                 val info = "#${reminder.id.value} ($time$channel)$content"
