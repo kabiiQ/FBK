@@ -131,7 +131,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
         exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)
         origin.event.editReply()
-            .withEmbeds(Embeds.error("${search}Unable to load audio track$error"))
+            .withEmbeds(Embeds.error("${search.ifBlank { "Attempted to play: ${extract.url}\n\n" }}Unable to load audio track$error"))
             .block()
     }
 }
