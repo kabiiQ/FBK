@@ -17,6 +17,7 @@ import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
@@ -213,7 +214,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         } else null
 
         // buttons technically don't change - but components will be overwritten to update selectmenu
-        val buttons = module.elements
+        val buttons = listOf(Button.success("exit", "Save and Exit")) + module.elements
             .filter(ConfigurationElement<*>::elementIsStringInputtable)
             .map { e -> Button.primary(e.propName, "Edit ${e.propName}") }
 
@@ -249,10 +250,22 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             listeners.add(menuListener)
         }
 
+        val exitListener = origin.listener(ButtonInteractionEvent::class, true, null, "exit")
+            .flatMap { press ->
+                mono {
+                    origin.config.save()
+                }.then(
+                    origin.event.editReply()
+                        .withEmbeds(Embeds.fbk("Configuration saved."))
+                        .withComponentsOrNull(null)
+                )
+            }
+        listeners.add(exitListener)
+
         // string input elements (stringelement, customelement) presented as button -> modal for text input
         module.elements
             .filter(ConfigurationElement<*>::elementIsStringInputtable)
-            .map { e ->
+            .forEach { e ->
                 // listener for button creates modal for input
                 val buttonListener = origin.listener(ButtonInteractionEvent::class, true, null, e.propName)
                     .flatMap { press ->
