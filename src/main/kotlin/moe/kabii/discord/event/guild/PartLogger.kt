@@ -11,7 +11,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
-import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener
@@ -20,7 +19,6 @@ import moe.kabii.util.extensions.long
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object PartLogger {
     object PartListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
@@ -68,9 +66,5 @@ object PartLogger {
                     } else throw ce
                 }
             }
-
-        transaction {
-            UserLog.GuildRelationship.delete(user.id.long, guild.long)
-        }
     }
 }

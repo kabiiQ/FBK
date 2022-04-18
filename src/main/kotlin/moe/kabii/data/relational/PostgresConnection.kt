@@ -7,7 +7,6 @@ import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
-import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscriptions
@@ -64,7 +63,6 @@ internal object PostgresConnection {
                 TwitterSpaces.SpaceNotifs,
                 Twitcasts.Movies,
                 Twitcasts.TwitNotifs,
-                UserLog.GuildRelationships,
                 TwitterFeeds,
                 TwitterTargets,
                 TwitterMentions,

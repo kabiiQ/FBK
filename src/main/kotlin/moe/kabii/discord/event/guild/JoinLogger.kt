@@ -11,14 +11,12 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
-import moe.kabii.data.relational.discord.UserLog
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object JoinLogger {
     object JoinListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
@@ -31,9 +29,6 @@ object JoinLogger {
         // create user log entry
         val memberId = member.id.asLong()
         val guildId = member.guildId.asLong()
-        transaction {
-            UserLog.GuildRelationship.getOrInsert(memberId, guildId)
-        }
 
         var errorStr = ""
 
