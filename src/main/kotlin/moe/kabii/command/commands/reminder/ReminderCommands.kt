@@ -14,11 +14,13 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.DurationParser
+import moe.kabii.util.extensions.javaInstant
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
+import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -121,10 +123,13 @@ object ReminderCommands : CommandContainer {
                         reminders
                             .sortedWith(channelPriority)
                             .map { reminder ->
+                                val time = DurationFormatter(Duration.between(Instant.now(), reminder.remind.javaInstant)).inputTime
+                                val channel = if(reminder.channel != channelId) ", different channel" else ""
                                 val content = if(reminder.content != null) ": ${reminder.content}" else ""
-                                val channel = if(reminder.channel != channelId) " (different channel)" else ""
+                                val info = "#${reminder.id.value} ($time$channel)$content"
+
                                 ApplicationCommandOptionChoiceData.builder()
-                                    .name("#${reminder.id.value}$channel$content")
+                                    .name(info)
                                     .value(reminder.id.value)
                                     .build()
                             }

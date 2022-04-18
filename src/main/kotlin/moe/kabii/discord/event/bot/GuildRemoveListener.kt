@@ -5,7 +5,6 @@ import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.data.deletion.DataDeletionRequests
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.DiscordBot

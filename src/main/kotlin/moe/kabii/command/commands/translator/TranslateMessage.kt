@@ -9,7 +9,6 @@ import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.createJumpLink
 import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.userAddress
 import org.apache.commons.lang3.StringUtils
 
 object TranslateMessage : Command("Translate Message") {

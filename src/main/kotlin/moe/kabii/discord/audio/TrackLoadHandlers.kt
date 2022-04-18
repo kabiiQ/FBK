@@ -76,7 +76,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
 
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
-            val addedEmbed = Embeds.fbk("${searched}Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
+            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
                 .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
@@ -89,7 +89,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
 
-            val addedEmbed = Embeds.fbk("${searched}Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
+            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
@@ -131,7 +131,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         LOG.warn("Loading audio track failed: ${exception.severity} :: ${exception.cause}")
         exception.cause?.let(Throwable::stackTraceString)?.let(LOG::debug)
         origin.event.editReply()
-            .withEmbeds(Embeds.error("${searched}Unable to load audio track$error"))
+            .withEmbeds(Embeds.error("${search}Unable to load audio track$error"))
             .block()
     }
 }

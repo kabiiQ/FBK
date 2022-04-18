@@ -179,7 +179,7 @@ object YoutubeVideosService {
                             return@propagateTransaction
                         }
                         // new track: verify channel with youtube
-                        val streamInfo = when(val lookup = YoutubeTarget.getChannelById(channelId)) {
+                        val streamInfo = when(val lookup = YoutubeTarget.getChannel(channelId)) {
                             is Ok -> lookup.value
                             is Err -> when(lookup.value) {
                                 is StreamErr.NotFound -> {

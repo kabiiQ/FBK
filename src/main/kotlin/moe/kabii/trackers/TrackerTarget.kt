@@ -72,7 +72,6 @@ sealed class StreamingTarget(
 
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
     abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
-    abstract suspend fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr>
 }
 
 object TwitchTarget : StreamingTarget(
@@ -88,8 +87,14 @@ object TwitchTarget : StreamingTarget(
     override val dbSite
         get() = TrackedStreams.DBSite.TWITCH
 
-    override suspend fun getChannel(id: String) = TwitchParser.getUser(id).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.username, ok.url) }
-    override suspend fun getChannelById(id: String) = TwitchParser.getUser(id.toLong()).mapOk { ok -> BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.username, ok.url) }
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
+        val twitchId = id.toLongOrNull()
+        val twitchUser = if(twitchId != null) TwitchParser.getUser(twitchId)
+        else TwitchParser.getUser(id)
+        return twitchUser.mapOk { ok ->
+            BasicStreamChannel(TwitchTarget, ok.userID.toString(), ok.username, ok.url)
+        }
+    }
 
     override fun feedById(id: String): String {
             return TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, id)
@@ -124,19 +129,18 @@ object YoutubeTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.YOUTUBE
 
-    override suspend fun getChannel(id: String) = getChannelByUnknown(id)
-    override suspend fun getChannelById(id: String) = getChannelByUnknown(id)
-
-    private fun getChannelByUnknown(identifier: String) = try {
-        val channel = YoutubeParser.getChannelFromUnknown(identifier)
-        if(channel != null) {
-            val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name, channel.url)
-            Ok(info)
-        } else Err(StreamErr.NotFound)
-    } catch(e: Exception) {
-        LOG.debug("Error getting YouTube channel: ${e.message}")
-        LOG.trace(e.stackTraceString)
-        Err(StreamErr.IO)
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
+        return try {
+            val channel = YoutubeParser.getChannelFromUnknown(id)
+            if(channel != null) {
+                val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name, channel.url)
+                Ok(info)
+            } else Err(StreamErr.NotFound)
+        } catch(e: Exception) {
+            LOG.debug("Error getting YouTube channel: ${e.message}")
+            LOG.trace(e.stackTraceString)
+            Err(StreamErr.IO)
+        }
     }
 
     override fun feedById(id: String): String = URLUtil.StreamingSites.Youtube.channel(id)
@@ -161,7 +165,6 @@ object TwitcastingTarget : StreamingTarget(
         get() = TrackedStreams.DBSite.TWITCASTING
 
     override suspend fun getChannel(id: String) = getChannelByIdentifier(id)
-    override suspend fun getChannelById(id: String) = getChannelByIdentifier(id)
 
     private val twitcastingNameType = Regex("c:[a-zA-Z0-9_]{4,15}")
     override fun feedById(id: String)
@@ -195,15 +198,18 @@ object TwitterSpaceTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.SPACES
 
-    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> = try {
-        val user = TwitterParser.getUser(id)
-        if(user != null) {
-            Ok(BasicStreamChannel(TwitterSpaceTarget, user.id.toString(), user.username, user.url))
-        } else Err(StreamErr.NotFound)
-    } catch(e: Exception) {
-        LOG.debug("Error getting Twitter user (Spaces): ${e.message}")
-        LOG.debug(e.stackTraceString)
-        Err(StreamErr.IO)
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
+        return try {
+            val twitterId = id.toLongOrNull()
+            val user = if(twitterId != null) TwitterParser.getUser(twitterId)
+            else TwitterParser.getUser(id)
+            if(user != null) Ok(BasicStreamChannel(TwitterSpaceTarget, user.id.toString(), user.username, user.url))
+            else Err(StreamErr.NotFound)
+        } catch(e: Exception) {
+            LOG.debug("Error getting Twitter user (Spaces): ${e.message}")
+            LOG.debug(e.stackTraceString)
+            Err(StreamErr.IO)
+        }
     }
 
     override val onTrack: TrackCallback = { origin, channel ->
@@ -214,7 +220,6 @@ object TwitterSpaceTarget : StreamingTarget(
         }
     }
 
-    override suspend fun getChannelById(id: String): Result<BasicStreamChannel, StreamErr> = error("twitter ids not supported")
     override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
 }
 
@@ -314,9 +319,9 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 val match = TargetArguments[colonArgs[0]]
                 if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
 
-            } else if(site != null) Ok(TargetArguments(site, input)) else {
+            } else {
 
-                // if 1 arg, user supplied just a username OR a url (containing site and username)
+                // check if 'username' matches a precise url for tracking
                 val urlMatch = declaredTargets.map { supportedSite ->
                     supportedSite.url.mapNotNull { exactUrl ->
                         exactUrl.find(input)?.to(supportedSite)
@@ -330,6 +335,11 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                             identifier = urlMatch.first.groups[1]?.value!!
                         )
                     )
+                } else if(site != null) {
+
+                    // if site was manually specified
+                    Ok(TargetArguments(site, input))
+
                 } else {
                     // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
                     // simple /track <username> is not supported for PMs

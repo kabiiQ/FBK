@@ -85,6 +85,9 @@ object TwitterParser {
     @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
     fun getUser(username: String): TwitterUser? = get<TwitterUserResponse>("https://api.twitter.com/2/users/by/username/$username")?.data
 
+    @Throws(TwitterIOException::class, TwitterRateLimitReachedException::class)
+    fun getUser(userId: Long): TwitterUser? = get<TwitterUserResponse>("https://api.twitter.com/2/users/$userId")?.data
+
     data class TwitterRecentTweets(val user: TwitterUser, val tweets: List<TwitterTweet>)
 
     data class TwitterQueryLimits(
