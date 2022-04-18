@@ -305,6 +305,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             supportedSite.alias.contains(name)
         }
 
+        private val suggestionStyle = Regex("(.+) \\(([A-Za-z]+)\\)")
         suspend fun parseFor(origin: DiscordParameters, input: String, site: TrackerTarget?): Result<TargetArguments, String> {
             // parse if the user provides a valid and enabled track target, either in the format of a matching URL or site name + account ID
             // get the channel features, if they exist. PMs do not require trackers to be enabled
@@ -313,51 +314,56 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
             } else null
 
+            val suggestion = suggestionStyle.find(input)
+            if(suggestion != null) {
+                val siteArg = suggestion.groups[2]!!.value
+                val match = TargetArguments[siteArg]
+                return if(match != null) Ok(TargetArguments(match, suggestion.groups[1]!!.value)) else Err("Invalid site: $siteArg. You may have accidentally edited a suggested option.")
+            }
+
             val colonArgs = input.split(":")
-            return if(colonArgs.size == 2 && !colonArgs[1].startsWith("/")) {
+            if(colonArgs.size == 2 && !colonArgs[1].startsWith("/")) {
                 // siteName:username autocomplete variant
                 val match = TargetArguments[colonArgs[0]]
-                if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
+                return if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
+            }
+
+            // check if 'username' matches a precise url for tracking
+            val urlMatch = declaredTargets.map { supportedSite ->
+                supportedSite.url.mapNotNull { exactUrl ->
+                    exactUrl.find(input)?.to(supportedSite)
+                }
+            }.flatten().firstOrNull()
+
+            return if(urlMatch != null) {
+                Ok(
+                    TargetArguments(
+                        site = urlMatch.second,
+                        identifier = urlMatch.first.groups[1]?.value!!
+                    )
+                )
+            } else if(site != null) {
+
+                // if site was manually specified
+                Ok(TargetArguments(site, input))
 
             } else {
+                // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
+                // simple /track <username> is not supported for PMs
+                if(features == null) {
+                    return Err("You must specify the site name for tracking in PMs.")
+                }
 
-                // check if 'username' matches a precise url for tracking
-                val urlMatch = declaredTargets.map { supportedSite ->
-                    supportedSite.url.mapNotNull { exactUrl ->
-                        exactUrl.find(input)?.to(supportedSite)
-                    }
-                }.flatten().firstOrNull()
-
-                if(urlMatch != null) {
+                val default = features.findDefaultTarget()
+                if(default == null) {
+                    Err("There are no website trackers enabled in **${origin.guildChan.name}**, so I can not determine the website you are trying to target. Please specify the site name.")
+                } else {
                     Ok(
                         TargetArguments(
-                            site = urlMatch.second,
-                            identifier = urlMatch.first.groups[1]?.value!!
+                            site = default,
+                            identifier = input
                         )
                     )
-                } else if(site != null) {
-
-                    // if site was manually specified
-                    Ok(TargetArguments(site, input))
-
-                } else {
-                    // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
-                    // simple /track <username> is not supported for PMs
-                    if(features == null) {
-                        return Err("You must specify the site name for tracking in PMs.")
-                    }
-
-                    val default = features.findDefaultTarget()
-                    if(default == null) {
-                        Err("There are no website trackers enabled in **${origin.guildChan.name}**, so I can not determine the website you are trying to target. Please specify the site name.")
-                    } else {
-                        Ok(
-                            TargetArguments(
-                                site = default,
-                                identifier = input
-                            )
-                        )
-                    }
                 }
             }
         }
