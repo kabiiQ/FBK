@@ -3,36 +3,37 @@ package moe.kabii.data.mongodb
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
 import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.util.extensions.GuildID
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
 import java.util.concurrent.ConcurrentHashMap
 
+data class GuildTarget(val clientId: Int, val guildId: Long)
+
 object GuildConfigurations {
     val mongoConfigurations = MongoDBConnection.mongoDB.getCollection<GuildConfiguration>()
-    val guildConfigurations: MutableMap<GuildID, GuildConfiguration>
+    val guildConfigurations: MutableMap<GuildTarget, GuildConfiguration>
 
     init {
         // grab existing guild configurations
         guildConfigurations = runBlocking {
             mongoConfigurations.find().toList()
-                .associateBy(GuildConfiguration::guildid)
+                .associateBy { config -> GuildTarget(config.clientId, config.guildid) }
                 .run { ConcurrentHashMap(this) }
         }
     }
 
-    @Synchronized fun getOrCreateGuild(id: Long) = guildConfigurations.getOrPut(id) { GuildConfiguration(guildid = id) }
+    @Synchronized fun getOrCreateGuild(clientId: Int, id: Long) = guildConfigurations.getOrPut(GuildTarget(clientId, id)) { GuildConfiguration(clientId = clientId, guildid = id) }
 
-    suspend fun findFeatures(guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
+    suspend fun findFeatures(clientId: Int, guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
         if(guildId == null || channelId == null) return null to null
-        val guildConfig = getOrCreateGuild(guildId)
+        val guildConfig = getOrCreateGuild(clientId, guildId)
         return guildConfig to guildConfig.getOrCreateFeatures(channelId)
     }
 
     suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
         val guildId = target.discordChannel.guild?.guildID ?: return null
-        val guildConfig = getOrCreateGuild(guildId)
+        val guildConfig = getOrCreateGuild(target.discordClient, guildId)
         return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)
     }
 }
@@ -40,6 +41,7 @@ object GuildConfigurations {
 // per guild - guildconfiguration collection
 data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
+    val clientId: Int, // TODO default=1 can be removed after migration
     val guildid: Long,
     var prefix: String = defaultPrefix,
     val options: OptionalFeatures = OptionalFeatures(),
@@ -76,7 +78,7 @@ data class GuildConfiguration(
     }
 
     suspend fun removeSelf() {
-        GuildConfigurations.guildConfigurations.remove(guildid)
+        GuildConfigurations.guildConfigurations.remove(GuildTarget(clientId, guildid))
         GuildConfigurations.mongoConfigurations.deleteOneById(this._id)
     }
 }

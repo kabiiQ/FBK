@@ -10,21 +10,21 @@ import moe.kabii.discord.util.Embeds
 object QueueState : AudioCommandContainer {
     suspend fun pause(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         audio.player.isPaused = true
         ireply(Embeds.fbk("Audio playback is now paused. You can resume playback with the **resume** command.")).awaitSingle()
     }
 
     suspend fun resume(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         audio.player.isPaused = false
         ireply(Embeds.fbk("Audio playback resumed.")).awaitSingle()
     }
 
     suspend fun loop(origin: DiscordParameters) = with(origin) {
         // toggles queue "loop" feature
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         if(audio.looping) {
             audio.looping = false
             ireply(Embeds.fbk("Queue loop has been disabled.")).awaitSingle()

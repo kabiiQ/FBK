@@ -6,7 +6,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.awaitAction
 
 object BotState : AudioCommandContainer {
-    object BotSummon : Command("join") {
+    object BotSummon : Command("summon") {
         override val wikiPath = "Music-Player#Music-Player#commands"
 
         init {

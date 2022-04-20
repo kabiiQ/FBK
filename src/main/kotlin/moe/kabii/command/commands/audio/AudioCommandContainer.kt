@@ -70,7 +70,7 @@ internal interface AudioCommandContainer : CommandContainer {
 
     suspend fun validateAndAlterFilters(origin: DiscordParameters, consumer: suspend FilterFactory.() -> Unit) {
         origin.channelFeatureVerify(FeatureChannel::musicChannel)
-        val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
+        val audio = AudioManager.getGuildAudio(origin.client, origin.target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             origin.ereply(Embeds.error("There is no track currently playing.")).awaitSingle()

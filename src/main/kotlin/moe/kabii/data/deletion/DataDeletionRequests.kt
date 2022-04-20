@@ -1,6 +1,7 @@
 package moe.kabii.data.deletion
 
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.util.extensions.propagateTransaction
 
@@ -30,7 +31,7 @@ object DataDeletionRequests {
         }
     }
 
-    suspend fun guildDataDeletion(guildId: Long) {
+    suspend fun guildDataDeletion(clientId: Int, guildId: Long) {
 
         // remove all data concerning this guild from the database
         propagateTransaction {
@@ -40,6 +41,6 @@ object DataDeletionRequests {
             dbGuild?.delete()
         }
 
-        GuildConfigurations.guildConfigurations[guildId]?.removeSelf()
+        GuildConfigurations.guildConfigurations[GuildTarget(clientId, guildId)]?.removeSelf()
     }
 }

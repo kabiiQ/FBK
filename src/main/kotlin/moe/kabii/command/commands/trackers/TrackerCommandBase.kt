@@ -7,6 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
@@ -38,7 +39,7 @@ object TrackerCommandBase : CommandContainer {
             autoComplete {
                 val channelId = event.interaction.channelId.asLong()
                 val siteArg = ChatCommandArguments(event).optInt("site")
-                suggest(TargetSuggestionGenerator.getTargets(channelId, value, siteArg))
+                suggest(TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg))
             }
 
             chat {
@@ -48,7 +49,9 @@ object TrackerCommandBase : CommandContainer {
     }
 
     private suspend fun trackCommand(origin: DiscordParameters, action: Action) = with(origin) {
-        val features = guild?.id?.asLong()?.run(GuildConfigurations.guildConfigurations::get)?.options?.featureChannels?.get(chan.id.asLong())
+        val features = guild?.id?.asLong()?.run {
+            GuildConfigurations.guildConfigurations[GuildTarget(client.clientId, this)]
+        }?.options?.featureChannels?.get(chan.id.asLong())
 
         // limit track command if this is a guild with 'locked' config
         if(guild != null && features != null && features.locked) {

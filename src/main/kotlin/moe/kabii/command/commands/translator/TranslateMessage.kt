@@ -19,10 +19,10 @@ object TranslateMessage : Command("Translate Message") {
             // form a flat representation of any contents in this discord message
             // pull contents of embeds in their client display order
             val contents = sequence {
-                if (resolvedMessage.embeds.isEmpty()) {
-                    yield(resolvedMessage.content)
+                if (event.resolvedMessage.embeds.isEmpty()) {
+                    yield(event.resolvedMessage.content)
                 } else {
-                    resolvedMessage.embeds
+                    event.resolvedMessage.embeds
                         .forEach { embed ->
                             yield(embed.title.orNull())
                             yield(embed.description.orNull())
@@ -31,18 +31,18 @@ object TranslateMessage : Command("Translate Message") {
             }.filterNotNull().joinToString("\n")
             if(contents.isBlank()) return@messageInteraction
 
-            val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }?.orNull()
+            val config = event.interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(client.clientId, id.asLong()) }?.orNull()
             val service = Translator.service
             val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
             val translator = Translator.getService(contents, defaultLang.tag)
             val translation = translator.translate(from = null, to = defaultLang, text = contents)
-            val jumpLink = resolvedMessage.createJumpLink()
-            val user = interaction.user
+            val jumpLink = event.resolvedMessage.createJumpLink()
+            val user = event.interaction.user
 
             if(translation.originalLanguage != translation.targetLanguage) {
 
                 val text = StringUtils.abbreviate(translation.translatedText, MagicNumbers.Embed.MAX_DESC)
-                reply()
+                event.reply()
                     .withEmbeds(
                         Embeds.fbk(text)
                             .withAuthor(EmbedCreateFields.Author.of("Translation Requested for Message", jumpLink, user.avatarUrl))
@@ -53,7 +53,7 @@ object TranslateMessage : Command("Translate Message") {
             } else {
 
                 val tag = translation.originalLanguage.tag
-                reply()
+                event.reply()
                     .withEmbeds(
                         Embeds.error("Translation was not performed: $tag -> $tag.")
                     )

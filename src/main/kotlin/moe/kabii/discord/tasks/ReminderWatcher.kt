@@ -1,7 +1,6 @@
 package moe.kabii.discord.tasks
 
 import discord4j.common.util.TimestampFormat
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
@@ -9,6 +8,7 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.discord.Reminder
 import moe.kabii.data.relational.discord.Reminders
@@ -23,7 +23,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceRequestCooldownSpec) : Runnable {
+class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestCooldownSpec) : Runnable {
     private val updateInterval = cooldown.minimumRepeatTime
 
     override fun run() {
@@ -59,6 +59,8 @@ class ReminderWatcher(val discord: GatewayDiscordClient, cooldown: ServiceReques
 
     @WithinExposedContext
     private suspend fun scheduleReminder(reminder: Reminder) {
+        val discord = instances[reminder.discordClient].client
+
         val time = Duration.between(Instant.now(), reminder.remind.javaInstant)
         delay(max(time.toMillis(), 0L))
         val user = discord.getUserById(reminder.user.userID.snowflake)

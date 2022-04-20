@@ -8,6 +8,7 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.FBK
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.QueueData
@@ -20,12 +21,12 @@ object RecoverQueue {
     private val recoverThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val taskScope = CoroutineScope(recoverThread + SupervisorJob())
 
-    fun recover(guild: Guild) = taskScope.launch {
+    fun recover(client: FBK, guild: Guild) = taskScope.launch {
         // restore audio queue
-        val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
+        val config = GuildConfigurations.getOrCreateGuild(client.clientId, guild.id.asLong())
         val activeQueue = config.musicBot.activeQueue
         if(activeQueue.isNotEmpty()) {
-            val audio = AudioManager.getGuildAudio(guild.id.asLong())
+            val audio = AudioManager.getGuildAudio(client, guild.id.asLong())
             if(audio.playlist.isEmpty()) { // if this was just an interruption the queue will not have been reset
                 // rejoin voice channel if tracks are being recovered
                 if(audio.discord.connection == null && config.musicBot.lastChannel != null) {
@@ -53,7 +54,7 @@ object RecoverQueue {
                                 override fun trackLoaded(loaded: AudioTrack) {
                                     loaded.userData = QueueData(
                                         audio,
-                                        discord = guild.client,
+                                        fbk = client,
                                         author_name = track.author_name,
                                         author = track.author.snowflake,
                                         originChannel = track.originChannel.snowflake,

@@ -1,7 +1,7 @@
 package moe.kabii.trackers.videos.twitch.webhook
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
@@ -16,7 +16,7 @@ import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class TwitchSubscriptionManager(discord: GatewayDiscordClient, checker: TwitchChecker, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
+class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChecker, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
 
     private val listener = TwitchWebhookListener(this, checker)
 

@@ -41,7 +41,7 @@ object GuildFeatures : Command("servercfg") {
             }
 
             if(wasPS2Guild != config.guildSettings.ps2Commands) {
-                GuildCommandRegistrar.updateGuildCommands(target)
+                GuildCommandRegistrar.updateGuildCommands(client, target)
             }
         }
     }

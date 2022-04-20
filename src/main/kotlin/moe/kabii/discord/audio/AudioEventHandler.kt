@@ -30,14 +30,14 @@ object AudioEventHandler : AudioEventAdapter() {
         // apply this track's audio filters. always reset filter factory to empty if there are no filters applied
         player.setFilterFactory(data.audioFilters.export())
 
-        val originChan = data.discord.getChannelById(data.originChannel)
+        val originChan = data.fbk.client.getChannelById(data.originChannel)
             .ofType(GuildMessageChannel::class.java)
 
         val guildID = data.audio.guildId
-        val config = GuildConfigurations.getOrCreateGuild(guildID).musicBot
+        val config = GuildConfigurations.getOrCreateGuild(data.fbk.clientId, guildID).musicBot
         // guild option to skip song if queuer has left voice channel.
         if(config.skipIfAbsent) {
-            val vc = data.discord.getGuildById(guildID.snowflake)
+            val vc = data.fbk.client.getGuildById(guildID.snowflake)
                 .flatMap(BotUtil::getBotVoiceChannel)
                 .tryBlock().orNull()
             if(vc != null) {
@@ -78,7 +78,7 @@ object AudioEventHandler : AudioEventAdapter() {
 
         // if the bot is not alone when something starts playing, cancel any inactivity timeouts
         val alone = runBlocking {
-            data.discord.getGuildById(guildID.snowflake)
+            data.fbk.client.getGuildById(guildID.snowflake)
                 .flatMap(BotUtil::getBotVoiceChannel)
                 .flatMap(BotUtil::isSingleClient)
                 .tryAwait().orNull()
@@ -127,9 +127,9 @@ object AudioEventHandler : AudioEventAdapter() {
 
                 // delete old messages per guild settings
                 val guildID = data.audio.guildId
-                val config = GuildConfigurations.getOrCreateGuild(guildID)
+                val config = GuildConfigurations.getOrCreateGuild(data.fbk.clientId, guildID)
                 data.associatedMessages.forEach { msg ->
-                    data.discord.getMessageById(msg.channelID, msg.messageID)
+                    data.fbk.client.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
                             when(msg) {
                                 is QueueData.NowPlaying -> {
@@ -149,7 +149,7 @@ object AudioEventHandler : AudioEventAdapter() {
 
     override fun onTrackException(player: AudioPlayer, track: AudioTrack, exception: FriendlyException) {
         val data = track.userData as QueueData
-        data.discord.getChannelById(data.originChannel)
+        data.fbk.client.getChannelById(data.originChannel)
             .ofType(GuildMessageChannel::class.java)
             .flatMap { chan ->
                 val title = AudioCommandContainer.trackString(track)

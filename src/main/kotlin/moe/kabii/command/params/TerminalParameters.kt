@@ -1,9 +1,9 @@
 package moe.kabii.command.params
 
-import discord4j.core.GatewayDiscordClient
+import moe.kabii.DiscordInstances
 
 data class TerminalParameters(
-    val discord: GatewayDiscordClient,
+    val instances: DiscordInstances,
     val noCmd: String,
     val args: List<String>
 )

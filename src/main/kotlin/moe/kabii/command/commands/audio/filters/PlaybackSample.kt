@@ -13,7 +13,7 @@ import moe.kabii.util.DurationParser
 object PlaybackSample : AudioCommandContainer {
     suspend fun sample(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
@@ -49,7 +49,7 @@ object PlaybackSample : AudioCommandContainer {
 
     suspend fun sampleTo(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()

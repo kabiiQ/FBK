@@ -1,10 +1,10 @@
 package moe.kabii.command
 
-import discord4j.core.event.domain.interaction.MessageInteractionEvent
-import discord4j.core.event.domain.interaction.UserInteractionEvent
 import discord4j.rest.util.Permission
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.params.MessageInteractionParameters
 import moe.kabii.command.params.TerminalParameters
+import moe.kabii.command.params.UserInteractionParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.discord.util.SourcePaths
@@ -19,9 +19,9 @@ abstract class Command(val name: String) {
 
     var executeChat: (suspend (DiscordParameters) -> Unit)? = null
     private set
-    var executeUser: (suspend (UserInteractionEvent) -> Unit)? = null
+    var executeUser: (suspend (UserInteractionParameters) -> Unit)? = null
     private set
-    var executeMessage: (suspend (MessageInteractionEvent) -> Unit)? = null
+    var executeMessage: (suspend (MessageInteractionParameters) -> Unit)? = null
     private set
     var autoComplete: (suspend (AutoCompleteHandler.Request) -> Unit)? = null
     private set
@@ -41,11 +41,11 @@ abstract class Command(val name: String) {
         executeChat = block
     }
 
-    fun userInteraction(block: suspend UserInteractionEvent.() -> Unit) {
+    fun userInteraction(block: suspend UserInteractionParameters.() -> Unit) {
         executeUser = block
     }
 
-    fun messageInteraction(block: suspend MessageInteractionEvent.() -> Unit) {
+    fun messageInteraction(block: suspend MessageInteractionParameters.() -> Unit) {
         executeMessage = block
     }
 

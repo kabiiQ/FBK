@@ -11,13 +11,23 @@ object Say : Command("say") {
 
     init {
         terminal {
-            if(args.size < 2) {
-                println("Usage: say <channel id> <message>")
+            if(args.size < 3) {
+                println("Usage: say <bot id/discriminator> <channel id> <message>")
                 return@terminal
             }
-            val channelID = args[0].toLongOrNull()
+            val discord = if(args[0].length == 4) {
+                instances.getByDiscriminator(args[0])
+            } else {
+                instances.check(args[0].toInt())
+            }?.client
+            if(discord == null) {
+                println("Unknown client '${args[0]}'")
+                return@terminal
+            }
+
+            val channelID = args[1].toLongOrNull()
             if(channelID == null) {
-                println("Invalid channel ID \"${args[0]}\"")
+                println("Invalid channel ID \"${args[1]}\"")
                 return@terminal
             }
             val channel = discord.getChannelById(channelID.snowflake)

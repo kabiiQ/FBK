@@ -63,11 +63,11 @@ class TwitterStreamRule(id: EntityID<Int>) : IntEntity(id) {
 
 object TwitterTargets : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+    val discordClient = integer("twitter_target_discord_client").default(1)
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracker", DiscordObjects.Users, ReferenceOption.CASCADE)
 
-    val mentionRole = long("discord_mention_role_id").nullable()
     val shouldStream = bool("twitter_streaming_feed").default(false)
 
     init {
@@ -76,6 +76,7 @@ object TwitterTargets : IdTable<Int>() {
 }
 
 class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
+    var discordClient by TwitterTargets.discordClient
     var twitterFeed by TwitterFeed referencedOn TwitterTargets.twitterFeed
     var discordChannel by DiscordObjects.Channel referencedOn TwitterTargets.discordChannel
     var tracker by DiscordObjects.User referencedOn TwitterTargets.tracker
@@ -84,12 +85,13 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext
-        fun getExistingTarget(userId: Long, channelId: Long) = TwitterTarget.wrapRows(
+        fun getExistingTarget(clientId: Int, userId: Long, channelId: Long) = TwitterTarget.wrapRows(
             TwitterTargets
                 .innerJoin(TwitterFeeds)
                 .innerJoin(DiscordObjects.Channels)
                 .select {
                     TwitterFeeds.userId eq userId and
+                            (TwitterTargets.discordClient eq clientId) and
                             (DiscordObjects.Channels.channelID eq channelId)
                 }
         ).firstOrNull()

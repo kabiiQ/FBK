@@ -1,10 +1,10 @@
 package moe.kabii.internal.ytchat
 
 import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.discord.util.Embeds
@@ -12,11 +12,11 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.ytchat.YoutubeChatWatcher
 
-class HoloChats(val discord: GatewayDiscordClient) {
+class HoloChats(val instances: DiscordInstances) {
 
     private val hololive = KnownStreamers.getValue("hololive").associateBy { it.youtubeId!! }
 
-    private val streamChatChannel = discord
+    private val streamChatChannel = instances[1].client
         .getChannelById(Snowflake.of("863354507822628864"))
         .ofType(MessageChannel::class.java)
         .tryBlock().orNull()

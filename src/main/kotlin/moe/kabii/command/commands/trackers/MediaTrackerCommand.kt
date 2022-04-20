@@ -40,7 +40,7 @@ object MediaTrackerCommand : TrackerCommand {
         // check if this list is already tracked in this channel, before we download the entire list (can be slow)
         val channelId = origin.chan.id.asLong()
         val existingTrack = transaction {
-            TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.lowercase(), channelId)
+            TrackedMediaLists.ListTarget.getExistingTarget(origin.client.clientId, site, siteListId.lowercase(), channelId)
         }
 
         if(existingTrack != null) {
@@ -99,6 +99,7 @@ object MediaTrackerCommand : TrackerCommand {
 
             // add this channel as a target for this list's updates, we know this does not exist
             TrackedMediaLists.ListTarget.new {
+                this.discordClient = origin.client.clientId
                 this.mediaList = dbList
                 this.discord = DiscordObjects.Channel.getOrInsert(channelId, origin.guild?.id?.asLong())
                 this.userTracked = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
@@ -108,7 +109,7 @@ object MediaTrackerCommand : TrackerCommand {
         origin.event.editReply().withEmbeds(
             Embeds.fbk("Now tracking **$inputId** on **$siteName**.")
         ).awaitSingle()
-        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
+        TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
@@ -126,7 +127,7 @@ object MediaTrackerCommand : TrackerCommand {
         val channelId = origin.chan.id.asLong()
 
         propagateTransaction {
-            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(site, siteListId.lowercase(), channelId)
+            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(origin.client.clientId, site, siteListId.lowercase(), channelId)
             if (existingTrack == null) {
                 origin.ereply(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
                 return@propagateTransaction
@@ -138,7 +139,7 @@ object MediaTrackerCommand : TrackerCommand {
 
                 existingTrack.delete()
                 origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
+                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
 
             } else {
                 val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"

@@ -33,7 +33,7 @@ object SetMentionRole : Command("setmention") {
         autoComplete {
             val channelId = event.interaction.channelId.asLong()
             val siteArg = ChatCommandArguments(event).optInt("site")
-            val matches = TargetSuggestionGenerator.getTargets(channelId, value, siteArg, TrackerTarget::mentionable)
+            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
             suggest(matches)
         }
 
@@ -79,6 +79,7 @@ object SetMentionRole : Command("setmention") {
                     .innerJoin(DiscordObjects.Channels)
                     .innerJoin(DiscordObjects.Guilds).select {
                         TrackedStreams.StreamChannels.site eq streamInfo.site.dbSite and
+                                (TrackedStreams.Targets.discordClient eq origin.client.clientId) and
                                 (TrackedStreams.StreamChannels.siteChannelID eq streamInfo.accountId) and
                                 (DiscordObjects.Guilds.guildID eq origin.target.id.asLong())
                     }
@@ -139,6 +140,7 @@ object SetMentionRole : Command("setmention") {
                     .innerJoin(DiscordObjects.Channels)
                     .innerJoin(DiscordObjects.Guilds).select {
                         TwitterFeeds.userId eq twitterUser.id and
+                                (TwitterTargets.discordClient eq origin.client.clientId) and
                                 (DiscordObjects.Guilds.guildID eq origin.target.id.asLong())
                     }
             ).firstOrNull()

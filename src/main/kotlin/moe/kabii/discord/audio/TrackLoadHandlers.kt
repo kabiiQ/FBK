@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.stackTraceString
 import java.net.URL
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery, val searched: Boolean = false) : AudioLoadResultHandler {
-    val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
+    val audio = AudioManager.getGuildAudio(origin.client, origin.target.id.asLong())
 
     val search = if(searched) "YouTube search: ${extract.url}\n\n" else ""
 
@@ -49,7 +49,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     override fun trackLoaded(track: AudioTrack) = trackLoadedModifiers(track)
 
     fun trackLoadedModifiers(track: AudioTrack, silent: Boolean = false, warnPlaylist: Boolean = false, deletePlayReply: Boolean = true) {
-        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
+        val data = QueueData(audio, origin.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
         // set track
@@ -106,7 +106,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         runBlocking {
             for(index in tracks.indices) {
                 val track = tracks[index]
-                track.userData = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
+                track.userData = QueueData(audio, origin.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
                 val add = audio.tryAdd(track, origin.member, position?.plus(index)) // add tracks sequentially if a position is provided, otherwise add to end
                 if(!add) {
                     // the rest of the tracks will be skipped when the user reaches their quota
@@ -180,8 +180,8 @@ open class ForcePlayTrackLoader(origin: DiscordParameters, extract: ExtractedQue
             }
             runBlocking { audio.forceAdd(oldTrack, position = 0) }
         }
-        val audio = AudioManager.getGuildAudio(origin.target.id.asLong())
-        val data = QueueData(audio, origin.event.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
+        val audio = AudioManager.getGuildAudio(origin.client, origin.target.id.asLong())
+        val data = QueueData(audio, origin.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         applyParam(track, data)
         track.userData = data
         audio.player.playTrack(track)

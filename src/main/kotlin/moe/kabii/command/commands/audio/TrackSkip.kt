@@ -12,7 +12,7 @@ import moe.kabii.discord.util.Embeds
 object TrackSkip : AudioCommandContainer {
     suspend fun skip(origin: DiscordParameters, silent: Boolean = false) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()

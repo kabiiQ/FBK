@@ -1,6 +1,5 @@
 package moe.kabii.trackers.anime.watcher
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.`object`.entity.channel.PrivateChannel
@@ -8,6 +7,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -24,7 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
+class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     override fun run() {
         applicationLoop {
 
@@ -143,6 +143,8 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
             }
             if (builder != null) {
                 filteredTargets.forEach { target ->
+                    val fbk = instances[target.discordClient]
+                    val discord = fbk.client
                     try {
                         // send embed to all channels this user's mal is tracked in
                         val userId = target.userTracked.userID
@@ -162,7 +164,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                                 // check if channel is currently enabled (or pm channel)
                                 when (chan) {
                                     is GuildMessageChannel -> {
-                                        val config = GuildConfigurations.getOrCreateGuild(chan.guildId.asLong())
+                                        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, chan.guildId.asLong())
                                         val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
                                         // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
                                         when {
@@ -186,7 +188,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
                             if (err == 403) {
-                                TrackerUtil.permissionDenied(discord, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeTargetChannel, target::delete)
+                                TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeTargetChannel, target::delete)
                                 LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
                             } else throw ce
@@ -210,6 +212,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
     private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
         val existingTargets = list.targets.toList()
             .filter { target ->
+                val discord = instances[target.discordClient].client
                 // untrack target if discord channel is deleted
                 if (target.discord.guild != null) {
                     try {
@@ -228,7 +231,7 @@ class ListServiceChecker(val site: ListSite, val discord: GatewayDiscordClient, 
             existingTargets.filter { target ->
                 // ignore, but do not untrack targets with feature disabled
                 val guildId = target.discord.guild?.guildID ?: return@filter true // PM do not have channel features
-                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId)
+                val featureChannel = GuildConfigurations.getOrCreateGuild(target.discordClient, guildId)
                     .getOrCreateFeatures(target.discord.channelID)
                 target.mediaList.site.targetType.channelFeature.get(featureChannel)
             }

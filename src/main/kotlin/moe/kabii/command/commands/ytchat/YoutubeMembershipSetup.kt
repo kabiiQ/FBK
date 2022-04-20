@@ -32,11 +32,12 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             // linkyoutubemembers (yt id else: get)
             member.verify(Permission.MANAGE_GUILD)
 
+            val clientId = client.clientId
             val linkArg = args.optStr("channel")
             if(linkArg == null) {
                 // get any active config
                 val linkedChannel = transaction {
-                    MembershipConfigurations.getForGuild(target.id)?.run(::linkChannel)
+                    MembershipConfigurations.getForGuild(clientId, target.id)?.run(::linkChannel)
                 }
 
                 if(linkedChannel != null) {
@@ -51,7 +52,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             if(resetArg == true) {
                 // remove existing config
                 propagateTransaction {
-                    val existing = MembershipConfigurations.getForGuild(target.id)
+                    val existing = MembershipConfigurations.getForGuild(clientId, target.id)
                     if(existing != null) {
                         val channelLink = linkChannel(existing)
                         val utils = existing.utils(target)
@@ -94,7 +95,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
 
             // create config in db
             propagateTransaction {
-                val existing = MembershipConfigurations.getForGuild(target.id)
+                val existing = MembershipConfigurations.getForGuild(clientId, target.id)
                 if(existing != null) {
 
                     val utils = existing.utils(target)
@@ -103,6 +104,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
 
                 val memberConfig = transaction {
                     MembershipConfiguration.new {
+                        this.discordClient = client.clientId
                         this.discordServer = DiscordObjects.Guild.getOrInsert(target.id.asLong())
                         this.streamChannel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, ytChannel.id, ytChannel.name)
                         this.membershipRole = membershipRole.id.asLong()

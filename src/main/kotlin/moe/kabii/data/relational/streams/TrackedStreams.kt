@@ -82,12 +82,14 @@ object TrackedStreams {
     }
 
     object Targets : IntIdTable() {
+        val discordClient = integer("target_discord_client").default(1)
         val streamChannel = reference("assoc_stream_channel", StreamChannels, ReferenceOption.CASCADE)
         val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val tracker = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
     }
 
     class Target(id: EntityID<Int>) : IntEntity(id) {
+        var discordClient by Targets.discordClient
         var streamChannel by StreamChannel referencedOn Targets.streamChannel
         var discordChannel by DiscordObjects.Channel referencedOn Targets.discordChannel
         var tracker by DiscordObjects.User referencedOn Targets.tracker
@@ -96,26 +98,16 @@ object TrackedStreams {
 
             // get target with same discord channel and streaming channel id
             @WithinExposedContext
-            fun getForChannel(discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
+            fun getForChannel(clientId: Int, discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
                 Targets
                     .innerJoin(StreamChannels)
                     .innerJoin(DiscordObjects.Channels).select {
                         StreamChannels.site eq site and
+                                (Targets.discordClient eq clientId) and
                                 (StreamChannels.siteChannelID eq  channelId) and
                                 (DiscordObjects.Channels.channelID eq discordChan.asLong())
                     }
             ).firstOrNull()
-
-            @WithinExposedContext
-            fun getForGuild(guildId: Snowflake, stream: StreamChannel) = Target.wrapRows(
-                Targets
-                    .innerJoin(DiscordObjects.Channels
-                        .innerJoin(DiscordObjects.Guilds))
-                    .select {
-                        Targets.streamChannel eq stream.id and
-                                (DiscordObjects.Guilds.guildID eq guildId.asLong())
-                    }
-            )
         }
     }
 

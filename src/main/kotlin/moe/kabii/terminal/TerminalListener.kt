@@ -1,14 +1,13 @@
 package moe.kabii.terminal
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.launch
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
-import moe.kabii.command.CommandManager
 import moe.kabii.command.params.TerminalParameters
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.stackTraceString
 
-class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordClient) : Runnable {
+class TerminalListener(val discord: DiscordInstances) : Runnable {
     private var active = false
 
     fun launch() {
@@ -19,6 +18,7 @@ class TerminalListener(val manager: CommandManager, val discord: GatewayDiscordC
     }
 
     override fun run() {
+        val manager = discord.manager
         applicationLoop {
             val line = checkNotNull(readLine()) { "Terminal input ending" }
             manager.context.launch {

@@ -104,7 +104,7 @@ object StreamTrackerConfig : Command("streamcfg") {
             if(modified) {
                 config.save()
                 propagateTransaction {
-                    StreamWatcher.checkAndRenameChannel(chan, null)
+                    StreamWatcher.checkAndRenameChannel(client.clientId, chan, null)
                 }
             }
         }

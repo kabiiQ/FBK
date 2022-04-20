@@ -32,7 +32,7 @@ import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
-abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionManager) : StreamWatcher(subscriptions.discord) {
+abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionManager) : StreamWatcher(subscriptions.instances) {
 
     companion object {
         private val liveColor = YoutubeParser.color
@@ -92,6 +92,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // edit/delete all notifications and remove stream from db when stream ends
 
         dbStream.ytVideo.notifications.forEach { notification ->
+            val fbk = instances[notification.targetID.discordClient]
+            val discord = fbk.client
             try {
 
                 val dbMessage = notification.messageID
@@ -155,7 +157,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     }.thenReturn(Unit).tryAwait()
                     existingNotif.channel.awaitSingle()
                 } else discord.getChannelById(notification.targetID.discordChannel.channelID.snowflake).ofType(GuildMessageChannel::class.java).awaitSingle()
-                checkAndRenameChannel(channel, endingStream = dbStream.ytVideo.ytChannel)
+                checkAndRenameChannel(fbk.clientId, channel, endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
@@ -247,7 +249,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         } else activeTargets
             .filter { target ->
                 val (_, features) =
-                    GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+                    GuildConfigurations.findFeatures(target.discordClient, target.discordChannel.guild?.guildID, target.discordChannel.channelID)
                 val yt = features?.youtubeSettings ?: YoutubeSettings()
                 filter(yt)
             }
@@ -258,6 +260,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // get target channel in discord
         val chan = getUpcomingChannel(target)
 
+        val fbk = subscriptions.instances[target.discordClient]
         val message = try {
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
             val embed = Embeds.other(scheduledColor)
@@ -272,23 +275,25 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
                 return null
             } else throw ce
         }
         YoutubeScheduledNotification.create(event, target)
-        TrackerUtil.checkAndPublish(message)
+        TrackerUtil.checkAndPublish(fbk, message)
         return message
     }
 
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
+        val fbk = instances[target.discordClient]
+        val discord = fbk.client
         // get target channel in discord
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
+        val chan = getChannel(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
@@ -316,7 +321,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -326,11 +331,13 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
-        val chan = getChannel(target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
+        val fbk = instances[target.discordClient]
+        val discord = fbk.client
+        val chan = getChannel(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
         val guildId = target.discordChannel.guild?.guildID
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
 
         val startTime = video.liveInfo?.scheduledStart!!
         val timeUntil = Duration.between(Instant.now(), startTime)
@@ -352,7 +359,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -362,26 +369,30 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
     @WithinExposedContext
     suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
+        val fbk = instances[videoTrack.discordClient]
+        val discord = fbk.client
         // get target channel in Discord
-        val chan = getChannel(videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
+        val chan = getChannel(fbk, videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
 
         val mention = if(videoTrack.mentionRole != null) "<@&${videoTrack.mentionRole}> " else "<@${videoTrack.tracker.userID}> Livestream reminder: "
         val new = chan
             .createMessage("$mention**${liveStream.channel.name}** is now live: ${liveStream.url}")
             .awaitSingle()
-        TrackerUtil.checkAndPublish(new)
+        TrackerUtil.checkAndPublish(fbk, new)
     }
 
     @WithinExposedContext
     @Throws(ClientException::class)
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
+        val fbk = instances[target.discordClient]
+        val discord = fbk.client
 
         // get target channel in discord, make sure it still exists
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, target)
+        val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
@@ -418,7 +429,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
 
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
-            TrackerUtil.pinActive(discord, features, newNotification)
+            TrackerUtil.pinActive(fbk, features, newNotification)
 
             // log message in db
             YoutubeNotification.new {
@@ -428,7 +439,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             }
 
             // edit channel name if feature is enabled and stream starts
-            checkAndRenameChannel(chan)
+            checkAndRenameChannel(fbk.clientId, chan)
 
             return newNotification
 
@@ -436,7 +447,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val err = ce.status.code()
             if(err == 403) {
                 LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
                 return null
             } else throw ce
         }
@@ -444,9 +455,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
     @WithinExposedContext
     private suspend fun getUpcomingChannel(target: TrackedStreams.Target): MessageChannel {
-        val (guildConfig, features) = GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+        val (guildConfig, features) = GuildConfigurations.findFeatures(target.discordClient, target.discordChannel.guild?.guildID, target.discordChannel.channelID)
         val yt = features?.youtubeSettings ?: YoutubeSettings()
 
+        val discord = instances[target.discordClient].client
         val altChannel = if(yt.upcomingChannel != null) {
             try {
                 discord.getChannelById(yt.upcomingChannel!!.snowflake)

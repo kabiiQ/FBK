@@ -1,9 +1,9 @@
 package moe.kabii.command.registration
 
-import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.discordjson.json.ApplicationCommandRequest
 import kotlinx.coroutines.reactor.awaitSingle
+import moe.kabii.FBK
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -38,12 +38,13 @@ object GuildCommandRegistrar : CommandRegistrar {
         yieldAll(customCommands)
     }.toList()
 
-    suspend fun updateGuildCommands(guild: Guild) = updateGuildCommands(guild.client.rest(), guild.id.asLong())
+    suspend fun updateGuildCommands(fbk: FBK, guild: Guild) = updateGuildCommands(fbk, guild.id.asLong())
 
-    suspend fun updateGuildCommands(discord: DiscordClient, guildId: Long) {
-        val config = GuildConfigurations.getOrCreateGuild(guildId)
+    suspend fun updateGuildCommands(fbk: FBK, guildId: Long) {
+        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
         val guildCommands = getGuildCommands(config)
 
+        val discord = fbk.client.rest()
         val appId = discord.applicationId.awaitSingle()
         discord.applicationService
             .bulkOverwriteGuildApplicationCommand(appId, guildId, guildCommands)

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.jodatime.datetime
 import org.joda.time.DateTime
 
 object Reminders : LongIdTable("reminders") {
+    val discordClient = integer("reminder_discord_client").default(1)
     val user = reference("user", DiscordObjects.Users, ReferenceOption.RESTRICT)
     val channel = long("channel_id")
     val created = datetime("created_time")
@@ -18,6 +19,7 @@ object Reminders : LongIdTable("reminders") {
 }
 
 class Reminder(id: EntityID<Long>) : LongEntity(id) {
+    var discordClient by Reminders.discordClient
     var user by DiscordObjects.User referencedOn Reminders.user
     var channel by Reminders.channel
     var created by Reminders.created

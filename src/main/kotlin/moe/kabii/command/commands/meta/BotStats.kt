@@ -8,7 +8,6 @@ import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
-import moe.kabii.discord.util.Uptime
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils
@@ -38,12 +37,6 @@ object BotStats : CommandContainer {
 
                 event.editReply().withEmbeds(pingEmbed).awaitSingle()
             }
-
-            terminal {
-                println("\nPong!")
-                val heartbeat = discord.gatewayClientGroup.find(0).orNull()?.responseTime?.toMillis()
-                println("Gateway heartbeat: ${heartbeat}ms\n")
-            }
         }
     }
 
@@ -62,9 +55,10 @@ object BotStats : CommandContainer {
                 val users = guilds.sum().toString()
                 val build = MetaData.buildInfo
 
+                val uptime = client.uptime
                 val now = Instant.now()
-                val connect = Duration.between(Uptime.connection, now)
-                val reconnect = Duration.between(Uptime.reconnect, now)
+                val connect = Duration.between(uptime.connection, now)
+                val reconnect = Duration.between(uptime.reconnect, now)
                 val connection = DurationFormatUtils.formatDuration(connect.toMillis(), uptimeFormat, false)
                 val reconnection = DurationFormatUtils.formatDuration(reconnect.toMillis(), uptimeFormat, false)
 

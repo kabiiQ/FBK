@@ -7,8 +7,10 @@ import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
@@ -17,10 +19,11 @@ import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent::class) {
+class MemberUpdateListener(val instances: DiscordInstances) : EventListener<MemberUpdateEvent>(MemberUpdateEvent::class) {
     override suspend fun handle(event: MemberUpdateEvent) {
         val old = event.old.orNull() ?: return
-        val config = GuildConfigurations.guildConfigurations[event.guildId.asLong()] ?: return
+        val clientId = instances[event.client].clientId
+        val config = GuildConfigurations.guildConfigurations[GuildTarget(clientId, event.guildId.asLong())] ?: return
         val member = event.member.awaitSingle()
 
         // nickname update
@@ -64,7 +67,7 @@ object MemberUpdateListener : EventListener<MemberUpdateEvent>(MemberUpdateEvent
                                     targetLog.displayNameLog = false
                                     config.save()
                                     val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}log names enable** to re-enable this log."
-                                    TrackerUtil.notifyOwner(event.client, event.guildId.asLong(), message)
+                                    TrackerUtil.notifyOwner(instances[event.client], event.guildId.asLong(), message)
                                 }
                                 else -> throw ce
                             }

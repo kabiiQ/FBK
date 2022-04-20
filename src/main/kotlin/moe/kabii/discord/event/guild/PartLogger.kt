@@ -8,6 +8,8 @@ import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
+import moe.kabii.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -21,12 +23,12 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 
 object PartLogger {
-    object PartListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
-        override suspend fun handle(event: MemberLeaveEvent) = handlePart(event.guildId, event.user, event.member.orNull())
+    class PartListener(val instances: DiscordInstances) : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
+        override suspend fun handle(event: MemberLeaveEvent) = handlePart(instances[event.client], event.guildId, event.user, event.member.orNull())
     }
 
-    suspend fun handlePart(guild: Snowflake, user: User, member: Member?) {
-        val config = GuildConfigurations.getOrCreateGuild(guild.asLong())
+    suspend fun handlePart(client: FBK, guild: Snowflake, user: User, member: Member?) {
+        val config = GuildConfigurations.getOrCreateGuild(client.clientId, guild.asLong())
 
         // save current roles if this setting is enabled
         if(config.guildSettings.reassignRoles && member != null) {
@@ -53,7 +55,7 @@ object PartLogger {
                     ).awaitSingle()
 
                     if(targetLog.kickLogs) {
-                        LogWatcher.auditEvent(user.client, AuditKick(log, guild, user.id))
+                        LogWatcher.auditEvent(client, AuditKick(log, guild, user.id))
                     }
 
                 } catch (ce: ClientException) {

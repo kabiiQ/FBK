@@ -10,8 +10,8 @@ import moe.kabii.util.extensions.withEach
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
-    suspend fun runChecks(guild: Guild) {
-        val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
+    suspend fun runChecks(clientId: Int, guild: Guild) {
+        val config = GuildConfigurations.getOrCreateGuild(clientId, guild.id.asLong())
 
         // sync all temporary voice channel states
         val tempChannels = config.tempVoiceChannels.tempChannels

@@ -10,13 +10,15 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import moe.kabii.FBK
+import moe.kabii.data.mongodb.GuildTarget
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 
 internal data class AudioComponents(val player: AudioPlayer, val provider: AudioProvider)
 
 object AudioManager {
-    internal val guilds = mutableMapOf<Long, GuildAudio>()
+    internal val guilds = mutableMapOf<GuildTarget, GuildAudio>()
 
     val manager = DefaultAudioPlayerManager()
     val timeouts = Timeouts()
@@ -52,10 +54,10 @@ object AudioManager {
         return AudioComponents(player, provider)
     }
 
-    fun getGuildAudio(guild: Long): GuildAudio = guilds.getOrPut(guild) {
+    fun getGuildAudio(fbk: FBK, guild: Long): GuildAudio = guilds.getOrPut(GuildTarget(fbk.clientId, guild)) {
         synchronized(guilds) {
             val (player, provider) = createAudioComponents()
-            GuildAudio(this, guild, player, provider)
+            GuildAudio(this, fbk, guild, player, provider)
         }
     }
 }

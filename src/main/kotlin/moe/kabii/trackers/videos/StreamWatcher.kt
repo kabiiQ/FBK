@@ -1,6 +1,5 @@
 package moe.kabii.trackers.videos
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.*
 import discord4j.rest.http.client.ClientException
@@ -8,6 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
+import moe.kabii.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -34,7 +35,7 @@ import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
 
-abstract class StreamWatcher(val discord: GatewayDiscordClient) {
+abstract class StreamWatcher(val instances: DiscordInstances) {
 
     private val job = SupervisorJob()
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
@@ -46,6 +47,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 // untrack target if channel deleted
                 if(target.discordChannel.guild != null) {
                     try {
+                        val discord = instances[target.discordClient].client
                         discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
                     } catch(e: Exception) {
                         if(e is ClientException && e.status.code() == 404) {
@@ -62,8 +64,9 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
                 // ignore, but do not untrack targets with feature disabled
                 val discordTarget = target.discordChannel
 
+                val clientId = instances[target.discordClient].clientId
                 val guildId = discordTarget.guild?.guildID ?: return@filter true // PM do not have channel features
-                val featureChannel = GuildConfigurations.getOrCreateGuild(guildId).getOrCreateFeatures(discordTarget.channelID)
+                val featureChannel = GuildConfigurations.getOrCreateGuild(clientId, guildId).getOrCreateFeatures(discordTarget.channelID)
                 target.streamChannel.site.targetType.channelFeature.get(featureChannel)
             }
         } else {
@@ -116,7 +119,8 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     }
 
     @WithinExposedContext
-    suspend fun getChannel(guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
+    suspend fun getChannel(fbk: FBK, guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
+        val discord = fbk.client
         return try {
             discord.getChannelById(channel.snowflake)
                 .ofType(MessageChannel::class.java)
@@ -124,7 +128,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         } catch(e: Exception) {
             if(e is ClientException && e.status.code() == 403) {
                 LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. StreamWatcher.java")
-                TrackerUtil.permissionDenied(discord, guild, channel, FeatureChannel::streamTargetChannel, { deleteTarget?.delete() })
+                TrackerUtil.permissionDenied(fbk, guild, channel, FeatureChannel::streamTargetChannel, { deleteTarget?.delete() })
             } else {
                 LOG.warn("${Thread.currentThread().name} - StreamWatcher :: Unable to get Discord channel: ${e.message}")
             }
@@ -136,7 +140,7 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
     suspend fun getStreamConfig(target: TrackedStreams.Target): StreamSettings {
         // get channel stream embed settings
         val (_, features) =
-            GuildConfigurations.findFeatures(target.discordChannel.guild?.guildID, target.discordChannel.channelID)
+            GuildConfigurations.findFeatures(target.discordClient, target.discordChannel.guild?.guildID, target.discordChannel.channelID)
         return features?.streamSettings ?: StreamSettings() // use default settings for pm notifications
     }
 
@@ -147,11 +151,11 @@ abstract class StreamWatcher(val discord: GatewayDiscordClient) {
         private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
 
         @WithinExposedContext
-        suspend fun checkAndRenameChannel(channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
+        suspend fun checkAndRenameChannel(clientId: Int, channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
             // if this is a guild channel with the rename feature enabled, execute this functionality
             val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms
 
-            val config = GuildConfigurations.getOrCreateGuild(guildChan.guildId.asLong())
+            val config = GuildConfigurations.getOrCreateGuild(clientId, guildChan.guildId.asLong())
             val features = config.options.featureChannels.getValue(guildChan.id.asLong())
 
             val feature = features.streamSettings

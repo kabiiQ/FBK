@@ -7,6 +7,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
@@ -19,12 +20,12 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
 
 object JoinLogger {
-    object JoinListener : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
-        override suspend fun handle(event: MemberJoinEvent) = handleJoin(event.member)
+    class JoinListener(val instances: DiscordInstances) : EventListener<MemberJoinEvent>(MemberJoinEvent::class) {
+        override suspend fun handle(event: MemberJoinEvent) = handleJoin(instances[event.client].clientId, event.member)
     }
 
-    suspend fun handleJoin(member: Member) {
-        val config = GuildConfigurations.getOrCreateGuild(member.guildId.asLong())
+    suspend fun handleJoin(clientId: Int, member: Member) {
+        val config = GuildConfigurations.getOrCreateGuild(clientId, member.guildId.asLong())
 
         // create user log entry
         val memberId = member.id.asLong()
@@ -33,7 +34,7 @@ object JoinLogger {
         var errorStr = ""
 
         // if we can determine the invite used, we can apply specific autoroles
-        val invite = InviteWatcher.updateGuild(member.guild.awaitFirst()).singleOrNull()
+        val invite = InviteWatcher.updateGuild(clientId, member.guild.awaitFirst()).singleOrNull()
 
         // reassign roles if the feature is enabled and the user rejoined. otherwise assign normal joinroles
         // currently intentional that users being reassigned roles don't get the autoroles

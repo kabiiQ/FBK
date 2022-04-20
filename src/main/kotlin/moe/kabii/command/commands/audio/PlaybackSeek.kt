@@ -51,7 +51,7 @@ object PlaybackSeek : AudioCommandContainer {
     private suspend fun time(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
@@ -77,7 +77,7 @@ object PlaybackSeek : AudioCommandContainer {
     private suspend fun forward(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
@@ -105,7 +105,7 @@ object PlaybackSeek : AudioCommandContainer {
     private suspend fun backward(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("There is no track currently playing.")).awaitSingle()

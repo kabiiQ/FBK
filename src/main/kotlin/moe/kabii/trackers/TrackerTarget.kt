@@ -104,7 +104,7 @@ object TwitchTarget : StreamingTarget(
     }
 
     override val onTrack: TrackCallback = callback@{ origin, channel ->
-        val services = origin.handler.services
+        val services = origin.handler.instances.services
         val twitch = services.twitch
 
         val targets = twitch.getActiveTargets(channel) ?: return@callback
@@ -182,7 +182,7 @@ object TwitcastingTarget : StreamingTarget(
     }
 
     override val onTrack: TrackCallback = { origin, channel ->
-        origin.handler.services.twitcastChecker.checkUserForMovie(channel)
+        origin.handler.instances.services.twitcastChecker.checkUserForMovie(channel)
         TwitcastingParser.registerWebhook(channel.siteChannelID)
     }
 }
@@ -216,7 +216,7 @@ object TwitterSpaceTarget : StreamingTarget(
         val twitterId = listOf(channel.siteChannelID)
         val space = TwitterParser.getSpacesByCreators(twitterId).firstOrNull()
         if(space != null) {
-            origin.handler.services.spaceChecker.updateSpace(channel, space)
+            origin.handler.instances.services.spaceChecker.updateSpace(channel, space)
         }
     }
 
@@ -311,7 +311,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             // get the channel features, if they exist. PMs do not require trackers to be enabled
             // thus, a URL or site name must be specified if used in PMs
             val features = if(origin.guild != null) {
-                GuildConfigurations.getOrCreateGuild(origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
+                GuildConfigurations.getOrCreateGuild(origin.client.clientId, origin.guild.id.asLong()).getOrCreateFeatures(origin.guildChan.id.asLong())
             } else null
 
             val suggestion = suggestionStyle.find(input)

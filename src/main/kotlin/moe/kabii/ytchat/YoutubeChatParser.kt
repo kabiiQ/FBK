@@ -1,14 +1,14 @@
 package moe.kabii.ytchat
 
 import com.squareup.moshi.Types
-import discord4j.core.GatewayDiscordClient
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMember
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 
-class YoutubeChatParser(val discord: GatewayDiscordClient, val watcher: YoutubeChatWatcher) {
+class YoutubeChatParser(val instances: DiscordInstances, val watcher: YoutubeChatWatcher) {
 
     private val chatDataType = Types.newParameterizedType(List::class.java, YTChatMessage::class.java)
     private val chatAdapter = MOSHI.adapter<List<YTChatMessage>>(chatDataType)
@@ -32,7 +32,7 @@ class YoutubeChatParser(val discord: GatewayDiscordClient, val watcher: YoutubeC
                     .onEach { message -> watcher.holoChatQueue.trySend(YoutubeChatWatcher.YTMessageData(room, message)) }
                     .filter { chat -> chat.author.member }
                     .forEach { chat ->
-                        YoutubeMember.recordActive(discord, room.channelId, chat.author.channelId)
+                        YoutubeMember.recordActive(instances, room.channelId, chat.author.channelId)
                 }
             }
         } catch(e: Exception) {

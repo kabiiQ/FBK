@@ -1,6 +1,6 @@
 package moe.kabii.trackers
 
-import discord4j.core.GatewayDiscordClient
+import moe.kabii.DiscordInstances
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.trackers.anime.anilist.AniListParser
@@ -24,7 +24,7 @@ data class ServiceRequestCooldownSpec(
     val minimumRepeatTime: Long
 )
 
-class ServiceWatcherManager(val discord: GatewayDiscordClient) {
+class ServiceWatcherManager(val discord: DiscordInstances) {
     // launch service watcher threads
     private val serviceThreads: List<Thread>
     private var active = false

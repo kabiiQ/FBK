@@ -21,7 +21,7 @@ object QueueEdit : AudioCommandContainer {
     suspend fun shuffle(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         channelVerify(Permission.MANAGE_MESSAGES)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         if(audio.queue.isEmpty()) {
             ereply(Embeds.error("There are no tracks currently in queue to shuffle.")).awaitSingle()
             return@with
@@ -35,7 +35,7 @@ object QueueEdit : AudioCommandContainer {
     suspend fun remove(origin: DiscordParameters, removeArg: String? = null, removeUser: User? = null) = with(origin) {
         // remove (range) (user) only remove tracks the user can skip normally
         channelFeatureVerify(FeatureChannel::musicChannel)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val queue = audio.queue
         if (queue.isEmpty()) {
             ereply(Embeds.fbk("The queue is currently empty.")).awaitSingle() // technically not necessary
@@ -101,7 +101,7 @@ object QueueEdit : AudioCommandContainer {
             return@with
         }
         // re-queue current song at the end of the queue
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             ereply(Embeds.error("Nothing is currently playing to be re-queued.")).awaitSingle()

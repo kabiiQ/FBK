@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -21,23 +22,23 @@ import java.time.Duration
 enum class ReactionAction { ADD, REMOVE }
 
 object ReactionRoleHandler {
-    object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
+    class ReactionAddListener(val instances: DiscordInstances) : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
         override suspend fun handle(event: ReactionAddEvent) {
             val guildId = event.guildId.orNull() ?: return
-            handleReactionRole(event.userId, guildId, event.channelId, event.messageId, event.guild, event.message, event.emoji, ReactionAction.ADD)
+            handleReactionRole(instances[event.client].clientId, event.userId, guildId, event.channelId, event.messageId, event.guild, event.message, event.emoji, ReactionAction.ADD)
         }
     }
 
-    object ReactionRemoveListener : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
+    class ReactionRemoveListener(val instances: DiscordInstances) : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
         override suspend fun handle(event: ReactionRemoveEvent) {
             val guildId = event.guildId.orNull() ?: return
-            handleReactionRole(event.userId, guildId, event.channelId, event.messageId, event.guild, event.message, event.emoji, ReactionAction.REMOVE)
+            handleReactionRole(instances[event.client].clientId, event.userId, guildId, event.channelId, event.messageId, event.guild, event.message, event.emoji, ReactionAction.REMOVE)
         }
     }
 
-    suspend fun handleReactionRole(userId: Snowflake, guildId: Snowflake, channelId: Snowflake, messageId: Snowflake, guild: Mono<Guild>, message: Mono<Message>, emoji: ReactionEmoji, direction: ReactionAction) {
+    suspend fun handleReactionRole(clientId: Int, userId: Snowflake, guildId: Snowflake, channelId: Snowflake, messageId: Snowflake, guild: Mono<Guild>, message: Mono<Message>, emoji: ReactionEmoji, direction: ReactionAction) {
         // check if this is a registered reaction role message
-        val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+        val config = GuildConfigurations.getOrCreateGuild(clientId, guildId.asLong())
         val reactionRole = config.selfRoles.reactionRoles
             .filter { cfg -> cfg.message.messageID == messageId.asLong() }
             .find { cfg -> cfg.reaction.toReactionEmoji() == emoji }

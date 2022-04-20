@@ -1,11 +1,11 @@
 package moe.kabii.trackers.videos.spaces.watcher
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.spaces.TwitterSpaces
@@ -25,7 +25,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class SpaceChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, SpaceNotifier(discord) {
+class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, SpaceNotifier(instances) {
 
     private val spacePattern = Regex("twitter.com/i/spaces/([a-zA-Z0-9]{13})")
     private val spaceContext = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("TwitterChecker-SpaceIntake") + SupervisorJob())

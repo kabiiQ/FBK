@@ -11,10 +11,13 @@ object LeaveGuild : Command("leaveguild") {
     init {
         terminal {
             val guildId = args[0].toLong()
-            val guild = discord.getGuildById(guildId.snowflake).awaitSingle()
-            val guildName = guild.name
-            guild.leave().awaitAction()
-            println("Leaving guild: ${guildName} (${guild.id.asString()}")
+            val bots = instances.getByGuild(guildId.snowflake)
+            bots.forEach { fbk ->
+                val guild = fbk.client.getGuildById(guildId.snowflake).awaitSingle()
+                val guildName = guild.name
+                guild.leave().awaitAction()
+                println("Leaving guild: $guildName (${guild.id.asString()}")
+            }
         }
     }
 }

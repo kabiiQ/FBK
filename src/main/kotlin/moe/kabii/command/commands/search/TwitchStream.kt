@@ -25,8 +25,9 @@ object TwitchStreamLookup : Command("ttv") {
                 ireply(Embeds.fbk("**${twitchUser.displayName}** is not currently live.")).awaitSingle()
                 return@chat
             }
+            val clientId = client.clientId
             val settings = guild?.run {
-                GuildConfigurations.getOrCreateGuild(id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings
+                GuildConfigurations.getOrCreateGuild(clientId, id.asLong()).options.featureChannels[chan.id.asLong()]?.streamSettings
             } ?: StreamSettings()
             val stream = TwitchEmbedBuilder(twitchUser, settings).stream(twitchStream)
             ireply(stream.create()).awaitSingle()

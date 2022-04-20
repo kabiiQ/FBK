@@ -19,7 +19,7 @@ object QueueInfo : AudioCommandContainer {
     suspend fun list(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         if(!audio.playing) {
             ereply(Embeds.fbk("There are no tracks currently queued.")).awaitSingle()
             return@with
@@ -68,7 +68,7 @@ object QueueInfo : AudioCommandContainer {
         init {
             chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
-                val audio = AudioManager.getGuildAudio(target.id.asLong())
+                val audio = AudioManager.getGuildAudio(client, target.id.asLong())
                 if(!audio.playing) {
                     ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
                     return@chat

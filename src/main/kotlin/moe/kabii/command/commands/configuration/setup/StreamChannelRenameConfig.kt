@@ -25,7 +25,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
             // autocomplete only enabled on 'set' -> 'stream'
             val channelId = event.interaction.channelId.asLong()
             val siteArg = ChatCommandArguments(event.options[0]).optInt("site")
-            val matches = TargetSuggestionGenerator.getTargets(channelId, value, siteArg) { target -> StreamingTarget::class.isSuperclassOf(target::class) }
+            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg) { target -> StreamingTarget::class.isSuperclassOf(target::class) }
             suggest(matches)
         }
 
@@ -87,7 +87,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
         }
         config.save()
         propagateTransaction {
-            StreamWatcher.checkAndRenameChannel(chan, null)
+            StreamWatcher.checkAndRenameChannel(origin.client.clientId, chan, null)
         }
     }
 

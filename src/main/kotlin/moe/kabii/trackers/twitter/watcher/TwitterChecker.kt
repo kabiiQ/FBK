@@ -2,7 +2,6 @@ package moe.kabii.trackers.twitter.watcher
 
 import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -14,6 +13,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -50,7 +50,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec, val spaceChecker: SpaceChecker) : Runnable {
+class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec, val spaceChecker: SpaceChecker) : Runnable {
 
     override fun run() {
         applicationLoop {
@@ -161,14 +161,17 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
         TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
 
         // check for twitter space info from tweet
-        //spaceChecker.intakeSpaceFromTweet(tweet)
+        spaceChecker.intakeSpaceFromTweet(tweet)
 
         // cache to not repeat translation for same tweet across multiple channels/servers
         val translations = mutableMapOf<TranslationLanguage, TranslationResult>()
 
         targets.forEach target@{ target ->
+            val fbk = instances[target.discordClient]
+            val discord = fbk.client
             try {
                 // post a notif to this target
+                discord.guilds
                 val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
                     .ofType(MessageChannel::class.java)
                     .awaitSingle()
@@ -202,7 +205,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                     try {
                         val service = Translator.service
                         val defaultLang = GuildConfigurations
-                            .getOrCreateGuild(target.discordChannel.guild!!.guildID)
+                            .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
                             .run(service.supportedLanguages::get) ?: service.defaultLanguage()
                         val translator = Translator.getService(tweet.text, defaultLang.tag)
@@ -322,10 +325,10 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
                         .tryAwait()
                 }
 
-                TrackerUtil.checkAndPublish(notif)
+                TrackerUtil.checkAndPublish(fbk, notif)
             } catch (e: Exception) {
                 if (e is ClientException && e.status.code() == 403) {
-                    TrackerUtil.permissionDenied(discord, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
+                    TrackerUtil.permissionDenied(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
                     LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
                 } else {
                     LOG.warn("Error sending Tweet to channel: ${e.message}")
@@ -341,6 +344,7 @@ class TwitterChecker(val discord: GatewayDiscordClient, val cooldowns: ServiceRe
     suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
         val existingTargets = feed.targets.toList()
             .filter { target ->
+                val discord = instances[target.discordClient].client
                 // untrack target if discord channel is deleted
                 if (target.discordChannel.guild != null) {
                     try {

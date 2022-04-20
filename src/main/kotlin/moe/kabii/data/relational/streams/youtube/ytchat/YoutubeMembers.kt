@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.streams.youtube.ytchat
 
-import discord4j.core.GatewayDiscordClient
+import moe.kabii.DiscordInstances
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.LongEntity
@@ -28,7 +28,7 @@ class YoutubeMember(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<YoutubeMember>(YoutubeMembers) {
 
         @WithinExposedContext
-        suspend fun recordActive(discord: GatewayDiscordClient, ytChannelId: String, ytChatterId: String) {
+        suspend fun recordActive(instances: DiscordInstances, ytChannelId: String, ytChatterId: String) {
             val existing = find {
                 YoutubeMembers.channelOwnerId eq ytChannelId and
                         (YoutubeMembers.chatterId eq ytChatterId)
@@ -40,7 +40,7 @@ class YoutubeMember(id: EntityID<Long>) : LongEntity(id) {
                     this.chatterId = ytChatterId
                     this.lastUpdate = DateTime.now()
                 }
-                YoutubeMembershipUtil.linkMembership(discord, newMember)
+                YoutubeMembershipUtil.linkMembership(instances, newMember)
             } else {
                 existing.lastUpdate = DateTime.now()
             }

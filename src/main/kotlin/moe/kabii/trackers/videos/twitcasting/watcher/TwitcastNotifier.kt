@@ -1,11 +1,11 @@
 package moe.kabii.trackers.videos.twitcasting.watcher
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -29,7 +29,7 @@ import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
-abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(discord) {
+abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(instances) {
 
     companion object {
         private val liveColor = TwitcastingParser.color
@@ -65,6 +65,8 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
         Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
+            val fbk = instances[notification.targetId.discordClient]
+            val discord = fbk.client
             try {
                 val dbMessage = notification.messageId
                 val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
@@ -99,7 +101,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                 }
 
                 action.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = channel)
+                checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = channel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to get Twitcast stream notification $notification :: ${ce.status.code()}")
@@ -116,12 +118,14 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
     @WithinExposedContext
     suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedStreams.Target) {
 
+        val fbk = instances[target.discordClient]
+        val discord = fbk.client
         // get target channel in discord
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, target)
+        val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)
 
         // get embed settings
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
@@ -154,7 +158,7 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                 .withEmbeds(embed)
                 .awaitSingle()
 
-            TrackerUtil.pinActive(discord, features, newNotification)
+            TrackerUtil.pinActive(fbk, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log notification in db
@@ -164,11 +168,11 @@ abstract class TwitcastNotifier(discord: GatewayDiscordClient) : StreamWatcher(d
                 this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
             }
 
-            checkAndRenameChannel(chan)
+            checkAndRenameChannel(fbk.clientId, chan)
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
             } else throw ce
         }
     }

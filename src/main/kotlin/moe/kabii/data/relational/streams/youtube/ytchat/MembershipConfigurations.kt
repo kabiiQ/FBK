@@ -12,10 +12,12 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
 object MembershipConfigurations : IntIdTable() {
 
+    val discordClient = integer("membership_connection_discord_client").default(1)
     val discordServer = reference("membership_connection_discord_server", DiscordObjects.Guilds, ReferenceOption.CASCADE).uniqueIndex("membershipconfigurations_membership_connection_discord_server_u")
     val streamChannel = reference("membership_connection_stream_channel", TrackedStreams.StreamChannels, ReferenceOption.RESTRICT)
     val membershipRole = long("membership_connection_generated_role_id")
@@ -25,16 +27,18 @@ object MembershipConfigurations : IntIdTable() {
     fun getForChannel(ytChan: TrackedStreams.StreamChannel) = MembershipConfigurations.select { streamChannel eq ytChan.id }
 
     @WithinExposedContext
-    fun getForGuild(guildId: Snowflake) = MembershipConfiguration.wrapRows(
+    fun getForGuild(clientId: Int, guildId: Snowflake) = MembershipConfiguration.wrapRows(
         MembershipConfigurations
             .innerJoin(DiscordObjects.Guilds)
             .select {
-                DiscordObjects.Guilds.guildID eq guildId.asLong()
+                discordClient eq clientId and
+                        (DiscordObjects.Guilds.guildID eq guildId.asLong())
             }
     ).firstOrNull()
 }
 
 class MembershipConfiguration(id: EntityID<Int>) : IntEntity(id) {
+    var discordClient by MembershipConfigurations.discordClient
     var discordServer by DiscordObjects.Guild referencedOn MembershipConfigurations.discordServer
     var streamChannel by TrackedStreams.StreamChannel referencedOn MembershipConfigurations.streamChannel
     var membershipRole by MembershipConfigurations.membershipRole

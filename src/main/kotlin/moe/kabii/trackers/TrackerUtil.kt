@@ -1,6 +1,5 @@
 package moe.kabii.trackers
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -10,8 +9,10 @@ import discord4j.core.`object`.entity.channel.NewsChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.mongodb.guilds.StreamSettings
@@ -23,9 +24,9 @@ import moe.kabii.util.extensions.success
 import kotlin.reflect.KMutableProperty1
 
 object TrackerUtil {
-    suspend fun checkAndPublish(message: Message) {
+    suspend fun checkAndPublish(fbk: FBK, message: Message) {
         val guildId = message.guildId.orNull()?.asLong() ?: return
-        val settings = GuildConfigurations.getOrCreateGuild(guildId).guildSettings
+        val settings = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId).guildSettings
         checkAndPublish(message, settings)
     }
 
@@ -45,17 +46,17 @@ object TrackerUtil {
         }
     }
 
-    suspend fun permissionDenied(discord: GatewayDiscordClient, guildId: Long?, channelId: Long, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+    suspend fun permissionDenied(fbk: FBK, guildId: Long?, channelId: Long, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val features = config.getOrCreateFeatures(channelId)
             guildDelete.set(features, false)
             config.save()
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
             val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}feature $featureName enable** in <#$channelId> to re-enable this tracker."
-            notifyOwner(discord, guildId, message)
+            notifyOwner(fbk, guildId, message)
 
         } else {
             // delete target, we do not keep configs for dms
@@ -68,10 +69,10 @@ object TrackerUtil {
         }
     }
 
-    suspend fun notifyOwner(discord: GatewayDiscordClient, guildId: Long, message: String) {
+    suspend fun notifyOwner(fbk: FBK, guildId: Long, message: String) {
         try {
-            if(GuildConfigurations.guildConfigurations[guildId] == null) return // removed from guild
-            discord.getGuildById(guildId.snowflake)
+            if(GuildConfigurations.guildConfigurations[GuildTarget(fbk.clientId, guildId)] == null) return // removed from guild
+            fbk.client.getGuildById(guildId.snowflake)
                 .flatMap(Guild::getOwner)
                 .flatMap(Member::getPrivateChannel)
                 .flatMap { pm ->
@@ -83,12 +84,12 @@ object TrackerUtil {
         }
     }
 
-    suspend fun permissionDenied(channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+    suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
         val guildChan = channel as? GuildMessageChannel
-        permissionDenied(channel.client, guildChan?.guildId?.asLong(), channel.id.asLong(), guildDelete, pmDelete)
+        permissionDenied(fbk, guildChan?.guildId?.asLong(), channel.id.asLong(), guildDelete, pmDelete)
     }
 
-    suspend fun pinActive(discord: GatewayDiscordClient, settings: StreamSettings, message: Message) {
+    suspend fun pinActive(fbk: FBK, settings: StreamSettings, message: Message) {
         if(settings.pinActive) {
             try {
                 message.pin().thenReturn(Unit).awaitSingle()
@@ -99,7 +100,7 @@ object TrackerUtil {
                 if(e is ClientException && e.status.code() == 403) {
                     val guildId = message.guildId.orNull() ?: return
                     val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this log."
-                    notifyOwner(discord, guildId.asLong(), notice)
+                    notifyOwner(fbk, guildId.asLong(), notice)
                 }
             }
         }

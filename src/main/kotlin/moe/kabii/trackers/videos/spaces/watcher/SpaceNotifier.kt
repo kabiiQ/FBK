@@ -1,11 +1,11 @@
 package moe.kabii.discord.trackers.videos.spaces.watcher
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -29,7 +29,7 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
 
-abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(discord) {
+abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instances) {
 
     companion object {
         private val liveColor = TwitterParser.color
@@ -57,11 +57,13 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
 
     @WithinExposedContext
     suspend fun createSpaceNotification(space: TwitterSpace, dbSpace: TwitterSpaces.Space, target: TrackedStreams.Target) {
+        val fbk = instances[target.discordClient]
+        val discord = fbk.client
         // get discord channel
         val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(guildId, target.discordChannel.channelID, target)
+        val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)
 
-        val guildConfig = guildId?.run(GuildConfigurations::getOrCreateGuild)
+        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
         val mention = guildId?.run { getMentionRoleFor(target.streamChannel, this, chan, features) }
@@ -96,7 +98,7 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
                         }
                 ).awaitSingle()
 
-            TrackerUtil.pinActive(discord, features, newNotification)
+            TrackerUtil.pinActive(fbk, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             TwitterSpaces.SpaceNotif.new {
@@ -105,11 +107,11 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
                 this.message = MessageHistory.Message.getOrInsert(newNotification)
             }
 
-            checkAndRenameChannel(chan)
+            checkAndRenameChannel(fbk.clientId, chan)
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 LOG.warn("Unable to send Space notification to channel: ${chan.id.asString()}. Disabling feature in channel. SpaceNotifier.java")
-                TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
             } else throw ce
         }
     }
@@ -124,6 +126,8 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
             .firstOrNull() ?: return
 
         TwitterSpaces.SpaceNotif.getForSpace(dbSpace).forEach { notification ->
+            val fbk = instances[notification.targetId.discordClient]
+            val discord = fbk.client
             try {
                 val dbMessage = notification.message
                 val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
@@ -154,7 +158,7 @@ abstract class SpaceNotifier(discord: GatewayDiscordClient) : StreamWatcher(disc
                 }
 
                 action.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(existingNotif.channel.awaitSingle(), endingStream = dbChannel)
+                checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = dbChannel)
             } catch(ce: ClientException) {
                 LOG.info("Unable to get Space notification $notification :: ${ce.status.code()}")
             } catch(e: Exception) {

@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono
 object BotUtil {
     fun getBotVoiceChannel(target: Guild): Mono<VoiceChannel> =
         target.voiceStates
-            .filter { state -> state.userId == DiscordBot.selfId }
+            .filter { state -> state.userId == target.client.selfId }
             .next()
             .flatMap(VoiceState::getChannel)
 

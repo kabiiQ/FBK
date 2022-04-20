@@ -13,7 +13,7 @@ object QueueCommand : Command("queue") {
         autoComplete {
             val subCommand = event.options[0]
             val guildId = event.interaction.guildId.get().asLong()
-            val audio = AudioManager.getGuildAudio(guildId)
+            val audio = AudioManager.getGuildAudio(client, guildId)
 
             when(subCommand.name) {
                 "list" -> {

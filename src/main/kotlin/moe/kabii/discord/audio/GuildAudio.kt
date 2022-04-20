@@ -3,7 +3,6 @@ package moe.kabii.discord.audio
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
@@ -12,10 +11,12 @@ import discord4j.voice.VoiceConnection
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import moe.kabii.FBK
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -26,6 +27,7 @@ import moe.kabii.util.extensions.tryAwait
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(
     val manager: AudioManager,
+    val fbk: FBK,
     val guildId: Long,
     var player: AudioPlayer,
     var provider: AudioProvider,
@@ -55,7 +57,7 @@ data class GuildAudio(
 
     // queue song for a user, returns false if user is over quota
     suspend fun tryAdd(track: AudioTrack, member: Member? = null, position: Int? = null, checkLimits: Boolean = true): Boolean {
-        val maxTracksUser = GuildConfigurations.getOrCreateGuild(guildId).musicBot.maxTracksUser
+        val maxTracksUser = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId).musicBot.maxTracksUser
         val meta = track.userData as? QueueData
         checkNotNull(meta) { "AudioTrack has no origin information: ${track.info}" }
         if (member != null && checkLimits && maxTracksUser != 0L) {
@@ -77,7 +79,7 @@ data class GuildAudio(
 
      suspend fun joinChannel(channel: VoiceChannel): Result<VoiceConnection, Throwable> {
          discord.mutex.withLock {
-             val config = GuildConfigurations.getOrCreateGuild(channel.guildId.asLong())
+             val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, channel.guildId.asLong())
              val join = channel.join().withProvider(this.provider).tryAwait()
              if (join is Ok) {
                  discord.connection = join.value
@@ -103,7 +105,7 @@ data class GuildAudio(
             this.player.stopTrack()
             with(AudioManager.guilds) {
                 synchronized(this) {
-                    put(guildId, newAudio)
+                    put(GuildTarget(fbk.clientId, guildId), newAudio)
                 }
             }
             if(voice != null) {
@@ -125,7 +127,7 @@ data class GuildAudio(
 
     // this needs to be called anywhere we manually edit the queue, adding/anything playing the next track is encapsulated but shuffling etc are not currently
     private suspend fun saveQueue() {
-        val config = GuildConfigurations.getOrCreateGuild(guildId)
+        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
         // save copy of queue to db with just serializable info that we need to requeue
         config.musicBot.activeQueue = playlist.map { track ->
             val data = track.userData as QueueData
@@ -153,7 +155,7 @@ data class GuildAudio(
 
 data class QueueData(
     val audio: GuildAudio,
-    val discord: GatewayDiscordClient,
+    val fbk: FBK,
     val author_name: String, // just caching the author's username as it is unlikely to change and is only used in output
     val author: Snowflake,
     val originChannel: Snowflake,

@@ -6,19 +6,22 @@ import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 
-object NewGuildListener : EventListener<GuildCreateEvent>(GuildCreateEvent::class) {
+class NewGuildListener(val instances: DiscordInstances) : EventListener<GuildCreateEvent>(GuildCreateEvent::class) {
     override suspend fun handle(event: GuildCreateEvent) {
         val guildId = event.guild.id.asLong()
-        val existingConfig = GuildConfigurations.guildConfigurations[guildId]
+        val clientId = instances[event.client].clientId
+        val existingConfig = GuildConfigurations.guildConfigurations[GuildTarget(clientId, guildId)]
         if(existingConfig == null) {
-            GuildConfigurations.getOrCreateGuild(guildId).save()
+            GuildConfigurations.getOrCreateGuild(clientId, guildId).save()
 
             // get meta info channel - log channel for bot events
             val metaChanId = Keys.config[Keys.Admin.logChannel]

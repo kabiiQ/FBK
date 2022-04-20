@@ -9,25 +9,29 @@ import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.sql.and
 
 object TargetSuggestionGenerator {
 
+    private data class TargetChannel(val clientId: Int, val channelId: Long)
     private data class TargetComponents(val site: TrackerTarget, val username: String, val userId: String? = null)
     private data class TargetChoice(val site: TrackerTarget, val username: String, val option: ApplicationCommandOptionChoiceData)
 
-    private val channelTargetCache = mutableMapOf<Long, List<TargetChoice>>()
+    private val channelTargetCache = mutableMapOf<TargetChannel, List<TargetChoice>>()
 
-    suspend fun updateTargets(channelId: Long) {
-        channelTargetCache[channelId] = generateTargetMappings(channelId)
+    suspend fun updateTargets(clientId: Int, channelId: Long) {
+        val targetChannel = TargetChannel(clientId, channelId)
+        channelTargetCache[targetChannel] = generateTargetMappings(targetChannel)
     }
 
-    fun invalidateTargets(channelId: Long) {
-        channelTargetCache.remove(channelId)
+    fun invalidateTargets(clientId: Int, channelId: Long) {
+        channelTargetCache.remove(TargetChannel(clientId, channelId))
     }
 
-    suspend fun getTargets(channelId: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
-        val allTargets = channelTargetCache.getOrPut(channelId) {
-            generateTargetMappings(channelId)
+    suspend fun getTargets(clientId: Int, channelId: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
+        val targetChannel = TargetChannel(clientId, channelId)
+        val allTargets = channelTargetCache.getOrPut(targetChannel) {
+            generateTargetMappings(targetChannel)
         }
         val targets = if(filter == null) allTargets else allTargets.filter { target -> filter(target.site) }
 
@@ -52,7 +56,8 @@ object TargetSuggestionGenerator {
         return filtered.map(TargetChoice::option)
     }
 
-    private suspend fun generateTargetMappings(channelId: Long): List<TargetChoice> {
+    private suspend fun generateTargetMappings(targetChannel: TargetChannel): List<TargetChoice> {
+        val (clientId, channelId) = targetChannel
         return propagateTransaction {
             val dbChannel = DiscordObjects.Channel.find {
                 DiscordObjects.Channels.channelID eq channelId
@@ -62,7 +67,8 @@ object TargetSuggestionGenerator {
                 val targets = mutableListOf<TargetComponents>()
 
                 TrackedStreams.Target.find {
-                    TrackedStreams.Targets.discordChannel eq dbChannel.id
+                    TrackedStreams.Targets.discordClient eq clientId and
+                            (TrackedStreams.Targets.discordChannel eq dbChannel.id)
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         target.streamChannel.site.targetType,
@@ -72,7 +78,8 @@ object TargetSuggestionGenerator {
                 }
 
                 TrackedMediaLists.ListTarget.find {
-                    TrackedMediaLists.ListTargets.discord eq dbChannel.id
+                    TrackedMediaLists.ListTargets.discordClient eq clientId and
+                            (TrackedMediaLists.ListTargets.discord eq dbChannel.id)
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         target.mediaList.site.targetType,
@@ -81,7 +88,8 @@ object TargetSuggestionGenerator {
                 }
 
                 moe.kabii.data.relational.twitter.TwitterTarget.find {
-                    TwitterTargets.discordChannel eq dbChannel.id
+                    TwitterTargets.discordClient eq clientId and
+                            (TwitterTargets.discordChannel eq dbChannel.id)
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         TwitterTarget,

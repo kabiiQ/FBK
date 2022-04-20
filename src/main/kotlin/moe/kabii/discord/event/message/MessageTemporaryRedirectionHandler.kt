@@ -3,6 +3,7 @@ package moe.kabii.discord.event.message
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.command.CommandManager
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -10,11 +11,12 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.orNull
 
-class MessageTemporaryRedirectionHandler(val manager: CommandManager): EventListener<MessageCreateEvent>(MessageCreateEvent::class) {
+class MessageTemporaryRedirectionHandler(val instances: DiscordInstances, val manager: CommandManager): EventListener<MessageCreateEvent>(MessageCreateEvent::class) {
 
     override suspend fun handle(event: MessageCreateEvent) {
         manager.context.launch {
-            val config = event.guildId.orNull()?.asLong()?.run(GuildConfigurations::getOrCreateGuild)
+            val clientId = instances[event.client].clientId
+            val config = event.guildId.orNull()?.asLong()?.run { GuildConfigurations.getOrCreateGuild(clientId, this) }
             val prefix = config?.prefix ?: GuildConfiguration.defaultPrefix
             val message = event.message.content
             if(message.startsWith(prefix)) {

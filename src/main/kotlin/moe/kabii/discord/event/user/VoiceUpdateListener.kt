@@ -1,21 +1,18 @@
 package moe.kabii.discord.event.user
 
-import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
-import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
-import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.logColor
 import moe.kabii.rusty.Ok
@@ -23,7 +20,7 @@ import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
+class VoiceUpdateListener(val instances: DiscordInstances) : EventListener<VoiceStateUpdateEvent>(VoiceStateUpdateEvent::class) {
     override suspend fun handle(event: VoiceStateUpdateEvent) { // voicelog
         val oldState = event.old.orNull()
         val newState = event.current
@@ -41,7 +38,8 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
         val new = newChannel != null
 
 
-        val config = GuildConfigurations.getOrCreateGuild(newState.guildId.asLong())
+        val client = instances[event.client]
+        val config = GuildConfigurations.getOrCreateGuild(client.clientId, newState.guildId.asLong())
         val user = newState.user.awaitSingle()
         val guildID = newState.guildId
 
@@ -97,20 +95,9 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
         }
 
         // actions when the bot is moved
-        if(event.current.userId == DiscordBot.selfId) {
+        if(event.current.userId == event.client.selfId) {
             config.musicBot.lastChannel = newChannel?.id?.asLong()
             config.save()
-
-            if(old && new && TempStates.dragGuilds.removeIf(guildID::equals)) {
-                // if guild has enabled drag command and the bot is moved, move all users along with the bot
-                oldState!!.channel
-                    .flatMapMany(VoiceChannel::getVoiceStates)
-                    .flatMap(VoiceState::getUser)
-                    .flatMap { vcUser -> vcUser.asMember(guildID) }
-                    .flatMap { vcMember ->
-                        vcMember.edit().withNewVoiceChannelOrNull(newChannel!!.id)
-                    }.subscribe()
-            }
         }
 
         // autorole
@@ -131,7 +118,7 @@ object VoiceUpdateListener : EventListener<VoiceStateUpdateEvent>(VoiceStateUpda
             val alone = BotUtil.getBotVoiceChannel(guild)
                 .flatMap(BotUtil::isSingleClient)
                 .awaitFirstOrNull()
-            val audio = AudioManager.getGuildAudio(guildID.long)
+            val audio = AudioManager.getGuildAudio(client, guildID.long)
             when(alone) {
                 true -> {
                     // bot is alone - schedule a disconnection

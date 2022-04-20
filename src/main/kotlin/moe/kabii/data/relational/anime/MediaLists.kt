@@ -49,26 +49,29 @@ object TrackedMediaLists {
 
     object ListTargets : IdTable<Int>() {
         override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+        val discordClient = integer("list_target_discord_client").default(1)
         val mediaList = reference("assoc_media_list", MediaLists, ReferenceOption.CASCADE)
         val discord = reference("target_discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val userTracked = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
 
-        override val primaryKey = PrimaryKey(mediaList, discord)
+        override val primaryKey = PrimaryKey(discordClient, mediaList, discord)
     }
 
     class ListTarget(id: EntityID<Int>) : IntEntity(id) {
+        var discordClient by ListTargets.discordClient
         var mediaList by MediaList referencedOn ListTargets.mediaList
         var discord by DiscordObjects.Channel referencedOn ListTargets.discord
         var userTracked by DiscordObjects.User referencedOn ListTargets.userTracked
 
         companion object : IntEntityClass<ListTarget>(ListTargets) {
             @WithinExposedContext
-            fun getExistingTarget(site: ListSite, listIdLower: String, channelId: Long) = ListTarget.wrapRows(
+            fun getExistingTarget(clientId: Int, site: ListSite, listIdLower: String, channelId: Long) = ListTarget.wrapRows(
                 ListTargets
                     .innerJoin(MediaLists)
                     .innerJoin(DiscordObjects.Channels)
                     .select {
                         MediaLists.site eq site and
+                                (ListTargets.discordClient eq clientId)
                                 (LowerCase(MediaLists.siteChannelId) eq listIdLower) and
                                 (DiscordObjects.Channels.channelID eq channelId)
                     }

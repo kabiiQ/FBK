@@ -1,7 +1,7 @@
 package moe.kabii.trackers.videos.youtube.subscriber
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscription
@@ -17,7 +17,7 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
 
-class YoutubeSubscriptionManager(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
+class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
 
     lateinit var checker: YoutubeChecker
     val subscriber = YoutubeFeedSubscriber()

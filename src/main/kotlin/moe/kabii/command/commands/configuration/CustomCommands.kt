@@ -48,7 +48,7 @@ object CustomCommands : Command("customcommand") {
         config.save()
 
         ireply(Embeds.fbk(reply)).awaitSingle()
-        GuildCommandRegistrar.updateGuildCommands(target)
+        GuildCommandRegistrar.updateGuildCommands(origin.client, target)
     }
 
     private suspend fun removeCommand(origin: DiscordParameters) = with(origin) {
@@ -61,7 +61,7 @@ object CustomCommands : Command("customcommand") {
         config.save()
 
         ireply(Embeds.fbk(reply)).awaitSingle()
-        GuildCommandRegistrar.updateGuildCommands(target)
+        GuildCommandRegistrar.updateGuildCommands(origin.client, target)
     }
 
     private suspend fun listCommands(origin: DiscordParameters) = with(origin) {

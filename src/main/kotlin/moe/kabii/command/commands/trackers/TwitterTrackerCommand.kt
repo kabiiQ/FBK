@@ -39,7 +39,7 @@ object TwitterTrackerCommand : TrackerCommand {
         val channelId = origin.chan.id.asLong()
 
         val existingTrack = transaction {
-            TwitterTarget.getExistingTarget(twitterUser.id, channelId)
+            TwitterTarget.getExistingTarget(origin.client.clientId, twitterUser.id, channelId)
         }
 
         if(existingTrack != null) {
@@ -54,6 +54,7 @@ object TwitterTrackerCommand : TrackerCommand {
             shouldStream = features?.twitterSettings?.streamFeeds == true
 
             TwitterTarget.new {
+                this.discordClient = origin.client.clientId
                 this.twitterFeed = dbFeed
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
@@ -63,7 +64,7 @@ object TwitterTrackerCommand : TrackerCommand {
         }
 
         origin.ireply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!")).awaitSingle()
-        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
+        TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
         if(shouldStream) {
             propagateTransaction {
                 TwitterFeedSubscriber.addStreamingFeeds(listOf(dbFeed))
@@ -87,7 +88,7 @@ object TwitterTrackerCommand : TrackerCommand {
         // verify this user is tracked
         val channelId = origin.chan.id.asLong()
         propagateTransaction {
-            val existingTrack = TwitterTarget.getExistingTarget(twitterUser.id, channelId)
+            val existingTrack = TwitterTarget.getExistingTarget(origin.client.clientId, twitterUser.id, channelId)
 
             if(existingTrack == null) {
                 origin.ereply(Embeds.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
@@ -104,7 +105,7 @@ object TwitterTrackerCommand : TrackerCommand {
 
                 propagateTransaction { existingTrack.delete() }
                 origin.ireply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
+                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
                 TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
             } else {
                 val tracker = origin.chan.client

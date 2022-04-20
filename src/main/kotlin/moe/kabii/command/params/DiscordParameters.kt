@@ -12,6 +12,7 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
+import moe.kabii.FBK
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -36,6 +37,7 @@ data class DiscordParameters (
     val guild: Guild?,
     val author: User,
     val command: Command,
+    val client: FBK,
     val args: ChatCommandArguments = ChatCommandArguments(event)
 ) {
 
@@ -56,7 +58,7 @@ data class DiscordParameters (
     }
 
     val config: GuildConfiguration by lazy {
-        GuildConfigurations.getOrCreateGuild(target.id.asLong())
+        GuildConfigurations.getOrCreateGuild(client.clientId, target.id.asLong())
     }
 
     suspend fun features() = config.getOrCreateFeatures(guildChan.id.asLong())

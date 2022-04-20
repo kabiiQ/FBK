@@ -23,7 +23,7 @@ object YoutubeVideoTrack : Command("trackvid") {
         chat {
             // make sure feature is enabled or this channel is private
             if(guild != null) {
-                val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
+                val config = GuildConfigurations.getOrCreateGuild(client.clientId, guild.id.asLong())
                 val features = config.options.featureChannels[chan.id.asLong()]
                 // if feature has been disabled (enabled by default)
                 if(features?.streamTargetChannel == false) throw ChannelFeatureDisabledException(YoutubeTarget.featureName, this)
@@ -64,7 +64,7 @@ object YoutubeVideoTrack : Command("trackvid") {
                 val dbVideo = YoutubeVideo.getOrInsert(ytVideo.id, ytVideo.channel.id)
                 val discordChannel = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), guild?.id?.asLong())
                 val dbUser = DiscordObjects.User.getOrInsert(author.id.asLong())
-                YoutubeVideoTrack.insertOrUpdate(dbVideo, discordChannel, dbUser, mentionRole?.id?.asLong())
+                YoutubeVideoTrack.insertOrUpdate(client.clientId, dbVideo, discordChannel, dbUser, mentionRole?.id?.asLong())
             }
 
             val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."

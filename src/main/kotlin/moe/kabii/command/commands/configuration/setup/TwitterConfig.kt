@@ -13,6 +13,7 @@ import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.sql.and
 
 object TwitterConfig : Command("twitter") {
     override val wikiPath = "Twitter-Tracker#twitter-feed-notification-configuration"
@@ -81,7 +82,8 @@ object TwitterConfig : Command("twitter") {
 
                     val dbChan = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), target.id.asLong())
                     val targets = TwitterTarget.find {
-                        TwitterTargets.discordChannel eq dbChan.id
+                        TwitterTargets.discordClient eq client.clientId and
+                                (TwitterTargets.discordChannel eq dbChan.id)
                     }
 
                     if(twitter.streamFeeds) {

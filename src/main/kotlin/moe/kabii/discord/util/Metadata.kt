@@ -1,9 +1,6 @@
 package moe.kabii.discord.util
 
-import discord4j.common.util.Snowflake
-import discord4j.common.util.TokenUtil
 import moe.kabii.data.flat.Keys
-import moe.kabii.util.extensions.snowflake
 import java.time.Instant
 
 class MetaData private constructor(
@@ -32,7 +29,7 @@ class MetaData private constructor(
     }
 }
 
-object Uptime {
+class Uptime {
     val connection: Instant = Instant.now()
 
     var reconnect: Instant = Instant.now()
@@ -41,10 +38,6 @@ object Uptime {
     fun update() {
         reconnect = Instant.now()
     }
-}
-
-object DiscordBot {
-    val selfId: Snowflake = TokenUtil.getSelfId(Keys.config[Keys.Discord.token]).snowflake
 }
 
 object SourcePaths {

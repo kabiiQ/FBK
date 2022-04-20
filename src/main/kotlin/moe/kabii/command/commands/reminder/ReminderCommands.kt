@@ -17,6 +17,7 @@ import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.javaInstant
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
@@ -63,6 +64,7 @@ object ReminderCommands : CommandContainer {
                 // add the reminder to the database
                 val reminder = transaction {
                     Reminder.new {
+                        discordClient = client.clientId
                         user = DiscordObjects.User.getOrInsert(author.id.asLong())
                         channel = replyChannel.id.asLong()
                         created = DateTime.now()
@@ -105,7 +107,8 @@ object ReminderCommands : CommandContainer {
                         Reminders
                             .innerJoin(DiscordObjects.Users)
                             .select {
-                                DiscordObjects.Users.userID eq userId
+                                Reminders.discordClient eq client.clientId and
+                                        (DiscordObjects.Users.userID eq userId)
                             }
                     ).toList()
                     if(reminders.isNotEmpty()) {

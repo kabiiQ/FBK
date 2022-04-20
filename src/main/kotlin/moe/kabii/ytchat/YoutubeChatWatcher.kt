@@ -1,9 +1,9 @@
 package moe.kabii.ytchat
 
-import discord4j.core.GatewayDiscordClient
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
@@ -19,15 +19,15 @@ import java.io.File
 import java.time.Duration
 import kotlin.concurrent.thread
 
-class YoutubeChatWatcher(discord: GatewayDiscordClient) : Runnable {
+class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
 
     val activeChats = mutableMapOf<String, Process>()
 
     private val parseQueue = Channel<YTChatData>(Channel.UNLIMITED)
     val holoChatQueue = Channel<YTMessageData>(Channel.UNLIMITED)
 
-    private val parser = YoutubeChatParser(discord, this)
-    private val holochats = HoloChats(discord)
+    private val parser = YoutubeChatParser(instances, this)
+    private val holochats = HoloChats(instances)
 
     private val scriptDir = File("files/ytchat")
     private val scriptName = "ytchat.py"

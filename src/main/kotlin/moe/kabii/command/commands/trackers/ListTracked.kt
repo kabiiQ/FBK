@@ -11,6 +11,7 @@ import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.sql.and
 
 object ListTracked : Command("tracked") {
     override val wikiPath: String? = null
@@ -38,7 +39,8 @@ object ListTracked : Command("tracked") {
 
                 // get all tracked stream channels in this channel
                 TrackedStreams.Target.find {
-                    TrackedStreams.Targets.discordChannel eq dbChannel.id
+                    TrackedStreams.Targets.discordClient eq client.clientId and
+                            (TrackedStreams.Targets.discordChannel eq dbChannel.id)
                 }.mapTo(tracks) { target ->
                     val stream = target.streamChannel
                     val url = stream.site.targetType.feedById(stream.siteChannelID)
@@ -47,7 +49,8 @@ object ListTracked : Command("tracked") {
 
                 // get all tracked anime lists in this channel
                 TrackedMediaLists.ListTarget.find {
-                    TrackedMediaLists.ListTargets.discord eq dbChannel.id
+                    TrackedMediaLists.ListTargets.discordClient eq client.clientId and
+                            (TrackedMediaLists.ListTargets.discord eq dbChannel.id)
                 }.mapTo(tracks) { target ->
                     val list = target.mediaList
                     val url = list.site.targetType.feedById(list.siteListId)
@@ -56,7 +59,8 @@ object ListTracked : Command("tracked") {
 
                 // get tracked twitter feeds in this channel
                 TwitterTarget.find {
-                    TwitterTargets.discordChannel eq dbChannel.id
+                    TwitterTargets.discordClient eq client.clientId and
+                            (TwitterTargets.discordChannel eq dbChannel.id)
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
                     val url = moe.kabii.trackers.TwitterTarget.feedById(feed.userId.toString())

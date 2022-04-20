@@ -7,30 +7,31 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.DiscordBot
 import moe.kabii.discord.util.Embeds
-import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.*
 
-class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatcherManager) : EventListener<ChatInputInteractionEvent>(ChatInputInteractionEvent::class) {
+class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatInputInteractionEvent>(ChatInputInteractionEvent::class) {
 
-    fun searchCommandByName(name: String, bypassExempt: Boolean = false): Command? = manager.commands.find { command ->
+    fun searchCommandByName(name: String, bypassExempt: Boolean = false): Command? = instances.manager.commands.find { command ->
         val allowed = if(bypassExempt) true else !command.commandExempt
         allowed && command.name.equals(name, ignoreCase = true)
     }
 
     override suspend fun handle(event: ChatInputInteractionEvent) {
 
+        val client = instances[event.client]
         val interaction = event.interaction
-        val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(id.asLong()) }.orNull()
+        val config = interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(client.clientId, id.asLong()) }.orNull()
 
         // discord command handler
+        val manager = instances.manager
         val command = manager.commandsDiscord[event.commandName]
         if(command != null) {
 
@@ -54,7 +55,7 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                     return@launch
                 }
                 val chan = interaction.channel.awaitSingle()
-                val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command)
+                val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command, client)
 
                 try {
 
@@ -107,7 +108,7 @@ class ChatCommandHandler(val manager: CommandManager, val services: ServiceWatch
                             LOG.debug("403: ${ce.message}")
                             if (config == null || chan !is GuildChannel) return@launch
                             if (ce.errorResponse.orNull()?.fields?.get("message")?.equals("Missing Permissions") != true) return@launch
-                            val botPermissions = chan.getEffectivePermissions(DiscordBot.selfId).awaitSingle()
+                            val botPermissions = chan.getEffectivePermissions(event.client.selfId).awaitSingle()
                             val listMissing = command.discordReqs
                                 .filterNot(botPermissions::contains)
                                 .map(Permission::friendlyName)

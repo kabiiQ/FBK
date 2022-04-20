@@ -48,7 +48,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         // get db 'target' object if it exists
         val dbTarget = transaction {
-            TrackedStreams.Target.getForChannel(origin.chan.id, site, streamId)
+            TrackedStreams.Target.getForChannel(origin.client.clientId, origin.chan.id, site, streamId)
         }
 
         // already tracked. otherwise we'll create the target
@@ -62,6 +62,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         propagateTransaction {
             TrackedStreams.Target.new { // record the track in db
+                this.discordClient = origin.client.clientId
                 this.streamChannel = dbChannel
                 this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
@@ -69,7 +70,7 @@ object StreamTrackerCommand : TrackerCommand {
         }
 
         origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
-        TargetSuggestionGenerator.updateTargets(origin.chan.id.asLong())
+        TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
 
         // side-effects for prompt data maintenance
         try {
@@ -99,7 +100,7 @@ object StreamTrackerCommand : TrackerCommand {
 
         propagateTransaction {
             // check db if stream is tracked in this location
-            val dbTarget = TrackedStreams.Target.getForChannel(origin.chan.id, site, streamId)
+            val dbTarget = TrackedStreams.Target.getForChannel(origin.client.clientId, origin.chan.id, site, streamId)
             if(dbTarget == null) {
                 origin.ereply(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
                 return@propagateTransaction
@@ -112,7 +113,7 @@ object StreamTrackerCommand : TrackerCommand {
             ) {
                 dbTarget.delete()
                 origin.ireply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.chan.id.asLong())
+                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
             } else {
                 val tracker = origin.chan.client
                     .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()

@@ -1,7 +1,6 @@
 package moe.kabii.discord.auditlog
 
 import discord4j.common.util.Snowflake
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.audit.AuditLogPart
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
@@ -9,6 +8,7 @@ import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactor.awaitSingle
+import moe.kabii.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -31,11 +31,12 @@ object LogWatcher {
     private val watcherThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val executor = CoroutineScope(watcherThread + SupervisorJob())
 
+    // TODO would need to respect client separation
     private val auditGuilds = mutableMapOf<Long, AuditList>()
 
-    suspend fun auditEvent(discord: GatewayDiscordClient, event: AuditableEvent) {
+    suspend fun auditEvent(fbk: FBK, event: AuditableEvent) {
         // record event and schedule an audit log tick
-        val config = GuildConfigurations.getOrCreateGuild(event.guild)
+        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, event.guild)
         if(!config.guildSettings.utilizeAuditLogs) return
 
         val guildEvents = auditGuilds.getOrPut(event.guild, ::AuditList)
@@ -44,11 +45,11 @@ object LogWatcher {
         }
         executor.launch {
             delay(delay)
-            runAudit(discord, event.guild.snowflake, guildEvents, config)
+            runAudit(fbk, event.guild.snowflake, guildEvents, config)
         }
     }
 
-    private suspend fun runAudit(discord: GatewayDiscordClient, guild: Snowflake, events: AuditList, config: GuildConfiguration) {
+    private suspend fun runAudit(fbk: FBK, guild: Snowflake, events: AuditList, config: GuildConfiguration) {
         try {
             if(events.allEvents.isEmpty()) return // may be already handled by previous tick! (this is dependent on how long Discord takes to update log, so we just check)
             if(!config.guildSettings.utilizeAuditLogs) {
@@ -58,6 +59,7 @@ object LogWatcher {
 
             val beginCap = Instant.now().minusSeconds(30)
 
+            val discord = fbk.client
             val auditLogs = try {
                 discord.getGuildById(guild)
                     .flatMapMany(Guild::getAuditLog)

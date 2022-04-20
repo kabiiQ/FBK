@@ -6,10 +6,10 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactor.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.*
-import moe.kabii.trackers.TrackerUtil
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -31,7 +31,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
     companion object {
         @WithinExposedContext fun forConfig(client: GatewayDiscordClient, config: MembershipConfiguration) = YoutubeMembershipUtil(client, config)
         @WithinExposedContext fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
-        @WithinExposedContext fun forGuild(guild: Guild) = MembershipConfigurations.getForGuild(guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
+        @WithinExposedContext fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
 
         @WithinExposedContext
         suspend fun linkMembership(discord: GatewayDiscordClient, linkedYt: LinkedYoutubeAccount) {
@@ -50,7 +50,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
 
         @WithinExposedContext
-        suspend fun linkMembership(discord: GatewayDiscordClient, member: YoutubeMember) {
+        suspend fun linkMembership(instances: DiscordInstances, member: YoutubeMember) {
             // check if newly recorded membership has an associated discord account
             // ytmember -> linkedyt -> configs -> assign role
             val linkedAccount = LinkedYoutubeAccount.find {
@@ -63,7 +63,10 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
                     TrackedStreams.StreamChannels.siteChannelID eq member.channelOwnerId
                 }
                 .run(MembershipConfiguration::wrapRows)
-                .map { config -> config.utils(discord) }
+                .map { config ->
+                    val discord = instances[config.discordClient].client
+                    config.utils(discord)
+                }
                 .forEach { utils -> utils.assignMembershipRole(linkedAccount) }
         }
     }
@@ -147,14 +150,14 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
             when {
                 ce.status.code() == 404 -> {
                     // role deleted, unlink memberships
-                    val unlinked = "The role for linked YouTube memberships has been deleted in **${guild.name}**. The integration has been deleted accordingly. If this was in error, you may re-create the integration at any time with the **linkyoutubemembers** command."
-                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), unlinked)
+//                    val unlinked = "The role for linked YouTube memberships has been deleted in **${guild.name}**. The integration has been deleted accordingly. If this was in error, you may re-create the integration at any time with the **linkyoutubemembers** command."
+//                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), unlinked)
                     link.delete()
                 }
                 ce.status.code() == 403 -> {
                     LOG.warn("YouTube membership link: permission denied for guild ${guild.id.asString()} :: ${ce.message}")
-                    val perms = "There is a role configured for linked YouTube memberships in **${guild.name}**, but I do not have permission to access this role. Please ensure I have both the Manage Roles permission and the **membership role** is NOT ABOVE my (bot) role."
-                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), perms)
+//                    val perms = "There is a role configured for linked YouTube memberships in **${guild.name}**, but I do not have permission to access this role. Please ensure I have both the Manage Roles permission and the **membership role** is NOT ABOVE my (bot) role."
+//                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), perms)
                 }
                 else -> throw ce
             }

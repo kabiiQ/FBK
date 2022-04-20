@@ -12,8 +12,8 @@ import moe.kabii.util.extensions.tryAwait
 object InviteWatcher {
     private val invites: MutableMap<Long, MutableMap<String, Int>> = mutableMapOf()
 
-    suspend fun updateGuild(guild: Guild): Set<String> {
-        val config = GuildConfigurations.getOrCreateGuild(guild.id.asLong())
+    suspend fun updateGuild(clientId: Int, guild: Guild): Set<String> {
+        val config = GuildConfigurations.getOrCreateGuild(clientId, guild.id.asLong())
         if(config.guildSettings.utilizeInvites) {
             val newInvites = when(val invites = guild.invites.collectList().tryAwait()) {
                 is Ok -> invites.value.map { invite -> invite.code to invite.uses }.toMap().toMutableMap()

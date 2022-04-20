@@ -13,7 +13,6 @@ object Keys : ConfigSpec("") {
         .from.toml.file(FILENAME)
 
     object Discord : ConfigSpec() {
-        val token by required<String>()
         val clientId by required<String>("discord_client_id")
         val clientSecret by required<String>("discord_client_secret")
     }

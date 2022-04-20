@@ -1,10 +1,10 @@
 package moe.kabii.trackers.videos.twitch.watcher
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -28,7 +28,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(discord) {
+class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
     override fun run() {
         applicationLoop {
             val start = Instant.now()
@@ -120,6 +120,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
 
                 if(streams.empty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
+                        val fbk = instances[notif.targetID.discordClient]
                         try {
                             val discordMessage = getDiscordMessage(notif, channel)
                             if (discordMessage != null) {
@@ -127,7 +128,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
 
                                 // edit channel name if feature is enabled and stream ended
                                 TrackerUtil.checkUnpin(discordMessage)
-                                checkAndRenameChannel(discordMessage.channel.awaitSingle())
+                                checkAndRenameChannel(fbk.clientId, discordMessage.channel.awaitSingle())
                             }
                         } catch(e: Exception) {
                             LOG.info("Error abandoning notification: $notif :: ${e.message}")
@@ -141,13 +142,15 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                 val dbStream = streams.first()
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
+                    val fbk = instances[notif.targetID.discordClient]
+                    val discord = fbk.client
                     try {
                         val messageID = notif.messageID
                         val discordMessage = getDiscordMessage(notif, channel)
                         if (discordMessage != null) {
                             val guildId = discordMessage.guildId.orNull()
                             val features = if (guildId != null) {
-                                val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+                                val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
                                 config.getOrCreateFeatures(messageID.channel.channelID).streamSettings
                             } else StreamSettings() // use default settings for PM
                             if (features.summaries) {
@@ -169,7 +172,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                             .ofType(MessageChannel::class.java)
                             .awaitSingle()
 
-                        checkAndRenameChannel(disChan, endingStream = notif.channelID)
+                        checkAndRenameChannel(fbk.clientId, disChan, endingStream = notif.channelID)
 
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
@@ -215,6 +218,8 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
         if(user == null) return
         if(user!!.username != channel.lastKnownUsername) channel.lastKnownUsername = user!!.username
         filteredTargets.forEach { target ->
+            val fbk = instances[target.discordClient]
+            val discord = fbk.client
             try {
                 val existing = DBTwitchStreams.Notification
                     .getForTarget(target)
@@ -223,7 +228,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                 // get channel twitch settings
                 val guildId = target.discordChannel.guild?.guildID
                 val (guildConfig, features) =
-                    GuildConfigurations.findFeatures(guildId, target.discordChannel.channelID)
+                    GuildConfigurations.findFeatures(fbk.clientId, guildId, target.discordChannel.channelID)
                 val settings = features?.streamSettings ?: StreamSettings()
 
                 val embed = TwitchEmbedBuilder(user!!, settings).stream(stream)
@@ -252,12 +257,12 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                         if (err == 403) {
                             // we don't have perms to send
                             LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
-                            TrackerUtil.permissionDenied(chan, FeatureChannel::streamTargetChannel, target::delete)
+                            TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
                             return@forEach
                         } else throw ce
                     }
 
-                    TrackerUtil.pinActive(discord, settings, newNotification)
+                    TrackerUtil.pinActive(fbk, settings, newNotification)
                     TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
                     DBTwitchStreams.Notification.new {
@@ -268,7 +273,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
                     }
 
                     // edit channel name if feature is enabled and stream goes live
-                    checkAndRenameChannel(chan)
+                    checkAndRenameChannel(fbk.clientId, chan)
 
                 } else {
                     val existingNotif = getDiscordMessage(existing, channel)
@@ -287,6 +292,7 @@ class TwitchChecker(discord: GatewayDiscordClient, val cooldowns: ServiceRequest
 
     @WithinExposedContext
     private suspend fun getDiscordMessage(dbNotif: DBTwitchStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
+        val discord = instances[dbNotif.targetID.discordClient].client
         if(dbNotif.deleted) null else {
             val dbMessage = dbNotif.messageID
             discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()

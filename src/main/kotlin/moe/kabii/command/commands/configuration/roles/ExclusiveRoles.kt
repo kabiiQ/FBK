@@ -23,7 +23,7 @@ object ExclusiveRoleSets : Command("roleset") {
             // suggest existing set names for set editing operations
             // only editing operations will have autocomplete enabled, checking not required
             val sets = GuildConfigurations
-                .getOrCreateGuild(guildId!!) // command will only be executed in guild
+                .getOrCreateGuild(client.clientId, guildId!!) // command will only be executed in guild
                 .autoRoles.exclusiveRoleSets
                 .map(ExclusiveRoleSet::name)
             suggest(sets.toAutoCompleteSuggestions())

@@ -50,23 +50,23 @@ object AvatarUtil : CommandContainer {
         init {
             userInteraction {
                 val globalAvatar = EmbedCreateSpec.create()
-                    .withTitle("Avatar for **${resolvedUser.userAddress()}**")
-                    .withImage("${resolvedUser.avatarUrl}?size=256")
+                    .withTitle("Avatar for **${event.resolvedUser.userAddress()}**")
+                    .withImage("${event.resolvedUser.avatarUrl}?size=256")
                     .withColor(Color.of(12187102))
 
-                val member = interaction.guildId.orNull()?.run(resolvedUser::asMember)?.tryBlock()?.orNull()
+                val member = event.interaction.guildId.orNull()?.run(event.resolvedUser::asMember)?.tryBlock()?.orNull()
                 val guildAvatar = if(member != null) {
                     val guild = member.guild.awaitSingle()
                     val format = if(member.hasAnimatedGuildAvatar()) Image.Format.GIF else Image.Format.PNG
                     val guildAvatarUrl = member.getGuildAvatarUrl(format).orNull()
                     if(guildAvatarUrl != null) {
                         EmbedCreateSpec.create()
-                            .withTitle("Server avatar for **${resolvedUser.userAddress()}** in **${guild.name}**")
+                            .withTitle("Server avatar for **${event.resolvedUser.userAddress()}** in **${guild.name}**")
                             .withImage("$guildAvatarUrl?size=256")
                             .withColor(Color.of(12187102))
                     } else null
                 } else null
-                reply()
+                event.reply()
                     .withEmbeds(listOfNotNull(globalAvatar, guildAvatar))
                     .awaitAction()
             }

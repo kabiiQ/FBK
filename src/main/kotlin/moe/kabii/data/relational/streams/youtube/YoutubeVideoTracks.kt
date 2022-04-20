@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.select
 
 object YoutubeVideoTracks : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+    val discordClient = integer("yt_video_track_discord_client").default(1)
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
@@ -22,6 +23,7 @@ object YoutubeVideoTracks : IdTable<Int>() {
 }
 
 class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
+    var discordClient by YoutubeVideoTracks.discordClient
     var ytVideo by YoutubeVideo referencedOn YoutubeVideoTracks.ytVideo
     var discordChannel by DiscordObjects.Channel referencedOn YoutubeVideoTracks.discordChannel
     var tracker by DiscordObjects.User referencedOn YoutubeVideoTracks.tracker
@@ -29,14 +31,16 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<YoutubeVideoTrack>(YoutubeVideoTracks) {
         @WithinExposedContext
-        fun insertOrUpdate(ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, mentionRoleId: Long?): YoutubeVideoTrack {
+        fun insertOrUpdate(discordClient: Int, ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, mentionRoleId: Long?): YoutubeVideoTrack {
             val existing = find {
                 YoutubeVideoTracks.ytVideo eq ytVideo.id and
-                        (YoutubeVideoTracks.discordChannel eq discordChannel.id)
+                        (YoutubeVideoTracks.discordChannel eq discordChannel.id) and
+                        (YoutubeVideoTracks.discordClient eq discordClient)
             }.firstOrNull()
             return existing?.apply {
                 this.mentionRole = mentionRoleId
             } ?: new {
+                this.discordClient = discordClient
                 this.ytVideo = ytVideo
                 this.discordChannel = discordChannel
                 this.tracker = tracker

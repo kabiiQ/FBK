@@ -7,22 +7,22 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.sync.withLock
+import moe.kabii.DiscordInstances
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.util.DiscordBot
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.orNull
 
 object StarboardEventHandler {
-    object ReactionAddListener : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
+    class ReactionAddListener(val instances: DiscordInstances) : EventListener<ReactionAddEvent>(ReactionAddEvent::class) {
         override suspend fun handle(event: ReactionAddEvent) {
             // ignore self reactions
-            if(event.userId == DiscordBot.selfId) return
+            if(event.userId == event.client.selfId) return
 
             val guildId = event.guildId.orNull()?.asLong() ?: return
 
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if this guild's starboard emoji
@@ -68,14 +68,14 @@ object StarboardEventHandler {
         }
     }
 
-    object ReactionRemoveListener : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
+    class ReactionRemoveListener(val instances: DiscordInstances) : EventListener<ReactionRemoveEvent>(ReactionRemoveEvent::class) {
         override suspend fun handle(event: ReactionRemoveEvent) {
              val guildId = event.guildId.orNull()?.asLong() ?: return
             // only continue if star reaction
             if (event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
 
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             starboardCfg.starsLock.withLock {
@@ -98,7 +98,7 @@ object StarboardEventHandler {
         }
     }
 
-    object ReactionEmojiRemoveListener : EventListener<ReactionRemoveEmojiEvent>(ReactionRemoveEmojiEvent::class) {
+    class ReactionEmojiRemoveListener(val instances: DiscordInstances) : EventListener<ReactionRemoveEmojiEvent>(ReactionRemoveEmojiEvent::class) {
         override suspend fun handle(event: ReactionRemoveEmojiEvent) {
             // triggered when the entire :star: reaction is removed by a moderator
             // in this event, remove the post from the starboard unless configured otherwise
@@ -108,7 +108,7 @@ object StarboardEventHandler {
             if (event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
 
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
@@ -128,14 +128,14 @@ object StarboardEventHandler {
         }
     }
 
-    object ReactionBulkRemoveListener : EventListener<ReactionRemoveAllEvent>(ReactionRemoveAllEvent::class) {
+    class ReactionBulkRemoveListener(val instances: DiscordInstances) : EventListener<ReactionRemoveAllEvent>(ReactionRemoveAllEvent::class) {
         override suspend fun handle(event: ReactionRemoveAllEvent) {
             // triggered when all reactions are removed from a message by a moderator
             // in this event, remove the post from the starboard unless configured otherwise
             val guildId = event.guildId.orNull()?.asLong() ?: return
 
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
@@ -155,14 +155,14 @@ object StarboardEventHandler {
         }
     }
 
-    object MessageDeletionListener : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
+    class MessageDeletionListener(val instances: DiscordInstances) : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
         override suspend fun handle(event: MessageDeleteEvent) {
             // in this event, remove the post from the starboard, unless configured otherwise
             val channel = event.channel.ofType(GuildMessageChannel::class.java).awaitFirstOrNull() ?: return
             val guildId = channel.guildId.asLong()
 
             // continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(guildId)
+            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // continue if "remove on delete" behavior is enabled

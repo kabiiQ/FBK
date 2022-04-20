@@ -17,7 +17,7 @@ object CommandFilters : CommandContainer {
             autoComplete {
                 // only "command"
                 val guildId = event.interaction.guildId.get().asLong()
-                val config = GuildConfigurations.getOrCreateGuild(guildId)
+                val config = GuildConfigurations.getOrCreateGuild(client.clientId, guildId)
                 val subCommand = event.options[0]
                 val commands = when(subCommand.name) {
                     "add" -> manager.generateSuggestions(value)
@@ -92,7 +92,7 @@ object CommandFilters : CommandContainer {
             autoComplete {
                 // only "command"
                 val guildId = event.interaction.guildId.get().asLong()
-                val config = GuildConfigurations.getOrCreateGuild(guildId)
+                val config = GuildConfigurations.getOrCreateGuild(client.clientId, guildId)
                 val subCommand = event.options[0]
                 val commands = when(subCommand.name) {
                     "add" -> manager.generateSuggestions(value)

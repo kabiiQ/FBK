@@ -16,7 +16,7 @@ object PlaybackMods : AudioCommandContainer {
     suspend fun volume(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val args = subArgs(subCommand)
-        val audio = AudioManager.getGuildAudio(target.id.asLong())
+        val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
             val default = config.musicBot.startingVolume

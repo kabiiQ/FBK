@@ -45,6 +45,7 @@ object DataDeletion : Command("datadeletionrequest") {
                         .appendLine()
                         .appendLine("This is offered in good faith for some users with privacy concerns.")
                         .appendLine("Usage of this command WILL DISABLE BOT FUNCTIONALITY IF YOU ARE USING IT.")
+                        .appendLine("This will take effect across ALL ACTIVE FBK INSTANCES, not just this one.")
                         .appendLine()
                         .appendLine("Examples of configurations that will be irreversibly deleted and must be manually re-configured if desired:")
                         .appendLine("- Any Reminders that you have set")
@@ -110,7 +111,7 @@ object DataDeletion : Command("datadeletionrequest") {
 
         when(press.customId) {
             "delete" -> {
-                DataDeletionRequests.guildDataDeletion(target.id.asLong())
+                DataDeletionRequests.guildDataDeletion(client.clientId, target.id.asLong())
                 event.editReply()
                     .withEmbeds(Embeds.error("ALL SERVER DATA has been deleted."))
                     .withComponentsOrNull(null)

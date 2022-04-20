@@ -8,6 +8,7 @@ import discord4j.core.event.domain.guild.UnbanEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
+import moe.kabii.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -21,21 +22,21 @@ object BanLogger {
 
     enum class Action { BAN, UNBAN }
 
-    object BanListener : EventListener<BanEvent>(BanEvent::class) {
+    class BanListener(val instances: DiscordInstances) : EventListener<BanEvent>(BanEvent::class) {
         override suspend fun handle(event: BanEvent) {
-            logBan(event.guildId, event.user, Action.BAN)
+            logBan(instances[event.client].clientId, event.guildId, event.user, Action.BAN)
         }
     }
 
-    object PardonListener : EventListener<UnbanEvent>(UnbanEvent::class) {
+    class PardonListener(val instances: DiscordInstances) : EventListener<UnbanEvent>(UnbanEvent::class) {
         override suspend fun handle(event: UnbanEvent) {
-            logBan(event.guildId, event.user, Action.UNBAN)
+            logBan(instances[event.client].clientId, event.guildId, event.user, Action.UNBAN)
         }
     }
 
 
-    suspend fun logBan(guildId: Snowflake, user: User, action: Action) {
-        val config = GuildConfigurations.getOrCreateGuild(guildId.asLong())
+    suspend fun logBan(clientId: Int, guildId: Snowflake, user: User, action: Action) {
+        val config = GuildConfigurations.getOrCreateGuild(clientId, guildId.asLong())
 
         config.logChannels()
             .filter(LogSettings::banLogs)
