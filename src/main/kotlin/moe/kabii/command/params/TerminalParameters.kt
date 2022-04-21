@@ -1,6 +1,6 @@
 package moe.kabii.command.params
 
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 
 data class TerminalParameters(
     val instances: DiscordInstances,

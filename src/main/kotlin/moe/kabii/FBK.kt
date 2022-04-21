@@ -10,6 +10,7 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.MetaData
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.net.api.videos.YoutubeVideosService
 import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
@@ -35,17 +36,17 @@ fun main() {
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initalization") {
         runBlocking {
+            // start file server
+            if(MetaData.host) {
+                NettyFileServer.server.start()
+            }
+
             DiscordOAuthRedirectServer.server.start()
             val welcomer = WelcomeImageGenerator
             TwitterFeedSubscriber.verifySubscriptions()
             val streamers = KnownStreamers
             YoutubeVideosService.server.start()
             val translator = Translator.detector.detectLanguageOf("initalizing translator")
-
-            // start file server
-            if(MetaData.host) {
-                NettyFileServer.server.start()
-            }
         }
     }
 

@@ -3,7 +3,7 @@ package moe.kabii.ytchat
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos

@@ -27,7 +27,6 @@ import moe.kabii.rusty.Result
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.awaitAction
-import moe.kabii.util.extensions.orAbsent
 import moe.kabii.util.extensions.orNull
 import org.apache.commons.lang3.StringUtils
 import reactor.core.publisher.Flux
@@ -245,7 +244,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                     }
                     response.edit()
                         .withEmbeds(currentConfig())
-                        .withComponents(configComponents().toList().orAbsent())
+                        .withComponents(configComponents().toList())
                 }
             listeners.add(menuListener)
         }
@@ -304,7 +303,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                         e.prop.set(instance, raw.ifBlank { "" })
                                         val edit = submission.edit()
                                             .withEmbeds(currentConfig())
-                                            .withComponents(configComponents().toList().orAbsent())
+                                            .withComponents(configComponents().toList())
                                             // may result in multiple reactions due to some weirdness with discord sending cancelled modals(?) when submit finally pressed
                                             .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                         val notice = submission
@@ -320,14 +319,15 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                             e.prop.set(instance, value)
                                             submission.edit()
                                                 .withEmbeds(currentConfig())
-                                                .withComponents(configComponents().toList().orAbsent())
+                                                .withComponents(configComponents().toList())
                                                 .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                         } else {
                                             val edit = submission.edit()
                                                 .withEmbeds(currentConfig())
-                                                .withComponents(configComponents().toList().orAbsent())
+                                                .withComponents(configComponents().toList())
                                             val notice = submission.createFollowup()
                                                 .withEmbeds(Embeds.error("**$raw** is not valid for **${e.propName}**. Please enter a whole number."))
+                                                .withEphemeral(true)
                                             Mono.`when`(edit, notice)
                                         }
                                     }
@@ -339,18 +339,20 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                                                 e.prop.set(instance, value.value)
                                                 val edit = submission.edit()
                                                     .withEmbeds(currentConfig())
-                                                    .withComponents(configComponents().toList().orAbsent())
+                                                    .withComponents(configComponents().toList())
                                                     .onErrorResume(ClientException::class.java) { _ -> Mono.empty() }
                                                 val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.fbk("**${e.propName}** has been set to **${getValue(e)}**."))
+                                                    .withEphemeral(true)
                                                 Mono.`when`(notice, edit)
                                             }
                                             is Err -> {
                                                 val edit = submission.edit()
                                                     .withEmbeds(currentConfig())
-                                                    .withComponents(configComponents().toList().orAbsent())
+                                                    .withComponents(configComponents().toList())
                                                 val notice = submission.createFollowup()
                                                     .withEmbeds(Embeds.error("**$raw** is not a valid value for **${e.propName}**: ${value.value}"))
+                                                    .withEphemeral(true)
                                                 Mono.`when`(edit, notice)
                                             }
                                         }
@@ -366,7 +368,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .reply()
             .withEmbeds(currentConfig())
             .withEphemeral(true)
-            .withComponents(configComponents().toList().orAbsent())
+            .withComponents(configComponents().toList())
             .awaitAction()
 
         Mono.`when`(listeners)

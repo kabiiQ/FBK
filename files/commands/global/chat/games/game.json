@@ -1,0 +1,55 @@
+{
+    "name": "game",
+    "description": "Challenge a friend to a game within Discord!",
+    "options": [
+        {
+            "name": "connect4",
+            "description": "Challenge a friend to a game of Connect 4!",
+            "type": 1,
+            "options": [
+                {
+                    "name": "user",
+                    "description": "The user to challenge.",
+                    "type": 6,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "rps",
+            "description": "Challenge a friend to a game of Rock Paper Scissors",
+            "type": 1,
+            "options": [
+                {
+                    "name": "user",
+                    "description": "The user to challenge.",
+                    "type": 6,
+                    "required": true
+                },
+                {
+                    "name": "rounds",
+                    "description": "Change how many rounds are played! Defaults to best of 3.",
+                    "type": 4,
+                    "choices": [
+                        {
+                            "name": "Single Game",
+                            "value": 1
+                        },
+                        {
+                            "name": "Best of 3",
+                            "value": 3
+                        },
+                        {
+                            "name": "Best of 5",
+                            "value": 5
+                        },
+                        {
+                            "name": "Best of 7",
+                            "value": 7
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

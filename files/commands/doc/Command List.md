@@ -209,7 +209,7 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
-### - `/join`:
+### - `/summon`:
 
 - (Music bot) Summon me into your voice channel. (This is done automatically when playing music.)
 - Wiki: [[Music-Player#Music-Player#commands]]
@@ -441,12 +441,30 @@ This page is an automatically generated list of all bot commands with a link to 
 
 ### - `/connect4`:
 
-- Play a game of Connect 4 within Discord.
-- Wiki: [[Games-(Connect-4)]]
+- Connect 4 has moved! Use /game connect4
+
+
+
+### - `/game`:
+
+- Challenge a friend to a game within Discord!
+- Wiki: [[Games]]
+
+#### -- `/game connect4`
+
+- Challenge a friend to a game of Connect 4!
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `user*` | User | The user to challenge
+| `user*` | User | The user to challenge.
+#### -- `/game rps`
+
+- Challenge a friend to a game of Rock Paper Scissors
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user*` | User | The user to challenge.
+| `rounds` | Integer | Change how many rounds are played! Defaults to best of 3.
 
 
 ### - `/botinfo`:

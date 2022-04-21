@@ -50,17 +50,12 @@ object ChannelFeatures : CommandContainer {
                     // validate default track target, if configured
                     features.validateDefaultTarget()
 
-                    val notifs = mutableListOf<String>()
-
-                    if(!wasLog && features.logChannel) {
-                        notifs.add("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **editlog** command.")
-                    }
-
                     config.save()
 
-                    if(notifs.isNotEmpty()) {
+                    if(!wasLog && features.logChannel) {
                         event.createFollowup()
-                            .withEmbeds(Embeds.fbk(notifs.joinToString("\n\n")))
+                            .withEmbeds(Embeds.fbk("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **/log setup** command."))
+                            .withEphemeral(true)
                             .awaitSingle()
                     }
                 }

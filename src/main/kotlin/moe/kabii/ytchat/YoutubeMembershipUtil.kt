@@ -6,7 +6,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactor.awaitSingle
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.*

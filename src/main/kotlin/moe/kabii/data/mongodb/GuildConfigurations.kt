@@ -1,6 +1,7 @@
 package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
+import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.*
 import moe.kabii.data.relational.twitter.TwitterTarget
 import org.litote.kmongo.Id
@@ -18,12 +19,12 @@ object GuildConfigurations {
         // grab existing guild configurations
         guildConfigurations = runBlocking {
             mongoConfigurations.find().toList()
-                .associateBy { config -> GuildTarget(config.clientId, config.guildid) }
+                .associateBy { config -> GuildTarget(config.guildClientId, config.guildid) }
                 .run { ConcurrentHashMap(this) }
         }
     }
 
-    @Synchronized fun getOrCreateGuild(clientId: Int, id: Long) = guildConfigurations.getOrPut(GuildTarget(clientId, id)) { GuildConfiguration(clientId = clientId, guildid = id) }
+    @Synchronized fun getOrCreateGuild(clientId: Int, id: Long) = guildConfigurations.getOrPut(GuildTarget(clientId, id)) { GuildConfiguration(guildid = id, guildClientId = clientId) }
 
     suspend fun findFeatures(clientId: Int, guildId: Long?, channelId: Long?): Pair<GuildConfiguration?, FeatureChannel?> {
         if(guildId == null || channelId == null) return null to null
@@ -41,7 +42,6 @@ object GuildConfigurations {
 // per guild - guildconfiguration collection
 data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
-    val clientId: Int, // TODO default=1 can be removed after migration
     val guildid: Long,
     var prefix: String = defaultPrefix,
     val options: OptionalFeatures = OptionalFeatures(),
@@ -53,6 +53,7 @@ data class GuildConfiguration(
     val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
     val translator: TranslatorSettings = TranslatorSettings(),
+    val guildClientId: Int = 1, // TODO default=1 can be removed after migration
 
     var starboardSetup: StarboardSetup = StarboardSetup(),
     var starboard: StarboardSetup? = null, // TODO remove after migration
@@ -78,7 +79,7 @@ data class GuildConfiguration(
     }
 
     suspend fun removeSelf() {
-        GuildConfigurations.guildConfigurations.remove(GuildTarget(clientId, guildid))
+        GuildConfigurations.guildConfigurations.remove(GuildTarget(guildClientId, guildid))
         GuildConfigurations.mongoConfigurations.deleteOneById(this._id)
     }
 }

@@ -58,8 +58,9 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
   - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar-with-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time-with-who)
 
-- ## Game(s)
-  - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games-(Connect-4))
+- ## Games
+  - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games#connect-4)
+  - [Rock Paper Scissors](https://github.com/kabiiQ/FBK/wiki/Games#rock-paper-scissors)
 
 - ## Automatic role assignment/removal on (each only if configured):
   - [User joining server (per invite code if needed)](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-joining-your-server)

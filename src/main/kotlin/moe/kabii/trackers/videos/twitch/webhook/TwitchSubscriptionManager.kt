@@ -1,7 +1,7 @@
 package moe.kabii.trackers.videos.twitch.webhook
 
 import kotlinx.coroutines.delay
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription

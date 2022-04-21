@@ -9,7 +9,7 @@ import discord4j.core.`object`.entity.channel.NewsChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.FBK
+import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
@@ -56,7 +56,7 @@ object TrackerUtil {
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
             val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}feature $featureName enable** in <#$channelId> to re-enable this tracker."
-            notifyOwner(fbk, guildId, message)
+            //notifyOwner(fbk, guildId, message)
 
         } else {
             // delete target, we do not keep configs for dms

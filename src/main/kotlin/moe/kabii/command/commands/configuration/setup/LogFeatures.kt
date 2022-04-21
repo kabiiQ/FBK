@@ -88,11 +88,13 @@ object LogFeatures : Command("log") {
                 if(features.logChannel && !any) {
                     features.logChannel = false
                     event.createFollowup()
+                        .withEphemeral(true)
                         .withEmbeds(Embeds.fbk("${chan.mention} is no longer a mod log channel."))
                         .subscribe()
                 } else if(!features.logChannel && any) {
                     features.logChannel = true
                     event.createFollowup()
+                        .withEphemeral(true)
                         .withEmbeds(Embeds.fbk("${chan.mention} is now a mod log channel."))
                         .subscribe()
                 }

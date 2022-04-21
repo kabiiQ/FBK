@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.event.domain.role.RoleDeleteEvent
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.discord.event.EventListener

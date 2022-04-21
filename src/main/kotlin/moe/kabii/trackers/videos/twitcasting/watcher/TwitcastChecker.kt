@@ -1,7 +1,7 @@
 package moe.kabii.trackers.videos.twitcasting.watcher
 
 import kotlinx.coroutines.time.delay
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts

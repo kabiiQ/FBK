@@ -4,8 +4,8 @@ import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import kotlinx.coroutines.launch
-import moe.kabii.DiscordInstances
-import moe.kabii.FBK
+import moe.kabii.instances.DiscordInstances
+import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.command.CommandManager
 import moe.kabii.discord.event.EventListener

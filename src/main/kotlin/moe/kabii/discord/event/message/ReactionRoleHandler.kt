@@ -8,7 +8,7 @@ import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations

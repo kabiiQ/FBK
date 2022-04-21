@@ -2,9 +2,9 @@ package moe.kabii.games
 
 import discord4j.common.util.Snowflake
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
-import moe.kabii.games.connect4.EmbedInfo
+import moe.kabii.command.commands.games.GameLauncher
 
-abstract class DiscordGame(val gameNameFull: String, private val gameMessage: EmbedInfo) {
+abstract class DiscordGame(private val gameMessage: EmbedInfo) {
     abstract val users: List<Snowflake>
 
     abstract suspend fun provide(interaction: ComponentInteractionEvent)

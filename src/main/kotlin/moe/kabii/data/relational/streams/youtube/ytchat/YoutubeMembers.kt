@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.streams.youtube.ytchat
 
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.LongEntity

@@ -1,12 +1,4 @@
 {
     "name": "connect4",
-    "description": "Play a game of Connect 4 within Discord.",
-    "options": [
-        {
-            "name": "user",
-            "description": "The user to challenge",
-            "type": 6,
-            "required": true
-        }
-    ]
+    "description": "Connect 4 has moved! Use /game connect4"
 }

@@ -3,7 +3,7 @@ package moe.kabii.discord.event.interaction
 import discord4j.core.event.domain.interaction.UserInteractionEvent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.command.params.UserInteractionParameters
 import moe.kabii.data.mongodb.GuildConfigurations

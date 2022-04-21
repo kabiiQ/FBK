@@ -45,8 +45,6 @@ fun EmbedCreateSpec.withUser(user: User?) =
     if(user == null) this
     else withAuthor(EmbedCreateFields.Author.of(user.userAddress(), null, user.avatarUrl))
 
-fun List<LayoutComponent>.orAbsent(): Possible<List<LayoutComponent>> = if(isEmpty()) Possible.absent() else Possible.of(this)
-
 fun List<String>.toAutoCompleteSuggestions() = map { str ->
     ApplicationCommandOptionChoiceData.builder()
         .name(str).value(str).build()

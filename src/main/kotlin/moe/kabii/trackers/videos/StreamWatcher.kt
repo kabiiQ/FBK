@@ -7,8 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.DiscordInstances
-import moe.kabii.FBK
+import moe.kabii.instances.DiscordInstances
+import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel

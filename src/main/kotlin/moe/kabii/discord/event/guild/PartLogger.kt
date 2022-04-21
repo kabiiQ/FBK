@@ -8,8 +8,8 @@ import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.DiscordInstances
-import moe.kabii.FBK
+import moe.kabii.instances.DiscordInstances
+import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings

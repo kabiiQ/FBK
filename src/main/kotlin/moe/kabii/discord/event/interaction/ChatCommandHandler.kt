@@ -7,7 +7,7 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters

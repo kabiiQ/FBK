@@ -71,7 +71,7 @@ object TwitterTargets : IdTable<Int>() {
     val shouldStream = bool("twitter_streaming_feed").default(false)
 
     init {
-        index(isUnique = true, twitterFeed, discordChannel)
+        index(customIndexName = "twittertargets_twitter_target_discord_client_assoc_twitter_feed", isUnique = true, discordClient, twitterFeed, discordChannel)
     }
 }
 

@@ -11,7 +11,7 @@ import discord4j.voice.VoiceConnection
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import moe.kabii.FBK
+import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.filters.FilterFactory
 import moe.kabii.command.hasPermissions

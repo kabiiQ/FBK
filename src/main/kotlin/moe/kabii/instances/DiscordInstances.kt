@@ -1,4 +1,4 @@
-package moe.kabii
+package moe.kabii.instances
 
 import discord4j.common.util.Snowflake
 import discord4j.core.DiscordClientBuilder
@@ -6,6 +6,7 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
@@ -28,7 +29,6 @@ import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
 import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
-import moe.kabii.instances.InstanceDataLoader
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
 import org.reflections.Reflections

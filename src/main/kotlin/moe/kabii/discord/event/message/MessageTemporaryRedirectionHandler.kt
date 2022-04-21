@@ -3,7 +3,7 @@ package moe.kabii.discord.event.message
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.command.CommandManager
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations

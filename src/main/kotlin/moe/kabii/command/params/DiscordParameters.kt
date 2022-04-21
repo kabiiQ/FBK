@@ -12,7 +12,7 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
-import moe.kabii.FBK
+import moe.kabii.instances.FBK
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations

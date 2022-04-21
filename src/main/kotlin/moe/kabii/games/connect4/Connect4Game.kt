@@ -13,27 +13,20 @@ import discord4j.core.spec.MessageEditSpec
 import discord4j.discordjson.possible.Possible
 import discord4j.rest.http.client.ClientException
 import moe.kabii.LOG
+import moe.kabii.command.commands.games.Connect4
 import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame
+import moe.kabii.games.EmbedInfo
 import moe.kabii.games.GameManager
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 
-data class EmbedInfo(val channelId: Snowflake, val messageId: Snowflake) {
-    companion object {
-        fun from(message: Message) = EmbedInfo(message.channelId, message.id)
-    }
-}
-
 class Connect4Game(
     playerRed: User,
     playerBlue: User,
-    gameMessage: EmbedInfo
-) : DiscordGame(
-    "Connect 4",
-    gameMessage
-) {
+    gameMessage: EmbedInfo,
+) : DiscordGame(gameMessage) {
     override val users: List<Snowflake> = listOf(playerRed.id, playerBlue.id)
 
     var inProgress = true
@@ -48,9 +41,6 @@ class Connect4Game(
 
     // red always player #1. which player is red can be determined at a higher level
     private var currentTurn: CircleState = CircleState.RED
-
-    private var previousResponse: Snowflake? = null
-    private var delete = true
 
     /*
         check if response is even a match, else ignore

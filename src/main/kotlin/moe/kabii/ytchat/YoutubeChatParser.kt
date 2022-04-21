@@ -1,7 +1,7 @@
 package moe.kabii.ytchat
 
 import com.squareup.moshi.Types
-import moe.kabii.DiscordInstances
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMember
