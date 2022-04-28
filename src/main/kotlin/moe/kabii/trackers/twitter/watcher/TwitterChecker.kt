@@ -13,7 +13,6 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -23,6 +22,7 @@ import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -365,12 +365,6 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 GuildConfigurations.findFeatures(target)?.twitterTargetChannel != false // enabled or DM
             }
         } else {
-            try {
-                TwitterFeedSubscriber.removeStreamingFeeds(listOf(feed))
-            } catch(e: Exception) {
-                LOG.error("Error removing streaming feed subscription: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            }
             feed.delete()
             LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
             null

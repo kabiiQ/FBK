@@ -5,18 +5,13 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterStreamRule
 import moe.kabii.discord.trackers.twitter.json.TwitterSpace
 import moe.kabii.discord.trackers.twitter.json.TwitterSpaceMultiResponse
 import moe.kabii.discord.trackers.twitter.json.TwitterSpaceSingleResponse
 import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.twitter.json.*
-import moe.kabii.util.extensions.WithinExposedContext
-import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.Instant
 
@@ -127,37 +122,6 @@ object TwitterParser {
             .url("https://api.twitter.com/2/tweets/search/stream/rules")
             .post(update.toRequestBody())
         return doRequest(request)
-    }
-
-    @WithinExposedContext
-    @Throws(TwitterIOException::class)
-    suspend fun deleteRule(rule: TwitterStreamRule): TwitterRuleResponse {
-        val deletion = updateStreamRules(TwitterRuleRequest.delete(rule.ruleId))
-        if(deletion?.meta?.summary?.notDeleted != 0) {
-            throw TwitterIOException("Twitter rule deletion failed: $rule")
-        }
-        propagateTransaction {
-            rule.delete()
-        }
-        return deletion
-    }
-
-    @WithinExposedContext
-    suspend fun createRule(feeds: List<TwitterFeed>): TwitterRuleResponse {
-        val rule = feeds.joinToString(" OR ") { feed -> "from:${feed.userId}" }
-        val twitterRule = updateStreamRules(TwitterRuleRequest.add(rule))
-        val ruleId = twitterRule?.data?.firstOrNull()?.ruleId
-        if(twitterRule == null || ruleId == null) throw TwitterIOException("Twitter rule creation failed: $feeds")
-        propagateTransaction {
-            val dbRule = transaction {
-                TwitterStreamRule.insert(ruleId)
-            }
-
-            feeds.onEach { feed ->
-                feed.streamRule = dbRule
-            }
-        }
-        return twitterRule
     }
 
     fun getV1Tweet(tweetId: String): TwitterV1Status? = get("https://api.twitter.com/1.1/statuses/show/$tweetId.json")

@@ -7,13 +7,7 @@ import moe.kabii.command.commands.configuration.setup.base.BooleanElement
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.util.Embeds
-import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
-import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.and
 
 object TwitterConfig : Command("twitter") {
     override val wikiPath = "Twitter-Tracker#twitter-feed-notification-configuration"
@@ -75,29 +69,6 @@ object TwitterConfig : Command("twitter") {
 
             if(configurator.run(this)) {
                 config.save()
-            }
-
-            if(wasStream != twitter.streamFeeds) {
-                propagateTransaction {
-
-                    val dbChan = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), target.id.asLong())
-                    val targets = TwitterTarget.find {
-                        TwitterTargets.discordClient eq client.clientId and
-                                (TwitterTargets.discordChannel eq dbChan.id)
-                    }
-
-                    if(twitter.streamFeeds) {
-                        val feeds = targets
-                            .onEach { target -> target.shouldStream = true }
-                            .map(TwitterTarget::twitterFeed)
-                        TwitterFeedSubscriber.addStreamingFeeds(feeds)
-                    } else {
-                        val feeds = targets
-                            .onEach { target -> target.shouldStream = false }
-                            .map(TwitterTarget::twitterFeed)
-                        TwitterFeedSubscriber.removeStreamingFeeds(feeds)
-                    }
-                }
             }
         }
     }
