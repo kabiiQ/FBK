@@ -47,7 +47,7 @@ object ReactionRoles {
             return@with
         }
 
-        val configs = config.selfRoles.reactionRoles
+        val configs = config.autoRoles.reactionConfigurations
         // make sure there is no conflicting info - can not have reaction role with same emoji
         if(configs.find { cfg -> cfg.message.messageID == message.id.asLong() && cfg.reaction == reactEmoji } != null) {
             ereply(Embeds.fbk("A reaction role is already set up with the same emoji on this message! I will attempt to re-add this reaction to the message.")).awaitSingle()
@@ -81,7 +81,7 @@ object ReactionRoles {
 
     suspend fun deleteReactionRole(origin: DiscordParameters, subCommand: ApplicationCommandInteractionOption) = with(origin) {
         val args = subArgs(subCommand)
-        val configs = config.selfRoles.reactionRoles
+        val configs = config.autoRoles.reactionConfigurations
 
         val messageArg = args.string("message")
         val messageId = messageArg.toLongOrNull()
@@ -124,7 +124,7 @@ object ReactionRoles {
     }
 
     suspend fun listReactionRoles(origin: DiscordParameters) = with(origin) {
-        val configs = config.selfRoles.reactionRoles.toList().map { cfg ->
+        val configs = config.autoRoles.reactionConfigurations.toList().map { cfg ->
             // generate string for each config that is still valid
             val (message, _, roleId) = cfg
             val channelId = message.channelID.snowflake
@@ -135,7 +135,7 @@ object ReactionRoles {
                 "Message #[${message.messageID}]($link) in ${channel.name} for role **${role.name}**"
             } catch(e: Exception) {
                 if(e is ClientException && e.status.code() == 404) {
-                    config.selfRoles.reactionRoles.remove(cfg)
+                    config.autoRoles.reactionConfigurations.remove(cfg)
                     config.save()
                 }
                 return@map "(Invalid configuration removed: Role:$roleId/Channel:$channelId"
@@ -153,7 +153,7 @@ object ReactionRoles {
 
     suspend fun resetReactionRoles(origin: DiscordParameters) = with(origin) {
         // get all reaction configs in this channel
-        val configs = config.selfRoles.reactionRoles
+        val configs = config.autoRoles.reactionConfigurations
 
         if(configs.isEmpty()) {
             ereply(Embeds.error("There are no reaction-role configs in **${guildChan.name}**.")).awaitSingle()
