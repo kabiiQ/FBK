@@ -17,7 +17,7 @@
         },
         {
             "name": "rps",
-            "description": "Challenge a friend to a game of Rock Paper Scissors",
+            "description": "Challenge a friend to a game of Rock Paper Scissors.",
             "type": 1,
             "options": [
                 {
@@ -48,6 +48,19 @@
                             "value": 7
                         }
                     ]
+                }
+            ]
+        },
+        {
+            "name": "tictactoe",
+            "description": "Challenge a friend to a game of Tic-tac-toe.",
+            "type": 1,
+            "options": [
+                {
+                    "name": "user",
+                    "description": "The user to challenge.",
+                    "type": 6,
+                    "required": true
                 }
             ]
         }

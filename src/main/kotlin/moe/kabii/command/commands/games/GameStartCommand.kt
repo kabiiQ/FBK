@@ -9,13 +9,13 @@ import discord4j.discordjson.possible.Possible
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame
 import moe.kabii.games.EmbedInfo
 import moe.kabii.games.GameManager
 import moe.kabii.games.connect4.Connect4Game
 import moe.kabii.games.rps.RPSGame
+import moe.kabii.games.tictactoe.TicTacToeGame
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
 import java.time.Duration
@@ -41,6 +41,17 @@ object RockPaperScissors : GameLauncher<RPSGame>("Rock Paper Scissors") {
     }
 }
 
+object TicTacToe : GameLauncher<TicTacToeGame>("Tic-Tac-Toe") {
+
+    override suspend fun start(gameBoard: Message, game: TicTacToeGame) {
+        gameBoard.edit()
+            .withEmbeds(game.generateGameEmbed())
+            .withContentOrNull(game.generateGameContent())
+            .withComponentsOrNull(game.generateGameplayButtons())
+            .awaitSingle()
+    }
+}
+
 object GameStartCommand : Command("game") {
     override val wikiPath = "Games"
 
@@ -49,6 +60,7 @@ object GameStartCommand : Command("game") {
             val game: GameLauncher<*> = when(subCommand.name) {
                 "connect4" -> Connect4
                 "rps" -> RockPaperScissors
+                "tictactoe" -> TicTacToe
                 else -> error("subcommand mismatch")
             }
 
@@ -122,6 +134,15 @@ object GameStartCommand : Command("game") {
                         }
                     }
                     game.start(gameBoard, rpsGame)
+                }
+                is TicTacToe -> {
+                    val tttGame = TicTacToeGame(author, p2Target, EmbedInfo.from(gameBoard))
+                    with(GameManager.ongoingGames) {
+                        synchronized(this) {
+                            add(tttGame)
+                        }
+                    }
+                    game.start(gameBoard, tttGame)
                 }
             }
         }

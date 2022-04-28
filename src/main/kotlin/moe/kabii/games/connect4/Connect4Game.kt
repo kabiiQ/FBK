@@ -3,7 +3,6 @@ package moe.kabii.games.connect4
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
@@ -13,7 +12,6 @@ import discord4j.core.spec.MessageEditSpec
 import discord4j.discordjson.possible.Possible
 import discord4j.rest.http.client.ClientException
 import moe.kabii.LOG
-import moe.kabii.command.commands.games.Connect4
 import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame
 import moe.kabii.games.EmbedInfo
@@ -167,9 +165,9 @@ class Connect4Game(
     private fun generateGameplayButtons() = (1..Connect4Grid.width)
         .map { column ->
             // convert each column into a button
-            val button = Button
+            Button
                 .primary(column.toString(), column.toString())
-            if(gameGrid.validateDrop(column) == null) button.disabled() else button
+                .disabled(gameGrid.validateDrop(column) == null)
         }
         .chunked(5)
         .map(ActionRow::of)

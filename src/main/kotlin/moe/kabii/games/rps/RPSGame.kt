@@ -1,6 +1,5 @@
 package moe.kabii.games.rps
 
-import discord4j.common.util.Snowflake
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.User
@@ -10,8 +9,6 @@ import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateFields.Author
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.core.spec.MessageEditSpec
-import discord4j.discordjson.possible.Possible
 import moe.kabii.discord.util.Embeds
 import moe.kabii.games.DiscordGame
 import moe.kabii.games.EmbedInfo
