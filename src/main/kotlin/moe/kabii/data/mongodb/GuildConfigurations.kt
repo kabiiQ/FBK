@@ -1,7 +1,6 @@
 package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
-import moe.kabii.LOG
 import moe.kabii.data.mongodb.guilds.*
 import moe.kabii.data.relational.twitter.TwitterTarget
 import org.litote.kmongo.Id
@@ -50,7 +49,6 @@ data class GuildConfiguration(
     val selfRoles: SelfRoles = SelfRoles(),
     val guildSettings: GuildSettings = GuildSettings(),
     val tempVoiceChannels: TempChannels = TempChannels(),
-    val commandFilter: CommandFilter = CommandFilter(),
     val musicBot: MusicSettings = MusicSettings(),
     val translator: TranslatorSettings = TranslatorSettings(),
     val guildClientId: Int = 1, // TODO default=1 can be removed after migration

@@ -1,9 +1,9 @@
 package moe.kabii.terminal
 
 import kotlinx.coroutines.launch
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.command.params.TerminalParameters
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.stackTraceString
 

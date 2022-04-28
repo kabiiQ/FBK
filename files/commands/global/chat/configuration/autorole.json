@@ -152,6 +152,195 @@
                     "type": 1
                 }
             ]
+        },
+        {
+            "name": "button",
+            "description": "Configure auto-roles where users can press a button to receive a role.",
+            "type": 2,
+            "options": [
+                {
+                    "name": "create",
+                    "description": "Create an auto-role where users can press a button to receive a role.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "style",
+                            "description": "Select to use separate buttons for each role or a drop-down list to select roles.",
+                            "type": 4,
+                            "required": true,
+                            "choices": [
+                                {
+                                    "name": "buttons",
+                                    "value": 0
+                                },
+                                {
+                                    "name": "dropdown",
+                                    "value": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "message",
+                            "description": "A message to be written above the auto-role buttons. Can be edited later. Use \n for new lines.",
+                            "type": 3,
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "edit",
+                    "description": "Edit an existing button-based auto-role message.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "id",
+                            "description": "The message ID of the button-based auto-roles to be edited.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        },
+                        {
+                            "name": "style",
+                            "description": "Include to edit the style: separate buttons for each role or a drop-down list to select roles.",
+                            "type": 4,
+                            "required": false,
+                            "choices": [
+                                {
+                                    "name": "buttons",
+                                    "value": 0
+                                },
+                                {
+                                    "name": "dropdown",
+                                    "value": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "message",
+                            "description": "Include to edit the message written above the auto-role buttons. Use \n for new lines.",
+                            "type": 3,
+                            "required": false
+                        },
+                        {
+                            "name": "maxroles",
+                            "description": "For role LISTS only. Limit the roles a user can select, such as for color roles. 0=Unlimited",
+                            "type": 4,
+                            "required": false,
+                            "min_value": 0,
+                            "max_value": 25
+                        },
+                        {
+                            "name": "listroles",
+                            "description": "Set to False to disable the list of roles in the button-role message.",
+                            "type": 5,
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "addrole",
+                    "description": "Add a role to an existing button-based auto-role message.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "id",
+                            "description": "The message ID of the button-based auto-roles to be edited.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        },
+                        {
+                            "name": "role",
+                            "description": "The role that users will be assigned.",
+                            "type": 8,
+                            "required": true
+                        },
+                        {
+                            "name": "info",
+                            "description": "Information about this role that will be presented to users.",
+                            "type": 3,
+                            "required": false
+                        },
+                        {
+                            "name": "emoji",
+                            "description": "An emoji that will represent this role on buttons.",
+                            "type": 3,
+                            "required": false
+                        },
+                        {
+                            "name": "name",
+                            "description": "An alternate name to use for this role on buttons/lists. Otherwise, the role name will be used.",
+                            "type": 3,
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "removerole",
+                    "description": "Remove a role from an existing button-based auto-role message.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "id",
+                            "description": "The message ID of the button-based auto-roles to be edited.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        },
+                        {
+                            "name": "role",
+                            "description": "The role ID to be removed. Use /autorole button to remove a button setup entirely.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        }
+                    ]
+                },
+                {
+                    "name": "delete",
+                    "description": "DELETE a button-based auto-role message. Use /autorole button removerole to remove a single role.",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "id",
+                            "description": "The message ID of the button-based auto-roles to be edited.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        }
+                    ]
+                },
+                {
+                    "name": "convert",
+                    "description": "Convert existing FBK reaction-roles on a message into button-roles",
+                    "type": 1,
+                    "options": [
+                        {
+                            "name": "message",
+                            "description": "The Discord ID of the message containing FBK reaction-roles to be converted into button-roles.",
+                            "type": 3,
+                            "required": true,
+                            "autocomplete": true
+                        },
+                        {
+                            "name": "style",
+                            "description": "Include to edit the style: separate buttons for each role or a drop-down list to select roles.",
+                            "type": 4,
+                            "required": true,
+                            "choices": [
+                                {
+                                    "name": "buttons",
+                                    "value": 0
+                                },
+                                {
+                                    "name": "dropdown",
+                                    "value": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

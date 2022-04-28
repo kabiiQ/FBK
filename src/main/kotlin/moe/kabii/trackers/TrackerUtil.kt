@@ -9,7 +9,6 @@ import discord4j.core.`object`.entity.channel.NewsChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
@@ -17,6 +16,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.FBK
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString

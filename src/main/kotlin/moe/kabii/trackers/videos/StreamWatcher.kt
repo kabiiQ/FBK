@@ -7,8 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.instances.DiscordInstances
-import moe.kabii.instances.FBK
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -21,9 +19,12 @@ import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
+import moe.kabii.instances.FBK
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
@@ -32,6 +33,7 @@ import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.WithinExposedContext
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
 
@@ -185,8 +187,10 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 YoutubeNotifications
                     .innerJoin(MessageHistory.Messages
                         .innerJoin(DiscordObjects.Channels))
+                    .innerJoin(YoutubeVideos)
                     .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                        DiscordObjects.Channels.channelID eq guildChan.id.asLong() and
+                                (YoutubeVideos.liveEvent.isNotNull())
                     })
                 .filter { notif ->
                     if(endingStream != null) {
@@ -242,5 +246,4 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             }
         }
     }
-
 }

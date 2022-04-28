@@ -8,6 +8,7 @@ object EmojiCharacters {
     const val check = "\u2714"
     const val checkBox = "\u2705"
     const val redX = "\u274C"
+    const val redO = "\u2B55"
     const val alarm = "\u23F0"
     const val star = "\u2B50"
 
@@ -24,6 +25,8 @@ object EmojiCharacters {
     const val redSquare = "\uD83D\uDFE5"
 
     const val translation = "🗣️"
+
+    const val plus = "\u2795"
 
     const val spacer = "<:BG:816785362625495072>"
 

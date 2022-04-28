@@ -8,12 +8,12 @@ import discord4j.core.event.domain.guild.UnbanEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress

@@ -3,10 +3,10 @@ package moe.kabii.ytchat
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.time.delay
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString

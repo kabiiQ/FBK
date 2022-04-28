@@ -1,11 +1,11 @@
 package moe.kabii.trackers.videos.youtube.subscriber
 
 import kotlinx.coroutines.delay
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscription
 import moe.kabii.discord.util.MetaData
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker

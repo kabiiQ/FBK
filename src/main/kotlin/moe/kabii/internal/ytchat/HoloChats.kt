@@ -4,10 +4,10 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.ytchat.YoutubeChatWatcher

@@ -27,7 +27,7 @@ object PixivEmbeds : Command("pixiv") {
             val imageCount = args.optInt("count") ?: 6
 
             event.reply("<$urlArg>").awaitAction()
-            for(i in startIndex..imageCount) {
+            for(i in startIndex until startIndex + imageCount) {
                 // try to pull image
                 val imageUrl = "https://boe-tea-pximg.herokuapp.com/$pid/$i"
                 val pixivRequest = Request.Builder()

@@ -6,7 +6,6 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -15,6 +14,7 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.logColor
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono

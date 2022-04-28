@@ -8,11 +8,11 @@ import discord4j.core.event.domain.message.ReactionAddEvent
 import discord4j.core.event.domain.message.ReactionRemoveEvent
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.success
@@ -39,7 +39,7 @@ object ReactionRoleHandler {
     suspend fun handleReactionRole(clientId: Int, userId: Snowflake, guildId: Snowflake, channelId: Snowflake, messageId: Snowflake, guild: Mono<Guild>, message: Mono<Message>, emoji: ReactionEmoji, direction: ReactionAction) {
         // check if this is a registered reaction role message
         val config = GuildConfigurations.getOrCreateGuild(clientId, guildId.asLong())
-        val reactionRole = config.selfRoles.reactionRoles
+        val reactionRole = config.autoRoles.reactionConfigurations
             .filter { cfg -> cfg.message.messageID == messageId.asLong() }
             .find { cfg -> cfg.reaction.toReactionEmoji() == emoji }
             ?: return

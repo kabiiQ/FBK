@@ -12,7 +12,6 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
-import moe.kabii.instances.FBK
 import moe.kabii.command.*
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -20,6 +19,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.FBK
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.util.extensions.userAddress
 import reactor.core.publisher.Flux

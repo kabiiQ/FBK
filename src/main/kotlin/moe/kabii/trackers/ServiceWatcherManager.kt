@@ -1,8 +1,8 @@
 package moe.kabii.trackers
 
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser

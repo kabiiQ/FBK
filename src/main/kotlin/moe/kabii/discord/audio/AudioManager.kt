@@ -10,8 +10,8 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
-import moe.kabii.instances.FBK
 import moe.kabii.data.mongodb.GuildTarget
+import moe.kabii.instances.FBK
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 

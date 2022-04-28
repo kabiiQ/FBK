@@ -1,10 +1,10 @@
 package moe.kabii.ytchat
 
 import com.squareup.moshi.Types
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMember
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 

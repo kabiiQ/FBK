@@ -17,10 +17,7 @@ import moe.kabii.discord.event.bot.NewGuildListener
 import moe.kabii.discord.event.bot.ReconnectListener
 import moe.kabii.discord.event.guild.*
 import moe.kabii.discord.event.guild.welcome.WelcomerListener
-import moe.kabii.discord.event.interaction.AutoCompleteHandler
-import moe.kabii.discord.event.interaction.ChatCommandHandler
-import moe.kabii.discord.event.interaction.MessageCommandHandler
-import moe.kabii.discord.event.interaction.UserCommandHandler
+import moe.kabii.discord.event.interaction.*
 import moe.kabii.discord.event.message.MessageTemporaryRedirectionHandler
 import moe.kabii.discord.event.message.starboard.StarboardEventHandler
 import moe.kabii.discord.event.user.MemberUpdateListener
@@ -112,6 +109,7 @@ class DiscordInstances {
             StarboardEventHandler.ReactionEmojiRemoveListener(this),
             StarboardEventHandler.ReactionBulkRemoveListener(this),
             StarboardEventHandler.MessageDeletionListener(this),
+            ButtonRoleHandler(this),
             MessageTemporaryRedirectionHandler(this, manager) // temporary listener to redirect users to slash commands
         )
 

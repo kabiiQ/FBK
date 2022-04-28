@@ -6,12 +6,12 @@ import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 

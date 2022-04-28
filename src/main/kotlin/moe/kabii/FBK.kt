@@ -15,7 +15,6 @@ import moe.kabii.net.NettyFileServer
 import moe.kabii.net.api.videos.YoutubeVideosService
 import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
 import moe.kabii.terminal.TerminalListener
-import moe.kabii.trackers.twitter.watcher.TwitterFeedSubscriber
 import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.stackTraceString
 import reactor.core.publisher.Mono
@@ -43,7 +42,6 @@ fun main() {
 
             DiscordOAuthRedirectServer.server.start()
             val welcomer = WelcomeImageGenerator
-            TwitterFeedSubscriber.verifySubscriptions()
             val streamers = KnownStreamers
             YoutubeVideosService.server.start()
             val translator = Translator.detector.detectLanguageOf("initalizing translator")

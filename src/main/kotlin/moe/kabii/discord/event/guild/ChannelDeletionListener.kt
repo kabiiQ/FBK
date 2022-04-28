@@ -1,11 +1,11 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.core.event.domain.channel.TextChannelDeleteEvent
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.discord.event.EventListener
+import moe.kabii.instances.DiscordInstances
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class ChannelDeletionListener(val instances: DiscordInstances) : EventListener<TextChannelDeleteEvent>(TextChannelDeleteEvent::class) {

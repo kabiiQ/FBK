@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.spaces.TwitterSpaces
@@ -13,6 +12,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.twitter.json.TwitterSpace
 import moe.kabii.discord.trackers.twitter.json.TwitterSpaceState
 import moe.kabii.discord.trackers.videos.spaces.watcher.SpaceNotifier
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.twitter.TwitterRateLimitReachedException

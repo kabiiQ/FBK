@@ -9,6 +9,7 @@ data class AutoRoles(
     val rejoinRoles: MutableMap<Long, LongArray> = mutableMapOf(),
     val reactionConfigurations: MutableList<ReactionRoleConfig> = mutableListOf(),
     val exclusiveRoleSets: MutableList<ExclusiveRoleSet> = mutableListOf(),
+    val buttonConfigurations: MutableList<ButtonConfiguration> = mutableListOf()
 )
 
 data class JoinConfiguration(
@@ -35,4 +36,29 @@ data class ReactionRoleConfig(
     val message: MessageInfo,
     val reaction: DiscordEmoji,
     val role: Long
+)
+
+data class ButtonConfiguration(
+    val message: MessageInfo,
+    var type: Int,
+    var content: String?,
+    val roles: MutableList<ButtonRoles>,
+    var max: Int = 0,
+    var listRoles: Boolean = true
+    ) {
+    companion object {
+        enum class Type {
+            BUTTONS,
+            DROPDOWN
+        }
+    }
+
+    fun isList() = type == 1
+}
+
+data class ButtonRoles(
+    val role: Long,
+    var info: String?,
+    var emoji: DiscordEmoji?,
+    var alternateName: String?
 )

@@ -40,20 +40,13 @@ object CommandInfo : Command("help") {
         val sourcePath = "${SourcePaths.sourceRoot}/$source"
 
         val fields = mutableListOf<EmbedCreateFields.Field>()
-        if(!isPM) {
-            val filter = config.commandFilter
-            val list = if(filter.blacklisted) "blacklist" else "whitelist"
-            val enabled = filter.isCommandEnabled(match).toString()
-            val exempt = if(match.commandExempt) " (exempt)" else ""
-            fields.add(EmbedCreateFields.Field.of("Command enabled in server (using $list):", "$enabled$exempt", false))
-        }
         fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
 
         val wikiPage = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${command.name}"
         ereply(
             Embeds.fbk()
                 .withTitle("Command information: ${match.name}")
-                .withDescription("Command wiki page not found.")
+                .withDescription("Command wiki page: $wikiPage")
                 .withFields(fields)
         ).awaitSingle()
     }

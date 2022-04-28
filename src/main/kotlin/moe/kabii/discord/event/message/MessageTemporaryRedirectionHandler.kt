@@ -3,12 +3,12 @@ package moe.kabii.discord.event.message
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.command.CommandManager
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.orNull
 
 class MessageTemporaryRedirectionHandler(val instances: DiscordInstances, val manager: CommandManager): EventListener<MessageCreateEvent>(MessageCreateEvent::class) {

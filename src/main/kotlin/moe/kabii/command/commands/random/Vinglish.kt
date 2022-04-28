@@ -1,7 +1,7 @@
 package moe.kabii.command.commands.random
 
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
+import moe.kabii.util.extensions.awaitAction
 
 
 object Vinglish : Command("garble") {
@@ -35,7 +35,7 @@ object Vinglish : Command("garble") {
 
     init {
         chat {
-            event.reply(vinglishify(args.string("text"))).awaitSingle()
+            event.reply(vinglishify(args.string("text"))).awaitAction()
         }
     }
 }

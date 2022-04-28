@@ -18,16 +18,12 @@ object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
     val lastKnownUsername = text("last_known_twitter_handle").nullable()
-
-    val streamRule = reference("twit_feed_streaming_rule", TwitterStreamRules, ReferenceOption.SET_NULL).nullable()
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var userId by TwitterFeeds.userId
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
     var lastKnownUsername by TwitterFeeds.lastKnownUsername
-
-    var streamRule by TwitterStreamRule optionalReferencedOn TwitterFeeds.streamRule
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
@@ -45,30 +41,12 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     }
 }
 
-object TwitterStreamRules : IntIdTable() {
-    val ruleId =  long("twit_streaming_rule_id").uniqueIndex()
-}
-
-class TwitterStreamRule(id: EntityID<Int>) : IntEntity(id) {
-    var ruleId by TwitterStreamRules.ruleId
-
-    val feeds by TwitterFeed optionalReferrersOn TwitterFeeds.streamRule
-
-    companion object : IntEntityClass<TwitterStreamRule>(TwitterStreamRules) {
-        fun insert(ruleId: String) = new {
-            this.ruleId = ruleId.toLong()
-        }
-    }
-}
-
 object TwitterTargets : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val discordClient = integer("twitter_target_discord_client").default(1)
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracker", DiscordObjects.Users, ReferenceOption.CASCADE)
-
-    val shouldStream = bool("twitter_streaming_feed").default(false)
 
     init {
         index(customIndexName = "twittertargets_twitter_target_discord_client_assoc_twitter_feed", isUnique = true, discordClient, twitterFeed, discordChannel)
@@ -80,8 +58,6 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     var twitterFeed by TwitterFeed referencedOn TwitterTargets.twitterFeed
     var discordChannel by DiscordObjects.Channel referencedOn TwitterTargets.discordChannel
     var tracker by DiscordObjects.User referencedOn TwitterTargets.tracker
-
-    var shouldStream by TwitterTargets.shouldStream
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext
