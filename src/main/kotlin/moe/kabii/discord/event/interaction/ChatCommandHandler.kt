@@ -7,7 +7,6 @@ import discord4j.rest.util.Permission
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import moe.kabii.instances.DiscordInstances
 import moe.kabii.LOG
 import moe.kabii.command.*
 import moe.kabii.command.params.DiscordParameters
@@ -15,6 +14,7 @@ import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
+import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.*
 
 class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatInputInteractionEvent>(ChatInputInteractionEvent::class) {
@@ -39,21 +39,12 @@ class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatIn
                 // retrieve/build command parameters
                 val author = interaction.user
                 val isPM = !interaction.guildId.isPresent
-                val enabled = if(config == null) true else config.commandFilter.isCommandEnabled(command)
                 val guild = interaction.guild.awaitSingleOrNull()
                 val targetId = (guild?.id ?: author.id).asLong()
                 val guildName = guild?.name ?: author.username
                 val context = if (isPM) "Private" else "Guild"
                 val optStr = GlobalCommandRegistrar.optionsToString(event.options)
                 LOG.info("${context}Command:\t$guildName\t${author.userAddress()}\t:${event.commandName}\t$optStr :: on ${Thread.currentThread().name}")
-                if(!enabled) {
-                    event.reply()
-                        .withEmbeds(Embeds.error("The /${command.name} command has been disabled by the staff of **${guild!!.name}**."))
-                        .withEphemeral(true)
-                        .awaitSingle()
-                    LOG.info("Command is disabled in guild $guildName")
-                    return@launch
-                }
                 val chan = interaction.channel.awaitSingle()
                 val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command, client)
 

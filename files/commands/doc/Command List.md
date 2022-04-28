@@ -459,12 +459,19 @@ This page is an automatically generated list of all bot commands with a link to 
 | `user*` | User | The user to challenge.
 #### -- `/game rps`
 
-- Challenge a friend to a game of Rock Paper Scissors
+- Challenge a friend to a game of Rock Paper Scissors.
 
 | Option | Type | Description
 | ---    | ---  | ---
 | `user*` | User | The user to challenge.
 | `rounds` | Integer | Change how many rounds are played! Defaults to best of 3.
+#### -- `/game tictactoe`
+
+- Challenge a friend to a game of Tic-tac-toe.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user*` | User | The user to challenge.
 
 
 ### - `/botinfo`:
