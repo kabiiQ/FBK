@@ -159,7 +159,7 @@ data class QueueData(
     val author_name: String, // just caching the author's username as it is unlikely to change and is only used in output
     val author: Snowflake,
     val originChannel: Snowflake,
-    var volume: Int,
+    var volume: Int?,
 
     val votes: MutableSet<Snowflake> = mutableSetOf(),
     val voting: Mutex = Mutex(),

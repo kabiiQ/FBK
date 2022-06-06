@@ -19,13 +19,18 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.tryBlock
+import kotlin.math.min
 
 object AudioEventHandler : AudioEventAdapter() {
     val manager = AudioManager
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         val data = track.userData as QueueData
-        player.volume = data.volume
+
+        val guildID = data.audio.guildId
+        val config = GuildConfigurations.getOrCreateGuild(data.fbk.clientId, guildID).musicBot
+        val volume = data.volume ?: config.startingVolume.toInt()
+        player.volume = min(volume, config.volumeLimit.toInt())
 
         // apply this track's audio filters. always reset filter factory to empty if there are no filters applied
         player.setFilterFactory(data.audioFilters.export())
@@ -33,8 +38,6 @@ object AudioEventHandler : AudioEventAdapter() {
         val originChan = data.fbk.client.getChannelById(data.originChannel)
             .ofType(GuildMessageChannel::class.java)
 
-        val guildID = data.audio.guildId
-        val config = GuildConfigurations.getOrCreateGuild(data.fbk.clientId, guildID).musicBot
         // guild option to skip song if queuer has left voice channel.
         if(config.skipIfAbsent) {
             val vc = data.fbk.client.getGuildById(guildID.snowflake)

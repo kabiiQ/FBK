@@ -55,7 +55,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         // set track
         if(!audio.player.startTrack(track, true)) {
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else ""
-            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, use the **playlist** command rather than **play**." else ""
+            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, set `playlist` to `True` when running /play." else ""
             val add = runBlocking { audio.tryAdd(track, origin.member, position) }
             if(silent) return // don't send any messages for this track
             if(!add) {
@@ -85,7 +85,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         } else {
 
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
-            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, use the **playlist** command rather than **play**." else ""
+            val playlist = if(warnPlaylist) "\n\nThe link you played is a playlist. If you want to add all tracks in this playlist to the queue, set `playlist` to `True` when running /play." else ""
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
 

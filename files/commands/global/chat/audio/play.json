@@ -28,9 +28,17 @@
         },
         {
             "name": "attachment",
-            "description": "Optionally play an attached audio file directly.",
+            "description": "Optionally play an attached audio file directly. The 'song' text will be ignored.",
             "type": 11,
             "required": false
+        },
+        {
+            "name": "volume",
+            "description": "Set the volume level for this track (for example, if this track is known to be very quiet)",
+            "type": 4,
+            "required": false,
+            "min_value": 1,
+            "max_value": 300
         }
     ]
 }

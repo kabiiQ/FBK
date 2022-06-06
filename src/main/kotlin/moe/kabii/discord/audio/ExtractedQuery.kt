@@ -5,7 +5,7 @@ import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.orNull
 
-class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int) {
+class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int?) {
     init {
         // ignore <> if they surround a URL - these can be used in Discord to avoid embedding a link
         url = url.removeSurrounding("<", ">")
@@ -43,15 +43,17 @@ class ExtractedQuery private constructor(var url: String, val timestamp: Long, v
             val volume = volumePct?.value?.toIntOrNull()
             url = if(matchVolume != null) url.replace(matchVolume.value, "") else url
 
+            val volumeArg = origin.args.optInt("volume")?.toInt()
+
             return ExtractedQuery(
                 url = url,
                 timestamp = time?.toMillis() ?: 0L,
                 sample = sample?.toMillis(),
-                volume = volume ?: origin.config.musicBot.startingVolume.toInt()
+                volume = volumeArg ?: volume
             )
         }
 
         // used for attachments, playlists, or internally in 'search' results - input requires no processing
-        fun default(url: String): ExtractedQuery = ExtractedQuery(url, timestamp = 0L, sample = null, volume = MusicSettings.defaultStartingVolume)
+        fun default(url: String): ExtractedQuery = ExtractedQuery(url, timestamp = 0L, sample = null, volume = null)
     }
 }
