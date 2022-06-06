@@ -1,7 +1,6 @@
+import pytchat
 import sys
 import time
-
-import pytchat
 
 chat_id = sys.argv[1]
 chat = pytchat.LiveChat(video_id=chat_id)

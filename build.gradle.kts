@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.6.20"
+    val kotlinVer = "1.6.21"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -48,7 +48,7 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.2.2") // discord websocket and api
 
     // music bot
-    implementation("com.github.walkyst:lavaplayer-fork:1.3.96") // discord audio library
+    implementation("com.github.walkyst:lavaplayer-fork:1.3.97.1") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.21")
 

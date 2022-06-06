@@ -97,7 +97,8 @@ This page is an automatically generated list of all bot commands with a link to 
 | `playlist` | True/False | Set to True to add ALL tracks from a YouTube playlist to the queue.
 | `forceplay` | True/False | Play this track immediately, pausing any current track until the new one ends.
 | `next` | True/False | Add this track to the front of the queue rather than the end ("skipping the line")
-| `attachment` | Attachment | Optionally play an attached audio file directly.
+| `attachment` | Attachment | Optionally play an attached audio file directly. The 'song' text will be ignored.
+| `volume` | Integer | Set the volume level for this track (for example, if this track is known to be very quiet)
 
 
 ### - `/queue`:
@@ -296,39 +297,65 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - Manually reset the reaction counts for reaction roles in this channel back to 0
 
+#### -- `/autorole button`
 
+- Configure auto-roles where users can press a button to receive a role.
 
-### - `/blacklist`:
+#### -- `/autorole button create`
 
-- Configure a bot command blacklist.
-- Wiki: [[Configuration#using-a-command-blacklist-or-whitelist]]
-
-#### -- `/blacklist use`
-
-- Enable the command blacklist and disable the whitelist. This is the default bot behavior.
-
-#### -- `/blacklist add`
-
-- Add a command to the blacklist by name
+- Create an auto-role where users can press a button to receive a role.
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `command*` | String | The command to be added to the blacklist
-#### -- `/blacklist remove`
+| `style*` | Integer | Select to use separate buttons for each role or a drop-down list to select roles.
+| `message` | String | A message to be written above the auto-role buttons. Can be edited later. Use 
+ for new lines.
+#### -- `/autorole button edit`
 
-- Remove a command currently on the command blacklist
+- Edit an existing button-based auto-role message.
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `command*` | String | The command to be removed from the blacklist
-#### -- `/blacklist view`
+| `id*` | String | The message ID of the button-based auto-roles to be edited.
+| `style` | Integer | Include to edit the style: separate buttons for each role or a drop-down list to select roles.
+| `message` | String | Include to edit the message written above the auto-role buttons. Use 
+ for new lines.
+| `maxroles` | Integer | For role LISTS only. Limit the roles a user can select, such as for color roles. 0=Unlimited
+| `listroles` | True/False | Set to False to disable the list of roles in the button-role message.
+#### -- `/autorole button addrole`
 
-- View the contents of the command blacklist.
+- Add a role to an existing button-based auto-role message.
 
-#### -- `/blacklist clear`
+| Option | Type | Description
+| ---    | ---  | ---
+| `id*` | String | The message ID of the button-based auto-roles to be edited.
+| `role*` | Role | The role that users will be assigned.
+| `info` | String | Information about this role that will be presented to users.
+| `emoji` | String | An emoji that will represent this role on buttons.
+| `name` | String | An alternate name to use for this role on buttons/lists. Otherwise, the role name will be used.
+#### -- `/autorole button removerole`
 
-- Remove all commands currently on the command blacklist.
+- Remove a role from an existing button-based auto-role message.
 
+| Option | Type | Description
+| ---    | ---  | ---
+| `id*` | String | The message ID of the button-based auto-roles to be edited.
+| `role*` | String | The role ID to be removed. Use /autorole button to remove a button setup entirely.
+#### -- `/autorole button delete`
+
+- DELETE a button-based auto-role message. Use /autorole button removerole to remove a single role.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `id*` | String | The message ID of the button-based auto-roles to be edited.
+#### -- `/autorole button convert`
+
+- Convert existing FBK reaction-roles on a message into button-roles
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `message*` | String | The Discord ID of the message containing FBK reaction-roles to be converted into button-roles.
+| `style*` | Integer | Include to edit the style: separate buttons for each role or a drop-down list to select roles.
 
 
 ### - `/channels`:
@@ -403,39 +430,6 @@ This page is an automatically generated list of all bot commands with a link to 
 #### -- `/roleset list`
 
 - List existing sets of mutually exclusive roles.
-
-
-
-### - `/whitelist`:
-
-- Configure a bot command whitelist.
-- Wiki: [[Configuration#using-a-command-blacklist-or-whitelist]]
-
-#### -- `/whitelist use`
-
-- Enable the command whitelist. IF ENABLED, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST
-
-#### -- `/whitelist add`
-
-- Add a command to the whitelist by name
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `command*` | String | The command to be added to the whitelist
-#### -- `/whitelist remove`
-
-- Remove a command currently on the command whitelist
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `command*` | String | The command to be removed from the whitelist
-#### -- `/whitelist view`
-
-- View the contents of the command whitelist.
-
-#### -- `/whitelist clear`
-
-- Clear the whitelist.If the whitelist is enabled, NO COMMANDS WILL WORK UNLESS ADDED TO THE WHITELIST
 
 
 
@@ -722,7 +716,8 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `username*` | String | The tracked stream/twitter feed that should send a ping
-| `role` | Role | The role that should be pinged. Leave empty to remove any existing configured ping.
+| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
+| `text` | String | Text to be included along with the ping. If empty, any existing text will be removed.
 | `site` | Integer | The site name may need to be specified if it can not be inferred.
 
 
@@ -940,16 +935,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | `name` | String | The name for the new voice channel.
 
 
-### - `/linkyoutubemembers`:
-
-- Link a YouTube chat's members to a Discord role on this server.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `channel` | String | The YouTube channel ID to link to.
-| `reset` | True/False | If any current YouTube chat should be unlinked.
-
-
 ### - `/ytlink`:
 
 - Link a YouTube account (from your Discord profile) to FBK.
@@ -1020,14 +1005,11 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for translate. Leave blank to check current value.
-#### -- `/twitter stream`
-
-- Receive Tweet updates faster (for high priority feeds)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for stream. Leave blank to check current value.
 #### -- `/twitter setup`
+
+- View all twitter tracker settings and configure.
+
+#### -- `/twitter config`
 
 - View all twitter tracker settings and configure.
 
@@ -1098,6 +1080,10 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - View all channel settings and configure.
 
+#### -- `/feature config`
+
+- View all channel settings and configure.
+
 
 
 ### - `/servercfg`:
@@ -1133,13 +1119,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for publish. Leave blank to check current value.
-#### -- `/servercfg reactiontl`
-
-- Allow users to react to messages with 🗣️ to request a translation
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for reactiontl. Leave blank to check current value.
 #### -- `/servercfg ps2commands`
 
 - Enable PS2 commands
@@ -1148,6 +1127,10 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | Integer | The new value for ps2commands. Leave blank to check current value.
 #### -- `/servercfg setup`
+
+- View all guild settings and configure.
+
+#### -- `/servercfg config`
 
 - View all guild settings and configure.
 
@@ -1234,6 +1217,10 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - View all channel log settings and configure.
 
+#### -- `/log config`
+
+- View all channel log settings and configure.
+
 
 
 ### - `/yt`:
@@ -1289,6 +1276,10 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - View all youtube tracker settings and configure.
 
+#### -- `/yt config`
+
+- View all youtube tracker settings and configure.
+
 
 
 ### - `/cleanreactionscfg`:
@@ -1304,6 +1295,10 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | Integer | The new value for clean. Leave blank to check current value.
 #### -- `/cleanreactionscfg setup`
+
+- View all reaction role settings and configure.
+
+#### -- `/cleanreactionscfg config`
 
 - View all reaction role settings and configure.
 
@@ -1395,6 +1390,10 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - View all music bot settings and configure.
 
+#### -- `/musiccfg config`
+
+- View all music bot settings and configure.
+
 
 
 ### - `/animeconfig`:
@@ -1424,6 +1423,10 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | Integer | The new value for watched. Leave blank to check current value.
 #### -- `/animeconfig setup`
+
+- View all anime list tracker settings and configure.
+
+#### -- `/animeconfig config`
 
 - View all anime list tracker settings and configure.
 
@@ -1508,6 +1511,10 @@ This page is an automatically generated list of all bot commands with a link to 
 | `value` | String | The new value for suffix. Leave blank to check current value.
 | `reset` | True/False | Reset this option its default value: 
 #### -- `/streamcfg setup`
+
+- View all livestream tracker settings and configure.
+
+#### -- `/streamcfg config`
 
 - View all livestream tracker settings and configure.
 
@@ -1606,6 +1613,10 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - View all welcome settings and configure.
 
+#### -- `/welcome config`
+
+- View all welcome settings and configure.
+
 #### -- `/welcome test`
 
 - Test the current welcome configuration.
@@ -1673,6 +1684,10 @@ This page is an automatically generated list of all bot commands with a link to 
 | `value` | String | The new value for emoji. Leave blank to check current value.
 | `reset` | True/False | Reset this option its default value: {empty}
 #### -- `/starboard setup`
+
+- View all starboard settings and configure.
+
+#### -- `/starboard config`
 
 - View all starboard settings and configure.
 
