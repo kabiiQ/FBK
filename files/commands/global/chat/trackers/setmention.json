@@ -11,8 +11,14 @@
         },
         {
             "name": "role",
-            "description": "The role that should be pinged. Leave empty to remove any existing configured ping.",
+            "description": "The role that should be pinged. If empty, any configured role will no longer be pinged.",
             "type": 8,
+            "required": false
+        },
+        {
+            "name": "text",
+            "description": "Text to be included along with the ping. If empty, any existing text will be removed.",
+            "type": 3,
             "required": false
         },
         {
