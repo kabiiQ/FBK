@@ -94,18 +94,20 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
     }
 
-    data class MentionRole(val db: TrackedStreams.Mention, val discord: Role)
+    data class MentionRole(val db: TrackedStreams.Mention, val discord: Role?)
     @WithinExposedContext
     suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings): MentionRole? {
         if(!streamCfg.mentionRoles) return null
         val dbRole = dbStream.mentionRoles
             .firstOrNull { men -> men.guild.guildID == guildId }
         return if(dbRole != null) {
-            val role = targetChannel.toMono()
-                .ofType(GuildChannel::class.java)
-                .flatMap(GuildChannel::getGuild)
-                .flatMap { guild -> guild.getRoleById(dbRole.mentionRole.snowflake) }
-                .tryAwait()
+            val role = if(dbRole.mentionRole != null) {
+                targetChannel.toMono()
+                    .ofType(GuildChannel::class.java)
+                    .flatMap(GuildChannel::getGuild)
+                    .flatMap { guild -> guild.getRoleById(dbRole.mentionRole!!.snowflake) }
+                    .tryAwait()
+            } else null
             when(role) {
                 is Ok -> MentionRole(dbRole, role.value)
                 is Err -> {
@@ -114,8 +116,9 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                         // role has been deleted, remove configuration
                         dbRole.delete()
                     }
-                    null
+                    MentionRole(dbRole, null)
                 }
+                null -> null
             }
         } else null
     }

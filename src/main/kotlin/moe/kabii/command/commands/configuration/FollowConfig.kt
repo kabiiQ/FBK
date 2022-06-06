@@ -53,15 +53,16 @@ object SetMentionRole : Command("setmention") {
             }
 
             val roleArg = args.optRole("role")?.awaitSingle()
+            val textArg = args.optStr("text")?.ifBlank { null }
             when(siteTarget.site) {
-                is StreamingTarget -> setStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg)
-                is moe.kabii.trackers.TwitterTarget -> setTwitterMention(this, siteTarget.identifier, roleArg)
+                is StreamingTarget -> setStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg, textArg)
+                is moe.kabii.trackers.TwitterTarget -> setTwitterMention(this, siteTarget.identifier, roleArg, textArg)
                 else -> ereply(Embeds.error("The **/setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
             }
         }
     }
 
-    private suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: Role?) {
+    private suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: Role?, textArg: String?) {
         val streamInfo = when (val streamCall = site.getChannel(siteUserId)) {
             is Ok -> streamCall.value
             is Err -> {
@@ -98,29 +99,33 @@ object SetMentionRole : Command("setmention") {
                         (TrackedStreams.Mentions.guild eq dbGuild.id)
             }.firstOrNull()
 
-            if(roleArg == null) {
+            if(roleArg == null && textArg == null) {
                 // unset role
                 existingMention?.delete()
                 "**removed**"
             } else {
-                // setting new role
+                // update existing mention info
                 if(existingMention != null) {
-                    existingMention.mentionRole = roleArg.id.asLong()
+                    existingMention.mentionRole = roleArg?.id?.asLong()
+                    existingMention.mentionText = textArg
                 } else {
                     TrackedStreams.Mention.new {
                         this.stream = matchingTarget.streamChannel
                         this.guild = dbGuild
-                        this.mentionRole = roleArg.id.asLong()
+                        this.mentionRole = roleArg?.id?.asLong()
+                        this.mentionText = textArg
                     }
                 }
-                "set to **${roleArg.name}**"
+                val role = roleArg?.run {"**$name**" } ?: ""
+                val text = textArg?.run(" "::plus) ?: ""
+                "set to $role$text"
             }
         }
 
         origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
     }
 
-    private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?) {
+    private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
         val twitterUser = try {
             TwitterParser.getUser(twitterId)
         } catch(e: Exception) {
@@ -156,20 +161,24 @@ object SetMentionRole : Command("setmention") {
             val existingMention = TwitterMention.getRoleFor(origin.target.id, twitterUser.id)
                 .firstOrNull()
 
-            if(roleArg == null) {
+            if(roleArg == null && textArg == null) {
                 existingMention?.delete()
                 "**removed**"
             } else {
                 if(existingMention != null) {
-                    existingMention.mentionRole = roleArg.id.asLong()
+                    existingMention.mentionRole = roleArg?.id?.asLong()
+                    existingMention.mentionText = textArg
                 } else {
                     TwitterMention.new {
                         this.twitterFeed = matchingTarget.twitterFeed
                         this.guild = DiscordObjects.Guild.getOrInsert(origin.target.id.asLong())
-                        this.mentionRole = roleArg.id.asLong()
+                        this.mentionRole = roleArg?.id?.asLong()
+                        this.mentionText = textArg
                     }
                 }
-                "set to **${roleArg.name}**"
+                val role = roleArg?.run {"**$name**" } ?: ""
+                val text = textArg?.run(" "::plus) ?: ""
+                "set to $role$text"
             }
         }
         origin.ireply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()

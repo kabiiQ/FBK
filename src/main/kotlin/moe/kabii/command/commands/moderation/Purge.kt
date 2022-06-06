@@ -61,7 +61,7 @@ object Purge : CommandContainer {
         }
         val messageCount = args.int("number")
         val delete = chan
-            .getMessagesBefore(last)
+            .getMessagesBefore(last.asLong().plus(1).snowflake)
             .take(messageCount)
         purgeAndNotify(this, delete)
     }
@@ -82,7 +82,7 @@ object Purge : CommandContainer {
 
         val delete = chan
             .getMessagesAfter(startMessage.snowflake)
-            .run { if(endMessage != null) takeUntil { message ->
+            .run { if(endMessage != null) takeWhile { message ->
                 message.id >= endMessage.snowflake
             } else this }
 

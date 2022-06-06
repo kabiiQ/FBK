@@ -275,15 +275,18 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 val guildId = target.discordChannel.guild?.guildID
                 val mention = guildId
                     ?.run { getMentionRoleFor(target, this.snowflake, channel, tweet, twitter) }
-                    ?.discord?.mention
-                    ?.plus(" ")
-                    ?.run { if(Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)) null else this }
-                    ?: ""
+
+                val mentionText = if(mention != null) {
+                    val rolePart = if(mention.discord == null || Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)) null
+                    else mention.discord.mention.plus(" ")
+                    val textPart = mention.db.mentionText?.plus(" ")
+                    "${rolePart ?: ""}${textPart ?: ""}"
+                } else ""
 
                 val notifSpec = MessageCreateSpec.create()
                     .run {
                         val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
-                        withContent("$mention**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
+                        withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
                     }
                     .run {
                         if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
@@ -371,18 +374,20 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
         }
     }
 
-    data class TwitterMentionRole(val db: TwitterMention, val discord: Role)
+    data class TwitterMentionRole(val db: TwitterMention, val discord: Role?)
     @WithinExposedContext
     suspend fun getMentionRoleFor(dbTarget: TwitterTarget, guildId: Snowflake, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         if(tweet.retweet) return null
         if(!twitterCfg.mentionRoles) return null
         val dbMentionRole = TwitterMention.getRoleFor(guildId, dbTarget.twitterFeed.userId)
             .firstOrNull() ?: return null
-        val dRole = targetChannel.toMono()
-            .ofType(GuildChannel::class.java)
-            .flatMap(GuildChannel::getGuild)
-            .flatMap { guild -> guild.getRoleById(dbMentionRole.mentionRole.snowflake) }
-            .tryAwait()
+        val dRole = if(dbMentionRole.mentionRole != null) {
+            targetChannel.toMono()
+                .ofType(GuildChannel::class.java)
+                .flatMap(GuildChannel::getGuild)
+                .flatMap { guild -> guild.getRoleById(dbMentionRole.mentionRole!!.snowflake) }
+                .tryAwait()
+        } else null
         return when(dRole) {
             is Ok -> TwitterMentionRole(dbMentionRole, dRole.value)
             is Err -> {
@@ -391,8 +396,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     // role has been deleted, remove configuration
                     dbMentionRole.delete()
                 }
-                null
+                TwitterMentionRole(dbMentionRole, null)
             }
+            null -> null
         }
     }
 }

@@ -21,7 +21,6 @@ object GuildFeatures : Command("servercfg") {
         BooleanElement("Use this server's audit log to enhance log info, bot requires Audit Log permission", "auditlog", GuildSettings::utilizeAuditLogs),
         BooleanElement("Give users their roles back when they rejoin the server", "reassignroles", GuildSettings::reassignRoles),
         BooleanElement("Publish messages from tracked targets (e.g. YT uploads) if tracked in an Announcement channel", "publish", GuildSettings::publishTrackerMessages),
-        BooleanElement("Allow users to react to messages with ${EmojiCharacters.translation} to request a translation", "reactiontl", GuildSettings::reactionTranslations),
         BooleanElement("Enable PS2 commands", "ps2commands", GuildSettings::ps2Commands),
     )
 

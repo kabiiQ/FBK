@@ -55,6 +55,7 @@ class ButtonRoleHandler(val instances: DiscordInstances) : EventListener<ButtonI
                         SelectMenu.Option
                             .of(StringUtils.abbreviate(br.alternateName ?: discordRole.name, 100), br.role.toString())
                             .run { if(br.emoji != null) withEmoji(br.emoji!!.toReactionEmoji()) else this }
+                            .run { if(br.info != null) withDescription(StringUtils.abbreviate(br.info, 100)) else this }
                             .withDefault(userRoles.contains(br.role)) to discordRole
                     }
                     val menu = SelectMenu
@@ -81,6 +82,8 @@ class ButtonRoleHandler(val instances: DiscordInstances) : EventListener<ButtonI
                         }
                         .switchIfEmpty { event.deleteReply() }
                         .take(1).awaitFirstOrNull() ?: return@launch
+
+                    response.deferEdit().awaitAction()
 
                     val selected = response.values.map(String::toLong)
 

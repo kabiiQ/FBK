@@ -137,7 +137,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         val command = origin.subCommand
         return when(command.name) {
-            "setup" -> embed(origin)
+            "setup", "config" -> embed(origin)
             else -> property(command, origin)
         }
     }

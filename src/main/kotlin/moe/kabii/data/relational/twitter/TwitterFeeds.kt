@@ -78,7 +78,8 @@ object TwitterMentions : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
     val guild = reference("assoc_feed_mention_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
-    val mentionRole = long("discord_feed_mention_role_id")
+    val mentionRole = long("discord_feed_mention_role_id").nullable()
+    val mentionText = text("discord_feed_mention_text").nullable()
 
     override val primaryKey = PrimaryKey(twitterFeed, guild)
 }
@@ -87,6 +88,7 @@ class TwitterMention(id: EntityID<Int>) : IntEntity(id) {
     var twitterFeed by TwitterFeed referencedOn TwitterMentions.twitterFeed
     var guild by DiscordObjects.Guild referencedOn TwitterMentions.guild
     var mentionRole by TwitterMentions.mentionRole
+    var mentionText by TwitterMentions.mentionText
 
     companion object : IntEntityClass<TwitterMention>(TwitterMentions) {
         @WithinExposedContext

@@ -22,12 +22,18 @@ object GuildUtil : CommandContainer {
 
         init {
             chat {
-                val targetGuild = args.optStr("id")
+                val (targetClient, targetGuild) = args.optStr("id")
                     ?.toLongOrNull()?.snowflake
-                    ?.run(event.client::getGuildById)
-                    ?.tryAwait()?.orNull()
-                    ?: target
+                    ?.run {
+                        for(fbk in handler.instances.all()) {
+                            val guild = fbk.client.getGuildById(this).tryAwait().orNull()
+                            if(guild != null) return@run fbk to guild
+                        }
+                        null
+                    }
+                    ?: (client to target)
 
+                val instanceId = targetClient.clientId
                 val creation = TimestampFormat.LONG_DATE_TIME.format(targetGuild.id.timestamp)
                 val description = targetGuild.description.orNull()
                 val guildOwner = targetGuild.owner.tryAwait().orNull()
@@ -45,7 +51,7 @@ object GuildUtil : CommandContainer {
 
                 val owner = if(guildOwner != null) "${guildOwner.userAddress()}(${guildOwner.id.asString()})" else "Unknown"
 
-                val more = StringBuilder("This Discord server was created $creation.")
+                val info = "This Discord server was created $creation.\n\nServiced by FBK instance #$instanceId (${targetClient.username}#${targetClient.discriminator})."
 
                 val large = targetGuild.isLarge
                 val features = targetGuild.features
@@ -72,7 +78,7 @@ object GuildUtil : CommandContainer {
                 if(description != null) fields.add(EmbedCreateFields.Field.of("Description", description, false))
 
                 ireply(
-                    Embeds.fbk(more.toString())
+                    Embeds.fbk(info)
                         .withAuthor(EmbedCreateFields.Author.of(targetGuild.name, null, targetGuild.getIconUrl(Image.Format.PNG).orNull()))
                         .withFields(fields)
                 ).awaitSingle()

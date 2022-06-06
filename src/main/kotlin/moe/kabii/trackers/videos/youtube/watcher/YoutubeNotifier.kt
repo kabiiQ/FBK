@@ -314,7 +314,13 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     val videoLength = DurationFormatter(video.duration).colonTime
                     withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo))
                 }
-            val mentionMessage = if(mentionRole != null) chan.createMessage(mentionRole.discord.mention) else chan.createMessage()
+            val mentionMessage = if(mentionRole != null) {
+
+                val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
+                val textPart = mentionRole.db.mentionText?.plus(" ") ?: ""
+                chan.createMessage("$rolePart$textPart")
+
+            } else chan.createMessage()
             mentionMessage.withEmbeds(embed).awaitSingle()
 
         } catch(ce: ClientException) {
@@ -422,8 +428,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 .run { if(startTime != null) withTimestamp(startTime) else this }
 
             val mentionMessage = if(mention != null) {
+
                 mention.db.lastMention = DateTime.now()
-                chan.createMessage(mention.discord.mention)
+                val rolePart = mention.discord?.mention?.plus(" ") ?: ""
+                val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                chan.createMessage("$rolePart$textPart")
+
             } else chan.createMessage()
 
             val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()

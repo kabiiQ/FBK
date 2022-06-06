@@ -25,7 +25,10 @@ object GuildCommandRegistrar : CommandRegistrar {
         if(Keys.config[Keys.Admin.guilds].contains(config.guildid)) yieldAll(adminCommands)
         when(config.guildid) {
             314662502204047361L, 602935619345186819L, 581785820156002304L -> yield(specificCommands["nuc"])
-            862160810918412319L -> yield(specificCommands["adminlink"])
+            862160810918412319L -> {
+                yield(specificCommands["adminlink"])
+                yield(specificCommands["linkyoutubemembers"])
+            }
         }
 
         // generate 'custom' commands associated with this guild

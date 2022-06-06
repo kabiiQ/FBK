@@ -6,8 +6,10 @@ import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
 
 object WelcomeMessageFormatter {
@@ -22,8 +24,13 @@ object WelcomeMessageFormatter {
             .replace(mentionParam, if(rich) member.mention else member.userAddress())
         if(format.contains(numberParam)) {
             // check first to avoid calculating this if not needed
-            val memberNumber = member.guild.awaitSingle().memberCount + 1
-            format = format.replace(numberParam, memberNumber.toString())
+            val memberCache = GuildMemberCounts[member.guildId.asLong()]
+            val memberNumber = if(memberCache == null) {
+                val memberCount = member.guild.tryAwait().orNull()?.memberCount
+                if(memberCount != null) GuildMemberCounts[member.guildId.asLong()] = memberCount.toLong()
+                memberCount
+            } else memberCache.toInt()
+            format = format.replace(numberParam, memberNumber?.plus(1)?.toString() ?: "")
         }
         return format
     }

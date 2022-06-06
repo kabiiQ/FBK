@@ -243,11 +243,17 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     } else null
 
                     val newNotification = try {
-                        val mentionMessage = if(mention != null
-                            && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+                        val mentionMessage = if(mention != null) {
 
-                            mention.db.lastMention = DateTime.now()
-                            chan.createMessage(mention.discord.mention)
+                            val rolePart = if(mention.discord != null
+                                && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+
+                                mention.db.lastMention = DateTime.now()
+                                mention.discord.mention.plus(" ")
+                            } else ""
+                            val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                            chan.createMessage("$rolePart$textPart")
+
                         } else chan.createMessage()
 
                         mentionMessage.withEmbeds(embed.create()).awaitSingle()

@@ -106,8 +106,7 @@ data class TwitterSettings(
     var displayRetweet: Boolean = false,
     var mentionRoles: Boolean = true,
     var mediaOnly: Boolean = false,
-    var autoTranslate: Boolean = false,
-    var streamFeeds: Boolean = false
+    var autoTranslate: Boolean = false
 )
 
 data class ChannelMark(

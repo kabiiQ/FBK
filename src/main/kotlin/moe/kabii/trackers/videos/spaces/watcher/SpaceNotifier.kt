@@ -66,7 +66,8 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
-        val mention = guildId?.run { getMentionRoleFor(target.streamChannel, this, chan, features) }
+        val mention = guildId
+            ?.run { getMentionRoleFor(target.streamChannel, this, chan, features) }
 
         try {
             val hosts = space.hosts - space.creator
@@ -74,11 +75,16 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
             val newNotification = chan.createMessage()
                 .run {
                     if(mention != null) {
-                        if(mention.db.lastMention == null
-                            || Duration(mention.db.lastMention, Instant.now()) > Duration.standardHours(6)) {
+
+                        val rolePart = if(mention.discord != null
+                            && (mention.db.lastMention == null
+                                    || Duration(mention.db.lastMention, Instant.now()) > Duration.standardHours(6))) {
+
                             mention.db.lastMention = DateTime.now()
-                            withContent(mention.discord.mention)
-                        } else this
+                            mention.discord.mention.plus(" ")
+                        } else ""
+                        val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                        withContent("$rolePart$textPart")
                     } else this
                 }
                 .withEmbeds(

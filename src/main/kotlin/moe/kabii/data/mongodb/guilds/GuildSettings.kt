@@ -9,7 +9,6 @@ data class GuildSettings(
     var utilizeInvites: Boolean = false,
     var utilizeAuditLogs: Boolean = true,
     var publishTrackerMessages: Boolean = false,
-    var reactionTranslations: Boolean = true,
     var ps2Commands: Boolean = false
 )
 

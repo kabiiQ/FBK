@@ -8,6 +8,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
@@ -26,6 +27,11 @@ object JoinLogger {
 
     suspend fun handleJoin(clientId: Int, member: Member) {
         val config = GuildConfigurations.getOrCreateGuild(clientId, member.guildId.asLong())
+
+        val memberCount = GuildMemberCounts[member.guildId.asLong()]
+        if(memberCount != null) {
+            GuildMemberCounts[member.guildId.asLong()] = memberCount + 1
+        }
 
         // create user log entry
         val memberId = member.id.asLong()

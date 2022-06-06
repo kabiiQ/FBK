@@ -42,10 +42,6 @@ object TwitterConfig : Command("twitter") {
         BooleanElement("Automatically request a translation for posted tweets",
             "translate",
             TwitterSettings::autoTranslate
-        ),
-        BooleanElement("Receive Tweet updates faster (for high priority feeds)",
-            "stream",
-            TwitterSettings::streamFeeds
         )
     )
 
@@ -64,8 +60,6 @@ object TwitterConfig : Command("twitter") {
                 TwitterConfigModule,
                 twitter
             )
-
-            val wasStream = twitter.streamFeeds
 
             if(configurator.run(this)) {
                 config.save()

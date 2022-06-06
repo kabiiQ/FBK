@@ -9,6 +9,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.auditlog.LogWatcher
@@ -29,6 +30,11 @@ object PartLogger {
 
     suspend fun handlePart(client: FBK, guild: Snowflake, user: User, member: Member?) {
         val config = GuildConfigurations.getOrCreateGuild(client.clientId, guild.asLong())
+
+        val memberCount = GuildMemberCounts[guild.asLong()]
+        if(memberCount != null) {
+            GuildMemberCounts[guild.asLong()] = memberCount - 1
+        }
 
         // save current roles if this setting is enabled
         if(config.guildSettings.reassignRoles && member != null) {

@@ -147,12 +147,19 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                 .run {
                     if(features.thumbnails) withImage(movie.thumbnailUrl) else withThumbnail(movie.thumbnailUrl)
                 }
-            val mentionMessage = if(mention != null
-                && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+
+            val mentionMessage = if(mention != null) {
+
+                val rolePart = if(mention.discord != null
+                    && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
                     mention.db.lastMention = DateTime.now()
-                    chan.createMessage(mention.discord.mention)
-                } else chan.createMessage()
+                    mention.discord.mention.plus(" ")
+                } else ""
+                val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                chan.createMessage("$rolePart$textPart")
+
+            } else chan.createMessage()
 
             val newNotification = mentionMessage
                 .withEmbeds(embed)

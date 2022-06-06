@@ -17,9 +17,12 @@ object TrackPlay : AudioCommandContainer {
 
             chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
+                event.deferReply().awaitAction()
                 val voice = AudioStateUtil.checkAndJoinVoice(this)
                 if(voice is AudioStateUtil.VoiceValidation.Failure) {
-                    ereply(Embeds.error(voice.error)).awaitSingle()
+                    event.editReply()
+                        .withEmbeds(Embeds.error(voice.error))
+                        .awaitSingle()
                     return@chat
                 }
                 // grab attachment or "song"
@@ -29,20 +32,19 @@ object TrackPlay : AudioCommandContainer {
                     args.optBool("forceplay") == true -> {
                         channelVerify(Permission.MANAGE_MESSAGES)
                         if(!member.hasPermissions(guildChan, Permission.MANAGE_MESSAGES)) {
-                            ereply(Embeds.error("You must be a channel moderator to force-play tracks.")).awaitSingle()
+                            event.editReply()
+                                .withEmbeds(Embeds.error("You must be a channel moderator to force-play tracks."))
+                                .awaitSingle()
                             return@chat
                         }
-                        event.deferReply().awaitAction()
                         AudioManager.manager.loadItem(query.url, ForcePlayTrackLoader(this, query))
                     }
                     args.optBool("playlist") == true -> {
-                        event.deferReply().awaitAction()
                         val songArg = args.string("song")
                         val playlist = ExtractedQuery.default(songArg)
                         AudioManager.manager.loadItem(songArg, PlaylistTrackLoader(this, extract = playlist))
                     }
                     else -> {
-                        event.deferReply().awaitAction()
                         // adds a song to the end of queue (front if next=true)
                         val playNextArg = args.optBool("next")
                         val position = if(playNextArg == true) 0 else null // default (null) -> false
