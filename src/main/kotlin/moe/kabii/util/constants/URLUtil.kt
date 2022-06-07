@@ -10,6 +10,7 @@ object URLUtil {
         object Youtube {
             fun thumbnail(videoID: String) = "https://i.ytimg.com/vi/$videoID/maxresdefault.jpg"
             fun channel(id: String) = "https://youtube.com/channel/$id"
+            fun video(id: String) = "https://youtube.com/watch?v=$id"
         }
 
         object Twitch {

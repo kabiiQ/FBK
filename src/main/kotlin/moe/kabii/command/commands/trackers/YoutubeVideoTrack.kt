@@ -12,6 +12,7 @@ import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.videos.youtube.YoutubeParser
+import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
@@ -67,8 +68,9 @@ object YoutubeVideoTrack : Command("trackvid") {
                 YoutubeVideoTrack.insertOrUpdate(client.clientId, dbVideo, discordChannel, dbUser, mentionRole?.id?.asLong())
             }
 
-            val mentioning = if(mentionRole != null) ", mentioning **${mentionRole.name}**." else "."
-            ireply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/**${ytVideo.id}** goes live$mentioning")).awaitSingle()
+            val videoUrl = URLUtil.StreamingSites.Youtube.video(ytVideo.id)
+            val mentioning = if(mentionRole != null) mentionRole.name else "you"
+            ireply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live, mentioning **$mentioning**.")).awaitSingle()
         }
     }
 }
