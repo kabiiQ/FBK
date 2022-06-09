@@ -23,7 +23,6 @@ data class FeatureChannel(
     var streamTargetChannel: Boolean = true,
     var twitterTargetChannel: Boolean = true,
     var animeTargetChannel: Boolean = true,
-    var ps2Channel: Boolean = true,
 
     // other commands
     var musicChannel: Boolean = false,
@@ -41,6 +40,7 @@ data class FeatureChannel(
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
     fun anyEnabled() = booleanArrayOf(musicChannel, tempChannelCreation, logChannel).any(true::equals)
+    fun anyDefaultDisabled() = booleanArrayOf(streamTargetChannel, twitterTargetChannel, animeTargetChannel).any(false::equals)
 
     fun defaultTracker() = trackerDefault?.run(TargetArguments::get)
 
