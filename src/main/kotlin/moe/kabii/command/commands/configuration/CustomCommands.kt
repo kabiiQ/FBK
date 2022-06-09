@@ -6,8 +6,10 @@ import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.registration.GuildCommandRegistrar
 import moe.kabii.command.verify
+import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.CustomCommand
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.extensions.toAutoCompleteSuggestions
 
 object CustomCommands : Command("customcommand") {
     override val wikiPath = "Custom-Commands"
@@ -21,12 +23,23 @@ object CustomCommands : Command("customcommand") {
                 "list" -> listCommands(this)
             }
         }
+
+        autoComplete {
+            // for "remove", list existing commands
+            val commands = GuildConfigurations
+                .getOrCreateGuild(client.clientId, guildId!!)
+                .guildCustomCommands
+                .commands
+                .map(CustomCommand::name)
+                .toAutoCompleteSuggestions()
+            suggest(commands)
+        }
     }
 
     private suspend fun addCommand(origin: DiscordParameters) = with(origin) {
         val args = subArgs(subCommand)
         val commandName = args.string("command").split(" ")[0].lowercase()
-        val commandResponse = args.string("response")
+        val commandResponse = args.string("response").replace("\\n", "\n")
         val commandDescription = args.optStr("description") ?: "Custom '$commandName' command."
         val ephemeral = args.optBool("private") ?: false
 
@@ -71,7 +84,7 @@ object CustomCommands : Command("customcommand") {
         } else {
             val commandList = commands.joinToString("\n", transform = { command ->
                 val restricted = if(command.ephemeral) "(sent privately) " else ""
-                "$restricted**/${command.name}**: ${command.description} **->** ${command.response}"
+                "$restricted**/${command.name}**: ${command.description}"
             })
             ireply(
                 Embeds.fbk(commandList).withTitle("Custom commands for ${target.name}")
