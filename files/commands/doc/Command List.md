@@ -365,6 +365,13 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
+### - `/configs`:
+
+- List available FBK configuration commands.
+- Wiki: [[https://github.com/kabiiQ/FBK/wiki/Configuration-Commands]]
+
+
+
 ### - `/customcommand`:
 
 - Add or remove basic custom commands

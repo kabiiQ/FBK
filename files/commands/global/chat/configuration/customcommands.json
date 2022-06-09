@@ -42,7 +42,8 @@
                     "name": "command",
                     "description": "The name of the custom command to be removed.",
                     "type": 3,
-                    "required": true
+                    "required": true,
+                    "autocomplete": true
                 }
             ]
         },
