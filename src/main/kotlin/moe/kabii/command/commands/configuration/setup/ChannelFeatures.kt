@@ -72,7 +72,11 @@ object ChannelFeatures : CommandContainer {
                 channelVerify(Permission.MANAGE_CHANNELS)
                 val features = config.options.featureChannels
                 val channels = features.toMap()
-                    .filter { (_, features) -> features.anyEnabled() }
+                    .filter { (_, features) ->
+                        features.anyEnabled()
+                                || features.anyDefaultDisabled()
+                                || !features.locked
+                    }
                     .mapNotNull { (id, channel) ->
                         when(val result = target.getChannelById(id.snowflake).tryAwait()) {
                             is Ok -> {
@@ -90,15 +94,19 @@ object ChannelFeatures : CommandContainer {
                     }
 
                 if(channels.isEmpty()) {
-                    ereply(Embeds.fbk("There are no channel-specific features enabled in **${target.name}**.")).awaitSingle()
+                    ereply(Embeds.fbk("There are no modifications to channel-specific features in **${target.name}**.")).awaitSingle()
                     return@chat
                 }
                 val fields = channels.map { (channel, features) ->
                     val codes = StringBuilder()
                     with(features) {
-                        if(logChannel) codes.append("Event Log Channel (log)\n")
-                        if(musicChannel) codes.append("Music Commands (music)\n")
-                        if(tempChannelCreation) codes.append("Temporary VC Commands (temp)\n")
+                        if(logChannel) codes.appendLine("**Enabled:** Event Log Channel (log)")
+                        if(musicChannel) codes.appendLine("**Enabled:** Music Commands (music)")
+                        if(tempChannelCreation) codes.appendLine("**Enabled:** Temporary VC Commands (temp)")
+                        if(!streamTargetChannel) codes.appendLine("**Disabled:** livestream tracker")
+                        if(!twitterTargetChannel) codes.appendLine("**Disabled:** Twitter feed tracker")
+                        if(!animeTargetChannel) codes.appendLine("**Disabled:** anime list tracker")
+                        if(!locked) codes.appendLine("Tracker usage **UNLOCKED** for all users")
                     }
                     EmbedCreateFields.Field.of("#${channel.name}", codes.toString().trim(), true)
                 }
