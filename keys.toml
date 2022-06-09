@@ -90,3 +90,6 @@ wolfram_appid = ''
 root_oauth_uri = ''
 port_block_start = ''
 oauth_signing_key = ''
+
+[mal]
+mal_client_id = ''

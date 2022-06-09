@@ -8,13 +8,16 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
 open class MediaListIOException(override val message: String, override val cause: Throwable? = null) : IOException()
 class MediaListDeletedException(message: String) : MediaListIOException(message)
 
-abstract class MediaListParser {
+typealias Authenticator = (Request.Builder) -> Request.Builder
+
+abstract class MediaListParser(val authenticator: Authenticator? = null) {
     @Throws(MediaListDeletedException::class, MediaListIOException::class, IOException::class)
     abstract suspend fun parse(id: String): MediaList?
     abstract fun getListID(input: String): String?
@@ -22,6 +25,7 @@ abstract class MediaListParser {
     suspend fun <R: Any> requestMediaList(requestStr: String, translator: (Response) -> Result<R?, Long>): R? {
         val request = newRequestBuilder()
             .get()
+            .run { authenticator?.invoke(this) ?: this }
             .url(requestStr)
             .build()
 

@@ -8,7 +8,6 @@ import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.command.registration.GuildCommandRegistrar
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.GuildSettings
-import moe.kabii.util.constants.EmojiCharacters
 
 object GuildFeatures : Command("servercfg") {
     override val wikiPath = "Configuration-Commands#the-serverconfig-command"

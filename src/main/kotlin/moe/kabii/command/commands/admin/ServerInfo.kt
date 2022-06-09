@@ -6,8 +6,6 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin
 import moe.kabii.discord.pagination.PaginationUtil
-import moe.kabii.instances.FBK
-import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
 
 object ServerInfo : Command("servers") {

@@ -2,34 +2,36 @@ package moe.kabii.trackers.anime.mal
 
 import kotlinx.coroutines.delay
 import moe.kabii.MOSHI
-import moe.kabii.rusty.Err
+import moe.kabii.data.flat.Keys
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.anime.*
 import moe.kabii.util.extensions.fromJsonSafe
 import java.io.IOException
 
-object MALParser : MediaListParser() {
-    const val callCooldown = 4_000L
+object MALParser : MediaListParser(
+    authenticator = { request ->
+        request.header("X-MAL-CLIENT-ID", Keys.config[Keys.MAL.malKey])
+    }
+) {
+    const val callCooldown = 500L
 
-    override fun getListID(input: String): String = input // mal does not have an offical api and thus no 'id' system. we just store name and can not track if a username changes.
+    override fun getListID(input: String): String = input // mal does not use an 'id' system for api - just use username
 
-    private val animeListAdapter = MOSHI.adapter(MALMapping.MALAnimeList::class.java)
-    private val mangaListAdapter = MOSHI.adapter(MALMapping.MALMangaList::class.java)
+    private val animeListAdapter = MOSHI.adapter(MALAPIMapping.AnimeListResponse::class.java)
+    private val mangaListAdapter = MOSHI.adapter(MALAPIMapping.MangaListResponse::class.java)
 
     @Throws(MediaListDeletedException::class, MediaListIOException::class, IOException::class)
     override suspend fun parse(id: String): MediaList? {
-        // at this time the api offers no way to know how many pages there are, or to safely know we are on the last page
-        // (technically we could check if entries < 300 but that number could change in the future?) so we must make the request and see if it is empty.
-        var page = 1
-        val animes = mutableListOf<MALMapping.MALAnimeList.MALAnime>()
-        do {
-            if(page > 1) delay(callCooldown)
-            val animeRequest = "http://127.0.0.1:8000/v3/user/$id/animelist/all/$page"
+        var first = true
+        val animes = mutableListOf<MALAPIMapping.UserAnimeListEdge>()
+        var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status,main_picture,num_episodes,mean&limit=1000"
+        while(animeRequest != null) {
+            if(first) first = false
+            else delay(callCooldown)
             val responseBody = requestMediaList(animeRequest) { response ->
                 return@requestMediaList if (!response.isSuccessful) {
                     when (response.code) {
-                        400 -> throw MediaListDeletedException("MAL: response code 400 for list '$id'") // currently 400 bad request from MAL means list does not exist
-                        429 -> Err(2000L) // if jikan is being rate limited by mal, we wait arbitrary amount of time
+                        404 -> throw MediaListDeletedException("MAL: Response code 404 for list '$id'")
                         else -> throw MediaListIOException(response.message)
                     }
                 } else {
@@ -37,47 +39,42 @@ object MALParser : MediaListParser() {
                 }
             }
 
-            val animeListPage =
-                animeListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break // break early if no more pages to avoid delay
-            animes.addAll(animeListPage.anime)
-            page++
-        } while(animeListPage.anime.isNotEmpty()) // break if no more page
+            val animeListPage = animeListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break
+            animes.addAll(animeListPage.data)
+            animeRequest = animeListPage.paging?.next
+        }
 
-        page = 1
-        val mangas = mutableListOf<MALMapping.MALMangaList.MALManga>()
-        do {
+        val mangas = mutableListOf<MALAPIMapping.UserMangaListEdge>()
+        var mangaRequest: String? = "https://api.myanimelist.net/v2/users/$id/mangalist?fields=node,list_status,main_picture,mean,num_volumes,num_chapters&limit=1000"
+        while(mangaRequest != null) {
             delay(callCooldown)
-            val mangaRequest = "http://127.0.0.1:8000/v3/user/$id/mangalist/all/$page"
             val responseBody = requestMediaList(mangaRequest) { response ->
-                if(!response.isSuccessful) {
-                    return@requestMediaList if(response.code == 429) Err(2000L)
-                    else throw MediaListIOException(response.message)
-                }
-                Ok(response.body!!.string())
+                // should not return 404 - list already exists if anime stage did not 404
+                // if we already got the anime list, but manga can not be acquired, still return nothing
+                // we do not want the list watcher to recieve empty manga list - this would be perceived as an update
+                if(!response.isSuccessful) throw MediaListIOException(response.message)
+                else Ok(response.body!!.string())
             }
 
-            // if we already got the anime list, but manga can not be acquired, still return nothing
-            // we do not want the list watcher to recieve empty manga list - this would be perceived as an update
-            val mangaListPage =
-                mangaListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break
-            mangas.addAll(mangaListPage.manga)
-            page++
-        } while(mangaListPage.manga.isNotEmpty())
+            val mangaListPage = mangaListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break
+            mangas.addAll(mangaListPage.data)
+            mangaRequest = mangaListPage.paging?.next
+        }
 
         // convert mal object to our general media object type
         val media = mutableListOf<Media>()
         animes.mapTo(media) { anime ->
             with(anime) {
                 Media(
-                    title,
-                    url,
-                    image_url,
-                    score.toFloat(),
-                    is_rewatching,
-                    watched_episodes.toShort(),
-                    total_episodes.toShort(),
-                    parseMALStatus(watching_status),
-                    mal_id,
+                    node.title,
+                    "https://myanimelist.net/anime/${node.id}",
+                    node.image?.image ?: "",
+                    listStatus.score.toFloat(),
+                    listStatus.rewatching,
+                    listStatus.watched.toShort(),
+                    node.numEpisodes?.toShort() ?: 0,
+                    parseMALStatus(listStatus.status) ?: ConsumptionStatus.PTW,
+                    node.id,
                     MediaType.ANIME,
                     0,
                     0
@@ -87,30 +84,30 @@ object MALParser : MediaListParser() {
         mangas.mapTo(media) { manga ->
             with(manga) {
                 Media(
-                    title,
-                    url,
-                    image_url,
-                    if (score == 0) null else score.toFloat(),
-                    is_rereading,
-                    read_chapters.toShort(),
-                    total_chapters.toShort(),
-                    parseMALStatus(reading_status),
-                    mal_id,
+                    node.title,
+                    "https://myanimelist.net/manga/${node.id}",
+                    node.image?.image ?: "",
+                    listStatus.score.toFloat(),
+                    listStatus.rereading,
+                    listStatus.chaptersRead.toShort(),
+                    node.numChapters?.toShort() ?: 0,
+                    parseMALStatus(listStatus.status) ?: ConsumptionStatus.PTW,
+                    node.id,
                     MediaType.MANGA,
-                    read_volumes.toShort(),
-                    total_volumes.toShort()
+                    listStatus.volumesRead.toShort(),
+                    node.numVolumes?.toShort() ?: 0
                 )
             }
         }
         return if(animes.isNotEmpty() || mangas.isNotEmpty()) MediaList(media) else null
     }
 
-    private fun parseMALStatus(status: Int): ConsumptionStatus = when (status) {
-        1 -> ConsumptionStatus.WATCHING
-        2 -> ConsumptionStatus.COMPLETED
-        3 -> ConsumptionStatus.HOLD
-        4 -> ConsumptionStatus.DROPPED
-        6 -> ConsumptionStatus.PTW
-        else -> error("Invalid MAL Object.")
+    private fun parseMALStatus(apiStatus: String?): ConsumptionStatus? = when(apiStatus?.lowercase()) {
+        "watching", "reading" -> ConsumptionStatus.WATCHING
+        "completed" -> ConsumptionStatus.COMPLETED
+        "on_hold"-> ConsumptionStatus.HOLD
+        "dropped" -> ConsumptionStatus.DROPPED
+        "plan_to_watch", "plan_to_read" -> ConsumptionStatus.PTW
+        else -> null
     }
 }

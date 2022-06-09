@@ -5,7 +5,6 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
-import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.util.Embeds

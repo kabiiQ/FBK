@@ -87,7 +87,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
         val malDelay = ServiceRequestCooldownSpec(
             callDelay = MALParser.callCooldown,
-            minimumRepeatTime = 180_000L
+            minimumRepeatTime = 30_000L
         )
         val malChecker = ListServiceChecker(ListSite.MAL, discord, malDelay)
         val malThread = Thread(malChecker, "MediaListWatcher-MAL")

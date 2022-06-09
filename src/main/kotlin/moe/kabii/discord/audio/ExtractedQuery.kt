@@ -1,7 +1,6 @@
 package moe.kabii.discord.audio
 
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.mongodb.guilds.MusicSettings
 import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.orNull
 

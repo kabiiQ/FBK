@@ -90,6 +90,9 @@ object Keys : ConfigSpec("") {
     object Dev : ConfigSpec() {
         val host by required<Boolean>("host_internal_servers")
     }
+    object MAL : ConfigSpec() {
+        val malKey by required<String>("mal_client_id")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {
