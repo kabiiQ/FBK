@@ -66,7 +66,7 @@ class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatIn
                 } catch (feat: ChannelFeatureDisabledException) {
                     //val channelMod = feat.origin.member.hasPermissions(feat.origin.guildChan, Permission.MANAGE_CHANNELS)
                     //val enableNotice = if(channelMod) "\nChannel moderators+ can enable this feature using **${prefix}feature ${feat.feature} enable**." else ""
-                    val enableNotice = "\nChannel moderators+ can enable this feature using **/feature ${feat.feature} enable**."
+                    val enableNotice = "\nChannel moderators+ can enable this feature using **/feature ${feat.feature} Enabled**."
 
                     val channels = if(feat.listChannels != null) {
                         feat.origin.config.options

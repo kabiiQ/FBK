@@ -58,10 +58,9 @@ sealed class StreamingTarget(
     val serviceColor: Color,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
-    featureName: String,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, channelFeature, featureName, url, *alias) {
+) : TrackerTarget(full, channelFeature, "streams", url, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: TrackedStreams.DBSite
@@ -78,7 +77,6 @@ object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     "Twitch",
     FeatureChannel::streamTargetChannel,
-    "twitch",
     listOf(
         Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
     ),
@@ -119,7 +117,6 @@ object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::streamTargetChannel,
-    "youtube",
     listOf(
         Regex(youtubeRegex),
         Regex("youtube.com/channel/$youtubeRegex")
@@ -154,7 +151,6 @@ object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
     "TwitCasting",
     FeatureChannel::streamTargetChannel,
-    "twitcasting",
     listOf(
         Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})"),
         Regex("twitcasting.tv/([a-z0-9_]{4,18})"),
@@ -191,7 +187,6 @@ object TwitterSpaceTarget : StreamingTarget(
     TwitterParser.color,
     "Twitter Spaces",
     FeatureChannel::streamTargetChannel,
-    "spaces",
     listOf(),
     "spaces", "twitterspace", "twitterspaces", "twitter_space", "twitter_spaces", "space"
 ) {
