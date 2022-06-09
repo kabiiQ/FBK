@@ -42,7 +42,7 @@ object CommandInfo : Command("help") {
         val fields = mutableListOf<EmbedCreateFields.Field>()
         fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
 
-        val wikiPage = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${command.name}"
+        val wikiPage = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${match.name}"
         ereply(
             Embeds.fbk()
                 .withTitle("Command information: ${match.name}")
