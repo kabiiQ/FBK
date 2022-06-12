@@ -72,7 +72,7 @@ object YoutubeParser {
         return videoIds.chunked(20).map { idChunk ->
             val idsPart = idChunk.joinToString(",")
             val request = try {
-                requestJson<YoutubeVideoResponse>("videos?part=snippet,contentDetails,liveStreamingDetails&id=$idsPart")
+                requestJson<YoutubeVideoResponse>("videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=$idsPart")
             } catch(e: Exception) {
                 LOG.warn("Error making YouTube request: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -108,7 +108,8 @@ object YoutubeParser {
                             id = match.snippet.channelId,
                             name = match.snippet.channelTitle,
                             avatar = null
-                        )
+                        ),
+                        memberLimited = match.statistics.membership
                     )
                     Ok(video)
                 } else Err(StreamErr.NotFound)

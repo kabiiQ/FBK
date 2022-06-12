@@ -99,7 +99,8 @@ object SetMentionRole : Command("setmention") {
                         (TrackedStreams.Mentions.guild eq dbGuild.id)
             }.firstOrNull()
 
-            if(roleArg == null && textArg == null) {
+            val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
+            if(roleArg == null && textArg == null && membershipRoleArg == null) {
                 // unset role
                 existingMention?.delete()
                 "**removed**"
@@ -108,12 +109,14 @@ object SetMentionRole : Command("setmention") {
                 if(existingMention != null) {
                     existingMention.mentionRole = roleArg?.id?.asLong()
                     existingMention.mentionText = textArg
+                    existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
                 } else {
                     TrackedStreams.Mention.new {
                         this.stream = matchingTarget.streamChannel
                         this.guild = dbGuild
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
+                        this.mentionRoleMember = membershipRoleArg?.id?.asLong()
                     }
                 }
                 val role = roleArg?.run {"**$name**" } ?: ""

@@ -24,6 +24,7 @@ data class YoutubeVideoInfo(
     val published: Instant,
     val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
+    val memberLimited: Boolean
 ) {
     val url = "https://youtube.com/watch?v=$id"
 }

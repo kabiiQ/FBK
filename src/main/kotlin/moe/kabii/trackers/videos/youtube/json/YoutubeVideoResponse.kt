@@ -15,6 +15,7 @@ data class YoutubeVideo(
     val id: String,
     val snippet: YoutubeVideoSnippet,
     val contentDetails: YoutubeVideoContentDetails,
+    val statistics: YoutubeVideoStatistics,
     val liveStreamingDetails: YoutubeVideoLiveDetails?
 ) {
     @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration.toMillis() > 0
@@ -42,6 +43,13 @@ data class YoutubeVideoContentDetails(
     @Json(name="duration") val _rawDuration: String
 ) {
     @Transient val duration: Duration = Duration.parse(_rawDuration)
+}
+
+@JsonClass(generateAdapter = true)
+data class YoutubeVideoStatistics(
+    val viewCount: String?
+) {
+    @Transient val membership = viewCount == null
 }
 
 @JsonClass(generateAdapter = true)

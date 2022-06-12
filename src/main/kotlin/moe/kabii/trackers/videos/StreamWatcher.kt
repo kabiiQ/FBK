@@ -96,16 +96,17 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     data class MentionRole(val db: TrackedStreams.Mention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings): MentionRole? {
+    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
         val dbRole = dbStream.mentionRoles
             .firstOrNull { men -> men.guild.guildID == guildId }
         return if(dbRole != null) {
-            val role = if(dbRole.mentionRole != null) {
+            val mentionRole = if(memberLimit) dbRole.mentionRoleMember else dbRole.mentionRole
+            val role = if(mentionRole != null) {
                 targetChannel.toMono()
                     .ofType(GuildChannel::class.java)
                     .flatMap(GuildChannel::getGuild)
-                    .flatMap { guild -> guild.getRoleById(dbRole.mentionRole!!.snowflake) }
+                    .flatMap { guild -> guild.getRoleById(mentionRole.snowflake) }
                     .tryAwait()
             } else null
             when(role) {
@@ -114,7 +115,9 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     val err = role.value
                     if(err is ClientException && err.status.code() == 404) {
                         // role has been deleted, remove configuration
-                        dbRole.delete()
+                        if(dbRole.mentionRole == mentionRole) dbRole.mentionRole = null
+                        if(dbRole.mentionRoleMember == mentionRole) dbRole.mentionRoleMember = null
+                        if(dbRole.mentionRole == null && dbRole.mentionRoleMember == null && dbRole.mentionText == null) dbRole.delete()
                     }
                     MentionRole(dbRole, null)
                 }

@@ -115,6 +115,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                                     // stream has ended and vod is available - edit notifications to reflect
                                     val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
                                     val durationStr = DurationFormatter(video.duration).colonTime
+                                    val memberStream = if(video.memberLimited) "Members-only content.\n" else ""
 
                                     withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
                                         .withUrl(video.url)
@@ -123,7 +124,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                                             val timestamp = video.liveInfo?.endTime
                                             if(timestamp != null) withTimestamp(timestamp) else this
                                         }
-                                        .withDescription("Video available: [$durationStr]")
+                                        .withDescription("${memberStream}Video available: [$durationStr]")
                                         .withTitle(video.title)
                                         .withThumbnail(video.thumbnail)
                                 } else {
@@ -298,7 +299,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // get mention role from db if one is registered
         val mentionRole = if(guildId != null) {
-            getMentionRoleFor(target.streamChannel, guildId, chan, features)
+            getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = video.memberLimited)
         } else null
 
         val new = try {
@@ -405,7 +406,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val mention = if(guildId != null) {
             val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
             if(old == true) null
-            else getMentionRoleFor(target.streamChannel, guildId, chan, features)
+            else getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = liveStream.memberLimited)
         } else null
 
         try {
@@ -414,6 +415,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val startTime = liveStream.liveInfo?.startTime
             val sinceStr = if(startTime != null) " since " else " "
 
+            if(liveStream.memberLimited) {
+                LOG.info("Member limited stream detected: ${liveStream.url}")
+                LOG.info(liveStream.toString())
+            }
             val liveMessage = when {
                 liveStream.premiere -> " is premiering a new video!"
                 new -> " went live!"
