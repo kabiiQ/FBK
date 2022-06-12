@@ -77,7 +77,8 @@ object MALParser : MediaListParser(
                     node.id,
                     MediaType.ANIME,
                     0,
-                    0
+                    0,
+                    meanScore = node.mean
                 )
             }
         }
@@ -95,7 +96,8 @@ object MALParser : MediaListParser(
                     node.id,
                     MediaType.MANGA,
                     listStatus.volumesRead.toShort(),
-                    node.numVolumes?.toShort() ?: 0
+                    node.numVolumes?.toShort() ?: 0,
+                    meanScore = node.mean
                 )
             }
         }

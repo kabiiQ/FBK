@@ -51,7 +51,7 @@ object MALAPIMapping {
         val id: Int,
         val title: String,
         @Json(name = "main_picture") val image: Picture?,
-        val mean: Double,
+        val mean: Float,
         @Json(name = "num_episodes") val numEpisodes: Int?,
         @Json(name = "num_volumes") val numVolumes: Int?,
         @Json(name = "num_chapters") val numChapters: Int?

@@ -37,6 +37,10 @@ class MediaEmbedBuilder(val media: Media) {
                 footer.append(oldScore).append(" -> ")
             }
             footer.append(media.scoreStr())
+            if(media.meanScore > 0.0f) {
+                val avgScore = "%.1f".format(media.meanScore)
+                footer.append(" (average: $avgScore)")
+            }
             withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))
         }
 }
