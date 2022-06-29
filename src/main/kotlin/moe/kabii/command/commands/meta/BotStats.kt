@@ -46,12 +46,15 @@ object BotStats : CommandContainer {
 
         init {
             chat {
-                val guilds = event.client.guilds
-                    .map(Guild::getMemberCount)
-                    .collectList()
-                    .awaitSingle()
+                val instances = handler.instances.all().size
+                val guilds = handler.instances.all()
+                    .flatMap { instance ->
+                        instance.client.guilds
+                            .map(Guild::getMemberCount)
+                            .collectList()
+                            .awaitSingle()
+                    }
                 val guildCount = guilds.count().toString()
-                val shards = event.client.gatewayClientGroup.shardCount
                 val users = guilds.sum().toString()
                 val build = MetaData.buildInfo
 
@@ -64,9 +67,9 @@ object BotStats : CommandContainer {
 
                 ereply(
                     Embeds.fbk().withFields(mutableListOf(
-                        EmbedCreateFields.Field.of("Process Uptime", connection, true),
-                        EmbedCreateFields.Field.of("Connection Uptime", reconnection, true),
-                        EmbedCreateFields.Field.of("Discord Shards", shards.toString(), false),
+                        EmbedCreateFields.Field.of("Last Restart", connection, true),
+                        EmbedCreateFields.Field.of("Last Reconnection", reconnection, true),
+                        EmbedCreateFields.Field.of("Bot Instances", instances.toString(), false),
                         EmbedCreateFields.Field.of("Guild Count", guildCount, true),
                         EmbedCreateFields.Field.of("Users Served", users, true),
                         EmbedCreateFields.Field.of("Build Info", build, false)

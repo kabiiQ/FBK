@@ -41,7 +41,7 @@ object MALParser : MediaListParser(
                 }
             }
 
-            val animeListPage = animeListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break
+            val animeListPage = animeListAdapter.fromJsonSafe(responseBody!!).orNull() ?: return null
             animes.addAll(animeListPage.data)
             animeRequest = animeListPage.paging?.next
         }
@@ -58,7 +58,7 @@ object MALParser : MediaListParser(
                 else Ok(response.body!!.string())
             }
 
-            val mangaListPage = mangaListAdapter.fromJsonSafe(responseBody!!).orNull() ?: break
+            val mangaListPage = mangaListAdapter.fromJsonSafe(responseBody!!).orNull() ?: return null
             mangas.addAll(mangaListPage.data)
             mangaRequest = mangaListPage.paging?.next
         }
