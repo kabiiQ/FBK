@@ -20,6 +20,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
+import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
@@ -119,13 +120,17 @@ object SetMentionRole : Command("setmention") {
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
                     }
                 }
-                val role = roleArg?.run {"**$name**" } ?: ""
+                val youtubeDetail = if(site is YoutubeTarget) {
+                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams/videos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams."
+                } else ""
+
+                val role = roleArg?.run {"**$name**" } ?: "NONE"
                 val text = textArg?.run(" "::plus) ?: ""
-                "set to $role$text"
+                "set to $role$text.$youtubeDetail"
             }
         }
 
-        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr.")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr")).awaitSingle()
     }
 
     private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {

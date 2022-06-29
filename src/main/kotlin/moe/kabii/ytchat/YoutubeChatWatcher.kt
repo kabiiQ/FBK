@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
@@ -12,6 +13,7 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.internal.ytchat.HoloChats
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
@@ -64,6 +66,8 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
         require(chatScript.exists()) { "YouTube chat script not found! ${chatScript.absolutePath}" }
         applicationLoop {
             val watchChatRooms = propagateTransaction {
+
+                val chatRooms = mutableMapOf<String, YTChatRoom>()
                 // get all youtube videos that have a yt channel with a connected membership
                 YoutubeVideos
                     .innerJoin(MembershipConfigurations, { ytChannel }, { streamChannel })
@@ -73,7 +77,21 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     }
                     .withDistinct(true)
                     .map { row -> YTChatRoom(YoutubeVideo.wrapRow(row)) }
-                    .associateBy(YTChatRoom::videoId)
+                    .associateByTo(chatRooms, YTChatRoom::videoId)
+
+                // get all youtube videos that have a yt channel associated with the holochat service
+                val holochatYtIds = holochats.chatChannels.keys
+                YoutubeVideos
+                    .innerJoin(TrackedStreams.StreamChannels)
+                    .select {
+                        TrackedStreams.StreamChannels.siteChannelID inList holochatYtIds and
+                                (YoutubeVideos.liveEvent neq null or (YoutubeVideos.scheduledEvent neq null))
+                    }
+                    .withDistinct(true)
+                    .map { row -> YTChatRoom(YoutubeVideo.wrapRow(row)) }
+                    .associateByTo(chatRooms, YTChatRoom::videoId)
+
+                chatRooms
             }
 
             // end old chat listeners

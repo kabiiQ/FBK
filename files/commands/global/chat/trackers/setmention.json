@@ -16,6 +16,12 @@
             "required": false
         },
         {
+            "name": "membershiprole",
+            "description": "A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.",
+            "type": 8,
+            "required": false
+        },
+        {
             "name": "text",
             "description": "Text to be included along with the ping. If empty, any existing text will be removed.",
             "type": 3,

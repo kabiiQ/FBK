@@ -109,8 +109,8 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     .flatMap { guild -> guild.getRoleById(mentionRole.snowflake) }
                     .tryAwait()
             } else null
-            when(role) {
-                is Ok -> MentionRole(dbRole, role.value)
+            val discordRole = when(role) {
+                is Ok -> role.value
                 is Err -> {
                     val err = role.value
                     if(err is ClientException && err.status.code() == 404) {
@@ -119,10 +119,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                         if(dbRole.mentionRoleMember == mentionRole) dbRole.mentionRoleMember = null
                         if(dbRole.mentionRole == null && dbRole.mentionRoleMember == null && dbRole.mentionText == null) dbRole.delete()
                     }
-                    MentionRole(dbRole, null)
+                    null
                 }
                 null -> null
             }
+            MentionRole(dbRole, discordRole)
         } else null
     }
 
