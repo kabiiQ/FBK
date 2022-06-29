@@ -104,9 +104,13 @@ data class TwitterSettings(
     var displayReplies: Boolean = false,
     var displayQuote: Boolean = true,
     var displayRetweet: Boolean = false,
-    var mentionRoles: Boolean = true,
     var mediaOnly: Boolean = false,
-    var autoTranslate: Boolean = false
+    var autoTranslate: Boolean = false,
+    var mentionRoles: Boolean = true,
+    var mentionTweets: Boolean = true,
+    var mentionReplies: Boolean = true,
+    var mentionQuotes: Boolean = true,
+    var mentionRetweets: Boolean = false,
 )
 
 data class ChannelMark(

@@ -31,10 +31,6 @@ object TwitterConfig : Command("twitter") {
             "replies",
             TwitterSettings::displayReplies
         ),
-        BooleanElement("Use the `setmention` config in this channel",
-            "pings",
-            TwitterSettings::mentionRoles
-        ),
         BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
             "mediaonly",
             TwitterSettings::mediaOnly
