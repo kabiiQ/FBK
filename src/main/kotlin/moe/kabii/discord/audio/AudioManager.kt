@@ -4,12 +4,14 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeHttpContextFilter
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import discord4j.voice.AudioProvider
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.instances.FBK
 import java.nio.ByteBuffer
@@ -25,6 +27,9 @@ object AudioManager {
 
     init {
         AudioSourceManagers.registerRemoteSources(manager)
+        // configure filter to access age-restricted videos
+        YoutubeHttpContextFilter.setPAPISID(Keys.config[Keys.Youtube.filterPAPIS])
+        YoutubeHttpContextFilter.setPSID(Keys.config[Keys.Youtube.filterPS])
     }
 
     internal fun createAudioComponents(): AudioComponents {
@@ -39,9 +44,8 @@ object AudioManager {
                     // track marker hooks for "sample" command
                     if(player.playingTrack != null) {
                         val data = player.playingTrack.userData as? QueueData ?: return@also
-                        val endMarker = data.endMarkerMillis
-                        if(endMarker != null) {
-                            val diff = frame.timecode - endMarker
+                        if(data.endMarkerMillis != null) {
+                            val diff = frame.timecode - data.endMarkerMillis!!
                             if(diff in 0..100) {
                                 data.endMarkerMillis = null
                                 player.stopTrack()
