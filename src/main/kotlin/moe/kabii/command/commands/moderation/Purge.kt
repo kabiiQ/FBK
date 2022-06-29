@@ -25,7 +25,7 @@ object Purge : CommandContainer {
         val skipped = messages
             .filterNot(Message::isPinned)
             .doOnNext { message ->
-                users.add(message.author.get().id)
+                message.author.orNull()?.id?.run(users::add)
                 messageCount++
             }
             .map(Message::getId)
@@ -33,7 +33,10 @@ object Purge : CommandContainer {
             .collectList()
             .awaitSingle()
         val warnSkip = if(skipped.isNotEmpty()) " ${skipped.size} messages were skipped as they were [too old](https://github.com/discord/discord-api-docs/issues/208) to be purged." else ""
-        origin.ireply(Embeds.fbk("Deleted $messageCount messages from ${users.size} users.$warnSkip")).awaitSingle()
+        origin.event
+            .editReply()
+            .withEmbeds(Embeds.fbk("Deleted $messageCount messages from ${users.size} users.$warnSkip"))
+            .awaitSingle()
     }
 
     object PurgeCommand : Command("purge") {
@@ -59,6 +62,8 @@ object Purge : CommandContainer {
             ereply(Embeds.error("No messages to purge!")).awaitSingle()
             return@with
         }
+        ereply(Embeds.fbk("Purging messages..."))
+
         val messageCount = args.int("number")
         val delete = chan
             .getMessagesBefore(last.asLong().plus(1).snowflake)
@@ -79,6 +84,7 @@ object Purge : CommandContainer {
             ereply(Embeds.error("Invalid ending message ID **$endMessage**")).awaitSingle()
             return@with
         }
+        ereply(Embeds.fbk("Purging messages..."))
 
         val delete = chan
             .getMessagesAfter(startMessage.snowflake)
