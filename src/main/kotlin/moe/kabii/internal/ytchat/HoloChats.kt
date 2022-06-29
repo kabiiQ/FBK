@@ -16,35 +16,62 @@ class HoloChats(val instances: DiscordInstances) {
 
     private val hololive = KnownStreamers.getValue("hololive").associateBy { it.youtubeId!! }
 
-    private val streamChatChannel = instances[1].client
-        .getChannelById(Snowflake.of("863354507822628864"))
-        .ofType(MessageChannel::class.java)
-        .tryBlock().orNull()
+    val chatChannels: MutableMap<String, MutableList<MessageChannel>> = mutableMapOf()
 
-    private val irysId = "UC8rcEBzJSleTkf_-agPM20g"
+    data class HoloChatConfiguration(val ytChannel: String, val outputChannel: Snowflake, val botInstance: Int)
+    init {
+        val configurations = listOf(
+            // irys channel / project hope server
+            HoloChatConfiguration("UC8rcEBzJSleTkf_-agPM20g", Snowflake.of("863354507822628864"), 1),
+            // zeta cord
+            HoloChatConfiguration("UCTvHWSfBZgtxE4sILOaurIQ", Snowflake.of("956516797065080833"), 1),
+            HoloChatConfiguration("UCTvHWSfBZgtxE4sILOaurIQ", Snowflake.of("956533433830617138"), 1),
+            // kaelacord
+            HoloChatConfiguration("UCZLZ8Jjx_RN2CXloOmgTHVg", Snowflake.of("918356347437846533"), 1),
+            // kobocord
+            HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
+        )
+        configurations.forEach { (yt, discord, instance) ->
+
+            instances[instance].client
+                .getChannelById(discord)
+                .ofType(MessageChannel::class.java)
+                .tryBlock().orNull()
+                .run {
+                    if(this == null) {
+                        LOG.error("Unable to link HoloChat channel: $yt :: $discord")
+                    } else {
+                        chatChannels.getOrPut(yt, ::mutableListOf).add(this)
+                    }
+                }
+        }
+    }
 
     suspend fun handleHoloChat(data: YoutubeChatWatcher.YTMessageData) {
         val (room, chat) = data
         // send Hololive messages to stream chat
-        if(room.channelId != irysId) return
+        if(!chatChannels.contains(room.channelId)) return
+        val chatChannel = chatChannels[room.channelId] ?: return
         try {
             val member = hololive[chat.author.channelId]
             if(member != null) {
-                streamChatChannel!!.createMessage(
-                    Embeds.fbk()
-                        .run {
-                            val gen = if(chat.author.channelId == irysId) "" else member.generation?.run { " ($this)" } ?: ""
-                            val name = "${member.names.first()}$gen"
-                            withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
-                        }
-                        .run {
-                            val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
-                            withDescription("$info: ${chat.message}")
-                        }
-                ).awaitSingle()
+                chatChannel.forEach { channel ->
+                    channel.createMessage(
+                        Embeds.fbk()
+                            .run {
+                                val gen = if(chat.author.channelId == room.channelId) "" else member.generation?.run { " ($this)" } ?: ""
+                                val name = "${member.names.first()}$gen"
+                                withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
+                            }
+                            .run {
+                                val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
+                                withDescription("$info: ${chat.message}")
+                            }
+                    ).awaitSingle()
+                }
             }
         } catch(e: Exception) {
-            LOG.warn("Problem processing holochat: ${e.message}")
+            LOG.warn("Problem processing HoloChat: ${e.message}")
             LOG.debug(e.stackTraceString)
         }
     }

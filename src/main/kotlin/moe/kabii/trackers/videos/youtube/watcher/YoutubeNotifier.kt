@@ -410,6 +410,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         } else null
 
         try {
+            val memberNotice = if(liveStream.memberLimited) "(Members-only content)\n" else ""
             val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
             val shortTitle = StringUtils.abbreviate(liveStream.title, MagicNumbers.Embed.TITLE)
             val startTime = liveStream.liveInfo?.startTime
@@ -424,8 +425,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 new -> " went live!"
                 else -> " is live."
             }
-            val embed = Embeds.other(shortDescription, if(liveStream.premiere) uploadColor else liveColor)
-                .withAuthor(EmbedCreateFields.Author.of("${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}", liveStream.url, liveStream.channel.avatar))
+            val channelLiveNotice = "${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}"
+            val embed = Embeds.other("$memberNotice$shortDescription", if(liveStream.premiere) uploadColor else liveColor)
+                .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(channelLiveNotice, MagicNumbers.Embed.AUTHOR), liveStream.url, liveStream.channel.avatar))
                 .withUrl(liveStream.url)
                 .withTitle(shortTitle)
                 .withFooter(EmbedCreateFields.Footer.of("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
