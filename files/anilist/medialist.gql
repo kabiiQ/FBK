@@ -23,6 +23,7 @@ query ($userId: Int, $mediaType: MediaType, $pageNumber: Int) {
                     coverImage {
                         large
                     }
+                    meanScore
                     siteUrl
                 }
             }
