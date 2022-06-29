@@ -311,7 +311,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
 
             val suggestion = suggestionStyle.find(input)
             if(suggestion != null) {
-                val siteArg = suggestion.groups[2]!!.value
+                val siteArg = suggestion.groups[2]!!.value.lowercase()
                 val match = TargetArguments[siteArg]
                 return if(match != null) Ok(TargetArguments(match, suggestion.groups[1]!!.value)) else Err("Invalid site: $siteArg. You may have accidentally edited a suggested option.")
             }

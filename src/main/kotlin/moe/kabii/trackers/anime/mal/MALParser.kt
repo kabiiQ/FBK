@@ -35,7 +35,9 @@ object MALParser : MediaListParser(
                         else -> throw MediaListIOException(response.message)
                     }
                 } else {
-                    Ok(response.body!!.string())
+                    val body = response.body!!.string()
+//                    Ok(response.body!!.string())
+                    Ok(body)
                 }
             }
 
@@ -78,7 +80,7 @@ object MALParser : MediaListParser(
                     MediaType.ANIME,
                     0,
                     0,
-                    meanScore = node.mean
+                    meanScore = node.mean ?: 0f
                 )
             }
         }
@@ -97,7 +99,7 @@ object MALParser : MediaListParser(
                     MediaType.MANGA,
                     listStatus.volumesRead.toShort(),
                     node.numVolumes?.toShort() ?: 0,
-                    meanScore = node.mean
+                    meanScore = node.mean ?: 0f
                 )
             }
         }

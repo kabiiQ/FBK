@@ -377,8 +377,15 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
     data class TwitterMentionRole(val db: TwitterMention, val discord: Role?)
     @WithinExposedContext
     suspend fun getMentionRoleFor(dbTarget: TwitterTarget, guildId: Snowflake, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
-        if(tweet.retweet) return null
-        if(!twitterCfg.mentionRoles) return null
+        // do not return ping if not configured for channel/tweet type
+        when {
+            !twitterCfg.mentionRoles -> return null
+            tweet.retweet -> if(!twitterCfg.mentionRetweets) return null
+            tweet.reply -> if(!twitterCfg.mentionReplies) return null
+            tweet.quote -> if(!twitterCfg.mentionQuotes) return null
+            else -> if(!twitterCfg.mentionTweets) return null
+        }
+
         val dbMentionRole = TwitterMention.getRoleFor(guildId, dbTarget.twitterFeed.userId)
             .firstOrNull() ?: return null
         val dRole = if(dbMentionRole.mentionRole != null) {
@@ -388,17 +395,23 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 .flatMap { guild -> guild.getRoleById(dbMentionRole.mentionRole!!.snowflake) }
                 .tryAwait()
         } else null
-        return when(dRole) {
-            is Ok -> TwitterMentionRole(dbMentionRole, dRole.value)
+        val discordRole = when(dRole) {
+            is Ok -> dRole.value
             is Err -> {
                 val err = dRole.value
                 if(err is ClientException && err.status.code() == 404) {
                     // role has been deleted, remove configuration
-                    dbMentionRole.delete()
+                    if(dbMentionRole.mentionText != null) {
+                        // don't delete if mentionrole still has text component
+                        dbMentionRole.mentionRole = null
+                    } else {
+                        dbMentionRole.delete()
+                    }
                 }
-                TwitterMentionRole(dbMentionRole, null)
+                null
             }
             null -> null
         }
+        return TwitterMentionRole(dbMentionRole, discordRole)
     }
 }

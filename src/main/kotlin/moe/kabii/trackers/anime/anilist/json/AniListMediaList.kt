@@ -89,6 +89,7 @@ data class AniListMedia(
     val chapters: Int?,
     val volumes: Int?,
     val coverImage: AniListCoverImage,
+    val meanScore: Int?,
     val siteUrl: String
 )
 

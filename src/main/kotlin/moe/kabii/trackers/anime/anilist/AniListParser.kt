@@ -96,7 +96,8 @@ object AniListParser : MediaListParser() {
                         mediaID = media.id,
                         type = listPart.mediaType,
                         readVolumes = entry.progressVolumes?.toShort() ?: 0,
-                        totalVolumes = media.volumes?.toShort() ?: 0
+                        totalVolumes = media.volumes?.toShort() ?: 0,
+                        meanScore = media.meanScore?.toFloat()?.div(10) ?: 0.0f
                     )
                 }
             if(collection.hasNextChunk) {

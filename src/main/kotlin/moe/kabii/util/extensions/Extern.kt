@@ -31,10 +31,15 @@ get() = Instant.ofEpochMilli(this.millis)
 // exceptionless json parse
 fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try {
     val parse = this.fromJson(input)
-    if(parse != null) Ok(parse) else Err(IOException("Invalid JSON :: $input"))
+    if(parse != null) Ok(parse) else {
+        LOG.debug("Invalid JSON :: $input")
+        Err(IOException("Invalid JSON :: $input"))
+    }
 } catch(malformed: IOException) {
+    LOG.debug("Malformed JSON: ${malformed.message} :: $input")
     Err(malformed)
 } catch(formatting: JsonDataException) {
+    LOG.debug("JSON Format: ${formatting.message} :: $input")
     Err(IOException(formatting))
 }
 

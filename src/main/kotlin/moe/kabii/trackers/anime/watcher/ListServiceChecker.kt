@@ -19,7 +19,6 @@ import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.anime.*
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -29,7 +28,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         applicationLoop {
 
             val start = Instant.now()
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
 
                     // get all tracked lists for this site
@@ -76,6 +75,14 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
 
         val oldList = trackedList.extractMedia()
         val newList = newMediaList.media
+
+        val oldAnime = oldList.count { it.type == MediaType.ANIME }
+        val newAnime = newList.count { it.type == MediaType.ANIME }
+        if(oldAnime == 0 && newAnime > 3) {
+            val listJson = newMediaList.toDBJson()
+            trackedList.lastListJson = listJson
+            return
+        }
 
         // flags set when list update conditions are met
         // for customization they are seperate configurations and any one must be met to post the message
@@ -166,7 +173,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                                     is GuildMessageChannel -> {
                                         val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, chan.guildId.asLong())
                                         val animeSettings = config.options.featureChannels[chan.id.asLong()]?.animeSettings
-                                        // qualifications for posting in tis particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
+                                        // qualifications for posting in this particular guild. same embed might be posted in any number of other guilds, so this is checked at the very end when sending.
                                         when {
                                             animeSettings == null -> true
                                             animeSettings.postNewItem && newEntry -> true
