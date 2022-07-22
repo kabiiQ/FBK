@@ -1,5 +1,6 @@
 package moe.kabii.trackers.videos.youtube.subscriber
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -10,6 +11,8 @@ import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.newRequestBuilder
+import moe.kabii.trackers.videos.youtube.YoutubeParser
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import org.dom4j.io.SAXReader
 import org.xml.sax.InputSource
@@ -64,6 +67,36 @@ object YoutubeVideoIntake {
         } catch(e: Exception) {
             LOG.warn("Error in YouTube XML intake: ${e.message}")
             LOG.info(e.stackTraceString)
+        }
+    }
+
+    private val intakeContext = CoroutineScope(DiscordTaskPool.youtubeIntakeThread + SupervisorJob() + CoroutineName("YoutubeVideoIntake"))
+    fun intakeVideosFromText(text: String) {
+        try {
+
+            val videoMatch = YoutubeParser.youtubeVideoUrlPattern.findAll(text).toList()
+            if(videoMatch.isEmpty()) return
+            intakeContext.launch {
+
+                propagateTransaction {
+                    // text contains 1 or more video ids
+                    videoMatch.forEach { match ->
+
+                        val videoId = match.groups[1]!!.value
+                        val ytVideo = YoutubeParser.getVideo(videoId)
+                        if(ytVideo == null) {
+                            LOG.warn("Video found from Twitter: '$videoId' but video not returned from YouTube API.")
+                            return@forEach
+                        }
+                        LOG.info("Received YouTube video from Tweet: $videoId")
+
+                        YoutubeVideo.getOrInsert(videoId, ytVideo.channel.id)
+                    }
+                }
+            }
+        } catch(e: Exception) {
+            LOG.warn("Error in YouTube text-video intake: ${e.message}")
+            LOG.debug(e.stackTraceString)
         }
     }
 }

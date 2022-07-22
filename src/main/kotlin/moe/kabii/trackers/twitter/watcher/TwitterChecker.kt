@@ -33,8 +33,10 @@ import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.trackers.twitter.json.TwitterMediaType
 import moe.kabii.trackers.twitter.json.TwitterTweet
+import moe.kabii.trackers.twitter.json.TwitterUrlEntity
 import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
+import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationLanguage
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
@@ -162,6 +164,13 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
         // check for twitter space info from tweet
         spaceChecker.intakeSpaceFromTweet(tweet)
+
+        // check for youtube video info from tweet
+        // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
+        // also will increase awareness of membership-limited streams
+        tweet.entities?.urls
+            ?.mapNotNull(TwitterUrlEntity::expanded)
+            ?.forEach(YoutubeVideoIntake::intakeVideosFromText)
 
         // cache to not repeat translation for same tweet across multiple channels/servers
         val translations = mutableMapOf<TranslationLanguage, TranslationResult>()
