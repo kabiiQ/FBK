@@ -35,7 +35,7 @@ object StreamTrackerCommand : TrackerCommand {
             is Err -> {
                 val error = when (lookup.value) {
                     is StreamErr.NotFound -> {
-                        val ytErr = if(streamTarget is YoutubeTarget) " For YouTube channels, ensure that you are using the 24-digit channnel ID." else ""
+                        val ytErr = if(streamTarget is YoutubeTarget) " For YouTube channels, ensure that you are using the 24-digit channel ID." else ""
                         "Unable to find **${streamTarget.full}** stream **${target.identifier}**.$ytErr"
                     }
                     is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
@@ -69,7 +69,8 @@ object StreamTrackerCommand : TrackerCommand {
             }
         }
 
-        origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!")).awaitSingle()
+        val ytInfo = if(streamTarget is YoutubeTarget) "\nUse `/yt config` to adjust the types of YouTube content posted to this channel." else ""
+        origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!$ytInfo\nUse `/setmention` to configure a role to be \"pinged\" for streams/uploads.")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
 
         // side-effects for prompt data maintenance

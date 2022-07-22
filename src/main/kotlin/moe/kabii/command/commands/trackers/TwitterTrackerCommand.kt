@@ -59,7 +59,7 @@ object TwitterTrackerCommand : TrackerCommand {
             dbFeed
         }
 
-        origin.ireply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.")).awaitSingle()
+        origin.ireply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 
