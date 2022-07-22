@@ -1,5 +1,6 @@
 package moe.kabii.trackers.videos.youtube.watcher
 
+import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
@@ -347,13 +348,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
 
         val startTime = video.liveInfo?.scheduledStart!!
-        val timeUntil = Duration.between(Instant.now(), startTime)
-        val eta = DurationFormatter(timeUntil).fullTime
+        val eta = TimestampFormat.RELATIVE_TIME.format(startTime)
 
         val shortDescription = StringUtils.abbreviate(video.description, 200)
         val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-        val embed = Embeds.other("Stream scheduled to start in ~$eta\n\nVideo description: $shortDescription", creationColor)
+        val embed = Embeds.other("Stream scheduled to start in $eta\n\nVideo description: $shortDescription", creationColor)
             .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
             .withUrl(video.url)
             .withTitle(shortTitle)
@@ -418,7 +418,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
             if(liveStream.memberLimited) {
                 LOG.info("Member limited stream detected: ${liveStream.url}")
-                LOG.info(liveStream.toString())
             }
             val liveMessage = when {
                 liveStream.premiere -> " is premiering a new video!"
