@@ -16,4 +16,5 @@ object DiscordTaskPool {
     val ps2WSSThread = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
     val twitterIntakeThread = Executors.newCachedThreadPool().asCoroutineDispatcher() // TODO may be issue with this pool, cache for now and monitor
     val twitchIntakeThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+    val youtubeIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 }

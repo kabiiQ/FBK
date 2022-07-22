@@ -24,7 +24,7 @@ object MALParser : MediaListParser(
     override suspend fun parse(id: String): MediaList? {
         var first = true
         val animes = mutableListOf<MALAPIMapping.UserAnimeListEdge>()
-        var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status,main_picture,num_episodes,mean&limit=1000"
+        var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status,main_picture,num_episodes,mean,nsfw&limit=1000&nsfw=true"
         while(animeRequest != null) {
             if(first) first = false
             else delay(callCooldown)
@@ -47,7 +47,7 @@ object MALParser : MediaListParser(
         }
 
         val mangas = mutableListOf<MALAPIMapping.UserMangaListEdge>()
-        var mangaRequest: String? = "https://api.myanimelist.net/v2/users/$id/mangalist?fields=node,list_status,main_picture,mean,num_volumes,num_chapters&limit=1000"
+        var mangaRequest: String? = "https://api.myanimelist.net/v2/users/$id/mangalist?fields=node,list_status,main_picture,mean,num_volumes,num_chapters,nsfw&limit=1000&nsfw=true"
         while(mangaRequest != null) {
             delay(callCooldown)
             val responseBody = requestMediaList(mangaRequest) { response ->
@@ -80,7 +80,8 @@ object MALParser : MediaListParser(
                     MediaType.ANIME,
                     0,
                     0,
-                    meanScore = node.mean ?: 0f
+                    meanScore = node.mean ?: 0f,
+                    nsfw = node.nsfw
                 )
             }
         }
@@ -99,7 +100,8 @@ object MALParser : MediaListParser(
                     MediaType.MANGA,
                     listStatus.volumesRead.toShort(),
                     node.numVolumes?.toShort() ?: 0,
-                    meanScore = node.mean ?: 0f
+                    meanScore = node.mean ?: 0f,
+                    nsfw = node.nsfw
                 )
             }
         }

@@ -52,10 +52,13 @@ object MALAPIMapping {
         val title: String,
         @Json(name = "main_picture") val image: Picture?,
         val mean: Float?,
+        @Json(name = "nsfw") val _nsfw: String?,
         @Json(name = "num_episodes") val numEpisodes: Int?,
         @Json(name = "num_volumes") val numVolumes: Int?,
         @Json(name = "num_chapters") val numChapters: Int?
-    )
+    ) {
+        @Transient val nsfw = _nsfw != null && _nsfw != "white"
+    }
 
     @JsonClass(generateAdapter = true)
     data class Picture(

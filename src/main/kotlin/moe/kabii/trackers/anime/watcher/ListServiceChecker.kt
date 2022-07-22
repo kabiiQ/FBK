@@ -91,6 +91,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         var statusUpdate = false
 
         for (newMedia in newList) {
+
             // find same entry on old list (may not be present if it is a new addition to list)
             val oldMedia = oldList.find { oldItem ->
                 oldItem.mediaId == newMedia.mediaID && oldItem.type == newMedia.type
@@ -106,7 +107,10 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                     ConsumptionStatus.DROPPED -> "Added %s to their list as Dropped."
                     ConsumptionStatus.HOLD -> "Added %s to their list as On-hold."
                     ConsumptionStatus.PTW -> "Added %s to their Plan to Watch."
-                    ConsumptionStatus.WATCHING -> "Started watching %s!"
+                    ConsumptionStatus.WATCHING -> when (newMedia.type) {
+                        MediaType.ANIME -> "Started watching %s!"
+                        MediaType.MANGA -> "Started reading %s!"
+                    }
                 }
             } else {
                 // media was already on list, check for changes

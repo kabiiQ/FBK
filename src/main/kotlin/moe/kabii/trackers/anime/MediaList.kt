@@ -34,7 +34,8 @@ data class Media(
     val readVolumes: Short,
     val totalVolumes: Short,
 
-    val meanScore: Float = 0.0f
+    val meanScore: Float = 0.0f,
+    val nsfw: Boolean = false
 ) {
     fun progressStr() = sequence {
         val includeVolume = readVolumes != 0.toShort()
