@@ -53,7 +53,7 @@ object TwitcastingParser {
 
             // check headers, set next call delay if rate limited
             val remaining = response.headers["X-RateLimit-Remaining"]
-            if(remaining == "0") {
+            if(remaining == "1") {
                 nextCall = Instant.ofEpochSecond(response.headers["X-RateLimit-Reset"]!!.toLong())
             }
 
@@ -74,7 +74,7 @@ object TwitcastingParser {
                         LOG.debug("Twitcasting returned 404: query not found: $requestStr :: $body")
                         null
                     }
-                    else -> throw IOException("Twitcasting API returned error code: ${response.code}. Body :: $body")
+                    else -> throw IOException("Twitcasting API returned error code: ${response.code}. Body :: $body. Headers :: ${response.headers.joinToString(", ") { h -> "${h.first} -> ${h.second}" }}")
                 }
 
             } finally {

@@ -7,6 +7,7 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
@@ -31,19 +32,21 @@ class HoloChats(val instances: DiscordInstances) {
             // kobocord
             HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
         )
-        configurations.forEach { (yt, discord, instance) ->
+        if(MetaData.host) {
+            configurations.forEach { (yt, discord, instance) ->
 
-            instances[instance].client
-                .getChannelById(discord)
-                .ofType(MessageChannel::class.java)
-                .tryBlock().orNull()
-                .run {
-                    if(this == null) {
-                        LOG.error("Unable to link HoloChat channel: $yt :: $discord")
-                    } else {
-                        chatChannels.getOrPut(yt, ::mutableListOf).add(this)
+                instances[instance].client
+                    .getChannelById(discord)
+                    .ofType(MessageChannel::class.java)
+                    .tryBlock().orNull()
+                    .run {
+                        if(this == null) {
+                            LOG.error("Unable to link HoloChat channel: $yt :: $discord")
+                        } else {
+                            chatChannels.getOrPut(yt, ::mutableListOf).add(this)
+                        }
                     }
-                }
+            }
         }
     }
 
