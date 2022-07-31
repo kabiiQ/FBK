@@ -41,10 +41,16 @@ data class AudioConnection(
         timeoutJob = newJob
     }
 
-    suspend fun disconnect() {
+    private suspend fun disconnect() {
         mutex.withLock {
             connection?.disconnect()?.success()?.awaitSingle()
             timeoutJob = null
+
+            guild.editQueue {
+                clear()
+            }
+            guild.player.stopTrack()
+            guild.looping = false
         }
     }
 }
