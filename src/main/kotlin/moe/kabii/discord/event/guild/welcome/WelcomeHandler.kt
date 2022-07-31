@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.guild.welcome
 
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.MemberJoinEvent
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -9,7 +9,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.trackers.TrackerUtil
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.success
 

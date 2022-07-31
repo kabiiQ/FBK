@@ -1,9 +1,9 @@
 package moe.kabii.command.commands.utility
 
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle

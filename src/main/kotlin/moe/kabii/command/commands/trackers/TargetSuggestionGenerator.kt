@@ -10,6 +10,8 @@ import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSuperclassOf
 
 object TargetSuggestionGenerator {
 
@@ -26,6 +28,16 @@ object TargetSuggestionGenerator {
 
     fun invalidateTargets(clientId: Int, channelId: Long) {
         channelTargetCache.remove(TargetChannel(clientId, channelId))
+    }
+
+    suspend fun getRawTargetCount(clientId: Int, channelId: Long, site: KClass<TrackerTarget>?): Int {
+        val targetChannel = TargetChannel(clientId, channelId)
+        val allTargets = channelTargetCache.getOrPut(targetChannel) {
+            generateTargetMappings(targetChannel)
+        }
+        val targets = if(site == null) allTargets
+        else allTargets.filter { target -> site.isSuperclassOf(target::class) }
+        return targets.size
     }
 
     suspend fun getTargets(clientId: Int, channelId: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {

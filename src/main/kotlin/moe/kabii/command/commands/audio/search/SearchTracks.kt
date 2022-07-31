@@ -1,8 +1,8 @@
 package moe.kabii.command.commands.audio.search
 
+import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.SelectMenu
-import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle

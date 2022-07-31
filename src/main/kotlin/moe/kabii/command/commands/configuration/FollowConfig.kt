@@ -189,6 +189,6 @@ object SetMentionRole : Command("setmention") {
                 "set to $role$text"
             }
         }
-        origin.ireply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.\nUse `/twitterping config` if you wish to configure which types of Tweets will include a ping.")).awaitSingle()
     }
 }

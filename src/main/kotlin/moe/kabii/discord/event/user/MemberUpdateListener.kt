@@ -1,9 +1,9 @@
 package moe.kabii.discord.event.user
 
 //import moe.kabii.discord.auditlog.LogWatcher
+import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.event.domain.guild.MemberUpdateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle

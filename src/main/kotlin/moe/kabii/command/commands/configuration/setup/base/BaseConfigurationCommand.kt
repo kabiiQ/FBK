@@ -1,5 +1,8 @@
 package moe.kabii.command.commands.configuration.setup.base
 
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
+import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
+import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.core.`object`.component.ActionRow
@@ -8,9 +11,6 @@ import discord4j.core.`object`.component.SelectMenu
 import discord4j.core.`object`.component.TextInput
 import discord4j.core.`object`.entity.Attachment
 import discord4j.core.`object`.entity.channel.*
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent
-import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
-import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionData

@@ -1,8 +1,8 @@
 package moe.kabii.discord.event.bot
 
+import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle

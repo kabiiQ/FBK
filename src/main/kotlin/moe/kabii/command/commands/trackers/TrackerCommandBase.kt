@@ -2,10 +2,12 @@ package moe.kabii.command.commands.trackers
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.BotSendMessageException
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.verifyBotAccess
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -75,6 +77,16 @@ object TrackerCommandBase : CommandContainer {
             is Err -> {
                 ereply(Embeds.error("Unable to track: ${findTarget.value}")).awaitSingle()
             }
+        }
+    }
+
+    suspend fun sendTrackerTestMessage(origin: DiscordParameters) {
+        val success = origin.chan.verifyBotAccess("Verifying my permission to send embeds in this channel.")
+        if(!success) {
+            origin
+                .ereply(Embeds.error("**Permission test failed.**\n\nPlease make sure I have permission to send **\"Send Messages\"** and **\"Embed Links\"** in this channel, or tracker messages will fail to send later!\n\nI am able to send /command responses (such as this one) regardless of permissions, but sending tracker updates will require me to have basic permissions in this channel."))
+                .awaitSingle()
+            throw BotSendMessageException("Tracker permission test failed", origin.chan.id.asLong())
         }
     }
 } 

@@ -1,9 +1,9 @@
 package moe.kabii.command.commands.moderation
 
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.http.client.ClientException

@@ -20,7 +20,7 @@ object CommandInfo : Command("help") {
             when(subCommand.name) {
                 "command" -> commandHelp(this)
                 "wiki" -> {
-                    ereply(Embeds.fbk("Fubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **/help command <command name>**")).awaitSingle()
+                    ereply(Embeds.fbk("FBK support Discord: https://discord.gg/ucVhtnh\nFubuki's command documentation is available on [GitHub](https://github.com/kabiiQ/FBK/wiki). For specific command information, use the command **/help command <command name>**")).awaitSingle()
                 }
             }
         }

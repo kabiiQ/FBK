@@ -46,6 +46,8 @@ object TwitterTrackerCommand : TrackerCommand {
             return
         }
 
+        TrackerCommandBase.sendTrackerTestMessage(origin)
+
         transaction {
             // get the db 'twitterfeed' object, create if this is new track
             val dbFeed = TwitterFeed.getOrInsert(twitterUser)

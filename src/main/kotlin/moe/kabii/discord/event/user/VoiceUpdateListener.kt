@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.user
 
-import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.VoiceStateUpdateEvent
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitFirstOrNull

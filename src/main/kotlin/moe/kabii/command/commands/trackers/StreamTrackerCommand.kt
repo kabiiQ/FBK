@@ -57,6 +57,8 @@ object StreamTrackerCommand : TrackerCommand {
             return
         }
 
+        TrackerCommandBase.sendTrackerTestMessage(origin)
+
         // get the db 'channel' object or create if this is a new stream channel
         val dbChannel = TrackedStreams.StreamChannel.getOrInsert(site, streamId, streamInfo.displayName)
 

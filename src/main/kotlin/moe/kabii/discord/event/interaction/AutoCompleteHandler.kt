@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.interaction
 
-import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent
+import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import kotlinx.coroutines.launch
 import moe.kabii.LOG

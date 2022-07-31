@@ -1,14 +1,19 @@
 package moe.kabii.command
 
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.flat.Keys
+import moe.kabii.discord.util.Embeds
+import moe.kabii.util.extensions.success
 import reactor.core.publisher.Flux
 
 class MemberPermissionsException(vararg val perms: Permission) : RuntimeException()
@@ -48,6 +53,19 @@ suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Per
 suspend fun Member.channelVerify(channel: GuildChannel, vararg permissions: Permission) {
     if(hasPermissions(channel, *permissions)) return
     throw MemberPermissionsException(*permissions)
+}
+
+suspend fun MessageChannel.verifyBotAccess(message: String): Boolean {
+    // test that the bot itself has permission to send messages in this channel.
+    // used where messages will only otherwise be sent arbitrarily later, such as trackers.
+    val test = try {
+        createMessage(Embeds.fbk(message)).awaitSingle()
+    } catch(ce: ClientException) {
+        if(ce.status.code() == 403) return false
+        else throw ce
+    }
+    test.delete().success().subscribe()
+    return true
 }
 
 object PermissionUtil {

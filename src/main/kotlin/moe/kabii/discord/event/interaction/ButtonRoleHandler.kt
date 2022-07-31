@@ -1,11 +1,11 @@
 package moe.kabii.discord.event.interaction
 
 import discord4j.common.util.Snowflake
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
+import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.SelectMenu
 import discord4j.core.`object`.entity.Message
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent
-import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle

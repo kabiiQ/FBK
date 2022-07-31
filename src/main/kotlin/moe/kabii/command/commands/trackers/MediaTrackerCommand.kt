@@ -48,6 +48,8 @@ object MediaTrackerCommand : TrackerCommand {
             return
         }
 
+        TrackerCommandBase.sendTrackerTestMessage(origin)
+
         origin.ireply(Embeds.fbk("Retrieving **$siteName** list...")).awaitSingle()
 
         // download and validate list
@@ -57,7 +59,6 @@ object MediaTrackerCommand : TrackerCommand {
             null
         } catch(io: MediaListIOException) {
             LOG.warn("Media list IO issue: ${io.message}")
-
 
             origin.event.editReply().withEmbeds(
                 Embeds.error("Unable to download your list from **$siteName**: ${io.message}")

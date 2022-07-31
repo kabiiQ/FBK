@@ -62,7 +62,7 @@ object Purge : CommandContainer {
             ereply(Embeds.error("No messages to purge!")).awaitSingle()
             return@with
         }
-        ereply(Embeds.fbk("Purging messages..."))
+        ereply(Embeds.fbk("Purging messages...")).awaitSingle()
 
         val messageCount = args.int("number")
         val delete = chan
@@ -84,7 +84,7 @@ object Purge : CommandContainer {
             ereply(Embeds.error("Invalid ending message ID **$endMessage**")).awaitSingle()
             return@with
         }
-        ereply(Embeds.fbk("Purging messages..."))
+        ereply(Embeds.fbk("Purging messages...")).awaitSingle()
 
         val delete = chan
             .getMessagesAfter(startMessage.snowflake)

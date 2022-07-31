@@ -1,8 +1,8 @@
 package moe.kabii.discord.event.message.starboard
 
+import discord4j.core.event.domain.message.*
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
-import discord4j.core.event.domain.message.*
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull

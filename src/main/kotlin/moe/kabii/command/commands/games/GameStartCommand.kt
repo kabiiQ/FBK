@@ -1,10 +1,10 @@
 package moe.kabii.command.commands.games
 
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.reaction.ReactionEmoji
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.discordjson.possible.Possible
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
