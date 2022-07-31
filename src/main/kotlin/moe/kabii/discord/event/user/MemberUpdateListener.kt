@@ -14,7 +14,6 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.trackers.TrackerUtil
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -64,10 +63,11 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                                 }
                                 403 -> {
                                     // permission denied
-                                    targetLog.displayNameLog = false
-                                    config.save()
-                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}log names enable** to re-enable this log."
-                                    TrackerUtil.notifyOwner(instances[event.client], event.guildId.asLong(), message)
+                                    // TODO pdenied
+//                                    targetLog.displayNameLog = false
+//                                    config.save()
+//                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}log names enable** to re-enable this log."
+//                                    TrackerUtil.notifyOwner(instances[event.client], event.guildId.asLong(), message)
                                 }
                                 else -> throw ce
                             }
@@ -146,7 +146,8 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                         if(err == 404 || err == 403) {
                             LOG.info("Unable to send role update log for guild '${event.guildId.asString()}'. Disabling role update log")
                             LOG.debug(ce.stackTraceString)
-                            targetLog.roleUpdateLog = false
+                            // TODO pdenied
+                            //targetLog.roleUpdateLog = false
                             config.save()
                         } else throw ce
                     }

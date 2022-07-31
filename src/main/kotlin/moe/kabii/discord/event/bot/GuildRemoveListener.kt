@@ -1,7 +1,7 @@
 package moe.kabii.discord.event.bot
 
-import discord4j.core.`object`.entity.User
 import discord4j.core.event.domain.guild.MemberLeaveEvent
+import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle

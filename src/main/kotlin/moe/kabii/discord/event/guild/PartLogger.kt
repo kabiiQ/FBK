@@ -1,10 +1,10 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.common.util.Snowflake
+import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.event.domain.guild.MemberLeaveEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
@@ -69,7 +69,8 @@ object PartLogger {
                     if(err == 404 || err == 403) {
                         LOG.info("Unable to send part log for guild '${guild.asString()}'. Disabling user join log.")
                         LOG.debug(ce.stackTraceString)
-                        targetLog.partLog = false
+                        // TODO pdenied
+                        //targetLog.partLog = false
                         config.save()
                     } else throw ce
                 }

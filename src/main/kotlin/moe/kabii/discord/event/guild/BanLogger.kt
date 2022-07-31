@@ -1,10 +1,10 @@
 package moe.kabii.discord.event.guild
 
 import discord4j.common.util.Snowflake
-import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.event.domain.guild.BanEvent
 import discord4j.core.event.domain.guild.UnbanEvent
+import discord4j.core.`object`.entity.User
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactor.awaitSingle
@@ -52,9 +52,10 @@ object BanLogger {
                 } catch(ce: ClientException) {
                     val err = ce.status.code()
                     if(err == 404 || err == 403) {
+                        // TODO pdenied
                         LOG.info("Unable to send ban log for guild '${guildId.asString()}. Disabling user ban log in ${targetLog.channelID}.")
                         LOG.debug(ce.stackTraceString)
-                        targetLog.banLogs = false
+                        //targetLog.banLogs = false
                         config.save()
                     } else throw ce
                 }

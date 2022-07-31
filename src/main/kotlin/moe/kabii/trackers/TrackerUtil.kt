@@ -47,6 +47,8 @@ object TrackerUtil {
     }
 
     suspend fun permissionDenied(fbk: FBK, guildId: Long?, channelId: Long, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+        // TODO pdenied
+        return // Temporarily(?) disabled functionality to mitigate some user confusion
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
             val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)

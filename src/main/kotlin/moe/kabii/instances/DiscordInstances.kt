@@ -166,4 +166,11 @@ class DiscordInstances {
 
         return publishers
     }
+
+    suspend fun logout() {
+        instances.values
+            .forEach { fbk ->
+                fbk.client.logout().awaitAction()
+            }
+    }
 }

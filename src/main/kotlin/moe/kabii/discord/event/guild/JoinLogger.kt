@@ -1,8 +1,8 @@
 package moe.kabii.discord.event.guild
 
+import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
@@ -105,7 +105,8 @@ object JoinLogger {
                     if(err == 404 || err == 403) {
                         LOG.info("Unable to send join log for guild '$guildId'. Disabling user join log.")
                         LOG.debug(ce.stackTraceString)
-                        targetLog.joinLog = false
+                        // TODO pdenied
+                        // targetLog.joinLog = false
                         config.save()
                     } else throw ce
                 }

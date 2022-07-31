@@ -90,7 +90,7 @@ class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatIn
                     LOG.info("Bot admin check failed: $param")
 
                 } catch (perms: BotSendMessageException) {
-                    LOG.warn("${perms.message} :: channel=${perms.channel}")
+                    LOG.warn("${perms.message} :: channel=#${perms.channel}")
 
                 } catch (ce: ClientException) {
                     // bot is missing permissions
