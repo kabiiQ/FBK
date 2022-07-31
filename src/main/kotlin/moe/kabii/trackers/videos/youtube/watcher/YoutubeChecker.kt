@@ -23,6 +23,7 @@ import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
+import kotlin.math.min
 
 sealed class YoutubeCall(val video: YoutubeVideo) {
     class Live(val live: YoutubeLiveEvent) : YoutubeCall(live.ytVideo)
@@ -250,10 +251,14 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         dbEvent.scheduledStart = scheduled.jodaDateTime
 
                         // set next update time to 1/2 time until stream start
+                        // special condition: keep polling newly scheduled streams as certain people tend to schedule streams incorrectly and then fix
+                        // provides roughly 15 minutes to 'fix' stream while still not constantly re-polling fake streams/chat rooms that are far in the future
                         val untilStart = Duration.between(Instant.now(), scheduled)
-                        val updateInterval = untilStart.toMillis() / 2
+                        val halfway = untilStart.toMillis() / 2
+                        val updateInterval = if(dbEvent.apiCalls > 2) halfway else min(halfway, Duration.ofMinutes(5).toMillis())
                         val nextUpdate = DateTime.now().plus(updateInterval)
                         dbEvent.dataExpiration = nextUpdate
+                        dbEvent.apiCalls += 1
 
                         // send out 'upcoming' notifications
                         streamUpcoming(dbEvent, ytVideo, scheduled)
