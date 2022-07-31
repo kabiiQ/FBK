@@ -353,7 +353,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val shortDescription = StringUtils.abbreviate(video.description, 200)
         val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-        val embed = Embeds.other("Stream scheduled to start in $eta\n\nVideo description: $shortDescription", creationColor)
+        val embed = Embeds.other("Stream scheduled to start: $eta\n\nVideo description: $shortDescription", creationColor)
             .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
             .withUrl(video.url)
             .withTitle(shortTitle)
