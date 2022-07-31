@@ -54,6 +54,13 @@ fun main() {
         discord.launchInstances()
     }
 
+    // once connected, try to log out properly
+    Runtime.getRuntime().addShutdownHook(thread(start = false, name = "Logout") {
+        runBlocking {
+            discord.logout()
+        }
+    })
+
     // begin listening for terminal commands
     TerminalListener(discord).launch()
 
