@@ -96,12 +96,16 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     data class MentionRole(val db: TrackedStreams.Mention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false): MentionRole? {
+    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
         val dbRole = dbStream.mentionRoles
             .firstOrNull { men -> men.guild.guildID == guildId }
         return if(dbRole != null) {
-            val mentionRole = if(memberLimit) dbRole.mentionRoleMember else dbRole.mentionRole
+            val mentionRole = when {
+                memberLimit -> dbRole.mentionRoleMember
+                uploadedVideo -> dbRole.mentionRoleUploads ?: dbRole.mentionRole
+                else -> dbRole.mentionRole
+            }
             val role = if(mentionRole != null) {
                 targetChannel.toMono()
                     .ofType(GuildChannel::class.java)

@@ -433,14 +433,21 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
                 .run { if(startTime != null) withTimestamp(startTime) else this }
 
-            val mentionMessage = if(mention != null) {
+            val mentionContent = if(mention != null) {
 
                 mention.db.lastMention = DateTime.now()
                 val rolePart = mention.discord?.mention?.plus(" ") ?: ""
                 val textPart = mention.db.mentionText?.plus(" ") ?: ""
-                chan.createMessage("$rolePart$textPart")
+                "$rolePart$textPart"
 
-            } else chan.createMessage()
+            } else ""
+
+            val messageContent = if(features.includeUrl) {
+                if(mentionContent.isBlank()) liveStream.url else "$mentionContent\n${liveStream.url}"
+            } else mentionContent
+
+            val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
+            else chan.createMessage(messageContent)
 
             val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
 
