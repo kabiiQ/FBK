@@ -22,6 +22,7 @@ object AvatarUtil : CommandContainer {
                 val avatars = sequence {
                     val globalAvatar = EmbedCreateSpec.create()
                         .withTitle("Avatar for **${targetUser.userAddress()}**")
+                        .withDescription("[View full size](${targetUser.avatarUrl}?size=1024)")
                         .withImage("${targetUser.avatarUrl}?size=256")
                         .withColor(Color.of(12187102))
                     yield(globalAvatar)
@@ -31,6 +32,7 @@ object AvatarUtil : CommandContainer {
                         if(guildAvatarUrl != null) {
                             val guildAvatar = EmbedCreateSpec.create()
                                 .withTitle("Server avatar for **${targetUser.userAddress()}** in **${guild.name}**")
+                                .withDescription("[View full size]($guildAvatarUrl?size=1024)")
                                 .withImage("$guildAvatarUrl?size=256")
                                 .withColor(Color.of(12187102))
                             yield(guildAvatar)
