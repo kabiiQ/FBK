@@ -18,7 +18,6 @@ import moe.kabii.discord.event.bot.ReconnectListener
 import moe.kabii.discord.event.guild.*
 import moe.kabii.discord.event.guild.welcome.WelcomerListener
 import moe.kabii.discord.event.interaction.*
-import moe.kabii.discord.event.message.MessageTemporaryRedirectionHandler
 import moe.kabii.discord.event.message.starboard.StarboardEventHandler
 import moe.kabii.discord.event.user.MemberUpdateListener
 import moe.kabii.discord.event.user.VoiceUpdateListener
@@ -109,8 +108,7 @@ class DiscordInstances {
             StarboardEventHandler.ReactionEmojiRemoveListener(this),
             StarboardEventHandler.ReactionBulkRemoveListener(this),
             StarboardEventHandler.MessageDeletionListener(this),
-            ButtonRoleHandler(this),
-            MessageTemporaryRedirectionHandler(this, manager) // temporary listener to redirect users to slash commands
+            ButtonRoleHandler(this)
         )
 
         val eventListeners = reflection.getSubTypesOf(EventListener::class.java)

@@ -42,7 +42,6 @@ object GuildConfigurations {
 data class GuildConfiguration(
     val _id: Id<GuildConfiguration> = newId(),
     val guildid: Long,
-    var prefix: String = defaultPrefix,
     val options: OptionalFeatures = OptionalFeatures(),
     val guildCustomCommands: CustomCommands = CustomCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
@@ -58,9 +57,6 @@ data class GuildConfiguration(
 
     val welcomer: WelcomeSettings = WelcomeSettings()
 ) {
-    companion object {
-        const val defaultPrefix = ";"
-    }
 
     fun starboard() = if(starboardSetup.channel != null) starboardSetup else null
 

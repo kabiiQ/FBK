@@ -57,7 +57,7 @@ object TrackerUtil {
             config.save()
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
-            val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}feature $featureName enable** in <#$channelId> to re-enable this tracker."
+            val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **/feature $featureName Enabled** in <#$channelId> to re-enable this tracker."
             notifyOwner(fbk, guildId, message)
 
         } else {

@@ -66,7 +66,7 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                                     // TODO pdenied
 //                                    targetLog.displayNameLog = false
 //                                    config.save()
-//                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **${config.prefix}log names enable** to re-enable this log."
+//                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **$/log names Enabled** to re-enable this log."
 //                                    TrackerUtil.notifyOwner(instances[event.client], event.guildId.asLong(), message)
                                 }
                                 else -> throw ce
