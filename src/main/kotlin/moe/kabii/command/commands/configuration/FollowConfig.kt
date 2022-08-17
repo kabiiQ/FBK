@@ -101,6 +101,8 @@ object SetMentionRole : Command("setmention") {
             }.firstOrNull()
 
             val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
+            val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
+
             if(roleArg == null && textArg == null && membershipRoleArg == null) {
                 // unset role
                 existingMention?.delete()
@@ -111,6 +113,7 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionRole = roleArg?.id?.asLong()
                     existingMention.mentionText = textArg
                     existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
+                    existingMention.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
                 } else {
                     TrackedStreams.Mention.new {
                         this.stream = matchingTarget.streamChannel
@@ -118,10 +121,13 @@ object SetMentionRole : Command("setmention") {
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
+                        this.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
                     }
                 }
                 val youtubeDetail = if(site is YoutubeTarget) {
-                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams/videos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams."
+                    val includeVideos = if(uploadsRoleArg == null) "+videos" else ""
+                    val uploadAlt = if(uploadsRoleArg != null) " Set to **${uploadsRoleArg.name}** for uploads/premieres." else ""
+                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$uploadAlt"
                 } else ""
 
                 val role = roleArg?.run {"**$name**" } ?: "NONE"

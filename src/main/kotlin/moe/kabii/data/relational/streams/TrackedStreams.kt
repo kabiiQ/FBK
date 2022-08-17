@@ -117,6 +117,7 @@ object TrackedStreams {
         val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id").nullable()
         var mentionRoleMember = long("discord_mention_role_membership").nullable()
+        var mentionRoleUploads = long("discord_mention_role_uploads").nullable()
         val mentionText = text("discord_mention_text").nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
@@ -128,6 +129,7 @@ object TrackedStreams {
         var guild by DiscordObjects.Guild referencedOn Mentions.guild
         var mentionRole by Mentions.mentionRole
         var mentionRoleMember by Mentions.mentionRoleMember
+        var mentionRoleUploads by Mentions.mentionRoleUploads
         var mentionText by Mentions.mentionText
         var lastMention by Mentions.lastMention
 

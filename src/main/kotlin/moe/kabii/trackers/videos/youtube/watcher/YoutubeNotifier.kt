@@ -300,7 +300,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // get mention role from db if one is registered
         val mentionRole = if(guildId != null) {
-            getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = video.memberLimited)
+            getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = video.memberLimited, uploadedVideo = true)
         } else null
 
         val new = try {
@@ -406,7 +406,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val mention = if(guildId != null) {
             val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
             if(old == true) null
-            else getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = liveStream.memberLimited)
+            else getMentionRoleFor(target.streamChannel, guildId, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
         } else null
 
         try {
