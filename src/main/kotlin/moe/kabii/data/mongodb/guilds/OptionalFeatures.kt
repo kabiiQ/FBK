@@ -79,6 +79,7 @@ data class StreamSettings(
     var endGame: Boolean = true,
     var mentionRoles: Boolean = true,
 
+    var includeUrl: Boolean = false,
     var renameEnabled: Boolean = false,
     var pinActive: Boolean = false,
     var discordEvents: Boolean = false,

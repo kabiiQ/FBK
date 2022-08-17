@@ -323,10 +323,15 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 return if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
             }
 
+            var assistedInput = input
+            if(site is TwitterSpaceTarget) {
+                assistedInput = assistedInput.removePrefix("@")
+            }
+
             // check if 'username' matches a precise url for tracking
             val urlMatch = declaredTargets.map { supportedSite ->
                 supportedSite.url.mapNotNull { exactUrl ->
-                    exactUrl.find(input)?.to(supportedSite)
+                    exactUrl.find(assistedInput)?.to(supportedSite)
                 }
             }.flatten().firstOrNull()
 
