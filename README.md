@@ -12,11 +12,11 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 FBK is now available for invite and public use, I have not done any sort of advertising yet, but feel free to use it or share it.
 
-#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=966202845865074738&permissions=288681168&scope=applications.commands%20bot)
+#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=1012933714730291270&permissions=288681168&scope=applications.commands%20bot)
 
-##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=966202845865074738&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
+##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1012933714730291270&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
 
-##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=966202845865074738&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
+##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1012933714730291270&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
 
 # Suggestion/Support Discord Server
 
@@ -70,7 +70,6 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 - ## General Configurability
   - Targeted functionality such as music bot commands and service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
-  - [Blacklist specific bot commands or require commands to be whitelisted](https://github.com/kabiiQ/FBK/wiki/Configuration#using-a-command-blacklist-or-whitelist) if further usage restriction is required
 
 
 - Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
