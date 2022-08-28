@@ -4,16 +4,14 @@ import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.trackers.TargetSuggestionGenerator
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -24,17 +22,21 @@ import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
         autoComplete {
-            val channelId = event.interaction.channelId.asLong()
+            val channelIds = event.interaction.guild
+                .flatMapMany { guild -> guild.channels }
+                .map { channel -> channel.id.asLong() }
+                .collectList()
+                .awaitSingle()
             val siteArg = ChatCommandArguments(event).optInt("site")
-            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
+            val matches = channelIds.flatMap { channelId ->
+                TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
+            }
             suggest(matches)
         }
 
@@ -75,18 +77,9 @@ object SetMentionRole : Command("setmention") {
         // get stream from db - verify that it is tracked in this server
         // get any target for this stream in this guild
         val matchingTarget = propagateTransaction {
-            TrackedStreams.Target.wrapRows(
-                TrackedStreams.Targets
-                    .innerJoin(TrackedStreams.StreamChannels)
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds).select {
-                        TrackedStreams.StreamChannels.site eq streamInfo.site.dbSite and
-                                (TrackedStreams.Targets.discordClient eq origin.client.clientId) and
-                                (TrackedStreams.StreamChannels.siteChannelID eq streamInfo.accountId) and
-                                (DiscordObjects.Guilds.guildID eq origin.target.id.asLong())
-                    }
-            ).firstOrNull()
+            TrackedStreams.Target.getForServer(origin.client.clientId, origin.target.id.asLong(), streamInfo.site.dbSite, streamInfo.accountId)
         }
+
         if (matchingTarget == null) {
             origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
             return
@@ -152,17 +145,8 @@ object SetMentionRole : Command("setmention") {
         }
 
         // verify that twitter feed is tracked in this server (any target in this guild)
-        val matchingTarget = transaction {
-            TwitterTarget.wrapRows(
-                TwitterTargets
-                    .innerJoin(TwitterFeeds)
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds).select {
-                        TwitterFeeds.userId eq twitterUser.id and
-                                (TwitterTargets.discordClient eq origin.client.clientId) and
-                                (DiscordObjects.Guilds.guildID eq origin.target.id.asLong())
-                    }
-            ).firstOrNull()
+        val matchingTarget = propagateTransaction {
+            TwitterTarget.getForServer(origin.client.clientId, origin.target.id.asLong(), twitterUser.id)
         }
 
         if(matchingTarget == null) {

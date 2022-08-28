@@ -108,6 +108,20 @@ object TrackedStreams {
                                 (DiscordObjects.Channels.channelID eq discordChan.asLong())
                     }
             ).firstOrNull()
+
+            // get target
+            @WithinExposedContext
+            fun getForServer(clientId: Int, guildId: Long, site: DBSite, accountId: String) = wrapRows(
+                Targets
+                    .innerJoin(StreamChannels)
+                    .innerJoin(DiscordObjects.Channels)
+                    .innerJoin(DiscordObjects.Guilds).select {
+                        StreamChannels.site eq site and
+                                (Targets.discordClient eq clientId) and
+                                (StreamChannels.siteChannelID eq accountId) and
+                                (DiscordObjects.Guilds.guildID eq guildId)
+                    }
+            ).firstOrNull()
         }
     }
 

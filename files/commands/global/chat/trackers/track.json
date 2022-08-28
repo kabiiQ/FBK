@@ -6,7 +6,8 @@
             "name": "username",
             "description": "The username to track. @username for Twitter, username for Twitch, channel ID for YouTube (see wiki)",
             "type": 3,
-            "required": true
+            "required": true,
+            "autocomplete": true
         },
         {
             "name": "site",

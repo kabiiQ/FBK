@@ -71,6 +71,18 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
                             (DiscordObjects.Channels.channelID eq channelId)
                 }
         ).firstOrNull()
+
+        @WithinExposedContext
+        fun getForServer(clientId: Int, guildId: Long, twitterId: Long) = wrapRows(
+            TwitterTargets
+                .innerJoin(TwitterFeeds)
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds).select {
+                    TwitterFeeds.userId eq twitterId and
+                            (TwitterTargets.discordClient eq clientId) and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }
+        ).firstOrNull()
     }
 }
 

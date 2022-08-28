@@ -10,24 +10,6 @@
             "autocomplete": true
         },
         {
-            "name": "role",
-            "description": "The role that should be pinged. If empty, any configured role will no longer be pinged.",
-            "type": 8,
-            "required": false
-        },
-        {
-            "name": "membershiprole",
-            "description": "A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.",
-            "type": 8,
-            "required": false
-        },
-        {
-            "name": "text",
-            "description": "Text to be included along with the ping. If empty, any existing text will be removed.",
-            "type": 3,
-            "required": false
-        },
-        {
             "name": "site",
             "description": "The site name may need to be specified if it can not be inferred.",
             "required": false,
@@ -52,20 +34,32 @@
                 {
                     "name": "TwitCasting",
                     "value": 103
-                },
-                {
-                    "name": "MyAnimeList",
-                    "value": 200
-                },
-                {
-                    "name": "kitsu.io",
-                    "value": 201
-                },
-                {
-                    "name": "AniList",
-                    "value": 202
                 }
             ]
+        },
+        {
+            "name": "role",
+            "description": "The role that should be pinged. If empty, any configured role will no longer be pinged.",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "text",
+            "description": "Text to be included along with the ping. If empty, any existing text will be removed.",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "membershiprole",
+            "description": "A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "alternateuploadrole",
+            "description": "An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.",
+            "type": 8,
+            "required": false
         }
     ]
 }
