@@ -1,0 +1,41 @@
+{
+    "name": "getmention",
+    "description": "Test the configured '/setmention' role ping for a tracked Twitter/livestream feed. (WILL PING ROLES)",
+    "options": [
+        {
+            "name": "username",
+            "description": "The tracked stream/twitter feed that should send a ping",
+            "type": 3,
+            "required": true,
+            "autocomplete": true
+        },
+        {
+            "name": "site",
+            "description": "The site name may need to be specified if it can not be inferred.",
+            "required": false,
+            "type": 4,
+            "choices": [
+                {
+                    "name": "Twitter",
+                    "value": 0
+                },
+                {
+                    "name": "YouTube",
+                    "value": 100
+                },
+                {
+                    "name": "Twitch",
+                    "value": 101
+                },
+                {
+                    "name": "Twitter Spaces",
+                    "value": 102
+                },
+                {
+                    "name": "TwitCasting",
+                    "value": 103
+                }
+            ]
+        }
+    ]
+}
