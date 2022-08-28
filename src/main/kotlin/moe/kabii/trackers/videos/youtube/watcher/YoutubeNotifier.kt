@@ -306,8 +306,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val new = try {
             val shortDescription = StringUtils.abbreviate(video.description, 200)
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
+            val memberNotice = if(video.memberLimited) "Members-only content.\n" else ""
 
-            val embed = Embeds.other("Video description: $shortDescription", uploadColor)
+            val embed = Embeds.other("${memberNotice}Video description: $shortDescription", uploadColor)
                 .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar))
                 .withUrl(video.url)
                 .withTitle(shortTitle)
