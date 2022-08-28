@@ -10,6 +10,7 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.runBlocking
+import moe.kabii.LOG
 import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.BotUtil
@@ -19,6 +20,7 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.tryBlock
+import reactor.core.publisher.Mono
 import kotlin.math.min
 
 object AudioEventHandler : AudioEventAdapter() {
@@ -73,7 +75,7 @@ object AudioEventHandler : AudioEventAdapter() {
                             .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
                     )
                 }.doOnNext { msg ->
-                    data.associatedMessages.add(QueueData.NowPlaying(msg.channelId, msg.id))
+                    data.nowPlayingMessage = QueueData.BotMessage(msg.channelId, msg.id)
                 }.subscribe()
         } else {
             data.apply = false
@@ -131,20 +133,30 @@ object AudioEventHandler : AudioEventAdapter() {
                 // delete old messages per guild settings
                 val guildID = data.audio.guildId
                 val config = GuildConfigurations.getOrCreateGuild(data.fbk.clientId, guildID)
-                data.associatedMessages.forEach { msg ->
+
+                val reactQueue = if(data.queueMessage != null) {
+                    val msg = data.queueMessage!!
                     data.fbk.client.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
-                            when(msg) {
-                                is QueueData.NowPlaying -> {
-                                    if(config.musicBot.deleteNowPlaying) discordMsg.delete("old music bot now playing message")
-                                    else discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
-                                }
-                                is QueueData.Queue -> {
-                                    discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
-                                }
-                            }
-                        }.subscribe()
-                }
+                            discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                        }
+                } else Mono.empty()
+
+                val reactNP = if(data.nowPlayingMessage != null) {
+                    val msg = data.nowPlayingMessage!!
+                    data.fbk.client.getMessageById(msg.channelID, msg.messageID)
+                        .flatMap { discordMsg ->
+                            if(config.musicBot.deleteNowPlaying) discordMsg.delete("old music bot now playing message")
+                            else discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                        }
+                } else Mono.empty()
+
+                Mono.`when`(reactQueue, reactNP)
+                    .onErrorResume { e ->
+                        LOG.warn("Unable to get music bot associated message: ${e.message}")
+                        Mono.empty()
+                    }
+                    .subscribe()
             }
             else -> return
         }

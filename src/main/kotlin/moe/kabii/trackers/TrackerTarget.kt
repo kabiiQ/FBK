@@ -345,7 +345,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             } else if(site != null) {
 
                 // if site was manually specified
-                Ok(TargetArguments(site, input))
+                Ok(TargetArguments(site, assistedInput))
 
             } else {
                 // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel

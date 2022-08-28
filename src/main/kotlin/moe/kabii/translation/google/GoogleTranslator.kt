@@ -66,7 +66,7 @@ object GoogleTranslator : TranslationService(
         val text = StringEscapeUtils.unescapeHtml4(translation.translatedText)
         return TranslationResult(
             service = this,
-            originalLanguage = detectedSourceLanguage ?: from!!,
+            originalLanguage = detectedSourceLanguage ?: from ?: defaultLanguage(),
             targetLanguage = to,
             translatedText = text,
             detected = translation.detectedSourceLanguage != null

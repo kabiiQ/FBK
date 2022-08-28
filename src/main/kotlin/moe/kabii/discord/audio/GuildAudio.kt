@@ -164,12 +164,11 @@ data class QueueData(
     val votes: MutableSet<Snowflake> = mutableSetOf(),
     val voting: Mutex = Mutex(),
     var endMarkerMillis: Long? = null,
-    val associatedMessages: MutableList<BotMessage> = mutableListOf(),
+    var queueMessage: BotMessage? = null,
+    var nowPlayingMessage: BotMessage? = null,
     val audioFilters: FilterFactory = FilterFactory()
 ) {
-    sealed class BotMessage(val channelID: Snowflake, val messageID: Snowflake)
-    class Queue(channelID: Snowflake, messageID: Snowflake) : BotMessage(channelID, messageID)
-    class NowPlaying(channelID: Snowflake, messageID: Snowflake) : BotMessage(channelID, messageID)
+    data class BotMessage(val channelID: Snowflake, val messageID: Snowflake)
 
     var silent = false // don't post added to queue message. for bulk actions, etc
     var apply = false // if this track is stopped, restart it. for applying filters

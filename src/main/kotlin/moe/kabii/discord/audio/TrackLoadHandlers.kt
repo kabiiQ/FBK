@@ -81,7 +81,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
-            data.associatedMessages.add(QueueData.Queue(reply.channelId, reply.id))
+            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
         } else {
 
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
@@ -93,7 +93,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
-            data.associatedMessages.add(QueueData.Queue(reply.channelId, reply.id))
+            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
         }
     }
 
