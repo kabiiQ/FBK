@@ -1,7 +1,8 @@
-package moe.kabii.command.commands.trackers
+package moe.kabii.command.commands.trackers.track
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -22,13 +23,15 @@ object TwitterTrackerCommand : TrackerCommand {
         // if this is in a guild make sure the twitter feature is enabled here
         origin.channelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", allowOverride = false)
 
-        if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
+        val twitterId = target.identifier.toLongOrNull()
+        if(!target.identifier.matches(TwitterParser.twitterUsernameRegex) && twitterId == null) {
             origin.ereply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
             return
         }
 
         // convert input @username -> twitter user ID
-        val twitterUser = TwitterParser.getUser(target.identifier)
+        val twitterUser = if(twitterId != null) TwitterParser.getUser(twitterId)
+        else TwitterParser.getUser(target.identifier)
         if(twitterUser == null) {
             origin.ereply(Embeds.error("Unable to find Twitter user **${target.identifier}**.")).awaitSingle()
             return
@@ -66,7 +69,8 @@ object TwitterTrackerCommand : TrackerCommand {
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
-        if(!target.identifier.matches(TwitterParser.twitterUsernameRegex)) {
+        val twitterId = target.identifier.toLongOrNull()
+        if(!target.identifier.matches(TwitterParser.twitterUsernameRegex) && twitterId == null) {
             origin.ereply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
             return
         }

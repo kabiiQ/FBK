@@ -1,10 +1,12 @@
-package moe.kabii.command.commands.trackers
+package moe.kabii.command.commands.trackers.track
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.BotSendMessageException
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verifyBotAccess
@@ -28,6 +30,12 @@ object TrackerCommandBase : CommandContainer {
         override val wikiPath = "Livestream-Tracker"
 
         init {
+            autoComplete {
+                val siteArg = ChatCommandArguments(event).optInt("site")
+                val feeds = GlobalTrackSuggestionGenerator.suggestFeeds(value, siteArg)
+                suggest(feeds)
+            }
+
             chat {
                 trackCommand(this, Action.TRACK)
             }
@@ -41,7 +49,8 @@ object TrackerCommandBase : CommandContainer {
             autoComplete {
                 val channelId = event.interaction.channelId.asLong()
                 val siteArg = ChatCommandArguments(event).optInt("site")
-                suggest(TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg))
+                val feeds = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg)
+                suggest(feeds)
             }
 
             chat {

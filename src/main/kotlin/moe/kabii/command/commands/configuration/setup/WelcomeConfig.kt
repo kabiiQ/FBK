@@ -21,7 +21,6 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.File
@@ -251,15 +250,5 @@ object WelcomeConfig : Command("welcome") {
     }
 
     @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
-    private fun verifyColor(origin: DiscordParameters, value: String): Result<Int?, String> {
-        val colorArg = value.split(" ").lastOrNull()?.ifBlank { null } ?: return Err("No color code specified.")
-
-        // parse color code
-        val parsed = colorArg
-            .replaceFirst("#", "")
-            .toIntOrNull(radix = 16)
-        return if(parsed == null || parsed < 0 || parsed > 16777215) {
-            Err("$colorArg is not a valid [hex color code.](${URLUtil.colorPicker})")
-        } else Ok(parsed)
-    }
+    private fun verifyColor(origin: DiscordParameters, value: String): Result<Int?, String> = ColorUtil.fromString(value)
 }

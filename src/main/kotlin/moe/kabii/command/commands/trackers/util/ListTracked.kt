@@ -1,4 +1,4 @@
-package moe.kabii.command.commands.trackers
+package moe.kabii.command.commands.trackers.util
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle

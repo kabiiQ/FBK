@@ -1,4 +1,4 @@
-package moe.kabii.command.commands.trackers
+package moe.kabii.command.commands.trackers.util
 
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import moe.kabii.data.relational.anime.TrackedMediaLists
@@ -40,13 +40,14 @@ object TargetSuggestionGenerator {
         return targets.size
     }
 
-    suspend fun getTargets(clientId: Int, channelId: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
-        val targetChannel = TargetChannel(clientId, channelId)
+    suspend fun getTargets(clientId: Int, id: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
+        val targetChannel = TargetChannel(clientId, id)
         val allTargets = channelTargetCache.getOrPut(targetChannel) {
             generateTargetMappings(targetChannel)
         }
         val targets = if(filter == null) allTargets else allTargets.filter { target -> filter(target.site) }
 
+        // TODO code is duplicated for global track suggestions
         // site: parsed from input or from site option
         val colonArg = input.split(":")
         var site: TrackerTarget? = null

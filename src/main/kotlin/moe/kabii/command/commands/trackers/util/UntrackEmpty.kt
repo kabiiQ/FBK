@@ -1,4 +1,4 @@
-package moe.kabii.command.commands.trackers
+package moe.kabii.command.commands.trackers.util
 
 import moe.kabii.command.Command
 import moe.kabii.data.relational.streams.TrackedStreams

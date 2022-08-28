@@ -1,6 +1,7 @@
 package moe.kabii
 
 import kotlinx.coroutines.runBlocking
+import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.data.flat.GQLQueries
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
@@ -42,6 +43,7 @@ fun main() {
 
             DiscordOAuthRedirectServer.server.start()
             val welcomer = WelcomeImageGenerator
+            GlobalTrackSuggestionGenerator.cacheAll()
             val streamers = KnownStreamers
             YoutubeVideosService.server.start()
             val translator = Translator.detector.detectLanguageOf("initalizing translator")

@@ -2,7 +2,7 @@ package moe.kabii.command.commands.configuration.setup
 
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.trackers.TargetSuggestionGenerator
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.ChannelMark
