@@ -239,7 +239,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         .awaitSingle()
                     // get mention role from db
                     val mention = if(guildId != null && Duration.between(stream.startedAt, Instant.now()) <= Duration.ofMinutes(15)) {
-                        getMentionRoleFor(target.streamChannel, guildId, chan, settings)
+                        getMentionRoleFor(target, chan, settings)
                     } else null
 
                     val newNotification = try {

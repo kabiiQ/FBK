@@ -41,7 +41,7 @@ object TwitterTrackerCommand : TrackerCommand {
         val channelId = origin.chan.id.asLong()
 
         val existingTrack = transaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, twitterUser.id, channelId)
+            TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
         }
 
         if(existingTrack != null) {
@@ -85,7 +85,7 @@ object TwitterTrackerCommand : TrackerCommand {
         // verify this user is tracked
         val channelId = origin.chan.id.asLong()
         propagateTransaction {
-            val existingTrack = TwitterTarget.getExistingTarget(origin.client.clientId, twitterUser.id, channelId)
+            val existingTrack = TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
 
             if(existingTrack == null) {
                 origin.ereply(Embeds.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
@@ -98,8 +98,6 @@ object TwitterTrackerCommand : TrackerCommand {
                 || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
                 || origin.author.id.asLong() == existingTrack.tracker.userID
             ) {
-                val feed = existingTrack.twitterFeed
-
                 propagateTransaction { existingTrack.delete() }
                 origin.ireply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
                 TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())

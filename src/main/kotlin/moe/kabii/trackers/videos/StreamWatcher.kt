@@ -94,41 +94,38 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
     }
 
-    data class MentionRole(val db: TrackedStreams.Mention, val discord: Role?)
+    data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbStream: TrackedStreams.StreamChannel, guildId: Long, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false): MentionRole? {
+    suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
-        val dbRole = dbStream.mentionRoles
-            .firstOrNull { men -> men.guild.guildID == guildId }
-        return if(dbRole != null) {
-            val mentionRole = when {
-                memberLimit -> dbRole.mentionRoleMember
-                uploadedVideo -> dbRole.mentionRoleUploads ?: dbRole.mentionRole
-                else -> dbRole.mentionRole
-            }
-            val role = if(mentionRole != null) {
-                targetChannel.toMono()
-                    .ofType(GuildChannel::class.java)
-                    .flatMap(GuildChannel::getGuild)
-                    .flatMap { guild -> guild.getRoleById(mentionRole.snowflake) }
-                    .tryAwait()
-            } else null
-            val discordRole = when(role) {
-                is Ok -> role.value
-                is Err -> {
-                    val err = role.value
-                    if(err is ClientException && err.status.code() == 404) {
-                        // role has been deleted, remove configuration
-                        if(dbRole.mentionRole == mentionRole) dbRole.mentionRole = null
-                        if(dbRole.mentionRoleMember == mentionRole) dbRole.mentionRoleMember = null
-                        if(dbRole.mentionRole == null && dbRole.mentionRoleMember == null && dbRole.mentionText == null) dbRole.delete()
-                    }
-                    null
-                }
-                null -> null
-            }
-            MentionRole(dbRole, discordRole)
+        val dbMention = dbTarget.mention() ?: return null
+        val mentionRole = when {
+            memberLimit -> dbMention.mentionRoleMember
+            uploadedVideo -> dbMention.mentionRoleUploads ?: dbMention.mentionRole
+            else -> dbMention.mentionRole
+        }
+        val role = if(mentionRole != null) {
+            targetChannel.toMono()
+                .ofType(GuildChannel::class.java)
+                .flatMap(GuildChannel::getGuild)
+                .flatMap { guild -> guild.getRoleById(mentionRole.snowflake) }
+                .tryAwait()
         } else null
+        val discordRole = when(role) {
+            is Ok -> role.value
+            is Err -> {
+                val err = role.value
+                if(err is ClientException && err.status.code() == 404) {
+                    // role has been deleted, remove configuration
+                    if(dbMention.mentionRole == mentionRole) dbMention.mentionRole = null
+                    if(dbMention.mentionRoleMember == mentionRole) dbMention.mentionRoleMember = null
+                    if(dbMention.mentionRole == null && dbMention.mentionRoleMember == null && dbMention.mentionText == null) dbMention.delete()
+                }
+                null
+            }
+            null -> null
+        }
+        return MentionRole(dbMention, discordRole)
     }
 
     @WithinExposedContext

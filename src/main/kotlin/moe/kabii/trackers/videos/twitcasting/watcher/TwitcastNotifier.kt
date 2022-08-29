@@ -130,7 +130,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
 
         // get mention role from db if one is registered
         val mention = if(guildId != null) {
-            getMentionRoleFor(target.streamChannel, guildId, chan, features)
+            getMentionRoleFor(target, chan, features)
         } else null
 
         val (movie, user) = info

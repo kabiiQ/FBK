@@ -46,7 +46,6 @@ object TrackedStreams {
         var lastApiUsage by StreamChannels.lastApiUsage
 
         val targets by Target referrersOn Targets.streamChannel
-        val mentionRoles by Mention referrersOn Mentions.streamChannel
 
         val subscription by WebSubSubscription referrersOn WebSubSubscriptions.webSubChannel
 
@@ -86,6 +85,10 @@ object TrackedStreams {
         val streamChannel = reference("assoc_stream_channel", StreamChannels, ReferenceOption.CASCADE)
         val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
         val tracker = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
+
+        init {
+            index(customIndexName = "targets_unique_per_channel", isUnique = true, discordClient, streamChannel, discordChannel)
+        }
     }
 
     class Target(id: EntityID<Int>) : IntEntity(id) {
@@ -93,6 +96,10 @@ object TrackedStreams {
         var streamChannel by StreamChannel referencedOn Targets.streamChannel
         var discordChannel by DiscordObjects.Channel referencedOn Targets.discordChannel
         var tracker by DiscordObjects.User referencedOn Targets.tracker
+
+        val mention by TargetMention referrersOn TargetMentions.target
+
+        fun mention() = this.mention.firstOrNull()
 
         companion object : IntEntityClass<Target>(Targets) {
 
@@ -108,55 +115,31 @@ object TrackedStreams {
                                 (DiscordObjects.Channels.channelID eq discordChan.asLong())
                     }
             ).firstOrNull()
-
-            // get target
-            @WithinExposedContext
-            fun getForServer(clientId: Int, guildId: Long, site: DBSite, accountId: String) = wrapRows(
-                Targets
-                    .innerJoin(StreamChannels)
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds).select {
-                        StreamChannels.site eq site and
-                                (Targets.discordClient eq clientId) and
-                                (StreamChannels.siteChannelID eq accountId) and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }
-            ).firstOrNull()
         }
     }
 
-    object Mentions : IdTable<Int>() {
-        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
-        val streamChannel = reference("assoc_stream", StreamChannels, ReferenceOption.CASCADE)
-        val guild = reference("assoc_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
+    object TargetMentions : IdTable<Int>() {
+        // extension of Target. fk, pk = target
         val mentionRole = long("discord_mention_role_id").nullable()
         var mentionRoleMember = long("discord_mention_role_membership").nullable()
         var mentionRoleUploads = long("discord_mention_role_uploads").nullable()
         val mentionText = text("discord_mention_text").nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
-        override val primaryKey = PrimaryKey(streamChannel, guild)
+        val target = reference("mention_assoc_target", Targets, ReferenceOption.CASCADE)
+        override val id = target
+        override val primaryKey = PrimaryKey(id)
     }
 
-    class Mention(id: EntityID<Int>) : IntEntity(id) {
-        var stream by StreamChannel referencedOn Mentions.streamChannel
-        var guild by DiscordObjects.Guild referencedOn Mentions.guild
-        var mentionRole by Mentions.mentionRole
-        var mentionRoleMember by Mentions.mentionRoleMember
-        var mentionRoleUploads by Mentions.mentionRoleUploads
-        var mentionText by Mentions.mentionText
-        var lastMention by Mentions.lastMention
+    class TargetMention(id: EntityID<Int>) : IntEntity(id) {
+        var mentionRole by TargetMentions.mentionRole
+        var mentionRoleMember by TargetMentions.mentionRoleMember
+        var mentionRoleUploads by TargetMentions.mentionRoleUploads
+        var mentionText by TargetMentions.mentionText
+        var lastMention by TargetMentions.lastMention
 
-        companion object : IntEntityClass<Mention>(Mentions) {
-            @WithinExposedContext
-            fun getMentionsFor(guildID: Snowflake, streamChannelID: String) = Mention.wrapRows(
-                Mentions
-                    .innerJoin(StreamChannels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .select {
-                        DiscordObjects.Guilds.guildID eq guildID.asLong() and
-                                (StreamChannels.siteChannelID eq streamChannelID)
-                    })
-        }
+        var target by Target referencedOn TargetMentions.target
+
+        companion object : IntEntityClass<TargetMention>(TargetMentions)
     }
 }

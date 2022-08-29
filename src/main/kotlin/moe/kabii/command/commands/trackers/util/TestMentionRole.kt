@@ -7,9 +7,7 @@ import moe.kabii.command.Command
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
-import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -18,10 +16,9 @@ import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.and
 
 object TestMentionRole : Command("getmention") {
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
         autoComplete {
@@ -70,22 +67,16 @@ object TestMentionRole : Command("getmention") {
         }
 
         val matchingTarget = propagateTransaction {
-            TrackedStreams.Target.getForServer(client.clientId, target.id.asLong(), streamInfo.site.dbSite, streamInfo.accountId)
+            TrackedStreams.Target.getForChannel(client.clientId, chan.id, streamInfo.site.dbSite, streamInfo.accountId)
         }
 
         if (matchingTarget == null) {
-            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in this channel.")).awaitSingle()
             return
         }
 
         val content = propagateTransaction {
-            val dbGuild = DiscordObjects.Guild.getOrInsert(origin.target.id.asLong())
-            val mention = TrackedStreams.Mention.find {
-                TrackedStreams.Mentions.streamChannel eq matchingTarget.streamChannel.id and
-                        (TrackedStreams.Mentions.guild eq dbGuild.id)
-            }.firstOrNull()
-
-            mention ?: return@propagateTransaction ""
+            val mention = matchingTarget.mention() ?: return@propagateTransaction ""
 
             val out = StringBuilder()
             if(mention.mentionRole != null) {
@@ -137,23 +128,21 @@ object TestMentionRole : Command("getmention") {
         }
 
         val matchingTarget = propagateTransaction {
-            moe.kabii.data.relational.twitter.TwitterTarget.getForServer(
+            moe.kabii.data.relational.twitter.TwitterTarget.getExistingTarget(
                 client.clientId,
-                target.id.asLong(),
+                chan.id.asLong(),
                 twitterUser.id
             )
         }
 
         if (matchingTarget == null) {
-            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**."))
+            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in this channel."))
                 .awaitSingle()
             return
         }
 
         val content = propagateTransaction {
-            val mention = TwitterMention
-                .getRoleFor(target.id, twitterUser.id)
-                .firstOrNull()
+            val mention = matchingTarget.mention()
 
             mention ?: return@propagateTransaction "No mentions/pings are configured for this Twitter feed."
 

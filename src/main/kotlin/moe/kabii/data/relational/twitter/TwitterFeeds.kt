@@ -1,6 +1,5 @@
 package moe.kabii.data.relational.twitter
 
-import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.util.extensions.WithinExposedContext
@@ -59,9 +58,13 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     var discordChannel by DiscordObjects.Channel referencedOn TwitterTargets.discordChannel
     var tracker by DiscordObjects.User referencedOn TwitterTargets.tracker
 
+    val mention by TwitterTargetMention referrersOn TwitterTargetMentions.target
+
+    fun mention() = this.mention.firstOrNull()
+
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext
-        fun getExistingTarget(clientId: Int, userId: Long, channelId: Long) = TwitterTarget.wrapRows(
+        fun getExistingTarget(clientId: Int, channelId: Long, userId: Long) = TwitterTarget.wrapRows(
             TwitterTargets
                 .innerJoin(TwitterFeeds)
                 .innerJoin(DiscordObjects.Channels)
@@ -71,47 +74,23 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
                             (DiscordObjects.Channels.channelID eq channelId)
                 }
         ).firstOrNull()
-
-        @WithinExposedContext
-        fun getForServer(clientId: Int, guildId: Long, twitterId: Long) = wrapRows(
-            TwitterTargets
-                .innerJoin(TwitterFeeds)
-                .innerJoin(DiscordObjects.Channels)
-                .innerJoin(DiscordObjects.Guilds).select {
-                    TwitterFeeds.userId eq twitterId and
-                            (TwitterTargets.discordClient eq clientId) and
-                            (DiscordObjects.Guilds.guildID eq guildId)
-                }
-        ).firstOrNull()
     }
 }
 
-object TwitterMentions : IdTable<Int>() {
-    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
-    val twitterFeed = reference("assoc_twitter_feed", TwitterFeeds, ReferenceOption.CASCADE)
-    val guild = reference("assoc_feed_mention_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
+object TwitterTargetMentions : IdTable<Int>() {
     val mentionRole = long("discord_feed_mention_role_id").nullable()
     val mentionText = text("discord_feed_mention_text").nullable()
 
-    override val primaryKey = PrimaryKey(twitterFeed, guild)
+    val target = reference("twitter_mention_assoc_target", TwitterTargets, ReferenceOption.CASCADE)
+    override val id = target
+    override val primaryKey = PrimaryKey(id)
 }
 
-class TwitterMention(id: EntityID<Int>) : IntEntity(id) {
-    var twitterFeed by TwitterFeed referencedOn TwitterMentions.twitterFeed
-    var guild by DiscordObjects.Guild referencedOn TwitterMentions.guild
-    var mentionRole by TwitterMentions.mentionRole
-    var mentionText by TwitterMentions.mentionText
+class TwitterTargetMention(id: EntityID<Int>) : IntEntity(id) {
+    var mentionRole by TwitterTargetMentions.mentionRole
+    var mentionText by TwitterTargetMentions.mentionText
 
-    companion object : IntEntityClass<TwitterMention>(TwitterMentions) {
-        @WithinExposedContext
-        fun getRoleFor(guildId: Snowflake, twitterId: Long) = TwitterMention.wrapRows(
-            TwitterMentions
-                .innerJoin(TwitterFeeds)
-                .innerJoin(DiscordObjects.Guilds)
-                .select {
-                    DiscordObjects.Guilds.guildID eq guildId.asLong() and
-                            (TwitterFeeds.userId eq twitterId)
-                }
-        )
-    }
+    var target by TwitterTarget referencedOn TwitterTargetMentions.target
+
+    companion object : IntEntityClass<TwitterTargetMention>(TwitterTargetMentions)
 }

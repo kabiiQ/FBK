@@ -1,6 +1,5 @@
 package moe.kabii.trackers.twitter.watcher
 
-import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
@@ -19,8 +18,8 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
@@ -281,9 +280,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                 LOG.debug("roles phase")
                 // mention roles
-                val guildId = target.discordChannel.guild?.guildID
-                val mention = guildId
-                    ?.run { getMentionRoleFor(target, this.snowflake, channel, tweet, twitter) }
+                val mention = getMentionRoleFor(target, channel, tweet, twitter)
 
                 val mentionText = if(mention != null) {
                     val rolePart = if(mention.discord == null || Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)) null
@@ -383,9 +380,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
         }
     }
 
-    data class TwitterMentionRole(val db: TwitterMention, val discord: Role?)
+    data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, guildId: Snowflake, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
+    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         // do not return ping if not configured for channel/tweet type
         when {
             !twitterCfg.mentionRoles -> return null
@@ -395,8 +392,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
             else -> if(!twitterCfg.mentionTweets) return null
         }
 
-        val dbMentionRole = TwitterMention.getRoleFor(guildId, dbTarget.twitterFeed.userId)
-            .firstOrNull() ?: return null
+        val dbMentionRole = dbTarget.mention() ?: return null
         val dRole = if(dbMentionRole.mentionRole != null) {
             targetChannel.toMono()
                 .ofType(GuildChannel::class.java)

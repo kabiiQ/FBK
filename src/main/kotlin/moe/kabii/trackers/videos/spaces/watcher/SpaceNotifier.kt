@@ -65,9 +65,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
 
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
-
-        val mention = guildId
-            ?.run { getMentionRoleFor(target.streamChannel, this, chan, features) }
+        val mention = getMentionRoleFor(target, chan, features)
 
         try {
             val hosts = space.hosts - space.creator

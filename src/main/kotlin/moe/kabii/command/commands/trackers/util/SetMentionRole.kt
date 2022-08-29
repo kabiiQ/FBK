@@ -1,17 +1,15 @@
-package moe.kabii.command.commands.configuration
+package moe.kabii.command.commands.trackers.util
 
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
-import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterMention
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -21,22 +19,15 @@ import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.and
 
 object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
         autoComplete {
-            val channelIds = event.interaction.guild
-                .flatMapMany { guild -> guild.channels }
-                .map { channel -> channel.id.asLong() }
-                .collectList()
-                .awaitSingle()
+            val channelId = event.interaction.channelId.asLong()
             val siteArg = ChatCommandArguments(event).optInt("site")
-            val matches = channelIds.flatMap { channelId ->
-                TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
-            }
+            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
             suggest(matches)
         }
 
@@ -74,24 +65,19 @@ object SetMentionRole : Command("setmention") {
             }
         }
 
-        // get stream from db - verify that it is tracked in this server
-        // get any target for this stream in this guild
+        // get stream from db - verify that it is tracked in this channel
         val matchingTarget = propagateTransaction {
-            TrackedStreams.Target.getForServer(origin.client.clientId, origin.target.id.asLong(), streamInfo.site.dbSite, streamInfo.accountId)
+            TrackedStreams.Target.getForChannel(origin.client.clientId, origin.chan.id, streamInfo.site.dbSite, streamInfo.accountId)
         }
 
         if (matchingTarget == null) {
-            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not being tracked in this channel.")).awaitSingle()
             return
         }
 
-        // create or overwrite mention for this guild
+        // create or overwrite mention for this target
         val updateStr = propagateTransaction {
-            val dbGuild = DiscordObjects.Guild.getOrInsert(origin.target.id.asLong())
-            val existingMention = TrackedStreams.Mention.find {
-                TrackedStreams.Mentions.streamChannel eq matchingTarget.streamChannel.id and
-                        (TrackedStreams.Mentions.guild eq dbGuild.id)
-            }.firstOrNull()
+            val existingMention = matchingTarget.mention()
 
             val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
             val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
@@ -108,9 +94,8 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
                     existingMention.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
                 } else {
-                    TrackedStreams.Mention.new {
-                        this.stream = matchingTarget.streamChannel
-                        this.guild = dbGuild
+                    TrackedStreams.TargetMention.new {
+                        this.target = matchingTarget
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
@@ -146,18 +131,17 @@ object SetMentionRole : Command("setmention") {
 
         // verify that twitter feed is tracked in this server (any target in this guild)
         val matchingTarget = propagateTransaction {
-            TwitterTarget.getForServer(origin.client.clientId, origin.target.id.asLong(), twitterUser.id)
+            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser.id)
         }
 
         if(matchingTarget == null) {
-            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in **${origin.target.name}**.")).awaitSingle()
+            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
             return
         }
 
          // create or overwrite mention for this guild
         val updateStr = propagateTransaction {
-            val existingMention = TwitterMention.getRoleFor(origin.target.id, twitterUser.id)
-                .firstOrNull()
+            val existingMention = matchingTarget.mention()
 
             if(roleArg == null && textArg == null) {
                 existingMention?.delete()
@@ -167,9 +151,8 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionRole = roleArg?.id?.asLong()
                     existingMention.mentionText = textArg
                 } else {
-                    TwitterMention.new {
-                        this.twitterFeed = matchingTarget.twitterFeed
-                        this.guild = DiscordObjects.Guild.getOrInsert(origin.target.id.asLong())
+                    TwitterTargetMention.new {
+                        this.target = matchingTarget
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
                     }
