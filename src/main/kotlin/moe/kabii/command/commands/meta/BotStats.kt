@@ -22,7 +22,7 @@ object BotStats : CommandContainer {
         init {
             chat {
                 val avatar = event.client.self.map(User::getAvatarUrl).tryAwait().orNull()
-                ireply(Embeds.fbk("Pong!")).awaitSingle()
+                ereply(Embeds.fbk("Pong!")).awaitSingle()
                 val reply = event.reply.awaitSingle()
                 val commandPing = ChronoUnit.MILLIS.between(event.interaction.id.timestamp, reply.timestamp)
                 val heartbeat = event.client.gatewayClientGroup.find(event.shardInfo.index).orNull()?.responseTime?.toMillis()
