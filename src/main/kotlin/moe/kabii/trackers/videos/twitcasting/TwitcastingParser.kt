@@ -100,7 +100,7 @@ object TwitcastingParser {
 
         val response = OkHTTP.newCall(request).execute()
         return response.use { rs ->
-            val body = rs.body!!.string()
+            val body = rs.body.string()
             rs.isSuccessful.also {
                 if(rs.code == 200) LOG.info("New Twitcasting webhook registered :: $body")
                 else LOG.warn("Unable to register Twitcasting Webhook :: $body")
@@ -119,7 +119,7 @@ object TwitcastingParser {
 
         val response = OkHTTP.newCall(request).execute()
         try {
-            val body = response.body!!.string()
+            val body = response.body.string()
 
             if(response.isSuccessful) {
                 LOG.info("Twitcasting webhook un-registered :: $body")

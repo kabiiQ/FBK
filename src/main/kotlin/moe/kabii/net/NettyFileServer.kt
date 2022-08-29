@@ -50,7 +50,7 @@ object NettyFileServer {
                     val request = newRequestBuilder().get().url(thumbnailUrl).build()
                     try {
                         OkHTTP.newCall(request).execute().use { rs ->
-                            call.respondBytes(rs.body!!.bytes(), contentType = ContentType.Image.PNG)
+                            call.respondBytes(rs.body.bytes(), contentType = ContentType.Image.PNG)
                         }
                     } catch(e: Exception) {
                         call.respondFile(defaultThumbnail)

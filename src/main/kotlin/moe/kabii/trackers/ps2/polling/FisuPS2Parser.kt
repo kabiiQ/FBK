@@ -22,7 +22,7 @@ object FisuPS2Parser {
         try {
             val response = OkHTTP.newCall(request).execute()
             try {
-                val body = response.body!!.string()
+                val body = response.body.string()
                 if(response.isSuccessful) {
                     val json = MOSHI.adapter(PS2FisuPopulationResponse::class.java).fromJson(body)
                     if(json != null) {

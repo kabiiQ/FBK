@@ -35,8 +35,8 @@ object MALParser : MediaListParser(
                         else -> throw MediaListIOException(response.message)
                     }
                 } else {
-                    val body = response.body!!.string()
-//                    Ok(response.body!!.string())
+                    val body = response.body.string()
+//                    Ok(response.body.string())
                     Ok(body)
                 }
             }
@@ -55,7 +55,7 @@ object MALParser : MediaListParser(
                 // if we already got the anime list, but manga can not be acquired, still return nothing
                 // we do not want the list watcher to recieve empty manga list - this would be perceived as an update
                 if(!response.isSuccessful) throw MediaListIOException(response.message)
-                else Ok(response.body!!.string())
+                else Ok(response.body.string())
             }
 
             val mangaListPage = mangaListAdapter.fromJsonSafe(responseBody!!).orNull() ?: return null

@@ -41,7 +41,7 @@ object PS2Parser {
             nextCall = Instant.now() + limitRate
             val response = httpClient.newCall(request).execute()
             try {
-                val body = response.body!!.string()
+                val body = response.body.string()
                 if(response.isSuccessful) {
 
                     val json = MOSHI.adapter(R::class.java).fromJson(body)

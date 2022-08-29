@@ -718,6 +718,7 @@ This page is an automatically generated list of all bot commands with a link to 
 ### - `/getmention`:
 
 - Test the configured '/setmention' role ping for a tracked Twitter/livestream feed. (WILL PING ROLES)
+- Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
 
 | Option | Type | Description
 | ---    | ---  | ---

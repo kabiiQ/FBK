@@ -36,7 +36,7 @@ object AniListParser : MediaListParser() {
 
         return response.use { rs ->
             if(!rs.isSuccessful) return null
-            val raw = response.body!!.string()
+            val raw = response.body.string()
             val json = aniListUserAdapter.fromJsonSafe(raw).orNull()
             json?.data?.user?.id?.toString()
         }
@@ -71,7 +71,7 @@ object AniListParser : MediaListParser() {
                         throw MediaListIOException(response.message)
                     }
                 } else {
-                    response.body!!.string()
+                    response.body.string()
                 }
             } finally {
                 response.close()

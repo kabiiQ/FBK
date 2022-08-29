@@ -53,14 +53,14 @@ object DeepLTranslator : TranslationService(
         val response = OkHTTP.newCall(request).execute()
         val translation = try {
             if(response.isSuccessful) {
-                val body = response.body!!.string()
+                val body = response.body.string()
                 translationAdapter.fromJson(body)!!.translations.first()
             } else {
                 if(response.code == 456) {
                     this.available = false
                     LOG.error("DeepL monthly quota exceeded: disabling DL translation")
-                    throw IOException("DeepL 456 quota exceeded: ${response.body!!.string()}")
-                } else throw IOException("HTTP request returned response code ${response.code} :: Body ${response.body!!.string()}")
+                    throw IOException("DeepL 456 quota exceeded: ${response.body.string()}")
+                } else throw IOException("HTTP request returned response code ${response.code} :: Body ${response.body.string()}")
             }
         } finally {
             response.close()
@@ -83,7 +83,7 @@ object DeepLTranslator : TranslationService(
         LOG.info("Requesting supported languages from DeepL")
         val response = OkHTTP.newCall(request).execute()
         return try {
-            val body = response.body!!.string()
+            val body = response.body.string()
             val languages = DeepLSupportedLanguage.parseList(body)
             if(languages != null) {
                 val deepLanguages = languages.associate { (language, name) ->

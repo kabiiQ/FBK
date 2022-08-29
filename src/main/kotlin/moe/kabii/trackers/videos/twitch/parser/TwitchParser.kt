@@ -60,14 +60,14 @@ object TwitchParser {
                             // retry with new oauth token
                             200L
                         } else {
-                            LOG.error("Error calling Twitch API: ${response.body?.string()}")
+                            LOG.error("Error calling Twitch API: ${response.body.string()}")
                             delay(200L)
                             break
                         }
                         delay(timeout)
                         continue
                     } else {
-                        val body = response.body!!.string()
+                        val body = response.body.string()
                         return try {
                             val json = MOSHI.adapter(R::class.java).fromJson(body)
                             if (json != null) Ok(json) else Err(StreamErr.NotFound)

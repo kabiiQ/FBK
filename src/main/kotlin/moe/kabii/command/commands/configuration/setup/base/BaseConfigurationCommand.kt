@@ -250,7 +250,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         }
 
         val exitListener = origin.listener(ButtonInteractionEvent::class, true, null, "exit")
-            .flatMap { press ->
+            .flatMap { _ ->
                 mono {
                     origin.config.save()
                 }.then(

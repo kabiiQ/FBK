@@ -46,7 +46,7 @@ object TwitterParser {
                             reset ?: Duration.ofMillis(1000L), "HTTP response: ${response.code}"
                         )
                     } else if(response.code == 400) {
-                        val body = response.body!!.string()
+                        val body = response.body.string()
                         val errorJson = TwitterBadRequestResponse.adapter.fromJson(body)
                         if(errorJson != null) {
                             // weird issue here: the since_id we provide to Twitter must be within 1 week. but if their last tweet was older than this, we don't want to pull any tweets at all until there are new ones
@@ -61,7 +61,7 @@ object TwitterParser {
                     }
                     throw TwitterIOException(response.toString())
                 }
-                val body = response.body!!.string()
+                val body = response.body.string()
                 return try {
                     MOSHI.adapter(R::class.java).fromJson(body)
                 } catch (e: Exception) {

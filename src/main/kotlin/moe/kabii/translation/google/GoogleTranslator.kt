@@ -50,14 +50,14 @@ object GoogleTranslator : TranslationService(
         val response = OkHTTP.newCall(request).execute()
         val translation = try {
             if(response.isSuccessful) {
-                val body = response.body!!.string()
+                val body = response.body.string()
                 translationAdapter.fromJson(body)!!.data.translations.first()
             } else {
-                if(response.code == 403 && response.body!!.string().contains("Limit Exceeded", ignoreCase = true)) {
+                if(response.code == 403 && response.body.string().contains("Limit Exceeded", ignoreCase = true)) {
                     this.available = false
                     LOG.error("GTL monthly quota exceeded: disabling GTL translation")
-                    throw IOException("GTL 403 quota exceeded: ${response.body!!.string()}")
-                } else throw IOException("HTTP request returned response code ${response.code} :: Body ${response.body!!.string()}")
+                    throw IOException("GTL 403 quota exceeded: ${response.body.string()}")
+                } else throw IOException("HTTP request returned response code ${response.code} :: Body ${response.body.string()}")
             }
         } finally {
             response.close()
@@ -83,7 +83,7 @@ object GoogleTranslator : TranslationService(
 
         val response = OkHTTP.newCall(request).execute()
         return try {
-            val body = response.body!!.string()
+            val body = response.body.string()
             val adapter = MOSHI.adapter(GoogleLanguagesResponse::class.java)
             val languages = adapter.fromJson(body)
             if(languages != null) {

@@ -135,12 +135,12 @@ object YoutubeParser {
             try {
                 if (response.isSuccessful) {
                     // should receive relevant json
-                    val body = response.body!!.string()
+                    val body = response.body.string()
                     return MOSHI.adapter(R::class.java).fromJson(body)!!
 
                 } else {
                     // should receive error json
-                    val body = response.body!!.string()
+                    val body = response.body.string()
                     val error = errorAdapter.fromJson(body)
                         ?.error?.errors?.firstOrNull()
                     if (error == null) {

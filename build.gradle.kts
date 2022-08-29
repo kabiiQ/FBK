@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.6.21"
+    val kotlinVer = "1.7.10"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -35,25 +35,25 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.6.0"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    val coroutinesVer = "1.6.3"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.6")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.1.7")
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.2") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.2.3") // discord websocket and api
 
     // music bot
-    implementation("com.github.walkyst:lavaplayer-fork:1.3.97.1") // discord audio library
+    implementation("com.github.walkyst:lavaplayer-fork:1.3.98.4") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.21")
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.6")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
 
     // other api - json response parsing
     val moshiVer = "1.13.0"
@@ -73,21 +73,21 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor")
 
     // ps2 websocket
-    implementation("org.java-websocket:Java-WebSocket:1.5.2")
+//    implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     // welcome banner image processing
-    val imageIO = "3.8.2"
+    val imageIO = "3.8.3"
     implementation("com.twelvemonkeys.imageio:imageio-jpeg:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-psd:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-bmp:$imageIO")
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.5.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.7.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.37.3"
+    val exposedVer = "0.39.2"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
@@ -96,7 +96,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // language detection
-    implementation("com.github.pemistahl:lingua:1.1.1")
+    implementation("com.github.pemistahl:lingua:1.2.2")
 
     // .toml token configuration
     implementation("com.uchuhimo:konf:1.1.2")

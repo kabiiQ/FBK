@@ -113,7 +113,7 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                         LOG.debug("Requesting OAuth $service token: ${rs.code}")
                         if(response.isSuccessful) {
                             try {
-                                val body = rs.body!!.string()
+                                val body = rs.body.string()
                                 val token = OAuthTokenResponse.fromJson(body)!!
                                 process.token(token.token)
                                 process.tokenCallback(process)

@@ -17,9 +17,9 @@ object DiscordParser {
         return try {
             OkHTTP.newCall(request).execute().use { rs ->
                 if(rs.isSuccessful) {
-                    val body = rs.body!!.string()
+                    val body = rs.body.string()
                     DAPI.UserConnection.fromJson(body)!!
-                } else throw IOException("Failed to parse Discord user connections: ${rs.body?.string()}")
+                } else throw IOException("Failed to parse Discord user connections: ${rs.body.string()}")
             }
         } catch(e: Exception) {
             LOG.error("Error while getting Discord user connections: ${e.message}")

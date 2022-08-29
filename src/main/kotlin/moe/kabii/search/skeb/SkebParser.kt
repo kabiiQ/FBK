@@ -26,7 +26,7 @@ object SkebParser {
                     if(response.code == 404) return null
                     else throw SkebIOException(response.toString())
                 }
-                val body = response.body!!.string()
+                val body = response.body.string()
                 MOSHI.adapter(R::class.java).fromJson(body)
             }
         } catch(e: Exception) {

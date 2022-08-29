@@ -52,7 +52,7 @@ object AzureTranslator : TranslationService(
         val response = OkHTTP.newCall(request).execute()
         val translation =  try {
             if(response.isSuccessful) {
-                val body = response.body!!.string()
+                val body = response.body.string()
                 AzureTranslationResponse.parseSingle(body)
             } else throw IOException("HTTP request returned response code ${response.code} :: Body: ${response.body}")
         } finally {
@@ -78,7 +78,7 @@ object AzureTranslator : TranslationService(
 
         val response = OkHTTP.newCall(request).execute()
         return try {
-            val body = response.body!!.string()
+            val body = response.body.string()
             val adapter = MOSHI.adapter(AzureLanguagesResponse::class.java)
             val languages = adapter.fromJson(body)
             if (languages != null) {

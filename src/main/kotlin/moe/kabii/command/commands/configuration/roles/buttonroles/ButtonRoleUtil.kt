@@ -190,7 +190,8 @@ class ButtonRoleUtil(val origin: DiscordParameters, val config: ButtonConfigurat
                             .find { dr -> dr.id == r.role.snowflake }
                             ?.run {
                                 val label = StringUtils.abbreviate(r.alternateName ?: name, 80)
-                                Button.primary(r.role.toString(), r.emoji?.toReactionEmoji(), label)
+                                if(r.emoji != null) Button.primary(r.role.toString(), r.emoji!!.toReactionEmoji(), label)
+                                else Button.primary(r.role.toString(), label)
                             }
                     }
                     .chunked(5)

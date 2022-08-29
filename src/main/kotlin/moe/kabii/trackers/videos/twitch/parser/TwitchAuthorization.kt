@@ -33,7 +33,7 @@ class TwitchAuthorization {
 
         val response = OkHTTP.newCall(request).execute()
         try {
-            val body = response.body!!.string()
+            val body = response.body.string()
 
             if(response.isSuccessful) {
                 val token = tokenAdapter.fromJson(body) ?: throw IOException("Twitch OAuth JSON problem :: $body")

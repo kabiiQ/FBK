@@ -36,7 +36,7 @@ object KitsuParser : MediaListParser() {
 
             response.use { rs ->
                 if (!rs.isSuccessful) return null
-                val body = response.body!!.string()
+                val body = response.body.string()
                 val json = kitsuUserAdapter.fromJsonSafe(body).orNull()
                 json?.run { data.singleOrNull() } // get user id from call if possible
                     ?.id
@@ -61,7 +61,7 @@ object KitsuParser : MediaListParser() {
                     if(response.code >= 429) Err(2000L)
                     else throw MediaListIOException(response.message)
                 } else {
-                    Ok(response.body!!.string())
+                    Ok(response.body.string())
                 }
             }
 

@@ -40,7 +40,7 @@ class YoutubeFeedSubscriber {
 
         val response = OkHTTP.newCall(request).execute()
         return response.use { rs ->
-            LOG.debug("${rs.code} :: ${rs.body!!.string()}")
+            LOG.debug("${rs.code} :: ${rs.body.string()}")
             if(response.isSuccessful) topic else null
         }
     }

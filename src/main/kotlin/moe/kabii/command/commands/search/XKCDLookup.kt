@@ -37,7 +37,7 @@ object XKCDLookup : Command("xkcd") {
             val comic = try {
                 OkHTTP.newCall(request).execute().use { rs ->
                     if(rs.isSuccessful) {
-                        val body = rs.body!!.string()
+                        val body = rs.body.string()
                         xkcdAdapter.fromJson(body)!!
                     } else {
                         ereply(Embeds.error("Unable to find comic.")).awaitSingle()

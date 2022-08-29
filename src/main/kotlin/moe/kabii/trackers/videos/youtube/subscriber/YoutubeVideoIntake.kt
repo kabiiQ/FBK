@@ -36,7 +36,7 @@ object YoutubeVideoIntake {
 
                 try {
                     OkHTTP.newCall(request).execute().use { response ->
-                        val xml = response.body!!.string()
+                        val xml = response.body.string()
                         intakeXml(xml)
                     }
 

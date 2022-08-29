@@ -38,7 +38,7 @@ object Urban : Command("ud") {
 
             val define = try {
                 OkHTTP.newCall(request).execute().use { response ->
-                    val body = response.body!!.string()
+                    val body = response.body.string()
                     udAdapter.fromJson(body)
                 }
             } catch (e: Exception) {

@@ -45,7 +45,7 @@ object WolframAlpha : Command("calc") {
 
         return try {
             OkHTTP.newCall(request).execute().use { rs ->
-                WolframResponse(rs.isSuccessful, rs.body!!.string())
+                WolframResponse(rs.isSuccessful, rs.body.string())
             }
         } catch(e: Exception) {
             LOG.warn("Error calling WolframAlpha conversation API: ${e.message}")

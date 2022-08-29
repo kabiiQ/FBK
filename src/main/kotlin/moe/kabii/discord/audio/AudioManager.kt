@@ -4,14 +4,12 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeHttpContextFilter
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import discord4j.voice.AudioProvider
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
-import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.instances.FBK
 import java.nio.ByteBuffer
@@ -28,8 +26,6 @@ object AudioManager {
     init {
         AudioSourceManagers.registerRemoteSources(manager)
         // configure filter to access age-restricted videos
-        YoutubeHttpContextFilter.setPAPISID(Keys.config[Keys.Youtube.filterPAPIS])
-        YoutubeHttpContextFilter.setPSID(Keys.config[Keys.Youtube.filterPS])
     }
 
     internal fun createAudioComponents(): AudioComponents {
