@@ -13,6 +13,7 @@ import moe.kabii.translation.argos.json.ArgosLanguagesResponse
 import moe.kabii.translation.argos.json.ArgosTranslationError
 import moe.kabii.translation.argos.json.ArgosTranslationRequest
 import moe.kabii.translation.argos.json.ArgosTranslationResponse
+import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 
@@ -76,21 +77,28 @@ object ArgosTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = newRequestBuilder()
-            .url("http://$libreTranslator/languages")
-            .build()
+        return try {
+            val request = newRequestBuilder()
+                .url("http://$libreTranslator/languages")
+                .build()
 
-        LOG.info("Getting supported languages from LibreTranslator endpoint.")
+            LOG.info("Getting supported languages from LibreTranslator endpoint.")
 
-        val response = OkHTTP.newCall(request).execute()
-        return response.use { response ->
-            val body = response.body.string()
-            val languages = ArgosLanguagesResponse.parseLanguages(body)
-            val argosLanguages = languages.map { lang ->
-                lang.code.lowercase() to TranslationLanguage(lang.code, lang.name, lang.name)
+            val response = OkHTTP.newCall(request).execute()
+            return response.use { response ->
+                val body = response.body.string()
+                val languages = ArgosLanguagesResponse.parseLanguages(body)
+                val argosLanguages = languages.map { lang ->
+                    lang.code.lowercase() to TranslationLanguage(lang.code, lang.name, lang.name)
+                }
+                    .toMap()
+                SupportedLanguages(this, argosLanguages)
             }
-                .toMap()
-            SupportedLanguages(this, argosLanguages)
+        } catch(e: Exception) {
+            LOG.error("Argos translation unavailable.")
+            LOG.debug(e.stackTraceString)
+            this.available = false
+            SupportedLanguages(this, mapOf())
         }
     }
 }

@@ -9,6 +9,7 @@ import moe.kabii.translation.TranslationService
 import moe.kabii.translation.azure.json.AzureLanguagesResponse
 import moe.kabii.translation.azure.json.AzureTranslationRequest
 import moe.kabii.translation.azure.json.AzureTranslationResponse
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
@@ -77,25 +78,30 @@ object AzureTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = newRequestBuilder()
-            .url("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation")
-            .build()
-
-        LOG.info("Requesting supported languages from Azure.")
-
-        val response = OkHTTP.newCall(request).execute()
         return try {
-            val body = response.body.string()
-            val adapter = MOSHI.adapter(AzureLanguagesResponse::class.java)
-            val languages = adapter.fromJson(body)
-            if (languages != null) {
-                val azureLanguages = languages.translation.map { (tag, lang) ->
-                    tag.lowercase() to TranslationLanguage(tag, lang.name, lang.nativeName)
-                }.toMap()
-                SupportedLanguages(this, azureLanguages)
-            } else throw IOException("Invalid JSON provided from Azure response: $body")
-        } finally {
-            response.close()
+            val request = newRequestBuilder()
+                .url("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation")
+                .build()
+
+            LOG.info("Requesting supported languages from Azure.")
+
+            val response = OkHTTP.newCall(request).execute()
+            response.use { response ->
+                val body = response.body.string()
+                val adapter = MOSHI.adapter(AzureLanguagesResponse::class.java)
+                val languages = adapter.fromJson(body)
+                if (languages != null) {
+                    val azureLanguages = languages.translation.map { (tag, lang) ->
+                        tag.lowercase() to TranslationLanguage(tag, lang.name, lang.nativeName)
+                    }.toMap()
+                    SupportedLanguages(this, azureLanguages)
+                } else throw IOException("Invalid JSON provided from Azure response: $body")
+            }
+        } catch(e: Exception) {
+            LOG.error("Azure translation unavailable.")
+            LOG.debug(e.stackTraceString)
+            this.available = false
+            SupportedLanguages(this, mapOf())
         }
     }
 }

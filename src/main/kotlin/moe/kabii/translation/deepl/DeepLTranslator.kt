@@ -12,6 +12,7 @@ import moe.kabii.translation.TranslationService
 import moe.kabii.translation.deepl.json.DLTranslationResponse
 import moe.kabii.translation.deepl.json.DeepLSupportedLanguage
 import moe.kabii.util.extensions.capitilized
+import moe.kabii.util.extensions.stackTraceString
 import okhttp3.FormBody
 import java.io.IOException
 
@@ -77,23 +78,27 @@ object DeepLTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
-        val request = newRequestBuilder()
-            .url("https://api-free.deepl.com/v2/languages?auth_key=$key")
-            .build()
-        LOG.info("Requesting supported languages from DeepL")
-        val response = OkHTTP.newCall(request).execute()
         return try {
-            val body = response.body.string()
-            val languages = DeepLSupportedLanguage.parseList(body)
-            if(languages != null) {
-                val deepLanguages = languages.associate { (language, name) ->
-                    language.lowercase() to TranslationLanguage(language, name, name)
-                }
-                SupportedLanguages(this, deepLanguages)
-            } else throw IOException("Invalid JSON provided from DeepL response: $body")
-        } finally {
-            response.close()
+            val request = newRequestBuilder()
+                .url("https://api-free.deepl.com/v2/languages?auth_key=$key")
+                .build()
+            LOG.info("Requesting supported languages from DeepL")
+            val response = OkHTTP.newCall(request).execute()
+            response.use { response ->
+                val body = response.body.string()
+                val languages = DeepLSupportedLanguage.parseList(body)
+                if (languages != null) {
+                    val deepLanguages = languages.associate { (language, name) ->
+                        language.lowercase() to TranslationLanguage(language, name, name)
+                    }
+                    SupportedLanguages(this, deepLanguages)
+                } else throw IOException("Invalid JSON provided from DeepL response: $body")
+            }
+        } catch(e: Exception) {
+            LOG.error("DeepL Translation unavailable.")
+            LOG.debug(e.stackTraceString)
+            this.available = false
+            SupportedLanguages(this, mapOf())
         }
     }
-
 }

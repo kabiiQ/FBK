@@ -90,7 +90,7 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
                                 TwitchEventSubscriptions.Type.START_STREAM -> {
 
                                     intakeContext.launch {
-                                        delay(Duration.ofSeconds(8))
+                                        delay(Duration.ofSeconds(15))
                                         val twitchStream = TwitchParser.getStream(notification.userId.toLong()).orNull()
                                         if(twitchStream == null) {
                                             LOG.warn("Twitch stream started: ${notification.userLogin} but there was an error retrieving the live stream info!")

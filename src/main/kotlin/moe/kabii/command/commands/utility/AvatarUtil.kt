@@ -70,6 +70,7 @@ object AvatarUtil : CommandContainer {
                 } else null
                 event.reply()
                     .withEmbeds(listOfNotNull(globalAvatar, guildAvatar))
+                    .withEphemeral(true)
                     .awaitAction()
             }
         }

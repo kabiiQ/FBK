@@ -29,7 +29,7 @@ object YoutubeConfig : Command("yt") {
             "premieres",
             YoutubeSettings::premieres
         ),
-        BooleanElement("Post on initial stream creation",
+        BooleanElement("Post on initial stream creation (when the stream is first scheduled)",
             "creation",
             YoutubeSettings::streamCreation
         ),
