@@ -21,6 +21,13 @@
             "type": 3,
             "required": false,
             "autocomplete": true
+        },
+        {
+            "name": "translator",
+            "description": "The preferred translator to complete this request. Changes based on availability.",
+            "type": 3,
+            "required": false,
+            "autocomplete": true
         }
     ]
 }

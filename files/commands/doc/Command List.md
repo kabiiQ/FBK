@@ -829,6 +829,7 @@ This page is an automatically generated list of all bot commands with a link to 
 | `text*` | String | The text to translate.
 | `to` | String | The language to translate the text into, if not specified, the server's default will be used.
 | `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
+| `translator` | String | The preferred translator to complete this request. Changes based on availability.
 
 
 ### - `/translate`:
@@ -841,6 +842,7 @@ This page is an automatically generated list of all bot commands with a link to 
 | `text*` | String | The text to translate.
 | `to` | String | The language to translate the text into, if not specified, the server's default will be used.
 | `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
+| `translator` | String | The preferred translator to complete this request. Changes based on availability.
 
 
 ### - `/avatar`:
@@ -1264,7 +1266,7 @@ This page is an automatically generated list of all bot commands with a link to 
 | `value` | Integer | The new value for premieres. Leave blank to check current value.
 #### -- `/yt creation`
 
-- Post on initial stream creation
+- Post on initial stream creation (when the stream is first scheduled)
 
 | Option | Type | Description
 | ---    | ---  | ---

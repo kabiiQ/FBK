@@ -17,6 +17,7 @@ object AzureTranslator : TranslationService(
     "https://docs.microsoft.com/en-us/azure/cognitive-services/translator/language-support"
 ) {
     override val supportedLanguages: SupportedLanguages
+    override var available = true
 
     private val azureKey = Keys.config[Keys.Microsoft.translatorKey]
 
@@ -54,7 +55,13 @@ object AzureTranslator : TranslationService(
             if(response.isSuccessful) {
                 val body = response.body.string()
                 AzureTranslationResponse.parseSingle(body)
-            } else throw IOException("HTTP request returned response code ${response.code} :: Body: ${response.body}")
+            } else {
+                if(response.code == 403) {
+                    this.available = false
+                    LOG.error("Azure monthly quota exceeded: disabling Azure translations")
+                    throw IOException("Azure 403 quota exceeded: ${response.body.string()}")
+                } else throw IOException("HTTP request returned response code ${response.code} :: Body: ${response.body}")
+            }
         } finally {
             response.close()
         }

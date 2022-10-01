@@ -216,7 +216,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
                             .run(service.supportedLanguages::get) ?: service.defaultLanguage()
-                        val translator = Translator.getService(tweet.text, defaultLang.tag)
+                        val translator = Translator.getService(tweet.text, listOf(defaultLang.tag), twitterFeed = user.id, primaryTweet = !tweet.retweet)
 
                         // check cache for existing translation of this tweet
                         val existingTl = translations[defaultLang]

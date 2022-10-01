@@ -5,6 +5,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
@@ -12,6 +13,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.toAutoCompleteSuggestions
 import moe.kabii.util.extensions.userAddress
 
 object TranslateCommands : CommandContainer {
@@ -22,6 +24,19 @@ object TranslateCommands : CommandContainer {
     private val autoCompletor: suspend AutoCompleteHandler.Request.() -> Unit = {
         // "from" and "to" autocomplete supported languages (and provide same information)
         // get languages from current available translator
+        when(event.focusedOption.name) {
+            "to", "from" -> {
+                val service = ChatCommandArguments(event)
+                    .optStr("translator")
+                    ?.run(Translator::getServiceByName)
+                    ?: Translator.service
+                suggest(LanguageSuggestionGenerator.languageSuggestions(service, value))
+            }
+            "translator" -> {
+                val services = Translator.getServiceNames()
+                suggest(services.toAutoCompleteSuggestions())
+            }
+        }
         val service = Translator.service
         suggest(LanguageSuggestionGenerator.languageSuggestions(service, value))
     }
@@ -41,7 +56,9 @@ object TranslateCommands : CommandContainer {
             ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
 
         val textArg = args.string("text")
-        val translator = Translator.getService(textArg, fromLang?.tag, toLang.tag)
+        val translatorArg = args.optStr("translator")?.run(Translator::getServiceByName)
+
+        val translator = Translator.getService(textArg, listOf(fromLang?.tag, toLang.tag), preference = translatorArg)
 
         val translation = try {
             translator.translate(fromLang, toLang, textArg)

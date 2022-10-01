@@ -70,6 +70,8 @@ translator_key = ''
 
 [google]
 gtranslator_key = ''
+[argos]
+lt_address = '127.0.0.1:5000'
 
 [ps2]
 census_id = ''

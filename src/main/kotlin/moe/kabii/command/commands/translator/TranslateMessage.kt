@@ -34,7 +34,7 @@ object TranslateMessage : Command("Translate Message") {
             val config = event.interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(client.clientId, id.asLong()) }?.orNull()
             val service = Translator.service
             val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
-            val translator = Translator.getService(contents, defaultLang.tag)
+            val translator = Translator.getService(contents, listOf(defaultLang.tag))
             val translation = translator.translate(from = null, to = defaultLang, text = contents)
             val jumpLink = event.resolvedMessage.createJumpLink()
             val user = event.interaction.user

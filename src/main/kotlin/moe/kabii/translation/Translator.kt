@@ -3,7 +3,9 @@ package moe.kabii.translation
 import com.github.pemistahl.lingua.api.Language
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
 import moe.kabii.LOG
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
+import moe.kabii.translation.argos.ArgosTranslator
 import moe.kabii.translation.azure.AzureTranslator
 import moe.kabii.translation.deepl.DeepLTranslator
 import moe.kabii.translation.google.GoogleTranslator
@@ -15,7 +17,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
     abstract val supportedLanguages: SupportedLanguages
 
     @Throws(IOException::class)
-    fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?, fallback: TranslationService?): TranslationResult {
+    fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult {
         if(suspectLanguage == to) return NoOpTranslator.doTranslation(suspectLanguage, suspectLanguage, rawText)
         if(from == to) return NoOpTranslator.doTranslation(from, from, rawText)
 
@@ -27,8 +29,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
             LOG.error("Error getting translation from $fullName: ${io.message}")
             LOG.debug(io.stackTraceString)
 
-            val backup = fallback?.doTranslation(from, to, rawText)
-            backup ?: throw IOException("Text translation failed with no available backup provider")
+            return ArgosTranslator.doTranslation(from, to, rawText)
         }
     }
 
@@ -42,7 +43,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
 object NoOpTranslator : TranslationService("None", "") {
      override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
-        = TranslationResult(this, from!!, from, rawText)
+        = TranslationResult(this, from ?: to, from ?: to, rawText)
 
     override val supportedLanguages = SupportedLanguages(this, mapOf())
 }
@@ -50,46 +51,73 @@ object NoOpTranslator : TranslationService("None", "") {
 object Translator {
     // register and initialize translation services (prioritized)
     private val services: List<TranslationService> = listOf(
-        GoogleTranslator,
-        AzureTranslator
+        DeepLTranslator, // (limited language support, limited monthly quota)
+        AzureTranslator, // (limited monthly quota)
+        ArgosTranslator // (unlimited, worst translations)
     )
 
-    val baseService = services.first()
-    val service = services.first(TranslationService::available)
-
+    val baseService = AzureTranslator
     val detector = LanguageDetectorBuilder.fromAllSpokenLanguages().build()
 
-    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?, val fallback: TranslationService?) {
+    private val inclusionList = Keys.config[Keys.Google.feedInclusionList]
+
+    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?) {
         fun translate(from: TranslationLanguage?, to: TranslationLanguage, text: String)
-            = service.translateText(from, to, text, suspect, fallback)
+            = service.translateText(from, to, text, suspect)
     }
 
-    fun getService(text: String?, vararg tags: String?): TranslationPair {
-        // if language supported by deepL - use that for better translation
-        val useService = services.toMutableList()
-        val detected = if(text != null) {
-            val language = detector.detectLanguageOf(text)
-            if(language == Language.UNKNOWN) null
-            else {
-                val deepL = DeepLTranslator.supportedLanguages
-                val deepLLanguage = deepL[language.isoCode639_1.toString()]
-                if(
-                    deepLLanguage != null && tags.filterNotNull().all { tag -> deepL[tag] != null }
-                ) useService.add(0, DeepLTranslator)
-                deepLLanguage
-            }
-        } else null
-        val services = useService.filter(TranslationService::available)
-        return TranslationPair(services[0], detected, services.getOrNull(1))
+    val service: TranslationService
+        get() = getService(null).service
+
+    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: Long? = null, primaryTweet: Boolean? = null, preference: TranslationService? = null): TranslationPair {
+        // return first available translator (supporting input language from text, if provided)
+        val detected = text?.run {
+            val language = detector.detectLanguageOf(this)
+            if(language != Language.UNKNOWN) language.isoCode639_1.toString() else null
+        }
+
+        // some special exceptions for certain twitter feeds will alter the available services
+        val allServices = if(primaryTweet == false) {
+            // retweets go straight to neural translator
+            listOf(ArgosTranslator)
+        } else if(primaryTweet == true && inclusionList.contains(twitterFeed)) {
+            // primary tweets in specific high-visiblity servers can use GTL (paid)
+            listOf(DeepLTranslator, GoogleTranslator)
+        } else if(preference != null) {
+            listOf(preference)
+        } else {
+            // all other content goes to general translation pool
+            services.filter(TranslationService::available)
+        }
+
+        // attempts to pair the 'suspected language' with a service that supports it
+        val filteredServices = if(detected != null) allServices.filter { service ->
+            val serviceLanguages = service.supportedLanguages
+            serviceLanguages[detected] != null && tags.filterNotNull().all { tag -> serviceLanguages[tag] != null }
+        } else allServices
+        // suspected languages are often wrong, so don't fail if a strange language is detected
+        val services = filteredServices.ifEmpty { allServices }
+        val detectedLanguage = detected?.run { services.getOrNull(0)?.supportedLanguages?.get(this) }
+
+        return TranslationPair(services.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
     }
+
+    fun getServiceNames(): List<String> =
+        services
+            .filter(TranslationService::available)
+            .map(TranslationService::fullName)
+
+    fun getServiceByName(name: String): TranslationService? =
+        services
+            .find { service -> service.fullName == name }
 
     init {
         // test quotas
         try {
-            val google = GoogleTranslator
-            google.doTranslation(
+            val azure = AzureTranslator
+            azure.doTranslation(
                 from = null,
-                to = google.defaultLanguage(),
+                to = azure.defaultLanguage(),
                 rawText = "t"
             )
         } catch(e: Exception) {
