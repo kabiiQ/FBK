@@ -145,8 +145,8 @@ class TicTacToeGame(
 
     private fun outputGrid(): String {
         // convert grid to single string
-        return grid.mapIndexed { iRow, row ->
-            row.mapIndexed { iCol, col ->
+        return grid.mapIndexed { _, row ->
+            row.mapIndexed { _, col ->
 //                col?.emoji ?: "${toGameIndex(iRow, iCol)}\u20E3"
                 col?.emoji ?: "\u2B1B"
             }.joinToString(" | ")

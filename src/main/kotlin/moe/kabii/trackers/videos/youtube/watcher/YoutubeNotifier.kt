@@ -289,7 +289,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @WithinExposedContext
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         val fbk = instances[target.discordClient]
-        val discord = fbk.client
         // get target channel in discord
         val chan = getChannel(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
@@ -341,7 +340,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @WithinExposedContext
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         val fbk = instances[target.discordClient]
-        val discord = fbk.client
         val chan = getChannel(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
 
         // get channel stream embed settings
@@ -378,7 +376,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @WithinExposedContext
     suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         val fbk = instances[videoTrack.discordClient]
-        val discord = fbk.client
         // get target channel in Discord
         val chan = getChannel(fbk, videoTrack.discordChannel.guild?.guildID, videoTrack.discordChannel.channelID, null)
 
@@ -393,7 +390,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @Throws(ClientException::class)
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
         val fbk = instances[target.discordClient]
-        val discord = fbk.client
 
         // get target channel in discord, make sure it still exists
         val guildId = target.discordChannel.guild?.guildID

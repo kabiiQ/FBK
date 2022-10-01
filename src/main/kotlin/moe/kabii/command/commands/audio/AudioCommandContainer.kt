@@ -4,7 +4,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.core.`object`.entity.channel.AudioChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.CommandContainer
@@ -48,7 +48,7 @@ internal interface AudioCommandContainer : CommandContainer {
         // return lesser of ratio or raw user count - check min user votes first as it is easier than polling v
         val config = origin.config.musicBot
         val vcUsers = BotUtil.getBotVoiceChannel(origin.target)
-            .flatMapMany(VoiceChannel::getVoiceStates)
+            .flatMapMany(AudioChannel::getVoiceStates)
             .flatMap(VoiceState::getUser)
             .filterNot(User::isBot)
             .count().tryAwait().orNull() ?: 0

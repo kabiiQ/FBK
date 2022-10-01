@@ -12,6 +12,11 @@ plugins {
 repositories {
     mavenCentral()
     jcenter()
+    // discord4j snapshots (using snapshot for thread support)
+    maven {
+        name = "snapshots"
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
     // personal libs: rusty
     maven {
         name = "jitpack.io"
@@ -45,7 +50,7 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.2.3") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.3.0-SNAPSHOT") // discord websocket and api
 
     // music bot
     implementation("com.github.walkyst:lavaplayer-fork:1.3.98.4") // discord audio library

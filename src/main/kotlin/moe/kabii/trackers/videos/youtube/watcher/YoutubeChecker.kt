@@ -264,7 +264,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         streamUpcoming(dbEvent, ytVideo, scheduled)
                     }
                 } else {
-                    LOG.warn("YouTube returned SCHEDULED stream with no start time: $ytVideo")
+                    LOG.warn("YouTube returned SCHEDULED stream with no start time: ${ytVideo.id}")
                 }
             }
             else -> {

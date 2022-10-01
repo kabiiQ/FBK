@@ -1,7 +1,7 @@
 package moe.kabii.command.commands.audio
 
 import discord4j.core.`object`.VoiceState
-import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.core.`object`.entity.channel.AudioChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -18,7 +18,7 @@ object AudioStateUtil {
         data class Failure(val error: String) : VoiceValidation()
     }
 
-    private suspend fun permOverride(origin: DiscordParameters, botChan: VoiceChannel?): Boolean {
+    private suspend fun permOverride(origin: DiscordParameters, botChan: AudioChannel?): Boolean {
         botChan ?: return false // if the bot is not in any voice channel there is no way to let them override the requirements
         return botChan.getEffectivePermissions(origin.author.id).map { it.contains(Permission.MANAGE_CHANNELS) }.awaitSingle()
     }

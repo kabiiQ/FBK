@@ -119,7 +119,6 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
     suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedStreams.Target) {
 
         val fbk = instances[target.discordClient]
-        val discord = fbk.client
         // get target channel in discord
         val guildId = target.discordChannel.guild?.guildID
         val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)

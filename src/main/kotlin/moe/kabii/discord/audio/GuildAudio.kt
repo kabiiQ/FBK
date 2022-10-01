@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.entity.channel.AudioChannel
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import discord4j.voice.AudioProvider
@@ -77,7 +78,7 @@ data class GuildAudio(
         return true
     }
 
-     suspend fun joinChannel(channel: VoiceChannel): Result<VoiceConnection, Throwable> {
+     suspend fun joinChannel(channel: AudioChannel): Result<VoiceConnection, Throwable> {
          discord.mutex.withLock {
              val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, channel.guildId.asLong())
              val join = channel.join().withProvider(this.provider).tryAwait()

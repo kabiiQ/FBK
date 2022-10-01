@@ -58,7 +58,6 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
     @WithinExposedContext
     suspend fun createSpaceNotification(space: TwitterSpace, dbSpace: TwitterSpaces.Space, target: TrackedStreams.Target) {
         val fbk = instances[target.discordClient]
-        val discord = fbk.client
         // get discord channel
         val guildId = target.discordChannel.guild?.guildID
         val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)
