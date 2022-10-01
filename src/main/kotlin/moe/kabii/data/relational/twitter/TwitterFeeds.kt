@@ -78,12 +78,14 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
 }
 
 object TwitterTargetMentions : IdTable<Int>() {
+    override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+    val target = reference("twitter_mention_assoc_target", TwitterTargets, ReferenceOption.CASCADE)
     val mentionRole = long("discord_feed_mention_role_id").nullable()
     val mentionText = text("discord_feed_mention_text").nullable()
 
-    val target = reference("twitter_mention_assoc_target", TwitterTargets, ReferenceOption.CASCADE)
-    override val id = target
-    override val primaryKey = PrimaryKey(id)
+    init {
+        index(isUnique = true, target)
+    }
 }
 
 class TwitterTargetMention(id: EntityID<Int>) : IntEntity(id) {

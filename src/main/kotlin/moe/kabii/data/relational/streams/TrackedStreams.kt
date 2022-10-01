@@ -120,15 +120,17 @@ object TrackedStreams {
 
     object TargetMentions : IdTable<Int>() {
         // extension of Target. fk, pk = target
+        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+        val target = reference("mention_assoc_target", Targets, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id").nullable()
         var mentionRoleMember = long("discord_mention_role_membership").nullable()
         var mentionRoleUploads = long("discord_mention_role_uploads").nullable()
         val mentionText = text("discord_mention_text").nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
-        val target = reference("mention_assoc_target", Targets, ReferenceOption.CASCADE)
-        override val id = target
-        override val primaryKey = PrimaryKey(id)
+        init {
+            index(isUnique = true, target)
+        }
     }
 
     class TargetMention(id: EntityID<Int>) : IntEntity(id) {
