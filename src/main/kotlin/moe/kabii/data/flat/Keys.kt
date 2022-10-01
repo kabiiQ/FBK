@@ -68,6 +68,8 @@ object Keys : ConfigSpec("") {
     }
     object Google : ConfigSpec() {
         val gTranslatorKey by required<String>("gtranslator_key")
+        val feedInclusionList by required<List<Long>>("feed_inclusion_list")
+    }
     object Argos : ConfigSpec() {
         val ltAddress by required<String>("lt_address")
     }
