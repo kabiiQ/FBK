@@ -1,10 +1,12 @@
 package moe.kabii.command.commands.trackers.util
 
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
+import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTargets
+import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
@@ -28,6 +30,19 @@ object TargetSuggestionGenerator {
 
     fun invalidateTargets(clientId: Int, channelId: Long) {
         channelTargetCache.remove(TargetChannel(clientId, channelId))
+    }
+
+    val siteMentionAutoCompletor: suspend AutoCompleteHandler.Request.() -> Unit = {
+        val channelId = event.interaction.channelId.asLong()
+        val siteArg = ChatCommandArguments(event).optInt("site")
+        val matches = getTargets(
+            client.clientId,
+            channelId,
+            value,
+            siteArg,
+            TrackerTarget::mentionable
+        )
+        suggest(matches)
     }
 
     suspend fun getRawTargetCount(clientId: Int, channelId: Long, site: KClass<TrackerTarget>?): Int {

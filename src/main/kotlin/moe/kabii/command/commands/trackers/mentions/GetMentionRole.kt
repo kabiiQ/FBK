@@ -1,10 +1,10 @@
-package moe.kabii.command.commands.trackers.util
+package moe.kabii.command.commands.trackers.mentions
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.params.ChatCommandArguments
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -17,16 +17,11 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 
-object TestMentionRole : Command("getmention") {
+object GetMentionRole : Command("getmention") {
     override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
-        autoComplete {
-            val channelId = event.interaction.channelId.asLong()
-            val siteArg = ChatCommandArguments(event).optInt("site")
-            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
-            suggest(matches)
-        }
+        autoComplete(TargetSuggestionGenerator.siteMentionAutoCompletor)
 
         chat {
             // test the 'setmention' config for a channel
@@ -56,7 +51,7 @@ object TestMentionRole : Command("getmention") {
         .tryAwait().orNull()?.name
         ?: "ERR: Role $id not found."
 
-    private suspend fun testStreamConfig(origin: DiscordParameters, site: StreamingTarget, userId: String) = with(origin) {
+    suspend fun testStreamConfig(origin: DiscordParameters, site: StreamingTarget, userId: String) = with(origin) {
 
         val streamInfo = when(val streamCall = site.getChannel(userId)) {
             is Ok -> streamCall.value
@@ -99,6 +94,15 @@ object TestMentionRole : Command("getmention") {
                     out.appendLine("For YouTube **members-only** livestreams and videos, the role **@$role** will be pinged instead.")
                 } else out.appendLine("For YouTube **members-only** livestreams and videos, **no roles** will be pinged.")
 
+                if(mention.mentionRoleUpcoming != null) {
+                    val role = getRole(target, mention.mentionRoleUpcoming!!)
+                    out.appendLine("For YouTube **upcoming** stream messages, the role **@$role** will be pinged.")
+                }
+
+                if(mention.mentionRoleCreation != null) {
+                    val role = getRole(target, mention.mentionRoleCreation!!)
+                    out.appendLine("For YouTube stream **creation/initial** messages, the role **@$role** will be pinged.")
+                }
 
             } else out.appendLine("This role will be pinged for **livestreams.**")
 
@@ -113,7 +117,7 @@ object TestMentionRole : Command("getmention") {
         ereply(Embeds.fbk(mention)).awaitSingle()
     }
 
-    private suspend fun testTwitterConfig(origin: DiscordParameters, username: String) = with(origin) {
+    suspend fun testTwitterConfig(origin: DiscordParameters, username: String) = with(origin) {
 
         val twitterUser = try {
             TwitterParser.getUser(username)

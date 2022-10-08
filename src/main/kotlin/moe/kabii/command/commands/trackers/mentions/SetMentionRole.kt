@@ -1,10 +1,10 @@
-package moe.kabii.command.commands.trackers.util
+package moe.kabii.command.commands.trackers.mentions
 
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.params.ChatCommandArguments
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -24,12 +24,7 @@ object SetMentionRole : Command("setmention") {
     override val wikiPath = "Livestream-Tracker#-pinging-a-role-with-setmention"
 
     init {
-        autoComplete {
-            val channelId = event.interaction.channelId.asLong()
-            val siteArg = ChatCommandArguments(event).optInt("site")
-            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg, TrackerTarget::mentionable)
-            suggest(matches)
-        }
+        autoComplete(TargetSuggestionGenerator.siteMentionAutoCompletor)
 
         chat {
             // manually set mention role for a followed stream - for servers where a role already exists
@@ -41,7 +36,7 @@ object SetMentionRole : Command("setmention") {
             val siteTarget = when(val findTarget = TargetArguments.parseFor(this, streamArg, target)) {
                 is Ok -> findTarget.value
                 is Err -> {
-                    ereply(Embeds.error("Unable to find livestream channel: ${findTarget.value}.")).awaitSingle()
+                    ereply(Embeds.error("Unable to find tracked channel: ${findTarget.value}.")).awaitSingle()
                     return@chat
                 }
             }
@@ -56,7 +51,7 @@ object SetMentionRole : Command("setmention") {
         }
     }
 
-    private suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: Role?, textArg: String?) {
+    suspend fun setStreamMention(origin: DiscordParameters, site: StreamingTarget, siteUserId: String, roleArg: Role?, textArg: String?) {
         val streamInfo = when (val streamCall = site.getChannel(siteUserId)) {
             is Ok -> streamCall.value
             is Err -> {
@@ -81,11 +76,13 @@ object SetMentionRole : Command("setmention") {
 
             val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
             val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
+            val upcomingRoleArg = origin.args.optRole("upcomingrole")?.awaitSingle()
+            val creationRoleArg = origin.args.optRole("creationrole")?.awaitSingle()
 
-            if(roleArg == null && textArg == null && membershipRoleArg == null) {
+            if(listOfNotNull(roleArg, textArg, membershipRoleArg, upcomingRoleArg, creationRoleArg).none()) {
                 // unset role
                 existingMention?.delete()
-                "**removed**"
+                "**removed.**"
             } else {
                 // update existing mention info
                 if(existingMention != null) {
@@ -93,6 +90,8 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionText = textArg
                     existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
                     existingMention.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
+                    existingMention.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
+                    existingMention.mentionRoleCreation = creationRoleArg?.id?.asLong()
                 } else {
                     TrackedStreams.TargetMention.new {
                         this.target = matchingTarget
@@ -100,12 +99,16 @@ object SetMentionRole : Command("setmention") {
                         this.mentionText = textArg
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
                         this.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
+                        this.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
+                        this.mentionRoleCreation = creationRoleArg?.id?.asLong()
                     }
                 }
                 val youtubeDetail = if(site is YoutubeTarget) {
                     val includeVideos = if(uploadsRoleArg == null) "+videos" else ""
                     val uploadAlt = if(uploadsRoleArg != null) " Set to **${uploadsRoleArg.name}** for uploads/premieres." else ""
-                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$uploadAlt"
+                    val upcomingAlt = if(upcomingRoleArg != null) "\nSet to **${upcomingRoleArg.name}** for **upcoming** stream notifications. **Upcoming** messages must still be enabled in `/yt config`." else ""
+                    val creationAlt = if(creationRoleArg != null) "\nSet to **${creationRoleArg.name}** for **immediately** when streams are scheduled. **Creation** messages must still be enabled in `/yt config`" else ""
+                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$uploadAlt$upcomingAlt$creationAlt"
                 } else ""
 
                 val role = roleArg?.run {"**$name**" } ?: "NONE"
@@ -114,10 +117,10 @@ object SetMentionRole : Command("setmention") {
             }
         }
 
-        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/addmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
     }
 
-    private suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
+    suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
         val twitterUser = try {
             TwitterParser.getUser(twitterId)
         } catch(e: Exception) {
