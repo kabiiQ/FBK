@@ -96,10 +96,12 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false): MentionRole? {
+    suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
         val dbMention = dbTarget.mention() ?: return null
         val mentionRole = when {
+            upcomingNotif -> if(memberLimit) null else dbMention.mentionRoleUpcoming
+            creationNotif -> if(memberLimit) null else dbMention.mentionRoleCreation
             memberLimit -> dbMention.mentionRoleMember
             uploadedVideo -> dbMention.mentionRoleUploads ?: dbMention.mentionRole
             else -> dbMention.mentionRole

@@ -261,8 +261,14 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedStreams.Target, time: Instant): Message? {
         // get target channel in discord
         val chan = getUpcomingChannel(target)
-
         val fbk = subscriptions.instances[target.discordClient]
+        val guildId = target.discordChannel.guild?.guildID
+
+        val mentionRole = if(guildId != null) {
+            val features = getStreamConfig(target)
+            getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, upcomingNotif = true)
+        } else null
+
         val message = try {
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
             val embed = Embeds.other(scheduledColor)
@@ -272,7 +278,11 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 .withThumbnail(video.thumbnail)
                 .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
                 .withTimestamp(time)
-            chan.createMessage(embed).awaitSingle()
+
+            val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
+            else chan.createMessage()
+
+            mentionMessage.withEmbeds(embed).awaitSingle()
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -346,6 +356,11 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val guildId = target.discordChannel.guild?.guildID
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
 
+        val mentionRole = if(guildId != null) {
+            val features = getStreamConfig(target)
+            getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, creationNotif = true)
+        } else null
+
         val startTime = video.liveInfo?.scheduledStart!!
         val eta = TimestampFormat.RELATIVE_TIME.format(startTime)
 
@@ -360,7 +375,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
             .withTimestamp(startTime)
         val new = try {
-            chan.createMessage(embed).awaitSingle()
+            val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
+            else chan.createMessage()
+
+            mentionMessage.withEmbeds(embed).awaitSingle()
         } catch(ce: ClientException) {
             val err = ce.status.code()
             if(err == 403) {
@@ -400,8 +418,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
+        var old: Boolean? = false
         val mention = if(guildId != null) {
-            val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
+            old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
             if(old == true) null
             else getMentionRoleFor(target, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
         } else null
@@ -422,11 +441,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 else -> " is live."
             }
             val channelLiveNotice = "${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}"
+            val outdatedNotice = if(old == true) "Skipping ping for old stream.\n" else ""
             val embed = Embeds.other("$memberNotice$shortDescription", if(liveStream.premiere) uploadColor else liveColor)
                 .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(channelLiveNotice, MagicNumbers.Embed.AUTHOR), liveStream.url, liveStream.channel.avatar))
                 .withUrl(liveStream.url)
                 .withTitle(shortTitle)
-                .withFooter(EmbedCreateFields.Footer.of("Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
+                .withFooter(EmbedCreateFields.Footer.of("${outdatedNotice}Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
                 .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
                 .run { if(startTime != null) withTimestamp(startTime) else this }
 

@@ -282,8 +282,10 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 // mention roles
                 val mention = getMentionRoleFor(target, channel, tweet, twitter)
 
+                var outdated = false
                 val mentionText = if(mention != null) {
-                    val rolePart = if(mention.discord == null || Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)) null
+                    outdated = Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)
+                    val rolePart = if(mention.discord == null || outdated) null
                     else mention.discord.mention.plus(" ")
                     val textPart = mention.db.mentionText?.plus(" ")
                     "${rolePart ?: ""}${textPart ?: ""}"
@@ -313,6 +315,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                                 } else this
                             }
                             .run {
+                                if(outdated) footer.append("Skipping ping for old Tweet.\n")
                                 if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
                             }
                             .run {

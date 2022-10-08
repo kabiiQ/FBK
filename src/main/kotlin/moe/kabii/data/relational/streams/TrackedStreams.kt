@@ -123,8 +123,10 @@ object TrackedStreams {
         override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val target = reference("mention_assoc_target", Targets, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role_id").nullable()
-        var mentionRoleMember = long("discord_mention_role_membership").nullable()
-        var mentionRoleUploads = long("discord_mention_role_uploads").nullable()
+        val mentionRoleMember = long("discord_mention_role_membership").nullable()
+        val mentionRoleUpcoming = long("discord_mention_role_upcoming").nullable()
+        val mentionRoleCreation = long("discord_mention_role_creation").nullable()
+        val mentionRoleUploads = long("discord_mention_role_uploads").nullable()
         val mentionText = text("discord_mention_text").nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
@@ -137,6 +139,8 @@ object TrackedStreams {
         var mentionRole by TargetMentions.mentionRole
         var mentionRoleMember by TargetMentions.mentionRoleMember
         var mentionRoleUploads by TargetMentions.mentionRoleUploads
+        var mentionRoleUpcoming by TargetMentions.mentionRoleUpcoming
+        var mentionRoleCreation by TargetMentions.mentionRoleCreation
         var mentionText by TargetMentions.mentionText
         var lastMention by TargetMentions.lastMention
 
