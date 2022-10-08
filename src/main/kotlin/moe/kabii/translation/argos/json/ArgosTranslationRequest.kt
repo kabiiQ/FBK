@@ -20,7 +20,7 @@ class ArgosTranslationRequest private constructor(
         private val adapter = MOSHI.adapter(ArgosTranslationRequest::class.java)
 
         fun create(text: String, target: TranslationLanguage, from: TranslationLanguage?) =
-            ArgosTranslationRequest(text, from?.tag ?: "auto", target.tag, "text")
+            ArgosTranslationRequest(text, from?.tag?.lowercase() ?: "auto", target.tag.lowercase(), "text")
     }
 }
 

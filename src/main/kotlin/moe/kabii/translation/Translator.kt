@@ -29,7 +29,12 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
             LOG.error("Error getting translation from $fullName: ${io.message}")
             LOG.debug(io.stackTraceString)
 
-            return ArgosTranslator.doTranslation(from, to, rawText)
+            // fall-back to argos if translation failed for any reason
+            with(ArgosTranslator) {
+                val fromLang = from?.run { supportedLanguages[tagAlias(tag)] }
+                val toLang = supportedLanguages[tagAlias(to.tag)] ?: ArgosTranslator.defaultLanguage()
+                return ArgosTranslator.doTranslation(fromLang, toLang, rawText)
+            }
         }
     }
 
@@ -91,15 +96,16 @@ object Translator {
         }
 
         // attempts to pair the 'suspected language' with a service that supports it
-        val filteredServices = if(detected != null) allServices.filter { service ->
-            val serviceLanguages = service.supportedLanguages
-            serviceLanguages[detected] != null && tags.filterNotNull().all { tag -> serviceLanguages[tag] != null }
-        } else allServices
+//        val filteredServices = if(detected != null) allServices.filter { service ->
+//            val serviceLanguages = service.supportedLanguages
+//            serviceLanguages[detected] != null && tags.filterNotNull().all { tag -> serviceLanguages[tag] != null }
+//        } else allServices
         // suspected languages are often wrong, so don't fail if a strange language is detected
-        val services = filteredServices.ifEmpty { allServices }
-        val detectedLanguage = detected?.run { services.getOrNull(0)?.supportedLanguages?.get(this) }
+//        val services = filteredServices.ifEmpty { allServices }
+        val availableServices = allServices.filter(TranslationService::available)
+        val detectedLanguage = detected?.run { availableServices.getOrNull(0)?.supportedLanguages?.get(this) }
 
-        return TranslationPair(services.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
+        return TranslationPair(availableServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
     }
 
     fun getServiceNames(): List<String> =
@@ -109,6 +115,7 @@ object Translator {
 
     fun getServiceByName(name: String): TranslationService? =
         services
+            .filter(TranslationService::available)
             .find { service -> service.fullName == name }
 
     init {

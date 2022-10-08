@@ -33,7 +33,7 @@ object ArgosTranslator : TranslationService(
 
     override fun tagAlias(input: String): String {
         return when(input.lowercase()) {
-            "ch", "cn" -> "zh"
+            "ch", "cn", "zh-hant", "zh-hans", "zh-tw", "zh-cn" -> "zh"
             "jp" -> "ja"
             "kr" -> "ko"
             "iw" -> "he"
@@ -56,7 +56,6 @@ object ArgosTranslator : TranslationService(
                 val body = response.body.string()
                 translationAdapter.fromJson(body)!!
             } else {
-                val body = response.body.string()
                 throw IOException("Argos translation returned response code ${response.code} :: Body ${response.body.string()}")
             }
         } finally {
@@ -88,10 +87,9 @@ object ArgosTranslator : TranslationService(
             return response.use { response ->
                 val body = response.body.string()
                 val languages = ArgosLanguagesResponse.parseLanguages(body)
-                val argosLanguages = languages.map { lang ->
+                val argosLanguages = languages.associate { lang ->
                     lang.code.lowercase() to TranslationLanguage(lang.code, lang.name, lang.name)
                 }
-                    .toMap()
                 SupportedLanguages(this, argosLanguages)
             }
         } catch(e: Exception) {

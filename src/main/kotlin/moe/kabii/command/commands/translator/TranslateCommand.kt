@@ -45,7 +45,9 @@ object TranslateCommands : CommandContainer {
         event.deferReply().awaitAction()
         val toTagDefault = if(isPM) "en" else config.translator.defaultTargetLanguage
         // translate
-        val languages = Translator.service.supportedLanguages
+        val translatorArg = args.optStr("translator")?.run(Translator::getServiceByName)
+        val translator = Translator.getService(null, preference = translatorArg)
+        val languages = translator.service.supportedLanguages
 
         val fromLang = args
             .optStr("from")?.run { languages.search(this).values.firstOrNull() } // get language if specified or pass 'null' to have it detected
@@ -56,12 +58,10 @@ object TranslateCommands : CommandContainer {
             ?: languages[TranslatorSettings.fallbackLang]!! // must pass a target language, fallback if invalid specified
 
         val textArg = args.string("text")
-        val translatorArg = args.optStr("translator")?.run(Translator::getServiceByName)
 
-        val translator = Translator.getService(textArg, listOf(fromLang?.tag, toLang.tag), preference = translatorArg)
-
+        val useTranslator = if(translatorArg != null) translator else Translator.getService(textArg, listOf(fromLang?.tag, toLang.tag))
         val translation = try {
-            translator.translate(fromLang, toLang, textArg)
+            useTranslator.translate(fromLang, toLang, textArg)
         } catch(e: Exception) {
             LOG.info("Translation request failed: ${e.message}")
             LOG.debug(e.stackTraceString)
