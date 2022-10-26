@@ -27,9 +27,10 @@ object AzureTranslator : TranslationService(
     }
 
     override fun tagAlias(input: String): String = when(input.lowercase()) {
-        "zh", "ch", "cn" -> "zh-Hans"
+        "zh", "ch", "cn", "zh-hans", "zh-cn" -> "zh-Hans"
+        "zh-hant", "zh-tw" -> "zh-Hant"
         "kr" -> "ko"
-        "pt" -> "pt-br"
+        "pt", "pt-br" -> "pt-br"
         "sr" -> "sr-Cyrl"
         "jp" -> "ja"
         else -> input
@@ -86,8 +87,8 @@ object AzureTranslator : TranslationService(
             LOG.info("Requesting supported languages from Azure.")
 
             val response = OkHTTP.newCall(request).execute()
-            response.use { response ->
-                val body = response.body.string()
+            response.use { rs ->
+                val body = rs.body.string()
                 val adapter = MOSHI.adapter(AzureLanguagesResponse::class.java)
                 val languages = adapter.fromJson(body)
                 if (languages != null) {

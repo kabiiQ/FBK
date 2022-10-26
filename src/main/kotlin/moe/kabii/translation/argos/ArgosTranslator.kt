@@ -37,7 +37,8 @@ object ArgosTranslator : TranslationService(
             "jp" -> "ja"
             "kr" -> "ko"
             "iw" -> "he"
-            else -> input
+            "pt", "pt-br" -> "pt"
+            else -> input.lowercase()
         }
     }
 
@@ -50,16 +51,14 @@ object ArgosTranslator : TranslationService(
             .build()
 
         val response = OkHTTP.newCall(request).execute()
-        val translation = try {
-            if(response.isSuccessful) {
+        val translation = response.use { rs ->
+            if(rs.isSuccessful) {
                 // 200: translatedText, detectedLanguage
-                val body = response.body.string()
+                val body = rs.body.string()
                 translationAdapter.fromJson(body)!!
             } else {
-                throw IOException("Argos translation returned response code ${response.code} :: Body ${response.body.string()}")
+                throw IOException("Argos translation returned response code ${rs.code} :: Body ${rs.body.string()}")
             }
-        } finally {
-            response.close()
         }
         val detectedSourceLanguage = translation.detectedLanguage?.language?.run(supportedLanguages::byTag)
         val text = StringEscapeUtils.unescapeHtml4(translation.translatedText)

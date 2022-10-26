@@ -31,10 +31,12 @@ object GoogleTranslator : TranslationService(
 
     override fun tagAlias(input: String): String {
         return when(input.lowercase()) {
-            "ch", "cn", "zh" -> "zh-CN"
+            "ch", "cn", "zh", "zh-hans", "zh-cn" -> "zh-CN"
+            "zh-hant", "zh-tw" -> "zh-TW"
             "kr" -> "ko"
             "jp" -> "ja"
             "iw" -> "he"
+            "pt", "pt-br" -> "pt-BR"
             else -> input
         }
     }
@@ -48,19 +50,17 @@ object GoogleTranslator : TranslationService(
             .build()
 
         val response = OkHTTP.newCall(request).execute()
-        val translation = try {
-            if(response.isSuccessful) {
-                val body = response.body.string()
+        val translation = response.use { rs ->
+            if(rs.isSuccessful) {
+                val body = rs.body.string()
                 translationAdapter.fromJson(body)!!.data.translations.first()
             } else {
-                if(response.code == 403 && response.body.string().contains("Limit Exceeded", ignoreCase = true)) {
+                if(rs.code == 403 && rs.body.string().contains("Limit Exceeded", ignoreCase = true)) {
                     this.available = false
                     LOG.error("GTL monthly quota exceeded: disabling GTL translation")
-                    throw IOException("GTL 403 quota exceeded: ${response.body.string()}")
-                } else throw IOException("HTTP request returned response code ${response.code} :: Body ${response.body.string()}")
+                    throw IOException("GTL 403 quota exceeded: ${rs.body.string()}")
+                } else throw IOException("HTTP request returned response code ${rs.code} :: Body ${rs.body.string()}")
             }
-        } finally {
-            response.close()
         }
         val detectedSourceLanguage = translation.detectedSourceLanguage?.run(supportedLanguages::byTag)
         val text = StringEscapeUtils.unescapeHtml4(translation.translatedText)

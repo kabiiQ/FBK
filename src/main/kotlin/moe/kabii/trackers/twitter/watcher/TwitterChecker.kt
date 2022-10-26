@@ -179,7 +179,6 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
             val discord = fbk.client
             try {
                 // post a notif to this target
-                discord.guilds
                 val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
                     .ofType(MessageChannel::class.java)
                     .awaitSingle()

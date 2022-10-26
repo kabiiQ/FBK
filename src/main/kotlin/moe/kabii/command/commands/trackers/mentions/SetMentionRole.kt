@@ -117,7 +117,7 @@ object SetMentionRole : Command("setmention") {
             }
         }
 
-        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/addmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
+        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/editmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
     }
 
     suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {

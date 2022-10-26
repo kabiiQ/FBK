@@ -31,10 +31,10 @@ object DeepLTranslator : TranslationService(
     }
 
     override fun tagAlias(input: String): String = when(input.lowercase()) {
-        "zh", "ch", "cn" -> "ZH"
+        "zh", "ch", "cn", "zh-hans", "zh-cn", "zh-hant", "zh-tw" -> "ZH"
         "en" -> "EN-US"
         "jp" -> "JA"
-        "pt" -> "PT-BR"
+        "pt", "pt-br" -> "PT-BR"
         else -> input.uppercase()
     }
 
@@ -84,8 +84,8 @@ object DeepLTranslator : TranslationService(
                 .build()
             LOG.info("Requesting supported languages from DeepL")
             val response = OkHTTP.newCall(request).execute()
-            response.use { response ->
-                val body = response.body.string()
+            response.use { rs ->
+                val body = rs.body.string()
                 val languages = DeepLSupportedLanguage.parseList(body)
                 if (languages != null) {
                     val deepLanguages = languages.associate { (language, name) ->
