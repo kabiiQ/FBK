@@ -4,7 +4,7 @@ data class SupportedLanguages(
     private val service: TranslationService,
     val languages: Map<String, TranslationLanguage>
 ) {
-    fun byTag(tag: String) = languages[tag.lowercase()]
+    fun byTag(tag: String) = languages[service.tagAlias(tag).lowercase()]
     operator fun get(tag: String) = byTag(tag)
 
     fun search(query: String): Map<String, TranslationLanguage> {

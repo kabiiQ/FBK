@@ -3,6 +3,7 @@ package moe.kabii.command.commands.translator
 import discord4j.core.spec.EmbedCreateFields
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.discord.util.Embeds
 import moe.kabii.translation.Translator
 import moe.kabii.util.constants.MagicNumbers
@@ -32,9 +33,9 @@ object TranslateMessage : Command("Translate Message") {
             if(contents.isBlank()) return@messageInteraction
 
             val config = event.interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(client.clientId, id.asLong()) }?.orNull()
-            val service = Translator.service
-            val defaultLang = config?.translator?.defaultTargetLanguage?.run(service.supportedLanguages::get) ?: service.defaultLanguage()
-            val translator = Translator.getService(contents, listOf(defaultLang.tag))
+            val defaultLangTag = config?.translator?.defaultTargetLanguage ?: TranslatorSettings.fallbackLang
+            val translator = Translator.getService(contents, listOf(defaultLangTag))
+            val defaultLang = translator.getLanguage(defaultLangTag)
             val translation = translator.translate(from = null, to = defaultLang, text = contents)
             val jumpLink = event.resolvedMessage.createJumpLink()
             val user = event.interaction.user

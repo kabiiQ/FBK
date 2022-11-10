@@ -80,7 +80,7 @@ object DeepLTranslator : TranslationService(
     private fun pullLanguages(): SupportedLanguages {
         return try {
             val request = newRequestBuilder()
-                .url("https://api-free.deepl.com/v2/languages?auth_key=$key")
+                .url("https://api-free.deepl.com/v2/languages?type=target&auth_key=$key")
                 .build()
             LOG.info("Requesting supported languages from DeepL")
             val response = OkHTTP.newCall(request).execute()

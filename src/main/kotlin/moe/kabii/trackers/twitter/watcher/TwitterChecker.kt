@@ -36,9 +36,9 @@ import moe.kabii.trackers.twitter.json.TwitterUrlEntity
 import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
-import moe.kabii.translation.TranslationLanguage
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
+import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
@@ -172,7 +172,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
             ?.forEach(YoutubeVideoIntake::intakeVideosFromText)
 
         // cache to not repeat translation for same tweet across multiple channels/servers
-        val translations = mutableMapOf<TranslationLanguage, TranslationResult>()
+        val translations = mutableMapOf<String, TranslationResult>()
 
         targets.forEach target@{ target ->
             val fbk = instances[target.discordClient]
@@ -210,19 +210,25 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 LOG.debug("translation stage")
                 val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                     try {
-                        val service = Translator.service
-                        val defaultLang = GuildConfigurations
+                        val lang = GuildConfigurations
                             .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
-                            .run(service.supportedLanguages::get) ?: service.defaultLanguage()
-                        val translator = Translator.getService(tweet.text, listOf(defaultLang.tag), twitterFeed = user.id, primaryTweet = !tweet.retweet)
+
+                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = user.id, primaryTweet = !tweet.retweet)
+
+                        LOG.debug("TEMP DEBUG:")
+                        LOG.debug("server lang: $lang")
+                        LOG.debug("language: ${translator.service.supportedLanguages.get(lang)?.tag}")
+                        LOG.debug("languages: ${translator.service.supportedLanguages.languages.map { (tag, lang) -> tag }}")
 
                         // check cache for existing translation of this tweet
-                        val existingTl = translations[defaultLang]
-                        val translation = if(existingTl != null) existingTl else {
+                        val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
+                        val existingTl = translations[standardLangTag]
+                        val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
 
-                            val tl = translator.translate(from = null, to = defaultLang, text = tweet.text)
-                            translations[tl.targetLanguage] = tl
+                            LOG.debug("ExistingTL: ${existingTl != null} - conditional: ${(existingTl?.service == GoogleTranslator || translator.service == GoogleTranslator)}")
+                            val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
+                            translations[standardLangTag] = tl
                             tl
                         }
 

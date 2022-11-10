@@ -33,6 +33,7 @@ object GoogleTranslator : TranslationService(
         return when(input.lowercase()) {
             "ch", "cn", "zh", "zh-hans", "zh-cn" -> "zh-CN"
             "zh-hant", "zh-tw" -> "zh-TW"
+            "en-us", "en" -> "en"
             "kr" -> "ko"
             "jp" -> "ja"
             "iw" -> "he"

@@ -31,9 +31,9 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 
             // fall-back to argos if translation failed for any reason
             with(ArgosTranslator) {
-                val fromLang = from?.run { supportedLanguages[tagAlias(tag)] }
-                val toLang = supportedLanguages[tagAlias(to.tag)] ?: ArgosTranslator.defaultLanguage()
-                return ArgosTranslator.doTranslation(fromLang, toLang, rawText)
+                val fromLang = from?.run { supportedLanguages[tag] }
+                val toLang = supportedLanguages[to.tag] ?: ArgosTranslator.defaultLanguage()
+                return doTranslation(fromLang, toLang, rawText)
             }
         }
     }
@@ -69,6 +69,8 @@ object Translator {
     data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?) {
         fun translate(from: TranslationLanguage?, to: TranslationLanguage, text: String)
             = service.translateText(from, to, text, suspect)
+
+        fun getLanguage(tag: String) = service.supportedLanguages[tag] ?: service.defaultLanguage()
     }
 
     val service: TranslationService
@@ -102,10 +104,20 @@ object Translator {
 //        } else allServices
         // suspected languages are often wrong, so don't fail if a strange language is detected
 //        val services = filteredServices.ifEmpty { allServices }
-        val availableServices = allServices.filter(TranslationService::available)
-        val detectedLanguage = detected?.run { availableServices.getOrNull(0)?.supportedLanguages?.get(this) }
 
-        return TranslationPair(availableServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
+        val availableServices = allServices.filter(TranslationService::available)
+        val langTags = tags.filterNotNull()
+        val filteredServices = if(langTags.isNotEmpty())
+            availableServices
+                .filter { service ->
+                    val languages = service.supportedLanguages
+                    langTags.all { tag -> languages[tag] != null }
+                }
+                .ifEmpty { availableServices }
+        else availableServices
+
+        val detectedLanguage = detected?.run { filteredServices.getOrNull(0)?.supportedLanguages?.get(this) }
+        return TranslationPair(filteredServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
     }
 
     fun getServiceNames(): List<String> =

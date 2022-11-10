@@ -28,6 +28,7 @@ object AzureTranslator : TranslationService(
 
     override fun tagAlias(input: String): String = when(input.lowercase()) {
         "zh", "ch", "cn", "zh-hans", "zh-cn" -> "zh-Hans"
+        "en-us", "en" -> "en"
         "zh-hant", "zh-tw" -> "zh-Hant"
         "kr" -> "ko"
         "pt", "pt-br" -> "pt-br"

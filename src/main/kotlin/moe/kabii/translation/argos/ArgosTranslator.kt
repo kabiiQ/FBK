@@ -34,6 +34,7 @@ object ArgosTranslator : TranslationService(
     override fun tagAlias(input: String): String {
         return when(input.lowercase()) {
             "ch", "cn", "zh-hant", "zh-hans", "zh-tw", "zh-cn" -> "zh"
+            "en-us", "en" -> "en"
             "jp" -> "ja"
             "kr" -> "ko"
             "iw" -> "he"
