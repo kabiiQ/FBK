@@ -13,7 +13,7 @@ import java.io.IOException
 
 object AniListParser : MediaListParser() {
 
-    const val callCooldown = 1500L
+    const val callCooldown = 2000L
 
     private val aniListUserAdapter = MOSHI.adapter(AniListUserResponse::class.java)
     private val aniListMediaListAdapter = MOSHI.adapter(AniListMediaListResponse::class.java)
@@ -68,7 +68,7 @@ object AniListParser : MediaListParser() {
                         throw MediaListDeletedException("AniList returned 404 for list ID $id :: ${response.message}")
                     } else {
                         if(response.code == 429) delay(20_000L)
-                        throw MediaListIOException(response.message)
+                        throw MediaListIOException("${response.code} :: ${response.body.string()} :: ${response.headers.joinToString(" + ") { (header, value) -> "header: $header=$value" }}")
                     }
                 } else {
                     response.body.string()

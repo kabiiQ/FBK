@@ -78,6 +78,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
 
         val oldAnime = oldList.count { it.type == MediaType.ANIME }
         val newAnime = newList.count { it.type == MediaType.ANIME }
+
         if(oldAnime == 0 && newAnime > 3) {
             val listJson = newMediaList.toDBJson()
             trackedList.lastListJson = listJson
