@@ -82,6 +82,7 @@ object TwitterTargetMentions : IdTable<Int>() {
     val target = reference("twitter_mention_assoc_target", TwitterTargets, ReferenceOption.CASCADE)
     val mentionRole = long("discord_feed_mention_role_id").nullable()
     val mentionText = text("discord_feed_mention_text").nullable()
+    val embedColor = integer("discord_embed_color").nullable()
 
     init {
         index(isUnique = true, target)
@@ -91,6 +92,7 @@ object TwitterTargetMentions : IdTable<Int>() {
 class TwitterTargetMention(id: EntityID<Int>) : IntEntity(id) {
     var mentionRole by TwitterTargetMentions.mentionRole
     var mentionText by TwitterTargetMentions.mentionText
+    var embedColor by TwitterTargetMentions.embedColor
 
     var target by TwitterTarget referencedOn TwitterTargetMentions.target
 

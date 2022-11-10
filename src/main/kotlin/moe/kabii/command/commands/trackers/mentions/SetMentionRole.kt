@@ -10,6 +10,7 @@ import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -117,7 +118,7 @@ object SetMentionRole : Command("setmention") {
             }
         }
 
-        origin.ireply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/editmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
+        origin.ereply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/editmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
     }
 
     suspend fun setTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
@@ -142,29 +143,43 @@ object SetMentionRole : Command("setmention") {
             return
         }
 
+        val colorArg = origin.args.optStr("twittercolor")
+        val embedColor = colorArg?.run {
+            when(val parsed = ColorUtil.fromString(this)) {
+                is Ok -> parsed.value
+                is Err -> {
+                    origin.ereply(Embeds.error("Unable to use specified 'twittercolor': ${parsed.value}"))
+                    return
+                }
+            }
+        }
+
          // create or overwrite mention for this guild
         val updateStr = propagateTransaction {
             val existingMention = matchingTarget.mention()
 
-            if(roleArg == null && textArg == null) {
+            if(roleArg == null && textArg == null && embedColor == null) {
                 existingMention?.delete()
                 "**removed**"
             } else {
                 if(existingMention != null) {
                     existingMention.mentionRole = roleArg?.id?.asLong()
                     existingMention.mentionText = textArg
+                    existingMention.embedColor = embedColor
                 } else {
                     TwitterTargetMention.new {
                         this.target = matchingTarget
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
+                        this.embedColor = embedColor
                     }
                 }
                 val role = roleArg?.run {"**$name**" } ?: ""
                 val text = textArg?.run(" "::plus) ?: ""
-                "set to $role$text"
+                val color = if(embedColor != null) ".\nCustom embed color: ${ColorUtil.hexString(embedColor)}." else ""
+                "set to $role$text$color"
             }
         }
-        origin.ireply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.\nUse `/twitterping config` if you wish to configure which types of Tweets will include a ping.")).awaitSingle()
+        origin.ereply(Embeds.fbk("The mention role for the Twitter feed **@${twitterUser.username}** has been $updateStr.\nUse `/twitterping config` if you wish to configure which types of Tweets will include a ping.")).awaitSingle()
     }
 }

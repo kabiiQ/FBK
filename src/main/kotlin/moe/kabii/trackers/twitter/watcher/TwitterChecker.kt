@@ -301,7 +301,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     .run {
                         val footer = StringBuilder(attachInfo)
 
-                        val color = if(user.id == 1255017971363090432L) 16703383 else 1942002
+                        val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
                         val author = (if(tweet.retweet) referenceUser else user) ?: user
 
                         val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))

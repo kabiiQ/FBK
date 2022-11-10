@@ -9,6 +9,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -134,7 +135,7 @@ object EditMentionRole : Command("editmention") {
                 mention.mentionRoleCreation = creationRoleArg.id.asLong()
             }
         }
-        origin.ireply(Embeds.fbk("Edited mention settings for **${streamInfo.displayName}**.\n\n$output")).awaitSingle()
+        origin.ereply(Embeds.fbk("Edited mention settings for **${streamInfo.displayName}**.\n\n$output")).awaitSingle()
     }
 
     private suspend fun addTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
@@ -167,7 +168,18 @@ object EditMentionRole : Command("editmention") {
             return
         }
 
-        if(listOfNotNull(roleArg, textArg).none()) {
+        val colorArg = origin.args.optStr("twittercolor")
+        val embedColor = colorArg?.run {
+            when(val parsed = ColorUtil.fromString(this)) {
+                is Ok -> parsed.value
+                is Err -> {
+                    origin.ereply(Embeds.error("Unable to use specified 'twittercolor': ${parsed.value}"))
+                    return
+                }
+            }
+        }
+
+        if(listOfNotNull(roleArg, textArg, embedColor).none()) {
             GetMentionRole.testTwitterConfig(origin, twitterId)
             return
         }
@@ -186,7 +198,11 @@ object EditMentionRole : Command("editmention") {
                 output.appendLine(textArg)
                 mention.mentionText = textArg
             }
+            if(embedColor != null) {
+                output.appendLine("Setting Twitter embed color to: ${ColorUtil.hexString(embedColor)}")
+                mention.embedColor = embedColor
+            }
         }
-        origin.ireply(Embeds.fbk("Edited mention settings for the Twitter feed **@${twitterUser.username}**.\n\n$output")).awaitSingle()
+        origin.ereply(Embeds.fbk("Edited mention settings for the Twitter feed **@${twitterUser.username}**.\n\n$output")).awaitSingle()
     }
 }
