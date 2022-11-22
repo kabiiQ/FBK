@@ -5,10 +5,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
-import moe.kabii.translation.SupportedLanguages
-import moe.kabii.translation.TranslationLanguage
-import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.TranslationService
+import moe.kabii.translation.*
 import moe.kabii.translation.google.json.GoogleLanguagesResponse
 import moe.kabii.translation.google.json.GoogleTranslationRequest
 import moe.kabii.translation.google.json.GoogleTranslationResponse
@@ -43,7 +40,8 @@ object GoogleTranslator : TranslationService(
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
-        val requestBody = GoogleTranslationRequest.create(rawText, to, from).generateRequestBody()
+        val text = TranslationUtil.preProcess(rawText)
+        val requestBody = GoogleTranslationRequest.create(text, to, from).generateRequestBody()
 
         val request = newRequestBuilder()
             .url("https://translation.googleapis.com/language/translate/v2?key=$googleKey")
@@ -64,12 +62,12 @@ object GoogleTranslator : TranslationService(
             }
         }
         val detectedSourceLanguage = translation.detectedSourceLanguage?.run(supportedLanguages::byTag)
-        val text = StringEscapeUtils.unescapeHtml4(translation.translatedText)
+        val result = StringEscapeUtils.unescapeHtml4(translation.translatedText)
         return TranslationResult(
             service = this,
             originalLanguage = detectedSourceLanguage ?: from ?: defaultLanguage(),
             targetLanguage = to,
-            translatedText = text,
+            translatedText = result,
             detected = translation.detectedSourceLanguage != null
         )
     }

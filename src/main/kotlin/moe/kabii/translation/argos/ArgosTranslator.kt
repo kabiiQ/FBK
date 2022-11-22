@@ -5,10 +5,7 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
-import moe.kabii.translation.SupportedLanguages
-import moe.kabii.translation.TranslationLanguage
-import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.TranslationService
+import moe.kabii.translation.*
 import moe.kabii.translation.argos.json.ArgosLanguagesResponse
 import moe.kabii.translation.argos.json.ArgosTranslationError
 import moe.kabii.translation.argos.json.ArgosTranslationRequest
@@ -44,7 +41,8 @@ object ArgosTranslator : TranslationService(
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
-        val requestBody = ArgosTranslationRequest.create(rawText, to, from).generateRequestBody()
+        val text = TranslationUtil.preProcess(rawText, removeEmoji = true)
+        val requestBody = ArgosTranslationRequest.create(text, to, from).generateRequestBody()
 
         val request = newRequestBuilder()
             .url("http://$libreTranslator/translate")
@@ -62,12 +60,12 @@ object ArgosTranslator : TranslationService(
             }
         }
         val detectedSourceLanguage = translation.detectedLanguage?.language?.run(supportedLanguages::byTag)
-        val text = StringEscapeUtils.unescapeHtml4(translation.translatedText)
+        val result = StringEscapeUtils.unescapeHtml4(translation.translatedText)
         return TranslationResult(
             service = this,
             originalLanguage = detectedSourceLanguage ?: from ?: defaultLanguage(),
             targetLanguage = to,
-            translatedText = text,
+            translatedText = result,
             detected = translation.detectedLanguage != null,
             confidence = translation.detectedLanguage?.confidence?.toDouble()
         )

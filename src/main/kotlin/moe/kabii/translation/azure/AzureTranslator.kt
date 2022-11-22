@@ -2,10 +2,7 @@ package moe.kabii.translation.azure
 
 import moe.kabii.*
 import moe.kabii.data.flat.Keys
-import moe.kabii.translation.SupportedLanguages
-import moe.kabii.translation.TranslationLanguage
-import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.TranslationService
+import moe.kabii.translation.*
 import moe.kabii.translation.azure.json.AzureLanguagesResponse
 import moe.kabii.translation.azure.json.AzureTranslationRequest
 import moe.kabii.translation.azure.json.AzureTranslationResponse
@@ -38,8 +35,7 @@ object AzureTranslator : TranslationService(
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
-        val text = rawText
-            .filterNot('#'::equals)
+        val text = TranslationUtil.preProcess(rawText, capitalize = true, removeTags = true)
 
         val paramTo = "&to=${to.tag}"
         val paramFrom = if(from != null) "&from=${from.tag}" else ""
