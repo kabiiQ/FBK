@@ -15,6 +15,8 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.spaces.TwitterSpaces
+import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
@@ -52,9 +54,12 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                         val discord = instances[target.discordClient].client
                         discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
                     } catch(e: Exception) {
-                        if(e is ClientException && e.status.code() == 404) {
-                            LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                            target.delete()
+                        if(e is ClientException) {
+                            if(e.status.code() == 401) return emptyList()
+                            if(e.status.code() == 404) {
+                                LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                                target.delete()
+                            }
                         }
                         return@filter false
                     }
@@ -94,7 +99,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
     }
 
-    data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?)
+    data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?, val textPart: String?)
     @WithinExposedContext
     suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
@@ -127,7 +132,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             }
             null -> null
         }
-        return MentionRole(dbMention, discordRole)
+
+        val text = if(memberLimit) dbMention.mentionTextMember else dbMention.mentionText
+        val textPart = text?.plus(" ") ?: ""
+
+        return MentionRole(dbMention, discordRole, textPart)
     }
 
     @WithinExposedContext
@@ -209,6 +218,35 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 }
                 .mapTo(liveChannels) { it.videoID.ytChannel }
 
+            // twitcasting notifs
+            Twitcasts.TwitNotif.wrapRows(
+                Twitcasts.TwitNotifs
+                    .innerJoin(MessageHistory.Messages
+                        .innerJoin(DiscordObjects.Channels))
+                    .select {
+                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                    })
+                .filter { notif ->
+                    if(endingStream != null) {
+                        notif.channelId.id != endingStream.id
+                    } else true
+                }
+                .mapTo(liveChannels, Twitcasts.TwitNotif::channelId)
+
+            // twitter spaces
+            TwitterSpaces.SpaceNotif.wrapRows(
+                TwitterSpaces.SpaceNotifs
+                    .innerJoin(MessageHistory.Messages
+                        .innerJoin(DiscordObjects.Channels))
+                    .select {
+                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                    })
+                .filter { notif ->
+                    if(endingStream != null) {
+                        notif.spaceId.channel.id != endingStream.id
+                    } else true
+                }
+                .mapTo(liveChannels) { it.spaceId.channel }
 
             // copy marks for safety (this thread can run at any time)
             val marks = feature.marks.toList()

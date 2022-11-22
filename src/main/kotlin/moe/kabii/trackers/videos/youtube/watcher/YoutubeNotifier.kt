@@ -329,7 +329,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val mentionMessage = if(mentionRole != null) {
 
                 val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
-                val textPart = mentionRole.db.mentionText?.plus(" ") ?: ""
+                val textPart = mentionRole.textPart
                 chan.createMessage("$rolePart$textPart")
 
             } else chan.createMessage()
@@ -454,7 +454,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mention.db.lastMention = DateTime.now()
                 val rolePart = mention.discord?.mention?.plus(" ") ?: ""
-                val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                val textPart = mention.textPart
                 "$rolePart$textPart"
 
             } else ""

@@ -157,7 +157,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
     @WithinExposedContext
     suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
-        LOG.debug("notify ${user.username} tweet: $tweet :: begin")
+        LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
         TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
 
@@ -207,7 +207,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     }
                 }
 
-                LOG.debug("translation stage")
+                // LOG.debug("translation stage")
                 val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                     try {
                         val lang = GuildConfigurations
@@ -216,17 +216,11 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                         val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = user.id, primaryTweet = !tweet.retweet)
 
-                        LOG.debug("TEMP DEBUG:")
-                        LOG.debug("server lang: $lang")
-                        LOG.debug("language: ${translator.service.supportedLanguages.get(lang)?.tag}")
-                        LOG.debug("languages: ${translator.service.supportedLanguages.languages.map { (tag, lang) -> tag }}")
-
                         // check cache for existing translation of this tweet
                         val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
                         val existingTl = translations[standardLangTag]
                         val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
 
-                            LOG.debug("ExistingTL: ${existingTl != null} - conditional: ${(existingTl?.service == GoogleTranslator || translator.service == GoogleTranslator)}")
                             val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
                             translations[standardLangTag] = tl
                             tl
@@ -353,7 +347,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 }
             }
         }
-        LOG.debug("$tweet :: complete??")
+        LOG.debug("notify ${user.username} - complete?? -")
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
@@ -367,9 +361,12 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     try {
                         discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
                     } catch (e: Exception) {
-                        if (e is ClientException && e.status.code() == 404) {
-                            LOG.info("Untracking Twitter feed '${feed.userId}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                            target.delete()
+                        if(e is ClientException) {
+                            if(e.status.code() == 401) return emptyList()
+                            if(e.status.code() == 404) {
+                                LOG.info("Untracking Twitter feed '${feed.userId}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                                target.delete()
+                            }
                         }
                         return@filter false
                     }

@@ -80,7 +80,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
                             mention.db.lastMention = DateTime.now()
                             mention.discord.mention.plus(" ")
                         } else ""
-                        val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                        val textPart = mention.textPart
                         withContent("$rolePart$textPart")
                     } else this
                 }

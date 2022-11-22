@@ -78,7 +78,7 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                                 val response = tweetAdapter.fromJson(line)
 
                                 if(response?.data != null && response.includes != null) {
-                                    LOG.trace("Decoded tweet from stream: $response")
+                                    //LOG.trace("Decoded tweet from stream: $response")
 
                                     val user = response.includes.users.first()
                                     val tweet = response.data

@@ -230,9 +230,12 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                     try {
                         discord.getChannelById(target.discord.channelID.snowflake).awaitSingle()
                     } catch(e: Exception) {
-                        if(e is ClientException && e.status.code() == 404) {
-                            LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
-                            target.delete()
+                        if(e is ClientException) {
+                            if(e.status.code() == 401) return emptyList()
+                            if(e.status.code() == 404) {
+                                LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
+                                target.delete()
+                            }
                         }
                         return@filter false
                     }

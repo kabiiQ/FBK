@@ -13,7 +13,7 @@ import java.io.IOException
 
 object AniListParser : MediaListParser() {
 
-    const val callCooldown = 2000L
+    const val callCooldown = 6000L
 
     private val aniListUserAdapter = MOSHI.adapter(AniListUserResponse::class.java)
     private val aniListMediaListAdapter = MOSHI.adapter(AniListMediaListResponse::class.java)

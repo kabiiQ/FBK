@@ -59,9 +59,8 @@ object YoutubeVideoIntake {
 
                 val videoId = entry.elements("videoId").first().text
                 val channelId = entry.elements("channelId").first().text
-                LOG.trace("debug: $videoId : $channelId")
+                LOG.trace("taking video: $videoId :: $channelId")
 
-                LOG.trace("taking video: $videoId")
                 YoutubeVideo.getOrInsert(videoId, channelId)
             }
         } catch(e: Exception) {
@@ -88,7 +87,7 @@ object YoutubeVideoIntake {
                             LOG.warn("Video found from Twitter: '$videoId' but video not returned from YouTube API.")
                             return@forEach
                         }
-                        LOG.info("Received YouTube video from Tweet: $videoId")
+                        LOG.debug("Received YouTube video from Tweet: $videoId")
 
                         YoutubeVideo.getOrInsert(videoId, ytVideo.channel.id)
                     }

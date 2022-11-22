@@ -155,7 +155,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                     mention.db.lastMention = DateTime.now()
                     mention.discord.mention.plus(" ")
                 } else ""
-                val textPart = mention.db.mentionText?.plus(" ") ?: ""
+                val textPart = mention.textPart
                 chan.createMessage("$rolePart$textPart")
 
             } else chan.createMessage()

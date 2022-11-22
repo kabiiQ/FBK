@@ -68,7 +68,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 call.response.status(HttpStatusCode.OK)
 
                 call.request.queryParameters["channel"]
-                    .also { LOG.trace("POST channel: $it") }
+                    //.also { LOG.trace("POST channel: $it") }
                     ?: return@post
 
                 val body = call.receiveStream().bufferedReader().readText()
@@ -84,7 +84,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 if(signature != "sha1=$bodySignature") {
                     LOG.warn("Unable to verify payload signature: $body\nX-Hub-Signature: $signature\nCalculated signature: $signature")
                     return@post
-                } else LOG.debug("verified sign")
+                } // else LOG.debug("verified sign")
 
                 // successfully acquired information on an updated video.
                 // let youtubevideointake decide what to do with this information
