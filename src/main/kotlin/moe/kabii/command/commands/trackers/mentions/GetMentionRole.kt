@@ -94,6 +94,10 @@ object GetMentionRole : Command("getmention") {
                     out.appendLine("For YouTube **members-only** livestreams and videos, the role **@$role** will be pinged instead.")
                 } else out.appendLine("For YouTube **members-only** livestreams and videos, **no roles** will be pinged.")
 
+                if(mention.mentionTextMember != null) {
+                    out.appendLine("For YouTube **members-only** livestreams, additional text will be sent (may include any message, additional pings, etc): ${mention.mentionTextMember}")
+                }
+
                 if(mention.mentionRoleUpcoming != null) {
                     val role = getRole(target, mention.mentionRoleUpcoming!!)
                     out.appendLine("For YouTube **upcoming** stream messages, the role **@$role** will be pinged.")
@@ -107,7 +111,7 @@ object GetMentionRole : Command("getmention") {
             } else out.appendLine("This role will be pinged for **livestreams.**")
 
             if(mention.mentionText != null) {
-                out.appendLine("The following text will **always** be sent (may include any text, pings, etc): ${mention.mentionText}")
+                out.appendLine("Additional text that will be always be sent (except for YT membership streams) (may include any message, additional pings, etc): ${mention.mentionText}")
             }
 
             out.toString()

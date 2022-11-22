@@ -1,6 +1,6 @@
 {
     "name": "setmention",
-    "description": "Configure a role to be mentioned when a tracked channel goes live.",
+    "description": "REMOVES PREVIOUS CONFIGS. Configure a role to be mentioned when a tracked channel goes live.",
     "options": [
         {
             "name": "username",
@@ -8,6 +8,12 @@
             "type": 3,
             "required": true,
             "autocomplete": true
+        },
+        {
+            "name": "role",
+            "description": "The role that should be pinged. If empty, any configured role will no longer be pinged.",
+            "type": 8,
+            "required": false
         },
         {
             "name": "site",
@@ -38,12 +44,6 @@
             ]
         },
         {
-            "name": "role",
-            "description": "The role that should be pinged. If empty, any configured role will no longer be pinged.",
-            "type": 8,
-            "required": false
-        },
-        {
             "name": "text",
             "description": "Text to be included along with the ping. If empty, any existing text will be removed.",
             "type": 3,
@@ -52,6 +52,24 @@
         {
             "name": "membershiprole",
             "description": "A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "membershiptext",
+            "description": "Text to be included for YouTube member-only streams.",
+            "type": 3,
+            "required": false
+        },
+        {
+            "name": "upcomingrole",
+            "description": "A role to ping for 'upcoming' YouTube streams (must be configured to be posted)",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "creationrole",
+            "description": "A role to ping when YouTube streams are initially scheduled (must be configured to be posted)",
             "type": 8,
             "required": false
         },

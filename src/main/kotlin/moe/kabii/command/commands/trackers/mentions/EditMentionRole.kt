@@ -85,11 +85,12 @@ object EditMentionRole : Command("editmention") {
         // an existing mention will continue to exist, add mention will never 'delete' a mention
         // so, we do not need to worry about requirements for existence
         val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
+        val membershipTextArg = origin.args.optStr("membershiptext")
         val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
         val upcomingRoleArg = origin.args.optRole("upcomingrole")?.awaitSingle()
         val creationRoleArg = origin.args.optRole("creationrole")?.awaitSingle()
 
-        if(listOfNotNull(roleArg, textArg, membershipRoleArg, uploadsRoleArg, upcomingRoleArg, creationRoleArg).none()) {
+        if(listOfNotNull(roleArg, textArg, membershipRoleArg, membershipTextArg, uploadsRoleArg, upcomingRoleArg, creationRoleArg).none()) {
             // if no new information, run 'getmention' instead
             GetMentionRole.testStreamConfig(origin, site, siteUserId)
             return
@@ -115,6 +116,12 @@ object EditMentionRole : Command("editmention") {
                 else output.append("Replacing existing alternate membership ping with: ")
                 output.appendLine(membershipRoleArg.name)
                 mention.mentionRoleMember = membershipRoleArg.id.asLong()
+            }
+            if(membershipTextArg != null) {
+                if(mention.mentionTextMember == null) output.append("Adding alternate membership stream text: ")
+                else output.append("Replacing existing membership stream text: ")
+                output.appendLine(membershipTextArg)
+                mention.mentionTextMember = membershipTextArg
             }
             if(uploadsRoleArg != null) {
                 if(mention.mentionRoleUploads == null) output.append("Adding alternate ping for uploads/premieres: ")

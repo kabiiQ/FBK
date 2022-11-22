@@ -76,11 +76,12 @@ object SetMentionRole : Command("setmention") {
             val existingMention = matchingTarget.mention()
 
             val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
+            val membershipTextArg = origin.args.optStr("membershiptext")
             val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
             val upcomingRoleArg = origin.args.optRole("upcomingrole")?.awaitSingle()
             val creationRoleArg = origin.args.optRole("creationrole")?.awaitSingle()
 
-            if(listOfNotNull(roleArg, textArg, membershipRoleArg, upcomingRoleArg, creationRoleArg).none()) {
+            if(listOfNotNull(roleArg, textArg, membershipRoleArg, membershipTextArg, upcomingRoleArg, creationRoleArg).none()) {
                 // unset role
                 existingMention?.delete()
                 "**removed.**"
@@ -90,6 +91,7 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionRole = roleArg?.id?.asLong()
                     existingMention.mentionText = textArg
                     existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
+                    existingMention.mentionTextMember = membershipTextArg
                     existingMention.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
                     existingMention.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
                     existingMention.mentionRoleCreation = creationRoleArg?.id?.asLong()
@@ -99,6 +101,7 @@ object SetMentionRole : Command("setmention") {
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
+                        this.mentionTextMember = membershipTextArg
                         this.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
                         this.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
                         this.mentionRoleCreation = creationRoleArg?.id?.asLong()
@@ -109,10 +112,11 @@ object SetMentionRole : Command("setmention") {
                     val uploadAlt = if(uploadsRoleArg != null) " Set to **${uploadsRoleArg.name}** for uploads/premieres." else ""
                     val upcomingAlt = if(upcomingRoleArg != null) "\nSet to **${upcomingRoleArg.name}** for **upcoming** stream notifications. **Upcoming** messages must still be enabled in `/yt config`." else ""
                     val creationAlt = if(creationRoleArg != null) "\nSet to **${creationRoleArg.name}** for **immediately** when streams are scheduled. **Creation** messages must still be enabled in `/yt config`" else ""
-                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$uploadAlt$upcomingAlt$creationAlt"
+                    val memberText = if(membershipTextArg != null) "\nAdditional text included for membership streams: **$membershipTextArg**." else ""
+                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$memberText$uploadAlt$upcomingAlt$creationAlt"
                 } else ""
 
-                val role = roleArg?.run {"**$name**" } ?: "NONE"
+                val role = roleArg?.run { "**$name**" } ?: "NONE"
                 val text = textArg?.run(" "::plus) ?: ""
                 "set to $role$text.$youtubeDetail"
             }
