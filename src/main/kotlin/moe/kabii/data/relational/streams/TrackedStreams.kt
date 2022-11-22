@@ -128,6 +128,7 @@ object TrackedStreams {
         val mentionRoleCreation = long("discord_mention_role_creation").nullable()
         val mentionRoleUploads = long("discord_mention_role_uploads").nullable()
         val mentionText = text("discord_mention_text").nullable()
+        val mentionTextMember = text("discord_mention_text_membership").nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
         init {
@@ -142,6 +143,7 @@ object TrackedStreams {
         var mentionRoleUpcoming by TargetMentions.mentionRoleUpcoming
         var mentionRoleCreation by TargetMentions.mentionRoleCreation
         var mentionText by TargetMentions.mentionText
+        var mentionTextMember by TargetMentions.mentionTextMember
         var lastMention by TargetMentions.lastMention
 
         var target by Target referencedOn TargetMentions.target
