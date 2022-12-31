@@ -5,13 +5,9 @@ import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
-import moe.kabii.translation.SupportedLanguages
-import moe.kabii.translation.TranslationLanguage
-import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.TranslationService
+import moe.kabii.translation.*
 import moe.kabii.translation.deepl.json.DLTranslationResponse
 import moe.kabii.translation.deepl.json.DeepLSupportedLanguage
-import moe.kabii.util.extensions.capitilized
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.FormBody
 import java.io.IOException
@@ -39,7 +35,7 @@ object DeepLTranslator : TranslationService(
     }
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
-        val text = rawText.capitilized()
+        val text = TranslationUtil.preProcess(rawText, removeEmoji = true, capitalize = true)
 
         val requestBody = FormBody.Builder()
             .add("text", text)

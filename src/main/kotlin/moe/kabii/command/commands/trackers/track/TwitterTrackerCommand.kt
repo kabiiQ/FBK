@@ -40,6 +40,11 @@ object TwitterTrackerCommand : TrackerCommand {
         // check if this user is already tracked
         val channelId = origin.chan.id.asLong()
 
+        if(twitterUser.id == 1072404907230060544L) {
+            origin.ereply(Embeds.error("This Twitter account is temporarily blocked from tracking due to bot reply spam."))
+            return
+        }
+
         val existingTrack = transaction {
             TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
         }

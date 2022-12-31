@@ -74,6 +74,8 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
+                        if(feed.userId == 1072404907230060544L) return@forEach // TODO temporary disable
+
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 

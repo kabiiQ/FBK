@@ -162,7 +162,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 checkAndRenameChannel(fbk.clientId, channel, endingStream = dbStream.ytVideo.ytChannel)
 
             } catch(ce: ClientException) {
-                LOG.info("Unable to find YouTube stream notification $notification :: ${ce.status.code()}")
+                LOG.info("Unable to find YouTube stream notification for target ${notification.targetID.id.value} :: ${ce.status.code()}")
             } catch(e: Exception) {
                 // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                 LOG.info("Error in YouTube #streamEnd for stream $dbStream :: ${e.message}")
