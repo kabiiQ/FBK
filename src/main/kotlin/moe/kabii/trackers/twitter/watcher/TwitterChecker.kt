@@ -21,6 +21,7 @@ import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
@@ -54,6 +55,7 @@ import kotlin.math.max
 class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec, val spaceChecker: SpaceChecker) : Runnable {
 
     override fun run() {
+        if(!MetaData.host) return // do not run on testing instances to avoid 429s on main service (overlapping api key)
         applicationLoop {
             val start = Instant.now()
 

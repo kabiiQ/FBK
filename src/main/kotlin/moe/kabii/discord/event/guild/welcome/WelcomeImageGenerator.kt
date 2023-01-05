@@ -8,6 +8,8 @@ import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
 import moe.kabii.util.formatting.GraphicsUtil
 import java.awt.*
+import java.awt.font.FontRenderContext
+import java.awt.font.TextLayout
 import java.awt.geom.Ellipse2D
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -30,6 +32,7 @@ object WelcomeImageGenerator {
     private val textPt = 64f
 
     private val shadowColor = Color(0f, 0f, 0f, 0.5f)
+    private val outlineStroke = 6f
 
     const val targetHeight = 512
     const val targetWidth = targetHeight * 2
@@ -65,10 +68,15 @@ object WelcomeImageGenerator {
                 if(tagWidth <= image.width) {
                     val xCenter = (image.width - tagWidth) / 2
                     graphics.font = taglineFont
-                    graphics.color = shadowColor
-                    graphics.drawString(config.taglineValue, xCenter - 4f, y - 4f) // drop shadow up-left offset
-                    graphics.color = textColor
-                    graphics.drawString(config.taglineValue, xCenter, y)
+
+                    if (config.textOutline) {
+                        drawStringWithOutline(graphics, frc, xCenter.toDouble(), y.toDouble(), textColor, config.taglineValue)
+                    } else {
+                        graphics.color = shadowColor
+                        graphics.drawString(config.taglineValue, xCenter - 4f, y - 4f) // drop shadow up-left offset
+                        graphics.color = textColor
+                        graphics.drawString(config.taglineValue, xCenter, y)
+                    }
                 }
 
                 val tagMetrics = taglineFont.getLineMetrics(config.taglineValue, frc)
@@ -88,10 +96,14 @@ object WelcomeImageGenerator {
                 val xCenter = (image.width - nameWidth) / 2f
 
                 y += lineSpacing
-                graphics.color = shadowColor
-                graphics.drawString(username, xCenter - 2f, y - 2f) // drop shadow down-left offset
-                graphics.color = textColor
-                graphics.drawString(username, xCenter, y)
+                if (config.textOutline) {
+                    drawStringWithOutline(graphics, frc, xCenter.toDouble(), y.toDouble(), textColor, username)
+                } else {
+                    graphics.color = shadowColor
+                    graphics.drawString(username, xCenter - 2f, y - 2f) // drop shadow down-left offset
+                    graphics.color = textColor
+                    graphics.drawString(username, xCenter, y)
+                }
             }
 
             // draw avatar
@@ -156,10 +168,14 @@ object WelcomeImageGenerator {
 
                 y += max(yCenter, yFontFit)
 
-                graphics.color = shadowColor
-                graphics.drawString(str, xCenter - 2f, y - 2f)
-                graphics.color = textColor
-                graphics.drawString(str, xCenter, y)
+                if (config.textOutline) {
+                    drawStringWithOutline(graphics, frc, xCenter.toDouble(), y.toDouble(), textColor, str)
+                } else {
+                    graphics.color = shadowColor
+                    graphics.drawString(str, xCenter - 2f, y - 2f)
+                    graphics.color = textColor
+                    graphics.drawString(str, xCenter, y)
+                }
             }
 
             ByteArrayOutputStream().use { os ->
@@ -174,5 +190,20 @@ object WelcomeImageGenerator {
         } finally {
             graphics?.dispose()
         }
+    }
+
+    private fun drawStringWithOutline(g2d: Graphics2D, frc: FontRenderContext, x: Double, y: Double, textColor: Color, text: String, outlineColor: Color = Color.BLACK) {
+
+        val graphics = g2d.create() as Graphics2D
+        val transform = graphics.transform
+        transform.translate(x, y)
+        graphics.transform(transform)
+        graphics.color = outlineColor
+        val textLayout = TextLayout(text, graphics.font, frc)
+        val shape = textLayout.getOutline(null)
+        graphics.stroke = BasicStroke(outlineStroke)
+        graphics.draw(shape)
+        graphics.color = textColor
+        graphics.fill(shape)
     }
 }

@@ -35,17 +35,16 @@ data class WelcomeSettings(
     var includeUsername: Boolean = true,
     var message: String = "",
 
-    var welcomeTagLine: String? = "WELCOME", // TODO remove after migration
     var includeTagline: Boolean = true,
     var taglineValue: String = "WELCOME",
 
     var imagePath: String? = null,
 
-    var imageText: String? = defaultImageText, // TODO remove after migration
     var includeImageText: Boolean = true,
     var imageTextValue: String = defaultImageText,
 
     var imageTextColor: Int? = defaultColor,
+    var textOutline: Boolean = true,
     var emoji: DiscordEmoji? = null
 ) {
     fun textColor() = imageTextColor ?: defaultColor

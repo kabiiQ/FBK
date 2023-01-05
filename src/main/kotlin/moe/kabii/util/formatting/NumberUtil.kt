@@ -20,4 +20,12 @@ object NumberUtil {
         }
         return ranges
     }
+
+    fun ordinalFor(value: Int) =
+        if(value % 100 in 11..13) "th" else when (value % 10) {
+            1 -> "st"
+            2 -> "nd"
+            3 -> "rd"
+            else -> "th"
+        }
 }

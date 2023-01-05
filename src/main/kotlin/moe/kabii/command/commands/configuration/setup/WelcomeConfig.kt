@@ -57,6 +57,10 @@ object WelcomeConfig : Command("welcome") {
             "useimagetext",
             WelcomeSettings::includeImageText
         ),
+        BooleanElement("Use a black outline to make image text more visible",
+            "textoutline",
+            WelcomeSettings::textOutline
+        ),
         StringElement("Text message sent when welcoming new user",
             "message",
             WelcomeSettings::message,
