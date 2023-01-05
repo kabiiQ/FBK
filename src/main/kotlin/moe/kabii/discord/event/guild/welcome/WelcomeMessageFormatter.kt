@@ -5,31 +5,42 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
+import moe.kabii.LOG
 import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.formatting.NumberUtil
 
 object WelcomeMessageFormatter {
 
     private val nameParam = Regex("&(user|name)+", RegexOption.IGNORE_CASE)
     private val mentionParam = Regex("&mention", RegexOption.IGNORE_CASE)
-    private val numberParam = Regex("&(number|count|member)", RegexOption.IGNORE_CASE)
+    private val numberParam = Regex("&(number|count|member)(ord)?", RegexOption.IGNORE_CASE)
 
     suspend fun format(member: Member, raw: String, rich: Boolean): String {
         var format = raw
             .replace(nameParam, member.username)
             .replace(mentionParam, if(rich) member.mention else member.userAddress())
-        if(format.contains(numberParam)) {
-            // check first to avoid calculating this if not needed
+
+        val memberCountMatch = numberParam.find(format)
+        if(memberCountMatch != null) {
+            // check cache to avoid pulling from discord if not needed
             val memberCache = GuildMemberCounts[member.guildId.asLong()]
             val memberNumber = if(memberCache == null) {
                 val memberCount = member.guild.tryAwait().orNull()?.memberCount
                 if(memberCount != null) GuildMemberCounts[member.guildId.asLong()] = memberCount.toLong()
+                LOG.info("Getting member count from guild: $memberCount")
                 memberCount
             } else memberCache.toInt()
-            format = format.replace(numberParam, memberNumber?.plus(1)?.toString() ?: "")
+            LOG.info("Member count: $memberNumber")
+
+            val newMember = memberNumber?.plus(1)
+            val ordinal = if(newMember != null && memberCountMatch.groups[2] != null) NumberUtil.ordinalFor(newMember)
+            else ""
+
+            format = format.replace(numberParam, "${newMember ?: ""}$ordinal")
         }
         return format
     }
