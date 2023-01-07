@@ -55,15 +55,9 @@ object TargetSuggestionGenerator {
         return targets.size
     }
 
-    suspend fun getTargets(clientId: Int, id: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
-        val targetChannel = TargetChannel(clientId, id)
-        val allTargets = channelTargetCache.getOrPut(targetChannel) {
-            generateTargetMappings(targetChannel)
-        }
-        val targets = if(filter == null) allTargets else allTargets.filter { target -> filter(target.site) }
-
-        // TODO code is duplicated for global track suggestions
-        // site: parsed from input or from site option
+    data class InputSite(val site: TrackerTarget?, val value: String)
+    fun parseSite(input: String, siteArg: Long?): InputSite {
+        // parse 'site' from input or from explicit site argument
         val colonArg = input.split(":")
         var site: TrackerTarget? = null
         var value = input
@@ -78,6 +72,16 @@ object TargetSuggestionGenerator {
             value = value.removePrefix("@")
         }
         site = site ?: siteArg?.run(TrackerTarget::parseSiteArg)
+        return InputSite(site, value)
+    }
+
+    suspend fun getTargets(clientId: Int, id: Long, input: String, siteArg: Long?, filter: ((TrackerTarget) -> Boolean)? = null): List<ApplicationCommandOptionChoiceData> {
+        val targetChannel = TargetChannel(clientId, id)
+        val allTargets = channelTargetCache.getOrPut(targetChannel) {
+            generateTargetMappings(targetChannel)
+        }
+        val targets = if(filter == null) allTargets else allTargets.filter { target -> filter(target.site) }
+        val (site, value) = parseSite(input, siteArg)
 
         val siteTargets = if(site == null) targets else targets.filter { target -> target.site == site }
         val filtered = if(value.isBlank()) siteTargets else siteTargets.filter { target -> target.username.contains(value, ignoreCase = true) }

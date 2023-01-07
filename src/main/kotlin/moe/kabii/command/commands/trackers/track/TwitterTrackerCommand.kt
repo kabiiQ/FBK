@@ -2,6 +2,7 @@ package moe.kabii.command.commands.trackers.track
 
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
@@ -71,6 +72,7 @@ object TwitterTrackerCommand : TrackerCommand {
 
         origin.ireply(Embeds.fbk("Now tracking **[${twitterUser.name}](${twitterUser.url})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
+        GlobalTrackSuggestionGenerator.cacheNewFeed(moe.kabii.trackers.TwitterTarget, twitterUser.id.toString(), twitterUser.username)
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {

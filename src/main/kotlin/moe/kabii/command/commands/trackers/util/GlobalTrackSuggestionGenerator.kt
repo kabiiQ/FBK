@@ -3,7 +3,6 @@ package moe.kabii.command.commands.trackers.util
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
@@ -49,21 +48,7 @@ object GlobalTrackSuggestionGenerator {
 
     fun suggestFeeds(input: String, siteArg: Long?): List<ApplicationCommandOptionChoiceData> {
         // site parsed from input or from site option
-        // TODO make helper method? duplicate code
-        val colonArg = input.split(":")
-        var site: TrackerTarget? = null
-        var value = input
-        if(colonArg.size == 2) {
-            val match = TargetArguments[colonArg[0]]
-            if(match != null) {
-                site = match
-                value = colonArg[1]
-            }
-        } else if(input.startsWith("@")) {
-            site = TwitterTarget
-            value = value.removePrefix("@")
-        }
-        site = site ?: siteArg?.run(TrackerTarget::parseSiteArg)
+        val (site, value) = TargetSuggestionGenerator.parseSite(input, siteArg)
 
         // don't return results if nothing is input to avoid favoritism
         if(site == null && value.isBlank()) return listOf()

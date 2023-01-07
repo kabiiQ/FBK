@@ -3,6 +3,7 @@ package moe.kabii.command.commands.trackers.track
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
@@ -75,6 +76,7 @@ object StreamTrackerCommand : TrackerCommand {
         val ytInfo = if(streamTarget is YoutubeTarget) "\nUse `/yt config` to adjust the types of YouTube content posted to this channel." else ""
         origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!$ytInfo\nUse `/setmention` to configure a role to be \"pinged\" for streams/uploads.")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
+        GlobalTrackSuggestionGenerator.cacheNewFeed(streamTarget, streamId, streamInfo.displayName)
 
         // side-effects for prompt data maintenance
         try {

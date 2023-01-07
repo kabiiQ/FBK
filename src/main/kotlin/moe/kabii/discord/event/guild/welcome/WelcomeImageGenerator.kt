@@ -60,6 +60,10 @@ object WelcomeImageGenerator {
             var y = 90f // from top to baseline first line
 
             val lineSpacing = 20
+
+            if(textColor == Color.BLACK) {
+                config.textOutline = false
+            }
             // draw tag line
             if(config.includeTagline) {
                 val tagBounds = taglineFont.getStringBounds(config.taglineValue, frc)

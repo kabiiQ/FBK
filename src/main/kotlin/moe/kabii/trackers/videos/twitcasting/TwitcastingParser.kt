@@ -53,6 +53,7 @@ object TwitcastingParser {
 
             // check headers, set next call delay if rate limited
             val remaining = response.headers["X-RateLimit-Remaining"]
+            LOG.debug("X-RateLimitRemaining: $remaining")
             if(remaining == "0") {
                 nextCall = Instant.ofEpochSecond(response.headers["X-RateLimit-Reset"]!!.toLong())
             }
