@@ -18,4 +18,3 @@ data class YoutubeChannelSnippet(
     val title: String,
     val thumbnails: YoutubeThumbnails
 )
-

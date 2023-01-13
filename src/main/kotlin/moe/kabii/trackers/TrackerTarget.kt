@@ -119,7 +119,9 @@ object YoutubeTarget : StreamingTarget(
     FeatureChannel::streamTargetChannel,
     listOf(
         Regex(youtubeRegex),
-        Regex("youtube.com/channel/$youtubeRegex")
+        Regex("youtube.com/channel/$youtubeRegex"),
+        Regex("youtube.com/${YoutubeParser.youtubeHandlePattern}"),
+        Regex("youtube.com/${YoutubeParser.youtubeNamePattern}")
     ),
     "youtube", "yt", "youtube.com", "utube", "ytube"
 ) {

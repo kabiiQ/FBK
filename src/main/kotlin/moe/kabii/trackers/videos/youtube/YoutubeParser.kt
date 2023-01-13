@@ -24,8 +24,9 @@ object YoutubeParser {
 
     val color = Color.of(16711680)
 
-    val youtubeChannelPattern = Regex("([a-zA-Z0-9-_]{24})")
-    val youtubeNamePattern = Regex("([a-zA-Z0-9)]{6,20})")
+    val youtubeChannelPattern = Regex("([a-zA-Z0-9\\-_]{24})")
+    val youtubeNamePattern = Regex("([a-zA-Z0-9]{6,20})")
+    val youtubeHandlePattern = Regex("(@[a-zA-Z0-9_\\-.]{3,30})")
 
     val youtubeVideoPattern = Regex("([a-zA-Z0-9-_]{11})")
     val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/)|(?:(?:watch)?\\?vi?=|&vi?=))($youtubeVideoPattern)")
@@ -33,6 +34,7 @@ object YoutubeParser {
     @Throws(YoutubeAPIException::class)
     fun getChannelFromUnknown(identifier: String): YoutubeChannelInfo? {
         return when {
+            identifier.length in 4..31 && identifier.matches(youtubeHandlePattern) -> getChannelByHandle(identifier)
             identifier.length in 6..20 && identifier.matches(youtubeNamePattern) -> getChannelByName(identifier)
             identifier.length == 24 && identifier.matches(youtubeChannelPattern) -> getChannelById(identifier)
             else -> null
@@ -44,6 +46,12 @@ object YoutubeParser {
 
     @Throws(YoutubeAPIException::class)
     private fun getChannelByName(name: String): YoutubeChannelInfo? = getChannel("forUsername=$name")
+
+    @Throws(YoutubeAPIException::class)
+    private fun getChannelByHandle(handle: String): YoutubeChannelInfo? = YoutubeScraper
+        .handle(handle)
+        ?.run("id="::plus)
+        ?.run(::getChannel)
 
     @Throws(YoutubeAPIException::class)
     private fun getChannel(identifierPart: String): YoutubeChannelInfo? {
