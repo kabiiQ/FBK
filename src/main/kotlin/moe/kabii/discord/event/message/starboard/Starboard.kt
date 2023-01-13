@@ -15,6 +15,7 @@ import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
 import moe.kabii.discord.util.MessageColors
+import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import java.net.URL
 
@@ -51,6 +52,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${starboard.useEmoji().string()} $stars <#$channel>$mention"
     }
 
+    private val supportedImageType = listOf(".png", ".jpg", ".jpeg", ".gif")
     private suspend fun starboardEmbed(message: Message): MessageCreateSpec {
         var spec = MessageCreateSpec.create()
         var embed = EmbedCreateSpec.create()
@@ -60,7 +62,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
         val attachment = message.attachments.firstOrNull()
         if(attachment != null && !attachment.filename.isBlank()) {
-            val supportedImage = listOf(".png", ".jpg", ".jpeg", ".gif").any { attachment.filename.endsWith(it, ignoreCase = true) }
+            val supportedImage = supportedImageType.any { attachment.filename.endsWith(it, ignoreCase = true) }
 
             if(supportedImage) {
                 // if there is an uploaded image, put it in the embed
@@ -73,6 +75,15 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
                 } catch (e: Exception) {
                     fields.add(EmbedCreateFields.Field.of("Attachment", attachment.url, false))
                 }
+            }
+        } else {
+            // scan message for linked image
+            val linkedImageUrl = URLUtil.genericUrl
+                .findAll(message.content)
+                .map(MatchResult::value)
+                .firstOrNull { match -> supportedImageType.any { extension -> match.endsWith(extension, ignoreCase = true) } }
+            if(linkedImageUrl != null) {
+                embed = embed.withImage(linkedImageUrl)
             }
         }
 

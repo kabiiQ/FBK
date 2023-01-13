@@ -6,6 +6,11 @@ import moe.kabii.trackers.anime.MediaType
 object URLUtil {
     const val colorPicker = "https://htmlcolorcodes.com/color-picker/"
 
+    val genericUrl = Regex(
+        "(?i)\\b((?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\)|[^\\s`!()\\[\\]{};:'\".,<>?«»“”‘’]))",
+        RegexOption.IGNORE_CASE
+    )
+
     object StreamingSites {
         object Youtube {
             fun thumbnail(videoID: String) = "https://i.ytimg.com/vi/$videoID/maxresdefault.jpg"
