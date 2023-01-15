@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
+    <logger name="discord4j.gateway.payload.JacksonPayloadReader" level="OFF"/>
     <logger name="io.netty" level="INFO"/>
     <logger name="reactor" level="INFO"/>
     <logger name="org.mongodb" level="INFO"/>
