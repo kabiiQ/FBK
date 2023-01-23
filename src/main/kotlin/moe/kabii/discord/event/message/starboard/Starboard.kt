@@ -14,6 +14,7 @@ import moe.kabii.command.BotSendMessageException
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
+import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
@@ -52,7 +53,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return "${starboard.useEmoji().string()} $stars <#$channel>$mention"
     }
 
-    private val supportedImageType = listOf(".png", ".jpg", ".jpeg", ".gif")
+    private val supportedImageType = listOf(".png", ".jpg", ".jpeg", ".gif", ".webp")
     private suspend fun starboardEmbed(message: Message): MessageCreateSpec {
         var spec = MessageCreateSpec.create()
         var embed = EmbedCreateSpec.create()
@@ -95,7 +96,17 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
             .withFooter(EmbedCreateFields.Footer.of("Message ID: ${message.id.asString()}, sent ", null))
             .withTimestamp(message.timestamp)
             .withFields(fields)
-        return spec.withEmbeds(embed)
+
+        // generic embeds from original post to be re-created
+        val postedImage = embed.image().orNull()
+        val originalEmbeds = message.embeds.filter { e ->
+            // do not re-attach files that are already handled more specifically above
+            if(postedImage != null) postedImage != e.url.orNull()
+            else true
+
+        }.map(Embeds::from).toTypedArray()
+        val embeds = listOfNotNull(embed, *originalEmbeds)
+        return spec.withEmbeds(embeds)
     }
 
     suspend fun addToBoard(message: Message, stars: MutableSet<Long>, exempt: Boolean = false) {
