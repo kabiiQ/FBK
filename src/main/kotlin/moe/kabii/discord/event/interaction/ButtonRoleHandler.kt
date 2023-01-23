@@ -24,6 +24,8 @@ import kotlin.math.min
 
 class ButtonRoleHandler(val instances: DiscordInstances) : EventListener<ButtonInteractionEvent>(ButtonInteractionEvent::class) {
 
+    private val formattingChars = Regex("[*_~]")
+
     override suspend fun handle(event: ButtonInteractionEvent) {
         // match this button press to a 'button-role' configuration
         val guildId = event.interaction.guildId.orNull() ?: return
@@ -52,10 +54,14 @@ class ButtonRoleHandler(val instances: DiscordInstances) : EventListener<ButtonI
                             .find { gr -> gr.id.asLong() == br.role }
                             ?: return@mapNotNull null
 
+                        // requested: formatting chars may be used in role embed but are useless in drop-down selection
+                        val info =
+                            br.info?.replace(formattingChars, "")
+                            ?.run { StringUtils.abbreviate(this, 100) }
                         SelectMenu.Option
                             .of(StringUtils.abbreviate(br.alternateName ?: discordRole.name, 100), br.role.toString())
                             .run { if(br.emoji != null) withEmoji(br.emoji!!.toReactionEmoji()) else this }
-                            .run { if(br.info != null) withDescription(StringUtils.abbreviate(br.info, 100)) else this }
+                            .run { if(info != null) withDescription(info) else this }
                             .withDefault(userRoles.contains(br.role)) to discordRole
                     }
                     val menu = SelectMenu
