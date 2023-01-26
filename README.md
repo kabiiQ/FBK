@@ -12,11 +12,11 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 FBK is now available for invite and public use, I have not done any sort of advertising yet, but feel free to use it or share it.
 
-#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=1040265007247663144&permissions=288681168&scope=applications.commands%20bot)
+#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=1012933714730291270&permissions=288681168&scope=applications.commands%20bot)
 
-##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1040265007247663144&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
+##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1012933714730291270&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
 
-##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1040265007247663144&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
+##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1012933714730291270&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
 
 # Suggestion/Support Discord Server
 
@@ -41,13 +41,6 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
   - [Twitter feed update notifications](https://github.com/kabiiQ/FBK/wiki/Twitter-Tracker)
     - Post information when specific users post a Tweet!
-
-- ## **[Music Player](https://github.com/kabiiQ/FBK/wiki/Music-Player)**
-  - [Play songs from multiple locations](https://github.com/kabiiQ/FBK/wiki/Music-Player#playing-music-with-the-play-command)
-  - [Song queue with vote-skip and force-skip](https://github.com/kabiiQ/FBK/wiki/Music-Player#skipping-tracks-in-queue-with-skip)
-    - Moderator commands: [*Temporarily interrupt a song already playing, or add to the front of the queue*](https://github.com/kabiiQ/FBK/wiki/Music-Player#--play-is-the-primary-command-for-adding-music-to-the-queue)
-  - [**Fast forward/rewind/skip** to timestamp in songs at will](https://github.com/kabiiQ/FBK/wiki/Music-Player#playback-manipulation)
-  - [**Speed up songs**, change their pitch, or apply a bass boost](https://github.com/kabiiQ/FBK/wiki/Music-Player#audio-manipulationfilters)
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
