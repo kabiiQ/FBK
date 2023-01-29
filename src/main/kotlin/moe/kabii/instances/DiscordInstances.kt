@@ -27,8 +27,10 @@ import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
+import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 class FBK(
     val clientId: Int,
@@ -150,10 +152,21 @@ class DiscordInstances {
                         RecoverQueue.recover(fbk, guild)
                     }
                 }
+                .onErrorResume { t ->
+                    LOG.error("Error in offline check: ${t.message}")
+                    LOG.warn(t.stackTraceString)
+                    Mono.empty()
+                }
             publishers.add(offlineChecks)
 
             val allListeners = (instancedListeners + eventListeners).map { listener ->
-                gateway.on(listener.eventType.java, listener::wrapAndHandle)
+                gateway
+                    .on(listener.eventType.java, listener::wrapAndHandle)
+                    .onErrorResume { t ->
+                        LOG.error("Uncaught error in event handler: ${t.message}")
+                        LOG.warn(t.stackTraceString)
+                        Mono.empty()
+                    }
             }
             publishers.addAll(allListeners)
 

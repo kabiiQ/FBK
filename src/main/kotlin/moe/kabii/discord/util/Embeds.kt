@@ -4,7 +4,6 @@ import discord4j.core.`object`.Embed
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.discordjson.json.EmbedData
 import discord4j.rest.util.Color
 import moe.kabii.command.Command
 import moe.kabii.util.extensions.orNull
