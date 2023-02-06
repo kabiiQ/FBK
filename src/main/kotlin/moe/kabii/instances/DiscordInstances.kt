@@ -6,6 +6,7 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
@@ -31,6 +32,7 @@ import moe.kabii.util.extensions.stackTraceString
 import org.reflections.Reflections
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Duration
 
 class FBK(
     val clientId: Int,
@@ -147,9 +149,10 @@ class DiscordInstances {
             val offlineChecks = gateway.guilds
                 .flatMap { guild ->
                     mono {
+                        delay(Duration.ofSeconds(2))
                         OfflineUpdateHandler.runChecks(fbk.clientId, guild)
                         InviteWatcher.updateGuild(fbk.clientId, guild)
-                        RecoverQueue.recover(fbk, guild)
+                        // RecoverQueue.recover(fbk, guild) TODO re-enable
                     }
                 }
                 .onErrorResume { t ->

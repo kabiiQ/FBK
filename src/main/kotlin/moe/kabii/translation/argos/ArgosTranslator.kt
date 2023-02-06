@@ -42,6 +42,8 @@ object ArgosTranslator : TranslationService(
 
     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
         val text = TranslationUtil.preProcess(rawText, removeEmoji = true)
+        if(text.isBlank()) return NoOpTranslator.doTranslation(from, to, text)
+
         val requestBody = ArgosTranslationRequest.create(text, to, from).generateRequestBody()
 
         val request = newRequestBuilder()

@@ -5,7 +5,6 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
-import moe.kabii.LOG
 import moe.kabii.data.flat.GuildMemberCounts
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.util.Embeds
@@ -31,10 +30,8 @@ object WelcomeMessageFormatter {
             val memberNumber = if(memberCache == null) {
                 val memberCount = member.guild.tryAwait().orNull()?.memberCount
                 if(memberCount != null) GuildMemberCounts[member.guildId.asLong()] = memberCount.toLong()
-                LOG.info("Getting member count from guild: $memberCount")
                 memberCount
             } else memberCache.toInt()
-            LOG.info("Member count: $memberNumber")
 
             val newMember = memberNumber?.plus(1)
             val ordinal = if(newMember != null && memberCountMatch.groups[2] != null) NumberUtil.ordinalFor(newMember)

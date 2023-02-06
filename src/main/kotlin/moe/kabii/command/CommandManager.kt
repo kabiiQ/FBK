@@ -23,7 +23,7 @@ class CommandManager {
         if(command.executeTerminal != null) {
             commandsTerminal[command.name] = command
         }
-        LOG.debug("Registered command \"${command.name}\". Object: ${command::class.simpleName}")
+        // LOG.debug("Registered command \"${command.name}\". Object: ${command::class.simpleName}")
     }
 
     fun registerClass(clazz: Class<out Command>) {

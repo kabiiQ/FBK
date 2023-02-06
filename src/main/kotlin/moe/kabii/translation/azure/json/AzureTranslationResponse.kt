@@ -30,7 +30,7 @@ data class AzureDetectedLanguage(
     @Json(name = "language") val _language: String,
     val score: Double
 ) {
-    @Transient val lang = AzureTranslator.supportedLanguages[_language]!!
+    @Transient val lang = AzureTranslator.supportedLanguages[_language] ?: AzureTranslator.defaultLanguage()
 }
 
 @JsonClass(generateAdapter = true)
