@@ -11,6 +11,8 @@ object TempStates {
     val emojiRemove = mutableListOf<BotReactionRemove>()
 
     val emojiTLCache = mutableSetOf<Snowflake>()
+
+    val musicPermissionWarnings = mutableMapOf<Snowflake, Boolean>()
 }
 
 object TwitterFeedCache {
