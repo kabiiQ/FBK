@@ -24,7 +24,6 @@ import moe.kabii.discord.event.user.MemberUpdateListener
 import moe.kabii.discord.event.user.VoiceUpdateListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
-import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
