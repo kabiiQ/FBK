@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.TrackPlay
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.TempStates
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
@@ -52,6 +53,13 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
         val data = QueueData(audio, origin.client, origin.author.username, origin.author.id, origin.chan.id, extract.volume)
         track.userData = data
         applyParam(track, data)
+
+        // warn user about permission issues
+        val permWarning = if(TempStates.musicPermissionWarnings[origin.chan.id] == false) {
+            TempStates.musicPermissionWarnings[origin.chan.id] = true
+            "\n\nWarning: I do not have permission to send messages in this channel, messages will not be sent when tracks begin playing. Disable \"now playing\" messages in /musiccfg or grant permission for me to send messages in this channel."
+        } else ""
+
         // set track
         if(!audio.player.startTrack(track, true)) {
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else ""
@@ -76,7 +84,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
 
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
-            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping")
+            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue, position **$trackPosition**.$eta$playlist$paused$looping$permWarning")
                 .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
@@ -89,7 +97,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
 
 
-            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping")
+            val addedEmbed = Embeds.fbk("${search}Added **${TrackPlay.trackString(track)}** to the queue.$paused$playlist$looping$permWarning")
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()

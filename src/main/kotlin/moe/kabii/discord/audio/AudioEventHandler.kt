@@ -51,13 +51,14 @@ object AudioEventHandler : AudioEventAdapter() {
                     .filter { state -> state.userId == data.author }
                     .hasElements().tryBlock().orNull()
                 if(userPresent == false) {  // abandon this if it errors, but the bot should definitely be in a voice channel if this is reached
-                    originChan.flatMap { chan ->
-                        val title = AudioCommandContainer.trackString(track, includeAuthor = false)
-                        val author = data.author_name
-                        chan.createMessage(
-                            Embeds.fbk("Skipping **$title** because **$author** left the channel.")
-                        )
-
+                    if(config.sendNowPlaying) {
+                        originChan.flatMap { chan ->
+                            val title = AudioCommandContainer.trackString(track, includeAuthor = false)
+                            val author = data.author_name
+                            chan.createMessage(
+                                Embeds.fbk("Skipping **$title** because **$author** left the channel.")
+                            )
+                        }.subscribe()
                     }
                         .onErrorResume(ClientException::class.java) { _ -> Mono.empty() } // if perms are disabled we should deal with it in a "normal usage" case instead, can ignore here
                         .subscribe()
@@ -67,7 +68,7 @@ object AudioEventHandler : AudioEventAdapter() {
             }
         }
         // post message when song starts playing if it was a user action
-        if(!data.apply) {
+        if(config.sendNowPlaying && !data.apply) {
             originChan
                 .flatMap { chan ->
                     val paused = if(player.isPaused) "\n\n**The bot is currently paused.**" else ""

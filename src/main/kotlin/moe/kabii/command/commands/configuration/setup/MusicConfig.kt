@@ -18,6 +18,11 @@ object MusicConfig : CommandContainer {
             "music bot",
             this,
             BooleanElement(
+                "Send a message when tracks in queue begin playing",
+                "playing",
+                MusicSettings::sendNowPlaying
+            ),
+            BooleanElement(
                 "Delete old Now Playing bot messages",
                 "deleteold",
                 MusicSettings::deleteNowPlaying

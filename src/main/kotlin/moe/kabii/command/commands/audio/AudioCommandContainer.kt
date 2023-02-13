@@ -53,13 +53,16 @@ internal interface AudioCommandContainer : CommandContainer {
             .filterNot(User::isBot)
             .count().tryAwait().orNull() ?: 0
         val minUsersRatio = ((config.skipRatio / 100.0) * vcUsers).toInt()
-        return intArrayOf(minUsersRatio, config.skipUsers.toInt()).minOrNull()!!
+        return intArrayOf(minUsersRatio, config.skipUsers.toInt()).min()
     }
 
     suspend fun canFSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
         val data = track.userData as QueueData
-        return if(origin.config.musicBot.queuerFSkip && data.author == origin.author.id) true
-        else origin.member.hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)
+        return when {
+            getSkipsNeeded(origin) == 1 -> true
+            origin.config.musicBot.queuerFSkip && data.author == origin.author.id -> true
+            else -> origin.member.hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)
+        }
     }
 
     suspend fun canVoteSkip(origin: DiscordParameters, track: AudioTrack): Boolean {
