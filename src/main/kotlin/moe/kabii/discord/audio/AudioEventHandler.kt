@@ -13,6 +13,7 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.AudioCommandContainer
+import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.Embeds
@@ -58,10 +59,10 @@ object AudioEventHandler : AudioEventAdapter() {
                             chan.createMessage(
                                 Embeds.fbk("Skipping **$title** because **$author** left the channel.")
                             )
-                        }.subscribe()
+                        }
+                            .onErrorResume(ClientException::class.java) { _ -> Mono.empty() } // if perms are disabled we should deal with it in a "normal usage" case instead, can ignore here
+                            .subscribe()
                     }
-                        .onErrorResume(ClientException::class.java) { _ -> Mono.empty() } // if perms are disabled we should deal with it in a "normal usage" case instead, can ignore here
-                        .subscribe()
                     track.stop()
                     return
                 }
@@ -84,6 +85,10 @@ object AudioEventHandler : AudioEventAdapter() {
                 }
                 .onErrorResume(ClientException::class.java) { e ->
                     LOG.warn("Missing permission to send music bot message to ${data.originChannel}")
+                    if(!TempStates.musicPermissionWarnings.contains(data.originChannel)) {
+                        // set flag that this channel should have (and has not already had) a warning sent
+                        TempStates.musicPermissionWarnings[data.originChannel] = false
+                    }
                     Mono.empty()
                 }
                 .subscribe()
