@@ -15,6 +15,10 @@ import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
@@ -171,19 +175,19 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                          // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall lessEq old
+                            lastAPICall lessEq old
                         }
                         // streams which never went live (with 1 day of leniency)
                         val overdue = DateTime.now().minusDays(1)
                         YoutubeScheduledEvents.deleteWhere {
-                            YoutubeScheduledEvents.scheduledStart less overdue
+                            scheduledStart less overdue
                         }
                         /* strange streams which youtube sometimes creates - it does not seem possible to distinguish these from brand
                         new stream entries. They are 'upcoming' streams with no scheduled start time
                          */
                         YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall eq null and
-                                    (YoutubeVideos.apiAttempts greater 10)
+                            lastAPICall eq null and
+                                    (apiAttempts greater 10)
                         }
                     }
                 }

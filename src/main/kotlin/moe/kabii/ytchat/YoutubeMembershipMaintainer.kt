@@ -11,6 +11,7 @@ import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -32,7 +33,7 @@ class YoutubeMembershipMaintainer(val instances: DiscordInstances): Runnable {
                     val cutoff = DateTime.now().minusWeeks(3)
                     transaction {
                         YoutubeMembers.deleteWhere {
-                            YoutubeMembers.lastUpdate lessEq cutoff
+                            lastUpdate lessEq cutoff
                         }
                     }
 
