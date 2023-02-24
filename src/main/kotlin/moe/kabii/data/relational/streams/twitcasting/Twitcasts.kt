@@ -14,7 +14,7 @@ object Twitcasts {
 
     object Movies : IntIdTable() {
         val channel = reference("assoc_tcast_stream_channel_id", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
-        val movieId = text("twitcast_movie_id").uniqueIndex()
+        val movieId = text("twitcast_movie_id", eagerLoading = true).uniqueIndex()
     }
 
     class Movie(id: EntityID<Int>) : IntEntity(id) {

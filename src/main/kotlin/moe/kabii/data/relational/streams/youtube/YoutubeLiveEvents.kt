@@ -15,8 +15,8 @@ import org.jetbrains.exposed.sql.and
 
 object YoutubeLiveEvents : LongIdTable() {
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE).uniqueIndex()
-    val lastThumbnail = text("thumbnail_url")
-    val lastChannelName = text("channel_name")
+    val lastThumbnail = text("thumbnail_url", eagerLoading = true)
+    val lastChannelName = text("channel_name", eagerLoading = true)
 
     val peakViewers = integer("peak_viewers")
     val uptimeTicks = integer("uptime_ticks")

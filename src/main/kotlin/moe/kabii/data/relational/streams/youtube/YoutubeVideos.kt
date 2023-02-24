@@ -15,7 +15,7 @@ object YoutubeVideos : LongIdTable() {
     val ytChannel = reference("yt_channel", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
     val lastAPICall = datetime("last_api_call").nullable()
     val apiAttempts = integer("yt_api_attempts").default(0)
-    val lastTitle = text("last_title").nullable()
+    val lastTitle = text("last_title", eagerLoading = true).nullable()
     val liveEvent = reference("live_event", YoutubeLiveEvents, ReferenceOption.SET_NULL).nullable()
     val scheduledEvent = reference("scheduled_event", YoutubeScheduledEvents, ReferenceOption.SET_NULL).nullable()
     val discordEvent = long("discord_event_id").nullable()

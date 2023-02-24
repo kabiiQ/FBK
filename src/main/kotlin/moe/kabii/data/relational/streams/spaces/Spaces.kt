@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.select
 object TwitterSpaces {
     object Spaces : IntIdTable() {
         val channel = reference("assoc_twitter_spaces_user_id", TrackedStreams.StreamChannels, ReferenceOption.CASCADE)
-        val spaceId = text("twitter_space_id").uniqueIndex()
+        val spaceId = text("twitter_space_id", eagerLoading = true).uniqueIndex()
     }
 
     class Space(id: EntityID<Int>) : IntEntity(id) {

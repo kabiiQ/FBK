@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
-    val lastKnownUsername = text("last_known_twitter_handle").nullable()
+    val lastKnownUsername = text("last_known_twitter_handle", eagerLoading = true).nullable()
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
@@ -81,7 +81,7 @@ object TwitterTargetMentions : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val target = reference("twitter_mention_assoc_target", TwitterTargets, ReferenceOption.CASCADE)
     val mentionRole = long("discord_feed_mention_role_id").nullable()
-    val mentionText = text("discord_feed_mention_text").nullable()
+    val mentionText = text("discord_feed_mention_text", eagerLoading = true).nullable()
     val embedColor = integer("discord_embed_color").nullable()
 
     init {

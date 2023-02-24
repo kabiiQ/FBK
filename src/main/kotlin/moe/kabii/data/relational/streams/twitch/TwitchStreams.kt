@@ -20,8 +20,8 @@ object DBTwitchStreams {
         val peakViewers = integer("peak_viewers")
         val uptimeTicks = integer("uptime_ticks")
         val averageViewers = integer("average_viewers")
-        val lastTitle = text("last_title")
-        val lastGame = text("last_game_name")
+        val lastTitle = text("last_title", eagerLoading = true)
+        val lastGame = text("last_game_name", eagerLoading = true)
     }
 
     class TwitchStream(id: EntityID<Int>) : IntEntity(id) {

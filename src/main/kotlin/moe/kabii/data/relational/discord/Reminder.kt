@@ -14,7 +14,7 @@ object Reminders : LongIdTable("reminders") {
     val channel = long("channel_id")
     val created = datetime("created_time")
     val remind = datetime("remind_time")
-    val content = text("content").nullable()
+    val content = text("content", eagerLoading = true).nullable()
     val originMessage = reference("origin", MessageHistory.Messages, ReferenceOption.SET_NULL).nullable()
 }
 
