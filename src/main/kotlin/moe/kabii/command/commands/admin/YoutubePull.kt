@@ -25,7 +25,7 @@ object YoutubePull : Command("ytpull") {
     suspend fun pullYoutubeFeeds(args: List<String>) {
         val arg = args[0]
 
-        propagateTransaction {
+        val channels = propagateTransaction {
             when (arg.lowercase()) {
                 "any", "all", "full" -> TrackedStreams.StreamChannel.getActive {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
@@ -46,12 +46,13 @@ object YoutubePull : Command("ytpull") {
                         .map(TrackedStreams.Target::streamChannel).distinct()
                 }
             }
+        }
+            channels
                 .map(TrackedStreams.StreamChannel::siteChannelID)
                 .forEach { feed ->
                     Thread.sleep(500L)
                     println("Manually pulling YT updates for '$feed'")
                     YoutubeVideoIntake.intakeExisting(feed)
                 }
-        }
     }
 }

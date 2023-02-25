@@ -6,7 +6,6 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.verifyBotAdmin
 import moe.kabii.discord.pagination.PaginationUtil
-import reactor.kotlin.core.publisher.toFlux
 
 object ServerInfo : Command("servers") {
     override val wikiPath: String? = null
@@ -15,15 +14,26 @@ object ServerInfo : Command("servers") {
         chat {
 
             event.verifyBotAdmin()
+
             // build list of guilds
-            val guildInfo = handler.instances.all().toFlux()
-                .flatMap { fbk -> fbk.client.guilds }
-                .sort(Comparator.comparing(Guild::getMemberCount).reversed())
-                .map { guild ->
-                    "${guild.memberCount}: ${guild.name} (${TimestampFormat.RELATIVE_TIME.format(guild.joinTime)}) ${guild.id.asString()}"
+            val guildInfo = handler.instances.all()
+                // transform from instance->list<guild> to list<guild, instance id>
+                .flatMap { fbk ->
+                    // convert each instance into instance # + list of guilds
+                    val guilds = fbk.client.guilds.collectList().awaitSingle()
+                    guilds.map { guild -> guild to fbk.clientId }
                 }
-                .collectList()
-                .awaitSingle()
+                // one list of guilds, associated with the instance id here
+                // sort by member count, then by which instance
+                .sortedWith(
+                    Comparator
+                        .comparing<Pair<Guild, Int>, Int> { (guild, _) -> guild.memberCount }
+                        .reversed() // largest guilds first
+                        .thenComparingInt { (_, instanceId) -> instanceId }
+                )
+                .map { (guild, instanceId) ->
+                    "#${instanceId} ${guild.memberCount}: ${guild.name} (${TimestampFormat.RELATIVE_TIME.format(guild.joinTime)}) ${guild.id.asString()}"
+                }
             PaginationUtil.paginateListAsDescription(this, guildInfo, "List Guilds")
         }
     }

@@ -10,6 +10,7 @@ object ConfigOverride {
 
         init {
             terminal {
+                // owner use only: print guild config for debugging/verification
                 if(args.size != 2) error("printconfig <bot id> <guild id>")
                 val bot = args[0].toInt().run(instances::get)
                 val targetGuildId = args[1].toLong()
@@ -25,6 +26,7 @@ object ConfigOverride {
 
         init {
             terminal {
+                // owner use only: delete a guild's config entirely (mongodb)
                 if(args.size != 2) error("resetconfig <bot id> <guild id>")
                 val bot = args[0].toInt().run(instances::get)
                 val targetGuildId = args[1].toLong()
