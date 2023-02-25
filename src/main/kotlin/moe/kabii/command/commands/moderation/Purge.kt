@@ -87,9 +87,9 @@ object Purge : CommandContainer {
         ereply(Embeds.fbk("Purging messages...")).awaitSingle()
 
         val delete = chan
-            .getMessagesAfter(startMessage.snowflake)
+            .getMessagesAfter(startMessage.minus(1).snowflake)
             .run { if(endMessage != null) takeWhile { message ->
-                message.id >= endMessage.snowflake
+                message.id <= endMessage.snowflake
             } else this }
 
         purgeAndNotify(this, delete)
