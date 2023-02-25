@@ -30,8 +30,8 @@ object BotStats : CommandContainer {
                     .withAuthor(EmbedCreateFields.Author.of("Ping Test", null, avatar))
                     .withFields(
                         mutableListOf(
-                            EmbedCreateFields.Field.of("Ping Command Response Time", "${commandPing}ms", false),
-                            heartbeat?.run { EmbedCreateFields.Field.of("Heartbeat Response Time", "${heartbeat}ms", false) }
+                            EmbedCreateFields.Field.of("Ping Command Completion Time", "${"%.2f".format(commandPing / 1000)}s", false),
+                            heartbeat?.run { EmbedCreateFields.Field.of("Discord Response Time", "${heartbeat}ms", false) }
                         ).filterNotNull()
                     )
 
