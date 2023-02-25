@@ -2,7 +2,7 @@ package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -30,7 +30,7 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
     var mentionRole by YoutubeVideoTracks.mentionRole
 
     companion object : IntEntityClass<YoutubeVideoTrack>(YoutubeVideoTracks) {
-        @WithinExposedContext
+        @ExposedReferenceAccessor
         fun insertOrUpdate(discordClient: Int, ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, mentionRoleId: Long?): YoutubeVideoTrack {
             val existing = find {
                 YoutubeVideoTracks.ytVideo eq ytVideo.id and
@@ -48,12 +48,12 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
             }
         }
 
-        @WithinExposedContext
+        @ExposedReferenceAccessor
         fun getForVideo(ytVideo: YoutubeVideo) = find {
             YoutubeVideoTracks.ytVideo eq ytVideo.id
         }
 
-        @WithinExposedContext
+        @ExposedReferenceAccessor
         fun getForChannel(ytChan: TrackedStreams.StreamChannel) = YoutubeVideoTrack.wrapRows(
             YoutubeVideoTracks
                 .innerJoin(YoutubeVideos)

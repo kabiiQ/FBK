@@ -70,9 +70,11 @@ object GetMentionRole : Command("getmention") {
             return
         }
 
-        val content = propagateTransaction {
-            val mention = matchingTarget.mention() ?: return@propagateTransaction ""
+        val mention = propagateTransaction {
+            matchingTarget.mention()
+        }
 
+        val content = if (mention != null) {
             val out = StringBuilder()
             if(mention.mentionRole != null) {
                 val role = getRole(target, mention.mentionRole!!)
@@ -115,10 +117,10 @@ object GetMentionRole : Command("getmention") {
             }
 
             out.toString()
-        }
+        } else ""
 
-        val mention = content.ifBlank { "No mentions/pings are configured for this livestream." }
-        ereply(Embeds.fbk(mention)).awaitSingle()
+        val mentionRole = content.ifBlank { "No mentions/pings are configured for this livestream." } // will be blank if no mention or no components
+        ereply(Embeds.fbk(mentionRole)).awaitSingle()
     }
 
     suspend fun testTwitterConfig(origin: DiscordParameters, username: String) = with(origin) {
@@ -149,11 +151,11 @@ object GetMentionRole : Command("getmention") {
             return
         }
 
-        val content = propagateTransaction {
-            val mention = matchingTarget.mention()
+        val mention = propagateTransaction {
+            matchingTarget.mention()
+        }
 
-            mention ?: return@propagateTransaction "No mentions/pings are configured for this Twitter feed."
-
+        val content = if(mention != null) {
             val out = StringBuilder()
             if(mention.mentionRole != null) {
                 val role = getRole(target, mention.mentionRole!!)
@@ -165,7 +167,7 @@ object GetMentionRole : Command("getmention") {
             }
 
             out.toString().trim()
-        }
+        } else "No mentions/pings are configured for this Twitter feed."
 
         ereply(Embeds.fbk(content)).awaitSingle()
     }

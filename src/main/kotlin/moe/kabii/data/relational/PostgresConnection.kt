@@ -24,6 +24,8 @@ import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
+import java.sql.Connection
 
 internal object PostgresConnection {
     private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
@@ -32,6 +34,7 @@ internal object PostgresConnection {
         isAutoCommit = true
         maximumPoolSize = 50
         minimumIdle = 50
+
         validate()
     }.run(::HikariDataSource)
 
@@ -73,5 +76,6 @@ internal object PostgresConnection {
                 MembershipConfigurations
             )
         }
+        postgres.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }
 }

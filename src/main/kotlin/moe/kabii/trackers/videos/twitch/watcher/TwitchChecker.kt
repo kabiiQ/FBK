@@ -85,7 +85,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?, filteredTargets: List<TrackedStreams.Target>) {
         val twitchId = channel.siteChannelID.toLong()
 
@@ -296,7 +296,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     private suspend fun getDiscordMessage(dbNotif: DBTwitchStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
         val discord = instances[dbNotif.targetID.discordClient].client
         if(dbNotif.deleted) null else {

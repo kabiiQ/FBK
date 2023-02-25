@@ -20,7 +20,7 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
@@ -36,7 +36,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         private val inactiveColor = Color.of(812958)
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun movieLive(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedStreams.Target>) {
         val (movie, user) = info
 
@@ -61,7 +61,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
         Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
@@ -115,7 +115,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         dbMovie.delete()
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedStreams.Target) {
 
         val fbk = instances[target.discordClient]

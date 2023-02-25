@@ -97,18 +97,15 @@ object GlobalCommandRegistrar : CommandRegistrar {
                 .build()
             command.addOption(subCommand)
         }
-        // add a "setup" sub-command - custom configurable embed
+        // add a "config" sub-command - custom configurable embed
         val embedSubCommand = ApplicationCommandOptionData.builder()
-            .name("setup")
+            .name("config")
             .description("View all ${module.name} settings and configure.")
             .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
             .build()
 
-        val embedAltSubCommand = embedSubCommand.withName("config")
-
         return builder
             .addOption(embedSubCommand)
-            .addOption(embedAltSubCommand)
             .run {
                 // add command-specific subcommands
                 if(module.subCommands.isNotEmpty()) addAllOptions(module.subCommands) else this

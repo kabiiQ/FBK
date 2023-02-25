@@ -32,6 +32,7 @@ object ListTracked : Command("tracked") {
                     DiscordObjects.Channels.channelID eq chan.id.asLong()
                 }.firstOrNull()
 
+                // violation of 2.1, discord api call within transaction but not worth splitting transaction for this case
                 if(dbChannel == null) {
                     ireply(Embeds.error("There are no trackers enabled in this channel.")).awaitSingle()
                     return@propagateTransaction

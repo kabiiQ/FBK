@@ -18,6 +18,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.ytchat.YoutubeMembershipUtil
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object YoutubeMembershipSetup : Command("linkyoutubemembers") {
@@ -51,16 +52,17 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             val resetArg = args.optBool("reset")
             if(resetArg == true) {
                 // remove existing config
-                propagateTransaction {
-                    val existing = MembershipConfigurations.getForGuild(clientId, target.id)
-                    if(existing != null) {
-                        val channelLink = linkChannel(existing)
-                        val utils = existing.utils(target)
-                        utils.unsync()
-                        ireply(Embeds.fbk("Membership link to channel $channelLink has been **removed.**")).awaitSingle()
-                    } else {
-                        ereply(Embeds.error("There is no active membership configuration for **${target.name}**.")).awaitSingle()
-                    }
+                val existing = propagateTransaction {
+                    MembershipConfigurations.getForGuild(clientId, target.id)
+                }
+
+                if(existing != null) {
+                    val channelLink = linkChannel(existing)
+                    val utils = existing.utils(target)
+                    utils.unsync()
+                    ireply(Embeds.fbk("Membership link to channel $channelLink has been **removed.**")).awaitSingle()
+                } else {
+                    ereply(Embeds.error("There is no active membership configuration for **${target.name}**.")).awaitSingle()
                 }
                 return@chat
             }
@@ -94,30 +96,32 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
             }
 
             // create config in db
-            propagateTransaction {
-                val existing = MembershipConfigurations.getForGuild(clientId, target.id)
-                if(existing != null) {
-
-                    val utils = existing.utils(target)
-                    utils.unsync()
-                }
-
-                val memberConfig = transaction {
-                    MembershipConfiguration.new {
-                        this.discordClient = client.clientId
-                        this.discordServer = DiscordObjects.Guild.getOrInsert(target.id.asLong())
-                        this.streamChannel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, ytChannel.id, ytChannel.name)
-                        this.membershipRole = membershipRole.id.asLong()
-                    }
-                }
-
-                ireply(Embeds.fbk("Memberships for YouTube channel **[${ytChannel.name}](${ytChannel.url})** have been linked to **${target.name}**.\n\nA role has been created for memberships: <@&${membershipRole.id.asString()}>\n\nUsers must link their Discord account with a YouTube connection to FBK using the **ytlink** command to automate membership status.")).tryAwait()
-
-                // sync any known memberships
-                YoutubeMembershipUtil
-                    .forConfig(event.client, memberConfig)
-                    .syncMemberships()
+            val existing = propagateTransaction {
+                MembershipConfigurations.getForGuild(clientId, target.id)
             }
+
+            if(existing != null) {
+
+                val utils = existing.utils(target)
+                utils.unsync()
+            }
+
+            val memberConfig = propagateTransaction {
+                MembershipConfiguration.new {
+                    this.discordClient = client.clientId
+                    this.discordServer = DiscordObjects.Guild.getOrInsert(target.id.asLong())
+                    this.streamChannel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, ytChannel.id, ytChannel.name)
+                    this.membershipRole = membershipRole.id.asLong()
+                }
+                    .load(MembershipConfiguration::discordServer)
+            }
+
+            ireply(Embeds.fbk("Memberships for YouTube channel **[${ytChannel.name}](${ytChannel.url})** have been linked to **${target.name}**.\n\nA role has been created for memberships: <@&${membershipRole.id.asString()}>\n\nUsers must link their Discord account with a YouTube connection to FBK using the **ytlink** command to automate membership status.")).tryAwait()
+
+            // sync any known memberships
+            YoutubeMembershipUtil
+                .forConfig(event.client, memberConfig)
+                .syncMemberships()
         }
     }
 }

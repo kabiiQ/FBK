@@ -43,7 +43,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         private val creationColor = Color.of(16749824)
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun streamStart(video: YoutubeVideoInfo, dbVideo: YoutubeVideo) {
         // video will have live info if this function is called
         val liveInfo = checkNotNull(video.liveInfo)
@@ -88,7 +88,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun streamEnd(video: YoutubeVideoInfo?, dbStream: YoutubeLiveEvent) {
         // edit/delete all notifications and remove stream from db when stream ends
 
@@ -177,7 +177,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         dbStream.delete()
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun streamUpcoming(dbEvent: YoutubeScheduledEvent, ytVideo: YoutubeVideoInfo, scheduled: Instant) {
         val untilStart = Duration.between(Instant.now(), scheduled)
 
@@ -201,7 +201,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun streamCreated(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
         // check if any targets would like notification for this stream frame creation
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::streamCreation)
@@ -215,7 +215,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun videoUploaded(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
         if(ytVideo.liveInfo != null) return // do not post 'uploaded a video' if this was a VOD
         if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(3L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
@@ -240,7 +240,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
     //       ----------------
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun filteredTargets(channel: TrackedStreams.StreamChannel, filter: (YoutubeSettings) -> Boolean): List<TrackedStreams.Target> {
         val channelId = channel.siteChannelID
         val activeTargets = getActiveTargets(channel)
@@ -257,7 +257,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedStreams.Target, time: Instant): Message? {
         // get target channel in discord
         val chan = getUpcomingChannel(target)
@@ -296,7 +296,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         return message
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         val fbk = instances[target.discordClient]
         // get target channel in discord
@@ -347,7 +347,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         return new
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedStreams.Target): Message? {
         val fbk = instances[target.discordClient]
         val chan = getChannel(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, target)
@@ -391,7 +391,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         return new
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         val fbk = instances[videoTrack.discordClient]
         // get target channel in Discord
@@ -404,7 +404,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         TrackerUtil.checkAndPublish(fbk, new)
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     @Throws(ClientException::class)
     suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedStreams.Target, new: Boolean = true): Message? {
         val fbk = instances[target.discordClient]
@@ -493,7 +493,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     private suspend fun getUpcomingChannel(target: TrackedStreams.Target): MessageChannel {
         val (guildConfig, features) = GuildConfigurations.findFeatures(target.discordClient, target.discordChannel.guild?.guildID, target.discordChannel.channelID)
         val yt = features?.youtubeSettings ?: YoutubeSettings()

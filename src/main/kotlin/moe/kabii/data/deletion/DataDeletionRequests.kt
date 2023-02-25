@@ -3,10 +3,11 @@ package moe.kabii.data.deletion
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.util.extensions.CreatesExposedContext
 import moe.kabii.util.extensions.propagateTransaction
 
 object DataDeletionRequests {
-
+    @CreatesExposedContext
     suspend fun userDataDeletion(userId: Long) {
 
         // remove all instances of user id from database
@@ -31,6 +32,7 @@ object DataDeletionRequests {
         }
     }
 
+    @CreatesExposedContext
     suspend fun guildDataDeletion(clientId: Int, guildId: Long) {
 
         // remove all data concerning this guild from the database

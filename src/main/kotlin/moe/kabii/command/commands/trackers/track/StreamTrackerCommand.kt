@@ -21,7 +21,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.dao.load
 
 object StreamTrackerCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
@@ -49,7 +49,7 @@ object StreamTrackerCommand : TrackerCommand {
         val streamId = streamInfo.accountId
 
         // get db 'target' object if it exists
-        val dbTarget = transaction {
+        val dbTarget = propagateTransaction {
             TrackedStreams.Target.getForChannel(origin.client.clientId, origin.chan.id, site, streamId)
         }
 
@@ -82,9 +82,7 @@ object StreamTrackerCommand : TrackerCommand {
         try {
             val callback = streamTarget.onTrack
             if(callback != null) {
-                propagateTransaction {
-                    callback(origin, dbChannel)
-                }
+                callback(origin, dbChannel)
             }
         } catch(e: Exception) {
             LOG.warn("Error getting initial update for StreamChannel: ${e.message}")
@@ -104,28 +102,33 @@ object StreamTrackerCommand : TrackerCommand {
         }
         val streamId = streamInfo.accountId
 
-        propagateTransaction {
-            // check db if stream is tracked in this location
-            val dbTarget = TrackedStreams.Target.getForChannel(origin.client.clientId, origin.chan.id, site, streamId)
-            if(dbTarget == null) {
-                origin.ereply(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
-                return@propagateTransaction
-            }
-            // user can untrack stream if they tracked it or are channel moderator
-            if (
-                origin.isPM
-                        || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
-                        || origin.author.id.asLong() == dbTarget.tracker.userID
-            ) {
+        val dbTarget = propagateTransaction {
+            TrackedStreams.Target
+                .getForChannel(origin.client.clientId, origin.chan.id, site, streamId)
+                ?.load(TrackedStreams.Target::tracker)
+        }
+
+        if(dbTarget == null) {
+            origin.ereply(Embeds.error("**${streamInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
+            return
+        }
+
+        // user can untrack stream if they tracked it or are channel moderator
+        if (
+            origin.isPM
+            || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+            || origin.author.id.asLong() == dbTarget.tracker.userID
+        ) {
+            propagateTransaction {
                 dbTarget.delete()
-                origin.ireply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
-            } else {
-                val tracker = origin.chan.client
-                    .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
-                    ?.username ?: "invalid-user"
-                origin.ereply(Embeds.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).")).awaitSingle()
             }
+            origin.ireply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
+            TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+        } else {
+            val tracker = origin.chan.client
+                .getUserById(dbTarget.tracker.userID.snowflake).tryAwait().orNull()
+                ?.username ?: "invalid-user"
+            origin.ereply(Embeds.error("You may not untrack **${streamInfo.displayName}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission).")).awaitSingle()
         }
     }
 }

@@ -5,15 +5,18 @@ import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.http.client.ClientException
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.*
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.WithinExposedContext
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.select
 
@@ -29,11 +32,13 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
     }
 
     companion object {
-        @WithinExposedContext fun forConfig(client: GatewayDiscordClient, config: MembershipConfiguration) = YoutubeMembershipUtil(client, config)
-        @WithinExposedContext fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
-        @WithinExposedContext fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
+        val roleAssignmentContext = CoroutineScope(DiscordTaskPool.ytMembershipRoleThread + CoroutineName("YT-Membership-Role-Assignment") + SupervisorJob())
 
-        @WithinExposedContext
+        @ExposedReferenceAccessor fun forConfig(client: GatewayDiscordClient, config: MembershipConfiguration) = YoutubeMembershipUtil(client, config)
+        fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
+        fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
+
+        @ExposedReferenceAccessor
         suspend fun linkMembership(discord: GatewayDiscordClient, linkedYt: LinkedYoutubeAccount) {
             // check if newly linked account has associated memberships
             // linkedyt -> chat memberships -> configs -> assign role
@@ -49,7 +54,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
                 .forEach { utils -> utils.assignMembershipRole(linkedYt) }
         }
 
-        @WithinExposedContext
+        @ExposedReferenceAccessor
         suspend fun linkMembership(instances: DiscordInstances, member: YoutubeMember) {
             // check if newly recorded membership has an associated discord account
             // ytmember -> linkedyt -> configs -> assign role
@@ -71,7 +76,6 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
     suspend fun unsync() {
         try {
             val role = checkMembershipRole()
@@ -80,13 +84,17 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
             LOG.info("Error deleting membership integration role: ${link.membershipRole} :: ${e.message}")
             LOG.trace(e.stackTraceString)
         }
-        link.delete()
+        propagateTransaction {
+            link.delete()
+        }
     }
 
-    @WithinExposedContext
     suspend fun syncMemberships() {
         // ensure all members have the role in discord
-        getActiveMembers().forEach { ytMember ->
+        val activeMembers = propagateTransaction {
+            getActiveMembers()
+        }
+        activeMembers.forEach { ytMember ->
             // get discord member data
             val member = getMember(ytMember) ?: return@forEach
             if(!member.roleIds.contains(link.membershipRole.snowflake)) {
@@ -95,7 +103,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     fun getActiveMembers(): List<LinkedYoutubeAccount> = LinkedYoutubeAccounts
         .innerJoin(YoutubeMembers, { ytChatId }, { chatterId })
         .select {
@@ -103,9 +111,9 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
             YoutubeMembers.channelOwnerId eq link.streamChannel.siteChannelID
         }
         .run(LinkedYoutubeAccount::wrapRows)
+        .onEach { acc -> acc.load(LinkedYoutubeAccount::discordUser) }
         .toList()
 
-    @WithinExposedContext
     private suspend fun getMember(linkedYt: LinkedYoutubeAccount): Member? {
         val guild = guild ?: return null
         return try {
@@ -116,27 +124,28 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
     private suspend fun assignMembershipRole(member: Member) {
         val role = checkMembershipRole() ?: return
         // todo notify if missing permissions? once sync command is written
-        member.addRole(role.id).success().awaitSingle()
+        roleAssignmentContext.launch {
+            member.addRole(role.id).success().awaitSingle()
+        }
     }
 
-    @WithinExposedContext
     private suspend fun assignMembershipRole(linkedYt: LinkedYoutubeAccount) {
         val member = getMember(linkedYt) ?: return
         assignMembershipRole(member)
     }
 
-    @WithinExposedContext
     suspend fun unassignMembershipRole(linkedYt: LinkedYoutubeAccount) {
         val role = checkMembershipRole() ?: return
         val member = getMember(linkedYt) ?: return
-        member.removeRole(role.id).success().awaitSingle()
+        roleAssignmentContext.launch {
+            member.removeRole(role.id).success().awaitSingle()
+        }
     }
 
-    @WithinExposedContext
+    @CreatesExposedContext
     private suspend fun checkMembershipRole(): Role? {
         if(membershipRole != null) return membershipRole
         val guild = guild ?: return null
@@ -152,7 +161,9 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
                     // role deleted, unlink memberships
 //                    val unlinked = "The role for linked YouTube memberships has been deleted in **${guild.name}**. The integration has been deleted accordingly. If this was in error, you may re-create the integration at any time with the **linkyoutubemembers** command."
 //                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), unlinked)
-                    link.delete()
+                    propagateTransaction {
+                        link.delete()
+                    }
                 }
                 ce.status.code() == 403 -> {
                     LOG.warn("YouTube membership link: permission denied for guild ${guild.id.asString()} :: ${ce.message}")

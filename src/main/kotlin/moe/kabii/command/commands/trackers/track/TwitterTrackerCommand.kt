@@ -16,7 +16,7 @@ import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.dao.load
 
 object TwitterTrackerCommand : TrackerCommand {
 
@@ -46,7 +46,7 @@ object TwitterTrackerCommand : TrackerCommand {
             return
         }
 
-        val existingTrack = transaction {
+        val existingTrack = propagateTransaction {
             TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
         }
 
@@ -57,7 +57,7 @@ object TwitterTrackerCommand : TrackerCommand {
 
         TrackerCommandBase.sendTrackerTestMessage(origin)
 
-        transaction {
+        propagateTransaction {
             // get the db 'twitterfeed' object, create if this is new track
             val dbFeed = TwitterFeed.getOrInsert(twitterUser)
 
@@ -91,29 +91,31 @@ object TwitterTrackerCommand : TrackerCommand {
 
         // verify this user is tracked
         val channelId = origin.chan.id.asLong()
-        propagateTransaction {
-            val existingTrack = TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
+        val existingTrack = propagateTransaction {
+            TwitterTarget
+                .getExistingTarget(origin.client.clientId, channelId, twitterUser.id)
+                ?.load(TwitterTarget::tracker)
+        }
 
-            if(existingTrack == null) {
-                origin.ereply(Embeds.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
-                return@propagateTransaction
-            }
+        if(existingTrack == null) {
+            origin.ereply(Embeds.error("**Twitter/${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
+            return
+        }
 
-            // user can untrack feed if they tracked it or are channel moderator
-            if(
-                origin.isPM
-                || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
-                || origin.author.id.asLong() == existingTrack.tracker.userID
-            ) {
-                propagateTransaction { existingTrack.delete() }
-                origin.ireply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
-            } else {
-                val tracker = origin.chan.client
-                    .getUserById(existingTrack.tracker.userID.snowflake).tryAwait().orNull()
-                    ?.username ?: "invalid-user"
-                origin.ereply(Embeds.error("You may not untrack **Twitter/${twitterUser.username}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
-            }
+        // user can untrack feed if they tracked it or are channel moderator
+        if(
+            origin.isPM
+            || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
+            || origin.author.id.asLong() == existingTrack.tracker.userID
+        ) {
+            propagateTransaction { existingTrack.delete() }
+            origin.ireply(Embeds.fbk("No longer tracking **Twitter/${twitterUser.username}**.")).awaitSingle()
+            TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+        } else {
+            val tracker = origin.chan.client
+                .getUserById(existingTrack.tracker.userID.snowflake).tryAwait().orNull()
+                ?.username ?: "invalid-user"
+            origin.ereply(Embeds.error("You may not untrack **Twitter/${twitterUser.username}** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
         }
     }
 }

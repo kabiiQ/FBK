@@ -18,6 +18,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -40,7 +41,7 @@ object MediaTrackerCommand : TrackerCommand {
 
         // check if this list is already tracked in this channel, before we download the entire list (can be slow)
         val channelId = origin.chan.id.asLong()
-        val existingTrack = transaction {
+        val existingTrack = propagateTransaction {
             TrackedMediaLists.ListTarget.getExistingTarget(origin.client.clientId, site, siteListId.lowercase(), channelId)
         }
 
@@ -128,25 +129,28 @@ object MediaTrackerCommand : TrackerCommand {
 
         val channelId = origin.chan.id.asLong()
 
-        propagateTransaction {
-            val existingTrack = TrackedMediaLists.ListTarget.getExistingTarget(origin.client.clientId, site, siteListId.lowercase(), channelId)
-            if (existingTrack == null) {
-                origin.ereply(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
-                return@propagateTransaction
-            }
+        val existingTrack = propagateTransaction {
+            TrackedMediaLists.ListTarget
+                .getExistingTarget(origin.client.clientId, site, siteListId.lowercase(), channelId)
+                ?.load(TrackedMediaLists.ListTarget::userTracked)
+        }
 
-            if(origin.isPM // always allow untrack in pm
-                    || origin.author.id.asLong() == existingTrack.userTracked.userID // not in pm, check for same user as tracker
-                    || origin.interaction.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
+        if(existingTrack == null) {
+            origin.ereply(Embeds.error("**$inputId** is not currently being tracked on $siteName.")).awaitSingle()
+            return
+        }
 
-                existingTrack.delete()
-                origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
-                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+        if(origin.isPM // always allow untrack in pm
+            || origin.author.id.asLong() == existingTrack.userTracked.userID // not in pm, check for same user as tracker
+            || origin.interaction.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
 
-            } else {
-                val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                origin.ereply(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
-            }
+            existingTrack.delete()
+            origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
+            TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+
+        } else {
+            val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
+            origin.ereply(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
         }
     }
 }

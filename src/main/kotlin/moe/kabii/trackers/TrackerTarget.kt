@@ -18,6 +18,7 @@ import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.util.constants.URLUtil
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -105,9 +106,9 @@ object TwitchTarget : StreamingTarget(
         val services = origin.handler.instances.services
         val twitch = services.twitch
 
-        val targets = twitch.getActiveTargets(channel) ?: return@callback
+        val targets = propagateTransaction { twitch.getActiveTargets(channel) } ?: return@callback
         val stream = TwitchParser.getStream(channel.siteChannelID.toLong()).orNull()
-        twitch.updateChannel(channel, stream, targets)
+        propagateTransaction { twitch.updateChannel(channel, stream, targets) }
         TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
     }
 }

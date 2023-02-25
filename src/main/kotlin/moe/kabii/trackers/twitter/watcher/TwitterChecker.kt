@@ -159,7 +159,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
@@ -355,7 +355,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
         val existingTargets = feed.targets.toList()
             .filter { target ->
@@ -390,7 +390,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
     }
 
     data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         // do not return ping if not configured for channel/tweet type
         when {

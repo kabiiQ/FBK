@@ -4,8 +4,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
@@ -20,30 +18,29 @@ import java.io.StringReader
 
 object YoutubeVideoIntake {
 
-    private val lock = Mutex()
-
     suspend fun intakeExisting(channelId: String) {
         // get recent video ids for intake
         // this can be a very slow response from YT, so send this off async
         val job = SupervisorJob()
-        val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
+        val taskScope = CoroutineScope(DiscordTaskPool.ytXMLIntakeThread + job)
+        // adds to 'ytIntakeThread' queue
         taskScope.launch {
-            lock.withLock {
-                val request = newRequestBuilder()
-                    .get()
-                    .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
-                    .build()
+            val request = newRequestBuilder()
+                .get()
+                .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
+                .build()
 
-                try {
-                    OkHTTP.newCall(request).execute().use { response ->
-                        val xml = response.body.string()
-                        intakeXml(xml)
-                    }
-
-                } catch (e: Exception) {
-                    LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+            // could be executed on diff thread: but processing/db time is relatively minor
+            // not optimal but some delay in calling youtube endpoint with no rate limit info is fine
+            try {
+                OkHTTP.newCall(request).execute().use { response ->
+                    val xml = response.body.string()
+                    intakeXml(xml)
                 }
+
+            } catch (e: Exception) {
+                LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
         }
     }
@@ -61,7 +58,9 @@ object YoutubeVideoIntake {
                 val channelId = entry.elements("channelId").first().text
                 LOG.trace("taking video: $videoId :: $channelId")
 
-                YoutubeVideo.getOrInsert(videoId, channelId)
+                propagateTransaction {
+                    YoutubeVideo.getOrInsert(videoId, channelId)
+                }
             }
         } catch(e: Exception) {
             LOG.warn("Error in YouTube XML intake: ${e.message}")
@@ -69,7 +68,7 @@ object YoutubeVideoIntake {
         }
     }
 
-    private val intakeContext = CoroutineScope(DiscordTaskPool.youtubeIntakeThread + SupervisorJob() + CoroutineName("YoutubeVideoIntake"))
+    private val intakeContext = CoroutineScope(DiscordTaskPool.ytSourceIntakeThread + SupervisorJob() + CoroutineName("YoutubeVideoIntake"))
     fun intakeVideosFromText(text: String) {
         try {
 

@@ -220,7 +220,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
         val existingTargets = list.targets.toList()
             .filter { target ->

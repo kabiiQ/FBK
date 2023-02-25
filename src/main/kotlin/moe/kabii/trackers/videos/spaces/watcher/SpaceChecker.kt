@@ -17,7 +17,7 @@ import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.trackers.twitter.json.TwitterTweet
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -102,7 +102,7 @@ class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCoo
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun updateSpace(dbChannel: TrackedStreams.StreamChannel, space: TwitterSpace) {
 
         when(space.state) {
@@ -115,7 +115,7 @@ class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCoo
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun intakeSpaceFromTweet(tweet: TwitterTweet) {
         val spaceMatch = tweet.entities?.urls?.firstNotNullOfOrNull { urls ->
             urls.expanded?.run(spacePattern::find)?.groups?.get(1)?.value

@@ -90,13 +90,13 @@ object TargetSuggestionGenerator {
 
     private suspend fun generateTargetMappings(targetChannel: TargetChannel): List<TargetChoice> {
         val (clientId, channelId) = targetChannel
-        return propagateTransaction {
+        val channelTargets = propagateTransaction {
             val dbChannel = DiscordObjects.Channel.find {
                 DiscordObjects.Channels.channelID eq channelId
             }.firstOrNull()
 
+            val targets = mutableListOf<TargetComponents>()
             if(dbChannel != null) {
-                val targets = mutableListOf<TargetComponents>()
 
                 TrackedStreams.Target.find {
                     TrackedStreams.Targets.discordClient eq clientId and
@@ -128,16 +128,16 @@ object TargetSuggestionGenerator {
                         (target.twitterFeed.lastKnownUsername ?: target.twitterFeed.userId.toString())
                     )
                 }
+            }
+            targets
+        }
 
-                targets.map { (site, username, userId) ->
-                    val option = ApplicationCommandOptionChoiceData.builder()
-                        .name("$username (${site.full})") // Username (Site Name)
-                        .value("${site.alias.first()}:${userId ?: username}") // site:id
-                        .build()
-                    TargetChoice(site, username, option)
-                }
-
-            } else listOf()
+        return channelTargets.map { (site, username, userId) ->
+            val option = ApplicationCommandOptionChoiceData.builder()
+                .name("$username (${site.full})") // Username (Site Name)
+                .value("${site.alias.first()}:${userId ?: username}") // site:id
+                .build()
+            TargetChoice(site, username, option)
         }
     }
 }

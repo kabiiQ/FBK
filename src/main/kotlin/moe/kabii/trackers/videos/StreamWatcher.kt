@@ -32,7 +32,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 import org.jetbrains.exposed.sql.and
@@ -44,7 +44,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
     private val job = SupervisorJob()
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val existingTargets = channel.targets
             .filter { target ->
@@ -100,7 +100,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
     }
 
     data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?, val textPart: String?)
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
         val dbMention = dbTarget.mention() ?: return null
@@ -139,7 +139,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         return MentionRole(dbMention, discordRole, textPart)
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getChannel(fbk: FBK, guild: Long?, channel: Long, deleteTarget: TrackedStreams.Target?): MessageChannel {
         val discord = fbk.client
         return try {
@@ -157,7 +157,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun getStreamConfig(target: TrackedStreams.Target): StreamSettings {
         // get channel stream embed settings
         val (_, features) =
@@ -171,7 +171,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
         private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
 
-        @WithinExposedContext
+        @ExposedReferenceAccessor
         suspend fun checkAndRenameChannel(clientId: Int, channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
             // if this is a guild channel with the rename feature enabled, execute this functionality
             val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms

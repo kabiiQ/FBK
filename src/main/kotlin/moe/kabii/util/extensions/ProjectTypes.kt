@@ -1,3 +1,5 @@
 package moe.kabii.util.extensions
 
-annotation class WithinExposedContext
+annotation class ExposedReferenceAccessor
+
+annotation class CreatesExposedContext

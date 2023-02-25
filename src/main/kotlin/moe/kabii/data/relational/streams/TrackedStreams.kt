@@ -3,7 +3,7 @@ package moe.kabii.data.relational.streams
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.trackers.*
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -11,7 +11,6 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 
 // generic logic to handle tracking any stream source
@@ -51,22 +50,23 @@ object TrackedStreams {
 
         companion object : IntEntityClass<StreamChannel>(StreamChannels) {
 
-            @WithinExposedContext
+            @ExposedReferenceAccessor
             fun getChannel(site: DBSite, channelId: String): StreamChannel? = find {
                 StreamChannels.site eq site and
                         (StreamChannels.siteChannelID eq channelId)
             }.firstOrNull()
 
-            fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel = transaction {
+            @ExposedReferenceAccessor
+            fun getOrInsert(site: DBSite, channelId: String, username: String? = null): StreamChannel {
                 val existing = getChannel(site, channelId)
-                existing ?: new {
+                return existing ?: new {
                     this.site = site
                     this.siteChannelID = channelId
                     if(username != null) this.lastKnownUsername = username
                 }
             }
 
-            @WithinExposedContext
+            @ExposedReferenceAccessor
             fun insertApiChannel(site: DBSite, channelId: String, username: String): StreamChannel = new {
                 this.site = site
                 this.siteChannelID= channelId
@@ -104,7 +104,7 @@ object TrackedStreams {
         companion object : IntEntityClass<Target>(Targets) {
 
             // get target with same discord channel and streaming channel id
-            @WithinExposedContext
+            @ExposedReferenceAccessor
             fun getForChannel(clientId: Int, discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
                 Targets
                     .innerJoin(StreamChannels)

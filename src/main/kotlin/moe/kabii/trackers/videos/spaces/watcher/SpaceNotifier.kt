@@ -20,7 +20,7 @@ import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.ExposedReferenceAccessor
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
@@ -36,7 +36,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
         private val inactiveColor = Color.of(812958)
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun updateLiveSpace(dbChannel: TrackedStreams.StreamChannel, space: TwitterSpace, targets: List<TrackedStreams.Target>) {
 
         val dbSpace = TwitterSpaces.Space.getOrInsert(dbChannel, space.id)
@@ -55,7 +55,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
         }
     }
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun createSpaceNotification(space: TwitterSpace, dbSpace: TwitterSpaces.Space, target: TrackedStreams.Target) {
         val fbk = instances[target.discordClient]
         // get discord channel
@@ -120,7 +120,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
     }
 
 
-    @WithinExposedContext
+    @ExposedReferenceAccessor
     suspend fun updateEndedSpace(dbChannel: TrackedStreams.StreamChannel, space: TwitterSpace) {
 
         // check if space in db (or ignore)
