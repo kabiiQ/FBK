@@ -42,11 +42,11 @@ object CommandInfo : Command("help") {
         val fields = mutableListOf<EmbedCreateFields.Field>()
         fields.add(EmbedCreateFields.Field.of("Location in Source Code:", "[$pack]($sourcePath)", false))
 
-        val wikiPage = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${match.name}"
+        val wikiInfo = match.getHelpURL() ?: "${SourcePaths.wikiURL}/Command-List#--${match.name}\nA wiki page for this specific command was not found."
         ereply(
             Embeds.fbk()
                 .withTitle("Command information: ${match.name}")
-                .withDescription("Command wiki page: $wikiPage")
+                .withDescription("${wikiInfo}Command wiki page: $wikiInfo")
                 .withFields(fields)
         ).awaitSingle()
     }
