@@ -38,7 +38,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
         fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
 
-        @ExposedReferenceAccessor
+        @CreatesExposedContext
         suspend fun linkMembership(discord: GatewayDiscordClient, linkedYt: LinkedYoutubeAccount) {
             // check if newly linked account has associated memberships
             // linkedyt -> chat memberships -> configs -> assign role
@@ -54,7 +54,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
                 .forEach { utils -> utils.assignMembershipRole(linkedYt) }
         }
 
-        @ExposedReferenceAccessor
+        @ExposedContextRequired
         suspend fun linkMembership(instances: DiscordInstances, member: YoutubeMember) {
             // check if newly recorded membership has an associated discord account
             // ytmember -> linkedyt -> configs -> assign role
@@ -103,7 +103,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @ExposedReferenceAccessor
+    @ExposedContextRequired
     fun getActiveMembers(): List<LinkedYoutubeAccount> = LinkedYoutubeAccounts
         .innerJoin(YoutubeMembers, { ytChatId }, { chatterId })
         .select {
@@ -114,6 +114,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         .onEach { acc -> acc.load(LinkedYoutubeAccount::discordUser) }
         .toList()
 
+    @ExposedReferenceAccessor
     private suspend fun getMember(linkedYt: LinkedYoutubeAccount): Member? {
         val guild = guild ?: return null
         return try {

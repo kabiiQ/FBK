@@ -150,14 +150,16 @@ object YoutubeVideosService {
 
                     if(!authorize(call)) return@get
 
-                    propagateTransaction {
-                        val dbChannel = getChannel(call) ?: return@propagateTransaction
-                        call.respondText(
-                            text = YoutubeChannelResponse.generate(dbChannel),
-                            contentType = ContentType.Application.Json,
-                            status = HttpStatusCode.OK
-                        )
+                    val dbChannel = propagateTransaction {
+                        getChannel(call)
                     }
+
+                    dbChannel ?: return@get
+                    call.respondText(
+                        text = YoutubeChannelResponse.generate(dbChannel),
+                        contentType = ContentType.Application.Json,
+                        status = HttpStatusCode.OK
+                    )
                 }
 
                 put {
@@ -168,6 +170,8 @@ object YoutubeVideosService {
                     val channelId = getChannelId(call) ?: return@put
 
                     // check if already tracked / api flag set
+                    // violation of 2.1 requirements: api calls within transaction
+                    // not worth rewrite at this time, this is not used and might not be kept
                     propagateTransaction {
                         val existing = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.YOUTUBE, channelId)
                         if(existing != null) {

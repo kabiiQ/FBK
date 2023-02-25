@@ -12,6 +12,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.anime.TrackedMediaLists
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -19,6 +20,8 @@ import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.anime.*
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.dao.load
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -28,42 +31,46 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         applicationLoop {
 
             val start = Instant.now()
-            propagateTransaction {
-                try {
 
-                    // get all tracked lists for this site
-                    val lists = TrackedMediaLists.MediaList.find {
+            try {
+
+                // get all tracked lists for this site
+                val lists = propagateTransaction {
+                    TrackedMediaLists.MediaList.find {
                         TrackedMediaLists.MediaLists.site eq site
                     }
-
-                    // work on single thread to call api - heavy rate limits
-                    lists.forEach { trackedList ->
-                        try {
-                            val filteredTargets = getActiveTargets(trackedList)
-                            if (filteredTargets == null) return@forEach // list has been untracked entirely
-
-                            val newList = trackedList.downloadCurrentList()!!
-
-                            compareAndUpdate(trackedList, newList, filteredTargets)
-
-                        } catch (delete: MediaListDeletedException) {
-                            LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
-                            trackedList.delete()
-                            return@forEach
-                        } catch (e: Exception) {
-                            LOG.warn("Exception parsing media item: ${trackedList.siteListId} :: ${e.message}")
-                            LOG.trace(e.stackTraceString)
-                            return@forEach
-                        }
-
-                        delay(cooldowns.callDelay)
-                    }
-                } catch (e: Exception) {
-                    // catch-all, we don't want this thread to end
-                    LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
                 }
+
+                lists.forEach { trackedList ->
+                    try {
+                        val filteredTargets = getActiveTargets(trackedList)
+                        filteredTargets ?: return@forEach
+
+                        val newList = trackedList.downloadCurrentList()!!
+
+                        compareAndUpdate(trackedList, newList, filteredTargets)
+
+                    } catch (delete: MediaListDeletedException) {
+                        LOG.warn("Untracking ${site.targetType.full} list ${trackedList.siteListId} as the list can no longer be found.")
+                        propagateTransaction {
+                            trackedList.delete()
+                        }
+                        return@forEach
+                    } catch (e: Exception) {
+                        LOG.warn("Exception parsing media item: ${trackedList.siteListId} :: ${e.message}")
+                        LOG.trace(e.stackTraceString)
+                        return@forEach
+                    }
+
+                    delay(cooldowns.callDelay)
+                }
+
+            } catch (e: Exception) {
+                // catch-all, we don't want this thread to end
+                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
+
             // only run every few minutes at max
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
@@ -81,7 +88,9 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
 
         if(oldAnime == 0 && newAnime > 3) {
             val listJson = newMediaList.toDBJson()
-            trackedList.lastListJson = listJson
+            propagateTransaction {
+                trackedList.lastListJson = listJson
+            }
             return
         }
 
@@ -200,7 +209,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
                             if (err == 403) {
-                                TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeTargetChannel, target::delete)
+                                TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeTargetChannel, { transaction { target.delete() } } )
                                 LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
                             } else throw ce
@@ -216,13 +225,20 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         if (newEntry || statusChange || statusUpdate) {
 
             val listJson = newMediaList.toDBJson()
-            trackedList.lastListJson = listJson
+            propagateTransaction {
+                trackedList.lastListJson = listJson
+            }
         }
     }
 
-    @ExposedReferenceAccessor
+
+    @CreatesExposedContext
     private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
-        val existingTargets = list.targets.toList()
+        val allTargets = propagateTransaction {
+            list.targets
+                .onEach { t -> t.load(TrackedMediaLists.ListTarget::mediaList, TrackedMediaLists.ListTarget::discord, DiscordObjects.Channel::guild, TrackedMediaLists.ListTarget::userTracked) }
+        }.toList()
+        val existingTargets = allTargets
             .filter { target ->
                 val discord = instances[target.discordClient].client
                 // untrack target if discord channel is deleted
@@ -234,7 +250,9 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
                                 LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
-                                target.delete()
+                                propagateTransaction {
+                                    target.delete()
+                                }
                             }
                         }
                         return@filter false
@@ -252,7 +270,9 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
             }
         } else {
             // delete media list if it has no targets at all
-            list.delete()
+            propagateTransaction {
+                list.delete()
+            }
             LOG.info("Untracking ${list.site.targetType.full} list: ${list.siteListId} as it has no targets.")
             null
         }

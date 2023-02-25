@@ -23,7 +23,7 @@ import kotlin.math.min
 
 class TweetStream(val twitter: TwitterChecker) : Runnable {
 
-    private val intakeContext = CoroutineScope(DiscordTaskPool.twitterIntakeThread + CoroutineName("TwitterStream-Notifier") + SupervisorJob())
+    private val intakeContext = CoroutineScope(DiscordTaskPool.tweetIntakeThread + CoroutineName("TwitterStream-Notifier") + SupervisorJob())
     private val tweetAdapter = MOSHI.adapter(TwitterSingleTweetData::class.java)
 
     override fun run() {

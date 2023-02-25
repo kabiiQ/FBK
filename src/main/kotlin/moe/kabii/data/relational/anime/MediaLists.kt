@@ -30,7 +30,7 @@ object TrackedMediaLists {
     object MediaLists : IntIdTable() {
         val site = enumeration("site_id", ListSite::class)
         val siteChannelId = varchar("site_channel_id", 64).uniqueIndex()
-        val lastListJson = text("last_list_json")
+        val lastListJson = text("last_list_json", eagerLoading = true)
     }
 
     class MediaList(id: EntityID<Int>) : IntEntity(id) {

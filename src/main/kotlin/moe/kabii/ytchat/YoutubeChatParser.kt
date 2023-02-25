@@ -25,14 +25,15 @@ class YoutubeChatParser(val instances: DiscordInstances, val watcher: YoutubeCha
 
         try {
             // chunk all data into one transaction
+            val updated = messages
+                .filter { chat -> chat.type == "textMessage" }
+                // internal process for IRyS server only at this time
+                .onEach { message -> watcher.holoChatQueue.trySend(YoutubeChatWatcher.YTMessageData(room, message)) }
+                .filter { chat -> chat.author.member }
+
             propagateTransaction {
-                messages
-                    .filter { chat -> chat.type == "textMessage" }
-                    // internal process for IRyS server only at this time
-                    .onEach { message -> watcher.holoChatQueue.trySend(YoutubeChatWatcher.YTMessageData(room, message)) }
-                    .filter { chat -> chat.author.member }
-                    .forEach { chat ->
-                        YoutubeMember.recordActive(instances, room.channelId, chat.author.channelId)
+                updated.forEach { chat ->
+                    YoutubeMember.recordActive(instances, room.channelId, chat.author.channelId)
                 }
             }
         } catch(e: Exception) {

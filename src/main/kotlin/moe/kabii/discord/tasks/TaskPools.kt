@@ -9,15 +9,16 @@ object DiscordTaskPool {
     // threading needs may change in future, currently all using one thread pool that will expand when needed
     val commandThreads = dispatchThreads
     val streamThreads = dispatchThreads
-    val listThreads = dispatchThreads
-    val reminderThreads = dispatchThreads
 
-    val renameThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    val reminderThreads = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+
     val ps2DBThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ps2WSSThread = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-    val twitterIntakeThread = Executors.newCachedThreadPool().asCoroutineDispatcher() // TODO may be issue with this pool, cache for now and monitor
+
+    val tweetIntakeThread = Executors.newCachedThreadPool().asCoroutineDispatcher() // TODO may be issue with this pool, cache for now and monitor
     val twitchIntakeThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
+    val renameThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ytXMLIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ytSourceIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ytMembershipRoleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()

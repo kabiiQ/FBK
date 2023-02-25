@@ -2,7 +2,11 @@ package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.util.extensions.CreatesExposedContext
+import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.dao.load
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
@@ -31,10 +35,12 @@ object GuildConfigurations {
         return guildConfig to guildConfig.getOrCreateFeatures(channelId)
     }
 
+    @CreatesExposedContext
     suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
-        val guildId = target.discordChannel.guild?.guildID ?: return null
+        val discordChannel = propagateTransaction { target.discordChannel.load(DiscordObjects.Channel::guild) }
+        val guildId = discordChannel.guild?.guildID ?: return null
         val guildConfig = getOrCreateGuild(target.discordClient, guildId)
-        return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)
+        return guildConfig.getOrCreateFeatures(discordChannel.channelID)
     }
 }
 

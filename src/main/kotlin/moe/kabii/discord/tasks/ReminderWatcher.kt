@@ -9,6 +9,8 @@ import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminder
 import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.discord.util.Embeds
@@ -17,6 +19,7 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -25,39 +28,39 @@ import kotlin.math.max
 
 class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestCooldownSpec) : Runnable {
     private val updateInterval = cooldown.minimumRepeatTime
+    private val reminderScope = CoroutineScope(DiscordTaskPool.reminderThreads + CoroutineName("Discord-Reminders") + SupervisorJob())
 
     override fun run() {
         applicationLoop {
-            // grab reminders ending in next 2 minutes
             val start = Instant.now()
-            newSuspendedTransaction {
-                try {
-                    val window = DateTime.now().plus(updateInterval)
-                    val reminders = Reminder.find { Reminders.remind lessEq window }.toList()
+            try {
+                // pull reminders ending in the next update interval (2 minutes)
+                val window = DateTime.now().plus(updateInterval)
+                val reminders = propagateTransaction {
+                    Reminder
+                        .find { Reminders.remind lessEq window }
+                        .onEach { r -> r.load(Reminder::user, Reminder::originMessage, MessageHistory.Message::channel, DiscordObjects.Channel::guild) }
+                        .toList()
+                }
 
-                    // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
-                    val job = SupervisorJob()
-                    val discordScope = CoroutineScope(DiscordTaskPool.reminderThreads + job)
+                // launch coroutine for precise reminder notifications. run on reminder dispatcher threads
+                reminders.map { reminder ->
+                    reminderScope.launch {
+                        scheduleReminder(reminder)
+                    }
+                }.joinAll()
+            } catch(e: Exception) {
+                LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            } // don't let this thread die
 
-                    reminders.map { reminder ->
-                        discordScope.launch {
-                            propagateTransaction {
-                                scheduleReminder(reminder)
-                            }
-                        }
-                    }.joinAll() // wait for all reminders to finish to make sure these are removed before next set
-                } catch(e: Exception) {
-                    LOG.error("Uncaught exception in ReminderWatcher :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
-                } // don't let this thread die
-            }
             val runtime = Duration.between(start, Instant.now())
             val delay = updateInterval - runtime.toMillis()
             delay(max(delay, 0L)) // don't sleep negative - not sure how this was happening though
         }
     }
 
-    @ExposedReferenceAccessor
+    @CreatesExposedContext
     private suspend fun scheduleReminder(reminder: Reminder) {
         val discord = instances[reminder.discordClient].client
 
@@ -66,7 +69,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
         val user = discord.getUserById(reminder.user.userID.snowflake)
             .tryAwait().orNull()
         if(user == null) {
-            LOG.warn("Skipping reminder: user ${reminder.user} not found") // this should not happen
+            LOG.warn("Skipping reminder: user ${reminder.user} not found") // this should not happen unless a user deletes their account
             return
         }
 
@@ -131,7 +134,9 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
             LOG.error("Uncaught exception sending reminder :: ${e.message}")
             LOG.debug(e.stackTraceString)
         }
-        reminder.delete()
+        propagateTransaction {
+            reminder.delete()
+        }
     }
 
 }
