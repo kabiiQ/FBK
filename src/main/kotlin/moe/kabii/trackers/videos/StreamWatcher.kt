@@ -32,9 +32,8 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.ExposedReferenceAccessor
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import reactor.kotlin.core.publisher.toMono
@@ -46,7 +45,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     @ExposedReferenceAccessor
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
-        val existingTargets = channel.targets
+        val allTargets = propagateTransaction {
+            channel.targets
+                .onEach { t -> t.load(TrackedStreams.Target::streamChannel, TrackedStreams.Target::discordChannel, DiscordObjects.Channel::guild, TrackedStreams.Target::tracker) }
+        }.toList()
+        val existingTargets = allTargets
             .filter { target ->
                 // untrack target if channel deleted
                 if(target.discordChannel.guild != null) {
@@ -58,7 +61,9 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
                                 LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                                target.delete()
+                                propagateTransaction {
+                                    target.delete()
+                                }
                             }
                         }
                         return@filter false
@@ -83,8 +88,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             if(channel.apiUse) return emptyList()
             if(channel.site == TrackedStreams.DBSite.YOUTUBE) {
 
-                if(!YoutubeVideoTrack.getForChannel(channel).empty() || !MembershipConfigurations.getForChannel(channel).empty()) return emptyList()
-
+                if(propagateTransaction {
+                        !YoutubeVideoTrack.getForChannel(channel).empty() || !MembershipConfigurations.getForChannel(channel).empty()
+                    }) {
+                    return emptyList()
+                }
             }
 
             channel.delete()
@@ -100,10 +108,13 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
     }
 
     data class MentionRole(val db: TrackedStreams.TargetMention, val discord: Role?, val textPart: String?)
-    @ExposedReferenceAccessor
+    @CreatesExposedContext
     suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
-        val dbMention = dbTarget.mention() ?: return null
+        val dbMention = propagateTransaction {
+            dbTarget.mention()
+        } ?: return null
+
         val mentionRole = when {
             upcomingNotif -> if(memberLimit) null else dbMention.mentionRoleUpcoming
             creationNotif -> if(memberLimit) null else dbMention.mentionRoleCreation
@@ -124,9 +135,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 val err = role.value
                 if(err is ClientException && err.status.code() == 404) {
                     // role has been deleted, remove configuration
-                    if(dbMention.mentionRole == mentionRole) dbMention.mentionRole = null
-                    if(dbMention.mentionRoleMember == mentionRole) dbMention.mentionRoleMember = null
-                    if(dbMention.mentionRole == null && dbMention.mentionRoleMember == null && dbMention.mentionText == null) dbMention.delete()
+                    propagateTransaction {
+                        if(dbMention.mentionRole == mentionRole) dbMention.mentionRole = null
+                        if(dbMention.mentionRoleMember == mentionRole) dbMention.mentionRoleMember = null
+                        if(dbMention.mentionRole == null && dbMention.mentionRoleMember == null && dbMention.mentionText == null) dbMention.delete()
+                    }
                 }
                 null
             }
@@ -186,67 +199,70 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             val liveChannels = mutableListOf<TrackedStreams.StreamChannel>()
 
             // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
-            // twitch notifs
-            DBTwitchStreams.Notification.wrapRows(
-                DBTwitchStreams.Notifications
-                    .innerJoin(MessageHistory.Messages
-                        .innerJoin(DiscordObjects.Channels))
-                    .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                    })
-                .filter { notif ->
-                    if(endingStream != null) {
-                        notif.channelID.id != endingStream.id
-                    } else true
-                }
-                .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
+            propagateTransaction {
 
-            // yt notifs
-            YoutubeNotification.wrapRows(
-                YoutubeNotifications
-                    .innerJoin(MessageHistory.Messages
-                        .innerJoin(DiscordObjects.Channels))
-                    .innerJoin(YoutubeVideos)
-                    .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong() and
-                                (YoutubeVideos.liveEvent.isNotNull())
-                    })
-                .filter { notif ->
-                    if(endingStream != null) {
-                        notif.videoID.ytChannel.id != endingStream.id
-                    } else true
-                }
-                .mapTo(liveChannels) { it.videoID.ytChannel }
+                // twitch notifs
+                DBTwitchStreams.Notification.wrapRows(
+                    DBTwitchStreams.Notifications
+                        .innerJoin(MessageHistory.Messages
+                            .innerJoin(DiscordObjects.Channels))
+                        .select {
+                            DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                        })
+                    .filter { notif ->
+                        if(endingStream != null) {
+                            notif.channelID.id != endingStream.id
+                        } else true
+                    }
+                    .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
 
-            // twitcasting notifs
-            Twitcasts.TwitNotif.wrapRows(
-                Twitcasts.TwitNotifs
-                    .innerJoin(MessageHistory.Messages
-                        .innerJoin(DiscordObjects.Channels))
-                    .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                    })
-                .filter { notif ->
-                    if(endingStream != null) {
-                        notif.channelId.id != endingStream.id
-                    } else true
-                }
-                .mapTo(liveChannels, Twitcasts.TwitNotif::channelId)
+                // yt notifs
+                YoutubeNotification.wrapRows(
+                    YoutubeNotifications
+                        .innerJoin(MessageHistory.Messages
+                            .innerJoin(DiscordObjects.Channels))
+                        .innerJoin(YoutubeVideos)
+                        .select {
+                            DiscordObjects.Channels.channelID eq guildChan.id.asLong() and
+                                    (YoutubeVideos.liveEvent.isNotNull())
+                        })
+                    .filter { notif ->
+                        if(endingStream != null) {
+                            notif.videoID.ytChannel.id != endingStream.id
+                        } else true
+                    }
+                    .mapTo(liveChannels) { it.videoID.ytChannel }
 
-            // twitter spaces
-            TwitterSpaces.SpaceNotif.wrapRows(
-                TwitterSpaces.SpaceNotifs
-                    .innerJoin(MessageHistory.Messages
-                        .innerJoin(DiscordObjects.Channels))
-                    .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                    })
-                .filter { notif ->
-                    if(endingStream != null) {
-                        notif.spaceId.channel.id != endingStream.id
-                    } else true
-                }
-                .mapTo(liveChannels) { it.spaceId.channel }
+                // twitcasting notifs
+                Twitcasts.TwitNotif.wrapRows(
+                    Twitcasts.TwitNotifs
+                        .innerJoin(MessageHistory.Messages
+                            .innerJoin(DiscordObjects.Channels))
+                        .select {
+                            DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                        })
+                    .filter { notif ->
+                        if(endingStream != null) {
+                            notif.channelId.id != endingStream.id
+                        } else true
+                    }
+                    .mapTo(liveChannels, Twitcasts.TwitNotif::channelId)
+
+                // twitter spaces
+                TwitterSpaces.SpaceNotif.wrapRows(
+                    TwitterSpaces.SpaceNotifs
+                        .innerJoin(MessageHistory.Messages
+                            .innerJoin(DiscordObjects.Channels))
+                        .select {
+                            DiscordObjects.Channels.channelID eq guildChan.id.asLong()
+                        })
+                    .filter { notif ->
+                        if(endingStream != null) {
+                            notif.spaceId.channel.id != endingStream.id
+                        } else true
+                    }
+                    .mapTo(liveChannels) { it.spaceId.channel }
+            }
 
             // copy marks for safety (this thread can run at any time)
             val marks = feature.marks.toList()
@@ -254,7 +270,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
             // generate new channel name
             val newName = if(liveChannels.isEmpty()) {
-                if(feature.notLive.isBlank()) "not-live" else feature.notLive
+                feature.notLive.ifBlank { "not-live" }
             } else {
                 val liveMarks = liveChannels
                     .sortedBy(TrackedStreams.StreamChannel::id)
@@ -266,13 +282,13 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                         }?.mark
                     }.joinToString("")
                 val new = "${feature.livePrefix}$liveMarks${feature.liveSuffix}".replace(disallowedChara, "").take(MagicNumbers.Channel.NAME)
-                if(new.isBlank()) "\uD83D\uDD34-live" else new
+                new.ifBlank { "\uD83D\uDD34-live" }
             }
 
-            // discord channel renaming is HEAVILY rate-limited - careful to not request same name
+            // discord channel renaming is HEAVILY rate-limited - do not request same name and launch this task on a single thread queue
             if(newName == currentName) return
 
-            LOG.info("DEBUG: Renaming channel: ${guildChan.id.asString()}")
+            LOG.info("Renaming channel: ${guildChan.id.asString()}")
             renameScope.launch {
                 try {
                     when (guildChan) {

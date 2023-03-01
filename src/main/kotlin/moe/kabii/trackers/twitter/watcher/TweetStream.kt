@@ -84,25 +84,33 @@ class TweetStream(val twitter: TwitterChecker) : Runnable {
                                     val tweet = response.data
                                     LOG.debug("TwitterStream: @${tweet.author?.username}/${tweet.url}")
 
-                                    propagateTransaction {
-                                        val feed = TwitterFeed
+                                    val feed = propagateTransaction {
+                                        TwitterFeed
                                             .find { TwitterFeeds.userId eq user.id }
                                             .firstOrNull()
-                                        val targets = feed?.run { twitter.getActiveTargets(this) }
-                                            ?: return@propagateTransaction
+                                            ?.apply {
+                                                // update twitter handle in database in case the user changed it
+                                                if(lastKnownUsername != user.username) {
+                                                    lastKnownUsername = user.username
+                                                }
+                                            }
+                                    }
 
-                                        feed.lastKnownUsername = user.username
+                                    val targets = feed
+                                        ?.run { twitter.getActiveTargets(this) }
+                                        ?: return@launch
 
-                                        // if already handled, skip
-                                        val cache = TwitterFeedCache.getOrPut(feed)
-                                        if(tweet.id < cache.initialBound || cache.seenTweets.contains(tweet.id)) return@propagateTransaction
+                                    // if already handled, skip
+                                    val cache = TwitterFeedCache.getOrPut(feed)
+                                    if(tweet.id < cache.initialBound || cache.seenTweets.contains(tweet.id)) return@launch
 
-                                        if(tweet.id > feed.lastPulledTweet ?: 0L) {
+                                    if(tweet.id > (feed.lastPulledTweet ?: 0L)) {
+                                        propagateTransaction {
                                             feed.lastPulledTweet = tweet.id
                                         }
-
-                                        twitter.notifyTweet(user, tweet, targets)
                                     }
+
+                                    twitter.notifyTweet(user, tweet, targets)
                                 }
                             } catch(e: Exception) {
                                 LOG.warn("Unable to decode Tweet: ${e.message}")

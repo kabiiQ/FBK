@@ -17,10 +17,8 @@ import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
 import moe.kabii.trackers.twitter.json.TwitterTweet
-import moe.kabii.util.extensions.ExposedReferenceAccessor
-import moe.kabii.util.extensions.applicationLoop
-import moe.kabii.util.extensions.propagateTransaction
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.dao.load
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -48,52 +46,62 @@ class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCoo
         applicationLoop {
             val start = Instant.now()
 
-            propagateTransaction {
+            try {
 
-                try {
-                    val liveSpaces = TwitterSpaces.Space.all()
+                lateinit var liveSpaces: List<TwitterSpaces.Space>
+                lateinit var users: List<TrackedStreams.StreamChannel>
 
-                    // check all trackers users that are not currently known to be live
-                    val checkUsers = TrackedStreams.StreamChannel.find {
+                propagateTransaction {
+                    // pull all known spaces, users from database
+                    liveSpaces = TwitterSpaces.Space
+                        .all()
+                        .onEach { s -> s.load(TwitterSpaces.Space::channel) }
+                        .toList()
+
+                    users = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.SPACES
-                    }.filter { channel ->
-                        liveSpaces.find { live -> live.channel == channel } == null
-                    }
-
-                    var first = true
-                    checkUsers.chunked(100).forEach { userChunk ->
-                        if(!first) {
-                            delay(Duration.ofMillis(cooldowns.callDelay))
-                        }  else first = false
-
-                        wrapAndTry {
-                            TwitterParser
-                                .getSpacesByCreators(userChunk.map { chan -> chan.siteChannelID })
-                        }?.forEach { liveSpace ->
-                            val channel = userChunk.find { user -> user.siteChannelID == liveSpace._creatorId }
-                            updateSpace(checkNotNull(channel), liveSpace)
-                        }
-                    }
-
-                    // then, check all 'live' spaces to verify they are still live
-                    first = true
-                    liveSpaces.chunked(100).forEach { spaceChunk ->
-                        if(!first) {
-                            delay(Duration.ofMillis(cooldowns.callDelay))
-                        } else first = false
-
-                        wrapAndTry {
-                            TwitterParser
-                                .getSpaces(spaceChunk.map { space -> space.spaceId })
-                        }?.forEach { checkSpace ->
-                            val dbSpace = spaceChunk.find { space -> space.spaceId == checkSpace.id }
-                            updateSpace(checkNotNull(dbSpace).channel, checkSpace)
-                        }
-                    }
-                } catch(e: Exception) {
-                    LOG.warn("Exception in SpaceChecker : ${e.message}")
-                    LOG.debug(e.stackTraceString)
+                    }.toList()
                 }
+
+                // check all tracked users that are not currently known to be live
+                val checkUsers = users.filter { channel ->
+                    liveSpaces.find { live -> live.channel == channel } == null
+                }
+
+                var first = true
+                checkUsers.chunked(100).forEach { userChunk ->
+                    if(!first) {
+                        delay(Duration.ofMillis(cooldowns.callDelay))
+                    }  else first = false
+
+                    wrapAndTry {
+                        TwitterParser
+                            .getSpacesByCreators(userChunk.map { chan -> chan.siteChannelID })
+                    }?.forEach { liveSpace ->
+                        val channel = userChunk.find { user -> user.siteChannelID == liveSpace._creatorId }
+                        updateSpace(checkNotNull(channel), liveSpace)
+                    }
+                }
+
+                // then, check all 'live' spaces to verify they are still live
+                first = true
+                liveSpaces.chunked(100).forEach { spaceChunk ->
+                    if (!first) {
+                        delay(Duration.ofMillis(cooldowns.callDelay))
+                    } else first = false
+
+                    wrapAndTry {
+                        TwitterParser
+                            .getSpaces(spaceChunk.map { space -> space.spaceId })
+                    }?.forEach { checkSpace ->
+                        val dbSpace = spaceChunk.find { space -> space.spaceId == checkSpace.id }
+                        updateSpace(checkNotNull(dbSpace).channel, checkSpace)
+                    }
+                }
+
+            } catch(e: Exception) {
+                LOG.warn("Exception in SpaceChecker : ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
 
             val runDuration = Duration.between(start, Instant.now())
@@ -108,33 +116,41 @@ class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCoo
         when(space.state) {
             TwitterSpaceState.LIVE -> {
                 val targets = getActiveTargets(dbChannel) ?: return
-                updateLiveSpace(dbChannel, space, targets)
+                propagateTransaction {
+                    updateLiveSpace(dbChannel, space, targets)
+                }
             }
             TwitterSpaceState.ENDED -> updateEndedSpace(dbChannel, space)
             TwitterSpaceState.SCHEDULED -> return // scheduled spaces not supported for now, just keep checking until live or cancelled
         }
     }
 
-    @ExposedReferenceAccessor
+    @CreatesExposedContext
     suspend fun intakeSpaceFromTweet(tweet: TwitterTweet) {
         val spaceMatch = tweet.entities?.urls?.firstNotNullOfOrNull { urls ->
             urls.expanded?.run(spacePattern::find)?.groups?.get(1)?.value
         }
-        spaceMatch ?: return
+        spaceMatch ?: return // no space found in tweet
 
         // if tweet contains space url, check if already known
-        val existing = TwitterSpaces.Space.find { TwitterSpaces.Spaces.spaceId eq spaceMatch }.firstOrNull()
-        if(existing != null) return
+        val existing = propagateTransaction {
+            TwitterSpaces.Space
+                .find { TwitterSpaces.Spaces.spaceId eq spaceMatch }
+                .firstOrNull()
+        }
+        if(existing != null) return // do not intake if the space is already known
 
+        // don't make the 'twitter' thread wait for the twitter space to be handled
         spaceContext.launch {
             try {
 
-                propagateTransaction {
-                    val liveSpace = TwitterParser.getSpace(spaceMatch) ?: return@propagateTransaction
-                    // check if this is even a tracked user's space
-                    val dbChannel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.SPACES, liveSpace._creatorId) ?: return@propagateTransaction
-                    updateSpace(dbChannel, liveSpace)
-                }
+                val liveSpace = TwitterParser.getSpace(spaceMatch) ?: return@launch
+                // check if this is even a tracked user's space
+                val dbChannel = propagateTransaction {
+                    TrackedStreams.StreamChannel
+                        .getChannel(TrackedStreams.DBSite.SPACES, liveSpace._creatorId)
+                } ?: return@launch
+                updateSpace(dbChannel, liveSpace)
 
             } catch(e: Exception) {
                 LOG.warn("Error retrieving Twitter Space: ${e.message}")

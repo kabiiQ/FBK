@@ -80,7 +80,9 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
 
     private suspend fun compareAndUpdate(trackedList: TrackedMediaLists.MediaList, newMediaList: MediaList, filteredTargets: List<TrackedMediaLists.ListTarget>) {
 
-        val oldList = trackedList.extractMedia()
+        val oldList = propagateTransaction {
+            trackedList.extractMedia()
+        }
         val newList = newMediaList.media
 
         val oldAnime = oldList.count { it.type == MediaType.ANIME }

@@ -54,6 +54,7 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
                 propagateTransaction {
                     val channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCASTING, movie.broadcaster.userId)
                     if(channel != null) {
+                        // getActiveTargets will create nested transaction
                         checker.getActiveTargets(channel)?.run { checker.checkMovie(channel, movie, this) }
                     }
                 }

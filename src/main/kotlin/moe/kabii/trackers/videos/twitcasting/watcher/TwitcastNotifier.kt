@@ -3,14 +3,20 @@ package moe.kabii.trackers.videos.twitcasting.watcher
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
@@ -20,11 +26,9 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.ExposedReferenceAccessor
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.jetbrains.exposed.dao.load
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -34,9 +38,11 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
     companion object {
         private val liveColor = TwitcastingParser.color
         private val inactiveColor = Color.of(812958)
+
+        val updateScope = CoroutineScope(DiscordTaskPool.twitcastNotifierThread + CoroutineName("Twitcasting-Notifier") + SupervisorJob())
     }
 
-    @ExposedReferenceAccessor
+    @ExposedContextRequired
     suspend fun movieLive(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedStreams.Target>) {
         val (movie, user) = info
 
@@ -52,19 +58,26 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         }
 
         targets.forEach { target ->
-            try {
-                createLiveNotification(info, target)
-            } catch(e: Exception) {
-                LOG.warn("Error while sending live notification for channel: $channel :: ${e.message}")
-                LOG.debug(e.stackTraceString)
+            updateScope.launch {
+                try {
+                    createLiveNotification(info, target)
+                } catch(e: Exception) {
+                    LOG.warn("Error while sending live notification for channel: $channel :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                }
             }
         }
     }
 
-    @ExposedReferenceAccessor
+    @CreatesExposedContext
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
-        Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
+        val notifications = propagateTransaction {
+            Twitcasts.TwitNotif
+                .getForChannel(channel)
+                .onEach { n -> n.load(Twitcasts.TwitNotif::targetId, TrackedStreams.Target::tracker, Twitcasts.TwitNotif::channelId, Twitcasts.TwitNotif::messageId, MessageHistory.Message::channel, DiscordObjects.Channel::guild) }
+        }
+        notifications.forEach { notification ->
             val fbk = instances[notification.targetId.discordClient]
             val discord = fbk.client
             try {
@@ -97,7 +110,9 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                         })
 
                 } else {
-                    existingNotif.delete()
+                    propagateTransaction {
+                        existingNotif.delete()
+                    }
                 }
 
                 action.thenReturn(Unit).tryAwait()
@@ -109,13 +124,18 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                 LOG.info("Error in Twitcasting #streamEnd for movie $dbMovie :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             } finally {
-                notification.delete()
+                propagateTransaction {
+                    notification.delete()
+                }
             }
         }
-        dbMovie.delete()
+        propagateTransaction {
+            dbMovie.delete()
+        }
     }
 
     @ExposedReferenceAccessor
+    @CreatesExposedContext
     suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedStreams.Target) {
 
         val fbk = instances[target.discordClient]
@@ -152,7 +172,9 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                 val rolePart = if(mention.discord != null
                     && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
-                    mention.db.lastMention = DateTime.now()
+                    propagateTransaction {
+                        mention.db.lastMention = DateTime.now()
+                    }
                     mention.discord.mention.plus(" ")
                 } else ""
                 val textPart = mention.textPart
@@ -168,10 +190,12 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
             // log notification in db
-            Twitcasts.TwitNotif.new {
-                this.targetId = target
-                this.channelId = target.streamChannel
-                this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
+            propagateTransaction {
+                Twitcasts.TwitNotif.new {
+                    this.targetId = target
+                    this.channelId = target.streamChannel
+                    this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
+                }
             }
 
             checkAndRenameChannel(fbk.clientId, chan)

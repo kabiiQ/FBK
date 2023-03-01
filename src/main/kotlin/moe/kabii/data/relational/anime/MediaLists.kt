@@ -9,6 +9,7 @@ import moe.kabii.trackers.anime.MediaListParser
 import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
+import moe.kabii.util.extensions.ExposedContextRequired
 import moe.kabii.util.extensions.ExposedReferenceAccessor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -42,6 +43,7 @@ object TrackedMediaLists {
 
         suspend fun downloadCurrentList() = site.parser.parse(siteListId)
 
+        @ExposedContextRequired
         fun extractMedia(): List<DBMedia> = DBMediaList.jsonAdapter.fromJson(this.lastListJson)!!.items
 
         companion object : IntEntityClass<MediaList>(MediaLists)

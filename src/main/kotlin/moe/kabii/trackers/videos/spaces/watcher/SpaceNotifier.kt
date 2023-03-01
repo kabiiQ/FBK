@@ -3,14 +3,20 @@ package moe.kabii.discord.trackers.videos.spaces.watcher
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.spaces.TwitterSpaces
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.trackers.twitter.json.TwitterSpace
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
@@ -20,11 +26,9 @@ import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.ExposedReferenceAccessor
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
+import org.jetbrains.exposed.dao.load
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
@@ -34,20 +38,24 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
     companion object {
         private val liveColor = TwitterParser.color
         private val inactiveColor = Color.of(812958)
+
+        private val updateScope = CoroutineScope(DiscordTaskPool.spaceNotifierThread + CoroutineName("TwitterSpace-Notifier") + SupervisorJob())
     }
 
-    @ExposedReferenceAccessor
+    @ExposedContextRequired
     suspend fun updateLiveSpace(dbChannel: TrackedStreams.StreamChannel, space: TwitterSpace, targets: List<TrackedStreams.Target>) {
 
         val dbSpace = TwitterSpaces.Space.getOrInsert(dbChannel, space.id)
-
         val notifs = TwitterSpaces.SpaceNotif.getForSpace(dbSpace)
 
         // check all targets have notification (handles new spaces and new tracks)
         targets.forEach { target ->
             if(notifs.find { notif -> notif.targetId == target } != null) return@forEach
             try {
-                createSpaceNotification(space, dbSpace, target)
+                // switch threads to free up this transaction
+                updateScope.launch {
+                    createSpaceNotification(space, dbSpace, target)
+                }
             } catch(e: Exception) {
                 LOG.warn("Error while sending space notification for channel $dbChannel :: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -120,7 +128,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
     }
 
 
-    @ExposedReferenceAccessor
+    @ExposedContextRequired
     suspend fun updateEndedSpace(dbChannel: TrackedStreams.StreamChannel, space: TwitterSpace) {
 
         // check if space in db (or ignore)
@@ -128,50 +136,60 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
             .find { TwitterSpaces.Spaces.spaceId eq space.id }
             .firstOrNull() ?: return
 
-        TwitterSpaces.SpaceNotif.getForSpace(dbSpace).forEach { notification ->
-            val fbk = instances[notification.targetId.discordClient]
-            val discord = fbk.client
-            try {
-                val dbMessage = notification.message
-                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
-                    .awaitSingle()
-                val features = getStreamConfig(notification.targetId)
+        TwitterSpaces.SpaceNotif.getForSpace(dbSpace)
+            .onEach { notification -> notification.load(TwitterSpaces.SpaceNotif::targetId, TrackedStreams.Target::discordChannel, DiscordObjects.Channel::guild, TwitterSpaces.SpaceNotif::message, MessageHistory.Message::channel) }
+            .forEach { notification ->
+                val fbk = instances[notification.targetId.discordClient]
+                val discord = fbk.client
+                updateScope.launch {
+                    try {
+                        val dbMessage = notification.message
+                        val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
+                            .awaitSingle()
+                        val features = getStreamConfig(notification.targetId)
 
-                val action = if(features.summaries) {
-                    val duration = java.time.Duration
-                        .between(space.startedAt, space.endedAt)
-                        .run(::DurationFormatter)
-                        .colonTime
-                    val description = "@${space.creator?.username} was live for [$duration]"
+                        val action = if(features.summaries) {
+                            val duration = java.time.Duration
+                                .between(space.startedAt, space.endedAt)
+                                .run(::DurationFormatter)
+                                .colonTime
+                            val description = "@${space.creator?.username} was live for [$duration]"
 
-                    existingNotif.edit()
-                        .withEmbeds(
-                            Embeds.other(description, inactiveColor)
-                                .withAuthor(EmbedCreateFields.Author.of("@${space.creator?.username} was live.", space.url, space.creator?.profileImage))
-                                .withFields(EmbedCreateFields.Field.of("Participants ", space.participants.toString(), true))
-                                .withUrl(space.url)
-                                .withFooter(EmbedCreateFields.Footer.of("Space ended", NettyFileServer.twitterLogo))
-                                .withTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
-                                .run { if(space.endedAt != null) withTimestamp(space.endedAt) else this }
-                        ).then(mono {
-                            TrackerUtil.checkUnpin(existingNotif)
-                        })
-                } else {
-                    existingNotif.delete()
+                            existingNotif.edit()
+                                .withEmbeds(
+                                    Embeds.other(description, inactiveColor)
+                                        .withAuthor(EmbedCreateFields.Author.of("@${space.creator?.username} was live.", space.url, space.creator?.profileImage))
+                                        .withFields(EmbedCreateFields.Field.of("Participants ", space.participants.toString(), true))
+                                        .withUrl(space.url)
+                                        .withFooter(EmbedCreateFields.Footer.of("Space ended", NettyFileServer.twitterLogo))
+                                        .withTitle(StringUtils.abbreviate(space.title, MagicNumbers.Embed.TITLE))
+                                        .run { if(space.endedAt != null) withTimestamp(space.endedAt) else this }
+                                ).then(mono {
+                                    TrackerUtil.checkUnpin(existingNotif)
+                                })
+                        } else {
+                            propagateTransaction {
+                                existingNotif.delete()
+                            }
+                        }
+
+                        action.thenReturn(Unit).tryAwait()
+                        checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = dbChannel)
+                    } catch(ce: ClientException) {
+                        LOG.info("Unable to get Space notification $notification :: ${ce.status.code()}")
+                    } catch(e: Exception) {
+                        LOG.info("Error in Space #streamEnd for space $dbSpace :: ${e.message}")
+                        LOG.debug(e.stackTraceString)
+                    } finally {
+                        propagateTransaction {
+                            notification.delete()
+                        }
+                    }
                 }
-
-                action.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = dbChannel)
-            } catch(ce: ClientException) {
-                LOG.info("Unable to get Space notification $notification :: ${ce.status.code()}")
-            } catch(e: Exception) {
-                LOG.info("Error in Space #streamEnd for space $dbSpace :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            } finally {
-                notification.delete()
-            }
         }
 
-        dbSpace.delete()
+        propagateTransaction {
+            dbSpace.delete()
+        }
     }
 }

@@ -17,6 +17,7 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
@@ -44,6 +45,7 @@ import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toMono
@@ -60,98 +62,105 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
             val start = Instant.now()
 
             LOG.debug("TwitterChecker :: start: $start")
-            newSuspendedTransaction {
-                try {
-                    // get all tracked twitter feeds
-                    val feeds = TwitterFeed.all()
-                    LOG.debug("2")
 
-                        // feeds who are completely inactive and since_id has fallen out of the valid range
-                    val requireUpdate = mutableListOf<TwitterFeed>()
-                    var maxId = 0L
+            try {
 
-                    var first = true
-                    feeds.forEach { feed ->
-                        if(!first) {
-                            delay(Duration.ofMillis(cooldowns.callDelay))
-                        } else first = false
+                // get all tracked Twitter feeds
+                val feeds = propagateTransaction {
+                    TwitterFeed.all()
+                }
+                LOG.debug("Feeds pulled")
 
-                        if(feed.userId == 1072404907230060544L) return@forEach // TODO temporary disable
+                // feeds who are completely inactive and since_id has fallen out of the valid range
+                val requireUpdate = mutableListOf<TwitterFeed>()
+                var maxId = 0L
+                var first = true
 
-                        val targets = getActiveTargets(feed)?.ifEmpty { null }
-                            ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+                feeds.forEach { feed ->
+                    if(!first) {
+                        delay(Duration.ofMillis(cooldowns.callDelay))
+                    } else first = false
 
-                        val cache = TwitterFeedCache.getOrPut(feed)
+                    val targets = getActiveTargets(feed)?.ifEmpty { null }
+                        ?: return@forEach // feed untracked or no targets currently enabled, skip
 
-                        // determine if any targets want RT or quote tweets
-                        var pullRetweets = false
-                        var pullQuotes = false
+                    val cache = TwitterFeedCache.getOrPut(feed)
 
-                        targets.forEach { target ->
-                            val features = GuildConfigurations.findFeatures(target)
-                            val twitter = features?.twitterSettings ?: TwitterSettings()
+                    // determine if any targets want RT or quote tweets
+                    var pullRetweets = false
+                    var pullQuotes = false
 
-                            if(twitter.displayRetweet) pullRetweets = true
-                            if(twitter.displayQuote) pullQuotes = true
-                        }
+                    targets.forEach { target ->
+                        val features = GuildConfigurations.findFeatures(target)
+                        val twitter = features?.twitterSettings ?: TwitterSettings()
 
-                        val limits = TwitterParser.TwitterQueryLimits(
-                            sinceId = feed.lastPulledTweet,
-                            includeRT = pullRetweets,
-                            includeQuote = pullQuotes
-                        )
-                        val recent = try {
-                            TwitterParser.getRecentTweets(feed.userId, limits)
-                        } catch(sinceId: TwitterDateTimeUpdateException) {
-                            LOG.info("Twitter feed '${feed.userId}' is far out of date and the Tweets since_id query was rejected")
-                            requireUpdate.add(feed)
-                            null
-                        } catch(rate: TwitterRateLimitReachedException) {
-                            val reset = rate.reset
-                            LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
-                            delay(reset)
-                            null
-                        } catch(e: Exception) {
-                            LOG.warn("TwitterChecker: Error in Twitter call: ${e.message}")
-                            LOG.debug(e.stackTraceString)
-                            delay(Duration.ofMillis(100L))
-                            null
-                        }
-                        recent ?: return@forEach
-                        val (user, tweets) = recent
-                        feed.lastKnownUsername = user.username
-
-                        val latest = tweets.maxOf { tweet ->
-                            // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                            val age = Duration.between(tweet.createdAt, Instant.now())
-
-                            // if already handled or too old, skip, but do not pull tweet ID again
-                            if((feed.lastPulledTweet ?: 0) >= tweet.id
-                                || age > Duration.ofHours(2)
-                                || cache.seenTweets.contains(tweet.id)
-                            ) return@maxOf tweet.id
-
-                            notifyTweet(user, tweet, targets)
-                        }
-                        if(latest > (feed.lastPulledTweet ?: 0L)) {
-                            transaction {
-                                feed.lastPulledTweet = latest
-                            }
-                        }
-                        if(latest > maxId) maxId = latest
+                        if(twitter.displayRetweet) pullRetweets = true
+                        if(twitter.displayQuote) pullQuotes = true
                     }
 
-                    requireUpdate.forEach { feed ->
-                        transaction {
+                    val limits = TwitterParser.TwitterQueryLimits(
+                        sinceId = feed.lastPulledTweet,
+                        includeRT = pullRetweets,
+                        includeQuote = pullQuotes
+                    )
+                    val recent = try {
+                        TwitterParser.getRecentTweets(feed.userId, limits)
+                    } catch(sinceId: TwitterDateTimeUpdateException) {
+                        LOG.info("Twitter feed '${feed.userId}' is far out of date and the Tweets since_id query was rejected")
+                        requireUpdate.add(feed)
+                        null
+                    } catch(rate: TwitterRateLimitReachedException) {
+                        val reset = rate.reset
+                        LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
+                        delay(reset)
+                        null
+                    } catch(e: Exception) {
+                        LOG.warn("TwitterChecker: Error in Twitter call: ${e.message}")
+                        LOG.debug(e.stackTraceString)
+                        delay(Duration.ofMillis(100L))
+                        null
+                    }
+                    recent ?: return@forEach // no new tweets
+                    val (user, tweets) = recent
+
+                    val latest = tweets.maxOf { tweet ->
+                        // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                        val age = Duration.between(tweet.createdAt, Instant.now())
+
+                        // if already handled or too old, skip, but do not pull tweet ID again
+                        if((feed.lastPulledTweet ?: 0) >= tweet.id
+                            || age > Duration.ofHours(2)
+                            || cache.seenTweets.contains(tweet.id)
+                        ) return@maxOf tweet.id
+
+                        notifyTweet(user, tweet, targets)
+                    }
+
+                    propagateTransaction {
+                        // update feed in db with state from this 'pull'
+                        if(latest > (feed.lastPulledTweet ?: 0L)) {
+                            feed.lastPulledTweet = latest
+                        }
+                        feed.lastKnownUsername = user.username
+                    }
+
+                    if(latest > maxId) maxId = latest
+                }
+
+                if(requireUpdate.isNotEmpty()) {
+                    propagateTransaction {
+                        requireUpdate.forEach { feed ->
                             feed.lastPulledTweet = maxId
                         }
                     }
-                    LOG.debug("twitter exit")
-                } catch(e: Exception) {
-                    LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
                 }
+
+                LOG.debug("TwitterChecker :: exit")
+            } catch(e: Exception) {
+                LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
+
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             LOG.debug("delay: $delay")
@@ -211,7 +220,6 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     }
                 }
 
-                // LOG.debug("translation stage")
                 val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                     try {
                         val lang = GuildConfigurations
@@ -357,7 +365,11 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
     @ExposedReferenceAccessor
     suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
-        val existingTargets = feed.targets.toList()
+        val allTargets = propagateTransaction {
+            feed.targets
+                .onEach { t -> t.load(TwitterTarget::twitterFeed, TwitterTarget::discordChannel, DiscordObjects.Channel::guild, TwitterTarget::tracker) }
+        }.toList()
+        val existingTargets = allTargets
             .filter { target ->
                 val discord = instances[target.discordClient].client
                 // untrack target if discord channel is deleted
@@ -369,7 +381,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
                                 LOG.info("Untracking Twitter feed '${feed.userId}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                                target.delete()
+                                propagateTransaction {
+                                    target.delete()
+                                }
                             }
                         }
                         return@filter false
@@ -383,7 +397,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 GuildConfigurations.findFeatures(target)?.twitterTargetChannel != false // enabled or DM
             }
         } else {
-            feed.delete()
+            propagateTransaction {
+                feed.delete()
+            }
             LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
             null
         }
@@ -401,7 +417,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
             else -> if(!twitterCfg.mentionTweets) return null
         }
 
-        val dbMentionRole = dbTarget.mention() ?: return null
+        val dbMentionRole = propagateTransaction {
+            dbTarget.mention()
+        } ?: return null
         val dRole = if(dbMentionRole.mentionRole != null) {
             targetChannel.toMono()
                 .ofType(GuildChannel::class.java)
@@ -415,11 +433,13 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                 val err = dRole.value
                 if(err is ClientException && err.status.code() == 404) {
                     // role has been deleted, remove configuration
-                    if(dbMentionRole.mentionText != null) {
-                        // don't delete if mentionrole still has text component
-                        dbMentionRole.mentionRole = null
-                    } else {
-                        dbMentionRole.delete()
+                    propagateTransaction {
+                        if(dbMentionRole.mentionText != null || dbMentionRole.embedColor != null) {
+                            // don't delete if mentionrole still has text component
+                            dbMentionRole.mentionRole = null
+                        } else {
+                            dbMentionRole.delete()
+                        }
                     }
                 }
                 null
