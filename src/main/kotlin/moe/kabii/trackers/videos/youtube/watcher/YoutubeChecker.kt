@@ -22,7 +22,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -126,42 +125,40 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             if(first) first = false
                             else Thread.sleep(500L)
                             YoutubeParser.getVideos(chunk).entries
-                        }.map { (videoId, ytVideo) ->
-                            propagateTransaction inner@{
-                                try {
-                                    val callReason = targetLookup.getValue(videoId)
+                        }.forEach { (videoId, ytVideo) ->
+                            try {
+                                val callReason = targetLookup.getValue(videoId)
 
-                                    val ytVideoInfo = when(ytVideo) {
-                                        is Ok -> ytVideo.value
-                                        is Err -> {
-                                            when (ytVideo.value) {
-                                                // do not process video if this was an IO issue on our end
-                                                is StreamErr.IO -> return@inner
-                                                is StreamErr.NotFound -> null
-                                            }
+                                val ytVideoInfo = when(ytVideo) {
+                                    is Ok -> ytVideo.value
+                                    is Err -> {
+                                        when (ytVideo.value) {
+                                            // do not process video if this was an IO issue on our end
+                                            is StreamErr.IO -> return@forEach
+                                            is StreamErr.NotFound -> null
                                         }
                                     }
-
-                                    if(ytVideoInfo != null) {
-                                        with(callReason.video) {
-                                            transaction {
-                                                lastAPICall = DateTime.now()
-                                                lastTitle = ytVideoInfo.title
-                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
-                                            }
-                                        }
-                                    }
-
-                                    // call specific handlers for each type of content
-                                    when (callReason) {
-                                        is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                        is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                        is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                    }
-                                } catch (e: Exception) {
-                                    LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
-                                    LOG.debug(e.stackTraceString)
                                 }
+
+                                if(ytVideoInfo != null) {
+                                    propagateTransaction {
+                                        with(callReason.video) {
+                                            lastAPICall = DateTime.now()
+                                            lastTitle = ytVideoInfo.title
+                                            ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                        }
+                                    }
+                                }
+
+                                // call specific handlers for each type of content
+                                when (callReason) {
+                                    is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                    is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                }
+                            } catch (e: Exception) {
+                                LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
                             }
                             // TODO if live/scheduled&feature enabled, check if discord event should be created/updated
                         }
@@ -204,7 +201,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         }
     }
 
-    @ExposedReferenceAccessor
+    @ExposedContextRequired
     private suspend fun currentLiveCheck(call: YoutubeCall.Live, ytVideo: YoutubeVideoInfo?) {
         val dbLive = call.live
 
@@ -213,13 +210,18 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             // stream is still live, update information
             val viewers = ytVideo.liveInfo?.concurrent
             if(viewers != null) {
-                dbLive.updateViewers(viewers)
-            } // else case seems to happen with membership streams that weren't initially private ? or similar cases
+                propagateTransaction {
+                    dbLive.updateViewers(viewers)
+                }
+            } // viewers null case seems to happen with membership streams that weren't initially private ? or similar edge cases
 
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
             filteredTargets(call.video.ytChannel, dbLive::shouldPostLiveNotice).forEach { target ->
                 // verify target already has a notification
-                if(YoutubeNotification.getExisting(target, call.video).empty()) {
+                val existing = propagateTransaction {
+                    YoutubeNotification.getExisting(target, call.video)
+                }
+                if(existing.empty()) {
                     try {
                         createLiveNotification(call.video, ytVideo, target, new = false)
                     } catch(e: Exception) {
@@ -241,11 +243,15 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         when {
             // scheduled video is not accessible for us
             // leave 'video' in db in case it is re-published, we don't need to notify again
-            ytVideo == null -> dbEvent.delete()
+            ytVideo == null -> propagateTransaction {
+                dbEvent.delete()
+            }
             ytVideo.live -> {
                 // scheduled stream has started
                 streamStart(ytVideo, call.video)
-                dbEvent.delete()
+                propagateTransaction {
+                    dbEvent.delete()
+                }
             }
             ytVideo.upcoming -> {
                 // event still exists and is not live yet
@@ -263,17 +269,18 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val nextUpdate = DateTime.now().plus(updateInterval)
                         dbEvent.dataExpiration = nextUpdate
                         dbEvent.apiCalls += 1
-
-                        // send out 'upcoming' notifications
-                        streamUpcoming(dbEvent, ytVideo, scheduled)
                     }
+                    // send out 'upcoming' notifications
+                    streamUpcoming(dbEvent, ytVideo, scheduled)
                 } else {
                     LOG.warn("YouTube returned SCHEDULED stream with no start time: ${ytVideo.id}")
                 }
             }
             else -> {
                 // video exists, never went live ?
-                dbEvent.delete()
+                propagateTransaction {
+                    dbEvent.delete()
+                }
             }
         }
     }
@@ -281,7 +288,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     private suspend fun newVideoCheck(call: YoutubeCall.New, ytVideo: YoutubeVideoInfo?) {
         if(ytVideo == null) {
             // if we don't have information on this video, and youtube provides no information, remove it.
-            call.new.delete()
+            propagateTransaction {
+                call.new.delete()
+            }
             return
         }
         val dbVideo = call.video
@@ -289,7 +298,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             ytVideo.upcoming -> {
                 val scheduled = ytVideo.liveInfo?.scheduledStart
                 if(scheduled == null) {
-                    dbVideo.apiAttempts += 1
+                    propagateTransaction {
+                        dbVideo.apiAttempts += 1
+                    }
                     LOG.debug("YouTube provided UPCOMING video with no start time")
                     return
                 }

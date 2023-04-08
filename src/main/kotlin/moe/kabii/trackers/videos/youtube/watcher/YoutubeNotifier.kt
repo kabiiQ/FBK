@@ -7,15 +7,20 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TrackerUtil
@@ -28,7 +33,7 @@ import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.dao.load
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -41,6 +46,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         private val scheduledColor = Color.of(4270381)
         private val uploadColor = Color.of(16748800)
         private val creationColor = Color.of(16749824)
+
+        val updateScope = CoroutineScope(DiscordTaskPool.ytNotifierThread + CoroutineName("Youtube-Notifier") + SupervisorJob())
     }
 
     @ExposedReferenceAccessor
@@ -51,9 +58,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // create live stats object for video
         // should not already exist
-        if(transaction { YoutubeLiveEvent.liveEventFor(dbVideo) != null }) return
         val liveEvent = propagateTransaction {
-            YoutubeLiveEvent.new {
+            if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) null // live event already exists, do not create
+            else YoutubeLiveEvent.new {
                 this.ytVideo = dbVideo
                 this.lastThumbnail = video.thumbnail
                 this.lastChannelName = video.channel.name
@@ -63,6 +70,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 this.premiere = video.premiere
             }
         }
+        liveEvent ?: return // if live event not created, we don't need to do anything more
         dbVideo.liveEvent = liveEvent
 
         // post notifications to all enabled targets
@@ -77,14 +85,21 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         }
 
         //  targets that specifically asked for this video and may not have the channel tracked at all are a little different
-        YoutubeVideoTrack.getForVideo(dbVideo).forEach { track ->
+        val videoTracks = propagateTransaction {
+            YoutubeVideoTrack
+                .getForVideo(dbVideo)
+                .onEach { v -> v.load(YoutubeVideo::ytChannel, YoutubeVideoTrack::discordChannel, DiscordObjects.Channel::guild, YoutubeVideoTrack::tracker) }
+        }
+        videoTracks.forEach { track ->
             try {
                 sendLiveReminder(video, track)
             } catch(e: Exception) {
                 LOG.warn("Error while sending live reminder for channel, dropping notification without sending: ${dbVideo.ytChannel} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             }
-            track.delete()
+            propagateTransaction {
+                track.delete()
+            }
         }
     }
 
@@ -92,6 +107,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     suspend fun streamEnd(video: YoutubeVideoInfo?, dbStream: YoutubeLiveEvent) {
         // edit/delete all notifications and remove stream from db when stream ends
 
+        val delete = mutableListOf<YoutubeNotification>()
         dbStream.ytVideo.notifications.forEach { notification ->
             val fbk = instances[notification.targetID.discordClient]
             val discord = fbk.client
@@ -169,12 +185,15 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 LOG.debug(e.stackTraceString)
             } finally {
                 // delete the notification from db either way, we are done with it
-                notification.delete()
+                delete.add(notification)
             }
         }
 
         // delete live stream event for this channel
-        dbStream.delete()
+        propagateTransaction {
+            delete.forEach(YoutubeNotification::delete)
+            dbStream.delete()
+        }
     }
 
     @ExposedReferenceAccessor
@@ -189,8 +208,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 range >= untilStart
 
             } else false
-        }.filter { target ->
-            !YoutubeScheduledNotification[dbEvent, target].empty().not()
+        }.run {
+            propagateTransaction {
+                filter { target ->
+                    !YoutubeScheduledNotification[dbEvent, target].empty().not()
+                }
+            }
         }.forEach { target ->
             try {
                 createUpcomingNotification(dbEvent, ytVideo, target, scheduled)
@@ -223,13 +246,18 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // check if any targets would like notification for this video upload
         filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
             .forEach { target ->
-                if(!YoutubeNotification.getExisting(target, dbVideo).empty()) return@forEach
+                val existing = propagateTransaction {
+                    YoutubeNotification.getExisting(target, dbVideo)
+                }
+                if(!existing.empty()) return@forEach
                 try {
                     val new = createVideoNotification(ytVideo, target) ?: return@forEach
-                    YoutubeNotification.new {
-                        this.messageID = MessageHistory.Message.getOrInsert(new)
-                        this.targetID = target
-                        this.videoID = dbVideo
+                    propagateTransaction {
+                        YoutubeNotification.new {
+                            this.messageID = MessageHistory.Message.getOrInsert(new)
+                            this.targetID = target
+                            this.videoID = dbVideo
+                        }
                     }
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
@@ -291,7 +319,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 return null
             } else throw ce
         }
-        YoutubeScheduledNotification.create(event, target)
+        propagateTransaction {
+            YoutubeScheduledNotification.create(event, target)
+        }
         TrackerUtil.checkAndPublish(fbk, message)
         return message
     }

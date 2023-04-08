@@ -77,6 +77,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
         try {
             val hosts = space.hosts - space.creator
 
+            var updateMentionTime = false
             val newNotification = chan.createMessage()
                 .run {
                     if(mention != null) {
@@ -85,7 +86,7 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
                             && (mention.db.lastMention == null
                                     || Duration(mention.db.lastMention, Instant.now()) > Duration.standardHours(6))) {
 
-                            mention.db.lastMention = DateTime.now()
+                            updateMentionTime = true
                             mention.discord.mention.plus(" ")
                         } else ""
                         val textPart = mention.textPart
@@ -112,10 +113,15 @@ abstract class SpaceNotifier(instances: DiscordInstances) : StreamWatcher(instan
             TrackerUtil.pinActive(fbk, features, newNotification)
             TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
-            TwitterSpaces.SpaceNotif.new {
-                this.targetId = target
-                this.spaceId = dbSpace
-                this.message = MessageHistory.Message.getOrInsert(newNotification)
+            propagateTransaction {
+                TwitterSpaces.SpaceNotif.new {
+                    this.targetId = target
+                    this.spaceId = dbSpace
+                    this.message = MessageHistory.Message.getOrInsert(newNotification)
+                }
+                if(updateMentionTime) {
+                    mention!!.db.lastMention = DateTime.now()
+                }
             }
 
             checkAndRenameChannel(fbk.clientId, chan)

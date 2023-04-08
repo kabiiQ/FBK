@@ -3,7 +3,6 @@ package moe.kabii.data.relational.streams.spaces
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.util.extensions.ExposedContextRequired
-import moe.kabii.util.extensions.ExposedReferenceAccessor
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

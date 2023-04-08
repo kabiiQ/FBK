@@ -120,7 +120,9 @@ class SpaceChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCoo
                     updateLiveSpace(dbChannel, space, targets)
                 }
             }
-            TwitterSpaceState.ENDED -> updateEndedSpace(dbChannel, space)
+            TwitterSpaceState.ENDED -> propagateTransaction {
+                updateEndedSpace(dbChannel, space)
+            }
             TwitterSpaceState.SCHEDULED -> return // scheduled spaces not supported for now, just keep checking until live or cancelled
         }
     }

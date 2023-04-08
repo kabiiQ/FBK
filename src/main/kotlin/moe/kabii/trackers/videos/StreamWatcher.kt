@@ -44,6 +44,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
 
     @ExposedReferenceAccessor
+    @CreatesExposedContext
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
         val allTargets = propagateTransaction {
             channel.targets
@@ -111,6 +112,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
     @CreatesExposedContext
     suspend fun getMentionRoleFor(dbTarget: TrackedStreams.Target, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
+
         val dbMention = propagateTransaction {
             dbTarget.mention()
         } ?: return null
@@ -184,7 +186,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
         private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
 
-        @ExposedReferenceAccessor
+        @CreatesExposedContext
         suspend fun checkAndRenameChannel(clientId: Int, channel: MessageChannel, endingStream: TrackedStreams.StreamChannel? = null) {
             // if this is a guild channel with the rename feature enabled, execute this functionality
             val guildChan = channel as? GuildMessageChannel ?: return // can not use feature for dms

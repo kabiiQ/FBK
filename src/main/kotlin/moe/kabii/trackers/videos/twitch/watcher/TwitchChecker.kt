@@ -11,6 +11,7 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -22,62 +23,70 @@ import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.dao.load
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
 class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
+
+    companion object {
+        private val updateScope = CoroutineScope(DiscordTaskPool.twitchNotifierThread + CoroutineName("Twitch-Notifier") + SupervisorJob())
+    }
     override fun run() {
         applicationLoop {
             val start = Instant.now()
             // get all tracked sites for this service
-            newSuspendedTransaction {
-                try {
-                    // get all tracked twitch streams
-                    val tracked = TrackedStreams.StreamChannel.find {
+
+            try {
+
+                val tracked = propagateTransaction {
+                    TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
                     }
-
-                    // get all the IDs to make bulk requests to the service.
-                    // no good way to do this besides temporarily dissociating ids from other data
-                    // very important to optimize requests to Twitch, etc
-                    // Twitch IDs are always type Long
-                    val ids = tracked
-                        .map(TrackedStreams.StreamChannel::siteChannelID)
-                        .map(String::toLong)
-                    // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
-                    val streamData = TwitchParser.getStreams(ids)
-
-                    // re-associate SQL data with stream API data
-                    streamData.mapNotNull { (id, data) ->
-                        val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
-                        if (data is Err && data.value is StreamErr.IO) {
-                            LOG.warn("Error contacting Twitch :: $trackedChannel")
-                            return@mapNotNull null
-                        }
-                        // now we can split into coroutines for processing & sending messages to Discord.
-                        taskScope.launch {
-                            newSuspendedTransaction {
-                                try {
-                                    val filteredTargets = getActiveTargets(trackedChannel)
-                                    if (filteredTargets != null) {
-                                        updateChannel(trackedChannel, data.orNull(), filteredTargets)
-                                    } // else channel has been untracked entirely
-                                } catch (e: Exception) {
-                                    LOG.warn("Error updating Twitch channel: $trackedChannel")
-                                    LOG.debug(e.stackTraceString)
-                                }
-                            }
-                            Unit
-                        }
-                    }.joinAll()
-                } catch(e: Exception) {
-                    LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
                 }
+
+                // get all the IDs to make bulk requests to the service.
+                // no good way to do this besides temporarily dissociating ids from other data: sending long ID, getting back channel object
+                // very important to optimize requests to Twitch
+                val ids = tracked
+                    .map(TrackedStreams.StreamChannel::siteChannelID)
+                    .map(String::toLong)
+
+                // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
+                val streamData = TwitchParser.getStreams(ids)
+
+                // re-associate SQL data with stream API data
+                val jobs = streamData.mapNotNull { (id, data) ->
+                    val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
+                    if (data is Err && data.value is StreamErr.IO) {
+                        LOG.warn("Error contacting Twitch :: $trackedChannel")
+                        return@mapNotNull null
+                    }
+                    // now we can launch coroutines for processing & updating information through Discord
+                    updateScope.launch {
+                        try {
+                            val filteredTargets = getActiveTargets(trackedChannel)
+                            if(filteredTargets != null) {
+                                updateChannel(trackedChannel, data.orNull(), filteredTargets)
+                            } // else: channel has been untracked entirely
+                        } catch (e: Exception) {
+                            LOG.warn("Error updating Twitch channel: $trackedChannel")
+                            LOG.debug(e.stackTraceString)
+                        }
+                    }
+                }
+
+                // block this twitch checker until current updates are finished
+                jobs.joinAll()
+
+
+            } catch(e: Exception) {
+                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
+
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
@@ -100,7 +109,9 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         if (err is StreamErr.NotFound) {
                             // call succeeded and the user ID does not exist.
                             LOG.info("Invalid Twitch user: $twitchId. Untracking user...")
-                            channel.delete()
+                            propagateTransaction {
+                                channel.delete()
+                            }
                         } else LOG.error("Error getting Twitch user: $twitchId: $err")
                         null
                     }
@@ -108,17 +119,28 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             }
         }
 
-        // existing stream info in db
-        val streams by lazy {
-            DBTwitchStreams.TwitchStream.getStreamDataFor(twitchId)
+        lateinit var streams: List<DBTwitchStreams.TwitchStream>
+        lateinit var notifications: List<DBTwitchStreams.Notification>
+
+        // doing single transaction before conditionals - data might not be used. should weigh transaction overhead
+        propagateTransaction {
+
+            // existing stream info in db
+            streams = DBTwitchStreams.TwitchStream
+                .getStreamDataFor(twitchId)
+                .toList()
+            notifications = DBTwitchStreams.Notification
+                .getForChannel(channel)
+                .onEach { n -> n.load(DBTwitchStreams.Notification::targetID, DBTwitchStreams.Notification::messageID, MessageHistory.Message::channel) }
+                .toList()
         }
+
 
         if(stream == null) {
             // stream is not live, check if there are any existing notifications to remove
-            val notifications = DBTwitchStreams.Notification.getForChannel(channel)
-            if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
+            if(!notifications.isEmpty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
-                if(streams.empty()) { // abandon notification if downtime causes missing information
+                if(streams.isEmpty()) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val fbk = instances[notif.targetID.discordClient]
                         try {
@@ -134,7 +156,9 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                             LOG.info("Error abandoning notification: $notif :: ${e.message}")
                             LOG.trace(e.stackTraceString)
                         } finally {
-                            notif.delete()
+                            propagateTransaction {
+                                notif.delete()
+                            }
                         }
                     }
                     return
@@ -178,8 +202,10 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
                         LOG.trace(e.stackTraceString)
                     } finally {
-                        notif.delete()
-                        dbStream.delete()
+                        propagateTransaction {
+                            notif.delete()
+                            dbStream.delete()
+                        }
                     }
                 }
             }
@@ -216,14 +242,21 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
 
         if(user == null) return
-        if(user!!.username != channel.lastKnownUsername) channel.lastKnownUsername = user!!.username
+        if(user!!.username != channel.lastKnownUsername) {
+            propagateTransaction { // rare case for username change
+                channel.lastKnownUsername = user!!.username
+            }
+        }
         filteredTargets.forEach { target ->
             val fbk = instances[target.discordClient]
             val discord = fbk.client
             try {
-                val existing = DBTwitchStreams.Notification
-                    .getForTarget(target)
-                    .firstOrNull()
+                val existing = propagateTransaction {
+                    DBTwitchStreams.Notification
+                        .getForTarget(target)
+                        .firstOrNull()
+                        ?.load(DBTwitchStreams.Notification::targetID, DBTwitchStreams.Notification::messageID, MessageHistory.Message::channel)
+                }
 
                 // get channel twitch settings
                 val guildId = target.discordChannel.guild?.guildID
@@ -242,13 +275,14 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         getMentionRoleFor(target, chan, settings)
                     } else null
 
+                    var updateMentionTime = false
                     val newNotification = try {
                         val mentionMessage = if(mention != null) {
 
                             val rolePart = if(mention.discord != null
                                 && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
-                                mention.db.lastMention = DateTime.now()
+                                updateMentionTime = true
                                 mention.discord.mention.plus(" ")
                             } else ""
                             val textPart = mention.textPart
@@ -271,11 +305,17 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     TrackerUtil.pinActive(fbk, settings, newNotification)
                     TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
-                    DBTwitchStreams.Notification.new {
-                        this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                        this.targetID = target
-                        this.channelID = channel
-                        this.deleted = false
+                    propagateTransaction {
+                        DBTwitchStreams.Notification.new {
+                            this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                            this.targetID = target
+                            this.channelID = channel
+                            this.deleted = false
+                        }
+
+                        if(updateMentionTime) {
+                            mention!!.db.lastMention = DateTime.now()
+                        }
                     }
 
                     // edit channel name if feature is enabled and stream goes live
@@ -305,7 +345,9 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
     } catch(e: Exception) {
         if(e is ClientException && e.status.code() == 404) {
-            dbNotif.deleted = true
+            propagateTransaction {
+                dbNotif.deleted = true
+            }
         }
         LOG.trace("Stream notification for Twitch/${channel.siteChannelID} not found :: ${e.message}")
         null

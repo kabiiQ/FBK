@@ -2,14 +2,12 @@ package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.util.extensions.ExposedContextRequired
-import moe.kabii.util.extensions.ExposedReferenceAccessor
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.jodatime.datetime
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object YoutubeVideos : LongIdTable() {
     val videoId = char("video_id", 11).uniqueIndex()

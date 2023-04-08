@@ -6,15 +6,12 @@ import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
-import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
 

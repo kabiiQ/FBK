@@ -1,10 +1,11 @@
 package moe.kabii.trackers.videos.twitch.webhook
 
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
@@ -17,10 +18,13 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChecker, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
-
     private val listener = TwitchWebhookListener(this, checker)
 
     var currentSubscriptions = setOf<Int>()
+
+    companion object {
+        private val updateScope = CoroutineScope(DiscordTaskPool.twitchSubscriptionThread + CoroutineName("Twitch-Subscriptions") + SupervisorJob())
+    }
 
     internal fun subscriptionComplete(sub: TwitchEventSubscription) {
         currentSubscriptions = currentSubscriptions + sub.id.value
@@ -47,9 +51,11 @@ class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChec
                         // find subscriptions that no longer have an active streamchannel
                         val dbSub = TwitchEventSubscription[subscription]
                         if(dbSub.twitchChannel == null) {
-                            LOG.info("Unsubscribing from Twitch webhook: ${dbSub.subscriptionId}")
-                            TwitchParser.EventSub.deleteSubscription(dbSub.subscriptionId)
-                            subscriptionRevoked(dbSub.id.value)
+                            updateScope.launch {
+                                LOG.info("Unsubscribing from Twitch webhook: ${dbSub.subscriptionId}")
+                                TwitchParser.EventSub.deleteSubscription(dbSub.subscriptionId)
+                                subscriptionRevoked(dbSub.id.value)
+                            }
                             dbSub.delete()
                         }
                     }
@@ -63,8 +69,10 @@ class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChec
                         val subscription = TwitchEventSubscription.getExisting(channel, TwitchEventSubscriptions.Type.START_STREAM).firstOrNull()
 
                         if(subscription == null) {
-                            LOG.info("New Twitch webhook: ${channel.siteChannelID}")
-                            TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
+                            updateScope.launch {
+                                LOG.info("New Twitch webhook: ${channel.siteChannelID}")
+                                TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
+                            }
                         }
                     }
                 } catch(e: Exception) {

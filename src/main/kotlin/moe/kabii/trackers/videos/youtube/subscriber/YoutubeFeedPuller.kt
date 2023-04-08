@@ -14,15 +14,16 @@ class YoutubeFeedPuller(val cooldown: ServiceRequestCooldownSpec) : Runnable {
     override fun run() {
         applicationLoop {
             val start = Instant.now()
-            propagateTransaction {
+            val channels = propagateTransaction {
                 TrackedStreams.StreamChannel.getActive {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
-                }.forEach { feed ->
-                    val channel = feed.siteChannelID
-                    LOG.debug("Manually pulling feed updates for $channel")
-                    YoutubeVideoIntake.intakeExisting(channel)
-                    delay(cooldown.callDelay)
                 }
+            }
+            channels.forEach { feed ->
+                val channel = feed.siteChannelID
+                LOG.debug("Manually pulling feed updates for $channel")
+                YoutubeVideoIntake.intakeExisting(channel).join() // wait for call finish, no need to race here
+                delay(cooldown.callDelay)
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldown.minimumRepeatTime - runDuration.toMillis()

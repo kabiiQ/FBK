@@ -70,14 +70,14 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
                         "webhook_callback_verification" -> {
 
                             val challenge = checkNotNull(event.challenge) { "verification requires challenge" }
-                            propagateTransaction {
-                                val subscription = TwitchEventSubscription.new {
+                            val subscription = propagateTransaction {
+                                TwitchEventSubscription.new {
                                     this.twitchChannel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, event.subscription.condition.broadcasterUserId)
                                     this.eventType =  eventType
                                     this.subscriptionId = event.subscription.id
                                 }
-                                manager.subscriptionComplete(subscription)
                             }
+                            manager.subscriptionComplete(subscription)
                             call.respondText(challenge, status = HttpStatusCode.OK)
                             LOG.info("Twitch event verified: $body")
                         }
@@ -96,14 +96,17 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
                                             LOG.warn("Twitch stream started: ${notification.userLogin} but there was an error retrieving the live stream info!")
                                             return@launch
                                         }
+
+                                        var channel: TrackedStreams.StreamChannel? = null
+                                        var targets: List<TrackedStreams.Target>? = null
                                         propagateTransaction {
-                                            val channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, notification.userId)
-                                            val targets = channel?.run { checker.getActiveTargets(this) }
-                                            if(channel == null || targets == null) {
-                                                LOG.warn("Payload received for untracked channel: $channel + targets: $targets + payload: $body")
-                                                return@propagateTransaction
-                                            }
-                                            checker.updateChannel(channel, twitchStream, targets)
+                                            channel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.TWITCH, notification.userId)
+                                            targets = channel?.run { checker.getActiveTargets(this) }
+                                        }
+                                        if(channel == null || targets == null) {
+                                            LOG.warn("Payload received for untracked channel: $channel + targets: $targets + payload: $body")
+                                        } else {
+                                            checker.updateChannel(channel!!, twitchStream, targets!!)
                                         }
                                     }
                                 }
