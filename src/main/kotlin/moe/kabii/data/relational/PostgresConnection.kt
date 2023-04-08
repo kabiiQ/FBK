@@ -22,6 +22,7 @@ import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTargetMentions
 import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -38,7 +39,10 @@ internal object PostgresConnection {
         validate()
     }.run(::HikariDataSource)
 
-    val postgres = Database.connect(createConnectionPool())
+    private val config = DatabaseConfig {
+        useNestedTransactions = true
+    }
+    val postgres = Database.connect(createConnectionPool(), databaseConfig = config)
 
     init {
         transaction {
@@ -77,5 +81,6 @@ internal object PostgresConnection {
             )
         }
         postgres.transactionManager.defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+        postgres.useNestedTransactions = true
     }
 }

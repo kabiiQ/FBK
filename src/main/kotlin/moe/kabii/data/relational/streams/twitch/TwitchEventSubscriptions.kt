@@ -17,7 +17,7 @@ object TwitchEventSubscriptions : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
     val twitchChannel = reference("subscribed_twitch_channel", TrackedStreams.StreamChannels, ReferenceOption.SET_NULL).nullable()
     val eventType = enumeration("eventsub_type", Type::class)
-    val subscriptionId = text("eventsub_id")
+    val subscriptionId = text("eventsub_id", eagerLoading = true)
 
     override val primaryKey: PrimaryKey = PrimaryKey(subscriptionId)
 }

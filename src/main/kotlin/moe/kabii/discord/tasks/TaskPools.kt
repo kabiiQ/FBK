@@ -18,11 +18,15 @@ object DiscordTaskPool {
     val renameThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     val tweetIntakeThread = Executors.newCachedThreadPool().asCoroutineDispatcher() // TODO may be issue with this pool, cache for now and monitor
-    val twitchIntakeThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
     val spaceNotifierThread = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
     val twitcastNotifierThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+
+    val twitchIntakeThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+    val twitchNotifierThread = Executors.newFixedThreadPool(4).asCoroutineDispatcher()
+    val twitchSubscriptionThread = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
     val ytXMLIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ytSourceIntakeThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     val ytMembershipRoleThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    val ytNotifierThread = Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 }
