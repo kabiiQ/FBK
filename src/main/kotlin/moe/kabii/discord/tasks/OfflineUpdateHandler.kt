@@ -6,7 +6,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import moe.kabii.util.extensions.withEach
 
 // this is for checking after bot/api outages for any missed events
 object OfflineUpdateHandler {
@@ -28,7 +27,7 @@ object OfflineUpdateHandler {
                     } ?: true // remove from db if empty or already deleted
             }.also { oldChannels ->
                 if(oldChannels.isNotEmpty()) {
-                    oldChannels.withEach(tempChannels::remove)
+                    oldChannels.forEach(tempChannels::remove)
                     config.save()
                 }
             }

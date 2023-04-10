@@ -13,7 +13,6 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.extensions.withEach
 import moe.kabii.util.formatting.NumberUtil
 
 object QueueEdit : AudioCommandContainer {
@@ -77,7 +76,7 @@ object QueueEdit : AudioCommandContainer {
                     notRemoved.add(index)
                     null
                 }
-            }.withEach(::remove)
+            }.forEach(::remove)
 
             fun formatRanges(ranges: Collection<Int>) = NumberUtil.getRanges(ranges).joinToString { range ->
                 if (range.first != range.last) "#${range.first}-#${range.last}" else "#${range.first}"

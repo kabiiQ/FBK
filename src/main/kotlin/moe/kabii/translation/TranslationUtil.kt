@@ -2,7 +2,7 @@ package moe.kabii.translation
 
 import com.vdurmont.emoji.EmojiParser
 import moe.kabii.util.constants.URLUtil
-import moe.kabii.util.extensions.capitilized
+import moe.kabii.util.extensions.capitalized
 
 object TranslationUtil {
 
@@ -19,7 +19,7 @@ object TranslationUtil {
             text = EmojiParser.removeAllEmojis(text)
         }
         if(capitalize) {
-            text = text.capitilized()
+            text = text.capitalized()
         }
         return text
     }

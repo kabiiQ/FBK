@@ -5,7 +5,7 @@ import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
-import moe.kabii.util.extensions.capitilized
+import moe.kabii.util.extensions.capitalized
 import moe.kabii.util.extensions.orNull
 import java.io.File
 
@@ -95,7 +95,7 @@ object CommandDocumentor {
                     val typeName = when(option.type()) {
                         ApplicationCommandOption.Type.BOOLEAN.value -> "True/False"
                         ApplicationCommandOption.Type.NUMBER.value -> "Decimal"
-                        else -> ApplicationCommandOption.Type.values().first { type -> type.value == option.type() }.name.lowercase().capitilized()
+                        else -> ApplicationCommandOption.Type.values().first { type -> type.value == option.type() }.name.lowercase().capitalized()
                     }
                     out.append(typeName)
                         .append(" | ")

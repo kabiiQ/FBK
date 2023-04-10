@@ -11,15 +11,13 @@ import java.util.*
 
 // Java Optional -> toNull = Kotlin nullable
 fun <T> Optional<T>.orNull(): T? = orElse(null)
-fun <T> Possible<T>.orNull(): T? = toOptional().orNull()
+fun <T> Possible<T>.orNull(): T? = toOptional().orElse(null)
 
-// % does not do modulus on negative numbers like I wanted - I don't really know the math but this works
+// % does not do modulus on negative numbers like desired
 infix fun Int.mod(n: Int) = (this % n + n) % n
 fun String.plural(count: Int) = if(count != 1) "${this}s" else this
 fun Int.s() = if(this != 1) "s" else ""
 
-// purely for formatting improvements to allow ((T) -> !Unit)
-fun <T, R> Iterable<T>.withEach(action: (T) -> R): Unit = forEach { action(it) }
 val Instant.jodaDateTime: DateTime
 get() = DateTime(this.toEpochMilli())
 
@@ -46,4 +44,4 @@ fun applicationLoop(process: suspend () -> Unit) {
     }
 }
 
-fun String.capitilized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
