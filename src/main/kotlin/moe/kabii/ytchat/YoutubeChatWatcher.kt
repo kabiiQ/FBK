@@ -31,7 +31,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
     private val parser = YoutubeChatParser(instances, this)
     private val holochats = HoloChats(instances)
 
-    private val scriptDir = File("files/ytchat")
+    private val scriptDir = File("files/scripts")
     private val scriptName = "ytchat.py"
     init {
         scriptDir.mkdirs()

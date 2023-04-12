@@ -15,9 +15,7 @@ import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -32,6 +30,7 @@ sealed class YoutubeCall(val video: YoutubeVideo) {
 }
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions) {
+    private val idChunk = 20 // can include up to 20 video IDs in 1 request
     private val cleanInterval = 180 // only clean db approx every 1.5 hours
     private val repeatTimeMillis = cooldowns.minimumRepeatTime
     private val tickDelay = cooldowns.callDelay
@@ -107,12 +106,29 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val callReason = YoutubeCall.New(new)
                         targetLookup[callReason.video.videoId] = callReason
                     }
+
+                    // check if we have 'wasted space' - an API call that will be made with less than 20 videos
+                    // check on random scheduled videos using this otherwise wasted space
+                    val remainder = targetLookup.size % idChunk
+                    if(remainder != 0) {
+                        val backfill = YoutubeScheduledEvent.wrapRows(
+                            YoutubeScheduledEvents.selectAll()
+                                .orderBy(Random())
+                                .limit(idChunk - remainder)
+                        ).toList()
+                        // TODO remove log - temporary for sanity check on this
+                        LOG.info("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
+                        backfill.forEach { event ->
+                            val callReason = YoutubeCall.Scheduled(event)
+                            targetLookup[callReason.video.videoId] = callReason
+                        }
+                    }
                 }
 
                 // main IO call, process as we go
                 LOG.debug("yt expected calls: ${targetLookup.keys}")
                 withTimeout(Duration.ofSeconds(
-                    (((targetLookup.size / 20) + 1) * 20).toLong()
+                    (((targetLookup.size / idChunk) + 1) * 20).toLong()
                 )) {
                     var first = true
                     targetLookup.keys
