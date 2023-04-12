@@ -1,2 +1,3 @@
 Java.gitignore
 keys.toml
+src/main/kotlin/moe/kabii/command/commands/meta/MigrationCommand.kt
