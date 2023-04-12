@@ -13,7 +13,7 @@ object MALParser : MediaListParser(
         request.header("X-MAL-CLIENT-ID", Keys.config[Keys.MAL.malKey])
     }
 ) {
-    const val callCooldown = 500L
+    const val callCooldown = 1_000L
 
     override fun getListID(input: String): String = input // mal does not use an 'id' system for api - just use username
 
@@ -32,7 +32,7 @@ object MALParser : MediaListParser(
                 return@requestMediaList if (!response.isSuccessful) {
                     when (response.code) {
                         404 -> throw MediaListDeletedException("MAL: Response code 404 for list '$id'")
-                        else -> throw MediaListIOException(response.message)
+                        else -> throw MediaListIOException("${response.code}: ${response.body.string()}")
                     }
                 } else {
                     val body = response.body.string()
@@ -54,7 +54,7 @@ object MALParser : MediaListParser(
                 // should not return 404 - list already exists if anime stage did not 404
                 // if we already got the anime list, but manga can not be acquired, still return nothing
                 // we do not want the list watcher to recieve empty manga list - this would be perceived as an update
-                if(!response.isSuccessful) throw MediaListIOException(response.message)
+                if(!response.isSuccessful) throw MediaListIOException("${response.code}: ${response.body.string()}")
                 else Ok(response.body.string())
             }
 

@@ -9,9 +9,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.EmbedCreateFields
+import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.AudioCommandContainer
+import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.util.BotUtil
 import moe.kabii.discord.util.Embeds
@@ -57,7 +59,9 @@ object AudioEventHandler : AudioEventAdapter() {
                             chan.createMessage(
                                 Embeds.fbk("Skipping **$title** because **$author** left the channel.")
                             )
-                        }.subscribe()
+                        }
+                            .onErrorResume(ClientException::class.java) { _ -> Mono.empty() } // if perms are disabled we should deal with it in a "normal usage" case instead, can ignore here
+                            .subscribe()
                     }
                     track.stop()
                     return
@@ -78,7 +82,16 @@ object AudioEventHandler : AudioEventAdapter() {
                     )
                 }.doOnNext { msg ->
                     data.nowPlayingMessage = QueueData.BotMessage(msg.channelId, msg.id)
-                }.subscribe()
+                }
+                .onErrorResume(ClientException::class.java) { _ ->
+                    LOG.warn("Missing permission to send music bot message to ${data.originChannel}")
+                    if(!TempStates.musicPermissionWarnings.contains(data.originChannel)) {
+                        // set flag that this channel should have (and has not already had) a warning sent
+                        TempStates.musicPermissionWarnings[data.originChannel] = false
+                    }
+                    Mono.empty()
+                }
+                .subscribe()
         } else {
             data.apply = false
         }
@@ -178,7 +191,9 @@ object AudioEventHandler : AudioEventAdapter() {
                             EmbedCreateFields.Field.of("Error", exception.message ?: "broken", false)
                         ))
                 )
-            }.subscribe()
+            }
+            .onErrorResume(ClientException::class.java) { _ -> Mono.empty() } // unable to send fail message to user, ignore error same reasoning as skip message above
+            .subscribe()
     }
 
     // if a track emits no frames for 10 seconds we will skip it
