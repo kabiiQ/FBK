@@ -83,7 +83,7 @@ object AudioEventHandler : AudioEventAdapter() {
                 }.doOnNext { msg ->
                     data.nowPlayingMessage = QueueData.BotMessage(msg.channelId, msg.id)
                 }
-                .onErrorResume(ClientException::class.java) { e ->
+                .onErrorResume(ClientException::class.java) { _ ->
                     LOG.warn("Missing permission to send music bot message to ${data.originChannel}")
                     if(!TempStates.musicPermissionWarnings.contains(data.originChannel)) {
                         // set flag that this channel should have (and has not already had) a warning sent

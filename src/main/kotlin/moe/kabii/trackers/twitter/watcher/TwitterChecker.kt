@@ -66,7 +66,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                     val feeds = TwitterFeed.all()
                     LOG.debug("2")
 
-                        // feeds who are completely inactive and since_id has fallen out of the valid range
+                    // feeds who are completely inactive and since_id has fallen out of the valid range
                     val requireUpdate = mutableListOf<TwitterFeed>()
                     var maxId = 0L
 

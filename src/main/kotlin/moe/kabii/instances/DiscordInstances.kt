@@ -3,6 +3,7 @@ package moe.kabii.instances
 import discord4j.common.util.Snowflake
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.GatewayDiscordClient
+import discord4j.gateway.intent.Intent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
@@ -131,7 +132,12 @@ class DiscordInstances {
                 .create(instance.token)
                 .build()
                 .gateway()
-                .setEnabledIntents(IntentSet.all())
+                .run {
+                    if(instance.id == 1)
+                        setEnabledIntents(IntentSet.all().andNot(IntentSet.of(Intent.MESSAGE_CONTENT))) // fbk#1 forever in verification limbo - message content was not requested and is locked :sob:
+                    else
+                        setEnabledIntents(IntentSet.all())
+                }
             val gateway = checkNotNull(discord.login().awaitSingle())
 
             val self = gateway.self.awaitSingle()
