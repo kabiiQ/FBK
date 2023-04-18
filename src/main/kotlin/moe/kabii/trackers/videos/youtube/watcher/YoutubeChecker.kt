@@ -187,7 +187,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                          // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall lessEq old
+                            YoutubeVideos.lastAPICall lessEq old and
+                                    // don't delete 'long term' videos that may be used for ytchat
+                                    (YoutubeVideos.scheduledEvent eq null)
                         }
                         // streams which never went live (with 1 day of leniency)
                         val overdue = DateTime.now().minusDays(1)
