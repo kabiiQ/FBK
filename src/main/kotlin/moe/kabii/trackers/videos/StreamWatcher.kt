@@ -15,7 +15,6 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.spaces.TwitterSpaces
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
@@ -232,21 +231,6 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     } else true
                 }
                 .mapTo(liveChannels, Twitcasts.TwitNotif::channelId)
-
-            // twitter spaces
-            TwitterSpaces.SpaceNotif.wrapRows(
-                TwitterSpaces.SpaceNotifs
-                    .innerJoin(MessageHistory.Messages
-                        .innerJoin(DiscordObjects.Channels))
-                    .select {
-                        DiscordObjects.Channels.channelID eq guildChan.id.asLong()
-                    })
-                .filter { notif ->
-                    if(endingStream != null) {
-                        notif.spaceId.channel.id != endingStream.id
-                    } else true
-                }
-                .mapTo(liveChannels) { it.spaceId.channel }
 
             // copy marks for safety (this thread can run at any time)
             val marks = feature.marks.toList()
