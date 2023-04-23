@@ -11,7 +11,6 @@ import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
@@ -38,7 +37,7 @@ sealed class TrackerTarget(
             0L -> TwitterTarget
             100L -> YoutubeTarget
             101L -> TwitchTarget
-            102L -> TwitterSpaceTarget
+//            102L -> TwitterSpaceTarget
             103L -> TwitcastingTarget
             200L -> MALTarget
             201L -> KitsuTarget
@@ -185,41 +184,6 @@ object TwitcastingTarget : StreamingTarget(
     }
 }
 
-object TwitterSpaceTarget : StreamingTarget(
-    TwitterParser.color,
-    "Twitter Spaces",
-    FeatureChannel::streamTargetChannel,
-    listOf(),
-    "spaces", "twitterspace", "twitterspaces", "twitter_space", "twitter_spaces", "space"
-) {
-    override val dbSite: TrackedStreams.DBSite
-        get() = TrackedStreams.DBSite.SPACES
-
-    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
-        return try {
-            val twitterId = id.toLongOrNull()
-            val user = if(twitterId != null) TwitterParser.getUser(twitterId)
-            else TwitterParser.getUser(id)
-            if(user != null) Ok(BasicStreamChannel(TwitterSpaceTarget, user.id.toString(), user.username, user.url))
-            else Err(StreamErr.NotFound)
-        } catch(e: Exception) {
-            LOG.debug("Error getting Twitter user (Spaces): ${e.message}")
-            LOG.debug(e.stackTraceString)
-            Err(StreamErr.IO)
-        }
-    }
-
-    override val onTrack: TrackCallback = { origin, channel ->
-        val twitterId = listOf(channel.siteChannelID)
-        val space = TwitterParser.getSpacesByCreators(twitterId).firstOrNull()
-        if(space != null) {
-            origin.handler.instances.services.spaceChecker.updateSpace(channel, space)
-        }
-    }
-
-    override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
-}
-
 // anime targets
 sealed class AnimeTarget(
     full: String,
@@ -326,9 +290,9 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
             }
 
             var assistedInput = input
-            if(site is TwitterSpaceTarget) {
-                assistedInput = assistedInput.removePrefix("@")
-            }
+//            if(site is TwitterSpaceTarget) {
+//                assistedInput = assistedInput.removePrefix("@")
+//            }
 
             // check if 'username' matches a precise url for tracking
             val urlMatch = declaredTargets.map { supportedSite ->

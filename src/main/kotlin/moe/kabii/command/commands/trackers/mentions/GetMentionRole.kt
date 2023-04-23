@@ -8,11 +8,11 @@ import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.*
-import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -123,15 +123,12 @@ object GetMentionRole : Command("getmention") {
 
     suspend fun testTwitterConfig(origin: DiscordParameters, username: String) = with(origin) {
 
-        val twitterUser = try {
-            TwitterParser.getUser(username)
-        } catch(e: Exception) {
-            ereply(Embeds.error("Unable to reach Twitter.")).awaitSingle()
-            return@with
+        val twitterUser = propagateTransaction {
+            TwitterFeed.findExisting(username)
         }
 
         if(twitterUser == null) {
-            origin.ereply(Embeds.error("Unable to find the Twitter user '$username'")).awaitSingle()
+            origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
             return
         }
 
@@ -139,12 +136,12 @@ object GetMentionRole : Command("getmention") {
             moe.kabii.data.relational.twitter.TwitterTarget.getExistingTarget(
                 client.clientId,
                 chan.id.asLong(),
-                twitterUser.id
+                twitterUser.userId
             )
         }
 
         if (matchingTarget == null) {
-            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in this channel."))
+            origin.ereply(Embeds.error("**@$username** is not currently tracked in this channel."))
                 .awaitSingle()
             return
         }

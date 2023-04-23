@@ -7,9 +7,7 @@ import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
-import moe.kabii.trackers.twitter.watcher.TweetStream
-import moe.kabii.trackers.twitter.watcher.TwitterChecker
-import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
+import moe.kabii.trackers.nitter.NitterChecker
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
@@ -31,7 +29,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
     val twitcastChecker: TwitcastChecker
     val twitch: TwitchChecker
-    val spaceChecker: SpaceChecker
+//    val spaceChecker: SpaceChecker
 
     init {
         val reminderDelay = ServiceRequestCooldownSpec(
@@ -57,11 +55,11 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         )
         val twitchSubs = TwitchSubscriptionManager(discord, twitch, twitchSubDelay)
 
-        val spacesDelay = ServiceRequestCooldownSpec(
-            callDelay = 3_500L,
-            minimumRepeatTime = 60_000L
-        )
-        spaceChecker = SpaceChecker(discord, spacesDelay)
+//        val spacesDelay = ServiceRequestCooldownSpec(
+//            callDelay = 3_500L,
+//            minimumRepeatTime = 60_000L
+//        )
+//        spaceChecker = SpaceChecker(discord, spacesDelay)
 
         val subsDelay = ServiceRequestCooldownSpec(
             callDelay = 0L,
@@ -106,18 +104,17 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListChecker = ListServiceChecker(ListSite.ANILIST, discord, aniListDelay)
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
-        val twitterDelay = ServiceRequestCooldownSpec(
+        val nitterDelay = ServiceRequestCooldownSpec(
             callDelay = 2_000L,
-            minimumRepeatTime = 30_000L
+            minimumRepeatTime = 120_000L
         )
-        val twitter = TwitterChecker(discord, twitterDelay, spaceChecker)
-        val twitterStream = TweetStream(twitter)
+        val nitterChecker = NitterChecker(discord, nitterDelay)
 
         serviceThreads = listOf(
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
             Thread(twitchSubs, "TwitchSubscriptionManager"),
-            Thread(spaceChecker, "TwitterSpacesChecker"),
+//            Thread(spaceChecker, "TwitterSpacesChecker"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),
@@ -125,8 +122,9 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             malThread,
             kitsuThread,
             aniListThread,
-            Thread(twitter, "TwitterChecker"),
-            Thread(twitterStream, "TwitterStream"),
+//            Thread(twitter, "TwitterChecker"),
+//            Thread(twitterStream, "TwitterStream"),
+            Thread(nitterChecker, "NitterManager"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
             Thread(ytChatWatcher, "YTChatWatcher")

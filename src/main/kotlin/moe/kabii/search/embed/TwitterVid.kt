@@ -4,7 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Embeds
-import moe.kabii.trackers.twitter.TwitterParser
+import moe.kabii.trackers.nitter.NitterParser
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 
@@ -17,7 +17,7 @@ object TwitterVid : Command("twittervid") {
         chat {
 
             val tweetArg = args.string("url")
-            val tweetId = twitterUrl.find(tweetArg)?.groups?.get(1)?.value
+            val tweetId = twitterUrl.find(tweetArg)?.groups?.get(1)?.value?.toLongOrNull()
 
             if(tweetId == null) {
                 ereply(Embeds.error("That does not seem to be a valid Twitter URL.")).awaitSingle()
@@ -25,7 +25,7 @@ object TwitterVid : Command("twittervid") {
             }
 
             val videoUrl = try {
-                TwitterParser.getV1Tweet(tweetId)?.findAttachedVideo()
+                NitterParser.getVideoFromTweet(tweetId)
             } catch(e: Exception) {
                 LOG.warn("Error getting linked Tweet: ${e.message}")
                 LOG.debug(e.stackTraceString)

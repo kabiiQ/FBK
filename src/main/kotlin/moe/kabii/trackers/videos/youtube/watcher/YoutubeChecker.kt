@@ -117,7 +117,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                 .limit(idChunk - remainder)
                         ).toList()
                         // TODO remove log - temporary for sanity check on this
-                        LOG.info("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
+                        LOG.debug("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
                         backfill.forEach { event ->
                             val callReason = YoutubeCall.Scheduled(event)
                             targetLookup[callReason.video.videoId] = callReason

@@ -2,7 +2,10 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.trackers.*
+import moe.kabii.trackers.StreamingTarget
+import moe.kabii.trackers.TwitcastingTarget
+import moe.kabii.trackers.TwitchTarget
+import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -21,7 +24,8 @@ object TrackedStreams {
         TWITCH(TwitchTarget),
         YOUTUBE(YoutubeTarget),
         TWITCASTING(TwitcastingTarget),
-        SPACES(TwitterSpaceTarget)
+
+        SPACES(YoutubeTarget)
     }
 
     object StreamChannels : IntIdTable() {
