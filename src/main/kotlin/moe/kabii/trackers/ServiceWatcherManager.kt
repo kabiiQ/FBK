@@ -105,7 +105,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 2_000L,
+            callDelay = 1_200L,
             minimumRepeatTime = 120_000L
         )
         val nitterChecker = NitterChecker(discord, nitterDelay)
