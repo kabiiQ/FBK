@@ -246,7 +246,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         val author = if(tweet.retweet) tweet.retweetOf!! else user.username
 
                         val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
-                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), null))
+                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), user.avatar))
                             .run {
                                 if(translation != null) {
                                     val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
