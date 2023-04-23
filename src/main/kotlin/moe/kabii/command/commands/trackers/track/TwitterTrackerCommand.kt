@@ -17,6 +17,7 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -87,7 +88,9 @@ object TwitterTrackerCommand : TrackerCommand {
         val username = target.identifier
         // convert input @username -> twitter user ID
         val twitterUser = propagateTransaction {
-            TwitterFeed.findExisting(username)
+            TwitterFeed.find {
+                LowerCase(TwitterFeeds.lastKnownUsername) eq username
+            }.firstOrNull()
         }
         if(twitterUser == null) {
             origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
