@@ -1,42 +1,38 @@
 package moe.kabii.data.relational.twitter
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.trackers.twitter.json.TwitterUser
 import moe.kabii.util.extensions.WithinExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object TwitterFeeds : IntIdTable() {
     val userId = long("twitter_user_id").uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
-    val lastKnownUsername = text("last_known_twitter_handle").nullable()
+    val lastKnownUsername = text("last_known_twitter_handle")
+    // change post twitter API apocalypse - disable all but select feeds
+    val enabled = bool("twitter_feed_allowed_access").default(false)
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var userId by TwitterFeeds.userId
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
     var lastKnownUsername by TwitterFeeds.lastKnownUsername
+    var enabled by TwitterFeeds.enabled
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
     companion object : IntEntityClass<TwitterFeed>(TwitterFeeds) {
-        fun getOrInsert(user: TwitterUser): TwitterFeed = find { TwitterFeeds.userId eq user.id }
-            .elementAtOrElse(0) { _ ->
-                transaction {
-                    new {
-                        this.userId = user.id
-                        this.lastPulledTweet = null
-                        this.lastKnownUsername = user.username
-                    }
-                }
-            }
+        fun findExisting(username: String): TwitterFeed? = find {
+            TwitterFeeds.enabled eq true and
+                    ((LowerCase(TwitterFeeds.lastKnownUsername)) eq username)
+        }.firstOrNull()
     }
 }
 

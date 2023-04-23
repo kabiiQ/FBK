@@ -8,6 +8,7 @@ import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
@@ -16,7 +17,6 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
-import moe.kabii.trackers.twitter.TwitterParser
 import moe.kabii.util.extensions.propagateTransaction
 
 object EditMentionRole : Command("editmention") {
@@ -145,25 +145,23 @@ object EditMentionRole : Command("editmention") {
         origin.ereply(Embeds.fbk("Edited mention settings for **${streamInfo.displayName}**.\n\n$output")).awaitSingle()
     }
 
-    private suspend fun addTwitterMention(origin: DiscordParameters, twitterId: String, roleArg: Role?, textArg: String?) {
-        val twitterUser = try {
-            TwitterParser.getUser(twitterId)
-        } catch(e: Exception) {
-            origin.ereply(Embeds.error("Unable to reach Twitter.")).awaitSingle()
-            return
+    private suspend fun addTwitterMention(origin: DiscordParameters, username: String, roleArg: Role?, textArg: String?) {
+        val twitterUser = propagateTransaction {
+            TwitterFeed.findExisting(username)
         }
+
         if(twitterUser == null) {
-            origin.ereply(Embeds.error("Unable to find the Twitter user '$twitterId'")).awaitSingle()
+            origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
             return
         }
 
         // verify that twitter feed is tracked in this server (any target in this guild)
         val matchingTarget = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser.id)
+            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser.userId)
         }
 
         if(matchingTarget == null) {
-            origin.ereply(Embeds.error("**@${twitterUser.username}** is not currently tracked in this channel.")).awaitSingle()
+            origin.ereply(Embeds.error("**@${username}** is not currently tracked in this channel.")).awaitSingle()
             return
         }
         val mention = propagateTransaction {
@@ -171,7 +169,7 @@ object EditMentionRole : Command("editmention") {
         }
 
         if(mention == null) {
-            SetMentionRole.setTwitterMention(origin, twitterId, roleArg, textArg)
+            SetMentionRole.setTwitterMention(origin, username, roleArg, textArg)
             return
         }
 
@@ -187,7 +185,7 @@ object EditMentionRole : Command("editmention") {
         }
 
         if(listOfNotNull(roleArg, textArg, embedColor).none()) {
-            GetMentionRole.testTwitterConfig(origin, twitterId)
+            GetMentionRole.testTwitterConfig(origin, username)
             return
         }
 
@@ -210,6 +208,6 @@ object EditMentionRole : Command("editmention") {
                 mention.embedColor = embedColor
             }
         }
-        origin.ereply(Embeds.fbk("Edited mention settings for the Twitter feed **@${twitterUser.username}**.\n\n$output")).awaitSingle()
+        origin.ereply(Embeds.fbk("Edited mention settings for the Twitter feed **@$username**.\n\n$output")).awaitSingle()
     }
 }
