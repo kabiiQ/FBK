@@ -63,6 +63,9 @@ object Keys : ConfigSpec("") {
         val apiSecret by required<String>("api_key_secret")
         val token by required<String>("bearer_token")
     }
+    object Nitter : ConfigSpec() {
+        val instanceUrl by required<String>("instance_url")
+    }
     object Microsoft : ConfigSpec() {
         val translatorKey by required<String>("translator_key")
     }

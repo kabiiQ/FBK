@@ -3,6 +3,7 @@ package moe.kabii.command.commands.trackers.util
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
@@ -26,7 +27,9 @@ object GlobalTrackSuggestionGenerator {
                 }
 
             // get all twitter feeds
-            globalFeedCache[TwitterTarget] = TwitterFeed.all()
+            globalFeedCache[TwitterTarget] = TwitterFeed.find {
+                TwitterFeeds.enabled eq true
+            }
                 .map { feed ->
                     createCachedFeed(TwitterTarget, feed.userId.toString(), feed.lastKnownUsername)
                 }

@@ -53,7 +53,7 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.3.0-SNAPSHOT") // discord websocket and api
 
     // music bot
-    implementation("com.github.walkyst:lavaplayer-fork:1.3.98.4") // discord audio library
+    implementation("com.github.walkyst:lavaplayer-fork:1.4.0") // discord audio library
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.21")
 

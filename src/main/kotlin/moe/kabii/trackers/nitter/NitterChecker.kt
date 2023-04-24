@@ -1,10 +1,9 @@
-package moe.kabii.trackers.twitter.watcher
+package moe.kabii.trackers.nitter
 
 import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.core.`object`.entity.channel.TextChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
@@ -18,6 +17,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
@@ -28,19 +28,12 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
-import moe.kabii.trackers.twitter.TwitterDateTimeUpdateException
-import moe.kabii.trackers.twitter.TwitterParser
-import moe.kabii.trackers.twitter.TwitterRateLimitReachedException
-import moe.kabii.trackers.twitter.json.TwitterMediaType
-import moe.kabii.trackers.twitter.json.TwitterTweet
-import moe.kabii.trackers.twitter.json.TwitterUrlEntity
-import moe.kabii.trackers.twitter.json.TwitterUser
-import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
 import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
@@ -52,18 +45,20 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 
-class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec, val spaceChecker: SpaceChecker) : Runnable {
+class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
 
     override fun run() {
-        if(!MetaData.host) return // do not run on testing instances to avoid 429s on main service (overlapping api key)
+        if(!MetaData.host) return // do not run on testing instances
         applicationLoop {
             val start = Instant.now()
 
-            LOG.debug("TwitterChecker :: start: $start")
+            LOG.debug("NitterChecker :: start: $start")
             newSuspendedTransaction {
                 try {
                     // get all tracked twitter feeds
-                    val feeds = TwitterFeed.all()
+                    val feeds = TwitterFeed.find {
+                        TwitterFeeds.enabled eq true
+                    }
                     LOG.debug("2")
 
                     // feeds who are completely inactive and since_id has fallen out of the valid range
@@ -76,54 +71,20 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             delay(Duration.ofMillis(cooldowns.callDelay))
                         } else first = false
 
-                        if(feed.userId == 1072404907230060544L) return@forEach // TODO temporary disable
-
                         val targets = getActiveTargets(feed)?.ifEmpty { null }
                             ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
                         val cache = TwitterFeedCache.getOrPut(feed)
 
-                        // determine if any targets want RT or quote tweets
-                        var pullRetweets = false
-                        var pullQuotes = false
+                        val nitter = NitterParser
+                            .getFeed(feed.lastKnownUsername ?: return@forEach)
+                            ?: return@forEach
 
-                        targets.forEach { target ->
-                            val features = GuildConfigurations.findFeatures(target)
-                            val twitter = features?.twitterSettings ?: TwitterSettings()
-
-                            if(twitter.displayRetweet) pullRetweets = true
-                            if(twitter.displayQuote) pullQuotes = true
-                        }
-
-                        val limits = TwitterParser.TwitterQueryLimits(
-                            sinceId = feed.lastPulledTweet,
-                            includeRT = pullRetweets,
-                            includeQuote = pullQuotes
-                        )
-                        val recent = try {
-                            TwitterParser.getRecentTweets(feed.userId, limits)
-                        } catch(sinceId: TwitterDateTimeUpdateException) {
-                            LOG.info("Twitter feed '${feed.userId}' is far out of date and the Tweets since_id query was rejected")
-                            requireUpdate.add(feed)
-                            null
-                        } catch(rate: TwitterRateLimitReachedException) {
-                            val reset = rate.reset
-                            LOG.warn("Twitter rate limit reached: sleeping ${reset.seconds} seconds")
-                            delay(reset)
-                            null
-                        } catch(e: Exception) {
-                            LOG.warn("TwitterChecker: Error in Twitter call: ${e.message}")
-                            LOG.debug(e.stackTraceString)
-                            delay(Duration.ofMillis(100L))
-                            null
-                        }
-                        recent ?: return@forEach
-                        val (user, tweets) = recent
-                        feed.lastKnownUsername = user.username
+                        val (user, tweets) = nitter
 
                         val latest = tweets.maxOf { tweet ->
                             // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                            val age = Duration.between(tweet.createdAt, Instant.now())
+                            val age = Duration.between(tweet.date, Instant.now())
 
                             // if already handled or too old, skip, but do not pull tweet ID again
                             if((feed.lastPulledTweet ?: 0) >= tweet.id
@@ -131,7 +92,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                                 || cache.seenTweets.contains(tweet.id)
                             ) return@maxOf tweet.id
 
-                            notifyTweet(user, tweet, targets)
+                            notifyTweet(feed.userId, user, tweet, targets)
                         }
                         if(latest > (feed.lastPulledTweet ?: 0L)) {
                             transaction {
@@ -146,7 +107,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             feed.lastPulledTweet = maxId
                         }
                     }
-                    LOG.debug("twitter exit")
+                    LOG.debug("nitter exit")
                 } catch(e: Exception) {
                     LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                     LOG.debug(e.stackTraceString)
@@ -160,20 +121,19 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
     }
 
     @WithinExposedContext
-    suspend fun notifyTweet(user: TwitterUser, tweet: TwitterTweet, targets: List<TwitterTarget>): Long {
+    suspend fun notifyTweet(feedId: Long, user: NitterUser, tweet: NitterTweet, targets: List<TwitterTarget>): Long {
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
-        TwitterFeedCache[user.id]?.seenTweets?.add(tweet.id)
-
-        // check for twitter space info from tweet
-        spaceChecker.intakeSpaceFromTweet(tweet)
+        TwitterFeedCache[feedId]?.seenTweets?.add(tweet.id)
 
         // check for youtube video info from tweet
         // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
         // also will increase awareness of membership-limited streams
-        tweet.entities?.urls
-            ?.mapNotNull(TwitterUrlEntity::expanded)
-            ?.forEach(YoutubeVideoIntake::intakeVideosFromText)
+        URLUtil.genericUrl
+            .findAll(tweet.text)
+            .forEach { match ->
+                YoutubeVideoIntake.intakeVideosFromText(match.value)
+            }
 
         // cache to not repeat translation for same tweet across multiple channels/servers
         val translations = mutableMapOf<String, TranslationResult>()
@@ -192,23 +152,9 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                 if(!tweet.notifyOption.get(twitter)) return@target
 
-                val referenceUser = tweet.references.firstOrNull()?.author
                 val action = when {
                     tweet.retweet -> "retweeted \uD83D\uDD01"
-                    tweet.reply -> "replied to a Tweet from **@${referenceUser?.username}** \uD83D\uDCAC"
-                    tweet.quote -> "quoted a Tweet from **@${referenceUser?.username}** \uD83D\uDDE8"
                     else -> "posted a new Tweet"
-                }
-
-                if(tweet.sensitive == true && target.discordChannel.guild != null) {
-                    // filter potentially nsfw tweets in guilds
-                    val guildChan = channel as? TextChannel // will fail for news channels as they can not be marked nsfw
-                    if(guildChan?.isNsfw != true) {
-                        channel.createMessage(
-                            Embeds.fbk("[**@${user.username}**](${user.url}) $action which may contain sensitive content.")
-                        ).awaitSingle()
-                        return@target
-                    }
                 }
 
                 // LOG.debug("translation stage")
@@ -218,7 +164,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                             .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
 
-                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = user.id, primaryTweet = !tweet.retweet)
+                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = feedId, primaryTweet = !tweet.retweet)
 
                         // check cache for existing translation of this tweet
                         val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
@@ -241,17 +187,16 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                 var editedThumb: ByteArrayInputStream? = null
                 var attachedVideo: String? = null
-                val attachment = tweet.attachments.firstOrNull()
-                val attachType = attachment?.type
-                val size = tweet.attachments.size
+                val attachment = tweet.images.firstOrNull()
+                val size = tweet.images.size
                 var attachInfo = ""
 
                 when {
-                    attachType == TwitterMediaType.VID || attachType == TwitterMediaType.GIF -> {
+                    tweet.hasVideo -> {
                         attachInfo = "(Open on Twitter to view video)\n"
                         // process video attachment
                         attachedVideo = try {
-                            TwitterParser.getV1Tweet(tweet.id.toString())?.findAttachedVideo()
+                            NitterParser.getVideoFromTweet(tweet.id)
                         } catch(e: Exception) {
                             LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
                             null
@@ -259,27 +204,19 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                         if(attachedVideo == null) {
                             // if we can't provide video, revert to notifying user/regular thumbnail attachment
-                            if(attachment.url != null) {
-                                editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment.url, video = true)
+                            if(attachment != null) {
+                                editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, video = true)
                             }
                         }
                     }
                     size > 1 -> {
                         attachInfo = "(Open on Twitter to view $size images)\n"
                         // tag w/ number of photos
-                        if(attachment?.url != null) {
-                            editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment.url, imageCount = size)
+                        if(attachment != null) {
+                            editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, imageCount = size)
                         }
                     }
                 }
-
-                // only use a static thumbnail if a video is not attached
-                val thumbnail = if(attachedVideo == null) {
-                    attachment?.url
-                        ?: tweet.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url // fallback to image from embedded twitter link, if it exists (discord uses these in the vanilla Twitter embed)
-                        ?: tweet.references.firstOrNull()?.attachments?.firstOrNull()?.url
-                        ?: tweet.references.firstOrNull()?.entities?.urls?.firstOrNull()?.images?.firstOrNull()?.url
-                } else null
 
                 LOG.debug("roles phase")
                 // mention roles
@@ -287,7 +224,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                 var outdated = false
                 val mentionText = if(mention != null) {
-                    outdated = Duration.between(tweet.createdAt, Instant.now()) > Duration.ofMinutes(15)
+                    outdated = Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
                     val rolePart = if(mention.discord == null || outdated) null
                     else mention.discord.mention.plus(" ")
                     val textPart = mention.db.mentionText?.plus(" ")
@@ -296,7 +233,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
                 val notifSpec = MessageCreateSpec.create()
                     .run {
-                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.createdAt)
+                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.date)
                         withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
                     }
                     .run {
@@ -306,10 +243,10 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                         val footer = StringBuilder(attachInfo)
 
                         val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
-                        val author = (if(tweet.retweet) referenceUser else user) ?: user
+                        val author = if(tweet.retweet) tweet.retweetOf!! else user.username
 
                         val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
-                            .withAuthor(EmbedCreateFields.Author.of("${author.name} (@${author.username})", author.url, author.profileImage))
+                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), user.avatar))
                             .run {
                                 if(translation != null) {
                                     val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
@@ -325,13 +262,13 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
                                 if(editedThumb != null) {
                                     // always use our edited thumbnail if we produced one for this
                                     withImage("attachment://thumbnail_edit.png")
-                                } else if(thumbnail != null) withImage(thumbnail)
+                                } else if(attachment != null) withImage(attachment)
                                 else this
                             }
                         withEmbeds(embed)
                     }
 
-                if(twitter.mediaOnly && attachment?.url == null) return@target
+                if(twitter.mediaOnly && attachment == null) return@target
                 val notif = channel.createMessage(notifSpec).awaitSingle()
 
                 if(attachedVideo != null) {
@@ -391,7 +328,7 @@ class TwitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequ
 
     data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
     @WithinExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: TwitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
+    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: NitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         // do not return ping if not configured for channel/tweet type
         when {
             !twitterCfg.mentionRoles -> return null

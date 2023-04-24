@@ -117,7 +117,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                 .limit(idChunk - remainder)
                         ).toList()
                         // TODO remove log - temporary for sanity check on this
-                        LOG.info("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
+                        LOG.debug("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
                         backfill.forEach { event ->
                             val callReason = YoutubeCall.Scheduled(event)
                             targetLookup[callReason.video.videoId] = callReason
@@ -187,7 +187,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                          // previously handled videos - 1 month old
                         val old = DateTime.now().minusWeeks(4)
                         YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall lessEq old
+                            YoutubeVideos.lastAPICall lessEq old and
+                                    // don't delete 'long term' videos that may be used for ytchat
+                                    (YoutubeVideos.scheduledEvent eq null)
                         }
                         // streams which never went live (with 1 day of leniency)
                         val overdue = DateTime.now().minusDays(1)

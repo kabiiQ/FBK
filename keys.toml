@@ -65,6 +65,9 @@ api_key = ''
 api_key_secret = ''
 bearer_token = ''
 
+[nitter]
+instance_url = ''
+
 [microsoft]
 translator_key = ''
 
