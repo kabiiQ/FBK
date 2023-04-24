@@ -7,6 +7,7 @@ import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
+import moe.kabii.data.relational.mastodon.Mastodon
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscriptions
@@ -46,6 +47,10 @@ internal object PostgresConnection {
                 TrackedMediaLists.ListTargets,
                 MessageHistory.Messages,
                 Reminders,
+                Mastodon.Domains,
+                Mastodon.Feeds,
+                Mastodon.Targets,
+                Mastodon.TargetMentions,
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
                 TrackedStreams.TargetMentions,

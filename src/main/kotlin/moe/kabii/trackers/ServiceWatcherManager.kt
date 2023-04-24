@@ -7,6 +7,7 @@ import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
+import moe.kabii.trackers.mastodon.streaming.MastodonIntake
 import moe.kabii.trackers.twitter.watcher.TweetStream
 import moe.kabii.trackers.twitter.watcher.TwitterChecker
 import moe.kabii.trackers.videos.spaces.watcher.SpaceChecker
@@ -113,6 +114,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val twitter = TwitterChecker(discord, twitterDelay, spaceChecker)
         val twitterStream = TweetStream(twitter)
 
+        val mastodon = MastodonIntake(discord)
+
         serviceThreads = listOf(
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
@@ -129,7 +132,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             Thread(twitterStream, "TwitterStream"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
-            Thread(ytChatWatcher, "YTChatWatcher")
+            Thread(ytChatWatcher, "YTChatWatcher"),
+            Thread(mastodon, "MastodonIntake")
         )
     }
 

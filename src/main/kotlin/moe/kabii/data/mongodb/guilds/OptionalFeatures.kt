@@ -38,6 +38,7 @@ data class FeatureChannel(
     val youtubeSettings: YoutubeSettings = YoutubeSettings(),
     val twitterSettings: TwitterSettings = TwitterSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
+    val mastodonSettings: MastodonSettings = MastodonSettings()
 ) {
     fun anyEnabled() = booleanArrayOf(musicChannel, tempChannelCreation, logChannel).any(true::equals)
     fun anyDefaultDisabled() = booleanArrayOf(streamTargetChannel, twitterTargetChannel, animeTargetChannel).any(false::equals)
@@ -112,6 +113,17 @@ data class TwitterSettings(
     var mentionReplies: Boolean = true,
     var mentionQuotes: Boolean = true,
     var mentionRetweets: Boolean = false,
+)
+
+data class MastodonSettings(
+    var postStatus: Boolean = true,
+    var postReply: Boolean = true,
+    var postReblog: Boolean = true,
+    var mentionStatus: Boolean = true,
+    var mentionReply: Boolean = true,
+    var mentionReblog: Boolean = false,
+    var mediaOnly: Boolean = false,
+    var autoTranslate: Boolean = false
 )
 
 data class ChannelMark(
