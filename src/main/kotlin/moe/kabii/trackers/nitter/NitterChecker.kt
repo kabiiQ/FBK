@@ -185,6 +185,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                     }
                 } else null
 
+                LOG.debug("Tweet debug TEMP: $tweet")
                 var editedThumb: ByteArrayInputStream? = null
                 var attachedVideo: String? = null
                 val attachment = tweet.images.firstOrNull()
