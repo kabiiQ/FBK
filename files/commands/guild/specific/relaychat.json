@@ -1,0 +1,12 @@
+{
+    "name": "relaychat",
+    "description": "Manually adds a YouTube video for Hololive member chat relay in this Discord channel.",
+    "options": [
+        {
+            "name": "videoid",
+            "description": "The YouTube video ID to relay chats from.",
+            "type": 3,
+            "required": true
+        }
+    ]
+}

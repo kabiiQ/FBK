@@ -6,22 +6,29 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.ytchat.YoutubeChatWatcher
+import org.jetbrains.exposed.dao.load
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class HoloChats(val instances: DiscordInstances) {
 
     private val hololive = KnownStreamers.getValue("hololive").associateBy { it.youtubeId!! }
 
     val chatChannels: MutableMap<String, MutableList<MessageChannel>> = mutableMapOf()
+    val chatVideos: MutableMap<String, MutableList<MessageChannel>> = mutableMapOf()
 
     data class HoloChatConfiguration(val ytChannel: String, val outputChannel: Snowflake, val botInstance: Int)
     init {
-        val configurations = listOf(
+        val channelConfigurations = listOf(
             // irys channel / project hope server
             HoloChatConfiguration("UC8rcEBzJSleTkf_-agPM20g", Snowflake.of("863354507822628864"), 1),
             // zeta cord
@@ -33,8 +40,8 @@ class HoloChats(val instances: DiscordInstances) {
             HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
         )
         if(MetaData.host) {
-            configurations.forEach { (yt, discord, instance) ->
-
+            // load configurations for discord channels tracking entire yt channels - currently hardcoded
+            channelConfigurations.forEach { (yt, discord, instance) ->
                 instances[instance].client
                     .getChannelById(discord)
                     .ofType(MessageChannel::class.java)
@@ -47,7 +54,29 @@ class HoloChats(val instances: DiscordInstances) {
                         }
                     }
             }
+
+            // load configurations for discord channels tracking specific freechat frames - command controlled
+            val videoConfigurations = transaction {
+                YoutubeLiveChat.all().onEach { c -> c.load(YoutubeLiveChat::ytVideo, YoutubeLiveChat::discordChannel) }
+            }
+            videoConfigurations.forEach { liveChat ->
+                watchNewChat(instances, liveChat.ytVideo.videoId, liveChat.discordChannel.channelID.snowflake, liveChat.discordClient)
+            }
         }
+    }
+
+    fun watchNewChat(instances: DiscordInstances, videoId: String, discordChannel: Snowflake, discordClient: Int) {
+        instances[discordClient].client
+            .getChannelById(discordChannel)
+            .ofType(MessageChannel::class.java)
+            .tryBlock().orNull()
+            .run {
+                if(this == null) {
+                    LOG.error("Unable to link HoloChat video: $videoId :: $discordChannel")
+                } else {
+                    chatVideos.getOrPut(videoId, ::mutableListOf).add(this)
+                }
+            }
     }
 
     suspend fun handleHoloChat(data: YoutubeChatWatcher.YTMessageData) {

@@ -8,15 +8,14 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.internal.ytchat.HoloChats
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import java.io.File
 import java.time.Duration
 import kotlin.concurrent.thread
@@ -89,6 +88,17 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     }
                     .withDistinct(true)
                     .map { row -> YTChatRoom(YoutubeVideo.wrapRow(row)) }
+                    .associateByTo(chatRooms, YTChatRoom::videoId)
+
+                // get all youtube videos that have a manually requested holochat relay
+                val (relayChats, endedChats) = YoutubeLiveChat
+                    .all()
+                    .partition { chat -> chat.ytVideo.liveEvent != null || chat.ytVideo.scheduledEvent != null }
+
+                // clean up holo chat relays that no longer have a chat
+                endedChats.forEach(YoutubeLiveChat::delete)
+                relayChats
+                    .map { chat -> YTChatRoom(chat.ytVideo) }
                     .associateByTo(chatRooms, YTChatRoom::videoId)
 
                 chatRooms

@@ -17,6 +17,7 @@ import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTargetMentions
@@ -59,6 +60,7 @@ internal object PostgresConnection {
                 YoutubeLiveEvents,
                 YoutubeNotifications,
                 YoutubeVideoTracks,
+                YoutubeLiveChats,
                 TwitterSpaces.Spaces,
                 TwitterSpaces.SpaceNotifs,
                 Twitcasts.Movies,
@@ -70,7 +72,7 @@ internal object PostgresConnection {
                 PS2Internal.Outfits,
                 YoutubeMembers,
                 LinkedYoutubeAccounts,
-                MembershipConfigurations
+                MembershipConfigurations,
             )
         }
     }

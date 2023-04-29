@@ -24,10 +24,16 @@ object GuildCommandRegistrar : CommandRegistrar {
         if(config.guildSettings.ps2Commands) yieldAll(ps2Commands)
         if(Keys.config[Keys.Admin.guilds].contains(config.guildid)) yieldAll(adminCommands)
         when(config.guildid) {
-            314662502204047361L, 602935619345186819L, 581785820156002304L -> yield(specificCommands["nuc"])
+            314662502204047361L, 581785820156002304L -> {
+                yield(specificCommands["nuc"])
+                yield(specificCommands["relaychat"])
+            }
             862160810918412319L -> {
                 yield(specificCommands["adminlink"])
                 yield(specificCommands["linkyoutubemembers"])
+            }
+            740802640895672374L -> {
+                yield(specificCommands["relaychat"])
             }
         }
 
