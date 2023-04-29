@@ -153,7 +153,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 if(!tweet.notifyOption.get(twitter)) return@target
 
                 val action = when {
-                    tweet.retweet -> "retweeted \uD83D\uDD01"
+                    tweet.retweet -> "retweeted \uD83D\uDD01 **${tweet.retweetOf}**"
                     else -> "posted a new Tweet"
                 }
 
@@ -245,9 +245,10 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
                         val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
                         val author = if(tweet.retweet) tweet.retweetOf!! else user.username
+                        val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
 
                         val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
-                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), user.avatar))
+                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
                             .run {
                                 if(translation != null) {
                                     val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
