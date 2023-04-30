@@ -9,10 +9,12 @@ import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.TwitterFeedCache
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
@@ -20,6 +22,7 @@ import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
@@ -41,11 +44,16 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
+import java.lang.Runnable
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.Executors
 import kotlin.math.max
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
+    private val instanceCount = NitterParser.instanceCount
+    private val rssThreads = Executors.newFixedThreadPool(instanceCount).asCoroutineDispatcher()
+    private val nitterScope = CoroutineScope(rssThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
 
     override fun run() {
         if(!MetaData.host) return // do not run on testing instances
@@ -53,66 +61,69 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             val start = Instant.now()
 
             LOG.debug("NitterChecker :: start: $start")
-            newSuspendedTransaction {
-                try {
-                    // get all tracked twitter feeds
-                    val feeds = TwitterFeed.find {
-                        TwitterFeeds.enabled eq true
-                    }
-                    LOG.debug("2")
-
-                    // feeds who are completely inactive and since_id has fallen out of the valid range
-                    val requireUpdate = mutableListOf<TwitterFeed>()
-                    var maxId = 0L
-
-                    var first = true
-                    feeds.forEach { feed ->
-                        if(!first) {
-                            delay(Duration.ofMillis(cooldowns.callDelay))
-                        } else first = false
-
-                        val targets = getActiveTargets(feed)?.ifEmpty { null }
-                            ?: return@forEach // feed untrack entirely or no target channels are currently enabled
-
-                        val cache = TwitterFeedCache.getOrPut(feed)
-
-                        val nitter = NitterParser
-                            .getFeed(feed.lastKnownUsername ?: return@forEach)
-                            ?: return@forEach
-
-                        val (user, tweets) = nitter
-
-                        val latest = tweets.maxOf { tweet ->
-                            // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                            val age = Duration.between(tweet.date, Instant.now())
-
-                            // if already handled or too old, skip, but do not pull tweet ID again
-                            if((feed.lastPulledTweet ?: 0) >= tweet.id
-                                || age > Duration.ofHours(2)
-                                || cache.seenTweets.contains(tweet.id)
-                            ) return@maxOf tweet.id
-
-                            notifyTweet(feed.userId, user, tweet, targets)
-                        }
-                        if(latest > (feed.lastPulledTweet ?: 0L)) {
-                            transaction {
-                                feed.lastPulledTweet = latest
-                            }
-                        }
-                        if(latest > maxId) maxId = latest
-                    }
-
-                    requireUpdate.forEach { feed ->
-                        transaction {
-                            feed.lastPulledTweet = maxId
-                        }
-                    }
-                    LOG.debug("nitter exit")
-                } catch(e: Exception) {
-                    LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
-                }
+            // get all tracked twitter feeds
+            val feeds = propagateTransaction {
+                TwitterFeed.find {
+                    TwitterFeeds.enabled eq true
+                }.toList()
             }
+            LOG.debug("got feeds")
+
+            // partition feeds onto nitter instances for pulling
+            val feedsPerInstance = feeds.size / instanceCount
+            val instanceJobs = feeds
+                .chunked(feedsPerInstance).withIndex()
+                .map { (instanceId, feedChunk) ->
+
+                    // each chunk executed on different instance - divide up work, pool assigns thread
+                    nitterScope.launch {
+                        try {
+                            propagateTransaction {
+                                var first = true
+                                feedChunk.forEach { feed ->
+
+                                    if (!first) {
+                                        delay(Duration.ofMillis(cooldowns.callDelay))
+                                    } else first = false
+
+                                    val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                        ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+
+                                    val cache = TwitterFeedCache.getOrPut(feed)
+
+                                    val nitter = NitterParser
+                                        .getFeed(feed.lastKnownUsername, instance = instanceId)
+                                        ?: return@forEach
+
+                                    val (user, tweets) = nitter
+
+                                    val latest = tweets.maxOf { tweet ->
+                                        // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                                        val age = Duration.between(tweet.date, Instant.now())
+
+                                        // if already handled or too old, skip, but do not pull tweet ID again
+                                        if ((feed.lastPulledTweet ?: 0) >= tweet.id
+                                            || age > Duration.ofHours(2)
+                                            || cache.seenTweets.contains(tweet.id)
+                                        ) return@maxOf tweet.id
+
+                                        notifyTweet(feed.userId, user, tweet, targets)
+                                    }
+                                    if (latest > (feed.lastPulledTweet ?: 0L)) {
+                                        transaction {
+                                            feed.lastPulledTweet = latest
+                                        }
+                                    }
+                                }
+                            }
+                        } catch(e: Exception) {
+                            LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                            LOG.debug(e.stackTraceString)
+                        }
+                    }
+                }
+            instanceJobs.joinAll()
+            LOG.debug("nitter exit")
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             LOG.debug("delay: $delay")
@@ -185,7 +196,6 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                     }
                 } else null
 
-                LOG.debug("Tweet debug TEMP: $tweet")
                 var editedThumb: ByteArrayInputStream? = null
                 var attachedVideo: String? = null
                 val attachment = tweet.images.firstOrNull()

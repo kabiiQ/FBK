@@ -20,7 +20,8 @@ import java.util.stream.Collectors
 object NitterParser {
     val color = Color.of(1942002)
 
-    val instanceUrl = Keys.config[Keys.Nitter.instanceUrl]
+    private val nitterInstances = Keys.config[Keys.Nitter.instanceUrls]
+    val instanceCount = nitterInstances.size
 
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
 
@@ -33,7 +34,9 @@ object NitterParser {
     private val scriptDir = File("files/scripts/twitter")
     private val scriptName = "get_video.py"
 
-    fun getFeed(name: String): NitterData? {
+    fun getInstanceUrl(id: Int): String = nitterInstances[id % nitterInstances.size]
+
+    fun getFeed(name: String, instance: Int = 0): NitterData? {
         // last minute sanity check on input - might not be strictly needed
         val username = name.removePrefix("@")
         if(!twitterUsernameRegex.matches(username)) return null
@@ -41,7 +44,7 @@ object NitterParser {
         // call to local nitter instance - no auth
         val request = newRequestBuilder()
             .get()
-            .url("${instanceUrl}/$username/rss")
+            .url("${getInstanceUrl(instance)}/$username/rss")
             .build()
         val body = try {
             OkHTTP.newCall(request).execute().use { rs ->
