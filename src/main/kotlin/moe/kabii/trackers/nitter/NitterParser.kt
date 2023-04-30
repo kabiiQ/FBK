@@ -100,12 +100,13 @@ object NitterParser {
 
                 // from guid/url: extract tweet id
                 val guid = item.element("guid").text
-                val tweetId = nitterTweetId.find(guid)!!.value.toLong()
-                val url = "https://twitter.com/$username/status/$tweetId"
-
-                nitterTweets.add(
-                    NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, false, false)
-                )
+                val tweetId = nitterTweetId.find(guid)?.value?.toLong()
+                if(tweetId != null) {
+                    val url = "https://twitter.com/$username/status/$tweetId"
+                    nitterTweets.add(
+                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, false, false)
+                    )
+                }
             }
 
             return NitterData(nitterUser, nitterTweets)
