@@ -67,6 +67,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 .chunked(feedsPerInstance).withIndex()
                 .map { (instanceId, feedChunk) ->
 
+                    LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ")} :: ${NitterParser.getInstanceUrl(instanceId)}")
                     // each chunk executed on different instance - divide up work, pool assigns thread
                     nitterScope.launch {
                         try {

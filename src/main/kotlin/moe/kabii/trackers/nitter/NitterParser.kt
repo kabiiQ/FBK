@@ -51,7 +51,8 @@ object NitterParser {
             OkHTTP.newCall(request).execute().use { rs ->
                 val body = rs.body.string()
                 if (rs.isSuccessful) body else {
-                    LOG.error("Error getting Nitter feed: $username :: ${rs.code} :: $body")
+                    LOG.error("Error getting Nitter feed: $username :: ${rs.code}")
+                    LOG.debug(body)
                     return null
                 }
             }
