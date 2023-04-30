@@ -13,7 +13,7 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.dao.load
 
-object ManualRelayVid : Command("relayvid") {
+object ManualRelayChat : Command("relaychat") {
     override val wikiPath: String? = null
 
     init {
