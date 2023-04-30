@@ -82,9 +82,13 @@ object YoutubeVideoIntake {
                     videoMatch.forEach { match ->
 
                         val videoId = match.groups[1]!!.value
+
+                        // don't call out if this video is already known
+                        if(YoutubeVideo.getVideo(videoId) != null) return@forEach
+
                         val ytVideo = YoutubeParser.getVideo(videoId)
                         if(ytVideo == null) {
-                            LOG.warn("Video found from Twitter: '$videoId' but video not returned from YouTube API.")
+                            LOG.warn("Video found from text: '$videoId' but video not returned from YouTube API.")
                             return@forEach
                         }
                         LOG.debug("Received YouTube video from Tweet: $videoId")

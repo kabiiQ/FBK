@@ -64,7 +64,7 @@ object ListTracked : Command("tracked") {
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
                     val url = moe.kabii.trackers.TwitterTarget.feedById(feed.userId.toString())
-                    "[Twitter/${feed.lastKnownUsername ?: feed.userId}]($url) by <@${target.tracker.userID}>"
+                    "[Twitter/${feed.lastKnownUsername}]($url) by <@${target.tracker.userID}>"
                 }
             }
 

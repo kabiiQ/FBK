@@ -34,7 +34,7 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     val notifications by YoutubeNotification referrersOn YoutubeNotifications.videoID
 
     companion object : LongEntityClass<YoutubeVideo>(YoutubeVideos) {
-        private fun getVideo(videoId: String): YoutubeVideo? = find {
+        fun getVideo(videoId: String): YoutubeVideo? = find {
             YoutubeVideos.videoId eq videoId
         }.firstOrNull()
 

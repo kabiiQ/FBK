@@ -84,8 +84,8 @@ object ArgosTranslator : TranslationService(
             LOG.info("Getting supported languages from LibreTranslator endpoint.")
 
             val response = OkHTTP.newCall(request).execute()
-            return response.use { response ->
-                val body = response.body.string()
+            return response.use { rs ->
+                val body = rs.body.string()
                 val languages = ArgosLanguagesResponse.parseLanguages(body)
                 val argosLanguages = languages.associate { lang ->
                     lang.code.lowercase() to TranslationLanguage(lang.code, lang.name, lang.name)

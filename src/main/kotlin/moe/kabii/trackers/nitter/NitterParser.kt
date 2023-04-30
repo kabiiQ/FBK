@@ -106,6 +106,9 @@ object NitterParser {
                     nitterTweets.add(
                         NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, false, false)
                     )
+                } else {
+                    // TODO temp
+                    LOG.debug("invalid nitter guid?: $guid")
                 }
             }
 
