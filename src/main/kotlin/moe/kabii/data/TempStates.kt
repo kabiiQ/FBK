@@ -17,7 +17,7 @@ object TempStates {
 
 object TwitterFeedCache {
     data class FeedCacheState(val initialBound: Long, val seenTweets: MutableList<Long> = mutableListOf())
-    private val cache = ConcurrentHashMap<Long, FeedCacheState>()
-    fun getOrPut(feed: TwitterFeed): FeedCacheState = cache.getOrPut(feed.userId) { FeedCacheState(feed.lastPulledTweet ?: 0L) }
-    operator fun get(userId: Long) = cache[userId]
+    private val cache = ConcurrentHashMap<String, FeedCacheState>()
+    fun getOrPut(feed: TwitterFeed): FeedCacheState = cache.getOrPut(feed.username.lowercase()) { FeedCacheState(feed.lastPulledTweet ?: 0L) }
+    operator fun get(username: String) = cache[username.lowercase()]
 }

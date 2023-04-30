@@ -18,7 +18,6 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
@@ -59,11 +58,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             LOG.debug("NitterChecker :: start: $start")
             // get all tracked twitter feeds
             val feeds = propagateTransaction {
-                TwitterFeed.find {
-                    TwitterFeeds.enabled eq true
-                }.toList()
+                TwitterFeed.all().toList()
             }
-            LOG.debug("got feeds")
 
             // partition feeds onto nitter instances for pulling
             val feedsPerInstance = feeds.size / instanceCount
@@ -88,7 +84,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                     val cache = TwitterFeedCache.getOrPut(feed)
 
                                     val nitter = NitterParser
-                                        .getFeed(feed.lastKnownUsername, instance = instanceId)
+                                        .getFeed(feed.username, instance = instanceId)
                                         ?: return@forEach
 
                                     val (user, tweets) = nitter
@@ -103,7 +99,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                             || cache.seenTweets.contains(tweet.id)
                                         ) return@maxOf tweet.id
 
-                                        notifyTweet(feed.userId, user, tweet, targets)
+                                        notifyTweet(user, tweet, targets)
                                     }
                                     if (latest > (feed.lastPulledTweet ?: 0L)) {
                                         transaction {
@@ -128,10 +124,11 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
     }
 
     @WithinExposedContext
-    suspend fun notifyTweet(feedId: Long, user: NitterUser, tweet: NitterTweet, targets: List<TwitterTarget>): Long {
+    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TwitterTarget>): Long {
+        val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
-        TwitterFeedCache[feedId]?.seenTweets?.add(tweet.id)
+        TwitterFeedCache[username]?.seenTweets?.add(tweet.id)
 
         // check for youtube video info from tweet
         // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
@@ -171,7 +168,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                             .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
                             .translator.defaultTargetLanguage
 
-                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = feedId, primaryTweet = !tweet.retweet)
+                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet)
 
                         // check cache for existing translation of this tweet
                         val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
@@ -313,7 +310,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         if(e is ClientException) {
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
-                                LOG.info("Untracking Twitter feed '${feed.userId}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
+                                LOG.info("Untracking Twitter feed '${feed.username}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
                                 target.delete()
                             }
                         }
@@ -329,7 +326,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             }
         } else {
             feed.delete()
-            LOG.info("Untracking Twitter feed ${feed.userId} as it has no targets.")
+            LOG.info("Untracking Twitter feed ${feed.username} as it has no targets.")
             null
         }
     }

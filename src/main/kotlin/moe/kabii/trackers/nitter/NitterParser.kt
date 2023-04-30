@@ -26,6 +26,7 @@ object NitterParser {
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
+    private val nitterReply = Regex("R to @$twitterUsernameRegex")
     private val nitterTweetId = Regex("[0-9]{19,}")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
     private val nitterVideo = Regex("<video poster=")

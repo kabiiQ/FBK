@@ -13,25 +13,23 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
 object TwitterFeeds : IntIdTable() {
-    val userId = long("twitter_user_id").uniqueIndex()
+    val username = text("last_known_twitter_handle", eagerLoading = true).uniqueIndex()
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
-    val lastKnownUsername = text("last_known_twitter_handle")
-    // change post twitter API apocalypse - disable all but select feeds
-    val enabled = bool("twitter_feed_allowed_access").default(false)
+
+    val userIdLegacy = long("twitter_user_id").nullable().default(null) // no longer useful information without Twitter API
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
-    var userId by TwitterFeeds.userId
+    var username by TwitterFeeds.username
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
-    var lastKnownUsername by TwitterFeeds.lastKnownUsername
-    var enabled by TwitterFeeds.enabled
+
+    var userIdLegacy by TwitterFeeds.userIdLegacy
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 
     companion object : IntEntityClass<TwitterFeed>(TwitterFeeds) {
         fun findExisting(username: String): TwitterFeed? = find {
-            TwitterFeeds.enabled eq true and
-                    ((LowerCase(TwitterFeeds.lastKnownUsername)) eq username)
+                ((LowerCase(TwitterFeeds.username)) eq username.lowercase())
         }.firstOrNull()
     }
 }
@@ -60,12 +58,12 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext
-        fun getExistingTarget(clientId: Int, channelId: Long, userId: Long) = TwitterTarget.wrapRows(
+        fun getExistingTarget(clientId: Int, channelId: Long, username: String) = TwitterTarget.wrapRows(
             TwitterTargets
                 .innerJoin(TwitterFeeds)
                 .innerJoin(DiscordObjects.Channels)
                 .select {
-                    TwitterFeeds.userId eq userId and
+                    LowerCase(TwitterFeeds.username) eq username.lowercase() and
                             (TwitterTargets.discordClient eq clientId) and
                             (DiscordObjects.Channels.channelID eq channelId)
                 }

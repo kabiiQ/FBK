@@ -125,7 +125,7 @@ object TargetSuggestionGenerator {
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         TwitterTarget,
-                        (target.twitterFeed.lastKnownUsername)
+                        (target.twitterFeed.username)
                     )
                 }
 

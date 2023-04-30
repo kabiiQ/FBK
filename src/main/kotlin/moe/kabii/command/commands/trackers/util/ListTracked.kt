@@ -10,6 +10,7 @@ import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
+import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 
@@ -63,8 +64,8 @@ object ListTracked : Command("tracked") {
                             (TwitterTargets.discordChannel eq dbChannel.id)
                 }.mapTo(tracks) { target ->
                     val feed = target.twitterFeed
-                    val url = moe.kabii.trackers.TwitterTarget.feedById(feed.userId.toString())
-                    "[Twitter/${feed.lastKnownUsername}]($url) by <@${target.tracker.userID}>"
+                    val url = URLUtil.Twitter.feedUsername(feed.username)
+                    "[Twitter/${feed.username}]($url) by <@${target.tracker.userID}>"
                 }
             }
 

@@ -136,7 +136,7 @@ object GetMentionRole : Command("getmention") {
             moe.kabii.data.relational.twitter.TwitterTarget.getExistingTarget(
                 client.clientId,
                 chan.id.asLong(),
-                twitterUser.userId
+                twitterUser.username
             )
         }
 

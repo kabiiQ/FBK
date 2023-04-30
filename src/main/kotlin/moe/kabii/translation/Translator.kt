@@ -76,7 +76,7 @@ object Translator {
     val service: TranslationService
         get() = getService(null).service
 
-    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: Long? = null, primaryTweet: Boolean? = null, preference: TranslationService? = null): TranslationPair {
+    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: String? = null, primaryTweet: Boolean? = null, preference: TranslationService? = null): TranslationPair {
         // return first available translator (supporting input language from text, if provided)
         val detected = text?.run {
             val language = detector.detectLanguageOf(this)
