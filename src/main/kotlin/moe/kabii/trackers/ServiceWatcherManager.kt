@@ -29,7 +29,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
     val twitcastChecker: TwitcastChecker
     val twitch: TwitchChecker
-//    val spaceChecker: SpaceChecker
+    val ytChatWatcher: YoutubeChatWatcher
 
     init {
         val reminderDelay = ServiceRequestCooldownSpec(
@@ -73,7 +73,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val ytChecker = YoutubeChecker(ytSubscriptions, ytDelay)
         ytSubscriptions.checker = ytChecker
 
-        val ytChatWatcher = YoutubeChatWatcher(discord)
+        ytChatWatcher = YoutubeChatWatcher(discord)
 
         val ytMembershipMaintainer = YoutubeMembershipMaintainer(discord)
 

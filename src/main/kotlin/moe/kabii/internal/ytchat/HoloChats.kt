@@ -7,11 +7,9 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
-import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
@@ -62,12 +60,12 @@ class HoloChats(val instances: DiscordInstances) {
                     .toList()
             }
             videoConfigurations.forEach { liveChat ->
-                watchNewChat(instances, liveChat.ytVideo.videoId, liveChat.discordChannel.channelID.snowflake, liveChat.discordClient)
+                watchNewChat(liveChat.ytVideo.videoId, liveChat.discordChannel.channelID.snowflake, liveChat.discordClient)
             }
         }
     }
 
-    fun watchNewChat(instances: DiscordInstances, videoId: String, discordChannel: Snowflake, discordClient: Int) {
+    fun watchNewChat(videoId: String, discordChannel: Snowflake, discordClient: Int) {
         instances[discordClient].client
             .getChannelById(discordChannel)
             .ofType(MessageChannel::class.java)

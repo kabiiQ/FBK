@@ -9,26 +9,28 @@ import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
-import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.internal.ytchat.HoloChats
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.innerJoin
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.select
 import java.io.File
 import java.time.Duration
 import kotlin.concurrent.thread
 
 class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
 
-    val activeChats = mutableMapOf<String, Process>()
+    private val activeChats = mutableMapOf<String, Process>()
 
     private val parseQueue = Channel<YTChatData>(Channel.UNLIMITED)
     val holoChatQueue = Channel<YTMessageData>(Channel.UNLIMITED)
 
     private val parser = YoutubeChatParser(instances, this)
-    private val holochats = HoloChats(instances)
+    val holoChats = HoloChats(instances)
 
     private val scriptDir = File("files/scripts")
     private val scriptName = "ytchat.py"
@@ -47,7 +49,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
     private val holoChatTask = Runnable {
         runBlocking {
             for(ytChat in holoChatQueue) {
-                holochats.handleHoloChat(ytChat)
+                holoChats.handleHoloChat(ytChat)
             }
         }
     }
@@ -79,7 +81,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     .associateByTo(chatRooms, YTChatRoom::videoId)
 
                 // get all youtube videos that have a yt channel associated with the holochat service
-                val holochatYtIds = holochats.chatChannels.keys
+                val holochatYtIds = holoChats.chatChannels.keys
                 YoutubeVideos
                     .innerJoin(TrackedStreams.StreamChannels)
                     .select {
