@@ -24,10 +24,11 @@ object NitterParser {
     val instanceCount = nitterInstances.size
 
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
+    private val nitterTweetId = Regex("[0-9]{19,}")
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
-    private val nitterTweetId = Regex("[0-9]{19,}")
+    private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>]]")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
     private val nitterVideo = Regex("<video poster=")
     private val nitterDateFormat = DateTimeFormatter.ofPattern("EEE',' dd MMM uuuu HH:mm:ss zzz", Locale.ENGLISH)
@@ -97,12 +98,20 @@ object NitterParser {
                     .replaceFirst(nitterReply, "")
                     .replace("\n", " ")
 
-                // from html: extract image for thumbnails
                 val html = item.element("description").text
+                // from html: extract image for thumbnails
                 val images = nitterImage.findAll(html)
                     .mapNotNull { m -> m.groups[1]?.value }
                     .toList()
                 val hasVideo = nitterVideo.containsMatchIn(html)
+
+                // quotes: description html will contain a link to a different tweet at the end
+                val quoteMatch = nitterQuote.find(html)
+                val (quoteOf, quoteId) = if(quoteMatch != null) {
+                    // group 1 will contain username being quoted
+                    // group 2 will contain id of quoted tweet
+                    quoteMatch.groups[1]!!.value to quoteMatch.groups[2]!!.value.toLongOrNull()
+                } else null to null
 
                 // parse gmt date into instant object
                 val rawDate = item.element("pubDate").text
@@ -115,7 +124,7 @@ object NitterParser {
                 if(tweetId != null) {
                     val url = "https://twitter.com/$username/status/$tweetId"
                     nitterTweets.add(
-                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, replyTo, false)
+                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, replyTo, quoteOf, quoteId)
                     )
                 } else {
                     LOG.debug("Invalid Tweet ID from Nitter guid: $guid")

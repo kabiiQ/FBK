@@ -160,6 +160,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 val action = when {
                     tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
                     tweet.reply -> "replied to a Tweet from **@${tweet.replyTo}** \uD83D\uDCAC"
+                    tweet.quote -> "quoted a Tweet from **@${tweet.quoteOf}** \uD83D\uDDE8"
                     else -> "posted a new Tweet"
                 }
 
@@ -255,14 +256,23 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
                             .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
                             .run {
+                                val fields = mutableListOf<EmbedCreateFields.Field>()
+
+                                if(tweet.quote) {
+                                    fields.add(EmbedCreateFields.Field.of("**Tweet Quoted**", tweet.quoteTweetUrl, false))
+                                }
+
                                 if(translation != null) {
                                     val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
                                     footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
-                                    withFields(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
-                                } else this
+                                    fields.add(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                }
+
+                                if(fields.isNotEmpty()) withFields(fields) else this
                             }
                             .run {
                                 if(outdated) footer.append("Skipping ping for old Tweet.\n")
+                                if(outdated) LOG.info("Missed ping: $tweet")
                                 if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
                             }
                             .run {

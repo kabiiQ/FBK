@@ -25,10 +25,15 @@ data class NitterTweet(
     val hasVideo: Boolean,
     val retweetOf: String?,
     val replyTo: String?,
-    val quote: Boolean
+    val quoteOf: String?,
+    val quoteOfTweet: Long?
 ) {
     val retweet = retweetOf != null
     val reply = replyTo != null
+    val quote = quoteOfTweet != null
+
+    val quoteTweetUrl: String
+    get() = "https://twitter.com/$quoteOf/status/$quoteOfTweet"
 
     val notifyOption = when {
         retweet -> TwitterSettings::displayRetweet
