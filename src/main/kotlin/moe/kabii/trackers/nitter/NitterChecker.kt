@@ -140,6 +140,17 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 YoutubeVideoIntake.intakeVideosFromText(match.value)
             }
 
+        // cache to not repeat request for twitter video
+        val twitterVid by lazy {
+            // process video attachment
+            try {
+                NitterParser.getVideoFromTweet(tweet.id)
+            } catch(e: Exception) {
+                LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
+                null
+            }
+        }
+
         // cache to not repeat translation for same tweet across multiple channels/servers
         val translations = mutableMapOf<String, TranslationResult>()
 
@@ -201,13 +212,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 when {
                     tweet.hasVideo -> {
                         attachInfo = "(Open on Twitter to view video)\n"
-                        // process video attachment
-                        attachedVideo = try {
-                            NitterParser.getVideoFromTweet(tweet.id)
-                        } catch(e: Exception) {
-                            LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
-                            null
-                        }
+                        // get potentially cached twitter video url
+                        attachedVideo = twitterVid
 
                         if(attachedVideo == null) {
                             // if we can't provide video, revert to notifying user/regular thumbnail attachment
