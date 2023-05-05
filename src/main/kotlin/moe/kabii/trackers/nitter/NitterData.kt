@@ -24,10 +24,11 @@ data class NitterTweet(
     val images: List<String>,
     val hasVideo: Boolean,
     val retweetOf: String?,
-    val reply: Boolean,
+    val replyTo: String?,
     val quote: Boolean
 ) {
     val retweet = retweetOf != null
+    val reply = replyTo != null
 
     val notifyOption = when {
         retweet -> TwitterSettings::displayRetweet

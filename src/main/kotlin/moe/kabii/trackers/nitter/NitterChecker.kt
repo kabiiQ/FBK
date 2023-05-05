@@ -158,7 +158,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 if(!tweet.notifyOption.get(twitter)) return@target
 
                 val action = when {
-                    tweet.retweet -> "retweeted \uD83D\uDD01 **${tweet.retweetOf}**"
+                    tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
+                    tweet.reply -> "replied to a Tweet from **@${tweet.replyTo}** \uD83D\uDCAC"
                     else -> "posted a new Tweet"
                 }
 

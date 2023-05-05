@@ -26,7 +26,7 @@ object NitterParser {
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
-    private val nitterReply = Regex("R to @$twitterUsernameRegex")
+    private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
     private val nitterTweetId = Regex("[0-9]{19,}")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
     private val nitterVideo = Regex("<video poster=")
@@ -45,7 +45,7 @@ object NitterParser {
         // call to local nitter instance - no auth
         val request = newRequestBuilder()
             .get()
-            .url("${getInstanceUrl(instance)}/$username/rss")
+            .url("${getInstanceUrl(instance)}/$username/with_replies/rss")
             .build()
         val body = try {
             OkHTTP.newCall(request).execute().use { rs ->
@@ -80,13 +80,22 @@ object NitterParser {
             feed.elementIterator("item").forEach { item ->
 
                 val rawText = item.element("title").text
-                val text = rawText
-                    .replaceFirst(nitterRt, "")
-                    .replace("\n", " ")
+
+                // replies: title contains 'R to' text
+                val replyTo = nitterReply
+                    .find(rawText)
+                    ?.run { groups[1]!!.value } // group 1 of regex will contain username that this tweet is replying to
+
                 // retweets: item contains original creator username
                 val creator = item.element("creator").text
                 val creatorUsername = creator.removePrefix("@")
                 val retweetOf = if(creatorUsername != username) creatorUsername else null
+
+                // remove parsed information from the title
+                val text = rawText
+                    .replaceFirst(nitterRt, "")
+                    .replaceFirst(nitterReply, "")
+                    .replace("\n", " ")
 
                 // from html: extract image for thumbnails
                 val html = item.element("description").text
@@ -106,11 +115,10 @@ object NitterParser {
                 if(tweetId != null) {
                     val url = "https://twitter.com/$username/status/$tweetId"
                     nitterTweets.add(
-                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, false, false)
+                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, replyTo, false)
                     )
                 } else {
-                    // TODO temp
-                    LOG.debug("invalid nitter guid?: $guid")
+                    LOG.debug("Invalid Tweet ID from Nitter guid: $guid")
                 }
             }
 
