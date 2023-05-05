@@ -92,12 +92,6 @@ object NitterParser {
                 val creatorUsername = creator.removePrefix("@")
                 val retweetOf = if(creatorUsername != username) creatorUsername else null
 
-                // remove parsed information from the title
-                val text = rawText
-                    .replaceFirst(nitterRt, "")
-                    .replaceFirst(nitterReply, "")
-                    .replace("\n", " ")
-
                 val html = item.element("description").text
                 // from html: extract image for thumbnails
                 val images = nitterImage.findAll(html)
@@ -112,6 +106,21 @@ object NitterParser {
                     // group 2 will contain id of quoted tweet
                     quoteMatch.groups[1]!!.value to quoteMatch.groups[2]!!.value.toLongOrNull()
                 } else null to null
+
+                // remove parsed information from the title
+                val text = rawText
+                    .replaceFirst(nitterRt, "")
+                    .replaceFirst(nitterReply, "")
+                    .replace("\n", " ")
+                    .run {
+                        // if reply or quote, add @mention to beginning of text
+                        val mention = when {
+                            quoteOf != null -> "@$quoteOf "
+                            replyTo != null -> "@$replyTo "
+                            else -> ""
+                        }
+                        "$mention$this"
+                    }
 
                 // parse gmt date into instant object
                 val rawDate = item.element("pubDate").text

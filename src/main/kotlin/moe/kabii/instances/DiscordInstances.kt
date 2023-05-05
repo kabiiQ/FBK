@@ -25,6 +25,7 @@ import moe.kabii.discord.event.user.MemberUpdateListener
 import moe.kabii.discord.event.user.VoiceUpdateListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
+import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
@@ -157,7 +158,7 @@ class DiscordInstances {
                         delay(Duration.ofSeconds(2))
                         OfflineUpdateHandler.runChecks(fbk.clientId, guild)
                         InviteWatcher.updateGuild(fbk.clientId, guild)
-                        // RecoverQueue.recover(fbk, guild) TODO re-enable
+                        RecoverQueue.recover(fbk, guild)
                     }
                 }
                 .onErrorResume { t ->
