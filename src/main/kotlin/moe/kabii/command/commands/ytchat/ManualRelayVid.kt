@@ -27,9 +27,9 @@ object ManualRelayChat : Command("relaychat") {
             // attempt intake of video - will discard invalid video IDs and check if the video already is known
             YoutubeVideoIntake.intakeVideosFromText(videoArg)
 
-            val dbVideo = propagateTransaction {
-                YoutubeVideo.getVideo(videoArg)
-                    ?.load(YoutubeVideo::scheduledEvent, YoutubeVideo::liveEvent)
+            val (dbVideo, scheduled, live) = propagateTransaction {
+                val video = YoutubeVideo.getVideo(videoArg)
+                Triple(video, video?.scheduledEvent, video?.liveEvent)
             }
             if(dbVideo == null) {
                 ereply(Embeds.error("Unable to process '$videoArg' as a YouTube video ID.")).awaitSingle()

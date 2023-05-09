@@ -54,13 +54,14 @@ class HoloChats(val instances: DiscordInstances) {
             }
 
             // load configurations for discord channels tracking specific freechat frames - command controlled
+            data class Data(val videoId: String, val channelId: Snowflake, val client: Int)
             val videoConfigurations = transaction {
                 YoutubeLiveChat.all()
-                    .onEach { c -> c.load(YoutubeLiveChat::ytVideo, YoutubeLiveChat::discordChannel) }
+                    .map { c -> Data(c.ytVideo.videoId, c.discordChannel.channelID.snowflake, c.discordClient) }
                     .toList()
             }
             videoConfigurations.forEach { liveChat ->
-                watchNewChat(liveChat.ytVideo.videoId, liveChat.discordChannel.channelID.snowflake, liveChat.discordClient)
+                watchNewChat(liveChat.videoId, liveChat.channelId, liveChat.client)
             }
         }
     }
