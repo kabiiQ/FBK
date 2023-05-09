@@ -118,7 +118,7 @@ object TargetSuggestionGenerator {
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         YoutubeVideoTarget,
-                        "${target.ytVideo.videoId}:${target.ytVideo.lastTitle ?: "Unknown Title"}",
+                        "${target.ytVideo.videoId}/${target.ytVideo.lastTitle ?: "Unknown Title"}",
                         target.ytVideo.videoId
                     )
                 }

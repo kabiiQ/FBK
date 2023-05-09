@@ -150,13 +150,13 @@ object YoutubeTarget : StreamingTarget(
 }
 
 object YoutubeVideoTarget : TrackerTarget(
-    "YouTube Videos",
+    "YouTubeVideos",
     FeatureChannel::streamTargetChannel,
     "ytvideo",
     listOf(
         YoutubeParser.youtubeVideoUrlPattern
     ),
-    "ytvid"
+    "youtubevideos", "ytvid"
 ) {
     override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoUrlPattern)) id else URLUtil.StreamingSites.Youtube.video(id)
 }
