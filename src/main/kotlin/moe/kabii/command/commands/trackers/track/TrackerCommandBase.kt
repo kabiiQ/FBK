@@ -77,10 +77,7 @@ object TrackerCommandBase : CommandContainer {
                     is StreamingTarget -> StreamTrackerCommand
                     is AnimeTarget -> MediaTrackerCommand
                     is TwitterTarget -> TwitterTrackerCommand
-                    is YoutubeVideoTarget -> {
-                        ereply(Embeds.error("Please use the YouTube **channel** ID to track streams/videos on a channel.\nYou seem to have linked a specific YouTube video. You can use /trackvid if you really wish to track only a single YouTube video.")).awaitSingle()
-                        return
-                    }
+                    is YoutubeVideoTarget -> YoutubeVideoUntrackCommand
                 }
                 when(action) {
                     Action.TRACK -> tracker.track(this, targetArgs, features)

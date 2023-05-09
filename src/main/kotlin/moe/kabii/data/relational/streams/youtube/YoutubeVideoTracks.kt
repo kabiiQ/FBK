@@ -61,5 +61,17 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
                     YoutubeVideos.ytChannel eq ytChan.id
                 }
         )
+
+        @WithinExposedContext
+        fun getExistingTrack(clientId: Int, channelId: Long, videoId: String) = YoutubeVideoTrack.wrapRows(
+            YoutubeVideoTracks
+                .innerJoin(YoutubeVideos)
+                .innerJoin(DiscordObjects.Channels)
+                .select {
+                    YoutubeVideoTracks.discordClient eq clientId and
+                            (DiscordObjects.Channels.channelID eq channelId) and
+                            (YoutubeVideos.videoId eq videoId)
+                }
+        ).firstOrNull()
     }
 }

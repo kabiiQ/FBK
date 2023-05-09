@@ -5,11 +5,14 @@ import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
 import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
+import moe.kabii.trackers.YoutubeVideoTarget
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import kotlin.reflect.KClass
@@ -109,6 +112,17 @@ object TargetSuggestionGenerator {
                     )
                 }
 
+                YoutubeVideoTrack.find {
+                    YoutubeVideoTracks.discordClient eq clientId and
+                            (YoutubeVideoTracks.discordChannel eq dbChannel.id)
+                }.mapTo(targets) { target ->
+                    TargetComponents(
+                        YoutubeVideoTarget,
+                        "${target.ytVideo.videoId}:${target.ytVideo.lastTitle ?: "Unknown Title"}",
+                        target.ytVideo.videoId
+                    )
+                }
+
                 TrackedMediaLists.ListTarget.find {
                     TrackedMediaLists.ListTargets.discordClient eq clientId and
                             (TrackedMediaLists.ListTargets.discord eq dbChannel.id)
@@ -125,7 +139,7 @@ object TargetSuggestionGenerator {
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         TwitterTarget,
-                        (target.twitterFeed.username)
+                        target.twitterFeed.username
                     )
                 }
 
