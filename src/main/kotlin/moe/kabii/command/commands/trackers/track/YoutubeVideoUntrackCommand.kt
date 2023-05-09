@@ -7,15 +7,12 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
-import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.TargetArguments
-import moe.kabii.trackers.YoutubeVideoTarget
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.dao.load
 
 object YoutubeVideoUntrackCommand : TrackerCommand {
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {

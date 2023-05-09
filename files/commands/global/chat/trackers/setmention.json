@@ -46,6 +46,13 @@
             "required": false
         },
         {
+            "name": "copyfrom",
+            "description": "A stream tracked in this channel to copy mention settings from. Applied before all other settings.",
+            "type": 3,
+            "required": false,
+            "autocomplete": true
+        },
+        {
             "name": "membershiprole",
             "description": "A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.",
             "type": 8,

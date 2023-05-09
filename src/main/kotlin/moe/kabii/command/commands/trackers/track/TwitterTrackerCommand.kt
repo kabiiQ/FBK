@@ -17,7 +17,6 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.LowerCase
 
 object TwitterTrackerCommand : TrackerCommand {

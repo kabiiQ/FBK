@@ -14,7 +14,6 @@ import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.ytchat.YoutubeChatWatcher
-import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class HoloChats(val instances: DiscordInstances) {
