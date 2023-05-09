@@ -157,7 +157,7 @@ object EditMentionRole : Command("editmention") {
 
         // verify that twitter feed is tracked in this server (any target in this guild)
         val matchingTarget = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser.username)
+            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser)
         }
 
         if(matchingTarget == null) {

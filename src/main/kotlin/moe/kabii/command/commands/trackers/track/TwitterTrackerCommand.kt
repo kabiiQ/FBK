@@ -60,7 +60,7 @@ object TwitterTrackerCommand : TrackerCommand {
         // check if this user is already tracked
         val channelId = origin.chan.id.asLong()
         val existingTrack = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser.username)
+            TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser)
         }
 
         if(existingTrack != null) {
@@ -103,10 +103,10 @@ object TwitterTrackerCommand : TrackerCommand {
         val username = twitterUser.username
         // verify this user is tracked
         val channelId = origin.chan.id.asLong()
-        val existingTrack = propagateTransaction {
-            TwitterTarget
-                .getExistingTarget(origin.client.clientId, channelId, twitterUser.username)
-                ?.load(TwitterTarget::tracker)
+        val (existingTrack, trackerId) = propagateTransaction {
+            val twitter = TwitterTarget
+                .getExistingTarget(origin.client.clientId, channelId, twitterUser)
+            twitter to twitter?.tracker?.userID
         }
 
         if(existingTrack == null) {
@@ -118,16 +118,16 @@ object TwitterTrackerCommand : TrackerCommand {
         if(
             origin.isPM
             || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
-            || origin.author.id.asLong() == existingTrack.tracker.userID
+            || origin.author.id.asLong() == trackerId
         ) {
             propagateTransaction { existingTrack.delete() }
             origin.ireply(Embeds.fbk("No longer tracking **Twitter/$username**.")).awaitSingle()
             TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
         } else {
             val tracker = origin.chan.client
-                .getUserById(existingTrack.tracker.userID.snowflake).tryAwait().orNull()
+                .getUserById(trackerId!!.snowflake).tryAwait().orNull()
                 ?.username ?: "invalid-user"
-            origin.ereply(Embeds.error("You may not untrack **Twitter/$username** unless you tracked this stream (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
+            origin.ereply(Embeds.error("You may not untrack **Twitter/$username** unless you tracked this feed (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
         }
     }
 }

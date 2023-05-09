@@ -58,12 +58,12 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
         @WithinExposedContext
-        fun getExistingTarget(clientId: Int, channelId: Long, username: String) = TwitterTarget.wrapRows(
+        fun getExistingTarget(clientId: Int, channelId: Long, feed: TwitterFeed) = TwitterTarget.wrapRows(
             TwitterTargets
                 .innerJoin(TwitterFeeds)
                 .innerJoin(DiscordObjects.Channels)
                 .select {
-                    LowerCase(TwitterFeeds.username) eq username.lowercase() and
+                    TwitterFeeds.id eq feed.id and
                             (TwitterTargets.discordClient eq clientId) and
                             (DiscordObjects.Channels.channelID eq channelId)
                 }
