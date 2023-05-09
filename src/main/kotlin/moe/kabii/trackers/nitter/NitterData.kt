@@ -37,6 +37,8 @@ data class NitterTweet(
 
     val notifyOption = when {
         retweet -> TwitterSettings::displayRetweet
+        reply -> TwitterSettings::displayReplies
+        quote -> TwitterSettings::displayQuote
         else -> TwitterSettings::displayNormalTweet
     }
 }
