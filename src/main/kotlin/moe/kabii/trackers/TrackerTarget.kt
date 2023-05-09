@@ -39,6 +39,7 @@ sealed class TrackerTarget(
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
             103L -> TwitcastingTarget
+            199L -> YoutubeVideoTarget
             200L -> MALTarget
             201L -> KitsuTarget
             202L -> AniListTarget
@@ -146,6 +147,18 @@ object YoutubeTarget : StreamingTarget(
     override val onTrack: TrackCallback = { _, channel ->
         YoutubeVideoIntake.intakeExisting(channel.siteChannelID)
     }
+}
+
+object YoutubeVideoTarget : TrackerTarget(
+    "YouTube Videos",
+    FeatureChannel::streamTargetChannel,
+    "ytvideo",
+    listOf(
+        YoutubeParser.youtubeVideoUrlPattern
+    ),
+    "ytvid"
+) {
+    override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoUrlPattern)) id else URLUtil.StreamingSites.Youtube.video(id)
 }
 
 object TwitcastingTarget : StreamingTarget(

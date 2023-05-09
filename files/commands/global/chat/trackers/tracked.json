@@ -1,4 +1,46 @@
 {
     "name": "tracked",
-    "description": "List targets that are currently tracked in this channel."
+    "description": "List targets that are currently tracked in this channel.",
+    "options": [
+        {
+            "name": "site",
+            "description": "If specified, only tracked targets for this specific site will be listed.",
+            "required": false,
+            "type": 4,
+            "choices": [
+                {
+                    "name": "Twitter",
+                    "value": 0
+                },
+                {
+                    "name": "YouTube",
+                    "value": 100
+                },
+                {
+                    "name": "YouTube Videos",
+                    "value": 199
+                },
+                {
+                    "name": "Twitch",
+                    "value": 101
+                },
+                {
+                    "name": "TwitCasting",
+                    "value": 103
+                },
+                {
+                    "name": "MyAnimeList",
+                    "value": 200
+                },
+                {
+                    "name": "kitsu.io",
+                    "value": 201
+                },
+                {
+                    "name": "AniList",
+                    "value": 202
+                }
+            ]
+        }
+    ]
 }
