@@ -50,10 +50,9 @@ object SetMentionRole : Command("setmention") {
             // validate and pass to setters if provided
             val copyArg = args.optStr("copyfrom")
             val copyFrom = if(copyArg != null) {
-                when(val findTarget = TargetArguments.parseFor(this, copyArg, null)) {
-                    is Ok -> copyMentionData(this, findTarget.value)
-                    is Err -> null
-                }
+                TargetArguments
+                    .parseFor(this, copyArg, null).orNull()
+                    ?.let { t -> copyMentionData(this, t) }
             } else null
             if(copyArg != null && copyFrom == null) {
                 ereply(Embeds.error("Unable to copy from channel **$copyArg**. Be careful to select a channel from the autocompleted options and do not click inside or edit the text if using this option."))

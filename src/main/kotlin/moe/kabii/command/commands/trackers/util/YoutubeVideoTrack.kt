@@ -7,20 +7,32 @@ import moe.kabii.command.ChannelFeatureDisabledException
 import moe.kabii.command.Command
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
+import moe.kabii.rusty.*
+import moe.kabii.trackers.StreamingTarget
+import kotlin.reflect.full.isSuperclassOf
 
 object YoutubeVideoTrack : Command("trackvid") {
     override val wikiPath = "Livestream-Tracker#user-commands"
 
     init {
+        autoComplete {
+            // autocomplete for 'usepings' option: should list streams tracked in this channel
+            val channelId = event.interaction.channelId.asLong()
+            val matches = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, null) { target -> target is YoutubeTarget }
+            suggest(matches)
+        }
+
         chat {
             // make sure feature is enabled or this channel is private
             if(guild != null) {
@@ -58,19 +70,36 @@ object YoutubeVideoTrack : Command("trackvid") {
                 return@chat
             }
 
-            // trackvid <id> (role...)
-            val mentionRole = args.optRole("role")?.awaitSingle()
+            // trackvid <id> (channel)
+            val pingsArg = args.optStr("usepings")
+            // get channel target specified by user
+            val usePings = pingsArg?.let { pings ->
+                TargetArguments
+                    .parseFor(this, pings, YoutubeTarget)
+                    .orNull()
+            }
+            if(pingsArg != null && usePings == null) {
+                ereply(Embeds.error("Unable to use pings from channel **$pingsArg**. Be careful to select a channel from the autocompleted options and do not click inside or edit the text if using this option."))
+                return@chat
+            }
 
             propagateTransaction {
+                val pings = usePings?.run {
+                    TrackedStreams.Target.getForChannel(client.clientId, chan.id, TrackedStreams.DBSite.YOUTUBE, this.identifier)
+                }
+
                 val dbVideo = YoutubeVideo.getOrInsert(ytVideo.id, ytVideo.channel.id)
                 val discordChannel = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), guild?.id?.asLong())
                 val dbUser = DiscordObjects.User.getOrInsert(author.id.asLong())
-                YoutubeVideoTrack.insertOrUpdate(client.clientId, dbVideo, discordChannel, dbUser, mentionRole?.id?.asLong())
+                YoutubeVideoTrack.insertOrUpdate(client.clientId, dbVideo, discordChannel, dbUser, pings)
             }
 
             val videoUrl = URLUtil.StreamingSites.Youtube.video(ytVideo.id)
-            val mentioning = if(mentionRole != null) mentionRole.name else "you"
-            ireply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live, mentioning **$mentioning**.")).awaitSingle()
+            val mentioning = if(usePings != null) {
+                val getCommand = "`/getmention username:youtube:${usePings.identifier}`"
+                "using the ping configuration for **${usePings.site.full}/${usePings.identifier}**\n\nYou can copy the following command to view this ping configuration: $getCommand"
+            } else "mentioning **you**."
+            ireply(Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live, $mentioning")).awaitSingle()
         }
     }
 }

@@ -9,10 +9,11 @@
             "required": true
         },
         {
-            "name": "role",
-            "description": "If specified, a role will be pinged when this stream goes live.",
-            "type": 8,
-            "required": false
+            "name": "usepings",
+            "description": "A tracked channel to use the ping settings from when this video goes live.",
+            "type": 3,
+            "required": false,
+            "autocomplete": true
         }
     ]
 }

@@ -17,7 +17,7 @@ object YoutubeVideoTracks : IdTable<Int>() {
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE)
     val discordChannel = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val tracker = reference("discord_user_tracked", DiscordObjects.Users, ReferenceOption.CASCADE)
-    val mentionRole = long("role_mention").nullable()
+    val useMentionFor = reference("use_mention_for", TrackedStreams.Targets, ReferenceOption.SET_NULL).nullable()
 
     override val primaryKey = PrimaryKey(ytVideo, discordChannel)
 }
@@ -27,24 +27,25 @@ class YoutubeVideoTrack(id: EntityID<Int>) : IntEntity(id) {
     var ytVideo by YoutubeVideo referencedOn YoutubeVideoTracks.ytVideo
     var discordChannel by DiscordObjects.Channel referencedOn YoutubeVideoTracks.discordChannel
     var tracker by DiscordObjects.User referencedOn YoutubeVideoTracks.tracker
-    var mentionRole by YoutubeVideoTracks.mentionRole
+
+    var useMentionFor by TrackedStreams.Target optionalReferencedOn YoutubeVideoTracks.useMentionFor
 
     companion object : IntEntityClass<YoutubeVideoTrack>(YoutubeVideoTracks) {
         @WithinExposedContext
-        fun insertOrUpdate(discordClient: Int, ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, mentionRoleId: Long?): YoutubeVideoTrack {
+        fun insertOrUpdate(discordClient: Int, ytVideo: YoutubeVideo, discordChannel: DiscordObjects.Channel, tracker: DiscordObjects.User, useMentionFor: TrackedStreams.Target?): YoutubeVideoTrack {
             val existing = find {
                 YoutubeVideoTracks.ytVideo eq ytVideo.id and
                         (YoutubeVideoTracks.discordChannel eq discordChannel.id) and
                         (YoutubeVideoTracks.discordClient eq discordClient)
             }.firstOrNull()
             return existing?.apply {
-                this.mentionRole = mentionRoleId
+                this.useMentionFor = useMentionFor
             } ?: new {
                 this.discordClient = discordClient
                 this.ytVideo = ytVideo
                 this.discordChannel = discordChannel
                 this.tracker = tracker
-                this.mentionRole = mentionRoleId
+                this.useMentionFor = useMentionFor
             }
         }
 
