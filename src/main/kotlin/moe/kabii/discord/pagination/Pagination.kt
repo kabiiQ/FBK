@@ -36,7 +36,7 @@ object PaginationUtil {
         yield(page.toString().dropLast(1))
     }.toList()
 
-    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", detail: (EmbedCreateSpec.() -> EmbedCreateSpec)? = null) {
+    suspend fun paginateListAsDescription(origin: DiscordParameters, elements: List<String>, embedTitle: String? = null, descHeader: String? = "", ephemeral: Boolean = true, detail: (EmbedCreateSpec.() -> EmbedCreateSpec)? = null) {
         val pages = partition(MagicNumbers.Embed.NORM_DESC, elements)
 
         fun pageContent(page: Page): EmbedCreateSpec {
@@ -53,11 +53,14 @@ object PaginationUtil {
 
         var currPage = Page(pages.size, 0)
         if(currPage.pageCount == 1) {
-            origin.ireply(pageContent(currPage)).awaitSingle()
+            val content = pageContent(currPage)
+            if(ephemeral) origin.ereply(content).awaitSingle()
+            else origin.ireply(content).awaitSingle()
             return
         }
         origin.event
             .reply()
+            .withEphemeral(ephemeral)
             .withEmbeds(pageContent(currPage))
             .withComponents(buttons)
             .awaitAction()

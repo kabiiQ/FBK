@@ -49,7 +49,7 @@ object PS2OutfitLookup : Command("ps2outfit") {
         val count = "${onlineMembers.count()}/${outfit.memberCount}"
         val header = "Outfit leader: ${leader.name?.first} - $status\n\nOnline members ($count):"
 
-        PaginationUtil.paginateListAsDescription(origin, onlineMembers, descHeader = header) {
+        PaginationUtil.paginateListAsDescription(origin, onlineMembers, descHeader = header, ephemeral = false) {
             this
                 .withColor(outfit.leader.faction.color)
                 .withAuthor(EmbedCreateFields.Author.of("[${outfit.tag.orEmpty()}] ${outfit.name}", null, outfit.leader.faction.image))
