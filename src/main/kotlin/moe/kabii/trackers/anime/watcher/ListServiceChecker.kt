@@ -51,7 +51,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                             trackedList.delete()
                             return@forEach
                         } catch (e: Exception) {
-                            LOG.warn("Exception parsing media item: ${trackedList.siteListId} :: ${e.message}")
+                            LOG.warn("Exception parsing media item: ${trackedList.siteListId}")
                             LOG.trace(e.stackTraceString)
                             return@forEach
                         }

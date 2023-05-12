@@ -45,7 +45,7 @@ abstract class MediaListParser(val authenticator: Authenticator? = null) {
                 // exception is thrown for other io issues
                 response.use(translator)
             } catch (e: Exception) {
-                LOG.warn("Media list request IO error: $request :: ${e.message}")
+                LOG.warn("Media list request IO error: $request")
                 LOG.debug(e.stackTraceString)
                 throw e
             }
