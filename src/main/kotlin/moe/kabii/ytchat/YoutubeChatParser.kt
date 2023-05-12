@@ -28,7 +28,6 @@ class YoutubeChatParser(val instances: DiscordInstances, val watcher: YoutubeCha
             propagateTransaction {
                 messages
                     .filter { chat -> chat.type == "textMessage" }
-                    // internal process for IRyS server only at this time
                     .onEach { message -> watcher.holoChatQueue.trySend(YoutubeChatWatcher.YTMessageData(room, message)) }
                     .filter { chat -> chat.author.member }
                     .forEach { chat ->

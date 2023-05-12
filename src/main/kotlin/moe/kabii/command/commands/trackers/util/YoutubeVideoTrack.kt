@@ -18,9 +18,6 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
-import moe.kabii.rusty.*
-import moe.kabii.trackers.StreamingTarget
-import kotlin.reflect.full.isSuperclassOf
 
 object YoutubeVideoTrack : Command("trackvid") {
     override val wikiPath = "Livestream-Tracker#user-commands"

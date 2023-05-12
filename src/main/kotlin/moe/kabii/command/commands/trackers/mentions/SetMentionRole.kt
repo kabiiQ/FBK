@@ -1,6 +1,5 @@
 package moe.kabii.command.commands.trackers.mentions
 
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Role
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
@@ -10,7 +9,6 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.ColorUtil
