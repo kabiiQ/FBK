@@ -28,7 +28,7 @@ object NitterParser {
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
-    private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>]]")
+    private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
     private val nitterVideo = Regex("<video poster=")
     private val nitterDateFormat = DateTimeFormatter.ofPattern("EEE',' dd MMM uuuu HH:mm:ss zzz", Locale.ENGLISH)
@@ -92,7 +92,9 @@ object NitterParser {
                 val creatorUsername = creator.removePrefix("@")
                 val retweetOf = if(creatorUsername != username) creatorUsername else null
 
-                val html = item.element("description").text
+                val html = item.element("description")
+                    .text
+                    .replace("\n", "")
                 // from html: extract image for thumbnails
                 val images = nitterImage.findAll(html)
                     .mapNotNull { m -> m.groups[1]?.value }

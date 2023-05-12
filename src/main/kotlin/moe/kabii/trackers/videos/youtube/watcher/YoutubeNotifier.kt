@@ -416,7 +416,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         } else "<@${videoTrack.tracker.userID}> Livestream reminder: "
 
         val new = chan
-            .createMessage("$mention**${liveStream.channel.name}** is now live: ${liveStream.url}")
+            .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
             .awaitSingle()
         TrackerUtil.checkAndPublish(fbk, new)
     }
