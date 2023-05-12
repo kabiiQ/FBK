@@ -13,7 +13,7 @@ object MALParser : MediaListParser(
         request.header("X-MAL-CLIENT-ID", Keys.config[Keys.MAL.malKey])
     }
 ) {
-    const val callCooldown = 2_000L
+    const val callCooldown = 1_000L
 
     override fun getListID(input: String): String = input // mal does not use an 'id' system for api - just use username
 

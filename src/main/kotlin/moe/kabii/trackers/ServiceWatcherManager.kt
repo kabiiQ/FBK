@@ -119,7 +119,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),
             Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
-            malThread,
+            //malThread, TODO re-enable, disabled due to MAL hack
             kitsuThread,
             aniListThread,
 //            Thread(twitter, "TwitterChecker"),
