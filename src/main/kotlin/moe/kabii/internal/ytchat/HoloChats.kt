@@ -44,24 +44,24 @@ class HoloChats(val instances: DiscordInstances) {
                     .ofType(MessageChannel::class.java)
                     .tryBlock().orNull()
                     .run {
-                        if(this == null) {
+                        if (this == null) {
                             LOG.error("Unable to link HoloChat channel: $yt :: $discord")
                         } else {
                             chatChannels.getOrPut(yt, ::mutableListOf).add(this)
                         }
                     }
             }
+        }
 
-            // load configurations for discord channels tracking specific freechat frames - command controlled
-            data class Data(val videoId: String, val channelId: Snowflake, val client: Int)
-            val videoConfigurations = transaction {
-                YoutubeLiveChat.all()
-                    .map { c -> Data(c.ytVideo.videoId, c.discordChannel.channelID.snowflake, c.discordClient) }
-                    .toList()
-            }
-            videoConfigurations.forEach { liveChat ->
-                watchNewChat(liveChat.videoId, liveChat.channelId, liveChat.client)
-            }
+        // load configurations for discord channels tracking specific freechat frames - command controlled
+        data class Data(val videoId: String, val channelId: Snowflake, val client: Int)
+        val videoConfigurations = transaction {
+            YoutubeLiveChat.all()
+                .map { c -> Data(c.ytVideo.videoId, c.discordChannel.channelID.snowflake, c.discordClient) }
+                .toList()
+        }
+        videoConfigurations.forEach { liveChat ->
+            watchNewChat(liveChat.videoId, liveChat.channelId, liveChat.client)
         }
     }
 
@@ -81,13 +81,16 @@ class HoloChats(val instances: DiscordInstances) {
 
     suspend fun handleHoloChat(data: YoutubeChatWatcher.YTMessageData) {
         val (room, chat) = data
-        // send Hololive messages to stream chat
-        if(!chatChannels.contains(room.channelId)) return
-        val chatChannel = chatChannels[room.channelId] ?: return
+        // send Hololive messages to stream chat discord channels
+        val targets = mutableListOf<MessageChannel>()
+        chatChannels[room.channelId]?.run(targets::addAll)
+        chatVideos[room.videoId]?.run(targets::addAll)
+        if(targets.isEmpty()) return
+
         try {
             val member = hololive[chat.author.channelId]
             if(member != null) {
-                chatChannel.forEach { channel ->
+                targets.forEach { channel ->
                     channel.createMessage(
                         Embeds.fbk()
                             .run {

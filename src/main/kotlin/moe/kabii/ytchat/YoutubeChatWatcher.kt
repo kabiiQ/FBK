@@ -94,8 +94,8 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
 
                 // get all youtube videos that have a manually requested holochat relay
                 val (relayChats, endedChats) = YoutubeLiveChat
-                    .all()
-                    .partition { chat -> chat.ytVideo.liveEvent != null || chat.ytVideo.scheduledEvent != null }
+                    .all()                             // don't remove videos that haven't even been checked against the YT API yet
+                    .partition { chat -> chat.ytVideo.lastAPICall == null || chat.ytVideo.liveEvent != null || chat.ytVideo.scheduledEvent != null }
 
                 // clean up holo chat relays that no longer have a chat
                 endedChats.forEach(YoutubeLiveChat::delete)
@@ -122,7 +122,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     LOG.info("Subscribing to YT chat: $newChatId")
                     // launch thread for each chat connection/process
                     thread(start = true) {
-                        val subprocess = ProcessBuilder("python3", scriptName, newChatId)
+                        val subprocess = ProcessBuilder("python3", "-u", scriptName, newChatId)
                             .directory(scriptDir)
                             .start()
 
