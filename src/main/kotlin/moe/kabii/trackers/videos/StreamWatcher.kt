@@ -22,6 +22,7 @@ import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
@@ -82,7 +83,12 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             if(channel.apiUse) return emptyList()
             if(channel.site == TrackedStreams.DBSite.YOUTUBE) {
 
-                if(!YoutubeVideoTrack.getForChannel(channel).empty() || !MembershipConfigurations.getForChannel(channel).empty()) return emptyList()
+                // other reasons this YT channel may be in the database
+                if(
+                    !YoutubeVideoTrack.getForChannel(channel).empty()
+                    || !MembershipConfigurations.getForChannel(channel).empty()
+                    || !YoutubeLiveChat.getForChannel(channel).empty()
+                ) return emptyList()
 
             }
 
