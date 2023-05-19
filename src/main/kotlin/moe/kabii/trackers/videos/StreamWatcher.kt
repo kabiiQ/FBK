@@ -17,7 +17,10 @@ import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
-import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.data.relational.streams.youtube.YoutubeNotification
+import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
+import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
 import moe.kabii.discord.tasks.DiscordTaskPool

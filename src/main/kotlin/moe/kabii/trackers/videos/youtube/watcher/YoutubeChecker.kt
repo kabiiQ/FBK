@@ -231,7 +231,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
             } // else case seems to happen with membership streams that weren't initially private ? or similar cases
 
             // iterate all targets and make sure they have a notification - if a stream is tracked in a different server/channel while live, it would not be posted
-            filteredTargets(call.video.ytChannel, dbLive::shouldPostLiveNotice).forEach { target ->
+            filteredTargets(call.video.ytChannel, ytVideo, dbLive::shouldPostLiveNotice).forEach { target ->
                 // verify target already has a notification
                 if(YoutubeNotification.getExisting(target, call.video).empty()) {
                     try {

@@ -96,6 +96,8 @@ data class YoutubeSettings(
     var premieres: Boolean = true,
     var upcomingNotificationDuration: String? = null,
     var streamCreation: Boolean = false,
+    var includeMemberContent: Boolean = true,
+    var includePublicContent: Boolean = true,
 
     var upcomingChannel: Long? = null
 )

@@ -33,6 +33,14 @@ object YoutubeConfig : Command("yt") {
             "creation",
             YoutubeSettings::streamCreation
         ),
+        BooleanElement("Include membership-only videos in this channel",
+            "membervid",
+            YoutubeSettings::includeMemberContent
+        ),
+        BooleanElement("Include non-membership videos in this channel",
+            "publicvid",
+            YoutubeSettings::includePublicContent
+        ),
         CustomElement("Post when a stream is starting soon",
             "upcoming",
             YoutubeSettings::upcomingNotificationDuration as KMutableProperty1<YoutubeSettings, Any?>,

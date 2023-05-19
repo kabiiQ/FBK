@@ -1,5 +1,6 @@
 package moe.kabii.trackers.videos.youtube
 
+import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.util.constants.URLUtil
 import java.time.Duration
 import java.time.Instant
@@ -27,6 +28,11 @@ data class YoutubeVideoInfo(
     val memberLimited: Boolean
 ) {
     val url = "https://youtube.com/watch?v=$id"
+
+    fun filterMembership(settings: YoutubeSettings): Boolean = when {
+        this.memberLimited -> settings.includeMemberContent
+        else -> settings.includePublicContent
+    }
 }
 
 data class YoutubeStreamInfo(

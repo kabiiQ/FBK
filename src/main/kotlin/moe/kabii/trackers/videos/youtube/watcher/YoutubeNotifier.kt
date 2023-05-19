@@ -66,7 +66,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         dbVideo.liveEvent = liveEvent
 
         // post notifications to all enabled targets
-        filteredTargets(dbVideo.ytChannel, liveEvent::shouldPostLiveNotice).forEach { target ->
+        filteredTargets(dbVideo.ytChannel, video, liveEvent::shouldPostLiveNotice).forEach { target ->
             try {
                 createLiveNotification(dbVideo, video, target, new = true)
             } catch(e: Exception) {
@@ -182,7 +182,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val untilStart = Duration.between(Instant.now(), scheduled)
 
         // check if any targets would like notification for this upcoming stream
-        filteredTargets(dbEvent.ytVideo.ytChannel) { yt ->
+        filteredTargets(dbEvent.ytVideo.ytChannel, ytVideo) { yt ->
             if (yt.upcomingNotificationDuration != null) {
                 // check upcoming stream is within this target's notice 'range'
                 val range = Duration.parse(yt.upcomingNotificationDuration)
@@ -204,7 +204,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     @WithinExposedContext
     suspend fun streamCreated(dbVideo: YoutubeVideo, ytVideo: YoutubeVideoInfo) {
         // check if any targets would like notification for this stream frame creation
-        filteredTargets(dbVideo.ytChannel, YoutubeSettings::streamCreation)
+        filteredTargets(dbVideo.ytChannel, ytVideo, YoutubeSettings::streamCreation)
             .forEach { target ->
                 try {
                     createInitialNotification(ytVideo, target)
@@ -221,7 +221,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(3L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
 
         // check if any targets would like notification for this video upload
-        filteredTargets(dbVideo.ytChannel, YoutubeSettings::uploads)
+        filteredTargets(dbVideo.ytChannel, ytVideo, YoutubeSettings::uploads)
             .forEach { target ->
                 if(!YoutubeNotification.getExisting(target, dbVideo).empty()) return@forEach
                 try {
@@ -241,7 +241,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     //       ----------------
 
     @WithinExposedContext
-    suspend fun filteredTargets(channel: TrackedStreams.StreamChannel, filter: (YoutubeSettings) -> Boolean): List<TrackedStreams.Target> {
+    suspend fun filteredTargets(channel: TrackedStreams.StreamChannel, ytVideo: YoutubeVideoInfo, filter: (YoutubeSettings) -> Boolean): List<TrackedStreams.Target> {
         val channelId = channel.siteChannelID
         val activeTargets = getActiveTargets(channel)
         return if(activeTargets == null) {
@@ -253,7 +253,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val (_, features) =
                     GuildConfigurations.findFeatures(target.discordClient, target.discordChannel.guild?.guildID, target.discordChannel.channelID)
                 val yt = features?.youtubeSettings ?: YoutubeSettings()
-                filter(yt)
+                ytVideo.filterMembership(yt) && filter(yt)
             }
     }
 
