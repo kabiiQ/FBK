@@ -113,7 +113,6 @@ object NitterParser {
                 val text = rawText
                     .replaceFirst(nitterRt, "")
                     .replaceFirst(nitterReply, "")
-                    .replace("\n", " ")
                     .run {
                         // if reply or quote, add @mention to beginning of text
                         val mention = when {
