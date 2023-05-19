@@ -3,7 +3,6 @@ package moe.kabii.command.commands.ytchat
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
-import moe.kabii.command.verify
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
@@ -17,7 +16,7 @@ object ManualRelayChat : Command("relaychat") {
 
     init {
         chat {
-            member.verify(Permission.MANAGE_CHANNELS)
+            channelVerify(Permission.MANAGE_MESSAGES)
 
             // command will currently only be called in a restricted set of guilds.
             // can simply go ahead and add the video as a chat relay for those guilds.
