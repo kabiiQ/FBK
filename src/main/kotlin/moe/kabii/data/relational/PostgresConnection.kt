@@ -20,6 +20,7 @@ import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.data.relational.twitter.TwitterFeeds
+import moe.kabii.data.relational.twitter.TwitterRetweetHistory
 import moe.kabii.data.relational.twitter.TwitterTargetMentions
 import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
@@ -67,6 +68,7 @@ internal object PostgresConnection {
                 Twitcasts.TwitNotifs,
                 TwitterFeeds,
                 TwitterTargets,
+                TwitterRetweetHistory,
                 TwitterTargetMentions,
                 PS2Internal.Characters,
                 PS2Internal.Outfits,
