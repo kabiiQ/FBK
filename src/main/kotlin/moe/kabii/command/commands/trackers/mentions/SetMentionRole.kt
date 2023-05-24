@@ -90,7 +90,7 @@ object SetMentionRole : Command("setmention") {
         val updateStr = propagateTransaction {
             val existingMention = matchingTarget.mention()
 
-            val membershipRoleArg = copyFrom?.mentionRoleMember ?: origin.args.optRole("membershipRole")?.awaitSingle()
+            val membershipRoleArg = copyFrom?.mentionRoleMember ?: origin.args.optRole("membershiprole")?.awaitSingle()
             val membershipTextArg = copyFrom?.mentionTextMember ?: origin.args.optStr("membershiptext")
             val uploadsRoleArg = copyFrom?.mentionRoleUploads ?: origin.args.optRole("alternateuploadrole")?.awaitSingle()
             val upcomingRoleArg = copyFrom?.mentionRoleUpcoming ?: origin.args.optRole("upcomingrole")?.awaitSingle()
