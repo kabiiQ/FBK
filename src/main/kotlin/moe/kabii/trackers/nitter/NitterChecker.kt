@@ -18,10 +18,10 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterRetweets
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
@@ -90,19 +90,35 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
                                     val (user, tweets) = nitter
 
-                                    val latest = tweets.maxOf { tweet ->
+                                    val latest = tweets.maxOfOrNull { tweet ->
                                         // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
                                         val age = Duration.between(tweet.date, Instant.now())
 
-                                        // if already handled or too old, skip, but do not pull tweet ID again
-                                        if ((feed.lastPulledTweet ?: 0) >= tweet.id
-                                            || age > Duration.ofHours(2)
-                                            || cache.seenTweets.contains(tweet.id)
-                                        ) return@maxOf tweet.id
+                                        if(tweet.retweet) {
+                                            /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
+                                            Check if this RT has already been acknowledged from this feed from our own database
+                                             */
+                                            val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                            if(!new) {
+                                                // TODO remove this logging
+                                                LOG.info("Skipping Retweet (proper): ${feed.username} :: ${tweet.id}")
+                                                return@maxOfOrNull tweet.id
+                                            }
+
+                                            LOG.info("Skipping Retweet (TEMP): ${feed.username} :: ${tweet.id}")
+                                            // TODO remove after initial wave: POST NO RETWEETS, or all old ones will be posted.
+                                            return@maxOfOrNull tweet.id
+                                        } else {
+                                            // if already handled or too old, skip, but do not pull tweet ID again
+                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
+                                                || age > Duration.ofHours(2)
+                                                || cache.seenTweets.contains(tweet.id)
+                                            ) return@maxOfOrNull tweet.id
+                                        }
 
                                         notifyTweet(user, tweet, targets)
                                     }
-                                    if (latest > (feed.lastPulledTweet ?: 0L)) {
+                                    if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
                                         transaction {
                                             feed.lastPulledTweet = latest
                                         }
@@ -237,7 +253,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
                 var outdated = false
                 val mentionText = if(mention != null) {
-                    outdated = Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
+                    outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
                     val rolePart = if(mention.discord == null || outdated) null
                     else mention.discord.mention.plus(" ")
                     val textPart = mention.db.mentionText?.plus(" ")
