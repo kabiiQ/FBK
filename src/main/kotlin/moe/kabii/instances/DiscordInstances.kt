@@ -15,17 +15,8 @@ import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.documentation.CommandDocumentor
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.discord.event.EventListener
-import moe.kabii.discord.event.bot.NewGuildListener
-import moe.kabii.discord.event.bot.ReconnectListener
-import moe.kabii.discord.event.guild.*
-import moe.kabii.discord.event.guild.welcome.WelcomerListener
-import moe.kabii.discord.event.interaction.*
-import moe.kabii.discord.event.message.starboard.StarboardEventHandler
-import moe.kabii.discord.event.user.MemberUpdateListener
-import moe.kabii.discord.event.user.VoiceUpdateListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
-import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
@@ -90,36 +81,20 @@ class DiscordInstances {
         CommandDocumentor.writeCommandDoc(manager, globalCommands)
         LOG.info("Command List.md updated.")
 
-        val instancedListeners = listOf(
-            ChatCommandHandler(this),
-            UserCommandHandler(this),
-            MessageCommandHandler(this),
-            AutoCompleteHandler(this),
-            ReconnectListener(this),
-            NewGuildListener(this),
-            ChannelDeletionListener(this),
-            RoleDeletionListener(this),
-            MemberUpdateListener(this),
-            WelcomerListener(this),
-            VoiceUpdateListener(this),
-            BanLogger.BanListener(this),
-            BanLogger.PardonListener(this),
-            JoinLogger.JoinListener(this),
-            PartLogger.PartListener(this),
-            ReactionRoleHandler.ReactionAddListener(this),
-            ReactionRoleHandler.ReactionRemoveListener(this),
-            StarboardEventHandler.ReactionAddListener(this),
-            StarboardEventHandler.ReactionRemoveListener(this),
-            StarboardEventHandler.ReactionEmojiRemoveListener(this),
-            StarboardEventHandler.ReactionBulkRemoveListener(this),
-            StarboardEventHandler.MessageDeletionListener(this),
-            ButtonRoleHandler(this)
-        )
-
         val eventListeners = reflection.getSubTypesOf(EventListener::class.java)
             .mapNotNull { clazz ->
-                clazz.kotlin.objectInstance?.apply {
-                    LOG.debug("Registering EventHandler: $eventType :: $clazz")
+                val obj = clazz.kotlin.objectInstance
+                if(obj != null) {
+                    LOG.debug("Registering EventHandler object :: $clazz")
+                    obj
+                } else {
+                    // many event listeners require access to the discord instances and are not singletons.
+                    val instance = clazz
+                        .constructors[0]
+                        .newInstance(this)
+                        .run(clazz::cast)
+                    LOG.debug("Found EventHandler class: $clazz :: ${instance.eventType}")
+                    instance
                 }
             }
 
@@ -158,7 +133,7 @@ class DiscordInstances {
                         delay(Duration.ofSeconds(2))
                         OfflineUpdateHandler.runChecks(fbk.clientId, guild)
                         InviteWatcher.updateGuild(fbk.clientId, guild)
-                        RecoverQueue.recover(fbk, guild)
+//                        RecoverQueue.recover(fbk, guild)
                     }
                 }
                 .onErrorResume { t ->
@@ -168,7 +143,7 @@ class DiscordInstances {
                 }
             publishers.add(offlineChecks)
 
-            val allListeners = (instancedListeners + eventListeners).map { listener ->
+            val allListeners = eventListeners.map { listener ->
                 gateway
                     .on(listener.eventType.java, listener::wrapAndHandle)
                     .onErrorResume { t ->
