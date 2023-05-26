@@ -22,6 +22,7 @@ import moe.kabii.data.relational.twitter.TwitterRetweets
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
@@ -71,22 +72,22 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                     // each chunk executed on different instance - divide up work, pool assigns thread
                     nitterScope.launch {
                         try {
-                            propagateTransaction {
-                                var first = true
-                                feedChunk.forEach { feed ->
+                            var first = true
+                            feedChunk.forEach { feed ->
 
+                                propagateTransaction feed@{
                                     if (!first) {
                                         delay(Duration.ofMillis(cooldowns.callDelay))
                                     } else first = false
 
                                     val targets = getActiveTargets(feed)?.ifEmpty { null }
-                                        ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+                                        ?: return@feed // feed untrack entirely or no target channels are currently enabled
 
                                     val cache = TwitterFeedCache.getOrPut(feed)
 
                                     val nitter = NitterParser
                                         .getFeed(feed.username, instance = instanceId)
-                                        ?: return@forEach
+                                        ?: return@feed
 
                                     val (user, tweets) = nitter
 
@@ -100,14 +101,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                              */
                                             val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
                                             if(!new) {
-                                                // TODO remove this logging
-                                                LOG.info("Skipping Retweet (proper): ${feed.username} :: ${tweet.id}")
                                                 return@maxOfOrNull tweet.id
                                             }
-
-                                            LOG.info("Skipping Retweet (TEMP): ${feed.username} :: ${tweet.id}")
-                                            // TODO remove after initial wave: POST NO RETWEETS, or all old ones will be posted.
-                                            return@maxOfOrNull tweet.id
                                         } else {
                                             // if already handled or too old, skip, but do not pull tweet ID again
                                             if ((feed.lastPulledTweet ?: 0) >= tweet.id
