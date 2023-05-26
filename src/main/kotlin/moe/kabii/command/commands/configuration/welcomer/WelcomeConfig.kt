@@ -1,4 +1,4 @@
-package moe.kabii.command.commands.configuration.setup
+package moe.kabii.command.commands.configuration.welcomer
 
 import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.command.ApplicationCommandOption
@@ -22,6 +22,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.awaitAction
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.stackTraceString
 import java.io.File
 import java.net.URL
@@ -80,17 +81,12 @@ object WelcomeConfig : Command("welcome") {
             prompt = "Enter the text which will be placed on the welcome image. See [wiki](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users#variables) for variables.",
             default = WelcomeSettings.defaultImageText
         ),
-        AttachmentElement("Banner image to use for welcoming",
-            "banner",
-            WelcomeSettings::imagePath,
-            validator = ::verifySaveImage
-        ),
         CustomElement("Text color on image",
             "color",
             WelcomeSettings::imageTextColor as KMutableProperty1<WelcomeSettings, Any?>,
             prompt = "Enter a hex color code to be used for the text added to your banner image (i.e. #FFC082).",
             default = WelcomeSettings.defaultColor,
-            parser = ::verifyColor,
+            parser = WelcomeConfig::verifyColor,
             value = { welcome -> ColorUtil.hexString(welcome.textColor()) }
         ),
         CustomElement("Add reaction to welcome",
@@ -110,14 +106,6 @@ object WelcomeConfig : Command("welcome") {
                 .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
                 .build()
             subCommands.add(testSubCommand)
-
-            // /welcome getbanner
-            val bannerSubCommand = ApplicationCommandOptionData.builder()
-                .name("getbanner")
-                .description("Get the current welcome banner image.")
-                .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
-                .build()
-            subCommands.add(bannerSubCommand)
         }
     }
 
@@ -128,49 +116,32 @@ object WelcomeConfig : Command("welcome") {
             val welcomer = config.welcomer
             when(subCommand.name) {
                 "test" -> {
+                    val guildId = target.id.asLong()
                     // test the current welcome config
-                    if(!welcomer.anyElements()) {
+                    if(!welcomer.anyElements(guildId)) {
                         ereply(Embeds.error("All welcome elements are disabled. There needs to be at least one welcome option enabled that would produce a welcome message, embed, or image. Users will be welcomed with the default settings until the configuration is changed.")).awaitSingle()
                         return@chat
                     }
 
-                    val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, member)
-                    event.reply()
-                        .withContent(welcomeMessage.contentOrElse("TEST WELCOME MESSAGE"))
-                        .withEmbeds(welcomeMessage.embeds())
+                    event.deferReply()
+                        .withEphemeral(true)
                         .awaitAction()
+
+                    val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(guildId, welcomer, member)
                     event.editReply()
+                        .withContentOrNull(welcomeMessage.contentOrElse("TEST WELCOME MESSAGE"))
+                        .withEmbedsOrNull(welcomeMessage.embeds().orNull())
                         .withFiles(welcomeMessage.files())
                         .awaitSingle()
                 }
-                "getbanner" -> {
-                    // allow downloading the existing banner
-                    val banner = File(WelcomeImageGenerator.bannerRoot, "${target.id.asString()}.png")
-
-                    if(banner.exists()) {
-                        ereply(Embeds.fbk("Retrieving banner image.")).awaitSingle()
-                        event.editReply()
-                            .withEmbedsOrNull(null)
-                            .withFiles(MessageCreateFields.File.of("welcome_banner.png", banner.inputStream()))
-                            .awaitSingle()
-                    } else {
-                        ereply(Embeds.error("Welcome banner image is not set for this server.")).awaitSingle()
-                    }
-                }
                 else -> {
-                    val oldImage = welcomer.imagePath
-
                     val configurator = Configurator(
-                        "User welcome settings in ${guildChan.name}",
+                        "User welcome settings in ${guildChan.name}. Use `/welcomebanners` to add/remove welcome banner images.",
                         WelcomeConfigModule,
                         welcomer
                     )
                     if(configurator.run(this)) {
                         config.save()
-
-                        if(welcomer.imagePath == null && oldImage != null) {
-                            File(WelcomeImageGenerator.bannerRoot, oldImage).delete()
-                        }
                     }
                 }
             }
@@ -192,64 +163,6 @@ object WelcomeConfig : Command("welcome") {
             "reset" -> Ok(WelcomeSettings.defaultImageText)
             "remove", "clear", "unset", "none", "<none>" -> Ok(null)
             else -> Ok(value)
-        }
-    }
-
-    private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
-    private suspend fun verifySaveImage(origin: DiscordParameters, attachment: Attachment?): Result<String, String> {
-        // given user message, check for attachment -> url
-        if(attachment == null || supportFormat.none { attachment.filename.endsWith(it, ignoreCase = true) }) {
-            return Err("No supported image attachment found. Please re-run your command with an attached .png, .jpg, .psd file. Banner should be exactly ${WelcomeImageGenerator.dimensionStr}, otherwise it will be altered to fit this size and content may be cropped.")
-        }
-
-        // download image and validate
-        try {
-            val imageUrl = URL(attachment.url)
-            val image = ImageIO.read(imageUrl)
-
-            val targetH = WelcomeImageGenerator.targetHeight
-            val targetW = WelcomeImageGenerator.targetWidth
-            // validate image size
-            val sizedImage = when {
-                image.height == targetH && image.width == targetW -> image
-                image.height < targetH || image.width < targetW -> {
-                    return Err("Welcome banners should be exactly ${targetW}x$targetH (larger images will be resized). The image you provided is too small (${image.width}x${image.height})!")
-                }
-                else -> {
-                    // at least 1 dimension is too large. forcibly resize this image
-                    // crop to 2:1 aspect
-                    val cropped = if(image.width != image.height * 2) {
-                        if(image.width > image.height * 2) {
-                            val newWidth = image.height * 2
-                            image.getSubimage(0, 0, newWidth, image.height)
-                        } else {
-                            val newHeight = image.width / 2
-                            image.getSubimage(0, 0, image.width, newHeight)
-                        }
-                    } else image // ex 2000x1000
-
-                    // scale to exact size
-                    if(cropped.width != targetW || cropped.height != targetH) {
-                        val resampler = ResampleOp(targetW, targetH, ResampleOp.FILTER_LANCZOS)
-                        resampler.filter(cropped, null)
-                    } else cropped
-                }
-            }
-
-            // save banner to disk
-            val imagePath = "${origin.target.id.asString()}.png"
-            val bannerFile = File(WelcomeImageGenerator.bannerRoot, imagePath)
-            ImageIO.write(sizedImage, "png", bannerFile)
-
-            origin.config.welcomer.imagePath = imagePath
-            origin.config.save()
-
-            return Ok(bannerFile.name)
-
-        } catch(e: Exception) {
-            LOG.info("Unable to parse user welcome banner: ${attachment.url} :: ${e.message}")
-            LOG.info(e.stackTraceString)
-            return Err("An error occurred while trying to download the image you provided.")
         }
     }
 

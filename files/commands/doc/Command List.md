@@ -440,6 +440,30 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
+### - `/welcomebanners`:
+
+- Edit banner images used for welcoming users
+
+#### -- `/welcomebanners add`
+
+- Add a welcome banner.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `image*` | Attachment | The new banner image to add. See wiki for banner requirements.
+#### -- `/welcomebanners list`
+
+- View currently uploaded welcome banners.
+
+#### -- `/welcomebanners remove`
+
+- Delete an uploaded welcome banner.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `file*` | String | The uploaded banner image to delete.
+
+
 ### - `/connect4`:
 
 - Connect 4 has moved! Use /game connect4
@@ -715,6 +739,24 @@ This page is an automatically generated list of all bot commands with a link to 
 | `id` | Integer | The ID of the xkcd comic to retrieve. If not provided, returns the current comic.
 
 
+### - `/editmention`:
+
+- Configure a role to be mentioned when a tracked channel goes live. Edits the specified options.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The tracked stream/twitter feed pings to edit
+| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+| `text` | String | Text to be included along with the ping.
+| `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
+| `membershiptext` | String | Text to be included for YouTube member-only streams.
+| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
+| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
+| `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
+| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
+
+
 ### - `/getmention`:
 
 - Test the configured '/setmention' role ping for a tracked Twitter/livestream feed. (WILL PING ROLES)
@@ -728,17 +770,22 @@ This page is an automatically generated list of all bot commands with a link to 
 
 ### - `/setmention`:
 
-- Configure a role to be mentioned when a tracked channel goes live.
+- REMOVES PREVIOUS CONFIGS. Configure a role to be mentioned when a tracked channel goes live.
 - Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
 
 | Option | Type | Description
 | ---    | ---  | ---
 | `username*` | String | The tracked stream/twitter feed that should send a ping
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
 | `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
 | `text` | String | Text to be included along with the ping. If empty, any existing text will be removed.
+| `copyfrom` | String | A stream tracked in this channel to copy mention settings from. Applied before all other settings.
 | `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
+| `membershiptext` | String | Text to be included for YouTube member-only streams.
+| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
+| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
 | `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
+| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
 
 
 ### - `/streamrenamecfg`:
@@ -776,6 +823,9 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - List targets that are currently tracked in this channel.
 
+| Option | Type | Description
+| ---    | ---  | ---
+| `site` | Integer | If specified, only tracked targets for this specific site will be listed.
 
 
 ### - `/trackvid`:
@@ -786,7 +836,7 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `video*` | String | The YouTube video ID or URL of an UPCOMING live stream to track.
-| `role` | Role | If specified, a role will be pinged when this stream goes live.
+| `usepings` | String | A tracked channel to use the ping settings from when this video goes live.
 
 
 ### - `/untrack`:
@@ -1271,6 +1321,20 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for creation. Leave blank to check current value.
+#### -- `/yt membervideos`
+
+- Include membership-only videos in this channel
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for memberVideos. Leave blank to check current value.
+#### -- `/yt publicvideos`
+
+- Include non-membership videos in this channel
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for publicVideos. Leave blank to check current value.
 #### -- `/yt upcoming`
 
 - Post when a stream is starting soon
@@ -1324,6 +1388,13 @@ This page is an automatically generated list of all bot commands with a link to 
 - Configurable music bot settings. Run '/musiccfg setup' to view all.
 - Wiki: [[Music-Player#configuration-using-musiccfg]]
 
+#### -- `/musiccfg playing`
+
+- Send a message when tracks in queue begin playing
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for playing. Leave blank to check current value.
 #### -- `/musiccfg deleteold`
 
 - Delete old Now Playing bot messages
@@ -1583,6 +1654,13 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for useimagetext. Leave blank to check current value.
+#### -- `/welcome textoutline`
+
+- Use a black outline to make image text more visible
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for textoutline. Leave blank to check current value.
 #### -- `/welcome message`
 
 - Text message sent when welcoming new user
@@ -1607,14 +1685,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | String | The new value for imagetext. Leave blank to check current value.
 | `reset` | True/False | Reset this option its default value: Welcome to the server!
-#### -- `/welcome banner`
-
-- Banner image to use for welcoming
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Attachment | The new value for banner. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: {empty}
 #### -- `/welcome color`
 
 - Text color on image
@@ -1642,10 +1712,6 @@ This page is an automatically generated list of all bot commands with a link to 
 #### -- `/welcome test`
 
 - Test the current welcome configuration.
-
-#### -- `/welcome getbanner`
-
-- Get the current welcome banner image.
 
 
 

@@ -16,12 +16,13 @@ class WelcomerListener(val instances: DiscordInstances) : EventListener<MemberJo
 
     override suspend fun handle(event: MemberJoinEvent) {
         val fbk = instances[event.client]
-        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, event.guildId.asLong())
+        val guildId = event.guildId.asLong()
+        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
         val channelId = config.welcomer.channelId ?: return
-        val welcomer = if(config.welcomer.anyElements()) config.welcomer else WelcomeSettings(channelId = channelId)
+        val welcomer = if(config.welcomer.anyElements(guildId)) config.welcomer else WelcomeSettings(channelId = channelId)
 
         val welcome = try {
-            val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(welcomer, event.member)
+            val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(guildId, welcomer, event.member)
             event.client
                 .getChannelById(channelId.snowflake)
                 .ofType(GuildMessageChannel::class.java)

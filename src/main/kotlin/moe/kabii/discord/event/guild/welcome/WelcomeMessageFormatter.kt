@@ -42,12 +42,12 @@ object WelcomeMessageFormatter {
         return format
     }
 
-    suspend fun createWelcomeMessage(config: WelcomeSettings, member: Member): MessageCreateSpec {
+    suspend fun createWelcomeMessage(guildId: Long, config: WelcomeSettings, member: Member): MessageCreateSpec {
         // apply plain-text message in all cases
         val message = if(config.message.isBlank()) null
         else format(member, config.message, rich = true)
 
-        val image = WelcomeImageGenerator.generate(config, member)
+        val image = WelcomeImageGenerator.generate(guildId, config, member)
         val subText = if(config.includeImageText) format(member, config.imageTextValue, rich = true) else null
         return MessageCreateSpec.create()
             .run { if(message != null) withContent(message) else this }

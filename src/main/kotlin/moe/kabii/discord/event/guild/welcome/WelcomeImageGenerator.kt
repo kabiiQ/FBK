@@ -3,6 +3,7 @@ package moe.kabii.discord.event.guild.welcome
 import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.entity.Member
 import moe.kabii.LOG
+import moe.kabii.command.commands.configuration.welcomer.WelcomeBannerUtil
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
@@ -42,14 +43,16 @@ object WelcomeImageGenerator {
         bannerRoot.mkdirs()
     }
 
-    suspend fun generate(config: WelcomeSettings, member: Member): InputStream? {
-        if(config.imagePath.isNullOrBlank()) return null
+    suspend fun generate(guildId: Long, config: WelcomeSettings, member: Member): InputStream? {
+        val banners = WelcomeBannerUtil.getBanners(guildId)
+        if(banners.isEmpty()) return null
         var graphics: Graphics2D? = null
         try {
 
             // get, load image
-            val image = ImageIO.read(File(bannerRoot, config.imagePath))
-            require(image.width == targetWidth && image.height == targetHeight) { "Invalid/corrupt image on file: ${config.imagePath} ${image.width}x${image.height}" }
+            val bannerImage = banners.random()
+            val image = ImageIO.read(bannerImage)
+            require(image.width == targetWidth && image.height == targetHeight) { "Invalid/corrupt image on file: $bannerImage ${image.width}x${image.height}" }
 
             graphics = image.createGraphics()
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)

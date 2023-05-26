@@ -1,6 +1,7 @@
 package moe.kabii.data.mongodb.guilds
 
 import discord4j.core.`object`.entity.User
+import moe.kabii.command.commands.configuration.welcomer.WelcomeBannerUtil
 import moe.kabii.util.DiscordEmoji
 
 data class LogSettings(
@@ -38,8 +39,6 @@ data class WelcomeSettings(
     var includeTagline: Boolean = true,
     var taglineValue: String = "WELCOME",
 
-    var imagePath: String? = null,
-
     var includeImageText: Boolean = true,
     var imageTextValue: String = defaultImageText,
 
@@ -48,7 +47,7 @@ data class WelcomeSettings(
     var emoji: DiscordEmoji? = null
 ) {
     fun textColor() = imageTextColor ?: defaultColor
-    fun anyElements() = booleanArrayOf(includeAvatar, includeUsername, includeImageText, includeTagline, message.isNotBlank(), imagePath != null).any(true::equals)
+    fun anyElements(guildId: Long) = booleanArrayOf(includeAvatar, includeUsername, includeImageText, includeTagline, message.isNotBlank(), WelcomeBannerUtil.getBanners(guildId).any()).any(true::equals)
 
     companion object {
         const val defaultImageText = "Welcome to the server!"

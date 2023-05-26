@@ -106,7 +106,7 @@ dependencies {
     // .toml token configuration
     implementation("com.uchuhimo:konf:1.1.2")
 
-    // logging
+    // lognging
     // HOLD VERSION - alpha5 breaks file output (and has for over a year)
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
 

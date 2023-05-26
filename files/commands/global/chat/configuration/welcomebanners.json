@@ -1,0 +1,38 @@
+{
+  "name": "welcomebanners",
+  "description": "Edit banner images used for welcoming users",
+  "options": [
+    {
+      "name": "add",
+      "description": "Add a welcome banner.",
+      "type": 1,
+      "options": [
+        {
+          "name": "image",
+          "description": "The new banner image to add. See wiki for banner requirements.",
+          "type": 11,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "View currently uploaded welcome banners.",
+      "type": 1
+    },
+    {
+      "name": "remove",
+      "description": "Delete an uploaded welcome banner.",
+      "type": 1,
+      "options": [
+        {
+          "name": "file",
+          "description": "The uploaded banner image to delete.",
+          "type": 3,
+          "required": true,
+          "autocomplete": true
+        }
+      ]
+    }
+  ]
+}
