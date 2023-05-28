@@ -257,7 +257,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
                 val notifSpec = MessageCreateSpec.create()
                     .run {
-                        val timestamp = TimestampFormat.RELATIVE_TIME.format(tweet.date)
+                        val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
                         withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
                     }
                     .run {
