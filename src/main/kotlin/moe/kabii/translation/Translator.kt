@@ -106,7 +106,8 @@ object Translator {
 //        val services = filteredServices.ifEmpty { allServices }
 
         val availableServices = allServices.filter(TranslationService::available)
-        val langTags = tags.filterNotNull()
+        val langTags = (tags + detected).filterNotNull()
+
         val filteredServices = if(langTags.isNotEmpty())
             availableServices
                 .filter { service ->
