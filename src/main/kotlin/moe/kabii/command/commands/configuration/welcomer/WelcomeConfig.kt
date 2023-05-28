@@ -1,32 +1,22 @@
 package moe.kabii.command.commands.configuration.welcomer
 
-import com.twelvemonkeys.image.ResampleOp
 import discord4j.core.`object`.command.ApplicationCommandOption
-import discord4j.core.`object`.entity.Attachment
 import discord4j.core.`object`.entity.Message
-import discord4j.core.spec.MessageCreateFields
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
-import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.*
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
-import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.event.guild.welcome.WelcomeMessageFormatter
 import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
-import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.stackTraceString
-import java.io.File
-import java.net.URL
-import javax.imageio.ImageIO
 import kotlin.reflect.KMutableProperty1
 
 object WelcomeConfig : Command("welcome") {

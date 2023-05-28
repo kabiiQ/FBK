@@ -13,9 +13,10 @@ import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.discord.util.Embeds
-import moe.kabii.util.extensions.orNull
-import moe.kabii.rusty.*
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.util.extensions.awaitAction
+import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.toAutoCompleteSuggestions
 import java.io.File
 import java.time.Duration

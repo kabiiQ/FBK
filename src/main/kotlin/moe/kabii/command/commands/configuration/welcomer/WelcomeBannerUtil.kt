@@ -1,7 +1,6 @@
 package moe.kabii.command.commands.configuration.welcomer
 
 import com.twelvemonkeys.image.ResampleOp
-import com.uchuhimo.konf.source.asSource
 import discord4j.core.`object`.entity.Attachment
 import moe.kabii.LOG
 import moe.kabii.command.params.DiscordParameters

@@ -7,6 +7,7 @@ import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.ChannelMark
 import moe.kabii.data.mongodb.guilds.MongoStreamChannel
+import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -99,14 +100,12 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
         }
 
         if(settings.marks.isEmpty()) {
-            ereply(Embeds.fbk("There are no configured channel marks in **#${guildChan.name}**."))
+            ereply(Embeds.fbk("There are no configured channel marks in **#${guildChan.name}**.")).awaitSingle()
         } else {
-            val allMarks = settings.marks.joinToString("\n") { mark ->
+            val allMarks = settings.marks.map { mark ->
                 "${mark.channel.site.targetType.full}/${mark.channel.identifier}: ${mark.mark}"
             }
-            ireply(
-                Embeds.fbk(allMarks).withTitle("Configured stream markers in **#${guildChan.name}**")
-            )
-        }.awaitSingle()
+            PaginationUtil.paginateListAsDescription(this, allMarks, "Configured stream markers in **#${guildChan.name}**")
+        }
     }
 }
