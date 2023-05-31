@@ -371,11 +371,11 @@ class Configurator<T>(private val name: String, private val module: Configuratio
             .withComponents(configComponents().toList())
             .awaitAction()
 
-        Mono.`when`(listeners)
+//        Mono.`when`(listeners)
+        Flux.firstWithSignal(listeners)
             .timeout(Duration.ofMinutes(30))
             .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
             .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null).then() }
-            .thenReturn(Unit)
             .awaitFirstOrNull()
         origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull()
         return true
