@@ -17,8 +17,10 @@ import javax.imageio.ImageIO
 object WelcomeBannerUtil {
     fun getBanners(guildId: Long): List<File> {
         val directory = File(WelcomeImageGenerator.bannerRoot, guildId.toString())
-        if(!directory.isDirectory) error("Welcome banner file format error")
-        return directory.listFiles { f -> f.extension == "png" }!!.toList()
+        val files = directory
+            .listFiles { f -> f.extension == "png" }
+            ?: arrayOf()
+        return files.toList()
     }
 
     private val supportFormat = listOf(".png", ".jpeg", ".jpg", ".webmp", ".psd")
