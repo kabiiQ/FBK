@@ -11,6 +11,7 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
+import moe.kabii.command.commands.configuration.setup.StarboardConfig
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.documentation.CommandDocumentor
 import moe.kabii.command.registration.GlobalCommandRegistrar
@@ -26,11 +27,21 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
 
+data class InstanceProperties(
+    val messageContentAccess: Boolean,
+    val presenceAccess: Boolean,
+    val musicFeaturesEnabled: Boolean,
+    val starboardEnabled: Boolean
+) {
+    constructor(inst: InstanceDataLoader.Instance) : this(inst.messageContent, inst.presences, inst.musicEnabled, inst.starboardEnabled)
+}
+
 class FBK(
     val clientId: Int,
     val client: GatewayDiscordClient,
     val username: String,
-    val discriminator: String
+    val discriminator: String,
+    val properties: InstanceProperties
 ) {
     val uptime = Uptime()
 }
@@ -75,10 +86,16 @@ class DiscordInstances {
         val modules = reflection
             .getSubTypesOf(ConfigurationModule::class.java)
             .mapNotNull { clazz -> clazz.kotlin.objectInstance }
+            .filterNot { mod -> mod == StarboardConfig.StarboardModule }
+
         val globalCommands = GlobalCommandRegistrar.getAllGlobalCommands(modules)
+        val musicCommands = GlobalCommandRegistrar.getFeatureCommands("music")
+        // starboard seperate: won't be enabled on 'primary' instance, nor generate in docs
+        val starboardCommand = GlobalCommandRegistrar.buildConfigCommand(StarboardConfig.StarboardModule)
+        val allCommands = globalCommands + musicCommands
 
         // generate command self-documentation
-        CommandDocumentor.writeCommandDoc(manager, globalCommands)
+        CommandDocumentor.writeCommandDoc(manager, allCommands)
         LOG.info("Command List.md updated.")
 
         val eventListeners = reflection.getSubTypesOf(EventListener::class.java)
@@ -109,24 +126,32 @@ class DiscordInstances {
                 .build()
                 .gateway()
                 .run {
-                    if(instance.id == 1)
-                        setEnabledIntents(IntentSet.all().andNot(IntentSet.of(Intent.MESSAGE_CONTENT))) // fbk#1 forever in verification limbo - message content was not requested and is locked :sob:
-                    else
-                        setEnabledIntents(IntentSet.all())
+                    val intents = IntentSet.all()
+                        .run { if(!instance.messageContent) andNot(IntentSet.of(Intent.MESSAGE_CONTENT)) else this }
+                        .run { if(!instance.presences) andNot(IntentSet.of(Intent.GUILD_PRESENCES)) else this }
+                    setEnabledIntents(intents)
                 }
             val gateway = checkNotNull(discord.login().awaitSingle())
 
             val self = gateway.self.awaitSingle()
 
             // send commands for instance
+            val commands = globalCommands.toMutableList()
+            if(instance.musicEnabled) commands.addAll(musicCommands)
+            if(instance.starboardEnabled) commands.add(starboardCommand)
+
             val rest = gateway.rest()
             val appId = checkNotNull(rest.applicationId.block())
-            rest.applicationService
-                .bulkOverwriteGlobalApplicationCommand(appId, globalCommands)
-                .then()
-                .awaitAction()
+            try {
+                rest.applicationService
+                    .bulkOverwriteGlobalApplicationCommand(appId, commands)
+                    .then()
+                    .awaitAction()
+            } catch(e: Exception) {
+                LOG.error("Error updating application commands: ${e.message}")
+            }
 
-            val fbk = FBK(instance.id, gateway, self.username, self.discriminator)
+            val fbk = FBK(instance.id, gateway, self.username, self.discriminator, InstanceProperties(instance))
             val offlineChecks = gateway.guilds
                 .flatMap { guild ->
                     mono {

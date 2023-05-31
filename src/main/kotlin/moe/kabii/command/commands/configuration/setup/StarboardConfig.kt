@@ -114,8 +114,8 @@ object StarboardConfig : Command("starboard") {
                     starboard.addToBoard(targetMessage, mutableSetOf(), exempt = true)
                     ereply(Embeds.fbk("[Message](${targetMessage.createJumpLink()}) sent to Starboard.")).awaitSingle()
 
-                } else -> {
-
+                }
+                else -> {
                     val configurator = Configurator(
                         "Starboard settings for ${target.name}",
                         StarboardModule,
@@ -124,6 +124,14 @@ object StarboardConfig : Command("starboard") {
 
                     if(configurator.run(this)) {
                         config.save()
+                    }
+
+                    if(!client.properties.messageContentAccess) {
+                        event
+                            .createFollowup()
+                            .withEphemeral(true)
+                            .withEmbeds(Embeds.error("Notice: Starboard on this FBK instance is permanently damaged. This instance does not have access to message contents, so messages will be starboarded but appear blank. FBK Music #2-8 have a functional starboard."))
+                            .awaitSingle()
                     }
                 }
             }

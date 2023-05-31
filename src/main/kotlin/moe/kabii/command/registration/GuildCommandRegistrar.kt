@@ -35,6 +35,9 @@ object GuildCommandRegistrar : CommandRegistrar {
             740802640895672374L -> {
                 yield(specificCommands["relaychat"])
             }
+            839985217506246706L -> {
+                yield(specificCommands["relaychat"])
+            }
         }
 
         // generate 'custom' commands associated with this guild

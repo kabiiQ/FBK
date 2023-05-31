@@ -14,18 +14,24 @@ import org.apache.commons.lang3.StringUtils
 import java.io.File
 
 object GlobalCommandRegistrar : CommandRegistrar {
+    private val commandRoot = File("files/commands/")
 
-    fun getAllGlobalCommands(modules: List<ConfigurationModule<*>>): List<ApplicationCommandRequest> = importStaticCommands() + modules.map(::buildConfigCommand)
+    fun getAllGlobalCommands(modules: List<ConfigurationModule<*>>): List<ApplicationCommandRequest> = importGlobalCommands() + modules.map(::buildConfigCommand)
 
-    private fun importStaticCommands(): List<ApplicationCommandRequest> {
-        val commands = loadFileCommands(File("files/commands/global/"))
+    fun getFeatureCommands(feature: String): List<ApplicationCommandRequest> {
+        val featureCommands = loadFileCommands(File(commandRoot, "feature/$feature/"))
+        return featureCommands.ifEmpty { error("Invalid command feature/subdirectory: $feature") }
+    }
+
+    private fun importGlobalCommands(): List<ApplicationCommandRequest> {
+        val commands = loadFileCommands(File(commandRoot, "global/"))
         return commands.ifEmpty { error("Command files not found!") }
     }
 
     /*
     "config" commands are global chat commands we generate programmatically and do not use json
      */
-    private fun buildConfigCommand(module: ConfigurationModule<*>): ApplicationCommandRequest {
+    fun buildConfigCommand(module: ConfigurationModule<*>): ApplicationCommandRequest {
 
         // generate command arguments from the module's properties
         val base =  ApplicationCommandRequest.builder()

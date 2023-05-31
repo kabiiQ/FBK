@@ -106,6 +106,14 @@ object LogFeatures : Command("log") {
                 if(newSettings.auditableLog() && !config.guildSettings.utilizeAuditLogs) {
                     event.createFollowup()
                         .withEmbeds(Embeds.fbk("Loggers are enabled that have enhanced information available from the audit log! To enable this feature, ensure I have permissions to view the Audit Log, then run the **/servercfg audit true** command."))
+                        .withEphemeral(true)
+                        .awaitSingle()
+                }
+
+                if(newSettings.displayNameLog && !client.properties.presenceAccess) {
+                    event.createFollowup()
+                        .withEmbeds(Embeds.error("Username logging will not work properly on this FBK instance. Only nickname changes will be logged. You must use FBK Music 1-8 if you need to enable username logging."))
+                        .withEphemeral(true)
                         .awaitSingle()
                 }
             }
