@@ -10,6 +10,7 @@ import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.util.extensions.applicationLoop
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -43,13 +44,15 @@ class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: Ser
         }
 
         applicationLoop {
-            newSuspendedTransaction {
-                try {
-                    // subscribe to updates for all channels with active targets
-                    val ytChannels = TrackedStreams.StreamChannel.getActive {
+            try {
+                // subscribe to updates for all channels with active targets
+                val ytChannels = propagateTransaction {
+                    TrackedStreams.StreamChannel.getActive {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                     }
-                    ytChannels.forEach { channel ->
+                }
+                ytChannels.forEach { channel ->
+                    propagateTransaction {
                         val subscription = channel.subscription.firstOrNull()
 
                         // only make actual call to google if last call is old - but still maintain current list in memory
@@ -73,10 +76,10 @@ class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: Ser
                         }
                         currentSubscriptions = currentSubscriptions + channel.siteChannelID
                     }
-                } catch (e: Exception) {
-                    LOG.error("Uncaught error in YoutubeSubscriptionManager: ${e.message}")
-                    LOG.warn(e.stackTraceString)
                 }
+            } catch (e: Exception) {
+                LOG.error("Uncaught error in YoutubeSubscriptionManager: ${e.message}")
+                LOG.warn(e.stackTraceString)
             }
 
             // no un-necessary calls are made here, we can run this on a fairly low interval
