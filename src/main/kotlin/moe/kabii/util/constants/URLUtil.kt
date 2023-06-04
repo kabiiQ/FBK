@@ -25,6 +25,10 @@ object URLUtil {
         object TwitCasting {
             fun channelByName(name: String) = "https://twitcasting.tv/$name"
         }
+
+        object Kick {
+            fun channelByName(name: String) = "https://kick.com/$name"
+        }
     }
 
     object MediaListSite {
