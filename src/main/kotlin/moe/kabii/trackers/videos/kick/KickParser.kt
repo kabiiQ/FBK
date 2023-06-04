@@ -4,7 +4,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.MOSHI
-import moe.kabii.OkHTTP
+import moe.kabii.net.Proxies
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
@@ -29,10 +29,13 @@ object KickParser {
         delay()
         val request= newRequestBuilder()
             .get()
-            .url("$baseUrl/$")
+            .url("$baseUrl/$requestStr")
             .build()
         try {
-            val response = OkHTTP.newCall(request).execute()
+            val response = Proxies
+                .getClient(requestStr.hashCode())
+                .newCall(request)
+                .execute()
 
             val channel = try {
                 val body = response.body.string()
@@ -58,7 +61,7 @@ object KickParser {
             return channel
 
         } catch(e: Exception) {
-            LOG.warn("KickParseR: Error while caling Kick: ${e.message}")
+            LOG.warn("KickParser: Error while calling Kick: ${e.message}")
             LOG.debug(e.stackTraceString)
             throw e
         }

@@ -1,17 +1,19 @@
 package moe.kabii.net
 
 import moe.kabii.LOG
+import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.OkHttpClient
 import java.net.InetSocketAddress
 import java.net.Proxy
 
 object Proxies {
     private val proxyPorts = Keys.config[Keys.Socks.proxyPorts]
-    private val proxies: List<Proxy>
+    private val clients: List<OkHttpClient>
 
     init {
-        proxies = proxyPorts.mapNotNull { port ->
+        val proxies = proxyPorts.mapNotNull { port ->
             try {
                 Proxy(
                     Proxy.Type.SOCKS,
@@ -23,14 +25,21 @@ object Proxies {
                 null
             }
         }
+        clients = proxies.map { proxy ->
+            OkHttpClient.Builder()
+                .proxy(proxy)
+                .build()
+        }
+            // add "no proxy" option that uses our common client
+            .plus(OkHTTP)
     }
 
-    private val cache = mutableMapOf<Int, Proxy>()
+    private val cache = mutableMapOf<Int, OkHttpClient>()
 
     /**
-     * Provides a proxy to be used for a request.
+     * Provides a (possibly) proxied client to be used for a request.
      * The key provided should be something unique enough to ensure requests for the same entity are the same key.
      * The key has no relation to the proxy chosen and will vary between restarts.
      */
-    fun getProxy(key: Int) = cache.getOrPut(key, proxies::random)
+    fun getClient(key: Int) = cache.getOrPut(key, clients::random)
 }

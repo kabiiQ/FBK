@@ -102,3 +102,8 @@ oauth_signing_key = ''
 
 [mal]
 mal_client_id = ''
+
+[socks]
+proxy_ports = [
+    
+]
