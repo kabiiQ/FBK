@@ -29,6 +29,10 @@
                     "value": 103
                 },
                 {
+                    "name": "Kick",
+                    "value": 104
+                },
+                {
                     "name": "MyAnimeList",
                     "value": 200
                 },

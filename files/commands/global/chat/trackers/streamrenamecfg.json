@@ -37,6 +37,10 @@
                         {
                             "name": "TwitCasting",
                             "value": 103
+                        },
+                        {
+                            "name": "Kick",
+                            "value": 104
                         }
                     ]
                 }
