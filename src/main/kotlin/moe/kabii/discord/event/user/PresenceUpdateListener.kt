@@ -36,7 +36,6 @@ class PresenceUpdateListener(val instances: DiscordInstances) : EventListener<Pr
         val member = event.member.awaitSingle()
         val oldName = "${old.username}#${old.discriminator}"
         val newName = "${member.username}#${member.discriminator}"
-        LOG.debug("$oldName -> $newName")
 
         if(!oldName.equals(newName, ignoreCase = true)) {
             channels

@@ -12,7 +12,6 @@ import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.Duration

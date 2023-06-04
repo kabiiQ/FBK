@@ -70,6 +70,7 @@ object WelcomeBannerUtil {
                 .run { StringUtils.truncate(this, 32) }
             val imagePath = "${origin.target.id.asString()}/$bannerName.png"
             val bannerFile = File(WelcomeImageGenerator.bannerRoot, imagePath)
+            bannerFile.parentFile.mkdirs()
             ImageIO.write(sizedImage, "png", bannerFile)
 
             return Ok(bannerFile.name)
