@@ -1,7 +1,9 @@
 package moe.kabii.discord.audio
 
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.DurationParser
+import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.orNull
 
 class ExtractedQuery private constructor(var url: String, val timestamp: Long, val sample: Long?, val volume: Int?) {
@@ -14,6 +16,7 @@ class ExtractedQuery private constructor(var url: String, val timestamp: Long, v
         private val timestampRegex = Regex("[&?#](?:t|time)=([0-9smh]*)")
         private val sampleRegex = Regex("[&?]sample=([0-9smh]*)")
         private val volumeRegex = Regex("[&?]volume=([0-9]{1,3})")
+        private val shareLiveRegex = Regex("youtube.com/live/${YoutubeParser.youtubeVideoPattern}")
 
         fun from(origin: DiscordParameters): ExtractedQuery {
             val attachment = origin.interaction.commandInteraction.orNull()?.resolved?.orNull()?.attachments?.values?.firstOrNull()
@@ -43,6 +46,12 @@ class ExtractedQuery private constructor(var url: String, val timestamp: Long, v
             url = if(matchVolume != null) url.replace(matchVolume.value, "") else url
 
             val volumeArg = origin.args.optInt("volume")?.toInt()
+
+            // convert youtube /live/ url format
+            val liveMatch = shareLiveRegex.find(url)
+            if(liveMatch != null) {
+                url = URLUtil.StreamingSites.Youtube.video(liveMatch.groups[1]!!.value)
+            }
 
             return ExtractedQuery(
                 url = url,
