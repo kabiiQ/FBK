@@ -102,6 +102,9 @@ object Keys : ConfigSpec("") {
     object MAL : ConfigSpec() {
         val malKey by required<String>("mal_client_id")
     }
+    object Socks : ConfigSpec() {
+        val proxyPorts by required<List<Int>>("proxy_ports")
+    }
 
     fun saveConfigFile() {
         synchronized(lock) {
