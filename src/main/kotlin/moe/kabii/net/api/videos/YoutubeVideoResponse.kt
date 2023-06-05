@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 import moe.kabii.MOSHI
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoResponse(
@@ -42,14 +42,14 @@ data class YoutubeVideoResponse(
     companion object {
         private val adapter = MOSHI.adapter(YoutubeVideoResponse::class.java)
 
-        @WithinExposedContext fun getType(video: YoutubeVideo) = when {
+        @RequiresExposedContext fun getType(video: YoutubeVideo) = when {
             video.lastAPICall == null -> null
             video.liveEvent != null -> "live"
             video.scheduledEvent != null -> "scheduled"
             else -> "past"
         }
 
-        @WithinExposedContext
+        @RequiresExposedContext
         fun forVideos(matchingVideos: List<YoutubeVideo>, dbTotal: Int) = YoutubeVideoResponse(
             matchingCount = matchingVideos.size,
             totalAvailable = dbTotal,
@@ -89,7 +89,7 @@ data class YoutubeChannelResponse(
     companion object {
         private val adapter = MOSHI.adapter(YoutubeChannelResponse::class.java)
 
-        @WithinExposedContext
+        @RequiresExposedContext
         fun generate(channel: TrackedStreams.StreamChannel): String =
             YoutubeChannelResponse(
                 id = channel.siteChannelID,

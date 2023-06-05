@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.twitter
 
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -57,7 +57,7 @@ class TwitterTarget(id: EntityID<Int>) : IntEntity(id) {
     fun mention() = this.mention.firstOrNull()
 
     companion object : IntEntityClass<TwitterTarget>(TwitterTargets) {
-        @WithinExposedContext
+        @RequiresExposedContext
         fun getExistingTarget(clientId: Int, channelId: Long, feed: TwitterFeed) = TwitterTarget.wrapRows(
             TwitterTargets
                 .innerJoin(TwitterFeeds)

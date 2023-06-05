@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.discord
 
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.orNull
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -25,7 +25,7 @@ object MessageHistory {
         else "https://discord.com/channels/@me/${channel.channelID}/$messageID"
 
         companion object : LongEntityClass<Message>(Messages) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun new(message: discord4j.core.`object`.entity.Message): Message {
                 return new {
                     messageID = message.id.asLong()
@@ -37,7 +37,7 @@ object MessageHistory {
                 }
             }
 
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getOrInsert(message: discord4j.core.`object`.entity.Message): Message {
                 return find { Messages.messageID eq message.id.asLong() }
                     .elementAtOrElse(0) { _ ->

@@ -2,6 +2,8 @@ package moe.kabii.data.relational.streams.twitcasting
 
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.trackers.videos.StreamWatcher
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -22,6 +24,7 @@ object Twitcasts {
         var movieId by Movies.movieId
 
         companion object : IntEntityClass<Movie>(Movies) {
+            @RequiresExposedContext
             fun getMovieFor(userId: String): Movie? = Movie.wrapRows(
                 Movies
                     .innerJoin(TrackedStreams.StreamChannels)
@@ -49,8 +52,8 @@ object Twitcasts {
                 TwitNotifs.channelId eq dbChannel.id
             }
 
-            fun getForTarget(dbTarget: TrackedStreams.Target) = find {
-                TwitNotifs.targetId eq dbTarget.id
+            fun getForTarget(target: StreamWatcher.TrackedTarget) = find {
+                TwitNotifs.targetId eq target.db
             }
         }
     }

@@ -218,7 +218,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun currentLiveCheck(call: YoutubeCall.Live, ytVideo: YoutubeVideoInfo?) {
         val dbLive = call.live
 
@@ -249,7 +249,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun upcomingCheck(call: YoutubeCall.Scheduled, ytVideo: YoutubeVideoInfo?) {
         val dbEvent = call.scheduled
         when {

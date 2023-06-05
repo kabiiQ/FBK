@@ -18,7 +18,7 @@ import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -67,7 +67,7 @@ object YoutubeVideosService {
         } else return channelId
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun getChannel(call: ApplicationCall): TrackedStreams.StreamChannel? {
         val channelId = getChannelId(call) ?: return null
         val dbChannel = TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.YOUTUBE, channelId)

@@ -3,6 +3,7 @@ package moe.kabii.data.relational.streams.youtube
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.trackers.videos.StreamWatcher
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity
@@ -72,8 +73,8 @@ class YoutubeNotification(id: EntityID<Int>) : IntEntity(id) {
             YoutubeNotifications.targetID eq dbTarget.id
         }
 
-        fun getExisting(dbTarget: TrackedStreams.Target, dbVideo: YoutubeVideo) = find {
-            YoutubeNotifications.targetID eq dbTarget.id and
+        fun getExisting(dbTarget: StreamWatcher.TrackedTarget, dbVideo: YoutubeVideo) = find {
+            YoutubeNotifications.targetID eq dbTarget.db and
                     (YoutubeNotifications.videoID eq dbVideo.id)
         }
     }

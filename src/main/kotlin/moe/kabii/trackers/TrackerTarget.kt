@@ -12,7 +12,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.trackers.videos.StreamErr
-import moe.kabii.trackers.videos.kick.KickParser
+import moe.kabii.trackers.videos.kick.api.KickParser
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.youtube.YoutubeParser

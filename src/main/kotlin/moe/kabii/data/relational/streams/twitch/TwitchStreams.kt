@@ -2,6 +2,7 @@ package moe.kabii.data.relational.streams.twitch
 
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.trackers.videos.StreamWatcher
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -72,8 +73,8 @@ object DBTwitchStreams {
                 Notifications.channelID eq dbChannel.id
             }
 
-            fun getForTarget(dbTarget: TrackedStreams.Target) = find {
-                Notifications.targetID eq dbTarget.id
+            fun getForTarget(dbTarget: StreamWatcher.TrackedTarget) = find {
+                Notifications.targetID eq dbTarget.db
             }
         }
     }

@@ -2,7 +2,7 @@ package moe.kabii.data.relational.streams.spaces
 
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -22,7 +22,7 @@ object TwitterSpaces {
         var spaceId by Spaces.spaceId
 
         companion object : IntEntityClass<Space>(Spaces) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getOrInsert(dbChannel: TrackedStreams.StreamChannel, spaceId: String) = Space.find {
                 Spaces.spaceId eq spaceId
             }.elementAtOrElse(0) { _ ->
@@ -46,12 +46,12 @@ object TwitterSpaces {
         var message by MessageHistory.Message referencedOn SpaceNotifs.message
 
         companion object : IntEntityClass<SpaceNotif>(SpaceNotifs) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getForSpace(dbSpace: Space) = SpaceNotif.find {
                 SpaceNotifs.spaceId eq dbSpace.id
             }
 
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getForSpace(spaceId: String) = SpaceNotif.wrapRows(
                 SpaceNotifs
                     .innerJoin(Spaces)
@@ -60,7 +60,7 @@ object TwitterSpaces {
                     }
             )
 
-            @WithinExposedContext
+            @RequiresExposedContext
             fun find(spaceId: String, dbTarget: TrackedStreams.Target) = SpaceNotif.wrapRows(
                 SpaceNotifs
                     .innerJoin(Spaces)

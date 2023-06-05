@@ -11,6 +11,7 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingUser
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookServer
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -30,28 +31,30 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
             // slow interval poller to verify stream states (rapid processing done based on webhooks)
             val start = Instant.now()
 
-            propagateTransaction {
+            try {
+                lateinit var checkUsers: List<TrackedStreams.StreamChannel>
+                lateinit var checkMovies: List<Twitcasts.Movie>
 
-                try {
+                propagateTransaction {
                     // check all users that are currently not known to be live (and have a target we might want to notify)
-                    val checkUsers = TrackedStreams.StreamChannel.find {
+                    checkUsers = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCASTING
                     }.filter { channel ->
                         Twitcasts.Movie.getMovieFor(channel.siteChannelID) == null
                     }
 
                     // get all current movies to verify if still live
-                    val checkMovies = Twitcasts.Movie.all()
-
-                    // generate lists first, so that these operations do not alter the other
-                    // now execute
-                    checkUsers.forEach { channel -> checkUserForMovie(channel) }
-                    checkMovies.forEach { movie -> updateLiveMovie(movie) }
-
-                } catch(e: Exception) {
-                    LOG.warn("Exception in TwitcastChecker: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+                    checkMovies = Twitcasts.Movie.all().toList()
                 }
+
+                // generate lists first, so that these operations do not alter the other
+                // now execute
+                checkUsers.forEach { channel -> propagateTransaction { checkUserForMovie(channel) } }
+                checkMovies.forEach { movie -> propagateTransaction { updateLiveMovie(movie) } }
+
+            } catch(e: Exception) {
+                LOG.warn("Exception in TwitcastChecker: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
@@ -66,6 +69,7 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
         }
     }
 
+    @RequiresExposedContext
     suspend fun checkUserForMovie(channel: TrackedStreams.StreamChannel, twitUser: TwitcastingUser? = null) {
         require(channel.site == TrackedStreams.DBSite.TWITCASTING) { "Invalid StreamChannel passed to TwitcastChecker: $channel" }
         if(Twitcasts.Movie.getMovieFor(channel.siteChannelID) != null) return
@@ -89,7 +93,8 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
         }
     }
 
-    suspend fun checkMovie(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedStreams.Target>) {
+    @RequiresExposedContext
+    suspend fun checkMovie(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedTarget>) {
         val (movie, _) = info
 
         // actions depend on : movie live state and whether we already knew about this movie

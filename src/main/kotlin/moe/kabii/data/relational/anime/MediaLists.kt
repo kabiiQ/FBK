@@ -9,7 +9,7 @@ import moe.kabii.trackers.anime.MediaListParser
 import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -64,7 +64,7 @@ object TrackedMediaLists {
         var userTracked by DiscordObjects.User referencedOn ListTargets.userTracked
 
         companion object : IntEntityClass<ListTarget>(ListTargets) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getExistingTarget(clientId: Int, site: ListSite, listIdLower: String, channelId: Long) = ListTarget.wrapRows(
                 ListTargets
                     .innerJoin(MediaLists)

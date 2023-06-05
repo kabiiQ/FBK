@@ -1,5 +1,6 @@
 package moe.kabii.trackers
 
+import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -46,19 +47,19 @@ object TrackerUtil {
         }
     }
 
-    suspend fun permissionDenied(fbk: FBK, guildId: Long?, channelId: Long, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+    suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
         // TODO pdenied
         return // Temporarily(?) disabled functionality to mitigate some user confusion
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
-            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
-            val features = config.getOrCreateFeatures(channelId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+            val features = config.getOrCreateFeatures(channelId.asLong())
             guildDelete.set(features, false)
             config.save()
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
             val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **/feature $featureName Enabled** in <#$channelId> to re-enable this tracker."
-            notifyOwner(fbk, guildId, message)
+            notifyOwner(fbk, guildId.asLong(), message)
 
         } else {
             // delete target, we do not keep configs for dms
@@ -88,7 +89,7 @@ object TrackerUtil {
 
     suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
         val guildChan = channel as? GuildMessageChannel
-        permissionDenied(fbk, guildChan?.guildId?.asLong(), channel.id.asLong(), guildDelete, pmDelete)
+        permissionDenied(fbk, guildChan?.guildId, channel.id, guildDelete, pmDelete)
     }
 
     suspend fun pinActive(fbk: FBK, settings: StreamSettings, message: Message) {

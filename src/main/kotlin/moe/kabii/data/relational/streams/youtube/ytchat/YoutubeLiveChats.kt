@@ -4,7 +4,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -27,7 +27,7 @@ class YoutubeLiveChat(id: EntityID<Int>) : IntEntity(id) {
     var discordChannel by DiscordObjects.Channel referencedOn YoutubeLiveChats.discordChannel
 
     companion object : IntEntityClass<YoutubeLiveChat>(YoutubeLiveChats) {
-        @WithinExposedContext
+        @RequiresExposedContext
         fun getForChannel(ytChan: TrackedStreams.StreamChannel) = YoutubeLiveChat.wrapRows(
             YoutubeLiveChats
                 .innerJoin(YoutubeVideos)

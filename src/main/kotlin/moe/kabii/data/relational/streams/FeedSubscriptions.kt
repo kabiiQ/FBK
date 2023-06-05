@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.streams
 
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -23,7 +23,7 @@ class WebSubSubscription(id: EntityID<Int>) : IntEntity(id) {
     var lastSubscription by WebSubSubscriptions.lastSubscription
 
     companion object : IntEntityClass<WebSubSubscription>(WebSubSubscriptions) {
-        @WithinExposedContext
+        @RequiresExposedContext
         fun getCurrent(site: TrackedStreams.DBSite, maxSubscriptionInterval: Duration): SizedIterable<WebSubSubscription> {
             val cutOff = DateTime.now().minus(maxSubscriptionInterval)
             return WebSubSubscription.wrapRows(
@@ -36,7 +36,7 @@ class WebSubSubscription(id: EntityID<Int>) : IntEntity(id) {
             )
         }
 
-        @WithinExposedContext
+        @RequiresExposedContext
         fun getSite(site: TrackedStreams.DBSite): SizedIterable<WebSubSubscription> =
             WebSubSubscription.wrapRows(
                 WebSubSubscriptions
