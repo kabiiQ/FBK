@@ -30,7 +30,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
         applicationLoop {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
                     val window = DateTime.now().plus(updateInterval)
                     val reminders = Reminder.find { Reminders.remind lessEq window }.toList()

@@ -33,7 +33,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         applicationLoop {
             val start = Instant.now()
             // get all tracked sites for this service
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
                     // get all tracked twitch streams
                     val tracked = TrackedStreams.StreamChannel.find {
@@ -59,7 +59,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         }
                         // now we can split into coroutines for processing & sending messages to Discord.
                         taskScope.launch {
-                            newSuspendedTransaction {
+                            propagateTransaction {
                                 try {
                                     val filteredTargets = getActiveTargets(trackedChannel)
                                     if (filteredTargets != null) {

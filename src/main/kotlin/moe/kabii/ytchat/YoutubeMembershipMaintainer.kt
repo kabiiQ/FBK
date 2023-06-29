@@ -23,7 +23,7 @@ class YoutubeMembershipMaintainer(val instances: DiscordInstances): Runnable {
         applicationLoop {
             LOG.info("Running YT membership DB maintainence")
 
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
 
                     // remove any old expired youtube memberships

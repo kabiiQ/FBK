@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.launch
 import moe.kabii.trackers.ps2.store.PS2DataCache
 import moe.kabii.trackers.ps2.store.PS2Faction
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import moe.kabii.util.extensions.propagateTransaction
 import java.time.Instant
 
 @JsonClass(generateAdapter = true)
@@ -35,7 +35,7 @@ data class PS2Player(
 
     init {
         PS2DataCache.async.launch {
-            newSuspendedTransaction {
+            propagateTransaction {
                 PS2DataCache.updateCharacter(this@PS2Player)
             }
         }
@@ -85,7 +85,7 @@ data class PS2OutfitInfo(
 ) {
     init {
         PS2DataCache.async.launch {
-            newSuspendedTransaction {
+            propagateTransaction {
                 PS2DataCache.updateOutfit(outfitId, name, tag)
             }
         }

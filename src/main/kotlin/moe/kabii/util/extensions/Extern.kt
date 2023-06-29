@@ -2,9 +2,9 @@ package moe.kabii.util.extensions
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.request.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
 import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
