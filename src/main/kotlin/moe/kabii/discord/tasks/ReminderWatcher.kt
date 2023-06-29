@@ -17,7 +17,6 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant

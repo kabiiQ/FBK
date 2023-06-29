@@ -6,7 +6,6 @@ import kotlinx.coroutines.launch
 import moe.kabii.trackers.ps2.store.PS2DataCache
 import moe.kabii.trackers.ps2.store.PS2Faction
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 @JsonClass(generateAdapter = true)
 data class PS2OutfitResponse(
