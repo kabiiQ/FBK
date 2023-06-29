@@ -44,7 +44,7 @@ object Embeds {
         val data = discordEmbed.data
         var embed = EmbedCreateSpec.create()
         val author = data.author().orNull()
-        if(author != null) embed = embed.withAuthor(EmbedCreateFields.Author.of(author.name().get(), author.url().orNull(), author.iconUrl().orNull()))
+        if(author != null) embed = embed.withAuthor(EmbedCreateFields.Author.of(author.name().get(), author.url().orNull()?.orNull(), author.iconUrl().orNull()))
         val color = data.color().orNull()
         if(color != null) embed = embed.withColor(Color.of(color))
         val desc = data.description().orNull()

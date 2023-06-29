@@ -46,7 +46,7 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                                     }
                                     chan.createMessage(
                                         Embeds.fbk()
-                                            .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+//                                            TODO .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
                                             .withTitle(changeType)
                                             .withDescription("**Old:** $oldName\n**New:** $newName")
                                             .withFooter(EmbedCreateFields.Footer.of("User ID: ${member.id.asString()}", null))
