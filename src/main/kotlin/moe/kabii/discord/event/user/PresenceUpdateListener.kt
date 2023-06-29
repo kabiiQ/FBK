@@ -14,7 +14,6 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.userAddress
 
 /**
  * Presence updates needed for tracking usernames and avatars.
@@ -34,8 +33,8 @@ class PresenceUpdateListener(val instances: DiscordInstances) : EventListener<Pr
         if(channels.isEmpty()) return
 
         val member = event.member.awaitSingle()
-        val oldName = "${old.username}#${old.discriminator}"
-        val newName = "${member.username}#${member.discriminator}"
+        val oldName = old.username
+        val newName = member.username
 
         if(!oldName.equals(newName, ignoreCase = true)) {
             channels
@@ -48,7 +47,7 @@ class PresenceUpdateListener(val instances: DiscordInstances) : EventListener<Pr
                             .flatMap { chan ->
                                 chan.createMessage(
                                     Embeds.fbk()
-                                        .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
+//                                       TODO .withAuthor(EmbedCreateFields.Author.of(member.userAddress(), null, member.avatarUrl))
                                         .withTitle("Changed username")
                                         .withDescription("**Old:** $oldName\n**New:** $newName")
                                         .withFooter(EmbedCreateFields.Footer.of("User ID: ${member.id.asString()}", null))

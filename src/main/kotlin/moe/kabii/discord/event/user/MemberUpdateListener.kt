@@ -25,8 +25,8 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
         val member = event.member.awaitSingle()
 
         // nickname update
-        val oldName = "${old.displayName}#${old.discriminator}"
-        val newName = "${member.displayName}#${member.discriminator}"
+        val oldName = old.displayName
+        val newName = member.displayName
         if(!oldName.equals(newName, ignoreCase = true)) {
             try {
                 config.logChannels()

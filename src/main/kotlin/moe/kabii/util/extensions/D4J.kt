@@ -1,7 +1,6 @@
 package moe.kabii.util.extensions
 
 import discord4j.common.util.Snowflake
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
@@ -24,17 +23,7 @@ get() = Snowflake.of(this)
 val Snowflake.long: Long
 get() = asLong()
 
-suspend fun User.userAddress(guild: Guild): String {
-    val nickname = try {
-        this.asMember(guild.id).awaitFirstOrNull()
-    } catch(e: Exception) {
-        null
-    }
-    val displayName = nickname?.displayName ?: this.username
-    return "$displayName#$discriminator"
-}
-
-fun User.userAddress(): String = "$username#$discriminator"
+fun User.userAddress(): String = if(discriminator != "0") "$username#$discriminator" else username
 
 val Permission.friendlyName
 get() = name.replace("_", " ").run(WordUtils::capitalizeFully)
