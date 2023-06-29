@@ -3,7 +3,6 @@ package moe.kabii.command.commands.trackers.util
 import moe.kabii.command.Command
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 object UntrackEmpty : Command("untrackempty") {
     override val wikiPath: String? = null
