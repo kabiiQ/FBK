@@ -2,10 +2,10 @@ package moe.kabii.net.oauth
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.*
