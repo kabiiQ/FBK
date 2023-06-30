@@ -34,7 +34,7 @@ object AudioManager {
         val ipv4Addr = Keys.config[Keys.Youtube.ipv4Rotation]
         if(ipv4Addr.isNotEmpty()) {
             val addrs = ipv4Addr.map { addr -> Ipv4Block("$addr/32") }
-            LOG.info("Configuring LavaPlayer IP balancing:\n${addrs.joinToString("\n")}")
+            LOG.info("Configuring LavaPlayer IP balancing:\n${ipv4Addr.joinToString("\n")}")
             val ipRoute = BalancingIpRoutePlanner(addrs)
             YoutubeIpRotatorSetup(ipRoute)
                 .forManager(manager)
