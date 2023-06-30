@@ -104,8 +104,12 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListChecker = ListServiceChecker(ListSite.ANILIST, discord, aniListDelay)
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
+//        val nitterDelay = ServiceRequestCooldownSpec(
+//            callDelay = 500L,
+//            minimumRepeatTime = 60_000L
+//        )
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 500L,
+            callDelay = 1_000L,
             minimumRepeatTime = 60_000L
         )
         val nitterChecker = NitterChecker(discord, nitterDelay)
@@ -124,7 +128,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             aniListThread,
 //            Thread(twitter, "TwitterChecker"),
 //            Thread(twitterStream, "TwitterStream"),
-//            Thread(nitterChecker, "NitterManager"),
+            Thread(nitterChecker, "NitterManager"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
             Thread(ytChatWatcher, "YTChatWatcher")

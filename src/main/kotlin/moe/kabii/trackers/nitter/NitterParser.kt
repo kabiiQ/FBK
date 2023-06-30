@@ -46,7 +46,8 @@ object NitterParser {
         // call to local nitter instance - no auth
         val request = newRequestBuilder()
             .get()
-            .url("${getInstanceUrl(instance)}/$username/with_replies/rss")
+//            .url("${getInstanceUrl(instance)}/$username/with_replies/rss") TODO restore?
+            .url("${getInstanceUrl(instance)}/$username/rss")
             .build()
         val body = try {
             OkHTTP.newCall(request).execute().use { rs ->
@@ -58,7 +59,7 @@ object NitterParser {
                 }
             }
         } catch(e: Exception) {
-            LOG.error("Error reaching Nitter instance: ${e.message}")
+            LOG.error("Error reaching Nitter instance ${getInstanceUrl(instance)}: ${e.message}")
             LOG.debug(e.stackTraceString)
             return null
         }
@@ -143,7 +144,7 @@ object NitterParser {
 
             return NitterData(nitterUser, nitterTweets)
         } catch(e: Exception) {
-            LOG.warn("Error parsing Nitter XML: ${e.message}")
+            LOG.warn("Error parsing Nitter XML from ${getInstanceUrl(instance)}: ${e.message}")
             LOG.info(e.stackTraceString)
             return null
         }
