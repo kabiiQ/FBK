@@ -3,6 +3,10 @@ package moe.kabii.trackers.videos.kick.api
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import moe.kabii.util.constants.URLUtil
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @JsonClass(generateAdapter = true)
 data class KickChannel(
@@ -22,12 +26,26 @@ data class KickLivestream(
     @Json(name = "is_live") val live: Boolean,
     val viewers: Int,
     val thumbnail: KickThumbnail?,
-    val categories: List<KickCategory>
-)
+    @Json(name = "categories") val _categories: List<KickCategory>
+) {
+    companion object {
+        // different format for 'livestream' created_at field
+        // 2023-06-29 18:00:00
+        private val liveStreamDateTimeFormat = DateTimeFormatter
+            .ofPattern("uuuu-MM-dd HH:mm:ss")
+            .withZone(ZoneId.from(ZoneOffset.UTC))
+    }
+
+    @Transient val createdAt = Instant.from(liveStreamDateTimeFormat.parse(_createdAt))
+    @Transient val categories = _categories
+        .joinToString(", ", transform = KickCategory::name)
+        .ifBlank { "none" }
+}
 
 @JsonClass(generateAdapter = true)
 data class KickUser(
-    val username: String
+    val username: String,
+    @Json(name = "profile_pic") val avatarUrl: String
 )
 
 @JsonClass(generateAdapter = true)
