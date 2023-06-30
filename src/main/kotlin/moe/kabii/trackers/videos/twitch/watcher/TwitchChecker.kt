@@ -10,7 +10,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -108,16 +108,16 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
 
         // existing stream info in db
-        val streams by lazy {
-            DBTwitchStreams.TwitchStream.getStreamDataFor(twitchId)
+        val dbStream by lazy {
+            DBStreams.LiveStreamEvent.getTwitchStreamFor(twitchId)
         }
 
         if(stream == null) {
             // stream is not live, check if there are any existing notifications to remove
-            val notifications = DBTwitchStreams.Notification.getForChannel(channel)
+            val notifications = DBStreams.Notification.getForChannel(channel)
             if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
-                if(streams.empty()) { // abandon notification if downtime causes missing information
+                if(dbStream == null) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val fbk = instances[notif.targetID.discordClient]
                         try {
@@ -138,7 +138,6 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     }
                     return
                 }
-                val dbStream = streams.first()
                 // Stream is not live and we have stream history. edit/remove any existing notifications
                 notifications.forEach { notif ->
                     val fbk = instances[notif.targetID.discordClient]
@@ -156,7 +155,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                 val specEmbed = TwitchEmbedBuilder(
                                     user!!,
                                     features
-                                ).statistics(dbStream)
+                                ).statistics(dbStream!!)
                                 discordMessage.edit()
                                     .withEmbeds(specEmbed.create())
                             } else {
@@ -178,14 +177,14 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         LOG.trace(e.stackTraceString)
                     } finally {
                         notif.delete()
-                        dbStream.delete()
+                        dbStream!!.delete()
                     }
                 }
             }
             return
         }
         // stream is live, edit or post a notification in each target channel
-        val find = streams.firstOrNull()
+        val find = dbStream
         val changed = if(find != null) {
             find.run {
                 // update stream stats
@@ -201,7 +200,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         } else {
             // create stream stats
             propagateTransaction {
-                DBTwitchStreams.TwitchStream.new {
+                DBStreams.LiveStreamEvent.new {
                     this.channelID = channel
                     this.startTime = stream.startedAt.jodaDateTime
                     this.peakViewers = stream.viewers
@@ -220,7 +219,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             val fbk = instances[target.discordClient]
             val discord = fbk.client
             try {
-                val existing = DBTwitchStreams.Notification
+                val existing = DBStreams.Notification
                     .getForTarget(target)
                     .firstOrNull()
 
@@ -269,7 +268,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     TrackerUtil.pinActive(fbk, settings, newNotification)
                     TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
 
-                    DBTwitchStreams.Notification.new {
+                    DBStreams.Notification.new {
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)
                         this.targetID = target.findDBTarget()
                         this.channelID = channel
@@ -295,7 +294,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
     }
 
     @RequiresExposedContext
-    private suspend fun getDiscordMessage(dbNotif: DBTwitchStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
+    private suspend fun getDiscordMessage(dbNotif: DBStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
         val discord = instances[dbNotif.targetID.discordClient].client
         if(dbNotif.deleted) null else {
             val dbMessage = dbNotif.messageID

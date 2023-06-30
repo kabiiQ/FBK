@@ -3,7 +3,7 @@ package moe.kabii.trackers.videos.twitch
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.StreamSettings
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
@@ -18,7 +18,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
         StreamEmbed(liveStream, this)
 
     @RequiresExposedContext
-    fun statistics(dbStream: DBTwitchStreams.TwitchStream) =
+    fun statistics(dbStream: DBStreams.LiveStreamEvent) =
         StatisticsEmbed(dbStream, this)
 
     class StreamEmbed internal constructor(val stream: TwitchStreamInfo, val builder: TwitchEmbedBuilder) {
@@ -36,7 +36,7 @@ class TwitchEmbedBuilder(val user: TwitchUserInfo, val settings: StreamSettings)
             }
     }
 
-    class StatisticsEmbed internal constructor(val dbStream: DBTwitchStreams.TwitchStream, val builder: TwitchEmbedBuilder) {
+    class StatisticsEmbed internal constructor(val dbStream: DBStreams.LiveStreamEvent, val builder: TwitchEmbedBuilder) {
         fun create() = Embeds.other(Color.of(3941986))
             .run {
                 val recordedUptime = Duration.between(dbStream.startTime.javaInstant, Instant.now())

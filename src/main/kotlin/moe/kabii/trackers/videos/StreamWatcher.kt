@@ -254,8 +254,8 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
             // now we can do the work - get all live streams in this channel using the existing 'notifications' - and check those streams for marks
             // twitch notifs
-            DBTwitchStreams.Notification.wrapRows(
-                DBTwitchStreams.Notifications
+            DBStreams.Notification.wrapRows(
+                DBStreams.Notifications
                     .innerJoin(MessageHistory.Messages
                         .innerJoin(DiscordObjects.Channels))
                     .select {
@@ -266,7 +266,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                         notif.channelID.id != endingStream.id
                     } else true
                 }
-                .mapTo(liveChannels, DBTwitchStreams.Notification::channelID)
+                .mapTo(liveChannels, DBStreams.Notification::channelID)
 
             // yt notifs
             YoutubeNotification.wrapRows(
