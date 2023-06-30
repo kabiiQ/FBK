@@ -6,16 +6,21 @@ import moe.kabii.trackers.videos.StreamWatcher
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.select
 
-// representing an actual single 'livestream' event from Twitch
-object DBTwitchStreams {
-    object TwitchStreams : IntIdTable() {
+object DBStreams {
+    /*
+    Object representing single 'livestream' event from Twitch
+    Now also can represent a Kick stream - the structure is identical
+     */
+    object LiveStreamEvents : IdTable<Int>("twitchstreams") {
+        override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val channelID = reference("assoc_stream_channel_id", TrackedStreams.StreamChannels, ReferenceOption.CASCADE).uniqueIndex()
         val startTime = datetime("started_at")
         val peakViewers = integer("peak_viewers")
@@ -23,28 +28,41 @@ object DBTwitchStreams {
         val averageViewers = integer("average_viewers")
         val lastTitle = text("last_title")
         val lastGame = text("last_game_name")
+
+        override val primaryKey = PrimaryKey(channelID)
     }
 
-    class TwitchStream(id: EntityID<Int>) : IntEntity(id) {
-        var channelID by TrackedStreams.StreamChannel referencedOn TwitchStreams.channelID
-        var startTime by TwitchStreams.startTime
-        var peakViewers by TwitchStreams.peakViewers
-        var uptimeTicks by TwitchStreams.uptimeTicks
-        var averageViewers by TwitchStreams.averageViewers
-        var lastTitle by TwitchStreams.lastTitle
-        var lastGame by TwitchStreams.lastGame
+    class LiveStreamEvent(id: EntityID<Int>) : IntEntity(id) {
+        var channelID by TrackedStreams.StreamChannel referencedOn LiveStreamEvents.channelID
+        var startTime by LiveStreamEvents.startTime
+        var peakViewers by LiveStreamEvents.peakViewers
+        var uptimeTicks by LiveStreamEvents.uptimeTicks
+        var averageViewers by LiveStreamEvents.averageViewers
+        var lastTitle by LiveStreamEvents.lastTitle
+        var lastGame by LiveStreamEvents.lastGame
 
-        companion object : IntEntityClass<TwitchStream>(TwitchStreams) {
-            fun getStreamDataFor(channelId: Long): SizedIterable<TwitchStream> {
+        companion object : IntEntityClass<LiveStreamEvent>(LiveStreamEvents) {
+            fun getTwitchStreamFor(channelId: Long): LiveStreamEvent? {
                 val twitchId = channelId.toString()
-                return TwitchStream.wrapRows(
-                    TwitchStreams
+                return LiveStreamEvent.wrapRows(
+                    LiveStreamEvents
                         .innerJoin(TrackedStreams.StreamChannels)
                         .select {
                             TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH and
                                     (TrackedStreams.StreamChannels.siteChannelID eq twitchId)
                         }
-                )
+                ).firstOrNull()
+            }
+
+            fun getKickStreamFor(channel: String): LiveStreamEvent? {
+                return LiveStreamEvent.wrapRows(
+                    LiveStreamEvents
+                        .innerJoin(TrackedStreams.StreamChannels)
+                        .select {
+                            TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK and
+                                    (LowerCase(TrackedStreams.StreamChannels.siteChannelID) eq channel.lowercase())
+                        }
+                ).firstOrNull()
             }
         }
 
