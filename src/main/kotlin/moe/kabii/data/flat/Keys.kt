@@ -28,7 +28,6 @@ object Keys : ConfigSpec("") {
         val videoApiPort by required<Int>("internal_video_api_port")
         val filterPAPIS by required<String>("filter_papis")
         val filterPS by required<String>("filter_ps")
-        val ipv4Rotation by required<List<String>>("ipv4_rotation")
     }
     object Postgres : ConfigSpec() {
         val connectionString by required<String>("connection_string")
@@ -103,7 +102,8 @@ object Keys : ConfigSpec("") {
     object MAL : ConfigSpec() {
         val malKey by required<String>("mal_client_id")
     }
-    object Socks : ConfigSpec() {
+    object Net : ConfigSpec() {
+        val ipv4Rotation by required<List<String>>("ipv4_rotation")
         val proxyPorts by required<List<Int>>("proxy_ports")
     }
 

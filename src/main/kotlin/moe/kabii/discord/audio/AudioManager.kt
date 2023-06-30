@@ -31,7 +31,7 @@ object AudioManager {
     init {
         AudioSourceManagers.registerRemoteSources(manager)
 
-        val ipv4Addr = Keys.config[Keys.Youtube.ipv4Rotation]
+        val ipv4Addr = Keys.config[Keys.Net.ipv4Rotation]
         if(ipv4Addr.isNotEmpty()) {
             val addrs = ipv4Addr.map { addr -> Ipv4Block("$addr/32") }
             LOG.info("Configuring LavaPlayer IP balancing:\n${ipv4Addr.joinToString("\n")}")

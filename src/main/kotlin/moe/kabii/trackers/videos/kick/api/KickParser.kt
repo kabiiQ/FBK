@@ -4,7 +4,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.delay
 import moe.kabii.LOG
 import moe.kabii.MOSHI
-import moe.kabii.net.Proxies
+import moe.kabii.net.ClientRotation
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
@@ -32,7 +32,7 @@ object KickParser {
             .url("$baseUrl/$requestStr")
             .build()
         try {
-            val response = Proxies
+            val response = ClientRotation
                 .getClient(requestStr.hashCode())
                 .newCall(request)
                 .execute()
