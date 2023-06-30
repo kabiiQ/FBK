@@ -16,6 +16,10 @@ import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -171,7 +175,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                     }
                                 } catch (e: Exception) {
-                                    LOG.warn("Error processing YouTube video: $videoId: $ytVideo :: ${e.message}")
+                                    LOG.warn("Error processing YouTube video: $videoId: ${ytVideo.orNull()} :: ${e.message}")
                                     LOG.debug(e.stackTraceString)
                                 }
                             }

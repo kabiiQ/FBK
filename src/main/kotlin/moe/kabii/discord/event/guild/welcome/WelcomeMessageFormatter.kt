@@ -22,6 +22,7 @@ object WelcomeMessageFormatter {
         var format = raw
             .replace(nameParam, member.username)
             .replace(mentionParam, if(rich) member.mention else member.userAddress())
+            .replace("\\n", "\n")
 
         val memberCountMatch = numberParam.find(format)
         if(memberCountMatch != null) {

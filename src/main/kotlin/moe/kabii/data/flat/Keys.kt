@@ -28,6 +28,7 @@ object Keys : ConfigSpec("") {
         val videoApiPort by required<Int>("internal_video_api_port")
         val filterPAPIS by required<String>("filter_papis")
         val filterPS by required<String>("filter_ps")
+        val ipv4Rotation by required<List<String>>("ipv4_rotation")
     }
     object Postgres : ConfigSpec() {
         val connectionString by required<String>("connection_string")

@@ -90,7 +90,8 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
 
         fields.add(EmbedCreateFields.Field.of("Link", "[Jump to message](${message.createJumpLink()})", false))
         embed = embed
-            .withAuthor(EmbedCreateFields.Author.of(author?.username ?: "Unknown", null, author?.avatarUrl))
+//          TODO switch back to author  .withAuthor(EmbedCreateFields.Author.of(author?.username ?: "Unknown", null, author?.avatarUrl))
+            .withTitle(author?.username ?: "Unknown")
             .withColor(MessageColors.star)
             .withDescription(message.content)
             .withFooter(EmbedCreateFields.Footer.of("Message ID: ${message.id.asString()}, sent ", null))

@@ -22,7 +22,7 @@ import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -32,10 +32,10 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         applicationLoop {
             val start = Instant.now()
             // get all tracked sites for this service
-            try {
-                // get all tracked twitch streams
-                val tracked = propagateTransaction {
-                    TrackedStreams.StreamChannel.find {
+            propagateTransaction {
+                try {
+                    // get all tracked twitch streams
+                    val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
                     }
                 }
@@ -50,24 +50,25 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                 // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
                 val streamData = TwitchParser.getStreams(ids)
 
-                // re-associate SQL data with stream API data
-                streamData.mapNotNull { (id, data) ->
-                    val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
-                    if (data is Err && data.value is StreamErr.IO) {
-                        LOG.warn("Error contacting Twitch :: $trackedChannel")
-                        return@mapNotNull null
-                    }
-                    // now we can split into coroutines for processing & sending messages to Discord.
-                    taskScope.launch {
-                        newSuspendedTransaction {
-                            try {
-                                val filteredTargets = getActiveTargets(trackedChannel)
-                                if (filteredTargets != null) {
-                                    updateChannel(trackedChannel, data.orNull(), filteredTargets)
-                                } // else channel has been untracked entirely
-                            } catch (e: Exception) {
-                                LOG.warn("Error updating Twitch channel: $trackedChannel")
-                                LOG.debug(e.stackTraceString)
+                    // re-associate SQL data with stream API data
+                    streamData.mapNotNull { (id, data) ->
+                        val trackedChannel = tracked.find { it.siteChannelID.toLong() == id }!!
+                        if (data is Err && data.value is StreamErr.IO) {
+                            LOG.warn("Error contacting Twitch :: $trackedChannel")
+                            return@mapNotNull null
+                        }
+                        // now we can split into coroutines for processing & sending messages to Discord.
+                        taskScope.launch {
+                            propagateTransaction {
+                                try {
+                                    val filteredTargets = getActiveTargets(trackedChannel)
+                                    if (filteredTargets != null) {
+                                        updateChannel(trackedChannel, data.orNull(), filteredTargets)
+                                    } // else channel has been untracked entirely
+                                } catch (e: Exception) {
+                                    LOG.warn("Error updating Twitch channel: $trackedChannel")
+                                    LOG.debug(e.stackTraceString)
+                                }
                             }
                         }
                         Unit

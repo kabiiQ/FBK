@@ -7,12 +7,9 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.applicationLoop
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
+import moe.kabii.util.extensions.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Duration
@@ -25,7 +22,7 @@ class YoutubeMembershipMaintainer(val instances: DiscordInstances): Runnable {
         applicationLoop {
             LOG.info("Running YT membership DB maintainence")
 
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
 
                     // remove any old expired youtube memberships

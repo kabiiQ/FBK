@@ -17,7 +17,6 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
@@ -30,7 +29,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
         applicationLoop {
             // grab reminders ending in next 2 minutes
             val start = Instant.now()
-            newSuspendedTransaction {
+            propagateTransaction {
                 try {
                     val window = DateTime.now().plus(updateInterval)
                     val reminders = Reminder.find { Reminders.remind lessEq window }.toList()

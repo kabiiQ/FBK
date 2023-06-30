@@ -11,6 +11,7 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.CommandManager
+import moe.kabii.command.commands.configuration.setup.MusicConfig
 import moe.kabii.command.commands.configuration.setup.StarboardConfig
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.documentation.CommandDocumentor
@@ -18,6 +19,7 @@ import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.OfflineUpdateHandler
+import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
@@ -86,12 +88,17 @@ class DiscordInstances {
         val modules = reflection
             .getSubTypesOf(ConfigurationModule::class.java)
             .mapNotNull { clazz -> clazz.kotlin.objectInstance }
-            .filterNot { mod -> mod == StarboardConfig.StarboardModule }
+            .filterNot { mod -> mod == StarboardConfig.StarboardModule || mod == MusicConfig.MusicBot.MusicSettingsModule }
 
         val globalCommands = GlobalCommandRegistrar.getAllGlobalCommands(modules)
-        val musicCommands = GlobalCommandRegistrar.getFeatureCommands("music")
-        // starboard seperate: won't be enabled on 'primary' instance, nor generate in docs
+
+        // build dynamic config commands that are not used on all instances
         val starboardCommand = GlobalCommandRegistrar.buildConfigCommand(StarboardConfig.StarboardModule)
+        val musicCfgCommand = GlobalCommandRegistrar.buildConfigCommand(MusicConfig.MusicBot.MusicSettingsModule)
+
+        // build all feature specific commands that are not used on all instances
+        val musicCommands = GlobalCommandRegistrar.getFeatureCommands("music") + musicCfgCommand
+
         val allCommands = globalCommands + musicCommands
 
         // generate command self-documentation
@@ -118,7 +125,7 @@ class DiscordInstances {
         val publishers = mutableListOf<Flux<*>>()
 
         // load FBK instances from json and connect each
-        instances = InstanceDataLoader.loadFromFile().map { instance ->
+        instances = InstanceDataLoader.loadFromFile().associate { instance ->
 
             // connect instance to discord
             val discord = DiscordClientBuilder
@@ -151,14 +158,15 @@ class DiscordInstances {
                 LOG.error("Error updating application commands: ${e.message}")
             }
 
-            val fbk = FBK(instance.id, gateway, self.username, self.discriminator, InstanceProperties(instance))
+            @Suppress("DEPRECATION") // discriminators are still valid for bots
+            val fbk = FBK(instance.id, gateway, self.username, self.discriminator ?: "0", InstanceProperties(instance))
             val offlineChecks = gateway.guilds
                 .flatMap { guild ->
                     mono {
                         delay(Duration.ofSeconds(2))
                         OfflineUpdateHandler.runChecks(fbk.clientId, guild)
                         InviteWatcher.updateGuild(fbk.clientId, guild)
-//                        RecoverQueue.recover(fbk, guild)
+                        RecoverQueue.recover(fbk, guild)
                     }
                 }
                 .onErrorResume { t ->
@@ -180,7 +188,7 @@ class DiscordInstances {
             publishers.addAll(allListeners)
 
             instance.id to fbk
-        }.toMap()
+        }
 
         services = ServiceWatcherManager(this)
 

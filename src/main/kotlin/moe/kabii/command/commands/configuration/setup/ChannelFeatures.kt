@@ -40,6 +40,7 @@ object ChannelFeatures : CommandContainer {
                 val features = features()
 
                 val wasLog = features.logChannel
+                val wasMusic = features.musicChannel
 
                 val configurator = Configurator(
                     "Feature configuration for #${guildChan.name}",
@@ -51,6 +52,14 @@ object ChannelFeatures : CommandContainer {
                     features.validateDefaultTarget()
 
                     config.save()
+
+                    if(!wasMusic && features.musicChannel && !client.properties.musicFeaturesEnabled) {
+                        features.musicChannel = false
+                        event.createFollowup()
+                            .withEmbeds(Embeds.error("This instance of FBK does not provide music features. You must add FBK Music 1-8 if this is a requirement."))
+                            .withEphemeral(true)
+                            .awaitSingle()
+                    }
 
                     if(!wasLog && features.logChannel) {
                         event.createFollowup()
