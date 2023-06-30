@@ -38,17 +38,16 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     val tracked = TrackedStreams.StreamChannel.find {
                         TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
                     }
-                }
 
-                // get all the IDs to make bulk requests to the service.
-                // no good way to do this besides temporarily dissociating ids from other data
-                // very important to optimize requests to Twitch, etc
-                // Twitch IDs are always type Long
-                val ids = tracked
-                    .map(TrackedStreams.StreamChannel::siteChannelID)
-                    .map(String::toLong)
-                // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
-                val streamData = TwitchParser.getStreams(ids)
+                    // get all the IDs to make bulk requests to the service.
+                    // no good way to do this besides temporarily dissociating ids from other data
+                    // very important to optimize requests to Twitch, etc
+                    // Twitch IDs are always type Long
+                    val ids = tracked
+                        .map(TrackedStreams.StreamChannel::siteChannelID)
+                        .map(String::toLong)
+                    // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
+                    val streamData = TwitchParser.getStreams(ids)
 
                     // re-associate SQL data with stream API data
                     streamData.mapNotNull { (id, data) ->
@@ -70,13 +69,13 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                     LOG.debug(e.stackTraceString)
                                 }
                             }
+                            Unit
                         }
-                        Unit
-                    }
-                }.joinAll()
-            } catch(e: Exception) {
-                LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                LOG.debug(e.stackTraceString)
+                    }.joinAll()
+                } catch(e: Exception) {
+                    LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                }
             }
             // only run task at most every 3 minutes
             val runDuration = Duration.between(start, Instant.now())
