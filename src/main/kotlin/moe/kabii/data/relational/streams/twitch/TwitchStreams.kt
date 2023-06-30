@@ -54,16 +54,20 @@ object DBStreams {
                 ).firstOrNull()
             }
 
-            fun getKickStreamFor(channel: String): LiveStreamEvent? {
-                return LiveStreamEvent.wrapRows(
-                    LiveStreamEvents
-                        .innerJoin(TrackedStreams.StreamChannels)
-                        .select {
-                            TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK and
-                                    (LowerCase(TrackedStreams.StreamChannels.siteChannelID) eq channel.lowercase())
-                        }
-                ).firstOrNull()
-            }
+            fun getKickStreamFor(dbChannel: TrackedStreams.StreamChannel) = find {
+                LiveStreamEvents.channelID eq dbChannel.id
+            }.firstOrNull()
+
+//            fun getKickStreamFor(channel: String): LiveStreamEvent? {
+//                return LiveStreamEvent.wrapRows(
+//                    LiveStreamEvents
+//                        .innerJoin(TrackedStreams.StreamChannels)
+//                        .select {
+//                            TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK and
+//                                    (LowerCase(TrackedStreams.StreamChannels.siteChannelID) eq channel.lowercase())
+//                        }
+//                ).firstOrNull()
+//            }
         }
 
         fun updateViewers(current: Int) {

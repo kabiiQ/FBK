@@ -35,12 +35,12 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
     }
 
     @CreatesExposedContext
-    suspend fun streamLive(channel: TrackedStreams.StreamChannel, info: KickChannel, targets: List<TrackedTarget>) {
+    suspend fun streamStart(channel: TrackedStreams.StreamChannel, info: KickChannel, targets: List<TrackedTarget>) {
 
         // create live stats object for stream
         val liveInfo = checkNotNull(info.livestream)
 
-        if(transaction { DBStreams.LiveStreamEvent.getKickStreamFor(info.user.username) } != null) {
+        if(transaction { DBStreams.LiveStreamEvent.getKickStreamFor(channel) } != null) {
             LOG.error("Duplicate live stream event for Kick stream: ${info.user}")
             return
         }
@@ -51,7 +51,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 this.peakViewers = liveInfo.viewers
                 this.averageViewers = liveInfo.viewers
                 this.uptimeTicks = 1
-                this.lastTitle = liveInfo.title ?: "No title"
+                this.lastTitle = liveInfo.title
                 this.lastGame = liveInfo.categories
             }
         }
@@ -68,7 +68,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
 
     data class KickNotification(val discordClient: Int, val guildId: Snowflake?, val channelId: Snowflake, val messageId: Snowflake)
     @RequiresExposedContext
-    suspend fun streamEnd(dbStream: DBStreams.LiveStreamEvent, info: KickChannel?) {
+    suspend fun streamEnd(dbStream: DBStreams.LiveStreamEvent, info: KickChannel) {
 
         val notifications = propagateTransaction {
             DBStreams.Notification
@@ -94,7 +94,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                     .awaitSingle()
                 val features = getStreamConfig(data.discordClient, data.guildId, data.channelId)
 
-                val action = if(features.summaries && info != null) {
+                val action = if(features.summaries) {
                     // edit live embed with post-stream summary
                     val uptime = Duration
                         .between(dbStream.startTime.javaInstant, Instant.now())
@@ -146,7 +146,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
             } catch(ce: ClientException) {
                 LOG.info("Unable to get Kick stream notification $dbNotif :: ${ce.status.code()}")
             } catch(e: Exception) {
-                LOG.info("Error in Kick #streamEnd for channel ${info?.slug} :: ${e.message}")
+                LOG.info("Error in Kick #streamEnd for channel ${info.slug} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             } finally {
                 propagateTransaction {
@@ -188,7 +188,9 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 .withTimestamp(info.livestream.createdAt)
                 .run {
                     val thumbnail = liveInfo.thumbnail?.url
-                    if(features.thumbnails && thumbnail != null) withImage(thumbnail) else withThumbnail(thumbnail)
+                    if(thumbnail != null) {
+                        if(features.thumbnails) withImage(thumbnail) else withThumbnail(thumbnail)
+                    } else this
                 }
 
             val mentionMessage = if(mention != null) {
@@ -219,6 +221,9 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                     this.deleted = false
                 }
             }
+
+            // edit channel name if feature is enabled and stream goes live
+            checkAndRenameChannel(fbk.clientId, chan)
 
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {

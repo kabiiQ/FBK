@@ -3,6 +3,7 @@ package moe.kabii.trackers.videos.kick.watcher
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.kick.api.KickChannel
@@ -15,6 +16,8 @@ import java.time.Instant
 import kotlin.math.max
 
 class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, KickNotifier(instances) {
+
+    private val callDelay = Duration.ofMillis(cooldowns.callDelay)
 
     override fun run() {
         applicationLoop {
@@ -32,6 +35,7 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
                 tracked.forEach { channel ->
                     // call each kick stream sequentially - unknown rate limits
                     try {
+                        delay(callDelay)
                         val kickChannel = KickParser.getChannel(channel.siteChannelID)
                         if(kickChannel == null) {
                             LOG.warn("Error getting Kick channel: ${channel.siteChannelID}")
@@ -44,6 +48,7 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
                         }
                     } catch(e: Exception) {
                         LOG.warn("Error updating Kick channel: $channel")
+                        LOG.debug(e.stackTraceString)
                     }
                 }
             } catch(e: Exception) {
@@ -57,6 +62,42 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
     }
 
     suspend fun updateChannel(db: TrackedStreams.StreamChannel, kick: KickChannel, targets: List<TrackedTarget>) {
-        TODO()
+        val stream = kick.livestream
+        val dbStream = propagateTransaction {
+            DBStreams.LiveStreamEvent.getKickStreamFor(db)
+        }
+        if(stream?.live == true) {
+
+            // stream is live, edit or post a notification in each target channel
+            if(dbStream != null) {
+
+                // stream is already known, update stats
+                propagateTransaction {
+                    dbStream.updateViewers(stream.viewers)
+                    if(stream.title != dbStream.lastTitle || stream.categories != dbStream.lastGame) {
+                        dbStream.lastTitle = stream.title
+                        dbStream.lastGame = stream.categories
+                    }
+                }
+
+            } else {
+                // new stream has started
+                streamStart(db, kick, targets)
+            }
+
+        } else {
+
+            // stream is not live, check if there are any existing notifications to remove
+            if(dbStream != null) {
+
+                // no longer live but we have stream history. edit/remove any notifications and delete history
+                try {
+                    streamEnd(dbStream, kick)
+                } finally {
+                    dbStream.delete()
+                }
+
+            } // else stream is not live and there are no notifications
+        }
     }
 }

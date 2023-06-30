@@ -22,7 +22,7 @@ data class KickChannel(
 @JsonClass(generateAdapter = true)
 data class KickLivestream(
     @Json(name = "created_at") val _createdAt: String,
-    @Json(name = "session_title") val title: String?,
+    @Json(name = "session_title") val _title: String?,
     @Json(name = "is_live") val live: Boolean,
     val viewers: Int,
     val thumbnail: KickThumbnail?,
@@ -36,6 +36,7 @@ data class KickLivestream(
             .withZone(ZoneId.from(ZoneOffset.UTC))
     }
 
+    @Transient val title = _title ?: "No title"
     @Transient val createdAt = Instant.from(liveStreamDateTimeFormat.parse(_createdAt))
     @Transient val categories = _categories
         .joinToString(", ", transform = KickCategory::name)
