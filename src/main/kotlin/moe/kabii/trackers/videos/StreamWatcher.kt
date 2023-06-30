@@ -17,7 +17,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
-import moe.kabii.data.relational.streams.twitch.DBTwitchStreams
+import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
@@ -232,10 +232,16 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         return features?.streamSettings ?: StreamSettings() // default for pm
     }
 
+    suspend fun getStreamConfig(discordClient: Int, guildId: Snowflake?, channelId: Snowflake): StreamSettings {
+        // get channel stream embed settings (all info available)
+        val (_, features) =
+            GuildConfigurations.findFeatures(discordClient, guildId?.asLong(), channelId.asLong())
+        return features?.streamSettings ?: StreamSettings()
+    }
+
     companion object {
         // rename
-        private val job = SupervisorJob()
-        private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + job)
+        private val renameScope = CoroutineScope(DiscordTaskPool.renameThread + SupervisorJob())
         private val disallowedChara = Regex("[.,/?:\\[\\]\"'\\s]+")
 
         @RequiresExposedContext
