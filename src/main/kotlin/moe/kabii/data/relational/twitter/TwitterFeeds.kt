@@ -17,6 +17,8 @@ object TwitterFeeds : IntIdTable() {
     val lastPulledTweet = long("last_pulled_snowflake").nullable()
 
     val userIdLegacy = long("twitter_user_id").nullable().default(null) // no longer useful information without Twitter API
+
+    val enabled = bool("twitter_feed_allowed_access").default(false)
 }
 
 class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
@@ -24,6 +26,8 @@ class TwitterFeed(id: EntityID<Int>) : IntEntity(id) {
     var lastPulledTweet by TwitterFeeds.lastPulledTweet
 
     var userIdLegacy by TwitterFeeds.userIdLegacy
+
+    var enabled by TwitterFeeds.enabled
 
     val targets by TwitterTarget referrersOn TwitterTargets.twitterFeed
 

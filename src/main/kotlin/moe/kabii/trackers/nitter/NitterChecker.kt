@@ -13,14 +13,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.TempStates
 import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterRetweets
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.data.relational.twitter.*
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
@@ -45,6 +43,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.math.max
+import kotlin.random.Random
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
@@ -58,8 +57,14 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
             LOG.debug("NitterChecker :: start: $start")
             // get all tracked twitter feeds
+            // TODO temporary measures
+//            val feeds = propagateTransaction {
+//                TwitterFeed.all().toList()
+//            }
             val feeds = propagateTransaction {
-                TwitterFeed.all().toList()
+                TwitterFeed.find {
+                    TwitterFeeds.enabled eq true
+                }.toList()
             }
 
             if(feeds.isEmpty() || TempStates.skipTwitter) {
@@ -107,6 +112,11 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                             if(!new) {
                                                 return@maxOfOrNull tweet.id
                                             }
+                                            // if temporary switch to syndication feeds - time is accurate again
+//                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
+//                                                || age > Duration.ofHours(2)
+//                                                || cache.seenTweets.contains(tweet.id)
+//                                            ) return@maxOfOrNull tweet.id
                                         } else {
                                             // if already handled or too old, skip, but do not pull tweet ID again
                                             if ((feed.lastPulledTweet ?: 0) >= tweet.id
@@ -158,12 +168,13 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         // cache to not repeat request for twitter video
         val twitterVid by lazy {
             // process video attachment
-            try {
-                NitterParser.getVideoFromTweet(tweet.id)
-            } catch(e: Exception) {
-                LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
-                null
-            }
+            tweet.videoUrl
+                ?: try {
+                    NitterParser.getVideoFromTweet(tweet.id)
+                } catch(e: Exception) {
+                    LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
+                    null
+                }
         }
 
         // cache to not repeat translation for same tweet across multiple channels/servers
@@ -292,6 +303,10 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                 if(fields.isNotEmpty()) withFields(fields) else this
                             }
                             .run {
+                                // TODO temporary measures
+                                if(Random.nextInt(25) == 0) {
+                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
+                                }
                                 if(outdated) footer.append("Skipping ping for old Tweet.\n")
                                 if(outdated) LOG.info("Missed ping: $tweet")
                                 if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
