@@ -62,6 +62,10 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 TwitterFeed.all().toList()
             }
 
+            if(feeds.isEmpty() || TempStates.skipTwitter) {
+                delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
+                return@applicationLoop
+            }
             // partition feeds onto nitter instances for pulling
             val feedsPerInstance = feeds.size / instanceCount
             val instanceJobs = feeds
