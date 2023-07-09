@@ -46,8 +46,7 @@ object NitterParser {
         // call to local nitter instance - no auth
         val request = newRequestBuilder()
             .get()
-//            .url("${getInstanceUrl(instance)}/$username/with_replies/rss") TODO restore?
-            .url("${getInstanceUrl(instance)}/$username/rss")
+            .url("${getInstanceUrl(instance)}/$username/with_replies/rss")
             .build()
         val body = try {
             OkHTTP.newCall(request).execute().use { rs ->
@@ -91,7 +90,7 @@ object NitterParser {
                 // retweets: item contains original creator username
                 val creator = item.element("creator").text
                 val creatorUsername = creator.removePrefix("@")
-                val retweetOf = if(creatorUsername != username) creatorUsername else null
+                val retweetOf = if(creatorUsername != username && rawText.contains(nitterRt)) creatorUsername else null
 
                 val html = item.element("description")
                     .text
