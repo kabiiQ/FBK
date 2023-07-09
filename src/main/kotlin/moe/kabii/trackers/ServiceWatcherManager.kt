@@ -108,9 +108,10 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 //            callDelay = 500L,
 //            minimumRepeatTime = 60_000L
 //        )
+        // temporary syndication feed measures
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 1_000L,
-            minimumRepeatTime = 60_000L
+            callDelay = 1_500L,
+            minimumRepeatTime = 120_000L
         )
         val nitterChecker = NitterChecker(discord, nitterDelay)
 

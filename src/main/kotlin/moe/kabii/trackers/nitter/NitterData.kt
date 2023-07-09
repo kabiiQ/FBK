@@ -26,7 +26,9 @@ data class NitterTweet(
     val retweetOf: String?,
     val replyTo: String?,
     val quoteOf: String?,
-    val quoteOfTweet: Long?
+    val quoteOfTweet: Long?,
+
+    val videoUrl: String? = null
 ) {
     val retweet = retweetOf != null
     val reply = replyTo != null

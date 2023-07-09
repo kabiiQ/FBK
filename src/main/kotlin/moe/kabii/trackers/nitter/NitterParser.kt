@@ -2,11 +2,14 @@ package moe.kabii.trackers.nitter
 
 import discord4j.rest.util.Color
 import moe.kabii.LOG
+import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
+import moe.kabii.net.ClientRotation
 import moe.kabii.newRequestBuilder
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.Request
 import org.dom4j.io.SAXReader
 import org.xml.sax.InputSource
 import java.io.File
@@ -150,7 +153,7 @@ object NitterParser {
     }
 
     @Throws(IOException::class)
-    fun getVideoFromTweet(tweetId: Long): String? {
+    fun getVideoFromTweetScript(tweetId: Long): String? {
         val videoScript = File(scriptDir, scriptName)
         require(videoScript.exists()) { "Twitter video script not found! ${videoScript.absolutePath}" }
         val subprocess = ProcessBuilder("python3.11", scriptName, tweetId.toString())
@@ -178,5 +181,42 @@ object NitterParser {
 
         subprocess.destroy()
         return videoUrl
+    }
+
+    fun getBestVideoUrl(variants: List<SyndicationObjects.Variant>): String = variants.maxBy { v -> v.bitrate ?: 0 }.url
+
+    private val syndicationDetailAdapter = MOSHI.adapter(SyndicationObjects.TweetDetail::class.java)
+    fun getVideoFromTweet(tweetId: Long): String? {
+        val idStr = tweetId.toString()
+        if(!nitterTweetId.matches(idStr)) {
+            return null
+        }
+
+        val request = Request.Builder()
+            .header("User-Agent", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+            .get()
+            .url("https://cdn.syndication.twimg.com/tweet-result?id=$tweetId")
+            .build()
+
+        return try {
+            val result = ClientRotation
+                .getClient(idStr.last().code)
+                .newCall(request)
+                .execute()
+                .use { rs ->
+                    val body = rs.body.string()
+                    if(rs.isSuccessful) body else return null
+                }
+
+            val json = syndicationDetailAdapter.fromJson(result)
+            json?.mediaDetails
+                ?.filter { m -> m.type == "video" }
+                ?.firstOrNull()
+                ?.videoInfo?.variants
+                ?.run(::getBestVideoUrl)
+        } catch(e: Exception) {
+            LOG.info("Error getting YouTube video: ${e.message}")
+            null
+        }
     }
 }
