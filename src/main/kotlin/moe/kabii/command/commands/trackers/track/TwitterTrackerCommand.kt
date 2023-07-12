@@ -35,11 +35,10 @@ object TwitterTrackerCommand : TrackerCommand {
             TwitterFeed.findExisting(target.identifier)
         }
 
-        // TODO temporary measures
-        if(knownUser == null || !knownUser.enabled) {
-            origin.ereply(Embeds.error("General Twitter feed tracking is currently disabled due to the ongoing issues with Twitter.")).awaitSingle()
-            return
-        }
+//        if(knownUser == null || !knownUser.enabled) {
+//            origin.ereply(Embeds.error("General Twitter feed tracking is currently disabled due to the ongoing issues with Twitter.")).awaitSingle()
+//            return
+//        }
 
         val twitterUser = if(knownUser == null) {
 

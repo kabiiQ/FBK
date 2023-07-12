@@ -57,15 +57,14 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 
             LOG.debug("NitterChecker :: start: $start")
             // get all tracked twitter feeds
-            // TODO temporary measures
-//            val feeds = propagateTransaction {
-//                TwitterFeed.all().toList()
-//            }
             val feeds = propagateTransaction {
-                TwitterFeed.find {
-                    TwitterFeeds.enabled eq true
-                }.toList()
+                TwitterFeed.all().toList()
             }
+//            val feeds = propagateTransaction {
+//                TwitterFeed.find {
+//                    TwitterFeeds.enabled eq true
+//                }.toList()
+//            }
 
             if(feeds.isEmpty() || TempStates.skipTwitter) {
                 delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
@@ -303,10 +302,9 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                 if(fields.isNotEmpty()) withFields(fields) else this
                             }
                             .run {
-                                // TODO temporary measures
-                                if(Random.nextInt(25) == 0) {
-                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
-                                }
+//                                if(Random.nextInt(25) == 0) {
+//                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
+//                                }
                                 if(outdated) footer.append("Skipping ping for old Tweet.\n")
                                 if(outdated) LOG.info("Missed ping: $tweet")
                                 if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
