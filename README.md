@@ -16,7 +16,7 @@ FBK is now available for invite and public use, I have not done any sort of adve
 
 ##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1113221032908693534&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
 
-##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1113221032908693534&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic commands+music bot functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
+##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1113221032908693534&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic command functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
 
 # Suggestion/Support Discord Server
 
@@ -62,7 +62,7 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
 - ## General Configurability
-  - Targeted functionality such as music bot commands and service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
+  - Targeted functionality such as service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
 
 
 - Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
