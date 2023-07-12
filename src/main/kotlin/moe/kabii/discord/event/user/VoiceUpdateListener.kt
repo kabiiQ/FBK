@@ -75,8 +75,7 @@ class VoiceUpdateListener(val instances: DiscordInstances) : EventListener<Voice
                         // channel is deleted or we don't have send message perms. remove log configuration
                         LOG.info("Unable to send voice state log for channel '${targetLog.channelID}'. Disabling voicelog.")
                         LOG.debug(ce.stackTraceString)
-                        // TODO pdenied
-                        //targetLog.voiceLog = false
+                        targetLog.voiceLog = false
                         config.save()
                     } else throw ce
                 }
