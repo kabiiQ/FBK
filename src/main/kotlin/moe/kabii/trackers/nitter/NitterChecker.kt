@@ -18,7 +18,10 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.*
+import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterRetweets
+import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
@@ -43,7 +46,6 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.math.max
-import kotlin.random.Random
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount

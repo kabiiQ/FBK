@@ -5,7 +5,6 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Color
-import moe.kabii.command.Command
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.withUser
 import java.time.Instant
@@ -32,11 +31,6 @@ object Embeds {
     fun fbk(content: String, user: User? = null) = fbk(user).withDescription(content)
 
     fun other(content: String, color: Color, user: User? = null) = other(color, user).withDescription(content)
-
-    fun wiki(command: Command, commandError: String, user: User? = null): EmbedCreateSpec {
-        val link = if(command.wikiPath != null) " **[Command wiki page](${command.getHelpURL()})**." else ""
-        return other("$commandError$link", MessageColors.spec).withUser(user)
-    }
 
     // copy "real" embed data (from arbitrary user messages) into a re-postable spec
     // converting from internal library object - missing feature per https://github.com/Discord4J/Discord4J/issues/1035

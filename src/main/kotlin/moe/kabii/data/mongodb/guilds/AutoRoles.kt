@@ -27,11 +27,6 @@ data class ExclusiveRoleSet(
     val roles: MutableSet<Long> = mutableSetOf()
 )
 
-// TODO remove after migrations complete
-data class SelfRoles(
-    val reactionRoles: MutableList<ReactionRoleConfig> = mutableListOf()
-)
-
 data class ReactionRoleConfig(
     val message: MessageInfo,
     val reaction: DiscordEmoji,

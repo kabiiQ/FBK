@@ -45,15 +45,13 @@ data class GuildConfiguration(
     val options: OptionalFeatures = OptionalFeatures(),
     val guildCustomCommands: CustomCommands = CustomCommands(),
     val autoRoles: AutoRoles = AutoRoles(),
-    val selfRoles: SelfRoles = SelfRoles(),
     val guildSettings: GuildSettings = GuildSettings(),
     val tempVoiceChannels: TempChannels = TempChannels(),
     val musicBot: MusicSettings = MusicSettings(),
     val translator: TranslatorSettings = TranslatorSettings(),
-    val guildClientId: Int = 1, // TODO default=1 can be removed after migration
+    val guildClientId: Int,
 
     var starboardSetup: StarboardSetup = StarboardSetup(),
-    var starboard: StarboardSetup? = null, // TODO remove after migration
 
     val welcomer: WelcomeSettings = WelcomeSettings()
 ) {

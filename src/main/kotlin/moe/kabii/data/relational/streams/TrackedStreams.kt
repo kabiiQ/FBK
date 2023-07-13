@@ -2,7 +2,6 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TwitcastingTarget
