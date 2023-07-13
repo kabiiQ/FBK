@@ -46,6 +46,9 @@ class FBK(
     val properties: InstanceProperties
 ) {
     val uptime = Uptime()
+
+    override fun equals(other: Any?): Boolean = (other as? FBK)?.clientId == clientId
+    override fun hashCode() = clientId
 }
 
 class DiscordInstances {
