@@ -2,6 +2,7 @@ package moe.kabii.data.requests
 
 import discord4j.core.`object`.entity.Guild
 import moe.kabii.LOG
+import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.registration.GuildCommandRegistrar
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.GuildTarget
@@ -68,6 +69,12 @@ object DataTransfer {
         val mongoNew = mongoOld.copy(_id = newId(), guildClientId = new.clientId)
         mongoNew.save()
         mongoOld.removeSelf()
+
+        // invalidate cached "tracked target" suggestions
+        mongoNew.options.featureChannels.forEach { (channelId, _) ->
+            TargetSuggestionGenerator.invalidateTargets(old.clientId, channelId)
+            TargetSuggestionGenerator.invalidateTargets(new.clientId, channelId)
+        }
 
         propagateTransaction {
             fun tryUpdate(block: () -> Unit) {
