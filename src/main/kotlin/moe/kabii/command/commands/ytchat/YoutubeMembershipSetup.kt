@@ -43,7 +43,7 @@ object YoutubeMembershipSetup : Command("linkyoutubemembers") {
                 if(linkedChannel != null) {
                     ireply(Embeds.fbk("**${target.name}** is currently linked to YouTube channel: $linkedChannel."))
                 } else {
-                    ereply(Embeds.wiki(command, "**/linkyoutubemembership** is used to set up a link that connects YouTube chat members to a Discord role."))
+                    ereply(Embeds.error("**/linkyoutubemembership** is used to set up a link that connects YouTube chat members to a Discord role."))
                 }.awaitSingle()
                 return@chat
             }

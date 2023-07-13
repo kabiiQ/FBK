@@ -8,8 +8,9 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.deletion.DataDeletionRequests
+import moe.kabii.data.requests.DataDeletion
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.extensions.awaitAction
 import java.time.Duration
 
@@ -39,7 +40,7 @@ object DataDeletion : Command("datadeletionrequest") {
         // warn user about operation, irreversible
         event.reply()
             .withEmbeds(
-                Embeds.error(
+                Embeds.other(
                     StringBuilder()
                         .appendLine("**WARNING:** this operation will delete ALL information concerning your Discord user account from this bot (FBK)'s internal database.")
                         .appendLine()
@@ -50,7 +51,7 @@ object DataDeletion : Command("datadeletionrequest") {
                         .appendLine("Examples of configurations that will be irreversibly deleted and must be manually re-configured if desired:")
                         .appendLine("- Any Reminders that you have set")
                         .appendLine("- Any social feeds in **ANY SERVER** (Twitch, YouTube, Twitter, anime lists, etc) where you were the user who originally /track'ed them.")
-                        .toString()
+                        .toString(), MessageColors.special
                 ))
             .withEphemeral(true)
             .withComponents(confirmActionButtons())
@@ -62,9 +63,9 @@ object DataDeletion : Command("datadeletionrequest") {
 
         when(press.customId) {
             "delete" -> {
-                DataDeletionRequests.userDataDeletion(author.id.asLong())
+                DataDeletion.userDataDeletion(author.id.asLong())
                 event.editReply()
-                    .withEmbeds(Embeds.error("ALL USER DATA has been deleted."))
+                    .withEmbeds(Embeds.other("ALL USER DATA has been deleted.", MessageColors.special))
                     .withComponentsOrNull(null)
                     .awaitSingle()
             }
@@ -83,7 +84,7 @@ object DataDeletion : Command("datadeletionrequest") {
         // warn user about operation, irreversible
         event.reply()
             .withEmbeds(
-                Embeds.error(
+                Embeds.other(
                     StringBuilder()
                         .appendLine("**WARNING:** this operation will delete ALL information concerning your **entire Discord SERVER** from this bot (FBK)'s internal database.")
                         .appendLine()
@@ -98,7 +99,7 @@ object DataDeletion : Command("datadeletionrequest") {
                         .appendLine("    - Log channels")
                         .appendLine("    - Enabled music bot/feature channels")
                         .appendLine("    - ETC...")
-                        .toString()
+                        .toString(), MessageColors.special
                 )
             )
             .withEphemeral(true)
@@ -111,9 +112,9 @@ object DataDeletion : Command("datadeletionrequest") {
 
         when(press.customId) {
             "delete" -> {
-                DataDeletionRequests.guildDataDeletion(client.clientId, target.id.asLong())
+                DataDeletion.guildDataDeletion(target.id.asLong())
                 event.editReply()
-                    .withEmbeds(Embeds.error("ALL SERVER DATA has been deleted."))
+                    .withEmbeds(Embeds.other("ALL SERVER DATA has been deleted.", MessageColors.special))
                     .withComponentsOrNull(null)
                     .awaitSingle()
             }

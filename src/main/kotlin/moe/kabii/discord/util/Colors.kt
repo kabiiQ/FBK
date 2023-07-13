@@ -12,9 +12,9 @@ import reactor.core.publisher.Mono
 object MessageColors {
     val error = Color.RED
     val fbk = Color.of(12187102)
-    val spec = Color.of(13369088)
     val reminder = Color.of(44031)
     val star = Color.of(16755762)
+    val special = Color.of(15171054)
 }
 
 fun logColor(member: Member?): Color =

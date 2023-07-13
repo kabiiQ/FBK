@@ -25,10 +25,9 @@ object GuildUtil : CommandContainer {
                 val (targetClient, targetGuild) = args.optStr("id")
                     ?.toLongOrNull()?.snowflake
                     ?.run {
-                        for(fbk in handler.instances.all()) {
-                            val guild = fbk.client.getGuildById(this).tryAwait().orNull()
-                            if(guild != null) return@run fbk to guild
-                        }
+                        val fbk = handler.instances.getByGuild(this).firstOrNull()
+                        val guild = fbk?.client?.getGuildById(this)?.tryAwait()?.orNull()
+                        if(guild != null) return@run fbk to guild
                         null
                     }
                     ?: (client to target)

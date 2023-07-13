@@ -2,12 +2,12 @@ package moe.kabii.command.commands.utility
 
 import discord4j.core.retriever.EntityRetrievalStrategy
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.rest.util.Color
 import discord4j.rest.util.Image
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.extensions.*
 
 object AvatarUtil : CommandContainer {
@@ -24,7 +24,7 @@ object AvatarUtil : CommandContainer {
                         .withTitle("Avatar for **${targetUser.userAddress()}**")
                         .withDescription("[View full size](${targetUser.avatarUrl}?size=1024)")
                         .withImage("${targetUser.avatarUrl}?size=256")
-                        .withColor(Color.of(12187102))
+                        .withColor(MessageColors.fbk)
                     yield(globalAvatar)
                     if(guild != null && member != null) {
                         val format = if(member.hasAnimatedGuildAvatar()) Image.Format.GIF else Image.Format.PNG
@@ -34,7 +34,7 @@ object AvatarUtil : CommandContainer {
                                 .withTitle("Server avatar for **${targetUser.userAddress()}** in **${guild.name}**")
                                 .withDescription("[View full size]($guildAvatarUrl?size=1024)")
                                 .withImage("$guildAvatarUrl?size=256")
-                                .withColor(Color.of(12187102))
+                                .withColor(MessageColors.fbk)
                             yield(guildAvatar)
                         }
                     }
@@ -54,7 +54,7 @@ object AvatarUtil : CommandContainer {
                 val globalAvatar = EmbedCreateSpec.create()
                     .withTitle("Avatar for **${event.resolvedUser.userAddress()}**")
                     .withImage("${event.resolvedUser.avatarUrl}?size=256")
-                    .withColor(Color.of(12187102))
+                    .withColor(MessageColors.fbk)
 
                 val member = event.interaction.guildId.orNull()?.run(event.resolvedUser::asMember)?.tryBlock()?.orNull()
                 val guildAvatar = if(member != null) {
@@ -65,7 +65,7 @@ object AvatarUtil : CommandContainer {
                         EmbedCreateSpec.create()
                             .withTitle("Server avatar for **${event.resolvedUser.userAddress()}** in **${guild.name}**")
                             .withImage("$guildAvatarUrl?size=256")
-                            .withColor(Color.of(12187102))
+                            .withColor(MessageColors.fbk)
                     } else null
                 } else null
                 event.reply()

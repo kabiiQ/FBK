@@ -20,7 +20,9 @@ object ServerInfo : Command("servers") {
                 .flatMap { fbk -> fbk.client.guilds }
                 .sort(Comparator.comparing(Guild::getMemberCount).reversed())
                 .map { guild ->
-                    "${guild.memberCount}: ${guild.name} (${TimestampFormat.RELATIVE_TIME.format(guild.joinTime)}) ${guild.id.asString()}"
+                    val guildName = guild.name
+                        .replace("|", "\\|")
+                    "${guild.memberCount}: $guildName (${TimestampFormat.RELATIVE_TIME.format(guild.joinTime)}) ${guild.id.asString()}"
                 }
                 .collectList()
                 .awaitSingle()
