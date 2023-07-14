@@ -12,11 +12,9 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 FBK is now available for invite and public use. Feel free to use it or share it though I don't plan on putting it on any kind of bot list or advertising.
 
-#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=1113221032908693534&permissions=288681168&scope=applications.commands%20bot)
+#### [Invite link granting permissions necessary for ALL bot features](https://discord.com/oauth2/authorize?client_id=1113221032908693534&permissions=17875674262608&scope=applications.commands%20bot)
 
-##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1113221032908693534&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions.
-
-##### [Invite link granting basic/minimum permissions](https://discord.com/api/oauth2/authorize?client_id=1113221032908693534&permissions=3468352&scope=bot%20applications.commands). This is sufficient for basic command functionality. If using any more complex features, (for example: auto-roles, renaming channels for livestreams, or moderation logs) you will need to grant the required permissions to the bot through the Discord role system manually, or the bot **will not function properly.** 
+##### [Invite link granting Administrator (all permissions+view all channels)](https://discord.com/oauth2/authorize?client_id=1113221032908693534&permissions=8&scope=applications.commands%20bot). For security, this is not recommended unless you have a small server and do not want to deal with permissions. However, in my experience many servers have many permissions set to "denied" and give their staff Administrator - you may just want to use this role.
 
 # Suggestion/Support Discord Server
 
