@@ -2,8 +2,9 @@ package moe.kabii.command.commands.configuration.roles
 
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.entity.channel.VoiceChannel
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
 import moe.kabii.data.mongodb.guilds.VoiceConfiguration
@@ -32,7 +33,14 @@ object VoiceRole {
         }
         val vcName = if(channelTarget != null) "VC-${channelTarget.name}" else "Voice"
         // at this point there was no configuration or we removed the outdated configuration, we can create a new role config
-        val newRole = target.createRole().withName(vcName).awaitSingle()
+        val newRole = try {
+            target.createRole().withName(vcName).awaitSingle()
+        } catch(ce: ClientException) {
+            if(ce.status.code() == 403) {
+                ereply(Embeds.error("I am missing permission to create roles in **${target.name}**.")).awaitSingle()
+                return@with
+            } else throw ce
+        }
         val roleSetup =
             VoiceConfiguration(
                 channelTarget?.id?.asLong(),

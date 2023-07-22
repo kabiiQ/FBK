@@ -17,9 +17,6 @@ object GuildRemoveListener : EventListener<MemberLeaveEvent>(MemberLeaveEvent::c
                 Embeds.other("Bot removed from server with ID ${event.guildId.asString()}.", Color.of(16739688))
                     .withAuthor(EmbedCreateFields.Author.of("Leaving server", null, event.client.self.map(User::getAvatarUrl).tryBlock().orNull()))
             ).awaitSingle()
-
-            // disable automatic database clearing temporarily: users re-inviting bot for slash command migrations
-            // DataDeletionRequests.guildDataDeletion(event.guildId.asLong())
         }
     }
 }

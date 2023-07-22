@@ -27,7 +27,7 @@ object NitterParser {
     val instanceCount = nitterInstances.size
 
     val twitterUsernameRegex = Regex("[a-zA-Z0-9_]{4,15}")
-    private val nitterTweetId = Regex("[0-9]{19,}")
+    private val nitterTweetId = Regex("[0-9]{18,}")
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")

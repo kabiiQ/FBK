@@ -19,7 +19,6 @@ import moe.kabii.instances.FBK
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.update
-import org.litote.kmongo.newId
 
 object DataTransfer {
 
@@ -62,11 +61,11 @@ object DataTransfer {
         }
 
         // replace mongo config with new copy
-        val mongoExisting = GuildConfigurations.guildConfigurations.remove(GuildTarget(new.clientId, guildId))
-        if(mongoExisting != null) {
-            GuildConfigurations.mongoConfigurations.deleteOneById(mongoExisting._id)
-        }
-        val mongoNew = mongoOld.copy(_id = newId(), guildClientId = new.clientId)
+        val newTarget = GuildTarget(new.clientId, guildId)
+        val mongoExisting = GuildConfigurations.guildConfigurations.remove(newTarget)
+        checkNotNull(mongoExisting)
+        val mongoNew = mongoOld.copy(_id = mongoExisting._id, guildClientId = new.clientId)
+        GuildConfigurations.guildConfigurations[newTarget] = mongoNew
         mongoNew.save()
         mongoOld.removeSelf()
 
@@ -76,127 +75,127 @@ object DataTransfer {
             TargetSuggestionGenerator.invalidateTargets(new.clientId, channelId)
         }
 
-        propagateTransaction {
-            fun tryUpdate(block: () -> Unit) {
-                try {
+        suspend fun tryUpdate(block: () -> Unit) {
+            try {
+                propagateTransaction {
                     block()
-                } catch(e: Exception) {
-                    LOG.error("Error in /transferdata: ${e.message}")
-                    detail.appendLine("Error transferring some tracker data, contact kabii to look into details.")
                 }
+            } catch(e: Exception) {
+                LOG.error("Error in /transferdata: ${e.message}")
+                detail.appendLine("Error transferring some tracker data, contact kabii to look into details.")
             }
+        }
 
-            // animelist targets
-            tryUpdate {
-                val mediaLists = TrackedMediaLists.ListTargets
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({ // where
-                        TrackedMediaLists.ListTargets.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[TrackedMediaLists.ListTargets.discordClient] = new.clientId
-                    }
-                if (mediaLists > 0) {
-                    detail.appendLine("$mediaLists tracked anime/manga lists.")
+        // animelist targets
+        tryUpdate {
+            val mediaLists = TrackedMediaLists.ListTargets
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({ // where
+                    TrackedMediaLists.ListTargets.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[TrackedMediaLists.ListTargets.discordClient] = new.clientId
                 }
+            if (mediaLists > 0) {
+                detail.appendLine("$mediaLists tracked anime/manga lists.")
             }
+        }
 
-            // reminders
-            tryUpdate {
-                val reminders = Reminders
-                    .innerJoin(MessageHistory.Messages)
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({ // where
-                        Reminders.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[Reminders.discordClient] = new.clientId
-                    }
-
-                if (reminders > 0) {
-                    detail.appendLine("$reminders user reminders.")
+        // reminders
+        tryUpdate {
+            val reminders = Reminders
+                .innerJoin(MessageHistory.Messages)
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({ // where
+                    Reminders.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[Reminders.discordClient] = new.clientId
                 }
+
+            if (reminders > 0) {
+                detail.appendLine("$reminders user reminders.")
             }
+        }
 
-            // yt membership configurations
-            tryUpdate {
-                val memberSetup = MembershipConfigurations
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({
-                        MembershipConfigurations.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[MembershipConfigurations.discordClient] = new.clientId
-                    }
-                if (memberSetup > 0) {
-                    detail.appendLine("$memberSetup YouTube Membership link.")
+        // yt membership configurations
+        tryUpdate {
+            val memberSetup = MembershipConfigurations
+                .innerJoin(DiscordObjects.Guilds)
+                .update({
+                    MembershipConfigurations.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[MembershipConfigurations.discordClient] = new.clientId
                 }
+            if (memberSetup > 0) {
+                detail.appendLine("$memberSetup YouTube Membership link.")
             }
+        }
 
-            // yt live chat tracks
-            tryUpdate {
-                val ytLiveChat = YoutubeLiveChats
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({
-                        YoutubeLiveChats.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[YoutubeLiveChats.discordClient] = new.clientId
-                    }
-                if (ytLiveChat > 0) {
-                    detail.appendLine("$ytLiveChat tracked YouTube live chat relays")
+        // yt live chat tracks
+        tryUpdate {
+            val ytLiveChat = YoutubeLiveChats
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({
+                    YoutubeLiveChats.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[YoutubeLiveChats.discordClient] = new.clientId
                 }
+            if (ytLiveChat > 0) {
+                detail.appendLine("$ytLiveChat tracked YouTube live chat relays")
             }
+        }
 
-            // yt video tracks
-            tryUpdate {
-                val ytVideoTrack = YoutubeVideoTracks
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({
-                        YoutubeVideoTracks.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[YoutubeVideoTracks.discordClient] = new.clientId
-                    }
-                if (ytVideoTrack > 0) {
-                    detail.appendLine("$ytVideoTrack individually tracked YouTube videos")
+        // yt video tracks
+        tryUpdate {
+            val ytVideoTrack = YoutubeVideoTracks
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({
+                    YoutubeVideoTracks.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[YoutubeVideoTracks.discordClient] = new.clientId
                 }
+            if (ytVideoTrack > 0) {
+                detail.appendLine("$ytVideoTrack individually tracked YouTube videos")
             }
+        }
 
-            // tracked stream channels
-            tryUpdate {
-                val streamTargets = TrackedStreams.Targets
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({
-                        TrackedStreams.Targets.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[TrackedStreams.Targets.discordClient] = new.clientId
-                    }
-                if (streamTargets > 0) {
-                    detail.appendLine("$streamTargets tracked live stream channels.")
+        // tracked stream channels
+        tryUpdate {
+            val streamTargets = TrackedStreams.Targets
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({
+                    TrackedStreams.Targets.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[TrackedStreams.Targets.discordClient] = new.clientId
                 }
+            if (streamTargets > 0) {
+                detail.appendLine("$streamTargets tracked live stream channels.")
             }
+        }
 
-            // tracked twitter feeds
-            tryUpdate {
-                val twitterFeeds = TwitterTargets
-                    .innerJoin(DiscordObjects.Channels)
-                    .innerJoin(DiscordObjects.Guilds)
-                    .update({
-                        TwitterTargets.discordClient eq old.clientId and
-                                (DiscordObjects.Guilds.guildID eq guildId)
-                    }) { update ->
-                        update[TwitterTargets.discordClient] = new.clientId
-                    }
-                if (twitterFeeds > 0) {
-                    detail.appendLine("$twitterFeeds tracked Twitter feeds.")
+        // tracked twitter feeds
+        tryUpdate {
+            val twitterFeeds = TwitterTargets
+                .innerJoin(DiscordObjects.Channels)
+                .innerJoin(DiscordObjects.Guilds)
+                .update({
+                    TwitterTargets.discordClient eq old.clientId and
+                            (DiscordObjects.Guilds.guildID eq guildId)
+                }) { update ->
+                    update[TwitterTargets.discordClient] = new.clientId
                 }
+            if (twitterFeeds > 0) {
+                detail.appendLine("$twitterFeeds tracked Twitter feeds.")
             }
         }
 
