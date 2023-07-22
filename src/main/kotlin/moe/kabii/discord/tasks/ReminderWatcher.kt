@@ -56,7 +56,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun scheduleReminder(reminder: Reminder) {
         val discord = instances[reminder.discordClient].client
 

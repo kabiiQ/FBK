@@ -2,7 +2,7 @@ package moe.kabii.data.relational.streams.youtube.ytchat
 
 import discord4j.core.GatewayDiscordClient
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -21,7 +21,7 @@ class LinkedYoutubeAccount(id: EntityID<Int>): IntEntity(id) {
 
     companion object : IntEntityClass<LinkedYoutubeAccount>(LinkedYoutubeAccounts) {
 
-        @WithinExposedContext
+        @RequiresExposedContext
         suspend fun link(discord: GatewayDiscordClient, youtubeId: String, dbUser: DiscordObjects.User) {
             val existing = find {
                 LinkedYoutubeAccounts.ytChatId eq youtubeId

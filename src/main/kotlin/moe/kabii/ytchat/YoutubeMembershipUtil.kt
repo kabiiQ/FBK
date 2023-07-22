@@ -10,7 +10,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.*
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
@@ -29,11 +29,11 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
     }
 
     companion object {
-        @WithinExposedContext fun forConfig(client: GatewayDiscordClient, config: MembershipConfiguration) = YoutubeMembershipUtil(client, config)
-        @WithinExposedContext fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
-        @WithinExposedContext fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
+        @RequiresExposedContext fun forConfig(client: GatewayDiscordClient, config: MembershipConfiguration) = YoutubeMembershipUtil(client, config)
+        @RequiresExposedContext fun forConfig(guild: Guild, config: MembershipConfiguration) = YoutubeMembershipUtil(guild.client, config, guild = guild)
+        @RequiresExposedContext fun forGuild(clientId: Int, guild: Guild) = MembershipConfigurations.getForGuild(clientId, guild.id)?.run { YoutubeMembershipUtil(guild.client, this, guild = guild) }
 
-        @WithinExposedContext
+        @RequiresExposedContext
         suspend fun linkMembership(discord: GatewayDiscordClient, linkedYt: LinkedYoutubeAccount) {
             // check if newly linked account has associated memberships
             // linkedyt -> chat memberships -> configs -> assign role
@@ -49,7 +49,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
                 .forEach { utils -> utils.assignMembershipRole(linkedYt) }
         }
 
-        @WithinExposedContext
+        @RequiresExposedContext
         suspend fun linkMembership(instances: DiscordInstances, member: YoutubeMember) {
             // check if newly recorded membership has an associated discord account
             // ytmember -> linkedyt -> configs -> assign role
@@ -71,7 +71,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun unsync() {
         try {
             val role = checkMembershipRole()
@@ -83,7 +83,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         link.delete()
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun syncMemberships() {
         // ensure all members have the role in discord
         getActiveMembers().forEach { ytMember ->
@@ -95,7 +95,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     fun getActiveMembers(): List<LinkedYoutubeAccount> = LinkedYoutubeAccounts
         .innerJoin(YoutubeMembers, { ytChatId }, { chatterId })
         .select {
@@ -105,7 +105,7 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         .run(LinkedYoutubeAccount::wrapRows)
         .toList()
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun getMember(linkedYt: LinkedYoutubeAccount): Member? {
         val guild = guild ?: return null
         return try {
@@ -116,27 +116,27 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun assignMembershipRole(member: Member) {
         val role = checkMembershipRole() ?: return
         // todo notify if missing permissions? once sync command is written
         member.addRole(role.id).success().awaitSingle()
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun assignMembershipRole(linkedYt: LinkedYoutubeAccount) {
         val member = getMember(linkedYt) ?: return
         assignMembershipRole(member)
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun unassignMembershipRole(linkedYt: LinkedYoutubeAccount) {
         val role = checkMembershipRole() ?: return
         val member = getMember(linkedYt) ?: return
         member.removeRole(role.id).success().awaitSingle()
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun checkMembershipRole(): Role? {
         if(membershipRole != null) return membershipRole
         val guild = guild ?: return null

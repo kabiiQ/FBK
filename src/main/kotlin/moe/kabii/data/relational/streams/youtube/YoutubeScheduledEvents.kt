@@ -2,6 +2,7 @@ package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.extensions.stackTraceString
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -47,15 +48,15 @@ class YoutubeScheduledNotification(id: EntityID<Int>) : IntEntity(id) {
     var target by TrackedStreams.Target referencedOn YoutubeScheduledNotifications.target
 
     companion object : IntEntityClass<YoutubeScheduledNotification>(YoutubeScheduledNotifications) {
-        operator fun get(scheduled: YoutubeScheduledEvent, target: TrackedStreams.Target) = find {
+        operator fun get(scheduled: YoutubeScheduledEvent, target: StreamWatcher.TrackedTarget) = find {
             YoutubeScheduledNotifications.ytScheduled eq scheduled.id and
-                    (YoutubeScheduledNotifications.target eq target.id)
+                    (YoutubeScheduledNotifications.target eq target.db)
         }
 
-        fun create(scheduled: YoutubeScheduledEvent, target: TrackedStreams.Target) {
+        fun create(scheduled: YoutubeScheduledEvent, target: StreamWatcher.TrackedTarget) {
             try {
                 new {
-                    this.target = target
+                    this.target = target.findDBTarget()
                     this.ytScheduled = scheduled
                 }
             } catch(e: Exception) {

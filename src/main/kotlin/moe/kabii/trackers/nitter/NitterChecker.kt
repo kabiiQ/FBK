@@ -161,7 +161,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         LOG.debug("nitter exit")
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TwitterTarget>): Long {
         val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
@@ -349,7 +349,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 TrackerUtil.checkAndPublish(fbk, notif)
             } catch (e: Exception) {
                 if (e is ClientException && e.status.code() == 403) {
-                    TrackerUtil.permissionDenied(fbk, target.discordChannel.guild?.guildID, target.discordChannel.channelID, FeatureChannel::twitterTargetChannel, target::delete)
+                    TrackerUtil.permissionDenied(fbk, target.discordChannel.guild?.guildID?.snowflake, target.discordChannel.channelID.snowflake, FeatureChannel::twitterTargetChannel, target::delete)
                     LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
                 } else {
                     LOG.warn("Error sending Tweet to channel: ${e.message}")
@@ -361,7 +361,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
         val existingTargets = feed.targets.toList()
             .filter { target ->
@@ -396,7 +396,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
     }
 
     data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: NitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         // do not return ping if not configured for channel/tweet type
         when {

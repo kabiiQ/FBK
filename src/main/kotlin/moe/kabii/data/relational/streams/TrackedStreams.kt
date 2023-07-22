@@ -2,6 +2,8 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.trackers.*
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.trackers.StreamingTarget
@@ -26,6 +28,7 @@ object TrackedStreams {
         TWITCH(TwitchTarget),
         YOUTUBE(YoutubeTarget),
         TWITCASTING(TwitcastingTarget),
+        KICK(KickTarget),
 
         SPACES(YoutubeTarget)
     }
@@ -57,7 +60,7 @@ object TrackedStreams {
 
         companion object : IntEntityClass<StreamChannel>(StreamChannels) {
 
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getChannel(site: DBSite, channelId: String): StreamChannel? = find {
                 StreamChannels.site eq site and
                         (StreamChannels.siteChannelID eq channelId)
@@ -72,7 +75,7 @@ object TrackedStreams {
                 }
             }
 
-            @WithinExposedContext
+            @RequiresExposedContext
             fun insertApiChannel(site: DBSite, channelId: String, username: String): StreamChannel = new {
                 this.site = site
                 this.siteChannelID= channelId
@@ -110,7 +113,7 @@ object TrackedStreams {
         companion object : IntEntityClass<Target>(Targets) {
 
             // get target with same discord channel and streaming channel id
-            @WithinExposedContext
+            @RequiresExposedContext
             fun getForChannel(clientId: Int, discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
                 Targets
                     .innerJoin(StreamChannels)
@@ -133,8 +136,8 @@ object TrackedStreams {
         val mentionRoleUpcoming = long("discord_mention_role_upcoming").nullable()
         val mentionRoleCreation = long("discord_mention_role_creation").nullable()
         val mentionRoleUploads = long("discord_mention_role_uploads").nullable()
-        val mentionText = text("discord_mention_text").nullable()
-        val mentionTextMember = text("discord_mention_text_membership").nullable()
+        val mentionText = text("discord_mention_text", eagerLoading = true).nullable()
+        val mentionTextMember = text("discord_mention_text_membership", eagerLoading = true).nullable()
         val lastMention = datetime("last_role_mention_time").nullable()
 
         init {

@@ -7,7 +7,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.trackers.ps2.polling.PS2Parser
 import moe.kabii.trackers.ps2.polling.json.PS2Outfit
 import moe.kabii.trackers.ps2.polling.json.PS2Player
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.joda.time.DateTime
 import org.joda.time.Duration
 
@@ -22,7 +22,7 @@ object PS2DataCache {
         fun getOutfitExpiration() = DateTime.now() + outfitExpiration
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     // update character whenever we pull it - ignoring and updating data expiration
     fun updateCharacter(character: PS2Player): PS2Internal.Character {
         return PS2Internal.Character.insertOrUpdate(
@@ -35,13 +35,13 @@ object PS2DataCache {
         )
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     fun updateOutfit(outfitId: String, name: String, tag: String?): PS2Internal.Outfit {
         // just basic outfit info returned from character updates
         return PS2Internal.Outfit.insertOrUpdate(outfitId, name, tag)
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     fun updateOutfit(outfit: PS2Outfit) {
         val dbOutfit = updateOutfit(outfit.outfitId, outfit.name, outfit.tag)
         // additionally able to update members with expanded outfit data
@@ -58,7 +58,7 @@ object PS2DataCache {
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun characterById(characterId: String): PS2Internal.Character? {
         val existing = PS2Internal.Character.find {
             PS2Internal.Characters.characterId eq characterId
@@ -70,7 +70,7 @@ object PS2DataCache {
         return existing
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun outfitById(outfitId: String): PS2Internal.Outfit? {
         val existing = PS2Internal.Outfit.find {
             PS2Internal.Outfits.outfitId eq outfitId
@@ -82,7 +82,7 @@ object PS2DataCache {
         return existing
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun getOutfitMembers(outfitId: String): List<PS2Internal.Character>? {
         val dbOutfit = outfitById(outfitId) ?: return null
         return PS2Internal.Character.find {

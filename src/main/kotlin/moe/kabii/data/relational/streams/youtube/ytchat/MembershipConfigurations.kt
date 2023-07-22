@@ -5,7 +5,7 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -23,10 +23,10 @@ object MembershipConfigurations : IntIdTable() {
     val membershipRole = long("membership_connection_generated_role_id")
     val logChannel = reference("membership_connection_logging_channel", DiscordObjects.Channels, ReferenceOption.SET_NULL).nullable()
 
-    @WithinExposedContext
+    @RequiresExposedContext
     fun getForChannel(ytChan: TrackedStreams.StreamChannel) = MembershipConfigurations.select { streamChannel eq ytChan.id }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     fun getForGuild(clientId: Int, guildId: Snowflake) = MembershipConfiguration.wrapRows(
         MembershipConfigurations
             .innerJoin(DiscordObjects.Guilds)

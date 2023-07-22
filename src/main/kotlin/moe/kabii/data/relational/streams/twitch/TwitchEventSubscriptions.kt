@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.streams.twitch
 
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -28,7 +28,7 @@ class TwitchEventSubscription(id: EntityID<Int>) : IntEntity(id) {
     var subscriptionId by TwitchEventSubscriptions.subscriptionId
 
     companion object : IntEntityClass<TwitchEventSubscription>(TwitchEventSubscriptions) {
-        @WithinExposedContext
+        @RequiresExposedContext
         fun getExisting(channel: TrackedStreams.StreamChannel, type: TwitchEventSubscriptions.Type) =
             TwitchEventSubscription.find {
                 TwitchEventSubscriptions.twitchChannel eq channel.id and

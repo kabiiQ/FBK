@@ -200,7 +200,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
                             if (err == 403) {
-                                TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID, target.discord.channelID, FeatureChannel::animeTargetChannel, target::delete)
+                                TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID?.snowflake, target.discord.channelID.snowflake, FeatureChannel::animeTargetChannel, target::delete)
                                 LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
                             } else throw ce
@@ -220,7 +220,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private suspend fun getActiveTargets(list: TrackedMediaLists.MediaList): List<TrackedMediaLists.ListTarget>? {
         val existingTargets = list.targets.toList()
             .filter { target ->

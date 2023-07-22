@@ -20,12 +20,11 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.StringUtils
-import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 
@@ -36,8 +35,8 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         private val inactiveColor = Color.of(812958)
     }
 
-    @WithinExposedContext
-    suspend fun movieLive(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedStreams.Target>) {
+    @RequiresExposedContext
+    suspend fun movieLive(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedTarget>) {
         val (movie, user) = info
 
         // create db movie - this method is only called at the real beginning of a stream
@@ -61,7 +60,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         }
     }
 
-    @WithinExposedContext
+    @RequiresExposedContext
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
         Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
@@ -115,20 +114,19 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         dbMovie.delete()
     }
 
-    @WithinExposedContext
-    suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedStreams.Target) {
+    @RequiresExposedContext
+    suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedTarget) {
 
         val fbk = instances[target.discordClient]
         // get target channel in discord
-        val guildId = target.discordChannel.guild?.guildID
-        val chan = getChannel(fbk, guildId, target.discordChannel.channelID, target)
+        val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
 
         // get embed settings
-        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
+        val guildConfig = target.discordGuild?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, asLong()) }
         val features = getStreamConfig(target)
 
         // get mention role from db if one is registered
-        val mention = if(guildId != null) {
+        val mention = if(target.discordGuild != null) {
             getMentionRoleFor(target, chan, features)
         } else null
 
@@ -150,9 +148,8 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
             val mentionMessage = if(mention != null) {
 
                 val rolePart = if(mention.discord != null
-                    && (mention.db.lastMention == null || org.joda.time.Duration(mention.db.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+                    && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
-                    mention.db.lastMention = DateTime.now()
                     mention.discord.mention.plus(" ")
                 } else ""
                 val textPart = mention.textPart
@@ -169,8 +166,8 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
 
             // log notification in db
             Twitcasts.TwitNotif.new {
-                this.targetId = target
-                this.channelId = target.streamChannel
+                this.targetId = target.findDBTarget()
+                this.channelId = TrackedStreams.StreamChannel.findById(target.dbStream)!!
                 this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
             }
 
@@ -178,7 +175,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         } catch(ce: ClientException) {
             if(ce.status.code() == 403) {
                 LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel, target::delete)
+                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
             } else throw ce
         }
     }

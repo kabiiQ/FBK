@@ -1,6 +1,6 @@
 package moe.kabii.data.relational.twitter
 
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.sql.*
 
 // TODO add to postgresconnection
@@ -20,13 +20,13 @@ object TwitterRetweetHistory : Table() {
  * Util object called to check/update history of known retweets.
  */
 object TwitterRetweets {
-    @WithinExposedContext
+    @RequiresExposedContext
     private fun checkKnown(feed: TwitterFeed, tweetId: Long) = TwitterRetweetHistory.select {
         TwitterRetweetHistory.feed eq feed.id and
                 (TwitterRetweetHistory.tweetId eq tweetId)
     }.any()
 
-    @WithinExposedContext
+    @RequiresExposedContext
     private fun acknowledge(dbFeed: TwitterFeed, retweetId: Long) {
         TwitterRetweetHistory.insertIgnore { new ->
             new[feed] = dbFeed.id
@@ -40,7 +40,7 @@ object TwitterRetweets {
      * @param retweetedId The ID of the original Tweet that was retweeted by the feed.
      * @return true if the retweet has been newly recorded (and therefore sent to notification)
      */
-    @WithinExposedContext
+    @RequiresExposedContext
     fun checkAndUpdate(feed: TwitterFeed, retweetedId: Long): Boolean {
         val new = !checkKnown(feed, retweetedId)
         if(new) acknowledge(feed, retweetedId)

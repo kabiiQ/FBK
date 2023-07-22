@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.ps2
 
 import moe.kabii.trackers.ps2.store.PS2DataCache
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -26,7 +26,7 @@ object PS2Internal {
         var outfit by Outfit optionalReferencedOn Characters.outfit
 
         companion object : IntEntityClass<Character>(Characters) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun insertOrUpdate(characterId: String, lastKnownName: String, outfit: Outfit?, factionId: Int) = find {
                 Characters.characterId eq characterId
             }.firstOrNull()?.apply {
@@ -57,7 +57,7 @@ object PS2Internal {
         var dataExpiration by Outfits.dataExpiration
 
         companion object : IntEntityClass<Outfit>(Outfits) {
-            @WithinExposedContext
+            @RequiresExposedContext
             fun insertOrUpdate(outfitId: String, lastKnownName: String, lastKnownTag: String?) = find {
                 Outfits.outfitId eq outfitId
             }.firstOrNull()?.apply {

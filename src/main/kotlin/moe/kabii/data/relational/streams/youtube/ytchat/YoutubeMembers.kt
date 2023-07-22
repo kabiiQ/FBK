@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.streams.youtube.ytchat
 
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.WithinExposedContext
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.ytchat.YoutubeMembershipUtil
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -27,7 +27,7 @@ class YoutubeMember(id: EntityID<Long>) : LongEntity(id) {
 
     companion object : LongEntityClass<YoutubeMember>(YoutubeMembers) {
 
-        @WithinExposedContext
+        @RequiresExposedContext
         suspend fun recordActive(instances: DiscordInstances, ytChannelId: String, ytChatterId: String) {
             val existing = find {
                 YoutubeMembers.channelOwnerId eq ytChannelId and

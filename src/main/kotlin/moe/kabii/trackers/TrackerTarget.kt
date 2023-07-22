@@ -12,6 +12,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.trackers.videos.StreamErr
+import moe.kabii.trackers.videos.kick.api.KickParser
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.youtube.YoutubeParser
@@ -39,6 +40,7 @@ sealed class TrackerTarget(
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
             103L -> TwitcastingTarget
+            104L -> KickTarget
             199L -> YoutubeVideoTarget
             200L -> MALTarget
             201L -> KitsuTarget
@@ -195,6 +197,35 @@ object TwitcastingTarget : StreamingTarget(
         origin.handler.instances.services.twitcastChecker.checkUserForMovie(channel)
         TwitcastingParser.registerWebhook(channel.siteChannelID)
     }
+}
+
+object KickTarget : StreamingTarget(
+    KickParser.color,
+    "Kick.com",
+    FeatureChannel::streamTargetChannel,
+    listOf(
+        Regex("kick.com/([a-zA-Z0-9_]{4,25})")
+    ),
+    "kick", "kick.com"
+) {
+
+    override val dbSite: TrackedStreams.DBSite
+        get() = TrackedStreams.DBSite.KICK
+
+    override suspend fun getChannel(id: String) = try {
+        val channel = KickParser.getChannel(id)
+        if(channel != null) {
+            Ok(BasicStreamChannel(KickTarget, channel.slug, channel.user.username, channel.url))
+        } else Err(StreamErr.NotFound)
+    } catch(e: Exception) {
+        LOG.debug("Error getting Kick channel: ${e.message}")
+        LOG.debug(e.stackTraceString)
+        Err(StreamErr.IO)
+    }
+
+    override fun feedById(id: String) = URLUtil.StreamingSites.Kick.channelByName(id)
+
+    override val onTrack: TrackCallback = { _, _ -> }
 }
 
 // anime targets
