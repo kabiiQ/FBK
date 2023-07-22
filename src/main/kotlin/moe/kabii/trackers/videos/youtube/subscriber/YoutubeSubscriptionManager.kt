@@ -31,8 +31,8 @@ class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: Ser
 
     override fun run() {
         // start callback server
-        if(!MetaData.host) return
         listener.server.start()
+        if(!MetaData.host) return
 
         currentSubscriptions = transaction {
             WebSubSubscription

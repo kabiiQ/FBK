@@ -14,6 +14,8 @@
     <logger name="com.github.twitch4j" level="INFO"/>
     <logger name="org.apache.http" level="INFO"/>
     <logger name="org.asynchttpclient.netty" level="INFO"/>
+    <logger name="com.impossibl.postgres" level="INFO"/>
+    <logger name="com.impossibl.postgres.jdbc" level="ERROR"/>
     <logger name="moe.kabii" level="TRACE"/>
     <logger name="Exposed" level="INFO"/>
 

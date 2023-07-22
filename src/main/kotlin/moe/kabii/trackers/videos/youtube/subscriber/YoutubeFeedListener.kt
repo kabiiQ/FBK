@@ -50,8 +50,8 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
                 val challenge = call.parameters["hub.challenge"]
                 if(challenge != null) {
+                    LOG.info("$mode validated: $channelTopic")
                     call.respondText(challenge, status = HttpStatusCode.OK)
-                    LOG.debug("$mode validated: $channelTopic")
                 }
             }
 
@@ -90,7 +90,7 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                 // let youtubevideointake decide what to do with this information
                 YoutubeVideoIntake.intakeXml(body)
                 // notify youtubechecker for immediate update
-                manager.checker.ytTick()
+//                manager.checker.ytTick()
             }
         }
     }

@@ -56,98 +56,109 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         if(!MetaData.host) return // do not run on testing instances
         applicationLoop {
             val start = Instant.now()
-
-            LOG.debug("NitterChecker :: start: $start")
-            // get all tracked twitter feeds
-            val feeds = propagateTransaction {
-                TwitterFeed.all().toList()
+            try {
+                kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(6)) {
+                    updateFeeds(start)
+                }
+            } catch(e: Exception) {
+                LOG.warn("NitterChecker: Timeout reached")
             }
+
+            val runDuration = Duration.between(start, Instant.now())
+            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
+            LOG.debug("delay: $delay")
+            delay(Duration.ofMillis(max(delay, 0L)))
+        }
+    }
+
+    suspend fun updateFeeds(start: Instant) {
+        LOG.debug("NitterChecker :: start: $start")
+        // get all tracked twitter feeds
+        val feeds = propagateTransaction {
+            TwitterFeed.all().toList()
+        }
 //            val feeds = propagateTransaction {
 //                TwitterFeed.find {
 //                    TwitterFeeds.enabled eq true
 //                }.toList()
 //            }
 
-            if(feeds.isEmpty() || TempStates.skipTwitter) {
-                delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
-                return@applicationLoop
-            }
-            // partition feeds onto nitter instances for pulling
-            val feedsPerInstance = feeds.size / instanceCount
-            val instanceJobs = feeds
-                .chunked(feedsPerInstance).withIndex()
-                .map { (instanceId, feedChunk) ->
+        if(feeds.isEmpty() || TempStates.skipTwitter) {
+            delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
+            return
+        }
+        // partition feeds onto nitter instances for pulling
+        val feedsPerInstance = feeds.size / instanceCount
+        val instanceJobs = feeds
+            .chunked(feedsPerInstance).withIndex()
+            .map { (instanceId, feedChunk) ->
 
-                    LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
-                    // each chunk executed on different instance - divide up work, pool assigns thread
-                    nitterScope.launch {
-                        try {
-                            var first = true
-                            feedChunk.forEach { feed ->
+                LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
+                // each chunk executed on different instance - divide up work, pool assigns thread
+                nitterScope.launch {
+                    try {
+                        var first = true
+                        feedChunk.forEach { feed ->
 
-                                propagateTransaction feed@{
-                                    if (!first) {
-                                        delay(Duration.ofMillis(cooldowns.callDelay))
-                                    } else first = false
+                            propagateTransaction feed@{
+                                if (!first) {
+                                    delay(Duration.ofMillis(cooldowns.callDelay))
+                                } else first = false
 
-                                    val targets = getActiveTargets(feed)?.ifEmpty { null }
-                                        ?: return@feed // feed untrack entirely or no target channels are currently enabled
+                                val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                    ?: return@feed // feed untrack entirely or no target channels are currently enabled
 
-                                    val cache = TwitterFeedCache.getOrPut(feed)
+                                val cache = TwitterFeedCache.getOrPut(feed)
 
-                                    val nitter = NitterParser
-                                        .getFeed(feed.username, instance = instanceId)
-                                        ?: return@feed
+                                val nitter = NitterParser
+                                    .getFeed(feed.username, instance = instanceId)
+                                    ?: return@feed
 
-                                    val (user, tweets) = nitter
+                                val (user, tweets) = nitter
 
-                                    val latest = tweets.maxOfOrNull { tweet ->
-                                        // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                                        val age = Duration.between(tweet.date, Instant.now())
+                                val latest = tweets.maxOfOrNull { tweet ->
+                                    // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                                    val age = Duration.between(tweet.date, Instant.now())
 
-                                        if(tweet.retweet) {
-                                            /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
-                                            Check if this RT has already been acknowledged from this feed from our own database
-                                             */
-                                            val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
-                                            if(!new) {
-                                                return@maxOfOrNull tweet.id
-                                            }
-                                            // if temporary switch to syndication feeds - time is accurate again
+                                    if(tweet.retweet) {
+                                        /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
+                                        Check if this RT has already been acknowledged from this feed from our own database
+                                         */
+                                        val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                        if(!new) {
+                                            return@maxOfOrNull tweet.id
+                                        }
+                                        // if temporary switch to syndication feeds - time is accurate again
 //                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
 //                                                || age > Duration.ofHours(2)
 //                                                || cache.seenTweets.contains(tweet.id)
 //                                            ) return@maxOfOrNull tweet.id
-                                        } else {
-                                            // if already handled or too old, skip, but do not pull tweet ID again
-                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
-                                                || age > Duration.ofHours(2)
-                                                || cache.seenTweets.contains(tweet.id)
-                                            ) return@maxOfOrNull tweet.id
-                                        }
-
-                                        notifyTweet(user, tweet, targets)
+                                    } else {
+                                        // if already handled or too old, skip, but do not pull tweet ID again
+                                        if ((feed.lastPulledTweet ?: 0) >= tweet.id
+//                                            || age > Duration.ofHours(2) TODO temp increase
+                                            || age > Duration.ofHours(12)
+                                            || cache.seenTweets.contains(tweet.id)
+                                        ) return@maxOfOrNull tweet.id
                                     }
-                                    if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
-                                        transaction {
-                                            feed.lastPulledTweet = latest
-                                        }
+
+                                    notifyTweet(user, tweet, targets)
+                                }
+                                if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
+                                    transaction {
+                                        feed.lastPulledTweet = latest
                                     }
                                 }
                             }
-                        } catch(e: Exception) {
-                            LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
-                            LOG.debug(e.stackTraceString)
                         }
+                    } catch(e: Exception) {
+                        LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                        LOG.debug(e.stackTraceString)
                     }
                 }
-            instanceJobs.joinAll()
-            LOG.debug("nitter exit")
-            val runDuration = Duration.between(start, Instant.now())
-            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
-            LOG.debug("delay: $delay")
-            delay(Duration.ofMillis(max(delay, 0L)))
-        }
+            }
+        instanceJobs.joinAll()
+        LOG.debug("nitter exit")
     }
 
     @WithinExposedContext
@@ -286,7 +297,12 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         val author = if(tweet.retweet) tweet.retweetOf!! else user.username
                         val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
 
-                        val embed = Embeds.other(StringEscapeUtils.unescapeHtml4(tweet.text), Color.of(color))
+                        val text = StringEscapeUtils
+                            .unescapeHtml4(tweet.text)
+                            .replace("*", "\\*")
+                            .replace("_", "\\_")
+                            .replace("#", "\\#")
+                        val embed = Embeds.other(text, Color.of(color))
                             .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
                             .run {
                                 val fields = mutableListOf<EmbedCreateFields.Field>()

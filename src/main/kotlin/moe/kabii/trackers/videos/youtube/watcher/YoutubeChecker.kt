@@ -3,7 +3,6 @@ package moe.kabii.trackers.videos.youtube.watcher
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.time.withTimeout
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
@@ -41,31 +40,31 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
 
     private var nextCall = Instant.now()
     private var tickId = 0
-    private val lock = Mutex()
+//    private val lock = Mutex()
 
     override fun run() {
         applicationLoop {
             val start = Instant.now()
-            // call yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
-            if(start >= nextCall) {
-                try {
-                    LOG.debug("start: $start :: nextCall : $nextCall")
-                    this.ytTick()
-                } catch(e: Exception) {
-
-                    LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+            try {
+                withTimeout(Duration.ofMinutes(10)) {
+                    ytTick(start)
                 }
+            } catch(e: Exception) {
+                LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
             val runDuration = Duration.between(start, Instant.now())
-            val delay = repeatTimeMillis - runDuration.toMillis()
+            val delay = repeatTimeMillis - runDuration.toMillis() - 250
             delay(max(delay, 0L))
         }
     }
 
-    suspend fun ytTick() {
-        if(!lock.tryLock() /* && Instant.now() < nextCall */) return // discard tick if one is already in progress
+    suspend fun ytTick(start: Instant = Instant.now()) {
+//        if(!lock.tryLock() /* && Instant.now() < nextCall */) return // discard tick if one is already in progress
+        // perform yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
+        if(start < nextCall) return
         this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
+        LOG.debug("start: $start :: nextCall : $nextCall")
         try {
             try {
                 // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
@@ -75,7 +74,9 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // <video id, target list>
                 val targetLookup = mutableMapOf<String, YoutubeCall>()
 
+                LOG.debug("yt 1")
                 propagateTransaction {
+                    LOG.debug("yt 2")
                     val currentTime = DateTime.now()
 
                     // 1: collect all videos we have as 'currently live' - don't recheck within 3 minutes-ish
@@ -110,6 +111,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val callReason = YoutubeCall.New(new)
                         targetLookup[callReason.video.videoId] = callReason
                     }
+                    LOG.debug("yt 3")
 
                     // check if we have 'wasted space' - an API call that will be made with less than 20 videos
                     // check on random scheduled videos using this otherwise wasted space
@@ -120,20 +122,21 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                 .orderBy(Random())
                                 .limit(idChunk - remainder)
                         ).toList()
-                        // TODO remove log - temporary for sanity check on this
-                        LOG.debug("Backfilling ${backfill.size} scheduled events: ${backfill.joinToString(", ") { e -> e.ytVideo.videoId }}")
                         backfill.forEach { event ->
                             val callReason = YoutubeCall.Scheduled(event)
                             targetLookup[callReason.video.videoId] = callReason
                         }
                     }
+                    LOG.debug("yt 4")
                 }
+                LOG.debug("yt 5")
 
                 // main IO call, process as we go
                 LOG.debug("yt expected calls: ${targetLookup.keys}")
                 withTimeout(Duration.ofSeconds(
                     (((targetLookup.size / idChunk) + 1) * 20).toLong()
                 )) {
+                    LOG.debug("yt 6")
                     var first = true
                     targetLookup.keys
                         .chunked(20)
@@ -142,8 +145,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             if(first) first = false
                             else Thread.sleep(500L)
                             YoutubeParser.getVideos(chunk).entries
-                        }.map { (videoId, ytVideo) ->
+                        }.forEach { (videoId, ytVideo) ->
+                            LOG.debug("yt 7")
                             propagateTransaction inner@{
+                                LOG.debug("yt 8")
                                 try {
                                     val callReason = targetLookup.getValue(videoId)
 
@@ -157,6 +162,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             }
                                         }
                                     }
+                                    LOG.debug("yt 9")
 
                                     if(ytVideoInfo != null) {
                                         with(callReason.video) {
@@ -167,6 +173,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             }
                                         }
                                     }
+                                    LOG.debug("yt 10")
 
                                     // call specific handlers for each type of content
                                     when (callReason) {
@@ -174,11 +181,14 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
                                         is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                     }
+                                    LOG.debug("yt 11")
                                 } catch (e: Exception) {
-                                    LOG.warn("Error processing YouTube video: $videoId: ${ytVideo.orNull()} :: ${e.message}")
+                                    LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
                                     LOG.debug(e.stackTraceString)
                                 }
+                                LOG.debug("yt 12")
                             }
+                            LOG.debug("yt 13")
                             // TODO if live/scheduled&feature enabled, check if discord event should be created/updated
                         }
                 }
@@ -217,7 +227,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         } finally {
             taskScope.launch {
                 delay(tickDelay)
-                lock.unlock()
+//                lock.unlock()
             }
         }
     }

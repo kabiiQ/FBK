@@ -2,6 +2,7 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TwitcastingTarget
@@ -156,15 +157,24 @@ object TrackedStreams {
         companion object : IntEntityClass<TargetMention>(TargetMentions)
     }
 
-    object DiscordEvent : IdTable<Int>() {
+    object DiscordEvents : IdTable<Int>() {
         override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val guild = reference("discord_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
-        val channel = reference("channel", StreamChannels, ReferenceOption.CASCADE)
+        val stream = reference("channel", StreamChannels, ReferenceOption.CASCADE)
         val event = long("discord_event_id")
         val live = bool("live_event")
 
         val yt = reference("yt_video", YoutubeVideos, ReferenceOption.SET_NULL).nullable()
 
-        override val primaryKey = PrimaryKey(guild, channel)
+        override val primaryKey = PrimaryKey(guild, stream)
+    }
+
+    class DiscordEvent(id: EntityID<Int>) : IntEntity(id) {
+        var guild by DiscordObjects.Guild referencedOn DiscordEvents.guild
+        var channel by StreamChannel referencedOn DiscordEvents.stream
+        var event by DiscordEvents.event
+        var live by DiscordEvents.live
+
+        var yt by YoutubeVideo optionalReferencedOn DiscordEvents.yt
     }
 }

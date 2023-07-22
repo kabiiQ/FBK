@@ -29,11 +29,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 internal object PostgresConnection {
     private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
-        driverClassName = "org.postgresql.Driver"
+//        driverClassName = "org.postgresql.Driver"
+        driverClassName = "com.impossibl.postgres.jdbc.PGDriver"
         jdbcUrl = Keys.config[Keys.Postgres.connectionString]
         isAutoCommit = true
-        maximumPoolSize = 60
-        minimumIdle = 50
+        maximumPoolSize = 200
+        minimumIdle = 90
         validate()
     }.run(::HikariDataSource)
 
@@ -51,6 +52,7 @@ internal object PostgresConnection {
                 TrackedStreams.StreamChannels,
                 TrackedStreams.Targets,
                 TrackedStreams.TargetMentions,
+
                 TwitchEventSubscriptions,
                 DBTwitchStreams.TwitchStreams,
                 DBTwitchStreams.Notifications,

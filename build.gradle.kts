@@ -98,7 +98,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-    implementation("org.postgresql:postgresql:42.6.0")
+//    implementation("org.postgresql:postgresql:42.6.0")
+    implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
     // language detection

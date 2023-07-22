@@ -43,6 +43,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     private val job = SupervisorJob()
     protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
+    protected val notifyScope = CoroutineScope(DiscordTaskPool.notifyThreads + job)
 
     @WithinExposedContext
     suspend fun getActiveTargets(channel: TrackedStreams.StreamChannel): List<TrackedStreams.Target>? {
