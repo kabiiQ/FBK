@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import moe.kabii.LOG
 import moe.kabii.data.flat.Keys
-import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.util.extensions.log
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils

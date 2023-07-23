@@ -23,7 +23,6 @@ import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.*
-import org.joda.time.DateTime
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max

@@ -19,7 +19,6 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterRetweets
 import moe.kabii.data.relational.twitter.TwitterTarget
@@ -42,12 +41,10 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
 import kotlin.math.max
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {

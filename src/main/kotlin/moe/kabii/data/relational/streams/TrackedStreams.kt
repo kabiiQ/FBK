@@ -2,14 +2,10 @@ package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.trackers.*
-import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
-import moe.kabii.trackers.StreamingTarget
-import moe.kabii.trackers.TwitcastingTarget
-import moe.kabii.trackers.TwitchTarget
-import moe.kabii.trackers.YoutubeTarget
+import moe.kabii.trackers.*
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

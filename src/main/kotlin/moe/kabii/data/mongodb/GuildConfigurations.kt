@@ -2,7 +2,6 @@ package moe.kabii.data.mongodb
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.data.mongodb.guilds.*
-import moe.kabii.data.relational.twitter.TwitterTarget
 import org.litote.kmongo.Id
 import org.litote.kmongo.coroutine.updateOne
 import org.litote.kmongo.newId
