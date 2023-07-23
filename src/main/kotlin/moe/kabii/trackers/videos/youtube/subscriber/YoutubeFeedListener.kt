@@ -8,8 +8,11 @@ import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import moe.kabii.LOG
 import moe.kabii.data.flat.Keys
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.util.extensions.log
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
@@ -71,7 +74,9 @@ class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
                     //.also { LOG.trace("POST channel: $it") }
                     ?: return@post
 
-                val body = call.receiveStream().bufferedReader().readText()
+                val body = withContext(Dispatchers.IO) {
+                    call.receiveStream().bufferedReader().readText()
+                }
 
                 val signature = call.request.header("X-Hub-Signature")
                 if(signature == null) {

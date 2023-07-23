@@ -1,5 +1,6 @@
 package moe.kabii.trackers.nitter
 
+import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
@@ -18,10 +19,12 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.data.relational.twitter.TwitterRetweets
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
@@ -49,8 +52,7 @@ import kotlin.math.max
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
-    private val rssThreads = Executors.newFixedThreadPool(instanceCount).asCoroutineDispatcher()
-    private val nitterScope = CoroutineScope(rssThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
+    private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
 
     override fun run() {
         if(!MetaData.host) return // do not run on testing instances
@@ -68,6 +70,12 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             LOG.debug("delay: $delay")
             delay(Duration.ofMillis(max(delay, 0L)))
+        }
+    }
+
+    suspend fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = nitterScope.launch {
+        withTimeout(timeoutMillis) {
+            block()
         }
     }
 
@@ -100,33 +108,33 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         var first = true
                         feedChunk.forEach { feed ->
 
-                            propagateTransaction feed@{
-                                if (!first) {
-                                    delay(Duration.ofMillis(cooldowns.callDelay))
-                                } else first = false
+                            if (!first) {
+                                delay(Duration.ofMillis(cooldowns.callDelay))
+                            } else first = false
 
-                                val targets = getActiveTargets(feed)?.ifEmpty { null }
-                                    ?: return@feed // feed untrack entirely or no target channels are currently enabled
+                            val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
-                                val cache = TwitterFeedCache.getOrPut(feed)
+                            val cache = TwitterFeedCache.getOrPut(feed)
 
-                                val nitter = NitterParser
-                                    .getFeed(feed.username, instance = instanceId)
-                                    ?: return@feed
+                            val nitter = NitterParser
+                                .getFeed(feed.username, instance = instanceId)
+                                ?: return@forEach
 
-                                val (user, tweets) = nitter
+                            val (user, tweets) = nitter
 
-                                val latest = tweets.maxOfOrNull { tweet ->
-                                    // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                                    val age = Duration.between(tweet.date, Instant.now())
+                            val latest = tweets.maxOfOrNull { tweet ->
+                                // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                                val age = Duration.between(tweet.date, Instant.now())
 
-                                    if(tweet.retweet) {
+                                propagateTransaction {
+                                    if (tweet.retweet) {
                                         /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
                                         Check if this RT has already been acknowledged from this feed from our own database
                                          */
                                         val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
-                                        if(!new) {
-                                            return@maxOfOrNull tweet.id
+                                        if (!new) {
+                                            return@propagateTransaction tweet.id
                                         }
                                         // if temporary switch to syndication feeds - time is accurate again
 //                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
@@ -139,15 +147,16 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
 //                                            || age > Duration.ofHours(2) TODO temp increase
                                             || age > Duration.ofHours(12)
                                             || cache.seenTweets.contains(tweet.id)
-                                        ) return@maxOfOrNull tweet.id
+                                        ) return@propagateTransaction tweet.id
                                     }
 
                                     notifyTweet(user, tweet, targets)
+                                    tweet.id
                                 }
-                                if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
-                                    transaction {
-                                        feed.lastPulledTweet = latest
-                                    }
+                            }
+                            if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
+                                propagateTransaction {
+                                    feed.lastPulledTweet = latest
                                 }
                             }
                         }
@@ -162,220 +171,226 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
     }
 
     @RequiresExposedContext
-    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TwitterTarget>): Long {
+    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedTwitTarget>) {
         val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
         TwitterFeedCache[username]?.seenTweets?.add(tweet.id)
 
-        // check for youtube video info from tweet
-        // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
-        // also will increase awareness of membership-limited streams
-        URLUtil.genericUrl
-            .findAll(tweet.text)
-            .forEach { match ->
-                YoutubeVideoIntake.intakeVideosFromText(match.value)
-            }
-
-        // cache to not repeat request for twitter video
-        val twitterVid by lazy {
-            // process video attachment
-            tweet.videoUrl
-                ?: try {
-                    NitterParser.getVideoFromTweet(tweet.id)
-                } catch(e: Exception) {
-                    LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
-                    null
-                }
-        }
-
-        // cache to not repeat translation for same tweet across multiple channels/servers
-        val translations = mutableMapOf<String, TranslationResult>()
-
-        targets.forEach target@{ target ->
-            val fbk = instances[target.discordClient]
-            val discord = fbk.client
-            try {
-                // post a notif to this target
-                val channel = discord.getChannelById(target.discordChannel.channelID.snowflake)
-                    .ofType(MessageChannel::class.java)
-                    .awaitSingle()
-
-                val features = GuildConfigurations.findFeatures(target)
-                val twitter = features?.twitterSettings ?: TwitterSettings()
-
-                if(!tweet.notifyOption.get(twitter)) return@target
-
-                val action = when {
-                    tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
-                    tweet.reply -> "replied to a Tweet from **@${tweet.replyTo}** \uD83D\uDCAC"
-                    tweet.quote -> "quoted a Tweet from **@${tweet.quoteOf}** \uD83D\uDDE8"
-                    else -> "posted a new Tweet"
+        discordTask {
+            // check for youtube video info from tweet
+            // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
+            // also will increase awareness of membership-limited streams
+            URLUtil.genericUrl
+                .findAll(tweet.text)
+                .forEach { match ->
+                    YoutubeVideoIntake.intakeVideosFromText(match.value)
                 }
 
-                // LOG.debug("translation stage")
-                val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
-                    try {
-                        val lang = GuildConfigurations
-                            .getOrCreateGuild(fbk.clientId, target.discordChannel.guild!!.guildID)
-                            .translator.defaultTargetLanguage
-
-                        val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet)
-
-                        // check cache for existing translation of this tweet
-                        val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
-                        val existingTl = translations[standardLangTag]
-                        val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
-
-                            val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
-                            translations[standardLangTag] = tl
-                            tl
-                        }
-
-                        if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
-                        else null
-
+            // cache to not repeat request for twitter video
+            val twitterVid by lazy {
+                // process video attachment
+                tweet.videoUrl
+                    ?: try {
+                        NitterParser.getVideoFromTweet(tweet.id)
                     } catch(e: Exception) {
-                        LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
+                        LOG.warn("Error getting V1 Tweet from feed: ${tweet.id}")
                         null
                     }
-                } else null
+            }
 
-                var editedThumb: ByteArrayInputStream? = null
-                var attachedVideo: String? = null
-                val attachment = tweet.images.firstOrNull()
-                val size = tweet.images.size
-                var attachInfo = ""
+            // cache to not repeat translation for same tweet across multiple channels/servers
+            val translations = mutableMapOf<String, TranslationResult>()
 
-                when {
-                    tweet.hasVideo -> {
-                        attachInfo = "(Open on Twitter to view video)\n"
-                        // get potentially cached twitter video url
-                        attachedVideo = twitterVid
+            targets.forEach target@{ target ->
+                val fbk = instances[target.discordClient]
+                val discord = fbk.client
+                try {
+                    // post a notif to this target
+                    val channel = discord.getChannelById(target.discordChannel)
+                        .ofType(MessageChannel::class.java)
+                        .awaitSingle()
 
-                        if(attachedVideo == null) {
-                            // if we can't provide video, revert to notifying user/regular thumbnail attachment
+                    val (_, features) = GuildConfigurations.findFeatures(target.discordClient, target.discordGuild?.asLong(), target.discordChannel.asLong())
+                    val twitter = features?.twitterSettings ?: TwitterSettings()
+
+                    if(!tweet.notifyOption.get(twitter)) return@target
+
+                    val action = when {
+                        tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
+                        tweet.reply -> "replied to a Tweet from **@${tweet.replyTo}** \uD83D\uDCAC"
+                        tweet.quote -> "quoted a Tweet from **@${tweet.quoteOf}** \uD83D\uDDE8"
+                        else -> "posted a new Tweet"
+                    }
+
+                    // LOG.debug("translation stage")
+                    val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
+                        try {
+                            val lang = GuildConfigurations
+                                .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
+                                .translator.defaultTargetLanguage
+
+                            val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet)
+
+                            // check cache for existing translation of this tweet
+                            val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
+                            val existingTl = translations[standardLangTag]
+                            val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
+
+                                val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
+                                translations[standardLangTag] = tl
+                                tl
+                            }
+
+                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
+                            else null
+
+                        } catch(e: Exception) {
+                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
+                            null
+                        }
+                    } else null
+
+                    var editedThumb: ByteArrayInputStream? = null
+                    var attachedVideo: String? = null
+                    val attachment = tweet.images.firstOrNull()
+                    val size = tweet.images.size
+                    var attachInfo = ""
+
+                    when {
+                        tweet.hasVideo -> {
+                            attachInfo = "(Open on Twitter to view video)\n"
+                            // get potentially cached twitter video url
+                            attachedVideo = twitterVid
+
+                            if(attachedVideo == null) {
+                                // if we can't provide video, revert to notifying user/regular thumbnail attachment
+                                if(attachment != null) {
+                                    editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, video = true)
+                                }
+                            }
+                        }
+                        size > 1 -> {
+                            attachInfo = "(Open on Twitter to view $size images)\n"
+                            // tag w/ number of photos
                             if(attachment != null) {
-                                editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, video = true)
+                                editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, imageCount = size)
                             }
                         }
                     }
-                    size > 1 -> {
-                        attachInfo = "(Open on Twitter to view $size images)\n"
-                        // tag w/ number of photos
-                        if(attachment != null) {
-                            editedThumb = TwitterThumbnailGenerator.attachInfoTag(attachment, imageCount = size)
+
+                    LOG.debug("roles phase")
+                    // mention roles
+                    val mention = getMentionRoleFor(target, channel, tweet, twitter)
+
+                    var outdated = false
+                    val mentionText = if(mention != null) {
+                        outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
+                        val rolePart = if(mention.discord == null || outdated) null
+                        else mention.discord.mention.plus(" ")
+                        val textPart = mention.db.mentionText?.plus(" ")
+                        "${rolePart ?: ""}${textPart ?: ""}"
+                    } else ""
+
+                    val notifSpec = MessageCreateSpec.create()
+                        .run {
+                            val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
+                            withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
                         }
-                    }
-                }
+                        .run {
+                            if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
+                        }
+                        .run {
+                            val footer = StringBuilder(attachInfo)
 
-                LOG.debug("roles phase")
-                // mention roles
-                val mention = getMentionRoleFor(target, channel, tweet, twitter)
+                            val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
+                            val author = if(tweet.retweet) tweet.retweetOf!! else user.username
+                            val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
 
-                var outdated = false
-                val mentionText = if(mention != null) {
-                    outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
-                    val rolePart = if(mention.discord == null || outdated) null
-                    else mention.discord.mention.plus(" ")
-                    val textPart = mention.db.mentionText?.plus(" ")
-                    "${rolePart ?: ""}${textPart ?: ""}"
-                } else ""
+                            val text = StringEscapeUtils
+                                .unescapeHtml4(tweet.text)
+                                .replace("*", "\\*")
+                                .replace("_", "\\_")
+                                .replace("#", "\\#")
+                            val embed = Embeds.other(text, Color.of(color))
+                                .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
+                                .run {
+                                    val fields = mutableListOf<EmbedCreateFields.Field>()
 
-                val notifSpec = MessageCreateSpec.create()
-                    .run {
-                        val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
-                        withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
-                    }
-                    .run {
-                        if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
-                    }
-                    .run {
-                        val footer = StringBuilder(attachInfo)
+                                    if(tweet.quote) {
+                                        fields.add(EmbedCreateFields.Field.of("**Tweet Quoted**", tweet.quoteTweetUrl, false))
+                                    }
 
-                        val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
-                        val author = if(tweet.retweet) tweet.retweetOf!! else user.username
-                        val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
+                                    if(translation != null) {
+                                        val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
+                                        footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
+                                        fields.add(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                    }
 
-                        val text = StringEscapeUtils
-                            .unescapeHtml4(tweet.text)
-                            .replace("*", "\\*")
-                            .replace("_", "\\_")
-                            .replace("#", "\\#")
-                        val embed = Embeds.other(text, Color.of(color))
-                            .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
-                            .run {
-                                val fields = mutableListOf<EmbedCreateFields.Field>()
-
-                                if(tweet.quote) {
-                                    fields.add(EmbedCreateFields.Field.of("**Tweet Quoted**", tweet.quoteTweetUrl, false))
+                                    if(fields.isNotEmpty()) withFields(fields) else this
                                 }
-
-                                if(translation != null) {
-                                    val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
-                                    footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
-                                    fields.add(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                .run {
+    //                                if(Random.nextInt(25) == 0) {
+    //                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
+    //                                }
+                                    if(outdated) footer.append("Skipping ping for old Tweet.\n")
+                                    if(outdated) LOG.info("Missed ping: $tweet")
+                                    if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
                                 }
+                                .run {
+                                    if(editedThumb != null) {
+                                        // always use our edited thumbnail if we produced one for this
+                                        withImage("attachment://thumbnail_edit.png")
+                                    } else if(attachment != null) withImage(attachment)
+                                    else this
+                                }
+                            withEmbeds(embed)
+                        }
 
-                                if(fields.isNotEmpty()) withFields(fields) else this
-                            }
-                            .run {
-//                                if(Random.nextInt(25) == 0) {
-//                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
-//                                }
-                                if(outdated) footer.append("Skipping ping for old Tweet.\n")
-                                if(outdated) LOG.info("Missed ping: $tweet")
-                                if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
-                            }
-                            .run {
-                                if(editedThumb != null) {
-                                    // always use our edited thumbnail if we produced one for this
-                                    withImage("attachment://thumbnail_edit.png")
-                                } else if(attachment != null) withImage(attachment)
-                                else this
-                            }
-                        withEmbeds(embed)
+                    if(twitter.mediaOnly && attachment == null) return@target
+                    val notif = channel.createMessage(notifSpec).awaitSingle()
+
+                    if(attachedVideo != null) {
+                        channel.createMessage(attachedVideo)
+                            .withMessageReference(notif.id)
+                            .tryAwait()
                     }
 
-                if(twitter.mediaOnly && attachment == null) return@target
-                val notif = channel.createMessage(notifSpec).awaitSingle()
-
-                if(attachedVideo != null) {
-                    channel.createMessage(attachedVideo)
-                        .withMessageReference(notif.id)
-                        .tryAwait()
-                }
-
-                TrackerUtil.checkAndPublish(fbk, notif)
-            } catch (e: Exception) {
-                if (e is ClientException && e.status.code() == 403) {
-                    TrackerUtil.permissionDenied(fbk, target.discordChannel.guild?.guildID?.snowflake, target.discordChannel.channelID.snowflake, FeatureChannel::twitterTargetChannel, target::delete)
-                    LOG.warn("Unable to send Tweet to channel '${target.discordChannel.channelID}'. Disabling feature in channel. TwitterChecker.java")
-                } else {
-                    LOG.warn("Error sending Tweet to channel: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+                    TrackerUtil.checkAndPublish(fbk, notif)
+                } catch (e: Exception) {
+                    if (e is ClientException && e.status.code() == 403) {
+                        TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::twitterTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }
+                        LOG.warn("Unable to send Tweet to channel '${target.discordChannel}'. Disabling feature in channel. TwitterChecker.java")
+                    } else {
+                        LOG.warn("Error sending Tweet to channel: ${e.message}")
+                        LOG.debug(e.stackTraceString)
+                    }
                 }
             }
+            LOG.debug("notify ${user.username} - complete?? -")
         }
-        LOG.debug("notify ${user.username} - complete?? -")
-        return tweet.id // return tweet id for 'max' calculation to find the newest tweet that was returned
     }
 
-    @RequiresExposedContext
-    suspend fun getActiveTargets(feed: TwitterFeed): List<TwitterTarget>? {
-        val existingTargets = feed.targets.toList()
+    @CreatesExposedContext
+    suspend fun getActiveTargets(feed: TwitterFeed): List<TrackedTwitTarget>? {
+        val targets = propagateTransaction {
+            feed.targets.map { t -> loadTarget(t) }
+        }
+        val existingTargets = targets
             .filter { target ->
                 val discord = instances[target.discordClient].client
                 // untrack target if discord channel is deleted
-                if (target.discordChannel.guild != null) {
+                if (target.discordGuild != null) {
                     try {
-                        discord.getChannelById(target.discordChannel.channelID.snowflake).awaitSingle()
+                        discord.getChannelById(target.discordChannel).awaitSingle()
                     } catch (e: Exception) {
                         if(e is ClientException) {
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
-                                LOG.info("Untracking Twitter feed '${feed.username}' in ${target.discordChannel.channelID} as the channel seems to be deleted.")
-                                target.delete()
+                                LOG.info("Untracking Twitter feed '${feed.username}' in ${target.discordChannel} as the channel seems to be deleted.")
+                                propagateTransaction {
+                                    target.findDBTarget().delete()
+                                }
                             }
                         }
                         return@filter false
@@ -386,18 +401,50 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         return if (existingTargets.isNotEmpty()) {
             existingTargets.filter { target ->
                 // ignore, but do not untrack targets with feature disabled
-                GuildConfigurations.findFeatures(target)?.twitterTargetChannel != false // enabled or DM
+                val clientId = instances[target.discordClient].clientId
+                val guildId = target.discordGuild?.asLong() ?: return@filter true // DM do not have channel features
+                val featureChannel = GuildConfigurations.getOrCreateGuild(clientId, guildId).getOrCreateFeatures(target.discordChannel.asLong())
+                featureChannel.twitterTargetChannel
             }
         } else {
-            feed.delete()
+            propagateTransaction {
+                feed.delete()
+            }
             LOG.info("Untracking Twitter feed ${feed.username} as it has no targets.")
             null
         }
     }
 
-    data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
+    /**
+     * Object to hold information about a tracked target from the database - resolving references to reduce transactions later
+     */
+    data class TrackedTwitTarget(
+        val db: Int,
+        val discordClient: Int,
+        val dbFeed: Int,
+        val username: String,
+        val discordChannel: Snowflake,
+        val discordGuild: Snowflake?,
+        val userId: Snowflake
+    ) {
+        @RequiresExposedContext fun findDBTarget() = TwitterTarget.findById(db)!!
+    }
+
     @RequiresExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TwitterTarget, targetChannel: MessageChannel, tweet: NitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
+    suspend fun loadTarget(target: TwitterTarget) =
+        TrackedTwitTarget(
+            target.id.value,
+            target.discordClient,
+            target.twitterFeed.id.value,
+            target.twitterFeed.username,
+            target.discordChannel.channelID.snowflake,
+            target.discordChannel.guild?.guildID?.snowflake,
+            target.tracker.userID.snowflake
+        )
+
+    data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
+    @CreatesExposedContext
+    suspend fun getMentionRoleFor(dbTarget: TrackedTwitTarget, targetChannel: MessageChannel, tweet: NitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
         // do not return ping if not configured for channel/tweet type
         when {
             !twitterCfg.mentionRoles -> return null
@@ -407,7 +454,9 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             else -> if(!twitterCfg.mentionTweets) return null
         }
 
-        val dbMentionRole = dbTarget.mention() ?: return null
+        val dbMentionRole = propagateTransaction {
+            dbTarget.findDBTarget().mention()
+        } ?: return null
         val dRole = if(dbMentionRole.mentionRole != null) {
             targetChannel.toMono()
                 .ofType(GuildChannel::class.java)
@@ -421,11 +470,13 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 val err = dRole.value
                 if(err is ClientException && err.status.code() == 404) {
                     // role has been deleted, remove configuration
-                    if(dbMentionRole.mentionText != null) {
-                        // don't delete if mentionrole still has text component
-                        dbMentionRole.mentionRole = null
-                    } else {
-                        dbMentionRole.delete()
+                    propagateTransaction {
+                        if (dbMentionRole.mentionText != null) {
+                            // don't delete if mentionrole still has text component
+                            dbMentionRole.mentionRole = null
+                        } else {
+                            dbMentionRole.delete()
+                        }
                     }
                 }
                 null

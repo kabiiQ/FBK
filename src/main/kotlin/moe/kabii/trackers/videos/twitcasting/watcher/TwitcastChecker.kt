@@ -11,10 +11,7 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingUser
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookServer
-import moe.kabii.util.extensions.RequiresExposedContext
-import moe.kabii.util.extensions.applicationLoop
-import moe.kabii.util.extensions.propagateTransaction
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.extensions.*
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
@@ -49,8 +46,8 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
 
                 // generate lists first, so that these operations do not alter the other
                 // now execute
-                checkUsers.forEach { channel -> propagateTransaction { checkUserForMovie(channel) } }
-                checkMovies.forEach { movie -> propagateTransaction { updateLiveMovie(movie) } }
+                checkUsers.forEach { channel -> checkUserForMovie(channel) }
+                checkMovies.forEach { movie -> updateLiveMovie(movie) }
 
             } catch(e: Exception) {
                 LOG.warn("Exception in TwitcastChecker: ${e.message}")
@@ -62,34 +59,41 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
         }
     }
 
+    @CreatesExposedContext
     suspend fun updateLiveMovie(dbMovie: Twitcasts.Movie) {
         val movie = TwitcastingParser.getMovie(dbMovie.movieId)
         if(movie == null || !movie.movie.live) {
-            movieEnd(dbMovie, movie)
+            propagateTransaction {
+                movieEnd(dbMovie, movie)
+            }
         }
     }
 
-    @RequiresExposedContext
+    @CreatesExposedContext
     suspend fun checkUserForMovie(channel: TrackedStreams.StreamChannel, twitUser: TwitcastingUser? = null) {
         require(channel.site == TrackedStreams.DBSite.TWITCASTING) { "Invalid StreamChannel passed to TwitcastChecker: $channel" }
-        if(Twitcasts.Movie.getMovieFor(channel.siteChannelID) != null) return
+        if(propagateTransaction { Twitcasts.Movie.getMovieFor(channel.siteChannelID) != null }) return
 
         // avoid request for user if already obtained when tracking etc
         val user = twitUser ?: TwitcastingParser.searchUser(channel.siteChannelID)
         if(user == null) {
             // user no longer exists
-            channel.delete()
+            propagateTransaction {
+                channel.delete()
+            }
             LOG.info("Untracking Twitcasting channel $channel as the Twitcasting user no longer exists.")
             return
         }
 
-        channel.lastKnownUsername = user.screenId
         // check targets first - allows untracking targets we don't care about
         val targets = getActiveTargets(channel) ?: return // channel untracked
         if(user.live) {
             // user is now live
             val movie = user.movieId?.run { TwitcastingParser.getMovie(this) } ?: throw IOException("TwitCasting user returned movie ID: ${user.movieId} but the movie does not exist")
-            checkMovie(channel, movie, targets)
+            propagateTransaction {
+                channel.lastKnownUsername = user.screenId
+                checkMovie(channel, movie, targets)
+            }
         }
     }
 

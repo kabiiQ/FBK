@@ -20,10 +20,7 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.extensions.RequiresExposedContext
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryAwait
+import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import java.time.Instant
@@ -67,40 +64,45 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
             val fbk = instances[notification.targetId.discordClient]
             val discord = fbk.client
             try {
-                val dbMessage = notification.messageId
-                val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake)
-                    .awaitSingle()
-                val features = getStreamConfig(notification.targetId)
+                val notifChan = notification.messageId.channel.channelID.snowflake
+                val notifMessage = notification.messageId.messageID.snowflake
+                discordTask {
+                    val existingNotif = discord.getMessageById(notifChan, notifMessage)
+                        .awaitSingle()
+                    val features = getStreamConfig(notification.targetId)
 
-                val action = if(features.summaries && info != null) {
-                    val (movie, user) = info
+                    val action = if(features.summaries && info != null) {
+                        val (movie, user) = info
 
-                    val duration = Duration
-                        .ofSeconds(movie.lengthSeconds.toLong())
-                        .run(::DurationFormatter)
-                        .colonTime
+                        val duration = Duration
+                            .ofSeconds(movie.lengthSeconds.toLong())
+                            .run(::DurationFormatter)
+                            .colonTime
 
-                    val endedEmbed = Embeds.other("${user.screenId} was live for [$duration]", inactiveColor)
-                        .withAuthor(EmbedCreateFields.Author.of("${user.screenId} was live.", movie.link, user.imageUrl))
-                        .withFields(EmbedCreateFields.Field.of("Views", movie.views.toString(), true))
-                        .withUrl(movie.link)
-                        .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.twitcastingLogo))
-                        .withTimestamp(Instant.now())
-                        .withTitle(movie.title)
-                        .withThumbnail(movie.thumbnailUrl)
+                        val endedEmbed = Embeds.other("${user.screenId} was live for [$duration]", inactiveColor)
+                            .withAuthor(EmbedCreateFields.Author.of("${user.screenId} was live.", movie.link, user.imageUrl))
+                            .withFields(EmbedCreateFields.Field.of("Views", movie.views.toString(), true))
+                            .withUrl(movie.link)
+                            .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.twitcastingLogo))
+                            .withTimestamp(Instant.now())
+                            .withTitle(movie.title)
+                            .withThumbnail(movie.thumbnailUrl)
 
-                    existingNotif.edit()
-                        .withEmbeds(endedEmbed)
-                        .then(mono {
-                            TrackerUtil.checkUnpin(existingNotif)
-                        })
+                        existingNotif.edit()
+                            .withEmbeds(endedEmbed)
+                            .then(mono {
+                                TrackerUtil.checkUnpin(existingNotif)
+                            })
 
-                } else {
-                    existingNotif.delete()
+                    } else {
+                        existingNotif.delete()
+                    }
+
+                    action.thenReturn(Unit).tryAwait()
+                    propagateTransaction {
+                        checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = channel)
+                    }
                 }
-
-                action.thenReturn(Unit).tryAwait()
-                checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = channel)
 
             } catch(ce: ClientException) {
                 LOG.info("Unable to get Twitcast stream notification $notification :: ${ce.status.code()}")
@@ -114,69 +116,73 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
         dbMovie.delete()
     }
 
-    @RequiresExposedContext
+    @CreatesExposedContext
     suspend fun createLiveNotification(info: TwitcastingMovieResponse, target: TrackedTarget) {
 
         val fbk = instances[target.discordClient]
         // get target channel in discord
-        val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
 
         // get embed settings
         val guildConfig = target.discordGuild?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, asLong()) }
         val features = getStreamConfig(target)
 
-        // get mention role from db if one is registered
-        val mention = if(target.discordGuild != null) {
-            getMentionRoleFor(target, chan, features)
-        } else null
+        discordTask {
+            val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
+            // get mention role from db if one is registered
+            val mention = if(target.discordGuild != null) {
+                getMentionRoleFor(target, chan, features)
+            } else null
 
-        val (movie, user) = info
-        try {
-            val title = StringUtils.abbreviate(movie.title, MagicNumbers.Embed.TITLE)
-            val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.NORM_DESC) ?: ""
+            val (movie, user) = info
+            try {
+                val title = StringUtils.abbreviate(movie.title, MagicNumbers.Embed.TITLE)
+                val desc = StringUtils.abbreviate(movie.subtitle, MagicNumbers.Embed.NORM_DESC) ?: ""
 
-            val embed = Embeds.other(desc, liveColor)
-                .withAuthor(EmbedCreateFields.Author.of("${user.name} (${user.screenId}) went live!", movie.link, user.imageUrl))
-                .withUrl(movie.link)
-                .withTitle(title)
-                .withFooter(EmbedCreateFields.Footer.of("TwitCasting now! Since ", NettyFileServer.twitcastingLogo))
-                .withTimestamp(movie.created)
-                .run {
-                    if(features.thumbnails) withImage(movie.thumbnailUrl) else withThumbnail(movie.thumbnailUrl)
+                val embed = Embeds.other(desc, liveColor)
+                    .withAuthor(EmbedCreateFields.Author.of("${user.name} (${user.screenId}) went live!", movie.link, user.imageUrl))
+                    .withUrl(movie.link)
+                    .withTitle(title)
+                    .withFooter(EmbedCreateFields.Footer.of("TwitCasting now! Since ", NettyFileServer.twitcastingLogo))
+                    .withTimestamp(movie.created)
+                    .run {
+                        if(features.thumbnails) withImage(movie.thumbnailUrl) else withThumbnail(movie.thumbnailUrl)
+                    }
+
+                val mentionMessage = if(mention != null) {
+
+                    val rolePart = if(mention.discord != null
+                        && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+
+                        mention.discord.mention.plus(" ")
+                    } else ""
+                    val textPart = mention.textPart
+                    chan.createMessage("$rolePart$textPart")
+
+                } else chan.createMessage()
+
+                val newNotification = mentionMessage
+                    .withEmbeds(embed)
+                    .awaitSingle()
+
+                TrackerUtil.pinActive(fbk, features, newNotification)
+                TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+
+                propagateTransaction {
+                    // log notification in db
+                    Twitcasts.TwitNotif.new {
+                        this.targetId = target.findDBTarget()
+                        this.channelId = TrackedStreams.StreamChannel.findById(target.dbStream)!!
+                        this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
+                    }
+
+                    checkAndRenameChannel(fbk.clientId, chan)
                 }
-
-            val mentionMessage = if(mention != null) {
-
-                val rolePart = if(mention.discord != null
-                    && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
-
-                    mention.discord.mention.plus(" ")
-                } else ""
-                val textPart = mention.textPart
-                chan.createMessage("$rolePart$textPart")
-
-            } else chan.createMessage()
-
-            val newNotification = mentionMessage
-                .withEmbeds(embed)
-                .awaitSingle()
-
-            TrackerUtil.pinActive(fbk, features, newNotification)
-            TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
-
-            // log notification in db
-            Twitcasts.TwitNotif.new {
-                this.targetId = target.findDBTarget()
-                this.channelId = TrackedStreams.StreamChannel.findById(target.dbStream)!!
-                this.messageId =  MessageHistory.Message.getOrInsert(newNotification)
+            } catch(ce: ClientException) {
+                if(ce.status.code() == 403) {
+                    LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                } else throw ce
             }
-
-            checkAndRenameChannel(fbk.clientId, chan)
-        } catch(ce: ClientException) {
-            if(ce.status.code() == 403) {
-                LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-            } else throw ce
         }
     }
 }

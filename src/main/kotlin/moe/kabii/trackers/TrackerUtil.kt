@@ -55,7 +55,7 @@ object TrackerUtil {
         }
     }
 
-    suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+    suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
         // TODO pdenied
         return // Temporarily(?) disabled functionality to mitigate some user confusion
         if(guildId != null) {
@@ -95,7 +95,7 @@ object TrackerUtil {
         }
     }
 
-    suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: () -> Unit) {
+    suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
         val guildChan = channel as? GuildMessageChannel
         permissionDenied(fbk, guildChan?.guildId, channel.id, guildDelete, pmDelete)
     }

@@ -33,7 +33,7 @@ internal object PostgresConnection {
         driverClassName = "com.impossibl.postgres.jdbc.PGDriver"
         jdbcUrl = Keys.config[Keys.Postgres.connectionString]
         isAutoCommit = true
-        maximumPoolSize = 200
+        maximumPoolSize = 10000
         minimumIdle = 90
         validate()
     }.run(::HikariDataSource)

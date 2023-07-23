@@ -30,12 +30,6 @@ object GuildConfigurations {
         val guildConfig = getOrCreateGuild(clientId, guildId)
         return guildConfig to guildConfig.getOrCreateFeatures(channelId)
     }
-
-    suspend fun findFeatures(target: TwitterTarget): FeatureChannel? {
-        val guildId = target.discordChannel.guild?.guildID ?: return null
-        val guildConfig = getOrCreateGuild(target.discordClient, guildId)
-        return guildConfig.getOrCreateFeatures(target.discordChannel.channelID)
-    }
 }
 
 // per guild - guildconfiguration collection

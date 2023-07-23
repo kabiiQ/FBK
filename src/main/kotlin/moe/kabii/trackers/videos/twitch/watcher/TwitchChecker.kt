@@ -1,5 +1,6 @@
 package moe.kabii.trackers.videos.twitch.watcher
 
+import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
@@ -33,46 +34,9 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             val start = Instant.now()
             // get all tracked sites for this service
             try {
-                // get all tracked twitch streams
-                val tracked = propagateTransaction {
-                    TrackedStreams.StreamChannel.find {
-                        TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
-                    }.associate { sc ->
-                        sc.siteChannelID.toLong() to sc.id
-                    }
+                kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(10)) {
+                    updateAll()
                 }
-
-                // get all the IDs to make bulk requests to the service.
-                // no good way to do this besides temporarily dissociating ids from other data
-                // very important to optimize requests to Twitch, etc
-                // Twitch IDs are always type Long
-                val ids = tracked.keys
-                // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
-                val streamData = TwitchParser.getStreams(ids)
-
-                // re-associate SQL data with stream API data
-                streamData.mapNotNull { (id, data) ->
-                    if (data is Err && data.value is StreamErr.IO) {
-                        LOG.warn("Error contacting Twitch :: $id")
-                        return@mapNotNull null
-                    }
-                    // now we can split into coroutines for processing & sending messages to Discord.
-                    taskScope.launch {
-                        propagateTransaction {
-                            try {
-                                val trackedChannel = TrackedStreams.StreamChannel.findById(tracked.getValue(id))!!
-                                val filteredTargets = getActiveTargets(trackedChannel)
-                                if (filteredTargets != null) {
-                                    updateChannel(trackedChannel, data.orNull(), filteredTargets)
-                                } // else channel has been untracked entirely
-                            } catch (e: Exception) {
-                                LOG.warn("Error updating Twitch channel: $id")
-                                LOG.debug(e.stackTraceString)
-                            }
-                        }
-                        Unit
-                    }
-                }.joinAll()
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -84,6 +48,49 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
     }
 
+    suspend fun updateAll() {
+        // get all tracked twitch streams
+        val tracked = propagateTransaction {
+            TrackedStreams.StreamChannel.find {
+                TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.TWITCH
+            }.associate { sc ->
+                sc.siteChannelID.toLong() to sc.id
+            }
+        }
+
+        // get all the IDs to make bulk requests to the service.
+        // no good way to do this besides temporarily dissociating ids from other data
+        // very important to optimize requests to Twitch, etc
+        // Twitch IDs are always type Long
+        val ids = tracked.keys
+        // getStreams is the bulk API I/O call. perform this on the current thread designated for this site
+        val streamData = TwitchParser.getStreams(ids)
+
+        // re-associate SQL data with stream API data
+        streamData.mapNotNull { (id, data) ->
+            if (data is Err && data.value is StreamErr.IO) {
+                LOG.warn("Error contacting Twitch :: $id")
+                return@mapNotNull null
+            }
+            // now we can split into coroutines for processing & sending messages to Discord.
+            taskScope.launch {
+                propagateTransaction {
+                    try {
+                        val trackedChannel = TrackedStreams.StreamChannel.findById(tracked.getValue(id))!!
+                        val filteredTargets = getActiveTargets(trackedChannel)
+                        if (filteredTargets != null) {
+                            updateChannel(trackedChannel, data.orNull(), filteredTargets)
+                        } // else channel has been untracked entirely
+                    } catch (e: Exception) {
+                        LOG.warn("Error updating Twitch channel: $id")
+                        LOG.debug(e.stackTraceString)
+                    }
+                }
+                Unit
+            }
+        }.joinAll()
+    }
+
     @RequiresExposedContext
     suspend fun updateChannel(channel: TrackedStreams.StreamChannel, stream: TwitchStreamInfo?, filteredTargets: List<TrackedTarget>) {
         val twitchId = channel.siteChannelID.toLong()
@@ -91,19 +98,21 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         // get streaming site user object when needed
         val user by lazy {
             runBlocking {
-                delay(400L)
-                when (val user = TwitchParser.getUser(twitchId)) {
-                    is Ok -> user.value
-                    is Err -> {
-                        val err = user.value
-                        if (err is StreamErr.NotFound) {
-                            // call succeeded and the user ID does not exist.
-                            LOG.info("Invalid Twitch user: $twitchId. Untracking user...")
-                            channel.delete()
-                        } else LOG.error("Error getting Twitch user: $twitchId: $err")
-                        null
+                discordCall {
+                    delay(400L)
+                    when (val user = TwitchParser.getUser(twitchId)) {
+                        is Ok -> user.value
+                        is Err -> {
+                            val err = user.value
+                            if (err is StreamErr.NotFound) {
+                                // call succeeded and the user ID does not exist.
+                                LOG.info("Invalid Twitch user: $twitchId. Untracking user...")
+                                channel.delete()
+                            } else LOG.error("Error getting Twitch user: $twitchId: $err")
+                            null
+                        }
                     }
-                }
+                }.await()
             }
         }
 
@@ -121,13 +130,21 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     notifications.forEach { notif ->
                         val fbk = instances[notif.targetID.discordClient]
                         try {
-                            val discordMessage = getDiscordMessage(notif, channel)
-                            if (discordMessage != null) {
-                                discordMessage.delete().thenReturn(Unit).tryAwait()
+                            val notifDeleted = notif.deleted
+                            val notifClient = notif.targetID.discordClient
+                            val notifChannel = notif.messageID.channel.channelID.snowflake
+                            val notifMessage = notif.messageID.messageID.snowflake
+                            discordTask {
+                                val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
+                                if (discordMessage != null) {
+                                    discordMessage.delete().thenReturn(Unit).tryAwait()
 
-                                // edit channel name if feature is enabled and stream ended
-                                TrackerUtil.checkUnpin(discordMessage)
-                                checkAndRenameChannel(fbk.clientId, discordMessage.channel.awaitSingle())
+                                    // edit channel name if feature is enabled and stream ended
+                                    TrackerUtil.checkUnpin(discordMessage)
+                                    propagateTransaction {
+                                        checkAndRenameChannel(fbk.clientId, discordMessage.channel.awaitSingle())
+                                    }
+                                }
                             }
                         } catch(e: Exception) {
                             LOG.info("Error abandoning notification: $notif :: ${e.message}")
@@ -143,34 +160,41 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     val fbk = instances[notif.targetID.discordClient]
                     val discord = fbk.client
                     try {
-                        val messageID = notif.messageID
-                        val discordMessage = getDiscordMessage(notif, channel)
-                        if (discordMessage != null) {
-                            val guildId = discordMessage.guildId.orNull()
-                            val features = if (guildId != null) {
-                                val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
-                                config.getOrCreateFeatures(messageID.channel.channelID).streamSettings
-                            } else StreamSettings() // use default settings for PM
-                            if (features.summaries) {
-                                val specEmbed = TwitchEmbedBuilder(
-                                    user!!,
-                                    features
-                                ).statistics(dbStream!!)
-                                discordMessage.edit()
-                                    .withEmbeds(specEmbed.create())
-                            } else {
-                                discordMessage.delete()
-                            }.thenReturn(Unit).tryAwait()
+                        val notifDeleted = notif.deleted
+                        val notifClient = notif.targetID.discordClient
+                        val notifChannel = notif.messageID.channel.channelID.snowflake
+                        val notifMessage = notif.messageID.messageID.snowflake
+                        discordTask {
+                            val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
+                            if (discordMessage != null) {
+                                val guildId = discordMessage.guildId.orNull()
+                                val features = if (guildId != null) {
+                                    val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+                                    config.getOrCreateFeatures(notifChannel.asLong()).streamSettings
+                                } else StreamSettings() // use default settings for PM
+                                if (features.summaries) {
+                                    val specEmbed = TwitchEmbedBuilder(
+                                        user!!,
+                                        features
+                                    ).statistics(dbStream!!)
+                                    discordMessage.edit()
+                                        .withEmbeds(specEmbed.create())
+                                } else {
+                                    discordMessage.delete()
+                                }.thenReturn(Unit).tryAwait()
 
-                            TrackerUtil.checkUnpin(discordMessage)
+                                TrackerUtil.checkUnpin(discordMessage)
+                            }
+
+                            // edit channel name if feature is enabled and stream ended
+                            val disChan = discord.getChannelById(notifChannel)
+                                .ofType(MessageChannel::class.java)
+                                .awaitSingle()
+
+                            propagateTransaction {
+                                checkAndRenameChannel(fbk.clientId, disChan, endingStream = notif.channelID)
+                            }
                         }
-
-                        // edit channel name if feature is enabled and stream ended
-                        val disChan = discord.getChannelById(messageID.channel.channelID.snowflake)
-                            .ofType(MessageChannel::class.java)
-                            .awaitSingle()
-
-                        checkAndRenameChannel(fbk.clientId, disChan, endingStream = notif.channelID)
 
                     } catch(e: Exception) {
                         LOG.info("Error ending stream notification $notif :: ${e.message}")
@@ -231,59 +255,69 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
 
                 val embed = TwitchEmbedBuilder(user!!, settings).stream(stream)
                 if (existing == null) { // post a new stream notification
-                    // get target channel in discord, make sure it still exists
-                    val chan = discord.getChannelById(target.discordChannel)
-                        .ofType(MessageChannel::class.java)
-                        .awaitSingle()
-                    // get mention role from db
-                    val mention = if(guildId != null && Duration.between(stream.startedAt, Instant.now()) <= Duration.ofMinutes(15)) {
-                        getMentionRoleFor(target, chan, settings)
-                    } else null
+                    discordTask {
+                        // get target channel in discord, make sure it still exists
+                        val chan = discord.getChannelById(target.discordChannel)
+                            .ofType(MessageChannel::class.java)
+                            .awaitSingle()
+                        // get mention role from db
+                        val mention = if(guildId != null && Duration.between(stream.startedAt, Instant.now()) <= Duration.ofMinutes(15)) {
+                            getMentionRoleFor(target, chan, settings)
+                        } else null
 
-                    val newNotification = try {
-                        val mentionMessage = if(mention != null) {
+                        val newNotification = try {
+                            val mentionMessage = if(mention != null) {
 
-                            val rolePart = if(mention.discord != null
-                                && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+                                val rolePart = if(mention.discord != null
+                                    && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
 
-                                mention.discord.mention.plus(" ")
-                            } else ""
-                            val textPart = mention.textPart
-                            chan.createMessage("$rolePart$textPart")
+                                    mention.discord.mention.plus(" ")
+                                } else ""
+                                val textPart = mention.textPart
+                                chan.createMessage("$rolePart$textPart")
 
-                        } else chan.createMessage()
+                            } else chan.createMessage()
 
-                        mentionMessage.withEmbeds(embed.create()).awaitSingle()
+                            mentionMessage.withEmbeds(embed.create()).awaitSingle()
 
-                    } catch (ce: ClientException) {
-                        val err = ce.status.code()
-                        if (err == 403) {
-                            // we don't have perms to send
-                            LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
-                            TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-                            return@forEach
-                        } else throw ce
+                        } catch (ce: ClientException) {
+                            val err = ce.status.code()
+                            if (err == 403) {
+                                // we don't have perms to send
+                                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
+                                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                                return@discordTask
+                            } else throw ce
+                        }
+
+                        TrackerUtil.pinActive(fbk, settings, newNotification)
+                        TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+
+                        propagateTransaction {
+                            DBStreams.Notification.new {
+                                this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                                this.targetID = target.findDBTarget()
+                                this.channelID = channel
+                                this.deleted = false
+                            }
+
+                            // edit channel name if feature is enabled and stream goes live
+                            checkAndRenameChannel(fbk.clientId, chan)
+                        }
                     }
-
-                    TrackerUtil.pinActive(fbk, settings, newNotification)
-                    TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
-
-                    DBStreams.Notification.new {
-                        this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                        this.targetID = target.findDBTarget()
-                        this.channelID = channel
-                        this.deleted = false
-                    }
-
-                    // edit channel name if feature is enabled and stream goes live
-                    checkAndRenameChannel(fbk.clientId, chan)
 
                 } else {
-                    val existingNotif = getDiscordMessage(existing, channel)
-                    if (existingNotif != null && changed) {
-                        existingNotif.edit()
-                            .withEmbeds(embed.create())
-                            .tryAwait()
+                    val existingDeleted = existing.deleted
+                    val existingClient = existing.targetID.discordClient
+                    val existingChan = existing.messageID.channel.channelID.snowflake
+                    val existingMessage = existing.messageID.messageID.snowflake
+                    discordTask {
+                        val existingNotif = getDiscordMessage(existingDeleted, existing, existingClient, existingChan, existingMessage, channel)
+                        if (existingNotif != null && changed) {
+                            existingNotif.edit()
+                                .withEmbeds(embed.create())
+                                .tryAwait()
+                        }
                     }
                 }
             } catch(e: Exception) {
@@ -293,18 +327,18 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         }
     }
 
-    @RequiresExposedContext
-    private suspend fun getDiscordMessage(dbNotif: DBStreams.Notification, channel: TrackedStreams.StreamChannel) = try {
-        val discord = instances[dbNotif.targetID.discordClient].client
-        if(dbNotif.deleted) null else {
-            val dbMessage = dbNotif.messageID
-            discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+    private suspend fun getDiscordMessage(deleted: Boolean, dbNotif: DBStreams.Notification, clientId: Int, channelId: Snowflake, messageId: Snowflake, channel: TrackedStreams.StreamChannel) = try {
+        if(deleted) null else {
+            val discord = instances[clientId].client
+            discord.getMessageById(channelId, messageId).awaitSingle()
         }
     } catch(e: Exception) {
-        if(e is ClientException && e.status.code() == 404) {
-            dbNotif.deleted = true
+        if(e is ClientException) {
+            propagateTransaction {
+                dbNotif.deleted = true
+            }
         }
-        LOG.trace("Stream notification for Twitch/${channel.siteChannelID} not found :: ${e.message}")
+        LOG.warn("Stream notification for Twitch/${channel.siteChannelID} not found :: ${e.message}")
         null
     }
 }

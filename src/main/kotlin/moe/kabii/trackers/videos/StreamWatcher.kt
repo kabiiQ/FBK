@@ -4,9 +4,7 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.*
 import discord4j.rest.http.client.ClientException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -38,12 +36,12 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
 import reactor.kotlin.core.publisher.toMono
+import java.time.Duration
 
 abstract class StreamWatcher(val instances: DiscordInstances) {
 
-    private val job = SupervisorJob()
-    protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
-    protected val notifyScope = CoroutineScope(DiscordTaskPool.notifyThreads + job)
+    protected val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + SupervisorJob())
+    protected val notifyScope = CoroutineScope(DiscordTaskPool.notifyThreads + SupervisorJob())
 
     /**
      * Object to hold information about a tracked target from the database - resolving references to reduce transactions later
@@ -60,6 +58,18 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         val userId: Snowflake
     ) {
         @RequiresExposedContext fun findDBTarget() = TrackedStreams.Target.findById(db)!!
+    }
+
+    suspend fun <T> discordCall(timeoutMillis: Long = 6_000L, block: suspend () -> T) = taskScope.async {
+        withTimeout(timeoutMillis) {
+            block()
+        }
+    }
+
+    suspend fun <T> discordTask(timeoutMillis: Long = 12_000L, block: suspend () -> T) = taskScope.launch {
+        withTimeout(timeoutMillis) {
+            block()
+        }
     }
 
     @CreatesExposedContext
@@ -200,7 +210,6 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         return MentionRole(discordRole, textPart, lastMention)
     }
 
-    @RequiresExposedContext
     suspend fun getChannel(fbk: FBK, guild: Snowflake?, channel: Snowflake, deleteTarget: TrackedTarget?): MessageChannel {
         val discord = fbk.client
         return try {

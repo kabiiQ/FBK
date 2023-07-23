@@ -1,6 +1,7 @@
 package moe.kabii.trackers.videos.kick.watcher
 
 import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.time.withTimeout
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.DBStreams
@@ -25,31 +26,8 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
             val start = Instant.now()
 
             try {
-                // get all tracked kick channels
-                val tracked = propagateTransaction {
-                    TrackedStreams.StreamChannel.find {
-                        TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK
-                    }
-                }
-
-                tracked.forEach { channel ->
-                    // call each kick stream sequentially - unknown rate limits
-                    try {
-                        delay(callDelay)
-                        val kickChannel = KickParser.getChannel(channel.siteChannelID)
-                        if(kickChannel == null) {
-                            LOG.warn("Error getting Kick channel: ${channel.siteChannelID}")
-                            return@forEach
-                        }
-
-                        val filteredTargets = getActiveTargets(channel)
-                        if(filteredTargets != null) {
-                            updateChannel(channel, kickChannel, filteredTargets)
-                        }
-                    } catch(e: Exception) {
-                        LOG.warn("Error updating Kick channel: $channel")
-                        LOG.debug(e.stackTraceString)
-                    }
+                withTimeout(Duration.ofMinutes(6)) {
+                    checkAll()
                 }
             } catch(e: Exception) {
                 LOG.error("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
@@ -58,6 +36,35 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
             val runDuration = Duration.between(start, Instant.now())
             val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
             delay(Duration.ofMillis(max(delay, 0L)))
+        }
+    }
+
+    private suspend fun checkAll() {
+        // get all tracked kick channels
+        val tracked = propagateTransaction {
+            TrackedStreams.StreamChannel.find {
+                TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK
+            }
+        }
+
+        tracked.forEach { channel ->
+            // call each kick stream sequentially - unknown rate limits
+            try {
+                delay(callDelay)
+                val kickChannel = KickParser.getChannel(channel.siteChannelID)
+                if(kickChannel == null) {
+                    LOG.warn("Error getting Kick channel: ${channel.siteChannelID}")
+                    return@forEach
+                }
+
+                val filteredTargets = getActiveTargets(channel)
+                if(filteredTargets != null) {
+                    updateChannel(channel, kickChannel, filteredTargets)
+                }
+            } catch(e: Exception) {
+                LOG.warn("Error updating Kick channel: $channel")
+                LOG.debug(e.stackTraceString)
+            }
         }
     }
 

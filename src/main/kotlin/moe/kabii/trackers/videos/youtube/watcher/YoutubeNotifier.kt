@@ -50,22 +50,25 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         // create live stats object for video
         // should not already exist
-        if(transaction { YoutubeLiveEvent.liveEventFor(dbVideo) != null }) return
-        val liveEvent = propagateTransaction {
-            YoutubeLiveEvent.new {
-                this.ytVideo = dbVideo
-                this.lastThumbnail = video.thumbnail
-                this.lastChannelName = video.channel.name
-                this.peakViewers = viewers
-                this.uptimeTicks = 1
-                this.averageViewers = viewers
-                this.premiere = video.premiere
+        val newLiveEvent = propagateTransaction {
+            if(YoutubeLiveEvent.liveEventFor(dbVideo) != null) null // already exists
+            else {
+                YoutubeLiveEvent.new {
+                    this.ytVideo = dbVideo
+                    this.lastThumbnail = video.thumbnail
+                    this.lastChannelName = video.channel.name
+                    this.peakViewers = viewers
+                    this.uptimeTicks = 1
+                    this.averageViewers = viewers
+                    this.premiere = video.premiere
+                }
             }
         }
-        dbVideo.liveEvent = liveEvent
+        newLiveEvent ?: return
+        dbVideo.liveEvent = newLiveEvent
 
         // post notifications to all enabled targets
-        filteredTargets(dbVideo.ytChannel, video, liveEvent::shouldPostLiveNotice).forEach { target ->
+        filteredTargets(dbVideo.ytChannel, video, newLiveEvent::shouldPostLiveNotice).forEach { target ->
             try {
                 createLiveNotification(dbVideo, video, target, new = true)
             } catch(e: Exception) {
@@ -94,81 +97,94 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         dbStream.ytVideo.notifications.forEach { notification ->
             val fbk = instances[notification.targetID.discordClient]
             val discord = fbk.client
-            try {
 
-                val dbMessage = notification.messageID
-                val channel = if(dbMessage != null) {
-                    val existingNotif = discord.getMessageById(dbMessage.channel.channelID.snowflake, dbMessage.messageID.snowflake).awaitSingle()
+            val target = loadTarget(notification.targetID)
+            val chanId = notification.messageID?.channel?.channelID?.snowflake
+            val messageId = notification.messageID?.messageID?.snowflake
+            discordTask {
+                try {
+                    val channel = if(chanId != null) {
+                        val existingNotif = discord.getMessageById(chanId, messageId).awaitSingle()
 
-                    val features = getStreamConfig(notification.targetID)
+                        val features = getStreamConfig(target)
 
-                    if(features.summaries) {
+                        if(features.summaries) {
 
-                        val embed = Embeds.other(if(dbStream.premiere) uploadColor else inactiveColor)
-                            .run {
-                                val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                                if(features.viewers && dbStream.peakViewers > 0) withFields(EmbedCreateFields.Field.of("Viewers", viewers, true)) else this
-                            }
-                            .run {
-                                if(video != null) {
-
-                                    // stream has ended and vod is available - edit notifications to reflect
-                                    val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
-                                    val durationStr = DurationFormatter(video.duration).colonTime
-                                    val memberStream = if(video.memberLimited) "Members-only content.\n" else ""
-
-                                    withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
-                                        .withUrl(video.url)
-                                        .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.youtubeLogo))
-                                        .run {
-                                            val timestamp = video.liveInfo?.endTime
-                                            if(timestamp != null) withTimestamp(timestamp) else this
-                                        }
-                                        .withDescription("${memberStream}Video available: [$durationStr]")
-                                        .withTitle(video.title)
-                                        .withThumbnail(video.thumbnail)
-                                } else {
-                                    // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
-                                    // here, we can only provide information from our database
-                                    val lastTitle = dbStream.ytVideo.lastTitle
-                                    val channelName = dbStream.lastChannelName
-                                    val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
-                                    val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
-
-                                    withAuthor(EmbedCreateFields.Author.of("$channelName was live.", channelLink, null))
-                                        .withUrl(videoLink)
-                                        .withFooter(EmbedCreateFields.Footer.of("Stream ended (approximate)", NettyFileServer.youtubeLogo))
-                                        .withTimestamp(Instant.now())
-                                        .withTitle("No VOD is available.")
-                                        .withThumbnail(dbStream.lastThumbnail)
-                                        .withDescription("Last video title: $lastTitle")
+                            val embed = Embeds.other(if(dbStream.premiere) uploadColor else inactiveColor)
+                                .run {
+                                    val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+                                    if(features.viewers && dbStream.peakViewers > 0) withFields(EmbedCreateFields.Field.of("Viewers", viewers, true)) else this
                                 }
+                                .run {
+                                    if(video != null) {
+
+                                        // stream has ended and vod is available - edit notifications to reflect
+                                        val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
+                                        val durationStr = DurationFormatter(video.duration).colonTime
+                                        val memberStream = if(video.memberLimited) "Members-only content.\n" else ""
+
+                                        withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
+                                            .withUrl(video.url)
+                                            .withFooter(EmbedCreateFields.Footer.of("Stream ended", NettyFileServer.youtubeLogo))
+                                            .run {
+                                                val timestamp = video.liveInfo?.endTime
+                                                if(timestamp != null) withTimestamp(timestamp) else this
+                                            }
+                                            .withDescription("${memberStream}Video available: [$durationStr]")
+                                            .withTitle(video.title)
+                                            .withThumbnail(video.thumbnail)
+                                    } else {
+                                        // this stream has ended and no vod is available (private or deleted) - edit notifications to reflect
+                                        // here, we can only provide information from our database
+                                        propagateTransaction {
+                                            val lastTitle = dbStream.ytVideo.lastTitle
+                                            val channelName = dbStream.lastChannelName
+                                            val videoLink = "https://youtube.com/watch?v=${dbStream.ytVideo.videoId}"
+                                            val channelLink = "https://youtube.com/channel/${dbStream.ytVideo.ytChannel.siteChannelID}"
+
+                                            withAuthor(EmbedCreateFields.Author.of("$channelName was live.", channelLink, null))
+                                                .withUrl(videoLink)
+                                                .withFooter(EmbedCreateFields.Footer.of("Stream ended (approximate)", NettyFileServer.youtubeLogo))
+                                                .withTimestamp(Instant.now())
+                                                .withTitle("No VOD is available.")
+                                                .withThumbnail(dbStream.lastThumbnail)
+                                                .withDescription("Last video title: $lastTitle")
+                                        }
+                                    }
+                                }
+
+
+                            existingNotif.edit()
+                                .withEmbeds(embed)
+                                .then(mono {
+                                    TrackerUtil.checkUnpin(existingNotif)
+                                })
+                        } else {
+
+                            propagateTransaction {
+                                existingNotif.delete()
                             }
 
+                        }.thenReturn(Unit).tryAwait()
+                        existingNotif.channel.awaitSingle()
 
-                        existingNotif.edit()
-                            .withEmbeds(embed)
-                            .then(mono {
-                                TrackerUtil.checkUnpin(existingNotif)
-                            })
-                    } else {
+                    } else discord.getChannelById(target.discordChannel).ofType(GuildMessageChannel::class.java).awaitSingle()
+                    propagateTransaction {
+                        checkAndRenameChannel(fbk.clientId, channel, endingStream = dbStream.ytVideo.ytChannel)
+                    }
 
-                        existingNotif.delete()
-
-                    }.thenReturn(Unit).tryAwait()
-                    existingNotif.channel.awaitSingle()
-                } else discord.getChannelById(notification.targetID.discordChannel.channelID.snowflake).ofType(GuildMessageChannel::class.java).awaitSingle()
-                checkAndRenameChannel(fbk.clientId, channel, endingStream = dbStream.ytVideo.ytChannel)
-
-            } catch(ce: ClientException) {
-                LOG.info("Unable to find YouTube stream notification for target ${notification.targetID.id.value} :: ${ce.status.code()}")
-            } catch(e: Exception) {
-                // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
-                LOG.info("Error in YouTube #streamEnd for stream $dbStream :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            } finally {
-                // delete the notification from db either way, we are done with it
-                notification.delete()
+                } catch(ce: ClientException) {
+                    LOG.info("Unable to find YouTube stream notification for target ${target.db} :: ${ce.status.code()}")
+                } catch(e: Exception) {
+                    // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
+                    LOG.info("Error in YouTube #streamEnd for stream $dbStream :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                } finally {
+                    // delete the notification from db either way, we are done with it
+                    propagateTransaction {
+                        notification.delete()
+                    }
+                }
             }
         }
 
@@ -225,12 +241,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             .forEach { target ->
                 if(!YoutubeNotification.getExisting(target, dbVideo).empty()) return@forEach
                 try {
-                    val new = createVideoNotification(ytVideo, target) ?: return@forEach
-                    YoutubeNotification.new {
-                        this.messageID = MessageHistory.Message.getOrInsert(new)
-                        this.targetID = target.findDBTarget()
-                        this.videoID = dbVideo
-                    }
+                    createVideoNotification(ytVideo, target, dbVideo)
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                     LOG.warn("Error while creating 'upload' notification for stream: $ytVideo :: ${e.message}")
@@ -258,215 +269,175 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
     }
 
     @RequiresExposedContext
-    suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedTarget, time: Instant): Message? {
+    suspend fun createUpcomingNotification(event: YoutubeScheduledEvent, video: YoutubeVideoInfo, target: TrackedTarget, time: Instant) {
         // get target channel in discord
         val chan = getUpcomingChannel(target)
         val fbk = subscriptions.instances[target.discordClient]
         val guildId = target.discordGuild?.asLong()
 
-        val mentionRole = if(guildId != null) {
-            val features = getStreamConfig(target)
-            getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, upcomingNotif = true)
-        } else null
+        discordTask {
+            val mentionRole = if(guildId != null) {
+                val features = getStreamConfig(target)
+                getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, upcomingNotif = true)
+            } else null
 
-        val message = try {
-            val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
-            val embed = Embeds.other(scheduledColor)
-                .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar))
-                .withUrl(video.url)
-                .withTitle(shortTitle)
-                .withThumbnail(video.thumbnail)
-                .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
-                .withTimestamp(time)
+            val message = try {
+                val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
+                val embed = Embeds.other(scheduledColor)
+                    .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} has an upcoming stream!", video.channel.url, video.channel.avatar))
+                    .withUrl(video.url)
+                    .withTitle(shortTitle)
+                    .withThumbnail(video.thumbnail)
+                    .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
+                    .withTimestamp(time)
 
-            val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
-            else chan.createMessage()
+                val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
+                else chan.createMessage()
 
-            mentionMessage.withEmbeds(embed).awaitSingle()
-        } catch(ce: ClientException) {
-            val err = ce.status.code()
-            if(err == 403) {
-                LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-                return null
-            } else throw ce
+                mentionMessage.withEmbeds(embed).awaitSingle()
+            } catch(ce: ClientException) {
+                val err = ce.status.code()
+                if(err == 403) {
+                    LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                    return@discordTask
+                } else throw ce
+            }
+            propagateTransaction {
+                YoutubeScheduledNotification.create(event, target)
+            }
+            TrackerUtil.checkAndPublish(fbk, message)
         }
-        YoutubeScheduledNotification.create(event, target)
-        TrackerUtil.checkAndPublish(fbk, message)
-        return message
     }
 
     @RequiresExposedContext
-    suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedTarget): Message? {
+    suspend fun createVideoNotification(video: YoutubeVideoInfo, target: TrackedTarget, dbVideo: YoutubeVideo) {
         val fbk = instances[target.discordClient]
         // get target channel in discord
-        val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordGuild?.asLong()
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
         val features = getStreamConfig(target)
 
-        // get mention role from db if one is registered
-        val mentionRole = if(guildId != null) {
-            getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, uploadedVideo = true)
-        } else null
+        discordTask {
+            val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
+            // get mention role from db if one is registered
+            val mentionRole = if(guildId != null) {
+                getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, uploadedVideo = true)
+            } else null
 
-        val new = try {
-            val shortDescription = StringUtils.abbreviate(video.description, 200)
-            val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
-            val memberNotice = if(video.memberLimited) "Members-only content.\n" else ""
+            val new = try {
+                val shortDescription = StringUtils.abbreviate(video.description, 200)
+                val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
+                val memberNotice = if(video.memberLimited) "Members-only content.\n" else ""
 
-            val embed = Embeds.other("${memberNotice}Video description: $shortDescription", uploadColor)
-                .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar))
-                .withUrl(video.url)
-                .withTitle(shortTitle)
-                .run { if(features.thumbnails) withImage(video.thumbnail) else withThumbnail(video.thumbnail) }
-                .run {
-                    val videoLength = DurationFormatter(video.duration).colonTime
-                    withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo))
+                val embed = Embeds.other("${memberNotice}Video description: $shortDescription", uploadColor)
+                    .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} posted a new video on YouTube!", video.channel.url, video.channel.avatar))
+                    .withUrl(video.url)
+                    .withTitle(shortTitle)
+                    .run { if(features.thumbnails) withImage(video.thumbnail) else withThumbnail(video.thumbnail) }
+                    .run {
+                        val videoLength = DurationFormatter(video.duration).colonTime
+                        withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo))
+                    }
+                val mentionMessage = if(mentionRole != null) {
+
+                    val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
+                    val textPart = mentionRole.textPart
+                    chan.createMessage("$rolePart$textPart")
+
+                } else chan.createMessage()
+                mentionMessage.withEmbeds(embed).awaitSingle()
+
+            } catch(ce: ClientException) {
+                val err = ce.status.code()
+                if(err == 403) {
+                    LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                    return@discordTask
+                } else throw ce
+            }
+            TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
+
+            propagateTransaction {
+                YoutubeNotification.new {
+                    this.messageID = MessageHistory.Message.getOrInsert(new)
+                    this.targetID = target.findDBTarget()
+                    this.videoID = dbVideo
                 }
-            val mentionMessage = if(mentionRole != null) {
-
-                val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
-                val textPart = mentionRole.textPart
-                chan.createMessage("$rolePart$textPart")
-
-            } else chan.createMessage()
-            mentionMessage.withEmbeds(embed).awaitSingle()
-
-        } catch(ce: ClientException) {
-            val err = ce.status.code()
-            if(err == 403) {
-                LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-                return null
-            } else throw ce
+            }
         }
-        TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
-        return new
     }
 
     @RequiresExposedContext
-    suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedTarget): Message? {
+    suspend fun createInitialNotification(video: YoutubeVideoInfo, target: TrackedTarget) {
         val fbk = instances[target.discordClient]
-        val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
 
         // get channel stream embed settings
         val guildId = target.discordGuild?.asLong()
         val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this) }
 
-        val mentionRole = if(guildId != null) {
-            val features = getStreamConfig(target)
-            getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, creationNotif = true)
-        } else null
+        discordTask {
+            val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
+            val mentionRole = if(guildId != null) {
+                val features = getStreamConfig(target)
+                getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, creationNotif = true)
+            } else null
 
-        val startTime = video.liveInfo?.scheduledStart!!
-        val eta = TimestampFormat.RELATIVE_TIME.format(startTime)
+            val startTime = video.liveInfo?.scheduledStart!!
+            val eta = TimestampFormat.RELATIVE_TIME.format(startTime)
 
-        val shortDescription = StringUtils.abbreviate(video.description, 200)
-        val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
+            val shortDescription = StringUtils.abbreviate(video.description, 200)
+            val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-        val embed = Embeds.other("Stream scheduled to start: $eta\n\nVideo description: $shortDescription", creationColor)
-            .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
-            .withUrl(video.url)
-            .withTitle(shortTitle)
-            .withThumbnail(video.thumbnail)
-            .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
-            .withTimestamp(startTime)
-        val new = try {
-            val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
-            else chan.createMessage()
+            val embed = Embeds.other("Stream scheduled to start: $eta\n\nVideo description: $shortDescription", creationColor)
+                .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
+                .withUrl(video.url)
+                .withTitle(shortTitle)
+                .withThumbnail(video.thumbnail)
+                .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
+                .withTimestamp(startTime)
+            val new = try {
+                val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
+                else chan.createMessage()
 
-            mentionMessage.withEmbeds(embed).awaitSingle()
-        } catch(ce: ClientException) {
-            val err = ce.status.code()
-            if(err == 403) {
-                LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-                return null
-            } else throw ce
+                mentionMessage.withEmbeds(embed).awaitSingle()
+            } catch(ce: ClientException) {
+                val err = ce.status.code()
+                if(err == 403) {
+                    LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                    return@discordTask
+                } else throw ce
+            }
+            TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
         }
-        TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
-        return new
     }
 
     @RequiresExposedContext
     suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         val fbk = instances[videoTrack.discordClient]
         // get target channel in Discord
-        val chan = getChannel(fbk, videoTrack.discordChannel.guild?.guildID?.snowflake, videoTrack.discordChannel.channelID.snowflake, null)
+        val trackGuild = videoTrack.discordChannel.guild?.guildID?.snowflake
+        val trackChan = videoTrack.discordChannel.channelID.snowflake
+        val mentioning = videoTrack.useMentionFor
+        val userId = videoTrack.tracker.userID
+        discordTask {
+            val chan = getChannel(fbk, trackGuild, trackChan, null)
 
-        val (mention, old) = if(videoTrack.useMentionFor != null) {
-            val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
-            val mention = if(old == true) null
-            else {
-                val useMentionFor = loadTarget(videoTrack.useMentionFor!!)
-                val features = getStreamConfig(useMentionFor)
-                getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere)
-            }
-            mention to old
-        } else null to false
-
-        val mentionContent = if(mention != null) {
-
-            val rolePart = mention.discord?.mention?.plus(" ") ?: ""
-            val textPart = mention.textPart
-            "$rolePart$textPart"
-
-        } else "<@${videoTrack.tracker.userID}> Livestream reminder: "
-
-        val new = chan
-            .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
-            .awaitSingle()
-        TrackerUtil.checkAndPublish(fbk, new)
-    }
-
-    @RequiresExposedContext
-    @Throws(ClientException::class)
-    suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedTarget, new: Boolean = true): Message? {
-        val fbk = instances[target.discordClient]
-
-        // get target channel in discord, make sure it still exists
-        val guildId = target.discordGuild
-        val chan = getChannel(fbk, guildId, target.discordChannel, target)
-
-        // get channel stream embed settings
-        val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this.asLong()) }
-        val features = getStreamConfig(target)
-
-        // get mention role from db if one is registered
-        var old: Boolean? = false
-        val mention = if(guildId != null) {
-            old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
-            if(old == true) null
-            else getMentionRoleFor(target, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
-        } else null
-
-        try {
-            val memberNotice = if(liveStream.memberLimited) "(Members-only content)\n" else ""
-            val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
-            val shortTitle = StringUtils.abbreviate(liveStream.title, MagicNumbers.Embed.TITLE)
-            val startTime = liveStream.liveInfo?.startTime
-            val sinceStr = if(startTime != null) " since " else " "
-
-            if(liveStream.memberLimited) {
-                LOG.info("Member limited stream detected: ${liveStream.url}")
-            }
-            val liveMessage = when {
-                liveStream.premiere -> " is premiering a new video!"
-                new -> " went live!"
-                else -> " is live."
-            }
-            val channelLiveNotice = "${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}"
-            val outdatedNotice = if(old == true) "Skipping ping for old stream.\n" else ""
-            val embed = Embeds.other("$memberNotice$shortDescription", if(liveStream.premiere) uploadColor else liveColor)
-                .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(channelLiveNotice, MagicNumbers.Embed.AUTHOR), liveStream.url, liveStream.channel.avatar))
-                .withUrl(liveStream.url)
-                .withTitle(shortTitle)
-                .withFooter(EmbedCreateFields.Footer.of("${outdatedNotice}Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
-                .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
-                .run { if(startTime != null) withTimestamp(startTime) else this }
+            val (mention, old) = if(mentioning != null) {
+                val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
+                val mention = if(old == true) null
+                else {
+                    val useMentionFor = propagateTransaction {
+                        loadTarget(mentioning)
+                    }
+                    val features = getStreamConfig(useMentionFor)
+                    getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere)
+                }
+                mention to old
+            } else null to false
 
             val mentionContent = if(mention != null) {
 
@@ -474,39 +445,103 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val textPart = mention.textPart
                 "$rolePart$textPart"
 
-            } else ""
+            } else "<@$userId> Livestream reminder: "
 
-            val messageContent = if(features.includeUrl) {
-                if(mentionContent.isBlank()) liveStream.url else "$mentionContent\n${liveStream.url}"
-            } else mentionContent
+            val new = chan
+                .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
+                .awaitSingle()
+            TrackerUtil.checkAndPublish(fbk, new)
+        }
+    }
 
-            val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
-            else chan.createMessage(messageContent)
+    @RequiresExposedContext
+    @Throws(ClientException::class)
+    suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedTarget, new: Boolean = true) {
+        val fbk = instances[target.discordClient]
 
-            val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
+        // get target channel in discord, make sure it still exists
+        val guildId = target.discordGuild
 
-            TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
-            TrackerUtil.pinActive(fbk, features, newNotification)
 
-            // log message in db
-            YoutubeNotification.new {
-                this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                this.targetID = target.findDBTarget()
-                this.videoID = dbVideo
+        discordTask {
+            val chan = getChannel(fbk, guildId, target.discordChannel, target)
+
+            // get channel stream embed settings
+            val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this.asLong()) }
+            val features = getStreamConfig(target)
+
+            // get mention role from db if one is registered
+            var old: Boolean? = false
+            val mention = if(guildId != null) {
+                old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
+                if(old == true) null
+                else getMentionRoleFor(target, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
+            } else null
+
+            try {
+                val memberNotice = if(liveStream.memberLimited) "(Members-only content)\n" else ""
+                val shortDescription = StringUtils.abbreviate(liveStream.description, 150)
+                val shortTitle = StringUtils.abbreviate(liveStream.title, MagicNumbers.Embed.TITLE)
+                val startTime = liveStream.liveInfo?.startTime
+                val sinceStr = if(startTime != null) " since " else " "
+
+                if(liveStream.memberLimited) {
+                    LOG.info("Member limited stream detected: ${liveStream.url}")
+                }
+                val liveMessage = when {
+                    liveStream.premiere -> " is premiering a new video!"
+                    new -> " went live!"
+                    else -> " is live."
+                }
+                val channelLiveNotice = "${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}"
+                val outdatedNotice = if(old == true) "Skipping ping for old stream.\n" else ""
+                val embed = Embeds.other("$memberNotice$shortDescription", if(liveStream.premiere) uploadColor else liveColor)
+                    .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(channelLiveNotice, MagicNumbers.Embed.AUTHOR), liveStream.url, liveStream.channel.avatar))
+                    .withUrl(liveStream.url)
+                    .withTitle(shortTitle)
+                    .withFooter(EmbedCreateFields.Footer.of("${outdatedNotice}Live on YouTube$sinceStr", NettyFileServer.youtubeLogo))
+                    .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
+                    .run { if(startTime != null) withTimestamp(startTime) else this }
+
+                val mentionContent = if(mention != null) {
+
+                    val rolePart = mention.discord?.mention?.plus(" ") ?: ""
+                    val textPart = mention.textPart
+                    "$rolePart$textPart"
+
+                } else ""
+
+                val messageContent = if(features.includeUrl) {
+                    if(mentionContent.isBlank()) liveStream.url else "$mentionContent\n${liveStream.url}"
+                } else mentionContent
+
+                val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
+                else chan.createMessage(messageContent)
+
+                val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
+
+                TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+                TrackerUtil.pinActive(fbk, features, newNotification)
+
+                // log message in db
+                propagateTransaction {
+                    YoutubeNotification.new {
+                        this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                        this.targetID = target.findDBTarget()
+                        this.videoID = dbVideo
+                    }
+
+                    // edit channel name if feature is enabled and stream starts
+                    checkAndRenameChannel(fbk.clientId, chan)
+                }
+
+            } catch (ce: ClientException) {
+                val err = ce.status.code()
+                if(err == 403) {
+                    LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }
+                } else throw ce
             }
-
-            // edit channel name if feature is enabled and stream starts
-            checkAndRenameChannel(fbk.clientId, chan)
-
-            return newNotification
-
-        } catch (ce: ClientException) {
-            val err = ce.status.code()
-            if(err == 403) {
-                LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-                return null
-            } else throw ce
         }
     }
 

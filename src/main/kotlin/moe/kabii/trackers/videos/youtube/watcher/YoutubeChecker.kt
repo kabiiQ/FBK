@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.withTimeout
 import moe.kabii.LOG
+import moe.kabii.command.commands.utility.RoleUtils
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -147,48 +148,45 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             YoutubeParser.getVideos(chunk).entries
                         }.forEach { (videoId, ytVideo) ->
                             LOG.debug("yt 7")
-                            propagateTransaction inner@{
-                                LOG.debug("yt 8")
-                                try {
-                                    val callReason = targetLookup.getValue(videoId)
 
-                                    val ytVideoInfo = when(ytVideo) {
-                                        is Ok -> ytVideo.value
-                                        is Err -> {
-                                            when (ytVideo.value) {
-                                                // do not process video if this was an IO issue on our end
-                                                is StreamErr.IO -> return@inner
-                                                is StreamErr.NotFound -> null
-                                            }
+                            try {
+                                val callReason = targetLookup.getValue(videoId)
+
+                                val ytVideoInfo = when(ytVideo) {
+                                    is Ok -> ytVideo.value
+                                    is Err -> {
+                                        when (ytVideo.value) {
+                                            // do not process video if this was an IO issue on our end
+                                            is StreamErr.IO -> return@forEach
+                                            is StreamErr.NotFound -> null
                                         }
                                     }
-                                    LOG.debug("yt 9")
+                                }
+                                LOG.debug("yt 9")
 
+                                propagateTransaction {
                                     if(ytVideoInfo != null) {
                                         with(callReason.video) {
-                                            transaction {
-                                                lastAPICall = DateTime.now()
-                                                lastTitle = ytVideoInfo.title
-                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
-                                            }
+                                            lastAPICall = DateTime.now()
+                                            lastTitle = ytVideoInfo.title
+                                            ytChannel.lastKnownUsername = ytVideoInfo.channel.name
                                         }
                                     }
                                     LOG.debug("yt 10")
 
-                                    // call specific handlers for each type of content
                                     when (callReason) {
                                         is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
                                         is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
                                         is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                     }
                                     LOG.debug("yt 11")
-                                } catch (e: Exception) {
-                                    LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
-                                    LOG.debug(e.stackTraceString)
                                 }
                                 LOG.debug("yt 12")
+                            } catch (e: Exception) {
+                                LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
                             }
-                            LOG.debug("yt 13")
+                            LOG.debug("yt x")
                             // TODO if live/scheduled&feature enabled, check if discord event should be created/updated
                         }
                 }
