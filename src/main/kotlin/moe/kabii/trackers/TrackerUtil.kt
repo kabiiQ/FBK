@@ -111,7 +111,10 @@ object TrackerUtil {
 
                     if(e is ClientException && e.status.code() == 403) {
                         val guildId = message.guildId.orNull() ?: return@launch
-                        val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this log."
+                        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+                        settings.pinActive = false
+                        config.save()
+                        val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this feature."
                         notifyOwner(fbk, guildId.asLong(), notice)
                     }
                 }

@@ -24,6 +24,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.extensions.tryAwait
+import java.time.Duration
 
 // contains the audio providers and current audio queue for a guild
 data class GuildAudio(
@@ -81,7 +82,12 @@ data class GuildAudio(
      suspend fun joinChannel(channel: AudioChannel): Result<VoiceConnection, Throwable> {
          discord.mutex.withLock {
              val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, channel.guildId.asLong())
-             val join = channel.join().withProvider(this.provider).tryAwait()
+             val join = channel
+                 .join()
+                 .withProvider(this.provider)
+                 .withSelfDeaf(true)
+                 .timeout(Duration.ofSeconds(20))
+                 .tryAwait()
              if (join is Ok) {
                  discord.connection = join.value
                  config.musicBot.lastChannel = channel.id.asLong()

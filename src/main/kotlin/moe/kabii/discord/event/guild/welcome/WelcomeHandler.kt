@@ -9,6 +9,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.trackers.TrackerUtil
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.success
 
@@ -39,11 +40,10 @@ class WelcomerListener(val instances: DiscordInstances) : EventListener<MemberJo
                 }
                 403 -> {
                     // permission denied
-                    // TODO pdenied
-//                    config.welcomer.channelId = null
-//                    config.save()
-//                    val message = "I tried to send a **welcome** message but I am missing permission to send messages+embeds/files in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **/welcome channel <#$channelId>** to re-enable the welcomer."
-//                    TrackerUtil.notifyOwner(fbk, event.guildId.asLong(), message)
+                    config.welcomer.channelId = null
+                    config.save()
+                    val message = "I tried to send a **welcome** message but I am missing permission to send messages in <#$channelId>. The **welcome** channel has been automatically disabled.\nOnce permissions are corrected, you can run **/welcome channel <#$channelId>** to re-enable the welcomer."
+                    TrackerUtil.notifyOwner(fbk, event.guildId.asLong(), message)
                 }
                 else -> throw ce
             }
