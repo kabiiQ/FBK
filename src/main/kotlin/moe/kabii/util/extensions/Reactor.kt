@@ -9,6 +9,7 @@ import moe.kabii.rusty.Result
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
+import java.time.Duration
 
 fun <T, R> Flux<T>.mapToNotNull(mapper: (T) -> R?): Flux<R> {
     return handle { obj: T, sink: SynchronousSink<R> ->
@@ -27,9 +28,10 @@ fun <T: Any> Mono<T>.tryBlock(): Result<T, Exception> {
     }
 }
 
-suspend fun <T: Any> Mono<T>.tryAwait(): Result<T, Exception> {
+suspend fun <T: Any> Mono<T>.tryAwait(timeoutMillis: Long? = null): Result<T, Exception> {
     return try {
-        val result = awaitFirstOrNull() ?: return Err(NullPointerException())
+        val timeout = if(timeoutMillis != null) timeout(Duration.ofMillis(timeoutMillis)) else this
+        val result = timeout.awaitFirstOrNull() ?: return Err(NullPointerException())
         Ok(result)
     } catch (e: Exception) {
         LOG.warn("Exception suppressed in tryAwait: ${e.message}.")

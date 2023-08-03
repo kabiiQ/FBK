@@ -1,7 +1,7 @@
 package moe.kabii.command.commands.configuration.setup;
 
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.BooleanElement
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
@@ -53,10 +53,10 @@ object StreamTrackerConfig : Command("streamcfg") {
             "pinLive",
             StreamSettings::pinActive
         ),
-        /*BooleanElement("Schedule an event on Discord for upcoming livestreams",
-            listOf("events", "scheduleevents", "event"),
+        BooleanElement("Schedule an event on Discord for live and upcoming streams tracked in this channel",
+            "events",
             StreamSettings::discordEvents
-        ),*/
+        ),
         StringElement(
             "Channel name when no streams are live",
             "notlive",
@@ -92,6 +92,7 @@ object StreamTrackerConfig : Command("streamcfg") {
             }
 
             val wasRename = features.streamSettings.renameEnabled
+            val wasEvents = features.streamSettings.discordEvents
 
             val configurator = Configurator(
                 "Livestream tracker settings for #${guildChan.name}",
@@ -103,6 +104,13 @@ object StreamTrackerConfig : Command("streamcfg") {
 
             if(!wasRename && features.streamSettings.renameEnabled) {
                 features.streamSettings.notLive = guildChan.name
+            }
+
+            if(!wasEvents && features.streamSettings.discordEvents) {
+                event.createFollowup()
+                    .withEphemeral(true)
+                    .withEmbeds(Embeds.fbk("Discord scheduled event feature for livestreams has been enabled.\nPlease ensure FBK has permission to manage scheduled events in **${target.name}** before any new streams are scheduled, or this feature may disable itself."))
+                    .awaitSingle()
             }
 
             if(modified) {

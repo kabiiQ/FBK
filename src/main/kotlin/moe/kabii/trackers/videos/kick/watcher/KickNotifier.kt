@@ -23,7 +23,6 @@ import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.Instant
 
@@ -40,11 +39,8 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
         // create live stats object for stream
         val liveInfo = checkNotNull(info.livestream)
 
-        if(transaction { DBStreams.LiveStreamEvent.getKickStreamFor(channel) } != null) {
-            LOG.error("Duplicate live stream event for Kick stream: ${info.user}")
-            return
-        }
-        propagateTransaction {
+        val newEvent = propagateTransaction {
+            if(DBStreams.LiveStreamEvent.getKickStreamFor(channel) != null) return@propagateTransaction null
             DBStreams.LiveStreamEvent.new {
                 this.channelID = channel
                 this.startTime = liveInfo.createdAt.jodaDateTime
@@ -54,11 +50,25 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 this.lastTitle = liveInfo.title
                 this.lastGame = liveInfo.categories
             }
+
+            val (noEvent, _) = eventManager.targets(channel)
+
+            noEvent
+                .forEach { target ->
+                    eventManager.scheduleEvent(
+                        target, info.url, liveInfo.title, liveInfo.categories, null, liveInfo.thumbnail?.url
+                    )
+                }
+        }
+
+        if(newEvent == null) {
+            LOG.error("Duplicate live stream event for Kick stream: ${info.user}")
+            return
         }
 
         targets.forEach { target ->
             try {
-                createLiveNotification(info, target)
+                createLiveNotification(channel, info, target)
             } catch(e: Exception) {
                 LOG.warn("Error while sending Kick notification for channel: $channel :: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -71,6 +81,12 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
     suspend fun streamEnd(dbStream: DBStreams.LiveStreamEvent, info: KickChannel) {
 
         val notifications = propagateTransaction {
+            val (_, existingEvent) = eventManager.targets(dbStream.channelID)
+            existingEvent
+                .forEach { event ->
+                    eventManager.completeEvent(event)
+                }
+
             DBStreams.Notification
                 .getForChannel(dbStream.channelID)
                 .associateWith { notif ->
@@ -87,149 +103,160 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
 
             val fbk = instances[data.discordClient]
             val discord = fbk.client
-            try {
 
-                val existingNotif = discord
-                    .getMessageById(data.channelId, data.messageId)
-                    .awaitSingle()
-                val features = getStreamConfig(data.discordClient, data.guildId, data.channelId)
+            discordTask {
+                try {
 
-                val action = if(features.summaries) {
-                    // edit live embed with post-stream summary
-                    val uptime = Duration
-                        .between(dbStream.startTime.javaInstant, Instant.now())
-                        .run(::DurationFormatter)
-                        .fullTime
-                    val username = info.user.username
+                    val existingNotif = discord
+                        .getMessageById(data.channelId, data.messageId)
+                        .awaitSingle()
+                    val features = getStreamConfig(data.discordClient, data.guildId, data.channelId)
 
-                    val body = StringBuilder()
-                    if(dbStream.lastTitle.isNotBlank()) {
-                        body.append("Last stream title: ")
-                            .append(dbStream.lastTitle)
-                            .append('\n')
-                    }
-                    if(features.endGame) {
-                        body.append("Last categories listed: ")
-                            .append(dbStream.lastGame)
-                    }
+                    val action = if(features.summaries) {
+                        // edit live embed with post-stream summary
+                        val uptime = Duration
+                            .between(dbStream.startTime.javaInstant, Instant.now())
+                            .run(::DurationFormatter)
+                            .fullTime
+                        val username = info.user.username
 
-                    val endedEmbed = Embeds.other(inactiveColor)
-                        .withAuthor(EmbedCreateFields.Author.of("$username was live for [$uptime].", info.url, info.user.avatarUrl))
-                        .withFooter(EmbedCreateFields.Footer.of("Stream ended ", NettyFileServer.kickLogo))
-                        .withTimestamp(Instant.now())
-                        .run {
-                            if(body.isNotBlank()) withDescription(body.toString()) else this
+                        val body = StringBuilder()
+                        if(dbStream.lastTitle.isNotBlank()) {
+                            body.append("Last stream title: ")
+                                .append(dbStream.lastTitle)
+                                .append('\n')
                         }
-                        .run {
-                            if(features.viewers) {
-                                val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
-                                withFields(EmbedCreateFields.Field.of("Viewers", viewers, true))
-                            } else this
+                        if(features.endGame) {
+                            body.append("Last categories listed: ")
+                                .append(dbStream.lastGame)
                         }
 
-                    existingNotif.edit()
-                        .withEmbeds(endedEmbed)
-                        .then(mono {
-                            TrackerUtil.checkUnpin(existingNotif)
-                        })
+                        val endedEmbed = Embeds.other(inactiveColor)
+                            .withAuthor(EmbedCreateFields.Author.of("$username was live for [$uptime].", info.url, info.user.avatarUrl))
+                            .withFooter(EmbedCreateFields.Footer.of("Stream ended ", NettyFileServer.kickLogo))
+                            .withTimestamp(Instant.now())
+                            .run {
+                                if(body.isNotBlank()) withDescription(body.toString()) else this
+                            }
+                            .run {
+                                if(features.viewers) {
+                                    val viewers = "${dbStream.averageViewers} avg. / ${dbStream.peakViewers} peak"
+                                    withFields(EmbedCreateFields.Field.of("Viewers", viewers, true))
+                                } else this
+                            }
 
-                } else {
-                    // no data available or summaries not enabled by this channel.
-                    existingNotif.delete()
-                }
+                        existingNotif.edit()
+                            .withEmbeds(endedEmbed)
+                            .then(mono {
+                                TrackerUtil.checkUnpin(existingNotif)
+                            })
 
-                action.thenReturn(Unit).tryAwait()
-                propagateTransaction {
-                    checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = dbStream.channelID)
-                }
+                    } else {
+                        // no data available or summaries not enabled by this channel.
+                        propagateTransaction {
+                            existingNotif.delete()
+                        }
+                    }
 
-            } catch(ce: ClientException) {
-                LOG.info("Unable to get Kick stream notification $dbNotif :: ${ce.status.code()}")
-            } catch(e: Exception) {
-                LOG.info("Error in Kick #streamEnd for channel ${info.slug} :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            } finally {
-                propagateTransaction {
-                    dbNotif.delete()
+                    action.thenReturn(Unit).tryAwait()
+                    propagateTransaction {
+                        checkAndRenameChannel(fbk.clientId, existingNotif.channel.awaitSingle(), endingStream = dbStream.channelID)
+                    }
+
+                } catch(ce: ClientException) {
+                    LOG.info("Unable to get Kick stream notification $dbNotif :: ${ce.status.code()}")
+                } catch(e: Exception) {
+                    LOG.info("Error in Kick #streamEnd for channel ${info.slug} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                } finally {
+                    propagateTransaction {
+                        dbNotif.delete()
+                    }
                 }
             }
         }
-        propagateTransaction {
-            dbStream.delete()
-        }
     }
 
-    private suspend fun createLiveNotification(info: KickChannel, target: TrackedTarget) {
+    private suspend fun createLiveNotification(channel: TrackedStreams.StreamChannel, info: KickChannel, target: TrackedTarget) {
+        discordTask {
+            val fbk = instances[target.discordClient]
+            // get target channel in discord
+                val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
 
-        val fbk = instances[target.discordClient]
-        // get target channel in discord
-        val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
+                // get embed settings
+                val guildConfig = target.discordGuild?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, asLong()) }
+                val features = getStreamConfig(target)
 
-        // get embed settings
-        val guildConfig = target.discordGuild?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, asLong()) }
-        val features = getStreamConfig(target)
-
-        // get mention role from db if one is registered
-        val mention = if(target.discordGuild != null) {
-            getMentionRoleFor(target, chan, features)
-        } else null
-
-        try {
+            // get mention role from db if one is registered
+            val mention = if(target.discordGuild != null) {
+                getMentionRoleFor(target, chan, features)
+            } else null
 
             val liveInfo = info.livestream!!
             val title = StringUtils.abbreviate("${info.user.username} live in category: ${liveInfo.categories}", MagicNumbers.Embed.TITLE)
             val description = "[${liveInfo.title}](${info.url})"
 
-            val embed = Embeds.other(description, liveColor)
-                .withAuthor(EmbedCreateFields.Author.of("${info.user.username} went live!", info.url, info.user.avatarUrl))
-                .withTitle(title)
-                .withUrl(info.url)
-                .withFooter(EmbedCreateFields.Footer.of("Live since ", NettyFileServer.kickLogo))
-                .withTimestamp(info.livestream.createdAt)
-                .run {
-                    val thumbnail = liveInfo.thumbnail?.url
-                    if(thumbnail != null) {
-                        if(features.thumbnails) withImage(thumbnail) else withThumbnail(thumbnail)
-                    } else this
+            try {
+                val embed = Embeds.other(description, liveColor)
+                    .withAuthor(
+                        EmbedCreateFields.Author.of(
+                            "${info.user.username} went live!",
+                            info.url,
+                            info.user.avatarUrl
+                        )
+                    )
+                    .withTitle(title)
+                    .withUrl(info.url)
+                    .withFooter(EmbedCreateFields.Footer.of("Live since ", NettyFileServer.kickLogo))
+                    .withTimestamp(info.livestream.createdAt)
+                    .run {
+                        val thumbnail = liveInfo.thumbnail?.url
+                        if (thumbnail != null) {
+                            if (features.thumbnails) withImage(thumbnail) else withThumbnail(thumbnail)
+                        } else this
+                    }
+
+                val mentionMessage = if (mention != null) {
+
+                    val rolePart = if (mention.discord != null
+                        && (mention.lastMention == null || org.joda.time.Duration(
+                            mention.lastMention,
+                            org.joda.time.Instant.now()
+                        ) > org.joda.time.Duration.standardHours(6))
+                    ) {
+
+                        mention.discord.mention.plus(" ")
+                    } else ""
+                    val textPart = mention.textPart
+                    chan.createMessage("$rolePart$textPart")
+
+                } else chan.createMessage()
+
+                val newNotification = mentionMessage
+                    .withEmbeds(embed)
+                    .awaitSingle()
+
+                TrackerUtil.pinActive(fbk, features, newNotification)
+                TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
+
+                // log notification in db
+                propagateTransaction {
+                    DBStreams.Notification.new {
+                        this.messageID = MessageHistory.Message.getOrInsert(newNotification)
+                        this.targetID = target.findDBTarget()
+                        this.channelID = channel
+                        this.deleted = false
+                    }
+
+                    // edit channel name if feature is enabled and stream goes live
+                    checkAndRenameChannel(fbk.clientId, chan)
                 }
-
-            val mentionMessage = if(mention != null) {
-
-                val rolePart = if(mention.discord != null
-                    && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
-
-                    mention.discord.mention.plus(" ")
-                } else ""
-                val textPart = mention.textPart
-                chan.createMessage("$rolePart$textPart")
-
-            } else chan.createMessage()
-
-            val newNotification = mentionMessage
-                .withEmbeds(embed)
-                .awaitSingle()
-
-            TrackerUtil.pinActive(fbk, features, newNotification)
-            TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
-
-            // log notification in db
-            propagateTransaction {
-                DBStreams.Notification.new {
-                    this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                    this.targetID = target.findDBTarget()
-                    this.channelID = channelID
-                    this.deleted = false
-                }
+            } catch(ce: ClientException) {
+                if(ce.status.code() == 403) {
+                    LOG.warn("Unable to send kick stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. KickNotifier.java")
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
+                } else throw ce
             }
-
-            // edit channel name if feature is enabled and stream goes live
-            checkAndRenameChannel(fbk.clientId, chan)
-
-        } catch(ce: ClientException) {
-            if(ce.status.code() == 403) {
-                LOG.warn("Unable to send kick stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. KickNotifier.java")
-                TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
-            } else throw ce
         }
     }
 }

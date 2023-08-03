@@ -5,6 +5,7 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -125,31 +126,35 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             val notifications = DBStreams.Notification.getForChannel(channel)
             if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
+                // existence of notifications should correlate to scheduled events existing
+                eventManager.endEvents(channel)
+
                 if(dbStream == null) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
                         val fbk = instances[notif.targetID.discordClient]
-                        try {
                             val notifDeleted = notif.deleted
                             val notifClient = notif.targetID.discordClient
                             val notifChannel = notif.messageID.channel.channelID.snowflake
                             val notifMessage = notif.messageID.messageID.snowflake
-                            discordTask {
+                        discordTask {
+                            try {
                                 val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
                                 if (discordMessage != null) {
-                                    discordMessage.delete().thenReturn(Unit).tryAwait()
+                                    discordMessage.delete().success().awaitSingle()
 
                                     // edit channel name if feature is enabled and stream ended
-                                    TrackerUtil.checkUnpin(discordMessage)
                                     propagateTransaction {
                                         checkAndRenameChannel(fbk.clientId, discordMessage.channel.awaitSingle())
                                     }
                                 }
+                            } catch(e: Exception) {
+                                LOG.info("Error abandoning notification: $notif :: ${e.message}")
+                                LOG.trace(e.stackTraceString)
+                            } finally {
+                                propagateTransaction {
+                                    notif.delete()
+                                }
                             }
-                        } catch(e: Exception) {
-                            LOG.info("Error abandoning notification: $notif :: ${e.message}")
-                            LOG.trace(e.stackTraceString)
-                        } finally {
-                            notif.delete()
                         }
                     }
                     return
@@ -158,31 +163,39 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                 notifications.forEach { notif ->
                     val fbk = instances[notif.targetID.discordClient]
                     val discord = fbk.client
-                    try {
-                        val notifDeleted = notif.deleted
-                        val notifClient = notif.targetID.discordClient
-                        val notifChannel = notif.messageID.channel.channelID.snowflake
-                        val notifMessage = notif.messageID.messageID.snowflake
-                        discordTask {
-                            val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
-                            if (discordMessage != null) {
-                                val guildId = discordMessage.guildId.orNull()
-                                val features = if (guildId != null) {
-                                    val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
-                                    config.getOrCreateFeatures(notifChannel.asLong()).streamSettings
-                                } else StreamSettings() // use default settings for PM
-                                if (features.summaries) {
-                                    val specEmbed = TwitchEmbedBuilder(
-                                        user!!,
-                                        features
-                                    ).statistics(dbStream!!)
-                                    discordMessage.edit()
-                                        .withEmbeds(specEmbed.create())
-                                } else {
-                                    discordMessage.delete()
-                                }.thenReturn(Unit).tryAwait()
-
-                                TrackerUtil.checkUnpin(discordMessage)
+                    val notifDeleted = notif.deleted
+                    val notifClient = notif.targetID.discordClient
+                    val notifChannel = notif.messageID.channel.channelID.snowflake
+                    val notifMessage = notif.messageID.messageID.snowflake
+                    discordTask {
+                        try {
+                            discordTask(5_000L) {
+                                try {
+                                    val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
+                                    if (discordMessage != null) {
+                                        val guildId = discordMessage.guildId.orNull()
+                                        val features = if (guildId != null) {
+                                            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+                                            config.getOrCreateFeatures(notifChannel.asLong()).streamSettings
+                                        } else StreamSettings() // use default settings for PM
+                                        if (features.summaries) {
+                                            val specEmbed = TwitchEmbedBuilder(
+                                                user!!,
+                                                features
+                                            ).statistics(dbStream!!)
+                                            discordMessage.edit()
+                                                .withEmbeds(specEmbed.create())
+                                                .then(mono {
+                                                    TrackerUtil.checkUnpin(discordMessage)
+                                                })
+                                        } else {
+                                            discordMessage.delete()
+                                        }.thenReturn(Unit).tryAwait()
+                                    }
+                                } catch (e: Exception) {
+                                    LOG.info("Error editing stream notification $notif :: ${e.message}")
+                                    LOG.debug(e.stackTraceString)
+                                }
                             }
 
                             // edit channel name if feature is enabled and stream ended
@@ -193,14 +206,15 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                             propagateTransaction {
                                 checkAndRenameChannel(fbk.clientId, disChan, endingStream = notif.channelID)
                             }
+                        } catch(e: Exception) {
+                            LOG.info("Error ending stream notification $notif :: ${e.message}")
+                            LOG.trace(e.stackTraceString)
+                        } finally {
+                            propagateTransaction {
+                                notif.delete()
+                                dbStream!!.delete()
+                            }
                         }
-
-                    } catch(e: Exception) {
-                        LOG.info("Error ending stream notification $notif :: ${e.message}")
-                        LOG.trace(e.stackTraceString)
-                    } finally {
-                        notif.delete()
-                        dbStream!!.delete()
                     }
                 }
             }
@@ -235,9 +249,22 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             }
             false
         }
-
         if(user == null) return
         if(user!!.username != channel.lastKnownUsername) channel.lastKnownUsername = user!!.username
+
+        // schedule Discord events where requested
+        val (noEvent, existingEvent) = eventManager.targets(channel)
+        noEvent
+            .forEach { target ->
+                eventManager.scheduleEvent(
+                    target, user!!.url, stream.title, null, null, user!!.thumbnailUrl
+                )
+            }
+        existingEvent
+            .forEach { event ->
+                eventManager.updateLiveEvent(event, stream.title)
+            }
+
         filteredTargets.forEach { target ->
             val fbk = instances[target.discordClient]
             val discord = fbk.client
@@ -306,18 +333,18 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     }
 
                 } else {
-                    val existingDeleted = existing.deleted
-                    val existingClient = existing.targetID.discordClient
-                    val existingChan = existing.messageID.channel.channelID.snowflake
-                    val existingMessage = existing.messageID.messageID.snowflake
-                    discordTask {
-                        val existingNotif = getDiscordMessage(existingDeleted, existing, existingClient, existingChan, existingMessage, channel)
-                        if (existingNotif != null && changed) {
-                            existingNotif.edit()
-                                .withEmbeds(embed.create())
-                                .tryAwait()
-                        }
-                    }
+//                    val existingDeleted = existing.deleted
+//                    val existingClient = existing.targetID.discordClient
+//                    val existingChan = existing.messageID.channel.channelID.snowflake
+//                    val existingMessage = existing.messageID.messageID.snowflake
+//                    discordTask {
+//                        val existingNotif = getDiscordMessage(existingDeleted, existing, existingClient, existingChan, existingMessage, channel)
+//                        if (existingNotif != null && changed) {
+//                            existingNotif.edit()
+//                                .withEmbeds(embed.create())
+//                                .awaitSingle()
+//                        }
+//                    }
                 }
             } catch(e: Exception) {
                 LOG.info("Error updating Twitch target: $target :: ${e.message}")

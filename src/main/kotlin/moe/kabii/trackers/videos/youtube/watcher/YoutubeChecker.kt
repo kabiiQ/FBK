@@ -1,11 +1,9 @@
 package moe.kabii.trackers.videos.youtube.watcher
 
-import kotlinx.coroutines.Runnable
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
@@ -37,6 +35,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     private val repeatTimeMillis = cooldowns.minimumRepeatTime
     private val tickDelay = cooldowns.callDelay
 
+    private val ytScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("YouTube-Intake") + SupervisorJob())
+
     private var nextCall = Instant.now()
     private var tickId = 0
 //    private val lock = Mutex()
@@ -45,9 +45,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         applicationLoop {
             val start = Instant.now()
             try {
-                withTimeout(Duration.ofMinutes(10)) {
-                    ytTick(start)
-                }
+                ytTick(start)
             } catch(e: Exception) {
                 LOG.warn("Error in YoutubeChecker#ytTick: ${e.message}")
                 LOG.debug(e.stackTraceString)
@@ -61,21 +59,18 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     suspend fun ytTick(start: Instant = Instant.now()) {
 //        if(!lock.tryLock() /* && Instant.now() < nextCall */) return // discard tick if one is already in progress
         // perform yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
-        if(start < nextCall) return
         this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
         LOG.debug("start: $start :: nextCall : $nextCall")
         try {
-            try {
-                // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
-                // gather all youtube IDs that need to be checked in the API
+            // youtube api has daily quota limits - we only hit /videos/ API and thus can chunk all of our calls
+            // gather all youtube IDs that need to be checked in the API
 
-                // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
-                // <video id, target list>
-                val targetLookup = mutableMapOf<String, YoutubeCall>()
+            // create lookup map to associate video id with the original 'type' as it will be lost when passed to the youtube API
+            // <video id, target list>
+            val targetLookup = mutableMapOf<String, YoutubeCall>()
 
-                LOG.debug("yt 1")
+            kotlinx.coroutines.time.withTimeout(Duration.ofSeconds(5)) {
                 propagateTransaction {
-                    LOG.debug("yt 2")
                     val currentTime = DateTime.now()
 
                     // 1: collect all videos we have as 'currently live' - don't recheck within 3 minutes-ish
@@ -110,7 +105,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         val callReason = YoutubeCall.New(new)
                         targetLookup[callReason.video.videoId] = callReason
                     }
-                    LOG.debug("yt 3")
 
                     // check if we have 'wasted space' - an API call that will be made with less than 20 videos
                     // check on random scheduled videos using this otherwise wasted space
@@ -126,98 +120,96 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             targetLookup[callReason.video.videoId] = callReason
                         }
                     }
-                    LOG.debug("yt 4")
                 }
-                LOG.debug("yt 5")
+            }
 
-                // main IO call, process as we go
-                LOG.debug("yt expected calls: ${targetLookup.keys}")
-                withTimeout(Duration.ofSeconds(
-                    (((targetLookup.size / idChunk) + 1) * 20).toLong()
-                )) {
-                    LOG.debug("yt 6")
-                    var first = true
-                    targetLookup.keys
-                        .chunked(20)
-                        .flatMap { chunk ->
-                            LOG.debug("yt api call: $chunk")
-                            if(first) first = false
-                            else Thread.sleep(500L)
-                            YoutubeParser.getVideos(chunk).entries
-                        }.forEach { (videoId, ytVideo) ->
-                            LOG.debug("yt 7")
+            // main IO call, process as we go
+            LOG.debug("yt expected calls: ${targetLookup.keys}")
+            ytScope.launch {
+                try {
+                    kotlinx.coroutines.time.withTimeout(Duration.ofSeconds(
+                        (((targetLookup.size / idChunk) + 1) * 20).toLong()
+                    )) {
+                        var first = true
+                        targetLookup.keys
+                            .chunked(20)
+                            .flatMap { chunk ->
+                                LOG.debug("yt api call: $chunk")
+                                if(first) first = false
+                                else Thread.sleep(500L)
+                                YoutubeParser.getVideos(chunk).entries
+                            }.forEach { (videoId, ytVideo) ->
 
-                            try {
-                                val callReason = targetLookup.getValue(videoId)
+                                try {
+                                    val callReason = targetLookup.getValue(videoId)
 
-                                val ytVideoInfo = when(ytVideo) {
-                                    is Ok -> ytVideo.value
-                                    is Err -> {
-                                        when (ytVideo.value) {
-                                            // do not process video if this was an IO issue on our end
-                                            is StreamErr.IO -> return@forEach
-                                            is StreamErr.NotFound -> null
+                                    val ytVideoInfo = when(ytVideo) {
+                                        is Ok -> ytVideo.value
+                                        is Err -> {
+                                            when (ytVideo.value) {
+                                                // do not process video if this was an IO issue on our end
+                                                is StreamErr.IO -> return@forEach
+                                                is StreamErr.NotFound -> null
+                                            }
                                         }
                                     }
-                                }
-                                LOG.debug("yt 9")
 
-                                propagateTransaction {
-                                    if(ytVideoInfo != null) {
-                                        with(callReason.video) {
-                                            lastAPICall = DateTime.now()
-                                            lastTitle = ytVideoInfo.title
-                                            ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                    propagateTransaction {
+                                        if(ytVideoInfo != null) {
+                                            with(callReason.video) {
+                                                lastAPICall = DateTime.now()
+                                                lastTitle = ytVideoInfo.title
+                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                            }
+                                        }
+
+                                        when (callReason) {
+                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                         }
                                     }
-                                    LOG.debug("yt 10")
-
-                                    when (callReason) {
-                                        is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                        is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                        is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                    }
-                                    LOG.debug("yt 11")
+                                } catch (e: Exception) {
+                                    LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
+                                    LOG.debug(e.stackTraceString)
                                 }
-                                LOG.debug("yt 12")
-                            } catch (e: Exception) {
-                                LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
-                                LOG.debug(e.stackTraceString)
+                                LOG.debug("yt x")
                             }
-                            LOG.debug("yt x")
-                            // TODO if live/scheduled&feature enabled, check if discord event should be created/updated
-                        }
-                }
-                LOG.debug("yt exit")
 
-                // clean up videos db
-                if(tickId == 10) {
-                    LOG.debug("Executing YouTube DB cleanup")
-                    propagateTransaction {
-                         // previously handled videos - 1 month old
-                        val old = DateTime.now().minusWeeks(4)
-                        YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall lessEq old and
-                                    // don't delete 'long term' videos that may be used for ytchat
-                                    (YoutubeVideos.scheduledEvent eq null)
-                        }
-                        // streams which never went live (with 1 day of leniency)
-                        val overdue = DateTime.now().minusDays(1)
-                        YoutubeScheduledEvents.deleteWhere {
-                            YoutubeScheduledEvents.scheduledStart less overdue
-                        }
-                        /* strange streams which youtube sometimes creates - it does not seem possible to distinguish these from brand
-                        new stream entries. They are 'upcoming' streams with no scheduled start time
-                         */
-                        YoutubeVideos.deleteWhere {
-                            YoutubeVideos.lastAPICall eq null and
-                                    (YoutubeVideos.apiAttempts greater 10)
+                        LOG.debug("yt exit")
+
+                        // clean up videos db
+                        if(tickId == 10) {
+                            LOG.debug("Executing YouTube DB cleanup")
+                            propagateTransaction {
+                                 // previously handled videos - 1 month old
+                                val old = DateTime.now().minusWeeks(4)
+                                YoutubeVideos.deleteWhere {
+                                    YoutubeVideos.lastAPICall lessEq old and
+                                            // don't delete 'long term' videos that may be used for ytchat
+                                            (YoutubeVideos.scheduledEvent eq null)
+                                }
+                                // streams which never went live (with 1 day of leniency)
+                                val overdue = DateTime.now().minusDays(1)
+                                YoutubeScheduledEvents.deleteWhere {
+                                    YoutubeScheduledEvents.scheduledStart less overdue
+                                }
+                                /* strange streams which youtube sometimes creates - it does not seem possible to distinguish these from brand
+                                new stream entries. They are 'upcoming' streams with no scheduled start time
+                                 */
+                                YoutubeVideos.deleteWhere {
+                                    YoutubeVideos.lastAPICall eq null and
+                                            (YoutubeVideos.apiAttempts greater 10)
+                                }
+                            }
                         }
                     }
+                } catch(time: TimeoutCancellationException) {
+                    LOG.warn("YoutubeChecker routine: timeout reached")
+                } catch(e: Exception) {
+                    LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
                 }
-            } catch (e: Exception) {
-                LOG.warn("Uncaught exception in YoutubeChecker :: ${e.message}")
-                LOG.debug(e.stackTraceString)
             }
             tickId = (tickId + 1) mod cleanInterval
         } finally {
@@ -253,6 +245,23 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                     }
                 }
             }
+
+            // Get any Discord scheduled events that exist for this video
+            val (noEvent, existingEvent) = eventManager.targets(dbLive.ytVideo.ytChannel, call.video)
+            // update all targets that require (missing) scheduled event to be created
+            noEvent
+                .forEach { target ->
+                    eventManager.scheduleEvent(
+                        target, ytVideo.url, ytVideo.title, ytVideo.description, dbLive.ytVideo, ytVideo.thumbnail
+                    )
+                }
+
+            // check targets that already have scheduled event for end times that are approaching
+            existingEvent
+                .forEach { event ->
+                    eventManager.updateLiveEvent(event, ytVideo.title)
+                }
+
         } else {
             // stream has ended (live = false or video deleted)
             streamEnd(ytVideo, dbLive)

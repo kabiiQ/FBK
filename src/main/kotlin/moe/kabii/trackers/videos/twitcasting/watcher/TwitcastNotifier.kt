@@ -60,6 +60,13 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
     @RequiresExposedContext
     suspend fun movieEnd(dbMovie: Twitcasts.Movie, info: TwitcastingMovieResponse?) {
         val channel = dbMovie.channel
+
+        val (_, existingEvent) = eventManager.targets(channel)
+        existingEvent
+            .forEach { event ->
+                eventManager.completeEvent(event)
+            }
+
         Twitcasts.TwitNotif.getForChannel(channel).forEach { notification ->
             val fbk = instances[notification.targetId.discordClient]
             val discord = fbk.client

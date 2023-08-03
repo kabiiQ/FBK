@@ -99,13 +99,26 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
 
     @RequiresExposedContext
     suspend fun checkMovie(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedTarget>) {
-        val (movie, _) = info
+        val (movie, user) = info
 
         // actions depend on : movie live state and whether we already knew about this movie
         val existing = Twitcasts.Movie.find {
             Twitcasts.Movies.movieId eq movie.movieId
         }.firstOrNull()
         if(movie.live) {
+            // Create Discord scheduled events where requested
+            val (noEvent, existingEvent) = eventManager.targets(channel)
+            noEvent
+                .forEach { target ->
+                    eventManager.scheduleEvent(
+                        target, movie.link, movie.title, movie.subtitle, null, movie.thumbnailUrl
+                    )
+                }
+            existingEvent
+                .forEach { event ->
+                    eventManager.updateLiveEvent(event, movie.title)
+                }
+
             if(existing != null) {
 
                 // check that all targets have a notification for this movie (for late tracks)

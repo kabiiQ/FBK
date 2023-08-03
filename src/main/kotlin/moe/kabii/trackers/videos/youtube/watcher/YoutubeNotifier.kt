@@ -1,11 +1,13 @@
 package moe.kabii.trackers.videos.youtube.watcher
 
 import discord4j.common.util.TimestampFormat
+import discord4j.core.`object`.entity.ScheduledEvent
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
+import discord4j.rest.util.Image
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import moe.kabii.LOG
@@ -73,6 +75,28 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                 LOG.warn("Error while creating live notification for channel: ${dbVideo.ytChannel} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
+            }
+        }
+
+        // get targets that request a Discord scheduled event
+        val (noEvent, existingEvent) = eventManager.targets(dbVideo.ytChannel, dbVideo)
+        // update all targets that require a new scheduled event
+        noEvent.forEach { target ->
+            eventManager.scheduleEvent(
+                target, video.url, video.title, video.description, dbVideo, video.thumbnail
+            )
+        }
+        // update all targets that have an existing Discord event - mark now live
+        existingEvent.forEach { event ->
+            val updateTitle = StringUtils.abbreviate(video.title, 100)
+            // Events will start on their own if the time is still accurate
+            if(updateTitle == event.title && Duration.between(Instant.now(), event.startTime.javaInstant) < Duration.ofMinutes(1)) return@forEach
+            eventManager.updateEvent(event) { edit ->
+                val image = Image.ofUrl(video.thumbnail).tryAwait(1_000L).orNull()
+                edit
+                    .withName(updateTitle)
+                    .run { if(image != null) withImage(image) else this }
+                    .withStatus(ScheduledEvent.Status.ACTIVE)
             }
         }
 
@@ -186,6 +210,13 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             }
         }
 
+        // get any Discord scheduled events that exist for this video
+        TrackedStreams.DiscordEvent.find {
+            TrackedStreams.DiscordEvents.yt eq dbStream.ytVideo.id.value.toInt()
+        }.forEach { event ->
+            eventManager.completeEvent(event)
+        }
+
         // delete live stream event for this channel
         dbStream.delete()
     }
@@ -212,6 +243,23 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 LOG.warn("Error while creating upcoming notification for stream: $ytVideo :: ${e.message}")
             }
         }
+
+        // get targets that request a Discord scheduled event
+        val (noEvent, existingEvent) = eventManager.targets(dbEvent.ytVideo.ytChannel, dbEvent.ytVideo)
+
+        // update all targets that require scheduled event to be created
+        noEvent
+            .forEach { target ->
+                eventManager.scheduleEvent(
+                    target, ytVideo.url, ytVideo.title, ytVideo.description, dbEvent.ytVideo, ytVideo.thumbnail
+                )
+            }
+
+        // check targets that already have scheduled event for updates
+        existingEvent
+            .forEach { event ->
+                eventManager.updateUpcomingEvent(event, scheduled, ytVideo.title)
+            }
     }
 
     @RequiresExposedContext
@@ -292,7 +340,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
                 else chan.createMessage()
 
-                mentionMessage.withEmbeds(embed).awaitSingle()
+                mentionMessage
+                    .withEmbeds(embed)
+                    .timeout(Duration.ofMillis(4_000L))
+                    .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
                 if(err == 403) {
@@ -346,7 +397,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     chan.createMessage("$rolePart$textPart")
 
                 } else chan.createMessage()
-                mentionMessage.withEmbeds(embed).awaitSingle()
+                mentionMessage
+                    .withEmbeds(embed)
+                    .timeout(Duration.ofMillis(4_000L))
+                    .awaitSingle()
 
             } catch(ce: ClientException) {
                 val err = ce.status.code()
@@ -400,7 +454,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
                 else chan.createMessage()
 
-                mentionMessage.withEmbeds(embed).awaitSingle()
+                mentionMessage
+                    .withEmbeds(embed)
+                    .timeout(Duration.ofMillis(4_000L))
+                    .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
                 if(err == 403) {
@@ -447,6 +504,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
             val new = chan
                 .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
+                .timeout(Duration.ofMillis(4_000L))
                 .awaitSingle()
             TrackerUtil.checkAndPublish(fbk, new)
         }
@@ -516,7 +574,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
                 else chan.createMessage(messageContent)
 
-                val newNotification = mentionMessage.withEmbeds(embed).awaitSingle()
+                val newNotification = mentionMessage
+                    .withEmbeds(embed)
+                    .timeout(Duration.ofMillis(4_000L))
+                    .awaitSingle()
 
                 TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
                 TrackerUtil.pinActive(fbk, features, newNotification)
