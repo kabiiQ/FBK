@@ -111,8 +111,8 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                 .filterKeys { activeId -> !watchChatRooms.contains(activeId) }
                 .forEach { (chatId, process) ->
                     LOG.info("Unsubscribing from YT chat: $chatId")
-                    process.destroy()
                     activeChats.remove(chatId)
+                    process.destroy()
                 }
 
             // register new chat listeners
@@ -126,7 +126,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                             .directory(scriptDir)
                             .start()
 
-                        println("1: $newChatId")
+                        LOG.debug("1: $newChatId")
                         activeChats[newChatId] = subprocess
 
                         subprocess.inputStream
@@ -136,15 +136,15 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                                 parseQueue.trySend(YTChatData(chatRoom, chatData))
                             }
 
-                        println("2: $newChatId")
+                        LOG.debug("2: $newChatId")
 
                         // if outputstream ends, this process should be ending (or unresponsive?)
+                        activeChats.remove(newChatId)
                         subprocess.destroy()
                         if(subprocess.waitFor() != 0) {
-                            activeChats.remove(newChatId)
                             println("lost chat $newChatId")
                         }
-                        println("3: $newChatId")
+                        LOG.debug("3: $newChatId")
                     }
                 }
             delay(Duration.ofSeconds(5))
