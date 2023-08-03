@@ -3,6 +3,7 @@ package moe.kabii.instances
 import discord4j.common.util.Snowflake
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.event.EventDispatcher
 import discord4j.gateway.intent.Intent
 import discord4j.gateway.intent.IntentSet
 import kotlinx.coroutines.reactor.awaitSingle
@@ -18,8 +19,8 @@ import moe.kabii.command.documentation.CommandDocumentor
 import moe.kabii.command.registration.GlobalCommandRegistrar
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
+import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
-import moe.kabii.discord.tasks.RecoverQueue
 import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
@@ -141,6 +142,11 @@ class DiscordInstances {
                         .run { if(!instance.presences) andNot(IntentSet.of(Intent.GUILD_PRESENCES)) else this }
                     setEnabledIntents(intents)
                 }
+                .setEventDispatcher(
+                    EventDispatcher.builder()
+                        .eventScheduler(DiscordTaskPool.discordScheduler)
+                        .build()
+                )
             val gateway = checkNotNull(discord.login().awaitSingle())
 
             val self = gateway.self.awaitSingle()
@@ -169,7 +175,7 @@ class DiscordInstances {
                         delay(Duration.ofSeconds(2))
                         OfflineUpdateHandler.runChecks(fbk.clientId, guild)
                         InviteWatcher.updateGuild(fbk.clientId, guild)
-                        RecoverQueue.recover(fbk, guild)
+                        //RecoverQueue.recover(fbk, guild)
                     }
                 }
                 .onErrorResume { t ->

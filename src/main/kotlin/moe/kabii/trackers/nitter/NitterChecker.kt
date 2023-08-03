@@ -45,7 +45,9 @@ import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.TimeoutException
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
@@ -56,11 +58,10 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         applicationLoop {
             val start = Instant.now()
             try {
-                kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(6)) {
-                    updateFeeds(start)
-                }
+                updateFeeds(start)
             } catch(e: Exception) {
-                LOG.warn("NitterChecker: Timeout reached")
+                LOG.warn("NitterChecker: ${e.message}")
+                LOG.debug(e.stackTraceString)
             }
 
             val runDuration = Duration.between(start, Instant.now())
@@ -93,8 +94,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             return
         }
         // partition feeds onto nitter instances for pulling
-        val feedsPerInstance = feeds.size / instanceCount
-        val instanceJobs = feeds
+        val feedsPerInstance = (feeds.size.toDouble() / instanceCount).roundToInt()
+        feeds
             .chunked(feedsPerInstance).withIndex()
             .map { (instanceId, feedChunk) ->
 
@@ -102,79 +103,81 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                 // each chunk executed on different instance - divide up work, pool assigns thread
                 nitterScope.launch {
                     try {
-                        var first = true
-                        feedChunk.forEach { feed ->
+                        kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(6)) {
+                            var first = true
+                            feedChunk.forEach { feed ->
 
-                            if (!first) {
-                                delay(Duration.ofMillis(cooldowns.callDelay))
-                            } else first = false
+                                if (!first) {
+                                    delay(Duration.ofMillis(cooldowns.callDelay))
+                                } else first = false
 
-                            val targets = getActiveTargets(feed)?.ifEmpty { null }
-                                ?: return@forEach // feed untrack entirely or no target channels are currently enabled
+                                val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                    ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
-                            val cache = TwitterFeedCache.getOrPut(feed)
+                                val cache = TwitterFeedCache.getOrPut(feed)
 
-                            val nitter = NitterParser
-                                .getFeed(feed.username, instance = instanceId)
-                                ?: return@forEach
+                                val nitter = NitterParser
+                                    .getFeed(feed.username, instance = instanceId)
+                                    ?: return@forEach
 
-                            val (user, tweets) = nitter
+                                val (user, tweets) = nitter
 
-                            val latest = tweets.maxOfOrNull { tweet ->
-                                // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
-                                val age = Duration.between(tweet.date, Instant.now())
+                                val latest = tweets.maxOfOrNull { tweet ->
+                                    // if tweet is after last posted tweet and within 2 hours (arbitrary - to prevent spam when initially tracking) - send discord notifs
+                                    val age = Duration.between(tweet.date, Instant.now())
 
-                                propagateTransaction {
-                                    if (tweet.retweet) {
-                                        /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
-                                        Check if this RT has already been acknowledged from this feed from our own database
-                                         */
-                                        val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
-                                        if (!new) {
-                                            return@propagateTransaction tweet.id
+                                    propagateTransaction {
+                                        if (tweet.retweet) {
+                                            /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
+                                            Check if this RT has already been acknowledged from this feed from our own database
+                                             */
+                                            val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                            if (!new) {
+                                                return@propagateTransaction tweet.id
+                                            }
+                                            // if temporary switch to syndication feeds - time is accurate again
+    //                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
+    //                                                || age > Duration.ofHours(2)
+    //                                                || cache.seenTweets.contains(tweet.id)
+    //                                            ) return@maxOfOrNull tweet.id
+                                        } else {
+                                            // if already handled or too old, skip, but do not pull tweet ID again
+                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
+    //                                            || age > Duration.ofHours(2) TODO temp increase
+                                                || age > Duration.ofHours(12)
+                                                || cache.seenTweets.contains(tweet.id)
+                                            ) return@propagateTransaction tweet.id
                                         }
-                                        // if temporary switch to syndication feeds - time is accurate again
-//                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
-//                                                || age > Duration.ofHours(2)
-//                                                || cache.seenTweets.contains(tweet.id)
-//                                            ) return@maxOfOrNull tweet.id
-                                    } else {
-                                        // if already handled or too old, skip, but do not pull tweet ID again
-                                        if ((feed.lastPulledTweet ?: 0) >= tweet.id
-//                                            || age > Duration.ofHours(2) TODO temp increase
-                                            || age > Duration.ofHours(12)
-                                            || cache.seenTweets.contains(tweet.id)
-                                        ) return@propagateTransaction tweet.id
-                                    }
 
-                                    notifyTweet(user, tweet, targets)
-                                    tweet.id
+                                        notifyTweet(user, tweet, targets)
+                                        tweet.id
+                                    }
                                 }
-                            }
-                            if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
-                                propagateTransaction {
-                                    feed.lastPulledTweet = latest
+                                if (latest != null && latest > (feed.lastPulledTweet ?: 0L)) {
+                                    propagateTransaction {
+                                        feed.lastPulledTweet = latest
+                                    }
                                 }
                             }
                         }
+                    } catch(time: TimeoutCancellationException) {
+                        LOG.warn("NitterChecker routine: timeout reached :: $instanceId")
                     } catch(e: Exception) {
                         LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                         LOG.debug(e.stackTraceString)
                     }
                 }
             }
-        instanceJobs.joinAll()
         LOG.debug("nitter exit")
     }
 
-    @RequiresExposedContext
     suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedTwitTarget>) {
         val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
         TwitterFeedCache[username]?.seenTweets?.add(tweet.id)
 
-        discordTask {
+        discordTask(10_000L) {
             // check for youtube video info from tweet
             // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
             // also will increase awareness of membership-limited streams
@@ -345,7 +348,10 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                         }
 
                     if(twitter.mediaOnly && attachment == null) return@target
-                    val notif = channel.createMessage(notifSpec).awaitSingle()
+                    val notif = channel
+                        .createMessage(notifSpec)
+                        .timeout(Duration.ofMillis(4_000))
+                        .awaitSingle()
 
                     if(attachedVideo != null) {
                         channel.createMessage(attachedVideo)
@@ -354,6 +360,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                     }
 
                     TrackerUtil.checkAndPublish(fbk, notif)
+                } catch (time: TimeoutException) {
+                    LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordChannel.asString()}")
                 } catch (e: Exception) {
                     if (e is ClientException && e.status.code() == 403) {
                         TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::twitterTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }

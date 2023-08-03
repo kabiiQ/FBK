@@ -2,6 +2,7 @@ package moe.kabii.discord.tasks
 
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.apache.commons.lang3.concurrent.BasicThreadFactory
+import reactor.core.scheduler.Schedulers
 import java.util.concurrent.Executors
 
 object DiscordTaskPool {
@@ -15,6 +16,11 @@ object DiscordTaskPool {
         .priority(Thread.MAX_PRIORITY)
         .build()
     private val discordNotifyThreads = Executors.newCachedThreadPool(discordNotifyThreadFactory).asCoroutineDispatcher()
+
+    private val discordSchedulerFactory = BasicThreadFactory.Builder()
+        .namingPattern("Discord-Scheduler-%d")
+        .build()
+    val discordScheduler = Schedulers.newBoundedElastic(500, Integer.MAX_VALUE, discordSchedulerFactory, 60)
 
 
     // threading needs may change in future, currently all using one thread pool that will expand when needed
