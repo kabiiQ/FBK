@@ -183,12 +183,21 @@ object AudioEventHandler : AudioEventAdapter() {
             .ofType(GuildMessageChannel::class.java)
             .flatMap { chan ->
                 val title = AudioCommandContainer.trackString(track)
+                val error = if(exception.cause?.message?.contains("403") == true) {
+                    LOG.info("YouTube 403 detected")
+                    data.audio.looping = false
+                    data.audio.editQueueSync {
+                        clear()
+                    }
+                    "YouTube has temporarily blocked the music bot."
+                } else exception.message ?: "broken"
+
                 chan.createMessage(
                     Embeds.error()
                         .withTitle("An error occured during audio playback")
                         .withFields(mutableListOf(
                             EmbedCreateFields.Field.of("Track", title, false),
-                            EmbedCreateFields.Field.of("Error", exception.message ?: "broken", false)
+                            EmbedCreateFields.Field.of("Error", error, false)
                         ))
                 )
             }
