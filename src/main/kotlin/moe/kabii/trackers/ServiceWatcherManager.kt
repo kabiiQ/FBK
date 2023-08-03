@@ -8,6 +8,7 @@ import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.trackers.nitter.NitterChecker
+import moe.kabii.trackers.videos.kick.watcher.KickChecker
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
@@ -83,6 +84,12 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         )
         val ytManualPuller = YoutubeFeedPuller(pullDelay)*/
 
+        val kickDelay = ServiceRequestCooldownSpec(
+            callDelay = 750L,
+            minimumRepeatTime = 90_000L
+        )
+        val kickChecker = KickChecker(discord, kickDelay)
+
         val malDelay = ServiceRequestCooldownSpec(
             callDelay = MALParser.callCooldown,
             minimumRepeatTime = 30_000L
@@ -105,7 +112,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 700L,
+            callDelay = 750L,
             minimumRepeatTime = 60_000L
         )
         // temporary syndication feed measures
@@ -119,10 +126,10 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             Thread(reminders, "ReminderWatcher"),
             Thread(twitch, "TwitchChecker"),
             Thread(twitchSubs, "TwitchSubscriptionManager"),
-//            Thread(spaceChecker, "TwitterSpacesChecker"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),
+            Thread(kickChecker, "KickChecker"),
             Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
             malThread,
             kitsuThread,

@@ -15,7 +15,7 @@ import kotlin.math.max
 object KickParser {
     val color = Color.of(5504024)
 
-    private val baseUrl = "https://kick.com/api/v1/"
+    private val baseUrl = "https://kick.com/api/v1"
 
     private val kickAdapter = MOSHI.adapter(KickChannel::class.java)
     private var nextCall = Instant.now()

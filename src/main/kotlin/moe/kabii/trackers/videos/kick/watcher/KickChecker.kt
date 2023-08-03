@@ -44,7 +44,7 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
         val tracked = propagateTransaction {
             TrackedStreams.StreamChannel.find {
                 TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK
-            }
+            }.toList()
         }
 
         tracked.forEach { channel ->
@@ -85,6 +85,12 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
                         dbStream.lastTitle = stream.title
                         dbStream.lastGame = stream.categories
                     }
+
+                    val (_, existingEvent) = eventManager.targets(db)
+                    existingEvent
+                        .forEach { event ->
+                            eventManager.updateLiveEvent(event, stream.title)
+                        }
                 }
 
             } else {
@@ -101,7 +107,9 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
                 try {
                     streamEnd(dbStream, kick)
                 } finally {
-                    dbStream.delete()
+                    propagateTransaction {
+                        dbStream.delete()
+                    }
                 }
 
             } // else stream is not live and there are no notifications

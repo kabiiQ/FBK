@@ -3,8 +3,8 @@ package moe.kabii.data.relational.streams
 import discord4j.common.util.Snowflake
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
-import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.trackers.*
+import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -23,9 +23,10 @@ object TrackedStreams {
         TWITCH(TwitchTarget),
         YOUTUBE(YoutubeTarget),
         TWITCASTING(TwitcastingTarget),
-        KICK(KickTarget),
 
-        SPACES(YoutubeTarget)
+        SPACES(YoutubeTarget),
+
+        KICK(KickTarget)
     }
 
     object StreamChannels : IntIdTable() {
@@ -157,22 +158,42 @@ object TrackedStreams {
 
     object DiscordEvents : IdTable<Int>() {
         override val id = integer("id").autoIncrement().entityId().uniqueIndex()
+        val client = integer("discord_client")
         val guild = reference("discord_guild", DiscordObjects.Guilds, ReferenceOption.CASCADE)
         val stream = reference("channel", StreamChannels, ReferenceOption.CASCADE)
-        val event = long("discord_event_id")
-        val live = bool("live_event")
+        val event = long("discord_event_id").uniqueIndex()
+        val startTime = datetime("scheduled_start_time")
+        val endTime = datetime("scheduled_end_time")
+        val title = text("event_saved_title", eagerLoading = true)
+        val yt = integer("yt_video_id")
 
-        val yt = reference("yt_video", YoutubeVideos, ReferenceOption.SET_NULL).nullable()
-
-        override val primaryKey = PrimaryKey(guild, stream)
+        override val primaryKey = PrimaryKey(guild, stream, yt)
     }
 
     class DiscordEvent(id: EntityID<Int>) : IntEntity(id) {
+        var client by DiscordEvents.client
         var guild by DiscordObjects.Guild referencedOn DiscordEvents.guild
         var channel by StreamChannel referencedOn DiscordEvents.stream
         var event by DiscordEvents.event
-        var live by DiscordEvents.live
+        var startTime by DiscordEvents.startTime
+        var endTime by DiscordEvents.endTime
+        var title by DiscordEvents.title
 
-        var yt by YoutubeVideo optionalReferencedOn DiscordEvents.yt
+        /**
+         * Database ID of an associated YouTube video, -1 if no video is associated
+         */
+        var yt by DiscordEvents.yt
+
+        companion object : IntEntityClass<DiscordEvent>(DiscordEvents) {
+            operator fun get(target: StreamWatcher.TrackedTarget, ytVideo: YoutubeVideo?) = DiscordEvent.wrapRows(
+                DiscordEvents
+                    .innerJoin(DiscordObjects.Guilds)
+                    .select {
+                        DiscordObjects.Guilds.guildID eq target.discordGuild!!.asLong() and
+                                (DiscordEvents.stream eq target.dbStream) and
+                                (DiscordEvents.yt eq (ytVideo?.id?.value?.toInt() ?: -1))
+                    }
+            ).firstOrNull()
+        }
     }
 }
