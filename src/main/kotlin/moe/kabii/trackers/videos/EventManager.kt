@@ -22,6 +22,8 @@ import java.time.Instant
 
 class EventManager(val watcher: StreamWatcher) {
     companion object {
+        // can not create events the in past or for 'now'
+        private val window = Duration.ofMinutes(1)
         // Some 'average' duration of streams - we can not actually know when streamers will end
         private val defaultEventLength = Duration.ofHours(3)
         // A grace period - if stream ends within this duration then it will be let to expire rather than ended early
@@ -54,7 +56,6 @@ class EventManager(val watcher: StreamWatcher) {
         // Start time is potentially in the future for YouTube videos, otherwise NOW
         val scheduledStart = ytVideo?.scheduledEvent?.scheduledStart?.javaInstant
         val now = Instant.now()
-        val window = Duration.ofMinutes(1) // can not create events the in past or for 'now'
         val startTime = if(scheduledStart != null && Duration.between(now, scheduledStart) > window) scheduledStart else now + window
 
         // "free chat"/announcement placeholder detection
@@ -153,9 +154,10 @@ class EventManager(val watcher: StreamWatcher) {
      * Updates an existing upcoming event if required
      */
     @RequiresExposedContext
-    suspend fun updateUpcomingEvent(dbEvent: TrackedStreams.DiscordEvent, startTime: Instant, title: String) {
+    suspend fun updateUpcomingEvent(dbEvent: TrackedStreams.DiscordEvent, scheduled: Instant, title: String) {
+        val now = Instant.now()
         // Delete upcoming events that are now more than 2 weeks in the future - "free chat" detection
-        if(Duration.between(Instant.now(), startTime) > futureLimit) {
+        if(Duration.between(now, scheduled) > futureLimit) {
             LOG.info("Cancelling scheduled event $title")
             updateEvent(dbEvent) { edit ->
                 edit
@@ -164,6 +166,7 @@ class EventManager(val watcher: StreamWatcher) {
             dbEvent.delete()
             return
         }
+        val startTime = if(Duration.between(now, scheduled) > window) scheduled else now + window
         if(
             dbEvent.startTime.javaInstant == startTime
             && dbEvent.title == title
