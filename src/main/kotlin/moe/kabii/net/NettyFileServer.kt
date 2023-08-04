@@ -112,7 +112,7 @@ object NettyFileServer {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"
     }
-    fun twitchThumbnail(id: String) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}}"
+    fun twitchThumbnail(id: String) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
 }
