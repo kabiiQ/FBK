@@ -46,8 +46,8 @@ import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeoutException
+import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
@@ -94,7 +94,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
             return
         }
         // partition feeds onto nitter instances for pulling
-        val feedsPerInstance = (feeds.size.toDouble() / instanceCount).roundToInt()
+        val feedsPerInstance = ceil(feeds.size.toDouble() / instanceCount).toInt()
         feeds
             .chunked(feedsPerInstance).withIndex()
             .map { (instanceId, feedChunk) ->
