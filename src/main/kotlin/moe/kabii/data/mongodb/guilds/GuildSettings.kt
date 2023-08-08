@@ -20,3 +20,7 @@ data class StreamInfo(
 data class TempChannels(
     val tempChannels: MutableList<Long> = mutableListOf()
 )
+
+data class GuildAPIKeys(
+    var deepLFree: String? = null
+)

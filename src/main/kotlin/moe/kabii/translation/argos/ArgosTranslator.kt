@@ -40,7 +40,7 @@ object ArgosTranslator : TranslationService(
         }
     }
 
-    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
+    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, apiKey: String?): TranslationResult {
         val text = TranslationUtil.preProcess(rawText, removeEmoji = true)
         if(text.isBlank()) return NoOpTranslator.doTranslation(from, to, text)
 

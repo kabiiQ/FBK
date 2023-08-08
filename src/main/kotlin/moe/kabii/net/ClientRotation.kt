@@ -9,6 +9,7 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import javax.net.SocketFactory
+import kotlin.math.min
 
 object ClientRotation {
     private val addrs = Keys.config[Keys.Net.ipv4Rotation]
@@ -28,7 +29,7 @@ object ClientRotation {
                 .socketFactory(factory)
                 .build()
         }
-            .plus(OkHTTP)
+            .run { listOf(OkHTTP) + this }
     }
 
     private val cache = mutableMapOf<Int, OkHttpClient>()
@@ -39,6 +40,12 @@ object ClientRotation {
      * The key has no relation to the proxy chosen and will vary between restarts.
      */
     fun getClient(key: Int) = cache.getOrPut(key, clients::random)
+
+    /**
+     * Provides a client to be used for a request.
+     * The first client (index 0) should be the "base" while any additional are "alternate" clients.
+     */
+    fun getClientNumber(index: Int) = clients[min(index, clients.size - 1)]
 
     private class Factory(private val addr: InetAddress) : SocketFactory() {
         private val fact = getDefault()

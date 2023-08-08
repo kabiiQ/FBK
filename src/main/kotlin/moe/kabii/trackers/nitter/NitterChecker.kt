@@ -230,7 +230,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                 .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
                                 .translator.defaultTargetLanguage
 
-                            val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet)
+                            val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedTwitTarget::discordGuild))
 
                             // check cache for existing translation of this tweet
                             val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang

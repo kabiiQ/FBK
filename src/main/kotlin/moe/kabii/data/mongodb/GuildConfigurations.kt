@@ -46,7 +46,9 @@ data class GuildConfiguration(
 
     var starboardSetup: StarboardSetup = StarboardSetup(),
 
-    val welcomer: WelcomeSettings = WelcomeSettings()
+    val welcomer: WelcomeSettings = WelcomeSettings(),
+
+    val guildApiKeys: GuildAPIKeys = GuildAPIKeys()
 ) {
 
     fun starboard() = if(starboardSetup.channel != null) starboardSetup else null

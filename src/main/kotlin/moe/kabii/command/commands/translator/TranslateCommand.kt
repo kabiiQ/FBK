@@ -44,9 +44,9 @@ object TranslateCommands : CommandContainer {
     private val chatHandler: suspend DiscordParameters.() -> Unit = chat@{
         event.deferReply().awaitAction()
         val toTagDefault = if(isPM) "en" else config.translator.defaultTargetLanguage
-        // translate
-        val translatorArg = args.optStr("translator")?.run(Translator::getServiceByName)
-        val translator = Translator.getService(null, preference = translatorArg)
+        // Provide properties that may affect which translator is selected
+        val translatorArg = args.optStr("translator")?.run(Translator::getServiceByName) // preference option selected by user
+        val translator = Translator.getService(null, preference = translatorArg, guilds = listOf(target.id))
         val languages = translator.service.supportedLanguages
 
         val fromLang = args

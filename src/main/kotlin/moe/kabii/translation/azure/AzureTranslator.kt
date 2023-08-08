@@ -34,7 +34,7 @@ object AzureTranslator : TranslationService(
         else -> input
     }
 
-    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
+    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, apiKey: String?): TranslationResult {
         val text = TranslationUtil.preProcess(rawText, capitalize = true, removeTags = true)
 
         val paramTo = "&to=${to.tag}"

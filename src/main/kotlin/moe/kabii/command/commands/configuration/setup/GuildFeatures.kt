@@ -13,7 +13,7 @@ object GuildFeatures : Command("servercfg") {
     override val wikiPath = "Configuration-Commands#the-serverconfig-command"
 
     object GuildFeatureModule : ConfigurationModule<GuildSettings>(
-        "guild",
+        "server settings",
         this,
         // BooleanElement("Use colored embeds for command responses", listOf("embeds", "embed"), GuildSettings::embedMessages), need to design fallback method first
         BooleanElement("Use this server's invites (required for invite-specific roles, requires Manage Server permission)", "useinvites", GuildSettings::utilizeInvites),

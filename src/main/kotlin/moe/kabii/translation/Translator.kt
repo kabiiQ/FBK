@@ -2,6 +2,7 @@ package moe.kabii.translation
 
 import com.github.pemistahl.lingua.api.Language
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
+import discord4j.common.util.Snowflake
 import moe.kabii.LOG
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
@@ -17,14 +18,14 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
     abstract val supportedLanguages: SupportedLanguages
 
     @Throws(IOException::class)
-    fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?): TranslationResult {
+    fun translateText(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, suspectLanguage: TranslationLanguage?, apiKey: String?): TranslationResult {
         if(suspectLanguage == to) return NoOpTranslator.doTranslation(suspectLanguage, suspectLanguage, rawText)
         if(from == to) return NoOpTranslator.doTranslation(from, from, rawText)
 
         require(rawText.length <= 1_000) { "Translation exceeds 2000 characters" }
 
         return try {
-            doTranslation(from, to, rawText)
+            doTranslation(from, to, rawText, apiKey)
         } catch(io: IOException) {
             LOG.error("Error getting translation from $fullName: ${io.message}")
             LOG.debug(io.stackTraceString)
@@ -39,7 +40,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
     }
 
     @Throws(IOException::class)
-    internal abstract fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
+    internal abstract fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, apiKey: String? = null): TranslationResult
 
     fun defaultLanguage() = supportedLanguages[TranslatorSettings.fallbackLang]!!
 
@@ -47,7 +48,7 @@ abstract class TranslationService(val fullName: String, val languageHelp: String
 }
 
 object NoOpTranslator : TranslationService("None", "") {
-     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult
+     override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, apiKey: String?): TranslationResult
         = TranslationResult(this, from ?: to, from ?: to, rawText)
 
     override val supportedLanguages = SupportedLanguages(this, mapOf())
@@ -66,9 +67,9 @@ object Translator {
 
     private val inclusionList = Keys.config[Keys.Google.feedInclusionList]
 
-    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?) {
+    data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?, val apiKey: String?) {
         fun translate(from: TranslationLanguage?, to: TranslationLanguage, text: String)
-            = service.translateText(from, to, text, suspect)
+            = service.translateText(from, to, text, suspect, apiKey)
 
         fun getLanguage(tag: String) = service.supportedLanguages[tag] ?: service.defaultLanguage()
     }
@@ -76,15 +77,29 @@ object Translator {
     val service: TranslationService
         get() = getService(null).service
 
-    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: String? = null, primaryTweet: Boolean? = null, preference: TranslationService? = null): TranslationPair {
+    /**
+     * Determines the service to use for translating this text
+     * Services may be unavailable for specific text for reasons such as quota limits or limited language support, so the "best available" should be chosen
+     */
+    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: String? = null, primaryTweet: Boolean? = null,
+                   preference: TranslationService? = null, guilds: List<Snowflake> = emptyList()
+    ): TranslationPair {
         // return first available translator (supporting input language from text, if provided)
         val detected = text?.run {
             val language = detector.detectLanguageOf(this)
             if(language != Language.UNKNOWN) language.isoCode639_1.toString() else null
         }
 
+        // special handling for DeepL which may have user provided keys
+        val deepLKey = DeepLTranslator
+            .getUserKeys(guilds)
+            .firstOrNull(DeepLTranslator::keyAvailable)
+
         // some special exceptions for certain twitter feeds will alter the available services
-        val allServices = if(primaryTweet == false) {
+        val allServices = if(deepLKey != null) {
+            // users who provide a DeepL key can use for their own feeds beyond typical restrictions
+            listOf(DeepLTranslator) + services
+        } else if(primaryTweet == false) {
             // retweets go straight to neural translator
             listOf(ArgosTranslator)
         } else if(primaryTweet == true && inclusionList.contains(twitterFeed)) {
@@ -94,7 +109,7 @@ object Translator {
             listOf(preference)
         } else {
             // all other content goes to general translation pool
-            services.filter(TranslationService::available)
+            services
         }
 
         // attempts to pair the 'suspected language' with a service that supports it
@@ -105,7 +120,9 @@ object Translator {
         // suspected languages are often wrong, so don't fail if a strange language is detected
 //        val services = filteredServices.ifEmpty { allServices }
 
-        val availableServices = allServices.filter(TranslationService::available)
+        val availableServices = allServices.filter { service ->
+            (service == DeepLTranslator && deepLKey != null) || service.available
+        }
         val langTags = (tags + detected).filterNotNull()
 
         val filteredServices = if(langTags.isNotEmpty())
@@ -118,7 +135,7 @@ object Translator {
         else availableServices
 
         val detectedLanguage = detected?.run { filteredServices.getOrNull(0)?.supportedLanguages?.get(this) }
-        return TranslationPair(filteredServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage)
+        return TranslationPair(filteredServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage, deepLKey?.apiKey)
     }
 
     fun getServiceNames(): List<String> =

@@ -39,7 +39,7 @@ object GoogleTranslator : TranslationService(
         }
     }
 
-    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String): TranslationResult {
+    override fun doTranslation(from: TranslationLanguage?, to: TranslationLanguage, rawText: String, apiKey: String?): TranslationResult {
         val text = TranslationUtil.preProcess(rawText)
         val requestBody = GoogleTranslationRequest.create(text, to, from).generateRequestBody()
 
