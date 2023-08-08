@@ -21,8 +21,10 @@ object StarboardEventHandler {
 
             val guildId = event.guildId.orNull()?.asLong() ?: return
 
+            val fbk = instances[event.client]
+            if(!fbk.properties.starboardEnabled) return
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if this guild's starboard emoji
@@ -74,8 +76,10 @@ object StarboardEventHandler {
             // only continue if star reaction
             if (event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
 
+            val fbk = instances[event.client]
+            if(!fbk.properties.starboardEnabled) return
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             starboardCfg.starsLock.withLock {
@@ -107,8 +111,10 @@ object StarboardEventHandler {
             // only continue if star reaction
             if (event.emoji.asUnicodeEmoji().filter { reaction -> reaction.raw == EmojiCharacters.star } == null) return
 
+            val fbk = instances[event.client]
+            if(!fbk.properties.starboardEnabled) return
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
@@ -134,8 +140,10 @@ object StarboardEventHandler {
             // in this event, remove the post from the starboard unless configured otherwise
             val guildId = event.guildId.orNull()?.asLong() ?: return
 
+            val fbk = instances[event.client]
+            if(!fbk.properties.starboardEnabled) return
             // only continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // only continue if "remove on clear" behavior is enabled
@@ -161,8 +169,10 @@ object StarboardEventHandler {
             val channel = event.channel.ofType(GuildMessageChannel::class.java).awaitFirstOrNull() ?: return
             val guildId = channel.guildId.asLong()
 
+            val fbk = instances[event.client]
+            if(!fbk.properties.starboardEnabled) return
             // continue if guild has a starboard
-            val config = GuildConfigurations.getOrCreateGuild(instances[event.client].clientId, guildId)
+            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId)
             val starboardCfg = config.starboard() ?: return
 
             // continue if "remove on delete" behavior is enabled
