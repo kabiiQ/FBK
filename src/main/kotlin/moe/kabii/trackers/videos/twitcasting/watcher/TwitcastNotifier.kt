@@ -73,10 +73,10 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
             try {
                 val notifChan = notification.messageId.channel.channelID.snowflake
                 val notifMessage = notification.messageId.messageID.snowflake
+                val features = getStreamConfig(notification.targetId)
                 discordTask {
                     val existingNotif = discord.getMessageById(notifChan, notifMessage)
                         .awaitSingle()
-                    val features = getStreamConfig(notification.targetId)
 
                     val action = if(features.summaries && info != null) {
                         val (movie, user) = info

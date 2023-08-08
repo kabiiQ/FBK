@@ -173,7 +173,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                     LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
                                     LOG.debug(e.stackTraceString)
                                 }
-                                LOG.debug("yt x")
                             }
 
                         LOG.debug("yt exit")
