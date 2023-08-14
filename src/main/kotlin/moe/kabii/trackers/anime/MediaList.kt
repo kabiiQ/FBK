@@ -27,6 +27,7 @@ data class Media(
     val watched: Short,
     val total: Short,
     val status: ConsumptionStatus,
+    val notes: String,
 
     val mediaID: Int,
 

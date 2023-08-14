@@ -93,6 +93,7 @@ object AniListParser : MediaListParser() {
                         watched = entry.progress.toShort(),
                         total = media.episodes?.toShort() ?: 0,
                         status = entry.status.consumption,
+                        notes = entry.notes,
                         mediaID = media.id,
                         type = listPart.mediaType,
                         readVolumes = entry.progressVolumes?.toShort() ?: 0,

@@ -41,6 +41,9 @@ class MediaEmbedBuilder(val media: Media) {
                 val avgScore = "%.1f".format(media.meanScore)
                 footer.append(" (average: $avgScore)")
             }
+            if(media.notes != "") {
+                footer.append("\nNote: ${media.notes}")
+            }
             withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))
         }
 }
