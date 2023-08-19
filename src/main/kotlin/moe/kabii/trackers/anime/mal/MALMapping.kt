@@ -21,7 +21,7 @@ object MALAPIMapping {
     data class AnimeListStatus(
         val status: String?,
         val score: Int,
-        val comments: String,
+        val comments: String?,
         @Json(name = "num_episodes_watched") val watched: Int,
         @Json(name = "is_rewatching") val rewatching: Boolean
     )
@@ -42,7 +42,7 @@ object MALAPIMapping {
     data class MangaListStatus(
         val status: String,
         val score: Int,
-        val comments: String,
+        val comments: String?,
         @Json(name = "num_volumes_read") val volumesRead: Int,
         @Json(name = "num_chapters_read") val chaptersRead: Int,
         @Json(name = "is_rereading") val rereading: Boolean

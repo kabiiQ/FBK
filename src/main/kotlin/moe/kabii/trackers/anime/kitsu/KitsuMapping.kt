@@ -23,7 +23,7 @@ object KitsuMapping {
                 val progress: Int,
                 val reconsuming: Boolean,
                 val rating: String,
-                val notes: String
+                val notes: String?
             )
 
             @JsonClass(generateAdapter = true)

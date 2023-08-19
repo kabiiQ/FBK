@@ -101,7 +101,7 @@ object KitsuParser : MediaListParser() {
                         total = (if (mediaType == MediaType.MANGA) media.attributes.episodeCount else media.attributes.chapterCount)?.toShort()
                             ?: 0,
                         status = parseKitsuStatus(library.attributes.status),
-                        notes = library.attributes.notes,
+                        notes = library.attributes.notes ?: "",
                         mediaID = media.id.toInt(),
                         type = mediaType,
                         readVolumes = 0,

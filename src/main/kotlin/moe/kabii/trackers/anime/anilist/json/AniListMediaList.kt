@@ -77,7 +77,7 @@ data class AniListMediaListEntry(
     val progress: Int,
     val progressVolumes: Int?,
     val media: AniListMedia,
-    val notes: String
+    val notes: String?
 ) {
     @Transient val status = AniListWatchingStatus.valueOf(_status)
 }
