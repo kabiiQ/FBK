@@ -24,7 +24,7 @@ object MALParser : MediaListParser(
     override suspend fun parse(id: String): MediaList? {
         var first = true
         val animes = mutableListOf<MALAPIMapping.UserAnimeListEdge>()
-        var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status,main_picture,num_episodes,mean,nsfw&limit=1000&nsfw=true"
+        var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status{comments},main_picture,num_episodes,mean,nsfw&limit=1000&nsfw=true"
         while(animeRequest != null) {
             if(first) first = false
             else delay(callCooldown)
@@ -76,6 +76,7 @@ object MALParser : MediaListParser(
                     listStatus.watched.toShort(),
                     node.numEpisodes?.toShort() ?: 0,
                     parseMALStatus(listStatus.status) ?: ConsumptionStatus.PTW,
+                    notes = listStatus.comments ?: "",
                     node.id,
                     MediaType.ANIME,
                     0,
@@ -96,6 +97,7 @@ object MALParser : MediaListParser(
                     listStatus.chaptersRead.toShort(),
                     node.numChapters?.toShort() ?: 0,
                     parseMALStatus(listStatus.status) ?: ConsumptionStatus.PTW,
+                    notes = listStatus.comments ?: "",
                     node.id,
                     MediaType.MANGA,
                     listStatus.volumesRead.toShort(),
