@@ -136,7 +136,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             aniListThread,
 //            Thread(twitter, "TwitterChecker"),
 //            Thread(twitterStream, "TwitterStream"),
-            Thread(nitterChecker, "NitterManager"),
+            //Thread(nitterChecker, "NitterManager"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
             Thread(ytChatWatcher, "YTChatWatcher")

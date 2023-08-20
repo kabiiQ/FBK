@@ -132,6 +132,7 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                             Check if this RT has already been acknowledged from this feed from our own database
                                              */
                                             val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                            return@propagateTransaction tweet.id
                                             if (!new) {
                                                 return@propagateTransaction tweet.id
                                             }
