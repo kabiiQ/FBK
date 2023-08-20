@@ -34,14 +34,14 @@ object PlaybackSeek : AudioCommandContainer {
 
     private suspend fun trySeekCurrentTrack(origin: DiscordParameters, track: AudioTrack, target: Duration): Boolean {
         if(!track.isSeekable) {
-            origin.ereply(Embeds.error("The current track is not compatible with this command. (For example, streams are not seekable.)")).awaitSingle()
+            origin.ereply(Embeds.error(origin.i18n("audio_seek_not_supported"))).awaitSingle()
             return false
         }
         val millis = Try(target::toMillis).result.orNull()
         if(millis == null || millis !in 0..track.duration) {
             val targetPosition = DurationFormatter(target).colonTime
             val endPosition = DurationFormatter(track.duration).colonTime
-            origin.ereply(Embeds.error("The timestamp **$targetPosition** is not valid for the current track. (0:00-$endPosition)")).awaitSingle()
+            origin.ereply(Embeds.error(origin.i18n("audio_seek_not_valid", "target" to targetPosition, "end" to endPosition))).awaitSingle()
             return false
         }
         track.position = millis
@@ -54,23 +54,23 @@ object PlaybackSeek : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(origin.i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
 
         val timeArg = args.string("timestamp")
         val seekTo = DurationParser.tryParse(timeArg, stopAt = ChronoUnit.HOURS)
         if(seekTo == null) {
-            ereply(Embeds.error("**$timeArg** is not a valid timestamp. Example: **seek 1:12**.")).awaitSingle()
+            ereply(Embeds.error(origin.i18n("audio_seek_invalid", timeArg))).awaitSingle()
             return@with
         }
         val targetPosition = DurationFormatter(seekTo).colonTime
         if(trySeekCurrentTrack(this, track, seekTo)) {
-            ireply(Embeds.fbk("The position in the currently playing track ${trackString(track)} has been set to **$targetPosition**.")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_seek", "track" to trackString(track), "target" to targetPosition))).awaitSingle()
         }
     }
 
@@ -80,25 +80,25 @@ object PlaybackSeek : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
         val forwardArg = args.optStr("time")
         val seekForwards = if(forwardArg == null) Duration.ofSeconds(30) else {
             val parse = DurationParser.tryParse(forwardArg, stopAt = ChronoUnit.HOURS)
             if(parse == null) {
-                ereply(Embeds.error("**$forwardArg** is not a valid length to fast-forward the track.")).awaitSingle()
+                ereply(Embeds.error(i18n("audio_ff_invalid", forwardArg))).awaitSingle()
                 return@with
             } else parse
         }
         val position = Duration.ofMillis(track.position)
         val seekTo = position.plus(seekForwards)
         if(trySeekCurrentTrack(this, track, seekTo)) {
-            ireply(timeSkipMessage(seekForwards, seekTo, track)).awaitSingle()
+            ireply(timeSkipMessage(this, seekForwards, seekTo, track)).awaitSingle()
         }
     }
 
@@ -108,33 +108,33 @@ object PlaybackSeek : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to alter playback of this track.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
         val backArg = args.optStr("time")
         val seekBackwards = if(backArg == null) Duration.ofSeconds(30) else {
             val parse = DurationParser.tryParse(backArg, stopAt = ChronoUnit.HOURS)
             if(parse == null) {
-                ereply(Embeds.error("**$backArg** is not a valid length to rewind the track.")).awaitSingle()
+                ereply(Embeds.error(i18n("audio_rewind_invalid", backArg))).awaitSingle()
                 return@with
             } else parse
         }
         val position = Duration.ofMillis(track.position)
         val seekTo = position.minus(seekBackwards)
         if(trySeekCurrentTrack(this, track, seekTo)) {
-            ireply(timeSkipMessage(seekBackwards, seekTo, track, backwards = true)).awaitSingle()
+            ireply(timeSkipMessage(this, seekBackwards, seekTo, track, backwards = true)).awaitSingle()
         }
     }
 
-    private fun timeSkipMessage(time: Duration, newPosition: Duration, track: AudioTrack, backwards: Boolean = false): EmbedCreateSpec {
+    private fun timeSkipMessage(origin: DiscordParameters, time: Duration, newPosition: Duration, track: AudioTrack, backwards: Boolean = false): EmbedCreateSpec {
         val direction = if(backwards) "backwards" else "forwards"
         val positiveTime = DurationFormatter(time).colonTime
         val new = DurationFormatter(newPosition).colonTime
 
-        return Embeds.fbk("Moving $direction $positiveTime. in the current track ${trackString(track)} **-> $new**.")
+        return Embeds.fbk(origin.i18n("audio_time_skip", "direction" to direction, "time" to positiveTime, "track" to trackString(track), "newTime" to new))
     }
 }

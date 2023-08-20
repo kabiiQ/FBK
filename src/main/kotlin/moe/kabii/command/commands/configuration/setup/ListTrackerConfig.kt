@@ -7,7 +7,7 @@ import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.data.mongodb.guilds.AnimeSettings
 
-object ListTrackerConfig : Command("animeconfig") {
+object ListTrackerConfig : Command("animecfg") {
     override val wikiPath = "Anime-List-Tracker#configuration"
 
     object ListTrackerModule : ConfigurationModule<AnimeSettings>(

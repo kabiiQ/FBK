@@ -76,11 +76,11 @@ internal interface AudioCommandContainer : CommandContainer {
         val audio = AudioManager.getGuildAudio(origin.client, origin.target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            origin.ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            origin.ereply(Embeds.error(origin.i18n("audio_no_track"))).awaitSingle()
             return
         }
         if(!canFSkip(origin, track)) {
-            origin.ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to add audio filters to this track.")).awaitSingle()
+            origin.ereply(Embeds.error(origin.i18n("audio_dj_only"))).awaitSingle()
             return
         }
         val data = track.userData as QueueData
@@ -88,9 +88,9 @@ internal interface AudioCommandContainer : CommandContainer {
         data.apply = true
         audio.player.stopTrack()
         val filterStr = if(data.audioFilters.filters.isEmpty()) {
-            "Filters reset: audio restored to normal playback."
+            origin.i18n("audio_filters_reset")
         } else {
-            "Applying filters:\n\n${data.audioFilters.asString()}"
+            "${origin.i18n("audio_filters_set")}\n\n${data.audioFilters.asString()}"
         }
         origin.ireply(Embeds.fbk(filterStr)).awaitSingle()
     }

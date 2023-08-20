@@ -53,9 +53,10 @@ data class GuildAudio(
             playlist.sumOf { track -> track.duration - track.position }
         else null
 
-    val formatDuration: String?
+    val formatDuration: String
         get() = duration?.let(::DurationFormatter)
             ?.let(DurationFormatter::colonTime)
+            ?: "Stream"
 
     // queue song for a user, returns false if user is over quota
     suspend fun tryAdd(track: AudioTrack, member: Member? = null, position: Int? = null, checkLimits: Boolean = true): Boolean {

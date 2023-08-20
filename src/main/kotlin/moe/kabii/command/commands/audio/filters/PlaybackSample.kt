@@ -16,11 +16,11 @@ object PlaybackSample : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
         val sampleArg = args.string("duration")
@@ -30,13 +30,13 @@ object PlaybackSample : AudioCommandContainer {
             ?.result?.orNull()
 
         if(sampleTime == null) {
-            ereply(Embeds.error("**$sampleArg** is not a valid length of time. Example: **sample 2m**.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_sample_invalid", sampleArg))).awaitSingle()
             return@with
         }
         val remaining = track.duration - track.position
         if(sampleTime > remaining) {
             val remainingTime = DurationFormatter(remaining).colonTime
-            ereply(Embeds.error("The current track only has $remainingTime remaining to play.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_sample_short", remainingTime))).awaitSingle()
             return@with
         }
         val endTarget = sampleTime + track.position
@@ -44,7 +44,7 @@ object PlaybackSample : AudioCommandContainer {
         data.endMarkerMillis = endTarget
         val formattedTime = DurationFormatter(sampleTime).colonTime
         val skipTime = DurationFormatter(endTarget).colonTime
-        ireply(Embeds.fbk("Sampling $formattedTime of ${trackString(track, includeAuthor = false)} -> skipping track at $skipTime.")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_sample_set", "time" to formattedTime, "track" to trackString(track, includeAuthor = false), "time2" to skipTime))).awaitSingle()
     }
 
     suspend fun sampleTo(origin: DiscordParameters) = with(origin) {
@@ -52,11 +52,11 @@ object PlaybackSample : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.restrictSeek && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or a channel moderator to limit this track's playback.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
 
@@ -69,17 +69,17 @@ object PlaybackSample : AudioCommandContainer {
                 if(position > track.duration) track.duration else position
             }
         if(sampleTo == null) {
-            ereply(Embeds.error("**$timeArg** is not a valid timestamp. Example: **sample 2m**.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_sampleto_short", timeArg))).awaitSingle()
             return@with
         }
         if(track.position > sampleTo) {
             val targetColon = DurationFormatter(sampleTo).colonTime
-            ereply(Embeds.error("The current track is already beyond the timestamp **$targetColon**.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_sampleto_long", targetColon))).awaitSingle()
             return@with
         }
         val data = track.userData as QueueData
         data.endMarkerMillis = sampleTo
         val skipAt = DurationFormatter(sampleTo).colonTime
-        ireply(Embeds.fbk("Sampling ${trackString(track, includeAuthor = false)} -> skipping track at $skipAt.")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_sampleto_set", "track" to trackString(track, includeAuthor = false), "time" to skipAt))).awaitSingle()
     }
 }

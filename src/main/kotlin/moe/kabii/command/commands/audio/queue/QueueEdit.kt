@@ -23,13 +23,13 @@ object QueueEdit : AudioCommandContainer {
         channelVerify(Permission.MANAGE_MESSAGES)
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         if(audio.queue.isEmpty()) {
-            ereply(Embeds.error("There are no tracks currently in queue to shuffle.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_shuffle_none"))).awaitSingle()
             return@with
         }
         audio.editQueue {
             shuffle()
         }
-        ireply(Embeds.fbk("The playback queue in **${target.name}** has been shuffled. Up next: ${trackString(audio.queue.first())}")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_shuffle_complete", "server" to target.name, "track" to trackString(audio.queue.first())))).awaitSingle()
     }
 
     suspend fun remove(origin: DiscordParameters, removeArg: String? = null, removeUser: User? = null) = with(origin) {
@@ -38,7 +38,7 @@ object QueueEdit : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val queue = audio.queue
         if (queue.isEmpty()) {
-            ereply(Embeds.fbk("The queue is currently empty.")).awaitSingle() // technically not necessary
+            ereply(Embeds.fbk(i18n("audio_queue_empty"))).awaitSingle() // technically not necessary
             return@with
         }
 
@@ -49,17 +49,19 @@ object QueueEdit : AudioCommandContainer {
                 // will return entire queue if removeArg is null
                 val (selected, invalid) = ParseUtil.parseRanges(queue.size, removeArg?.split(" "))
                 invalid.forEach { invalidArg ->
-                    outputMessage.append("Invalid range: $invalidArg\n")
+                    outputMessage
+                        .append(i18n("audio_remove_invalid", invalidArg))
+                        .append('\n')
                 }
                 if(selected.size == queue.size) {
-                    outputMessage.append("Clearing entire queue.\n")
+                    outputMessage.append("${i18n("audio_remove_queue")}\n")
                 }
                 selected
             }
         }
 
         if(remove.isEmpty()) {
-            ereply(Embeds.error("$outputMessage\nNo tracks removed. Provide track numbers or a user to remove all tracks from.")).awaitSingle()
+            ereply(Embeds.error("$outputMessage\n${i18n("audio_remove_none")}")).awaitSingle()
             return@with
         }
         val removed = mutableListOf<Int>()
@@ -84,10 +86,10 @@ object QueueEdit : AudioCommandContainer {
             }
 
             if (removed.isNotEmpty()) {
-                outputMessage.append("Removed tracks: ${formatRanges(removed)}\n")
+                outputMessage.append(i18n("audio_remove_tracks", formatRanges(removed))).append('\n')
             }
             if (notRemoved.isNotEmpty()) {
-                outputMessage.append("You can not skip tracks: ${formatRanges(notRemoved)}")
+                outputMessage.append(i18n("audio_not_remove_tracks", formatRanges(notRemoved)))
             }
             ireply(Embeds.fbk(outputMessage.toString())).awaitSingle()
         }
@@ -104,7 +106,7 @@ object QueueEdit : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("Nothing is currently playing to be re-queued.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         val newTrack = track.makeClone()
@@ -112,11 +114,11 @@ object QueueEdit : AudioCommandContainer {
         val add = audio.tryAdd(track, member)
         if(!add) {
             val maxTracksUser = config.musicBot.maxTracksUser
-            ereply(Embeds.error("You track was not added to queue because you reached the $maxTracksUser track queue limit set in ${target.name}."))
+            ereply(Embeds.error(i18n("audio_track_limit", "max" to maxTracksUser, "server" to target.name)))
             return@with
         }
         val position = audio.queue.size
-        ireply(Embeds.fbk("Added the current track **${trackString(track)}** to the end of the queue, position **$position**.")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_replay", "track" to trackString(track), "pos" to position))).awaitSingle()
     }
 
     private fun userTracks(audio: GuildAudio, user: User?): List<Int> {

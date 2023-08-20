@@ -94,7 +94,7 @@ object TrackerCommandBase : CommandContainer {
         val success = origin.chan.verifyBotAccess("Verifying my permission to send embeds in this channel.")
         if(!success) {
             origin
-                .ereply(Embeds.error("**Permission test failed.**\n\nPlease make sure I have permission to send **\"Send Messages\"** and **\"Embed Links\"** in this channel, or tracker messages will fail to send later!\n\nI am able to send /command responses (such as this one) regardless of permissions, but sending tracker updates will require me to have basic permissions in this channel."))
+                .ereply(Embeds.error("**Permission test failed.**\n\nPlease make sure I have permission to send **\"Send Messages\"** and **\"Embed Links\"** in this channel, or tracker messages will fail to send later!\n\nI am able to send /command responses (such as this one) regardless of permissions, but sending tracker updates will require me to have basic permissions in this channel.\n\nYou may want to use the \"**View Server as Role**\" feature in Discord on FBK's bot role to help understand what the bot can see and do in your server!"))
                 .awaitSingle()
             throw BotSendMessageException("Tracker permission test failed", origin.chan.id.asLong())
         }

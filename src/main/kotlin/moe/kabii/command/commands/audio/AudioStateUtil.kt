@@ -25,15 +25,16 @@ object AudioStateUtil {
 
     suspend fun checkAndJoinVoice(origin: DiscordParameters): VoiceValidation = with(origin) {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
-        val userChannel = member.voiceState.flatMap(VoiceState::getChannel).tryAwait().orNull()
-        if(userChannel == null) return VoiceValidation.Failure("You must be in a voice channel to use audio commands.")
+        val userChannel = member.voiceState
+            .flatMap(VoiceState::getChannel).tryAwait().orNull()
+            ?: return VoiceValidation.Failure(i18n("audio_vc"))
         val botChannel = audio.discord.connection?.channelId?.awaitFirstOrNull()
         val override = permOverride(this, userChannel)
 
         if(botChannel != null) {
             // if the bot is currently in a channel, moving may be restricted
             if(botChannel == userChannel.id) return VoiceValidation.Success // can always queue in same channel
-            if(audio.playing && !override) return VoiceValidation.Failure("You must be in the bot's voice channel if the bot is in use.")
+            if(audio.playing && !override) return VoiceValidation.Failure(i18n("audio_wrong_channel"))
         }
 
         // bot is not in a channel or is in a different channel
@@ -42,8 +43,8 @@ object AudioStateUtil {
             is Err -> {
                 val err = join.value
                 if (err is ClientException && err.status.code() == 403) {
-                    VoiceValidation.Failure("Missing permissions to join **${userChannel.name}**.")
-                } else VoiceValidation.Failure("Unable to connect to **${userChannel.name}**.")
+                    VoiceValidation.Failure(i18n("audio_missing_permissions", userChannel.name))
+                } else VoiceValidation.Failure(i18n("audio_join_error", userChannel.name))
             }
         }
     }

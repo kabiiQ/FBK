@@ -15,18 +15,18 @@ object TrackSkip : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         val track = audio.player.playingTrack
         if(track == null) {
-            ereply(Embeds.error("There is no track currently playing.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_no_track"))).awaitSingle()
             return@with
         }
         if(config.musicBot.autoFSkip && canFSkip(this, track)) {
             audio.player.stopTrack()
             if(!silent) {
-                ireply(Embeds.fbk("Force-skipped **${track.info.title}**.")).awaitSingle()
+                ireply(Embeds.fbk(i18n("audio_fskip", track.info.title))).awaitSingle()
             }
             return@with
         }
         if(!canVoteSkip(this, track)) {
-            ereply(Embeds.error("You must be in the bot's voice channel to vote skip.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_skip_vc"))).awaitSingle()
             return@with
         }
         val data = track.userData as QueueData
@@ -34,17 +34,17 @@ object TrackSkip : AudioCommandContainer {
         val votes = data.voting.withLock {
             if (data.votes.contains(author.id)) {
                 val votes = data.votes.count()
-                ereply(Embeds.error("You have already voted to skip **${track.info.title}**. ($votes/$votesNeeded votes)")).awaitSingle()
+                ereply(Embeds.error(i18n("audio_skip_dupe", "track" to track.info.title, "votes" to votes, "votesNeeded" to votesNeeded))).awaitSingle()
                 return@with
             }
             data.votes.add(author.id)
             data.votes.count()
         }
         if(votes >= votesNeeded) {
-            ireply(Embeds.fbk("Skipped **${track.info.title}**.")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_skipped", track.info.title))).awaitSingle()
             audio.player.stopTrack()
         } else {
-            ireply(Embeds.fbk("Voted to skip **${track.info.title}**. ($votes/$votesNeeded votes)")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_vote_skip", "track" to track.info.title, "votes" to votes, "votesNeeded" to votesNeeded))).awaitSingle()
         }
     }
 

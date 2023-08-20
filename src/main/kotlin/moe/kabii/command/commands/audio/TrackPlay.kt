@@ -33,7 +33,7 @@ object TrackPlay : AudioCommandContainer {
                         channelVerify(Permission.MANAGE_MESSAGES)
                         if(!member.hasPermissions(guildChan, Permission.MANAGE_MESSAGES)) {
                             event.editReply()
-                                .withEmbeds(Embeds.error("You must be a channel moderator to force-play tracks."))
+                                .withEmbeds(Embeds.error(i18n("audio_force_play_denied")))
                                 .awaitSingle()
                             return@chat
                         }

@@ -47,3 +47,5 @@ fun applicationLoop(process: suspend () -> Unit) {
 }
 
 fun String.capitilized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+
+operator fun String.rem(value: String) = Pair(this, value)

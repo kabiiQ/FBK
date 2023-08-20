@@ -37,7 +37,7 @@ object SearchTracks : AudioCommandContainer {
                 val search = source.handler.search(query)
                 if(search.isEmpty()) {
                     event.editReply()
-                        .withEmbeds(Embeds.error("No results found searching **${source.fullName}** for **$query**."))
+                        .withEmbeds(Embeds.error(i18n("audio_search_none", "source" to source.fullName, "query" to query)))
                         .awaitSingle()
                     return@chat
                 }
@@ -58,8 +58,8 @@ object SearchTracks : AudioCommandContainer {
                     options.add(option)
                 }
                 val embed = Embeds.fbk(menu.toString())
-                    .withAuthor(EmbedCreateFields.Author.of("Results from ${source.fullName} for \"$query\"", null, null))
-                    .withTitle("Select tracks to be played")
+                    .withAuthor(EmbedCreateFields.Author.of(i18n("audio_search_results", "source" to source.fullName, "query" to query), null, null))
+                    .withTitle(i18n("audio_search_select"))
                 val selectMenu = SelectMenu.of("menu", options).withMaxValues(options.size)
 
                 event.editReply()
@@ -70,7 +70,7 @@ object SearchTracks : AudioCommandContainer {
                 val response = listener(SelectMenuInteractionEvent::class, true, Duration.ofMinutes(5), "menu")
                     .switchIfEmpty {
                         event.editReply()
-                            .withEmbeds(Embeds.error("No track was selected."))
+                            .withEmbeds(Embeds.error(i18n("audio_search_none_selected")))
                             .withComponentsOrNull(null)
                     }
                     .awaitFirstOrNull() ?: return@chat
@@ -92,11 +92,11 @@ object SearchTracks : AudioCommandContainer {
                     FallbackHandler(this, extract = ExtractedQuery.default(track.identifier)).trackLoadedModifiers(track, silent = true, deletePlayReply = false)
                 }
                 event.editReply()
-                    .withEmbeds(Embeds.fbk("Adding **${selected.size}** tracks to queue."))
+                    .withEmbeds(Embeds.fbk(i18n("audio_search_adding", selected.size)))
                     .withComponentsOrNull(null)
                     .awaitSingle()
                 chan
-                    .createMessage(Embeds.fbk("${author.mention} added **${selected.size}** tracks to queue using /search."))
+                    .createMessage(Embeds.fbk(i18n("audio_search_user_added", "user" to author.mention, "count" to selected.size)))
                     .awaitSingle()
             }
         }

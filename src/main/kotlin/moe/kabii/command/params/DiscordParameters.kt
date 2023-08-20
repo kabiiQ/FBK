@@ -22,6 +22,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.FBK
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.util.extensions.userAddress
+import moe.kabii.util.i18n.Translations
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
@@ -99,10 +100,6 @@ data class DiscordParameters (
         .withEphemeral(true)
         .thenReturn(Unit)
 
-    fun _send(vararg embeds: EmbedCreateSpec) = chan
-        .createMessage()
-        .withEmbeds(*embeds)
-
     // listen for response to components on reply
     fun <T : ComponentInteractionEvent> listener(type: KClass<T>, restrict: Boolean = true, timeout: Duration? = null, vararg componentId: String): Flux<T> =
         event.reply
@@ -131,4 +128,25 @@ data class DiscordParameters (
                     .run { if(timeout != null) timeout(timeout) else this }
                     .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
             }
+
+    // internationalization
+    fun i18n(identifier: String): String = selecti18nMethod(identifier)
+
+    fun i18n(identifier: String, vararg variables: Pair<String, Any>): String = selecti18nMethod(identifier, namedVars = variables)
+
+    fun i18n(identifier: String, vararg variables: Any): String = selecti18nMethod(identifier, orderedVars = variables)
+
+    private fun selecti18nMethod(stringIdentifier: String, namedVars: Array<out Pair<String, Any>>? = null, orderedVars: Array<out Any>? = null): String {
+        val useLocale = if(!isPM) Translations.locales[config.translator.guildLocale] else null
+        val locale = useLocale ?: Translations.locales[Translations.defaultLocale]
+        checkNotNull(locale) { "Missing locale ${config.translator.guildLocale} set for guild ${target.id}" }
+
+        return if(namedVars != null) {
+            // named variables
+            locale.responseString(stringIdentifier, *namedVars)
+        } else {
+            // ordered variables or no variables
+            locale.responseString(stringIdentifier, *(orderedVars.orEmpty()))
+        }
+    }
 }

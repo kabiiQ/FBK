@@ -12,14 +12,14 @@ object QueueState : AudioCommandContainer {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         audio.player.isPaused = true
-        ireply(Embeds.fbk("Audio playback is now paused. You can resume playback with the **resume** command.")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_paused"))).awaitSingle()
     }
 
     suspend fun resume(origin: DiscordParameters) = with(origin) {
         channelFeatureVerify(FeatureChannel::musicChannel)
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         audio.player.isPaused = false
-        ireply(Embeds.fbk("Audio playback resumed.")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_resumed"))).awaitSingle()
     }
 
     suspend fun loop(origin: DiscordParameters) = with(origin) {
@@ -27,10 +27,10 @@ object QueueState : AudioCommandContainer {
         val audio = AudioManager.getGuildAudio(client, target.id.asLong())
         if(audio.looping) {
             audio.looping = false
-            ireply(Embeds.fbk("Queue loop has been disabled.")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_queue_loop_off"))).awaitSingle()
         } else {
             audio.looping = true
-            ireply(Embeds.fbk("Queue loop has been enabled.")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_queue_loop_on"))).awaitSingle()
         }
     }
 }

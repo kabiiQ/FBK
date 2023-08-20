@@ -14,7 +14,7 @@ object ConfigurationList : Command("configs") {
                 .appendLine("***--- Channel Specific Settings ---***")
                 .appendLine("`/feature config`: Channel-specific features")
                 .appendLine("`/log config`: Enabled mod logs")
-                .appendLine("`/animeconfig config`: Anime list tracker settings")
+                .appendLine("`/animecfg config`: Anime list tracker settings")
                 .appendLine("`/usetracker`: Configure the default site for /track")
                 .appendLine("`/streamcfg config`: General livestream tracker settings (including youtube, twitch, etc)")
                 .appendLine("`/yt config`: YouTube-specific tracker settings")

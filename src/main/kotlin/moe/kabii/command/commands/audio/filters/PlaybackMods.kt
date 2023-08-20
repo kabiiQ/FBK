@@ -20,33 +20,33 @@ object PlaybackMods : AudioCommandContainer {
         val track = audio.player.playingTrack
         if(track == null) {
             val default = config.musicBot.startingVolume
-            ereply(Embeds.error("There is no track currently playing. New tracks will start at **$default%** volume.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_volume_no_track", default))).awaitSingle()
             return@with
         }
         val targetVolume = args.optInt("percent")?.toInt()
         if(targetVolume == null) {
-            ireply(Embeds.fbk("The current playback volume is **${audio.player.volume}%**.")).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_volume_current", audio.player.volume))).awaitSingle()
             return@with
         }
         // if volume specified, attempt to change current volume
         if(config.musicBot.restrictFilters && !canFSkip(this, track)) {
-            ereply(Embeds.error("You must be the DJ (track requester) or be a channel moderator to adjust the playback volume for this track.")).awaitSingle()
+            ereply(Embeds.error(i18n("audio_dj_only"))).awaitSingle()
             return@with
         }
         val data = track.userData as QueueData
 
         val maximum = config.musicBot.volumeLimit
         if(targetVolume > maximum) {
-            val tip = if(member.hasPermissions(Permission.MANAGE_CHANNELS)) " This can be overridden with the **musicbot** configure command." else ""
-            ireply(Embeds.error("The volume limit is set at **$maximum**.$tip")).awaitSingle()
+            val tip = if(member.hasPermissions(Permission.MANAGE_CHANNELS)) " ${i18n("audio_volume_override_tip")}" else ""
+            ireply(Embeds.error(i18n("audio_volume_maximum", "maximum" to maximum, "tip" to tip))).awaitSingle()
             return@with
         }
-        val distort = if(targetVolume > 100) " Setting the volume over 100% will begin to cause audio distortion. " else ""
+        val distort = if(targetVolume > 100) " ${i18n("audio_volume_warning")} " else ""
         val oldVolume = audio.player.volume
         audio.player.volume = targetVolume
         data.volume = targetVolume
         config.save()
-        ireply(Embeds.fbk("Changing the playback volume in **${target.name}**: $oldVolume -> **$targetVolume**.$distort")).awaitSingle()
+        ireply(Embeds.fbk(i18n("audio_volume_set", "server" to target.name, "old" to oldVolume, "new" to targetVolume, "warning" to distort))).awaitSingle()
     }
 
     suspend fun speed(origin: DiscordParameters) = with(origin) {

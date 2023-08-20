@@ -64,7 +64,7 @@ object ChannelFeatures : CommandContainer {
 
                     if(!wasLog && features.logChannel) {
                         event.createFollowup()
-                            .withEmbeds(Embeds.fbk("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **/log setup** command."))
+                            .withEmbeds(Embeds.fbk("${chan.mention} is now a log channel. By default this will log nothing in this channel. To change the logs sent to this channel see the **/log config** command."))
                             .withEphemeral(true)
                             .awaitSingle()
                     }
