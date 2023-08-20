@@ -5,6 +5,7 @@ import discord4j.core.spec.EmbedCreateFields
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.constants.URLUtil
+import org.apache.commons.lang3.StringUtils
 
 class MediaEmbedBuilder(val media: Media) {
     // store message details until given a discord object to build on - don't store any discord objects
@@ -41,8 +42,9 @@ class MediaEmbedBuilder(val media: Media) {
                 val avgScore = "%.1f".format(media.meanScore)
                 footer.append(" (average: $avgScore)")
             }
-            if(media.notes != "") {
-                footer.append("\nNote: ${media.notes}")
+            if(media.notes.isNotBlank()) {
+                val notes = "\nUser ${media.type.name.lowercase()} notes: ${media.notes}"
+                footer.append(StringUtils.abbreviate(notes, 250))
             }
             withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))
         }
