@@ -147,6 +147,7 @@ class EventManager(val watcher: StreamWatcher) {
                 edit
                     .withStatus(ScheduledEvent.Status.COMPLETED)
             }
+            dbEvent.delete()
         }
     }
 
