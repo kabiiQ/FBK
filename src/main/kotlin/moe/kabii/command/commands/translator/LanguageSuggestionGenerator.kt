@@ -3,6 +3,7 @@ package moe.kabii.command.commands.translator
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import moe.kabii.translation.TranslationService
 import moe.kabii.util.extensions.CommandOptionSuggestions
+import moe.kabii.util.i18n.Translations
 
 object LanguageSuggestionGenerator {
 
@@ -17,4 +18,12 @@ object LanguageSuggestionGenerator {
                 .build()
         }
     }
+
+    fun localeSuggestions(): CommandOptionSuggestions = Translations.locales.keys
+        .map { locale ->
+            ApplicationCommandOptionChoiceData.builder()
+                .name("${locale.displayLanguage} (${locale.language})")
+                .value(locale.language)
+                .build()
+        }
 }

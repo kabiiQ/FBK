@@ -36,13 +36,14 @@ object GlobalCommandRegistrar : CommandRegistrar {
         // generate command arguments from the module's properties
         val base =  ApplicationCommandRequest.builder()
             .name(module.command.name)
-            .description("Configurable ${module.name} settings. Run '/${module.command.name} setup' to view all.")
+            .description("Configurable ${module.name} settings. Run '/${module.command.name} config' to view all.")
         val builder = module.elements.fold(base) { command, element ->
             // build argument option
             val option = ApplicationCommandOptionData.builder()
                 .name("value")
                 .description("The new value for ${element.propName}. Leave blank to check current value.")
                 .type(element.propertyType)
+                .autocomplete(element.autoComplete)
                 .run {
 
                     // apply bounds if this is numerical type
@@ -103,14 +104,14 @@ object GlobalCommandRegistrar : CommandRegistrar {
                 .build()
             command.addOption(subCommand)
         }
-        // add a "setup" sub-command - custom configurable embed
+        // add a "config" sub-command - custom configurable embed
         val embedSubCommand = ApplicationCommandOptionData.builder()
-            .name("setup")
+            .name("config")
             .description("View all ${module.name} settings and configure.")
             .type(ApplicationCommandOption.Type.SUB_COMMAND.value)
             .build()
 
-        val embedAltSubCommand = embedSubCommand.withName("config")
+        val embedAltSubCommand = embedSubCommand.withName("all")
 
         return builder
             .addOption(embedSubCommand)

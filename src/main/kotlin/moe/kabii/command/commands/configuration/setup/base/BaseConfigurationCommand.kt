@@ -35,7 +35,7 @@ import java.time.Duration
 import java.util.concurrent.TimeoutException
 import kotlin.reflect.KMutableProperty1
 
-sealed class ConfigurationElement<T>(val fullName: String, val propName: String, propertyType: ApplicationCommandOption.Type) {
+sealed class ConfigurationElement<T>(val fullName: String, val propName: String, propertyType: ApplicationCommandOption.Type, val autoComplete: Boolean = false) {
     val propertyType = propertyType.value
 
     fun elementIsStringInputtable() = this is StringElement<*> || this is LongElement<*> || this is CustomElement<*, *>
@@ -115,7 +115,8 @@ open class CustomElement<T, VT>(
     val default: VT?,
     val parser: (DiscordParameters, String) -> Result<VT?, String>, // given input, produce value or invalid
     val value: (T) -> String, // given value, produce string for embed output
-) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING)
+    autoComplete: Boolean = false
+) : ConfigurationElement<T>(fullName, propName, ApplicationCommandOption.Type.STRING, autoComplete)
 
 class ViewElement<T, ANY : Any?>(
     fullName: String,
@@ -136,7 +137,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     suspend fun run(origin: DiscordParameters): Boolean { // returns if a property was modified and the config should be saved
         val command = origin.subCommand
         return when(command.name) {
-            "setup", "config" -> embed(origin)
+            "config", "all" -> embed(origin)
             else -> property(command, origin)
         }
     }
@@ -222,7 +223,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
     }
 
     suspend fun embed(origin: DiscordParameters): Boolean {
-        // /command setup -> full menu embed
+        // /command config -> full menu embed
 
         // generate components for initial embed response
         // compile boolean elements into select menu
