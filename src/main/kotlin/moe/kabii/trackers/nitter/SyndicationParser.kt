@@ -26,7 +26,7 @@ object SyndicationParser {
         val request = Request.Builder()
             .header("User-Agent", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
             .get()
-            .url("https://syndication.twitter.com/srv/timeline-profile/screen-name/$name?showReplies=true")
+            .url("https://syndication.twitter.com/srv/timeline-profile/screen-name/$name")
             .build()
 
         val timeline = try {

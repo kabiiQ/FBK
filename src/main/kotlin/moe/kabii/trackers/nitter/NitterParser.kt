@@ -49,7 +49,7 @@ object NitterParser {
         // call to local nitter instance - no auth
         val request = newRequestBuilder()
             .get()
-            .url("${getInstanceUrl(instance)}/$username/with_replies/rss")
+            .url("${getInstanceUrl(instance)}/$username/rss")
             .build()
         val body = try {
             OkHTTP.newCall(request).execute().use { rs ->

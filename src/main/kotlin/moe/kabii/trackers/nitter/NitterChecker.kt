@@ -19,10 +19,7 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterRetweets
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.data.relational.twitter.*
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
@@ -80,14 +77,14 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
     suspend fun updateFeeds(start: Instant) {
         LOG.debug("NitterChecker :: start: $start")
         // get all tracked twitter feeds
-        val feeds = propagateTransaction {
-            TwitterFeed.all().toList()
-        }
-//            val feeds = propagateTransaction {
-//                TwitterFeed.find {
-//                    TwitterFeeds.enabled eq true
-//                }.toList()
-//            }
+//        val feeds = propagateTransaction {
+//            TwitterFeed.all().toList()
+//        }
+            val feeds = propagateTransaction {
+                TwitterFeed.find {
+                    TwitterFeeds.enabled eq true
+                }.toList()
+            }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
             delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
@@ -132,7 +129,6 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                             Check if this RT has already been acknowledged from this feed from our own database
                                              */
                                             val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
-                                            return@propagateTransaction tweet.id
                                             if (!new) {
                                                 return@propagateTransaction tweet.id
                                             }
@@ -144,8 +140,8 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
                                         } else {
                                             // if already handled or too old, skip, but do not pull tweet ID again
                                             if ((feed.lastPulledTweet ?: 0) >= tweet.id
-    //                                            || age > Duration.ofHours(2) TODO temp increase
-                                                || age > Duration.ofHours(12)
+                                                || age > Duration.ofHours(1)
+//                                                || age > Duration.ofHours(12)
                                                 || cache.seenTweets.contains(tweet.id)
                                             ) return@propagateTransaction tweet.id
                                         }
