@@ -10,6 +10,7 @@ query ($userId: Int, $mediaType: MediaType, $pageNumber: Int) {
             entries {
                 status
                 score(format: POINT_10_DECIMAL)
+                notes
                 progress
                 progressVolumes
                 media {
