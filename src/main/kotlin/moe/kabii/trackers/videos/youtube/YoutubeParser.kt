@@ -29,7 +29,7 @@ object YoutubeParser {
     val youtubeHandlePattern = Regex("(@[a-zA-Z0-9_\\-.]{3,30})")
 
     val youtubeVideoPattern = Regex("([a-zA-Z0-9-_]{11})")
-    val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/)|(?:(?:watch)?\\?vi?=|&vi?=))($youtubeVideoPattern)")
+    val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/|live/)|(?:(?:watch)?\\?vi?=|&vi?=))($youtubeVideoPattern)")
 
     @Throws(YoutubeAPIException::class)
     fun getChannelFromUnknown(identifier: String): YoutubeChannelInfo? {
