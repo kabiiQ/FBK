@@ -1,9 +1,6 @@
 package moe.kabii.search.skeb
 
-import moe.kabii.LOG
-import moe.kabii.MOSHI
-import moe.kabii.OkHTTP
-import moe.kabii.newRequestBuilder
+import moe.kabii.*
 import moe.kabii.util.extensions.stackTraceString
 
 open class SkebIOException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
@@ -17,7 +14,7 @@ object SkebParser {
         val request = newRequestBuilder()
             .get()
             .url("https://skeb.jp/api/$requestPart")
-            .header("User-Agent", "srkmfbk/1.0")
+            .header("User-Agent", USERAGENT)
             .header("Authorization", "Bearer null")
             .build()
         try {

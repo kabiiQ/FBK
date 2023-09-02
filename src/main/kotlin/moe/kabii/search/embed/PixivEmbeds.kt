@@ -3,6 +3,7 @@ package moe.kabii.search.embed
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.OkHTTP
+import moe.kabii.USERAGENT
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.awaitAction
@@ -32,7 +33,7 @@ object PixivEmbeds : Command("pixiv") {
                 val imageUrl = "https://boe-tea-pximg.herokuapp.com/$pid/$i"
                 val pixivRequest = Request.Builder()
                     .get()
-                    .header("User-Agent", "srkmfbk/1.0")
+                    .header("User-Agent", USERAGENT)
                     .url(imageUrl)
                     .build()
 

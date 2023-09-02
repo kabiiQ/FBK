@@ -32,6 +32,9 @@ class EventManager(val watcher: StreamWatcher) {
         private val refreshEventWindow = Duration.ofMinutes(10)
         // The maximum time until the scheduled stream - attempt to avoid free chat/announcement frames
         private val futureLimit = Duration.ofDays(14)
+
+        // The timeout period allowed for stream thumbnails to download
+        val thumbnailTimeoutMillis = 2_500L
     }
 
     private val instances = watcher.instances
@@ -74,7 +77,7 @@ class EventManager(val watcher: StreamWatcher) {
                     .run { if(description != null) "$this\nVideo description:\n$description" else this }
                     .run { StringUtils.abbreviate(this, 1000) }
 
-                val thumbnail = if(thumbnailUrl != null) Image.ofUrl(thumbnailUrl).tryAwait(1_000L).orNull() else null
+                val thumbnail = if(thumbnailUrl != null) Image.ofUrl(thumbnailUrl).tryAwait(thumbnailTimeoutMillis).orNull() else null
 
                 val location = ScheduledEventEntityMetadataSpec.builder()
                     .location(eventUrl).build()

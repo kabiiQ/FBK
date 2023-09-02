@@ -1,0 +1,4 @@
+{
+    "name": "transferdata",
+    "description": "Transfer all data if you are switching FBK instances. Does not matter if run on the old or new bot."
+}

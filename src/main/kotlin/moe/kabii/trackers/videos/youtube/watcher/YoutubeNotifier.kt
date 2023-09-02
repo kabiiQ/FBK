@@ -20,6 +20,7 @@ import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TrackerUtil
+import moe.kabii.trackers.videos.EventManager
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
@@ -92,7 +93,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             // Events will start on their own if the time is still accurate
             if(updateTitle == event.title && Duration.between(Instant.now(), event.startTime.javaInstant) < Duration.ofMinutes(1)) return@forEach
             eventManager.updateEvent(event) { edit ->
-                val image = Image.ofUrl(video.thumbnail).tryAwait(1_000L).orNull()
+                val image = Image.ofUrl(video.thumbnail).tryAwait(EventManager.thumbnailTimeoutMillis).orNull()
                 edit
                     .withName(updateTitle)
                     .run { if(image != null) withImage(image) else this }
