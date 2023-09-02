@@ -52,6 +52,13 @@
                     "value": 202
                 }
             ]
+        },
+        {
+            "name": "moveto",
+            "description": "A Discord channel to move this tracked feed into, after removing it from the current channel.",
+            "required": false,
+            "type": 7,
+            "channel_types": [0, 5, 10, 11, 12]
         }
     ]
 }

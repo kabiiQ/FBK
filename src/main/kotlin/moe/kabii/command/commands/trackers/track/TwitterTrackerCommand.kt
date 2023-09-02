@@ -1,7 +1,9 @@
 package moe.kabii.command.commands.trackers.track
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import moe.kabii.command.channelVerify
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
@@ -83,11 +85,12 @@ object TwitterTrackerCommand : TrackerCommand {
             }
         }
 
-        origin.ireply(Embeds.fbk("Now tracking **[$username](${URLUtil.Twitter.feedUsername(username)})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.")).awaitSingle()
+        val tempnote = "\n\nNOTICE: Most Twitter feeds are currently NOT updating due to changes made by Twitter. A limited number of feeds are currently enabled. It is not clear if it will become practical to enable all feeds again soon.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
+        origin.ireply(Embeds.fbk("Now tracking **[$username](${URLUtil.Twitter.feedUsername(username)})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.$tempnote")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 
-    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
         if(!target.identifier.matches(NitterParser.twitterUsernameRegex)) {
             origin.ereply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
             return
@@ -124,6 +127,33 @@ object TwitterTrackerCommand : TrackerCommand {
             || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
             || origin.author.id.asLong() == trackerId
         ) {
+            if(moveTo != null) {
+                // move requested: adjust target channel
+                // check feature enabled and user permissions
+                origin.guildChannelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", targetChannel = moveTo)
+                origin.member.channelVerify(moveTo, Permission.MANAGE_MESSAGES)
+
+                // target might already exist in requested channel
+                val existing = propagateTransaction {
+                    TwitterTarget.getExistingTarget(origin.client.clientId, moveTo.id.asLong(), twitterUser)
+                }
+                if(existing != null) {
+                    origin.ereply(Embeds.error("**Twitter/$username** is already tracked in <#${moveTo.id.asString()}>. Unable to move.")).awaitSingle()
+                    return
+                }
+                // check bot permissions
+                TrackerCommandBase.sendTrackerTestMessage(origin, altChannel = moveTo)
+                propagateTransaction {
+                    existingTrack.discordChannel = DiscordObjects.Channel.getOrInsert(moveTo.id.asLong(), moveTo.guildId.asLong())
+                }
+                origin.ireply(Embeds.fbk("Tracking for **[$username](${URLUtil.Twitter.feedUsername(username)})** has been moved to <#${moveTo.id.asString()}>.")).awaitSingle()
+
+                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+                TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, moveTo.id.asLong())
+                return
+            }
+
+            // typical case: delete target
             propagateTransaction { existingTrack.delete() }
             origin.ireply(Embeds.fbk("No longer tracking **Twitter/$username**.")).awaitSingle()
             TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())

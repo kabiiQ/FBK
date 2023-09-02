@@ -9,6 +9,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.entity.channel.GuildChannel
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Permission
@@ -86,6 +87,16 @@ data class DiscordParameters (
             val permOverride = member.hasPermissions(guildChan, Permission.MANAGE_CHANNELS)
             if(!feature.get(features) && (!allowOverride || !permOverride)) throw ChannelFeatureDisabledException(name, this, feature)
         } // else this is pm, allow
+    }
+
+    /**
+     * Verify a channel-specific feature is enabled in a different channel (for transferring to a new channel)
+     */
+    @Throws(ChannelFeatureDisabledException::class)
+    fun guildChannelFeatureVerify(feature: KProperty1<FeatureChannel, Boolean>, featureName: String? = null, targetChannel: GuildMessageChannel) {
+        val features = config.options.featureChannels[targetChannel.id.asLong()] ?: FeatureChannel(targetChannel.id.asLong())
+        val name = featureName ?: feature.name.removeSuffix("Channel")
+        if(!feature.get(features)) throw ChannelFeatureDisabledException(name, this, feature)
     }
 
     // basic command reply

@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.trackers.track
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
@@ -20,10 +21,15 @@ object YoutubeVideoUntrackCommand : TrackerCommand {
         origin.ereply(Embeds.error("Please use the YouTube **channel** ID to track streams/videos on a channel.\nYou seem to have linked a specific YouTube video. You can use /trackvid if you really wish to track only a single YouTube video.")).awaitSingle()
     }
 
-    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
         // validate youtube video id format before doing any work
         if(!(target.identifier.matches(YoutubeParser.youtubeVideoPattern))) {
             origin.ereply(Embeds.error("Invalid YouTube video ID **${target.identifier}**.")).awaitSingle()
+            return
+        }
+
+        if(moveTo != null) {
+            origin.ereply(Embeds.error("Transferring channels is not supported for YouTube videos.\n\nUse `/untrack` in the old channel and `/trackvid` again in the new channel.")).awaitSingle()
             return
         }
 

@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.trackers.track
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -114,7 +115,7 @@ object MediaTrackerCommand : TrackerCommand {
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 
-    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
         val site = requireNotNull(target.site as? AnimeTarget) { "Invalid target arguments provided to MediaTrackerCommand" }.dbSite
         val siteName = site.targetType.full
         val parser = site.parser
@@ -123,6 +124,11 @@ object MediaTrackerCommand : TrackerCommand {
         val siteListId = parser.getListID(inputId)
         if(siteListId == null) {
             origin.ereply(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
+            return
+        }
+
+        if(moveTo != null) {
+            origin.ereply(Embeds.fbk("Transferring channels is not supported for this tracker type.\n\nUse `/untrack` in the old channel and `/track` again in the new channel.")).awaitSingle()
             return
         }
 

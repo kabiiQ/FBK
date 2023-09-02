@@ -1,5 +1,6 @@
 package moe.kabii.command.commands.trackers.track
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.BotSendMessageException
@@ -22,7 +23,7 @@ private enum class Action { TRACK, UNTRACK }
 
 interface TrackerCommand {
     suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?)
-    suspend fun untrack(origin: DiscordParameters, target: TargetArguments)
+    suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?)
 }
 
 object TrackerCommandBase : CommandContainer {
@@ -72,6 +73,11 @@ object TrackerCommandBase : CommandContainer {
         val target = args.optInt("site")?.run(TrackerTarget::parseSiteArg)
         when(val findTarget = TargetArguments.parseFor(this, args.string("username"), target)) {
             is Ok -> {
+                // Check if this is an untrack requested to be 'moved' to a different channel
+                val moveTo = args
+                    .optChannel("moveto", GuildMessageChannel::class)
+                    ?.awaitSingle()
+
                 val targetArgs = findTarget.value
                 val tracker = when(targetArgs.site) {
                     is StreamingTarget -> StreamTrackerCommand
@@ -81,7 +87,7 @@ object TrackerCommandBase : CommandContainer {
                 }
                 when(action) {
                     Action.TRACK -> tracker.track(this, targetArgs, features)
-                    Action.UNTRACK -> tracker.untrack(this, targetArgs)
+                    Action.UNTRACK -> tracker.untrack(this, targetArgs, moveTo)
                 }
             }
             is Err -> {
@@ -90,13 +96,14 @@ object TrackerCommandBase : CommandContainer {
         }
     }
 
-    suspend fun sendTrackerTestMessage(origin: DiscordParameters) {
-        val success = origin.chan.verifyBotAccess("Verifying my permission to send embeds in this channel.")
+    suspend fun sendTrackerTestMessage(origin: DiscordParameters, altChannel: GuildMessageChannel? = null) {
+        val testChannel = altChannel ?: origin.chan
+        val success = testChannel.verifyBotAccess("Verifying my permission to send embeds in this channel.")
         if(!success) {
             origin
-                .ereply(Embeds.error("**Permission test failed.**\n\nPlease make sure I have permission to send **\"Send Messages\"** and **\"Embed Links\"** in this channel, or tracker messages will fail to send later!\n\nI am able to send /command responses (such as this one) regardless of permissions, but sending tracker updates will require me to have basic permissions in this channel.\n\nYou may want to use the \"**View Server as Role**\" feature in Discord on FBK's bot role to help understand what the bot can see and do in your server!"))
+                .ereply(Embeds.error("**Permission test failed.**\n\nPlease make sure I have permission to send **\"Send Messages\"** and **\"Embed Links\"** in <#${testChannel.id.asString()}>, or tracker messages will fail to send later!\n\nI am able to send /command responses (such as this one) regardless of permissions, but sending tracker updates will require me to have basic permissions in this channel.\n\nYou may want to use the \"**View Server as Role**\" feature in Discord on FBK's bot role to help understand what the bot can see and do in your server!"))
                 .awaitSingle()
-            throw BotSendMessageException("Tracker permission test failed", origin.chan.id.asLong())
+            throw BotSendMessageException("Tracker permission test failed", testChannel.id.asLong())
         }
     }
 } 

@@ -1,8 +1,10 @@
 package moe.kabii.command.commands.trackers.track
 
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.command.channelVerify
 import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
@@ -92,7 +94,7 @@ object StreamTrackerCommand : TrackerCommand {
         }
     }
 
-    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments) {
+    override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
         // get stream info from username the user provides
         val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
         val site = streamTarget.dbSite
@@ -117,6 +119,29 @@ object StreamTrackerCommand : TrackerCommand {
                         || origin.member.hasPermissions(Permission.MANAGE_MESSAGES)
                         || origin.author.id.asLong() == dbTarget.tracker.userID
             ) {
+                if(moveTo != null) {
+                    // move requested: adjust target channel
+                    // check feature enabled and user permissions
+                    origin.guildChannelFeatureVerify(streamTarget.channelFeature, streamTarget.featureName, targetChannel = moveTo)
+                    origin.member.channelVerify(moveTo, Permission.MANAGE_MESSAGES)
+
+                    // target might already exist in requested channel
+                    val existing = TrackedStreams.Target.getForChannel(origin.client.clientId, moveTo.id, site, streamId)
+                    if(existing != null) {
+                        origin.ereply(Embeds.error("**${streamInfo.displayName}** is already tracked in <#${moveTo.id.asString()}>. Unable to move.")).awaitSingle()
+                        return@propagateTransaction
+                    }
+                    // check bot permissions
+                    TrackerCommandBase.sendTrackerTestMessage(origin, altChannel = moveTo)
+                    dbTarget.discordChannel = DiscordObjects.Channel.getOrInsert(moveTo.id.asLong(), moveTo.guildId.asLong())
+                    origin.ireply(Embeds.fbk("Tracking for **[${streamInfo.displayName}](${streamInfo.url})** has been moved to <#${moveTo.id.asString()}>.")).awaitSingle()
+
+                    TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
+                    TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, moveTo.id.asLong())
+                    return@propagateTransaction
+                }
+
+                // typical case: delete target
                 dbTarget.delete()
                 origin.ireply(Embeds.fbk("No longer tracking **${streamInfo.displayName}**.")).awaitSingle()
                 TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
