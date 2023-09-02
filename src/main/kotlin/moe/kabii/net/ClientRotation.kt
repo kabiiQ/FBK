@@ -35,6 +35,12 @@ object ClientRotation {
     private val cache = mutableMapOf<Int, OkHttpClient>()
 
     /**
+     * Get the quantity of usable HTTP clients
+     */
+    val count
+    get() = clients.count()
+
+    /**
      * Provides a (possibly) proxied client to be used for a request.
      * The key provided should be something unique enough to ensure requests for the same entity are the same key.
      * The key has no relation to the proxy chosen and will vary between restarts.

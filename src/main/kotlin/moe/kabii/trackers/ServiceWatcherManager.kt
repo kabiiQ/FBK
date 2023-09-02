@@ -112,7 +112,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 1_200L,
+            callDelay = 1_600L,
             minimumRepeatTime = 60_000L
         )
         // temporary syndication feed measures
@@ -121,6 +121,13 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 //            minimumRepeatTime = 120_000L
 //        )
         val nitterChecker = NitterChecker(discord, nitterDelay)
+
+        // Syndication checker for priority feeds
+//        val syndicationDelay = ServiceRequestCooldownSpec(
+//            callDelay = 2_600L,
+//            minimumRepeatTime = 60_000L
+//        )
+//        val syndicationChecker = SyndicationChecker(discord, syndicationDelay)
 
         serviceThreads = listOf(
             Thread(reminders, "ReminderWatcher"),
@@ -137,6 +144,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 //            Thread(twitter, "TwitterChecker"),
 //            Thread(twitterStream, "TwitterStream"),
             Thread(nitterChecker, "NitterManager"),
+//            Thread(syndicationChecker, "SyndicationFeedChecker"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
             Thread(ytChatWatcher, "YTChatWatcher")

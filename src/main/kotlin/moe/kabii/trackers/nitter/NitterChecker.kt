@@ -46,7 +46,7 @@ import java.util.concurrent.TimeoutException
 import kotlin.math.ceil
 import kotlin.math.max
 
-class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
+open class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
     private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
 
@@ -74,17 +74,17 @@ class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceReque
         }
     }
 
-    suspend fun updateFeeds(start: Instant) {
+    open suspend fun updateFeeds(start: Instant) {
         LOG.debug("NitterChecker :: start: $start")
         // get all tracked twitter feeds
 //        val feeds = propagateTransaction {
 //            TwitterFeed.all().toList()
 //        }
-            val feeds = propagateTransaction {
-                TwitterFeed.find {
-                    TwitterFeeds.enabled eq true
-                }.toList()
-            }
+        val feeds = propagateTransaction {
+            TwitterFeed.find {
+                TwitterFeeds.enabled eq true
+            }.toList()
+        }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
             delay(Duration.ofMillis(cooldowns.minimumRepeatTime))

@@ -6,19 +6,20 @@ import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.net.ClientRotation
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 object SyndicationParser {
     private val scriptPattern = Regex("script id=\"__NEXT_DATA__\" type=\"application/json\">([^>]*)</script>")
-    private val syndicationAdapter = MOSHI.adapter(SyndicationObjects.Feed::class.java)
+    private val syndicationAdapter = MOSHI.adapter(SyndicationObjects.Feed ::class.java)
     val createdAtFormat = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss xx yyyy")
 
     /*
     Stop-gap parser to pull some feeds while Twitter is on lockdown
      */
-    fun getFeed(name: String): NitterData? {
+    fun getFeed(name: String, client: OkHttpClient? = null): NitterData? {
         val username = name.removePrefix("@")
         if(!NitterParser.twitterUsernameRegex.matches(username)) return null
 
@@ -30,8 +31,8 @@ object SyndicationParser {
             .build()
 
         val timeline = try {
-            ClientRotation
-                .getClient(name.hashCode())
+            val httpClient = client ?: ClientRotation.getClient(name.hashCode())
+            httpClient
                 .newCall(request)
                 .execute()
                 .use { rs ->
