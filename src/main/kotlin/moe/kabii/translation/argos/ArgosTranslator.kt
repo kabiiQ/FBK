@@ -13,11 +13,15 @@ import moe.kabii.translation.argos.json.ArgosTranslationResponse
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
+import java.time.Duration
 
 object ArgosTranslator : TranslationService(
     "Argos",
     "https://github.com/argosopentech/argos-translate/blob/master/README.md"
 ) {
+    private val timeoutClient = OkHTTP.newBuilder()
+        .callTimeout(Duration.ofSeconds(4))
+        .build()
     private val libreTranslator = Keys.config[Keys.Argos.ltAddress]
     private val translationAdapter = MOSHI.adapter(ArgosTranslationResponse::class.java)
     private val errorAdapter = MOSHI.adapter(ArgosTranslationError::class.java)
@@ -51,7 +55,7 @@ object ArgosTranslator : TranslationService(
             .post(requestBody)
             .build()
 
-        val response = OkHTTP.newCall(request).execute()
+        val response = timeoutClient.newCall(request).execute()
         val translation = response.use { rs ->
             if(rs.isSuccessful) {
                 // 200: translatedText, detectedLanguage
