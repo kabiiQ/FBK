@@ -12,6 +12,7 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.*
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
@@ -19,7 +20,10 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.*
+import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.twitter.TwitterRetweets
+import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
@@ -45,10 +49,21 @@ import java.time.Instant
 import java.util.concurrent.TimeoutException
 import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.min
 
 open class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
     private val instanceCount = NitterParser.instanceCount
     private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
+
+    private val refreshGoal = 75_000L
+    private val generalInstanceAdjustment = 0L
+    private val instanceLocks: Map<Int, Mutex>
+
+    init {
+        instanceLocks = (0 until instanceCount).associateWith {
+            Mutex()
+        }
+    }
 
     override fun run() {
         if(!MetaData.host) return // do not run on testing instances
@@ -81,31 +96,57 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
 //            TwitterFeed.all().toList()
 //        }
         val feeds = propagateTransaction {
-            TwitterFeed.find {
-                TwitterFeeds.enabled eq true
-            }.toList()
+            TwitterFeed
+                .all().toList()
         }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
             delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
             return
         }
+
+        val (priority, general) = feeds.partition(TwitterFeed::enabled)
+
+        // compute how many instances to use for 'priority' feeds, targeting a refresh time goal
+        // ensure at least one instance is saved for general pool in case numbers change drastically
+        val priorityInstance = min(ceil((priority.size.toDouble() * cooldowns.callDelay) / refreshGoal).toInt(), instanceCount - 1)
+        val generalInstance = instanceCount - priorityInstance
+
+        // convert list of feeds into Map<Instance ID, Feed Chunk>
         // partition feeds onto nitter instances for pulling
-        val feedsPerInstance = ceil(feeds.size.toDouble() / instanceCount).toInt()
-        feeds
-            .chunked(feedsPerInstance).withIndex()
+        val feedPerPriority = ceil(priority.size.toDouble() / priorityInstance).toInt()
+        val priorityChunks = priority
+            .chunked(feedPerPriority)
+            .mapIndexed { chunkIndex, chunkFeeds ->
+                chunkIndex to chunkFeeds
+            }
+
+        val feedPerGeneral = ceil(general.size.toDouble() / generalInstance).toInt()
+        val generalChunks = general
+            .chunked(feedPerGeneral)
+            .mapIndexed { chunkIndex, chunkFeeds ->
+                chunkIndex + priorityInstance to chunkFeeds
+            }
+
+        (priorityChunks + generalChunks)
             .map { (instanceId, feedChunk) ->
 
-                LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
+                LOG.debug("Chunk $instanceId (${feedChunk.size}): ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
                 // each chunk executed on different instance - divide up work, pool assigns thread
                 nitterScope.launch {
+                    val lock = instanceLocks.getValue(instanceId)
+                    if(!lock.tryLock()) {
+                        LOG.debug("Skipping in-use nitter instance #$instanceId")
+                        return@launch
+                    }
                     try {
-                        kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(6)) {
+                        kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(12)) {
                             var first = true
                             feedChunk.forEach { feed ->
 
                                 if (!first) {
-                                    delay(Duration.ofMillis(cooldowns.callDelay))
+                                    val delay = if(instanceId >= priorityInstance) cooldowns.callDelay + generalInstanceAdjustment else cooldowns.callDelay
+                                    delay(delay)
                                 } else first = false
 
                                 val targets = getActiveTargets(feed)?.ifEmpty { null }
@@ -157,11 +198,14 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
                                 }
                             }
                         }
+                        lock.unlock()
                     } catch(time: TimeoutCancellationException) {
                         LOG.warn("NitterChecker routine: timeout reached :: $instanceId")
                     } catch(e: Exception) {
                         LOG.info("Uncaught exception in ${Thread.currentThread().name} :: ${e.message}")
                         LOG.debug(e.stackTraceString)
+                    } finally {
+                        if(lock.isLocked) lock.unlock()
                     }
                 }
             }

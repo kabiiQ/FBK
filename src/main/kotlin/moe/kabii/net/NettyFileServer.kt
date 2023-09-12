@@ -3,15 +3,19 @@ package moe.kabii.net
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.html.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.html.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
+import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.util.RGB
 import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.util.extensions.propagateTransaction
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -98,6 +102,45 @@ object NettyFileServer {
             }
             get("/kick") {
                 call.respondFile(kickLogo)
+            }
+
+            get("/twitterfeeds") {
+                val (priorityList, generalCount) = propagateTransaction {
+                    val (priority, general) = TwitterFeed.all()
+                        .sortedBy(TwitterFeed::id)
+                        .partition { feed -> feed.enabled }
+                    priority.map(TwitterFeed::username) to general.size
+                }
+                call.respondHtml {
+                    head {
+                        title {
+                            +"FBK Twitter Feed Status"
+                        }
+                    }
+                    body {
+                        h2 {
+                            +"\"General\" tracked Twitter feeds = $generalCount"
+                        }
+                        h2 {
+                            +"\"Priority\" tracked Twitter feeds = ${priorityList.size}"
+                        }
+                        br()
+                        table {
+                            tr {
+                                th {
+                                    +"\"Priority\" Twitter feeds"
+                                }
+                            }
+                            priorityList.forEach { username ->
+                                tr {
+                                    td {
+                                        +username
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

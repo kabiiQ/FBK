@@ -85,7 +85,7 @@ object TwitterTrackerCommand : TrackerCommand {
             }
         }
 
-        val tempnote = "\n\nNOTICE: Most Twitter feeds are currently NOT updating due to changes made by Twitter. A limited number of feeds are currently enabled. It is not clear if it will become practical to enable all feeds again soon.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
+        val tempnote = "\n\nNOTICE: Most Twitter feeds are currently updating **very slowly** due to changes made by Twitter. A limited number of feeds are currently enabled on this bot for faster access. It is not currently practical to enable all feeds for this access.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
         origin.ireply(Embeds.fbk("Now tracking **[$username](${URLUtil.Twitter.feedUsername(username)})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.$tempnote")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }

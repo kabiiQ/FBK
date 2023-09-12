@@ -85,8 +85,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val ytManualPuller = YoutubeFeedPuller(pullDelay)*/
 
         val kickDelay = ServiceRequestCooldownSpec(
-            callDelay = 750L,
-            minimumRepeatTime = 90_000L
+            callDelay = 1_200L,
+            minimumRepeatTime = 75_000L
         )
         val kickChecker = KickChecker(discord, kickDelay)
 
@@ -112,8 +112,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val aniListThread = Thread(aniListChecker, "MediaListWatcher-AniList")
 
         val nitterDelay = ServiceRequestCooldownSpec(
-            callDelay = 1_600L,
-            minimumRepeatTime = 60_000L
+            callDelay = 2_000L,
+            minimumRepeatTime = 65_000L
         )
         // temporary syndication feed measures
 //        val nitterDelay = ServiceRequestCooldownSpec(

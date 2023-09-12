@@ -78,6 +78,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor")
     implementation("io.ktor:ktor-client-core:$ktor")
     implementation("io.ktor:ktor-client-apache:$ktor")
+    implementation("io.ktor:ktor-server-html-builder:$ktor")
 
     // ps2 websocket
 //    implementation("org.java-websocket:Java-WebSocket:1.5.2")
