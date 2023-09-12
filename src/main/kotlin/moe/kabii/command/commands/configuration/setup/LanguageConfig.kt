@@ -2,6 +2,7 @@ package moe.kabii.command.commands.configuration.setup
 
 import discord4j.rest.util.Permission
 import moe.kabii.command.Command
+import moe.kabii.command.commands.configuration.setup.base.BooleanElement
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.command.commands.configuration.setup.base.CustomElement
@@ -27,6 +28,10 @@ object LanguageConfig : Command("languagecfg") {
     object LanguageConfigModule : ConfigurationModule<TranslatorSettings>(
         "language settings",
         this,
+        BooleanElement("Only display \"Translate Message\" output to command user",
+            "ephemeral",
+            TranslatorSettings::ephemeral
+        ),
         CustomElement("Default target language for translations",
             "targetlang",
             TranslatorSettings::defaultTargetLanguage as KMutableProperty1<TranslatorSettings, Any?>,
@@ -38,7 +43,8 @@ object LanguageConfig : Command("languagecfg") {
                     .search(tl.defaultTargetLanguage)
                     .values.firstOrNull()
                     ?.fullName.toString()
-            }
+            },
+            autoComplete = true
         ),
         CustomElement("Language/locale that FBK should use for this Discord server",
             "locale",
@@ -46,7 +52,8 @@ object LanguageConfig : Command("languagecfg") {
             prompt = "Enter a language/locale that FBK should use for this Discord server. For example, you can enter `EN` to set the language back to English. It is recommended to instead use `/languagecfg locale` to set this value, so that you can use the autocompletion options. Only user-provided translations are available.",
             default = Translations.defaultLocale,
             parser = ::localeParser,
-            value = { tl -> tl.guildLocale.language }
+            value = { tl -> tl.guildLocale.language },
+            autoComplete = true
         )
     )
 

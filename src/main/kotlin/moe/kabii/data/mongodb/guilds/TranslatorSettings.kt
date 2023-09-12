@@ -4,6 +4,7 @@ import moe.kabii.util.i18n.Translations
 import java.util.*
 
 data class TranslatorSettings(
+    var ephemeral: Boolean = false,
     var defaultTargetLanguage: String = fallbackLang,
     var guildLocale: Locale = Translations.defaultLocale
 ) {

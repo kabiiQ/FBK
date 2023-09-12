@@ -3,6 +3,7 @@ package moe.kabii.data
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.reaction.ReactionEmoji
 import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.translation.TranslationResult
 import java.util.concurrent.ConcurrentHashMap
 
 // basic non-persistent in-memory storage
@@ -13,6 +14,8 @@ object TempStates {
     val musicPermissionWarnings = mutableMapOf<Snowflake, Boolean>()
 
     var skipTwitter = false
+
+    val translationCache = mutableMapOf<Snowflake, TranslationResult>()
 }
 
 object TwitterFeedCache {
