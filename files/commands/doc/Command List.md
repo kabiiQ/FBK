@@ -7,216 +7,6 @@ This page is an automatically generated list of all bot commands with a link to 
 
 > ❓ For all command options, `*` indicates it is required to run the command. All other options are "optional" and are not required in the Discord client, but may be useful to change the behavior of some commands.
 
-### - `/music`:
-
-- (Music bot) Apply a "filter" to the currently playing audio.
-- Wiki: [[Music-Player#audio-manipulationfilters]]
-
-#### -- `/music volume`
-
-- Change the playback volume.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent` | Integer | The volume level. Default volume is 15.
-#### -- `/music sample`
-
-- Play the current track for a specified amount of time and then automatically skip it.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `duration*` | String | Duration of the track to sample. For example, 'sample 2m' will play 2 more minutes of audio.
-#### -- `/music sampleto`
-
-- Similar to sample, instead sampleto only plays the current track until a specific timestamp.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `timestamp*` | String | Timestamp at which to skip. For example, 'sampleto 2m' will skip the current track at 2:00 in.
-#### -- `/music speed`
-
-- Manipulate the playback speed.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent*` | Integer | % to manipulate the audio playback speed. "100" or using /reset will restore normal speed.
-#### -- `/music pitch`
-
-- Manipulate the playback pitch.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent*` | Integer | % to manipulate the audio pitch. "100" or using /reset will return the pitch to normal.
-#### -- `/music bass`
-
-- Apply a bass boost.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `boost` | Integer | % of maximum bass boost to apply (0-100). "0" or using /reset will remove the boost.
-#### -- `/music rotate`
-
-- Apply a 3D audio effect where the audio rotates 'around' the listener.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `speed` | Decimal | The speed of the rotation effect. The default is .25
-#### -- `/music doubletime`
-
-- Applies a "double time" filter equivalent to: speed 125
-
-#### -- `/music nightcore`
-
-- Applies a "nightcore" filter equivalent to: speed 125 + pitch 125
-
-#### -- `/music daycore`
-
-- Applies a "daycore" filter equivalent to: speed 75 + pitch 75
-
-#### -- `/music reset`
-
-- Resets all active audio filters to return audio to normal.
-
-
-
-### - `/np`:
-
-- (Music bot) Displays info on the audio that is "now playing" (np).
-- Wiki: [[Music-Player#--music-queue-information]]
-
-
-
-### - `/play`:
-
-- (Music bot) Add a song or audio clip to the queue.
-- Wiki: [[Music-Player#Music-Player#playing-music-with-the-play-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `song*` | String | Provide either: a YouTube video ID, a YouTube search query, or a direct link to a supported source.
-| `playlist` | True/False | Set to True to add ALL tracks from a YouTube playlist to the queue.
-| `forceplay` | True/False | Play this track immediately, pausing any current track until the new one ends.
-| `next` | True/False | Add this track to the front of the queue rather than the end ("skipping the line")
-| `attachment` | Attachment | Optionally play an attached audio file directly. The 'song' text will be ignored.
-| `volume` | Integer | Set the volume level for this track (for example, if this track is known to be very quiet)
-
-
-### - `/queue`:
-
-- (Music bot) View and edit the music queue.
-- Wiki: [[Music-Player#--music-queue-information]]
-
-#### -- `/queue list`
-
-- View the current music queue.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `from` | Integer | Optionally specify the track to start listing the queue from, such as queue 10.
-#### -- `/queue remove`
-
-- Remove music from the queue.
-
-#### -- `/queue remove tracks`
-
-- Remove tracks by their position in the queue.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `numbers*` | String | Track # in queue to remove. Accepts ranges such as: remove 1, remove 1-4, remove 3-, remove all
-#### -- `/queue remove user`
-
-- Remove tracks by the user who queued them.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `who*` | User | The user to remove queued tracks from.
-#### -- `/queue pause`
-
-- Pause audio playback indefinitely.
-
-#### -- `/queue resume`
-
-- Resume audio playback if paused.
-
-#### -- `/queue loop`
-
-- Toggle queue looping. When enabled, tracks are re-added to the queue after they finish playing.
-
-#### -- `/queue replay`
-
-- Re-add the currently playing audio track to the end of the queue.
-
-#### -- `/queue shuffle`
-
-- Shuffles the audio tracks currently in queue.
-
-#### -- `/queue clear`
-
-- Removes all audio tracks waiting in queue. Does not skip the current track.
-
-
-
-### - `/search`:
-
-- (Music bot) Searches for a track by name, allowing you to select the correct track to play.
-- Wiki: [[Music-Player#playing-music-with-the-play-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `search*` | String | The text to search for
-| `site` | Integer | The site to search on. If not provided, default to YouTube
-
-
-### - `/seek`:
-
-- (Music bot) Skip around in the currently playing audio.
-- Wiki: [[Music-Player#playing-music-with-the-play-command]]
-
-#### -- `/seek time`
-
-- Seek to a specific timestamp in this track.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `timestamp*` | String | Timestamp to skip playback to in this track. Example, /seek time 2:10
-#### -- `/seek forward`
-
-- Skip forward in this track. (Fast-forward)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `time` | String | Time to skip forwards in the current track. If no time is provided, 30 seconds will be used.
-#### -- `/seek backward`
-
-- Skip backward in this track. (Rewind)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `time` | String | Time to skip backwards in the current track. If no time is provided, 30 seconds will be used.
-
-
-### - `/skip`:
-
-- (Music bot) Vote to skip the currently playing audio. Will instantly skip if you have permission.
-- Wiki: [[Music-Player#queue-manipulation]]
-
-
-
-### - `/stop`:
-
-- (Music bot) Combines 'clear' and 'skip'. Skips all tracks in queue (for which you have permission).
-- Wiki: [[Music-Player#queue-manipulation]]
-
-
-
-### - `/summon`:
-
-- (Music bot) Summon me into your voice channel. (This is done automatically when playing music.)
-- Wiki: [[Music-Player#Music-Player#commands]]
-
-
-
 ### - `/autorole`:
 
 - Configure automatic role assignment rules.
@@ -545,6 +335,12 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
+### - `/transferdata`:
+
+- Transfer all data if you are switching FBK instances. Does not matter if run on the old or new bot.
+
+
+
 ### - `/purge`:
 
 - Purge messages from this channel.
@@ -677,17 +473,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `query*` | String | The calculation to perform.
-
-
-### - `/pixiv`:
-
-- A very rudimentary Pixiv image embedder.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `url*` | String | The Pixiv URL to get images from.
-| `start` | Integer | The first image in the Pixiv album to include. Defaults to 1.
-| `count` | Integer | How many images to include. Default behavior will include up to 6 images after StartImage.
 
 
 ### - `/skeb`:
@@ -859,16 +644,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | `site*` | Integer | The site to use as the new default tracker.
 
 
-### - `/setlang`:
-
-- Change the default translation "target" language.
-- Wiki: [[Translator#set-the-default-target-language-with-setlang]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `language*` | String | The new default translation "target" language.
-
-
 ### - `/tl`:
 
 - Translate text between languages
@@ -1023,66 +798,39 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
-### - `/twitter`:
+### - `/languagecfg`:
 
-- Configurable twitter tracker settings. Run '/twitter setup' to view all.
-- Wiki: [[Twitter-Tracker#twitter-feed-notification-configuration]]
+- Configurable language settings settings. Run '/languagecfg config' to view all.
 
-#### -- `/twitter tweets`
+#### -- `/languagecfg targetlang`
 
-- Post when tracked Twitter feeds post a normal Tweet
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for tweets. Leave blank to check current value.
-#### -- `/twitter retweets`
-
-- Post when tracked feeds retweet other users
+- Default target language for translations
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `value` | Integer | The new value for retweets. Leave blank to check current value.
-#### -- `/twitter quotes`
+| `value` | String | The new value for targetlang. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: en
+#### -- `/languagecfg locale`
 
-- Post when tracked feeds quote tweet other users
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for quotes. Leave blank to check current value.
-#### -- `/twitter replies`
-
-- Post when tracked feeds reply to other users
+- Language/locale that FBK should use for this Discord server
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `value` | Integer | The new value for replies. Leave blank to check current value.
-#### -- `/twitter mediaonly`
+| `value` | String | The new value for locale. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: en
+#### -- `/languagecfg config`
 
-- LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)
+- View all language settings settings and configure.
 
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for mediaonly. Leave blank to check current value.
-#### -- `/twitter translate`
+#### -- `/languagecfg all`
 
-- Automatically request a translation for posted tweets
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for translate. Leave blank to check current value.
-#### -- `/twitter setup`
-
-- View all twitter tracker settings and configure.
-
-#### -- `/twitter config`
-
-- View all twitter tracker settings and configure.
+- View all language settings settings and configure.
 
 
 
 ### - `/feature`:
 
-- Configurable channel settings. Run '/feature setup' to view all.
+- Configurable channel settings. Run '/feature config' to view all.
 - Wiki: [[Configuration-Commands#the-feature-command-channel-features]]
 
 #### -- `/feature anime`
@@ -1141,11 +889,11 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for allowstarboarding. Leave blank to check current value.
-#### -- `/feature setup`
+#### -- `/feature config`
 
 - View all channel settings and configure.
 
-#### -- `/feature config`
+#### -- `/feature all`
 
 - View all channel settings and configure.
 
@@ -1153,7 +901,7 @@ This page is an automatically generated list of all bot commands with a link to 
 
 ### - `/servercfg`:
 
-- Configurable guild settings. Run '/servercfg setup' to view all.
+- Configurable server settings settings. Run '/servercfg config' to view all.
 - Wiki: [[Configuration-Commands#the-serverconfig-command]]
 
 #### -- `/servercfg useinvites`
@@ -1191,19 +939,19 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for ps2commands. Leave blank to check current value.
-#### -- `/servercfg setup`
-
-- View all guild settings and configure.
-
 #### -- `/servercfg config`
 
-- View all guild settings and configure.
+- View all server settings settings and configure.
+
+#### -- `/servercfg all`
+
+- View all server settings settings and configure.
 
 
 
 ### - `/log`:
 
-- Configurable channel log settings. Run '/log setup' to view all.
+- Configurable channel log settings. Run '/log config' to view all.
 - Wiki: [[Moderation-Logs]]
 
 #### -- `/log bots`
@@ -1278,11 +1026,11 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | String | The new value for leaveMessage. Leave blank to check current value.
 | `reset` | True/False | Reset this option its default value: **&name&discrim** left the server. (&mention)
-#### -- `/log setup`
+#### -- `/log config`
 
 - View all channel log settings and configure.
 
-#### -- `/log config`
+#### -- `/log all`
 
 - View all channel log settings and configure.
 
@@ -1290,7 +1038,7 @@ This page is an automatically generated list of all bot commands with a link to 
 
 ### - `/yt`:
 
-- Configurable youtube tracker settings. Run '/yt setup' to view all.
+- Configurable youtube tracker settings. Run '/yt config' to view all.
 - Wiki: [[Livestream-Tracker#-youtube-tracker-configuration-with-yt]]
 
 #### -- `/yt streams`
@@ -1351,11 +1099,11 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `value` | Channel | The new value for upcomingChannel. Leave blank to check current value.
 | `reset` | True/False | Reset this option its default value: {empty}
-#### -- `/yt setup`
+#### -- `/yt config`
 
 - View all youtube tracker settings and configure.
 
-#### -- `/yt config`
+#### -- `/yt all`
 
 - View all youtube tracker settings and configure.
 
@@ -1363,7 +1111,7 @@ This page is an automatically generated list of all bot commands with a link to 
 
 ### - `/cleanreactionscfg`:
 
-- Configurable reaction role settings. Run '/cleanreactionscfg setup' to view all.
+- Configurable reaction role settings. Run '/cleanreactionscfg config' to view all.
 - Wiki: [[Configuration-Commands#the-cleanreactionscfg-command]]
 
 #### -- `/cleanreactionscfg clean`
@@ -1373,19 +1121,598 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for clean. Leave blank to check current value.
-#### -- `/cleanreactionscfg setup`
-
-- View all reaction role settings and configure.
-
 #### -- `/cleanreactionscfg config`
 
 - View all reaction role settings and configure.
+
+#### -- `/cleanreactionscfg all`
+
+- View all reaction role settings and configure.
+
+
+
+### - `/animecfg`:
+
+- Configurable anime list tracker settings. Run '/animecfg config' to view all.
+- Wiki: [[Anime-List-Tracker#configuration]]
+
+#### -- `/animecfg new`
+
+- Post an update message when a new item is added to a list
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for new. Leave blank to check current value.
+#### -- `/animecfg status`
+
+- Post an update message on status change (started watching, dropped...)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for status. Leave blank to check current value.
+#### -- `/animecfg watched`
+
+- Post an update message when an item updates (changed rating, watched x# episodes)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for watched. Leave blank to check current value.
+#### -- `/animecfg config`
+
+- View all anime list tracker settings and configure.
+
+#### -- `/animecfg all`
+
+- View all anime list tracker settings and configure.
+
+
+
+### - `/streamcfg`:
+
+- Configurable livestream tracker settings. Run '/streamcfg config' to view all.
+- Wiki: [[Livestream-Tracker#stream-notification-configuration-with-streamcfg]]
+
+#### -- `/streamcfg summary`
+
+- Edit stream notification with a summary or VOD information rather than deleting the message
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for summary. Leave blank to check current value.
+#### -- `/streamcfg thumbnail`
+
+- Include the current stream thumbnail
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for thumbnail. Leave blank to check current value.
+#### -- `/streamcfg viewers`
+
+- Include viewer counts in summary
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for viewers. Leave blank to check current value.
+#### -- `/streamcfg game`
+
+- Include stream ending game in summary (twitch)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for game. Leave blank to check current value.
+#### -- `/streamcfg pingroles`
+
+- Use the `setmention` config in this channel
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pingRoles. Leave blank to check current value.
+#### -- `/streamcfg korotagger`
+
+- Send the video URL as plain text for YouTube livestreams (for KoroTagger compatibility)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for korotagger. Leave blank to check current value.
+#### -- `/streamcfg rename`
+
+- Rename this channel based on live channels
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for rename. Leave blank to check current value.
+#### -- `/streamcfg pinlive`
+
+- Pin active livestreams in this channel
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pinLive. Leave blank to check current value.
+#### -- `/streamcfg events`
+
+- Schedule an event on Discord for live and upcoming streams tracked in this channel
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for events. Leave blank to check current value.
+#### -- `/streamcfg notlive`
+
+- Channel name when no streams are live
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for notlive. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: no-streams-live
+#### -- `/streamcfg prefix`
+
+- Channel name prefix
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for prefix. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: 
+#### -- `/streamcfg suffix`
+
+- Channel name suffix
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for suffix. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: 
+#### -- `/streamcfg config`
+
+- View all livestream tracker settings and configure.
+
+#### -- `/streamcfg all`
+
+- View all livestream tracker settings and configure.
+
+
+
+### - `/welcome`:
+
+- Configurable welcome settings. Run '/welcome config' to view all.
+- Wiki: [[Welcoming-Users]]
+
+#### -- `/welcome channel`
+
+- Channel to send welcome messages to
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Channel | The new value for channel. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: {empty}
+#### -- `/welcome avatar`
+
+- Include new user's avatar in welcome embed or image
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for avatar. Leave blank to check current value.
+#### -- `/welcome username`
+
+- Include new user's username in welcome embed or image
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for username. Leave blank to check current value.
+#### -- `/welcome usetagline`
+
+- Include the 'tagline' in the message image
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for usetagline. Leave blank to check current value.
+#### -- `/welcome useimagetext`
+
+- Include the 'imagetext' in the welcome image
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for useimagetext. Leave blank to check current value.
+#### -- `/welcome textoutline`
+
+- Use a black outline to make image text more visible
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for textoutline. Leave blank to check current value.
+#### -- `/welcome message`
+
+- Text message sent when welcoming new user
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for message. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: 
+#### -- `/welcome tagline`
+
+- Welcome Tagline (included in image or embed)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for tagline. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: WELCOME
+#### -- `/welcome imagetext`
+
+- Image message
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for imagetext. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: Welcome to the server!
+#### -- `/welcome color`
+
+- Text color on image
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for color. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: 16777215
+#### -- `/welcome emoji`
+
+- Add reaction to welcome
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for emoji. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: {empty}
+#### -- `/welcome config`
+
+- View all welcome settings and configure.
+
+#### -- `/welcome all`
+
+- View all welcome settings and configure.
+
+#### -- `/welcome test`
+
+- Test the current welcome configuration.
+
+
+
+### - `/apikeys`:
+
+- Configurable Custom API Keys settings. Run '/apikeys config' to view all.
+
+#### -- `/apikeys deepl`
+
+- DeepL API Free
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for deepl. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: {empty}
+#### -- `/apikeys config`
+
+- View all Custom API Keys settings and configure.
+
+#### -- `/apikeys all`
+
+- View all Custom API Keys settings and configure.
+
+
+
+### - `/twitterping`:
+
+- Configurable twitter feed ping settings. Run '/twitterping config' to view all.
+- Wiki: [[Twitter-Tracker#changing-which-tweets-will-ping-with-twitterping-config]]
+
+#### -- `/twitterping pings`
+
+- (Legacy) Use the `setmention` config. Must be enabled for any pings to occur in this channel.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pings. Leave blank to check current value.
+#### -- `/twitterping pingtweets`
+
+- Mention the configured role for normal Tweets.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pingtweets. Leave blank to check current value.
+#### -- `/twitterping pingreplies`
+
+- Mention for Tweet replies.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pingreplies. Leave blank to check current value.
+#### -- `/twitterping pingquotes`
+
+- Mention for Quote Tweets.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pingquotes. Leave blank to check current value.
+#### -- `/twitterping pingretweets`
+
+- Mention for Retweets.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for pingretweets. Leave blank to check current value.
+#### -- `/twitterping config`
+
+- View all twitter feed ping settings and configure.
+
+#### -- `/twitterping all`
+
+- View all twitter feed ping settings and configure.
+
+
+
+### - `/twitter`:
+
+- Configurable twitter tracker settings. Run '/twitter config' to view all.
+- Wiki: [[Twitter-Tracker#twitter-feed-notification-configuration]]
+
+#### -- `/twitter tweets`
+
+- Post when tracked Twitter feeds post a normal Tweet
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for tweets. Leave blank to check current value.
+#### -- `/twitter retweets`
+
+- Post when tracked feeds retweet other users
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for retweets. Leave blank to check current value.
+#### -- `/twitter quotes`
+
+- Post when tracked feeds quote tweet other users
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for quotes. Leave blank to check current value.
+#### -- `/twitter replies`
+
+- Post when tracked feeds reply to other users
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for replies. Leave blank to check current value.
+#### -- `/twitter mediaonly`
+
+- LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for mediaonly. Leave blank to check current value.
+#### -- `/twitter translate`
+
+- Automatically request a translation for posted tweets
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for translate. Leave blank to check current value.
+#### -- `/twitter config`
+
+- View all twitter tracker settings and configure.
+
+#### -- `/twitter all`
+
+- View all twitter tracker settings and configure.
+
+
+
+### - `/music`:
+
+- (Music bot) Apply a "filter" to the currently playing audio.
+- Wiki: [[Music-Player#audio-manipulationfilters]]
+
+#### -- `/music volume`
+
+- Change the playback volume.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `percent` | Integer | The volume level. Default volume is 15.
+#### -- `/music sample`
+
+- Play the current track for a specified amount of time and then automatically skip it.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `duration*` | String | Duration of the track to sample. For example, 'sample 2m' will play 2 more minutes of audio.
+#### -- `/music sampleto`
+
+- Similar to sample, instead sampleto only plays the current track until a specific timestamp.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `timestamp*` | String | Timestamp at which to skip. For example, 'sampleto 2m' will skip the current track at 2:00 in.
+#### -- `/music speed`
+
+- Manipulate the playback speed.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `percent*` | Integer | % to manipulate the audio playback speed. "100" or using /reset will restore normal speed.
+#### -- `/music pitch`
+
+- Manipulate the playback pitch.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `percent*` | Integer | % to manipulate the audio pitch. "100" or using /reset will return the pitch to normal.
+#### -- `/music bass`
+
+- Apply a bass boost.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `boost` | Integer | % of maximum bass boost to apply (0-100). "0" or using /reset will remove the boost.
+#### -- `/music rotate`
+
+- Apply a 3D audio effect where the audio rotates 'around' the listener.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `speed` | Decimal | The speed of the rotation effect. The default is .25
+#### -- `/music doubletime`
+
+- Applies a "double time" filter equivalent to: speed 125
+
+#### -- `/music nightcore`
+
+- Applies a "nightcore" filter equivalent to: speed 125 + pitch 125
+
+#### -- `/music daycore`
+
+- Applies a "daycore" filter equivalent to: speed 75 + pitch 75
+
+#### -- `/music reset`
+
+- Resets all active audio filters to return audio to normal.
+
+
+
+### - `/np`:
+
+- (Music bot) Displays info on the audio that is "now playing" (np).
+- Wiki: [[Music-Player#--music-queue-information]]
+
+
+
+### - `/play`:
+
+- (Music bot) Add a song or audio clip to the queue.
+- Wiki: [[Music-Player#Music-Player#playing-music-with-the-play-command]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `song*` | String | Provide either: a YouTube video ID, a YouTube search query, or a direct link to a supported source.
+| `playlist` | True/False | Set to True to add ALL tracks from a YouTube playlist to the queue.
+| `forceplay` | True/False | Play this track immediately, pausing any current track until the new one ends.
+| `next` | True/False | Add this track to the front of the queue rather than the end ("skipping the line")
+| `attachment` | Attachment | Optionally play an attached audio file directly. The 'song' text will be ignored.
+| `volume` | Integer | Set the volume level for this track (for example, if this track is known to be very quiet)
+
+
+### - `/queue`:
+
+- (Music bot) View and edit the music queue.
+- Wiki: [[Music-Player#--music-queue-information]]
+
+#### -- `/queue list`
+
+- View the current music queue.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `from` | Integer | Optionally specify the track to start listing the queue from, such as queue 10.
+#### -- `/queue remove`
+
+- Remove music from the queue.
+
+#### -- `/queue remove tracks`
+
+- Remove tracks by their position in the queue.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `numbers*` | String | Track # in queue to remove. Accepts ranges such as: remove 1, remove 1-4, remove 3-, remove all
+#### -- `/queue remove user`
+
+- Remove tracks by the user who queued them.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `who*` | User | The user to remove queued tracks from.
+#### -- `/queue pause`
+
+- Pause audio playback indefinitely.
+
+#### -- `/queue resume`
+
+- Resume audio playback if paused.
+
+#### -- `/queue loop`
+
+- Toggle queue looping. When enabled, tracks are re-added to the queue after they finish playing.
+
+#### -- `/queue replay`
+
+- Re-add the currently playing audio track to the end of the queue.
+
+#### -- `/queue shuffle`
+
+- Shuffles the audio tracks currently in queue.
+
+#### -- `/queue clear`
+
+- Removes all audio tracks waiting in queue. Does not skip the current track.
+
+
+
+### - `/search`:
+
+- (Music bot) Searches for a track by name, allowing you to select the correct track to play.
+- Wiki: [[Music-Player#playing-music-with-the-play-command]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `search*` | String | The text to search for
+| `site` | Integer | The site to search on. If not provided, default to YouTube
+
+
+### - `/seek`:
+
+- (Music bot) Skip around in the currently playing audio.
+- Wiki: [[Music-Player#playing-music-with-the-play-command]]
+
+#### -- `/seek time`
+
+- Seek to a specific timestamp in this track.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `timestamp*` | String | Timestamp to skip playback to in this track. Example, /seek time 2:10
+#### -- `/seek forward`
+
+- Skip forward in this track. (Fast-forward)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `time` | String | Time to skip forwards in the current track. If no time is provided, 30 seconds will be used.
+#### -- `/seek backward`
+
+- Skip backward in this track. (Rewind)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `time` | String | Time to skip backwards in the current track. If no time is provided, 30 seconds will be used.
+
+
+### - `/skip`:
+
+- (Music bot) Vote to skip the currently playing audio. Will instantly skip if you have permission.
+- Wiki: [[Music-Player#queue-manipulation]]
+
+
+
+### - `/stop`:
+
+- (Music bot) Combines 'clear' and 'skip'. Skips all tracks in queue (for which you have permission).
+- Wiki: [[Music-Player#queue-manipulation]]
+
+
+
+### - `/summon`:
+
+- (Music bot) Summon me into your voice channel. (This is done automatically when playing music.)
+- Wiki: [[Music-Player#Music-Player#commands]]
 
 
 
 ### - `/musiccfg`:
 
-- Configurable music bot settings. Run '/musiccfg setup' to view all.
+- Configurable music bot settings. Run '/musiccfg config' to view all.
 - Wiki: [[Music-Player#configuration-using-musiccfg]]
 
 #### -- `/musiccfg playing`
@@ -1472,368 +1799,12 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for volumeLimit. Leave blank to check current value.
-#### -- `/musiccfg setup`
-
-- View all music bot settings and configure.
-
 #### -- `/musiccfg config`
 
 - View all music bot settings and configure.
 
+#### -- `/musiccfg all`
 
-
-### - `/animeconfig`:
-
-- Configurable anime list tracker settings. Run '/animeconfig setup' to view all.
-- Wiki: [[Anime-List-Tracker#configuration]]
-
-#### -- `/animeconfig new`
-
-- Post an update message when a new item is added to a list
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for new. Leave blank to check current value.
-#### -- `/animeconfig status`
-
-- Post an update message on status change (started watching, dropped...)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for status. Leave blank to check current value.
-#### -- `/animeconfig watched`
-
-- Post an update message when an item updates (changed rating, watched x# episodes)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for watched. Leave blank to check current value.
-#### -- `/animeconfig setup`
-
-- View all anime list tracker settings and configure.
-
-#### -- `/animeconfig config`
-
-- View all anime list tracker settings and configure.
-
-
-
-### - `/streamcfg`:
-
-- Configurable livestream tracker settings. Run '/streamcfg setup' to view all.
-- Wiki: [[Livestream-Tracker#stream-notification-configuration-with-streamcfg]]
-
-#### -- `/streamcfg summary`
-
-- Edit stream notification with a summary or VOD information rather than deleting the message
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for summary. Leave blank to check current value.
-#### -- `/streamcfg thumbnail`
-
-- Include the current stream thumbnail
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for thumbnail. Leave blank to check current value.
-#### -- `/streamcfg viewers`
-
-- Include viewer counts in summary
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for viewers. Leave blank to check current value.
-#### -- `/streamcfg game`
-
-- Include stream ending game in summary (twitch)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for game. Leave blank to check current value.
-#### -- `/streamcfg pingroles`
-
-- Use the `setmention` config in this channel
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingRoles. Leave blank to check current value.
-#### -- `/streamcfg korotagger`
-
-- Send the video URL as plain text for YouTube livestreams (for KoroTagger compatibility)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for korotagger. Leave blank to check current value.
-#### -- `/streamcfg rename`
-
-- Rename this channel based on live channels
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for rename. Leave blank to check current value.
-#### -- `/streamcfg pinlive`
-
-- Pin active livestreams in this channel
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pinLive. Leave blank to check current value.
-#### -- `/streamcfg notlive`
-
-- Channel name when no streams are live
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for notlive. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: no-streams-live
-#### -- `/streamcfg prefix`
-
-- Channel name prefix
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for prefix. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: 
-#### -- `/streamcfg suffix`
-
-- Channel name suffix
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for suffix. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: 
-#### -- `/streamcfg setup`
-
-- View all livestream tracker settings and configure.
-
-#### -- `/streamcfg config`
-
-- View all livestream tracker settings and configure.
-
-
-
-### - `/welcome`:
-
-- Configurable welcome settings. Run '/welcome setup' to view all.
-- Wiki: [[Welcoming-Users]]
-
-#### -- `/welcome channel`
-
-- Channel to send welcome messages to
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Channel | The new value for channel. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: {empty}
-#### -- `/welcome avatar`
-
-- Include new user's avatar in welcome embed or image
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for avatar. Leave blank to check current value.
-#### -- `/welcome username`
-
-- Include new user's username in welcome embed or image
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for username. Leave blank to check current value.
-#### -- `/welcome usetagline`
-
-- Include the 'tagline' in the message image
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for usetagline. Leave blank to check current value.
-#### -- `/welcome useimagetext`
-
-- Include the 'imagetext' in the welcome image
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for useimagetext. Leave blank to check current value.
-#### -- `/welcome textoutline`
-
-- Use a black outline to make image text more visible
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for textoutline. Leave blank to check current value.
-#### -- `/welcome message`
-
-- Text message sent when welcoming new user
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for message. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: 
-#### -- `/welcome tagline`
-
-- Welcome Tagline (included in image or embed)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for tagline. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: WELCOME
-#### -- `/welcome imagetext`
-
-- Image message
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for imagetext. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: Welcome to the server!
-#### -- `/welcome color`
-
-- Text color on image
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for color. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: 16777215
-#### -- `/welcome emoji`
-
-- Add reaction to welcome
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for emoji. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: {empty}
-#### -- `/welcome setup`
-
-- View all welcome settings and configure.
-
-#### -- `/welcome config`
-
-- View all welcome settings and configure.
-
-#### -- `/welcome test`
-
-- Test the current welcome configuration.
-
-
-
-### - `/starboard`:
-
-- Configurable starboard settings. Run '/starboard setup' to view all.
-- Wiki: [[Starboard]]
-
-#### -- `/starboard channel`
-
-- Starboard channel ID. Reset to disable starboard
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Channel | The new value for channel. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: {empty}
-#### -- `/starboard stars`
-
-- Stars required for a message to be put on the starboard
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for stars. Leave blank to check current value.
-#### -- `/starboard removeonclear`
-
-- Remove a message from the starboard if the star reactions are cleared by a moderator
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for removeOnClear. Leave blank to check current value.
-#### -- `/starboard removeondelete`
-
-- Remove a message from the starboard if the original message is deleted
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for removeOnDelete. Leave blank to check current value.
-#### -- `/starboard mentionuser`
-
-- Mention a user when their message is placed on the starboard
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for mentionUser. Leave blank to check current value.
-#### -- `/starboard includensfw`
-
-- Allow messages in NSFW-flagged channels to be starboarded
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for includeNSFW. Leave blank to check current value.
-#### -- `/starboard emoji`
-
-- Emoji used to add messages to the starboard
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | String | The new value for emoji. Leave blank to check current value.
-| `reset` | True/False | Reset this option its default value: {empty}
-#### -- `/starboard setup`
-
-- View all starboard settings and configure.
-
-#### -- `/starboard config`
-
-- View all starboard settings and configure.
-
-#### -- `/starboard message`
-
-- Manually add a message to the Starboard.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `id*` | String | The Discord ID of the message to add to the starboard.
-
-
-### - `/twitterping`:
-
-- Configurable twitter feed ping settings. Run '/twitterping setup' to view all.
-- Wiki: [[Twitter-Tracker#changing-which-tweets-will-ping-with-twitterping-config]]
-
-#### -- `/twitterping pings`
-
-- (Legacy) Use the `setmention` config. Must be enabled for any pings to occur in this channel.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pings. Leave blank to check current value.
-#### -- `/twitterping pingtweets`
-
-- Mention the configured role for normal Tweets.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingtweets. Leave blank to check current value.
-#### -- `/twitterping pingreplies`
-
-- Mention for Tweet replies.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingreplies. Leave blank to check current value.
-#### -- `/twitterping pingquotes`
-
-- Mention for Quote Tweets.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingquotes. Leave blank to check current value.
-#### -- `/twitterping pingretweets`
-
-- Mention for Retweets.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingretweets. Leave blank to check current value.
-#### -- `/twitterping setup`
-
-- View all twitter feed ping settings and configure.
-
-#### -- `/twitterping config`
-
-- View all twitter feed ping settings and configure.
+- View all music bot settings and configure.
 
 
