@@ -246,13 +246,16 @@ class EventManager(val watcher: StreamWatcher) {
             } catch(e: Exception) {
                 LOG.warn("Error editing existing Discord scheduled event '${data.eventId}': ${e.message}")
                 LOG.debug(e.stackTraceString)
+                propagateTransaction {
+                    TrackedStreams.DiscordEvent.findById(data.db)?.delete()
+                }
             }
         }
     }
 
-    private data class DiscordEventData(val client: Int, val guild: Snowflake, val eventId: Snowflake)
+    private data class DiscordEventData(val db: Int, val client: Int, val guild: Snowflake, val eventId: Snowflake)
     @RequiresExposedContext
-    private fun getData(dbEvent: TrackedStreams.DiscordEvent) = DiscordEventData(dbEvent.client, dbEvent.guild.guildID.snowflake, dbEvent.event.snowflake)
+    private fun getData(dbEvent: TrackedStreams.DiscordEvent) = DiscordEventData(dbEvent.id.value, dbEvent.client, dbEvent.guild.guildID.snowflake, dbEvent.event.snowflake)
 
     private suspend fun getExistingEvent(data: DiscordEventData) = try {
         instances[data.client].client
