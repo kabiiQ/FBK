@@ -291,6 +291,45 @@
     },
     {
       "names": [
+        "Hiodoshi Ao"
+      ],
+      "youtubeId": "UCMGfV7TVTmHhEErVJg1oHBQ",
+      "generation": "ReGLOSS"
+    },
+    {
+      "names": [
+        "Kanade",
+        "Otonose Kanade"
+      ],
+      "youtubeId": "UCWQtYtq9EOB4-I5P-3fh8lA",
+      "generation": "ReGLOSS"
+    },
+    {
+      "names": [
+        "Ririka",
+        "Ichijou Ririka"
+      ],
+      "youtubeId": "UCtyWhCj3AqKh2dXctLkDtng",
+      "generation": "ReGLOSS"
+    },
+    {
+      "names": [
+        "Raden",
+        "Juufuutei Raden"
+      ],
+      "youtubeId": "UCdXAk5MpyLD8594lm_OvtGQ",
+      "generation": "ReGLOSS"
+    },
+    {
+      "names": [
+        "Hajime",
+        "Todoroki Hajime"
+      ],
+      "youtubeId": "UC1iA6_NT4mtAcIII6ygrvCw",
+      "generation": "ReGLOSS"
+    },
+    {
+      "names": [
         "Risu",
         "Ayunda Risu"
       ],
@@ -367,7 +406,7 @@
         "Mori Calliope"
       ],
       "youtubeId": "UCL_qhgtOy0dy1Agp8vkySQg",
-      "generation": "HoloMyth"
+      "generation": "holoMyth"
     },
     {
       "names": [
@@ -375,7 +414,7 @@
         "Takanashi Kiara"
       ],
       "youtubeId": "UCHsx4Hqa-1ORjQTh9TYDhww",
-      "generation": "HoloMyth"
+      "generation": "holoMyth"
     },
     {
       "names": [
@@ -383,7 +422,7 @@
         "Ninomae Ina'nis"
       ],
       "youtubeId": "UCMwGHR0BTZuLsmjY_NT5Pwg",
-      "generation": "HoloMyth"
+      "generation": "holoMyth"
     },
     {
       "names": [
@@ -391,7 +430,7 @@
         "Gawr Gura"
       ],
       "youtubeId": "UCoSrY_IQQVpmIRZ9Xf-y93g",
-      "generation": "HoloMyth"
+      "generation": "holoMyth"
     },
     {
       "names": [
@@ -400,7 +439,7 @@
       ],
       "youtubeId": "UCyl1z3jo3XHR1riLFKG5UAg",
       "twitchId": 602713894,
-      "generation": "HoloMyth"
+      "generation": "holoMyth"
     },
     {
       "names": [
@@ -415,14 +454,14 @@
         "Tsukumo Sana"
       ],
       "youtubeId": "UCsUj0dszADCGbF3gNrQEuSQ",
-      "generation": "HoloCouncil"
+      "generation": "holoCouncil"
     },
     {
       "names": [
         "Ceres Fauna"
       ],
       "youtubeId": "UCO_aKKYxn4tvrqPjcTzZ6EQ",
-      "generation": "HoloCouncil"
+      "generation": "holoCouncil"
     },
     {
       "names": [
@@ -430,7 +469,7 @@
         "Ouro Kronii"
       ],
       "youtubeId": "UCmbs8T6MWqUHP1tIQvSgKrg",
-      "generation": "HoloCouncil"
+      "generation": "holoCouncil"
     },
     {
       "names": [
@@ -438,14 +477,48 @@
         "Nanashi Mumei"
       ],
       "youtubeId": "UC3n5uGu18FoCy23ggWWp8tA",
-      "generation": "HoloCouncil"
+      "generation": "holoCouncil"
     },
     {
       "names": [
         "Hakos Baelz"
       ],
       "youtubeId": "UCgmPnx-EEeOrZSg5Tiw7ZRQ",
-      "generation": "HoloCouncil"
+      "generation": "holoCouncil"
+    },
+    {
+      "names": [
+        "Shiori",
+        "Shiori Novella"
+      ],
+      "youtubeId": "UCgnfPPb9JI3e9A4cXHnWbyg",
+      "generation": "holoAdvent"
+    },
+    {
+      "names": [
+        "Biboo",
+        "Bijou",
+        "Koseki Bijou"
+      ],
+      "youtubeId": "UC9p_lqQ0FEDz327Vgf5JwqA",
+      "generation": "holoAdvent"
+    },
+    {
+      "names": [
+        "Nerissa",
+        "Nerissa Ravencroft"
+      ],
+      "youtubeId": "UC_sFNM0z0MWm9A6WlKPuMMg",
+      "generation": "holoAdvent"
+    },
+    {
+      "names": [
+        "FUWAMOCO",
+        "Fuwawa Abyssgard",
+        "Mococo Abyssgard"
+      ],
+      "youtubeId": "UCt9H_RpQzhxzlyBxFqrdHqA",
+      "generation": "holoAdvent"
     },
     {
       "names": [
