@@ -27,10 +27,10 @@ object TwitterConfig : Command("twitter") {
             "quotes",
             TwitterSettings::displayQuote
         ),
-        BooleanElement("Post when tracked feeds reply to other users",
-            "replies",
-            TwitterSettings::displayReplies
-        ),
+//        BooleanElement("Post when tracked feeds reply to other users",
+//            "replies",
+//            TwitterSettings::displayReplies
+//        ),
         BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
             "mediaonly",
             TwitterSettings::mediaOnly

@@ -292,7 +292,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         } else null
 
                         val newNotification = try {
-                            val mentionMessage = if(mention != null) {
+                            val mentionContent = if(mention != null) {
 
                                 val rolePart = if(mention.discord != null
                                     && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
@@ -300,11 +300,18 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                     mention.discord.mention.plus(" ")
                                 } else ""
                                 val textPart = mention.textPart
-                                chan.createMessage("$rolePart$textPart")
+                                "$rolePart$textPart"
 
-                            } else chan.createMessage()
+                            } else ""
 
-                            mentionMessage.withEmbeds(embed.create()).awaitSingle()
+                            val messageContent = if(settings.includeUrl) {
+                                if(mentionContent.isBlank()) user!!.url else "$mentionContent\n${user!!.url}"
+                            } else mentionContent
+
+                            val newMessage = if(messageContent.isBlank()) chan.createMessage()
+                            else chan.createMessage(messageContent)
+
+                            newMessage.withEmbeds(embed.create()).awaitSingle()
 
                         } catch (ce: ClientException) {
                             val err = ce.status.code()

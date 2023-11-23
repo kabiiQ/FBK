@@ -60,7 +60,7 @@ object TwitchParser {
                             // retry with new oauth token
                             200L
                         } else {
-                            LOG.error("Error calling Twitch API: ${response.body.string()}")
+                            LOG.error("Error calling Twitch API: ${request.url.encodedPath} :: ${response.body.string()}")
                             delay(200L)
                             break
                         }

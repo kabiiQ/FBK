@@ -51,13 +51,20 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
-open class NitterChecker(val instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable {
+open class NitterChecker(val instances: DiscordInstances) : Runnable {
     private val instanceCount = NitterParser.instanceCount
     private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
 
-    private val refreshGoal = 75_000L
     private val generalInstanceAdjustment = 0L
+    private val minimumRepeatTime = refreshGoal + 2_000L
+
     private val instanceLocks: Map<Int, Mutex>
+
+    companion object {
+        val callDelay = 2_000L // 450/15min = 30/minute = 2sec/call
+        val refreshGoal = 82_000L // = 41/instance @ 2 seconds
+        val loopTime = 20_000L // can lower loop repeat time below refresh time now with locking system implemented
+    }
 
     init {
         instanceLocks = (0 until instanceCount).associateWith {
@@ -77,7 +84,7 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
             }
 
             val runDuration = Duration.between(start, Instant.now())
-            val delay = cooldowns.minimumRepeatTime - runDuration.toMillis()
+            val delay = loopTime - runDuration.toMillis()
             LOG.debug("delay: $delay")
             delay(Duration.ofMillis(max(delay, 0L)))
         }
@@ -101,7 +108,7 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
         }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
-            delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
+            delay(Duration.ofMillis(minimumRepeatTime))
             return
         }
 
@@ -109,7 +116,7 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
 
         // compute how many instances to use for 'priority' feeds, targeting a refresh time goal
         // ensure at least one instance is saved for general pool in case numbers change drastically
-        val priorityInstance = min(ceil((priority.size.toDouble() * cooldowns.callDelay) / refreshGoal).toInt(), instanceCount - 1)
+        val priorityInstance = min(ceil((priority.size.toDouble() * callDelay) / refreshGoal).toInt(), instanceCount - 1)
         val generalInstance = instanceCount - priorityInstance
 
         // convert list of feeds into Map<Instance ID, Feed Chunk>
@@ -145,7 +152,7 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
                             feedChunk.forEach { feed ->
 
                                 if (!first) {
-                                    val delay = if(instanceId >= priorityInstance) cooldowns.callDelay + generalInstanceAdjustment else cooldowns.callDelay
+                                    val delay = if(instanceId >= priorityInstance) callDelay + generalInstanceAdjustment else callDelay
                                     delay(delay)
                                 } else first = false
 
@@ -351,8 +358,11 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
                             val text = StringEscapeUtils
                                 .unescapeHtml4(tweet.text)
                                 .replace("*", "\\*")
-                                .replace("_", "\\_")
+                                .replace("_ ", "\\_ ")
+                                .replace(" _", " \\_")
                                 .replace("#", "\\#")
+                                .replace("~", "\\~")
+                                .replace("|", "\\|")
                             val embed = Embeds.other(text, Color.of(color))
                                 .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
                                 .run {
@@ -402,13 +412,13 @@ open class NitterChecker(val instances: DiscordInstances, val cooldowns: Service
 
                     TrackerUtil.checkAndPublish(fbk, notif)
                 } catch (time: TimeoutException) {
-                    LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordChannel.asString()}")
+                    LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}")
                 } catch (e: Exception) {
                     if (e is ClientException && e.status.code() == 403) {
                         TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::twitterTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }
-                        LOG.warn("Unable to send Tweet to channel '${target.discordChannel}'. Disabling feature in channel. TwitterChecker.java")
+                        LOG.warn("Unable to send Tweet to channel '${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}'. Disabling feature in channel. TwitterChecker.java")
                     } else {
-                        LOG.warn("Error sending Tweet to channel: ${e.message}")
+                        LOG.warn("Error sending Tweet to channel ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}: ${e.message}")
                         LOG.debug(e.stackTraceString)
                     }
                 }

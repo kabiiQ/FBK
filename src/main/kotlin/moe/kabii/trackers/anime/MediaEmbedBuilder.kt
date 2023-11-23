@@ -43,7 +43,7 @@ class MediaEmbedBuilder(val media: Media) {
                 footer.append(" (average: $avgScore)")
             }
             if(media.notes.isNotBlank()) {
-                val notes = "\nUser ${media.type.name.lowercase()} notes: ${media.notes}"
+                val notes = "\n$username's notes: ${media.notes}"
                 footer.append(StringUtils.abbreviate(notes, 250))
             }
             withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))

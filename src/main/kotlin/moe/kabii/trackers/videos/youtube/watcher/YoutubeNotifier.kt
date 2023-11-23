@@ -200,7 +200,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     LOG.info("Unable to find YouTube stream notification for target ${target.db} :: ${ce.status.code()}")
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
-                    LOG.info("Error in YouTube #streamEnd for stream $dbStream :: ${e.message}")
+                    LOG.info("Error in YouTube #streamEnd for stream $target :: ${e.message}")
                     LOG.debug(e.stackTraceString)
                 } finally {
                     // delete the notification from db either way, we are done with it

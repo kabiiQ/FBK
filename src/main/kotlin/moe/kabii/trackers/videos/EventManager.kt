@@ -101,7 +101,10 @@ class EventManager(val watcher: StreamWatcher) {
             } catch(e: Exception) {
                 LOG.error("Error creating Discord scheduled event: ${e.message}")
                 LOG.debug(e.stackTraceString)
-                if(e is ClientException && e.status.code() == 403) {
+                val ex = e as? ClientException
+                if(ex?.status?.code() == 403 ||
+                    (ex?.status?.code() == 400 && (ex.message?.contains("Maximum number of ") == true))
+                ) {
                     LOG.info("Disabling 'events' feature for guild: ${target.discordGuild.asString()}")
                     // Permission denied to create events in this guild. Disable feature
                     val config = GuildConfigurations.getOrCreateGuild(target.discordClient, guildId.asLong())
@@ -246,9 +249,6 @@ class EventManager(val watcher: StreamWatcher) {
             } catch(e: Exception) {
                 LOG.warn("Error editing existing Discord scheduled event '${data.eventId}': ${e.message}")
                 LOG.debug(e.stackTraceString)
-                propagateTransaction {
-                    TrackedStreams.DiscordEvent.findById(data.db)?.delete()
-                }
             }
         }
     }

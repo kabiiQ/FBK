@@ -14,14 +14,19 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.util.RGB
 import moe.kabii.newRequestBuilder
+import moe.kabii.trackers.nitter.NitterChecker
+import moe.kabii.trackers.nitter.NitterParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.propagateTransaction
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.text.DecimalFormat
 import java.time.Instant
 import javax.imageio.ImageIO
+import kotlin.math.ceil
+import kotlin.math.min
 
 object NettyFileServer {
     private val address = Keys.config[Keys.Netty.domain]
@@ -107,10 +112,20 @@ object NettyFileServer {
             get("/twitterfeeds") {
                 val (priorityList, generalCount) = propagateTransaction {
                     val (priority, general) = TwitterFeed.all()
-                        .sortedBy(TwitterFeed::id)
+                        .sortedByDescending(TwitterFeed::id)
                         .partition { feed -> feed.enabled }
                     priority.map(TwitterFeed::username) to general.size
                 }
+
+                // Estimate refresh delays
+                val priorityInstance = min(ceil((priorityList.size.toDouble() * NitterChecker.callDelay) / NitterChecker.refreshGoal).toInt(), NitterParser.instanceCount - 1)
+                val generalInstance = NitterParser.instanceCount - priorityInstance
+
+                // feed count * time per call / num instances / 60000 (millis to minutes)
+                val priorityRefresh = (priorityList.size.toDouble() * NitterChecker.callDelay) / (priorityInstance * 60_000L)
+                val generalRefresh = (generalCount.toDouble() * NitterChecker.callDelay) / (generalInstance * 60_000L)
+                val format = DecimalFormat("#.##")
+
                 call.respondHtml {
                     head {
                         title {
@@ -121,8 +136,14 @@ object NettyFileServer {
                         h2 {
                             +"\"General\" tracked Twitter feeds = $generalCount"
                         }
+                        h3 {
+                            +"Refresh time estimate = ${format.format(generalRefresh)} minutes (not including potential Discord limitations)"
+                        }
                         h2 {
                             +"\"Priority\" tracked Twitter feeds = ${priorityList.size}"
+                        }
+                        h3 {
+                            +"Refresh time estimate = ${format.format(priorityRefresh)} minutes (not including potential Discord limitations)"
                         }
                         br()
                         table {

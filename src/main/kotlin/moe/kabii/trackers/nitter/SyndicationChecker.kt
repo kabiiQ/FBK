@@ -23,7 +23,7 @@ import kotlin.math.max
 /**
  * Copy of NitterChecker adapted to use syndication feeds as alternate route for priority Twitter feeds
  */
-class SyndicationChecker(instances: DiscordInstances, cooldowns: ServiceRequestCooldownSpec) : NitterChecker(instances, cooldowns), Runnable {
+class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : NitterChecker(instances), Runnable {
     private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Syndication-Priority-Tweet-Intake") + SupervisorJob())
 
     override fun run() {

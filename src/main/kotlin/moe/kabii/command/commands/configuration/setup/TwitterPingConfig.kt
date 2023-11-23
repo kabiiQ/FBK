@@ -23,10 +23,10 @@ object TwitterPingConfig : Command("twitterping") {
             "pingtweets",
             TwitterSettings::mentionTweets
         ),
-        BooleanElement("Mention for Tweet replies.",
-            "pingreplies",
-            TwitterSettings::mentionReplies
-        ),
+//        BooleanElement("Mention for Tweet replies.",
+//            "pingreplies",
+//            TwitterSettings::mentionReplies
+//        ),
         BooleanElement("Mention for Quote Tweets.",
             "pingquotes",
             TwitterSettings::mentionQuotes
