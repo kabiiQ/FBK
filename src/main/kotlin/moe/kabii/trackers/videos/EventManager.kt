@@ -23,18 +23,30 @@ import java.time.Instant
 class EventManager(val watcher: StreamWatcher) {
     companion object {
         // can not create events the in past or for 'now'
-        private val window = Duration.ofMinutes(1)
+        private val window = Duration.ofMinutes(4)
         // Some 'average' duration of streams - we can not actually know when streamers will end
         private val defaultEventLength = Duration.ofHours(3)
         // A grace period - if stream ends within this duration then it will be let to expire rather than ended early
         private val forceEventEnd = Duration.ofMinutes(10)
         // Event end times will be pushed back if still live within this duration - must be less than stream update intervals
-        private val refreshEventWindow = Duration.ofMinutes(10)
+        private val refreshEventWindow = Duration.ofMinutes(15)
         // The maximum time until the scheduled stream - attempt to avoid free chat/announcement frames
         private val futureLimit = Duration.ofDays(14)
 
         // The timeout period allowed for stream thumbnails to download
         val thumbnailTimeoutMillis = 2_500L
+
+        /***
+         * Parse a Discord scheduled event-related error for known unrecoverable errors
+         * For example, user related operations (cancelling the event, ending the event early) we do not want to interfere with.
+         * @return true if the event should be ignored moving forward
+         */
+        fun shouldAbandon(ce: ClientException) = when {
+            ce.opcode == 180000 -> true // updating a completed event
+            ce.status.code() == 403 -> true // other 403 for true permission issue
+            ce.status.code() == 400 && ce.message?.contains("non-scheduled event") == true -> true
+            else -> false
+        }
     }
 
     private val instances = watcher.instances
@@ -103,7 +115,7 @@ class EventManager(val watcher: StreamWatcher) {
                 LOG.debug(e.stackTraceString)
                 val ex = e as? ClientException
                 if(ex?.status?.code() == 403 ||
-                    (ex?.status?.code() == 400 && (ex.message?.contains("Maximum number of ") == true))
+                    ex?.opcode == 30038 // max events reached opcode 30038
                 ) {
                     LOG.info("Disabling 'events' feature for guild: ${target.discordGuild.asString()}")
                     // Permission denied to create events in this guild. Disable feature
@@ -125,8 +137,9 @@ class EventManager(val watcher: StreamWatcher) {
                     this.event = discordEvent.id.asLong()
                     this.startTime = startTime.jodaDateTime
                     this.endTime = endTime.jodaDateTime
-                    this.title = title
+                    this.title = eventTitle
                     this.yt = ytVideoId.toInt()
+                    this.valid = true
                 }
             }
         }
@@ -163,9 +176,10 @@ class EventManager(val watcher: StreamWatcher) {
     @RequiresExposedContext
     suspend fun updateUpcomingEvent(dbEvent: TrackedStreams.DiscordEvent, scheduled: Instant, title: String) {
         val now = Instant.now()
+        val eventTitle = StringUtils.abbreviate(title, 100)
         // Delete upcoming events that are now more than 2 weeks in the future - "free chat" detection
         if(Duration.between(now, scheduled) > futureLimit) {
-            LOG.info("Cancelling scheduled event $title")
+            LOG.info("Cancelling scheduled event $eventTitle")
             updateEvent(dbEvent) { edit ->
                 edit
                     .withStatus(ScheduledEvent.Status.CANCELED)
@@ -173,24 +187,24 @@ class EventManager(val watcher: StreamWatcher) {
             dbEvent.delete()
             return
         }
-        val startTime = if(Duration.between(now, scheduled) > window) scheduled else now + window
+        val currentStart = dbEvent.startTime.javaInstant
+        val startTime = if(Duration.between(now, currentStart) > window) currentStart else now + window.multipliedBy(2)
         if(
-            dbEvent.startTime.javaInstant == startTime
-            && dbEvent.title == title
+            currentStart == startTime
+            && dbEvent.title == eventTitle
         ) return
         // data does not match, send an update
-        val newTitle = StringUtils.abbreviate(title, 100)
         val endTime = startTime + defaultEventLength
         dbEvent.startTime = startTime.jodaDateTime
         dbEvent.endTime = endTime.jodaDateTime
-        dbEvent.title = newTitle
+        dbEvent.title = eventTitle
 
-        LOG.info("Updating scheduled event: $title")
+        LOG.info("Updating scheduled event: $eventTitle")
         updateEvent(dbEvent) { edit ->
             edit
                 .withScheduledStartTime(startTime)
                 .withScheduledEndTime(endTime)
-                .withName(newTitle)
+                .withName(eventTitle)
         }
     }
 
@@ -203,7 +217,9 @@ class EventManager(val watcher: StreamWatcher) {
         val scheduledEnd = dbEvent.endTime.javaInstant
         val now = Instant.now()
         val sufficientTime = Duration.between(now, scheduledEnd) > refreshEventWindow
-        val sameTitle = dbEvent.title == title
+
+        val eventTitle = StringUtils.abbreviate(title, 100)
+        val sameTitle = dbEvent.title == eventTitle
         // Event is still live at this point
         if(
             sufficientTime // update if the event is scheduled to end within 10 minutes
@@ -215,18 +231,15 @@ class EventManager(val watcher: StreamWatcher) {
             dbEvent.endTime = newEnd.jodaDateTime
             newEnd
         }
-        val newTitle = if(sameTitle) dbEvent.title
-        else {
-            val newTitle = StringUtils.abbreviate(title, 100)
-            dbEvent.title = title
-            newTitle
+        if(!sameTitle) {
+            dbEvent.title = eventTitle
         }
 
-        LOG.info("Updating live event: $title")
+        LOG.info("Updating live event: $eventTitle")
         updateEvent(dbEvent) { edit ->
             edit
                 .withScheduledEndTime(endTime)
-                .withName(newTitle)
+                .withName(eventTitle)
         }
     }
 
@@ -240,6 +253,7 @@ class EventManager(val watcher: StreamWatcher) {
     }
 
     private suspend fun editEvent(data: DiscordEventData, block: suspend (ScheduledEventEditMono) -> ScheduledEventEditMono) {
+        if(!data.valid) return // event exists (a new one should not be created) but was deleted by user or expired
         watcher.discordTask {
             try {
                 val event = getExistingEvent(data) ?: return@discordTask
@@ -247,15 +261,24 @@ class EventManager(val watcher: StreamWatcher) {
                     .run { block(this) }
                     .awaitSingle()
             } catch(e: Exception) {
+
+                if(e is ClientException && shouldAbandon(e)) {
+                    // mark event invalid in database
+                    propagateTransaction {
+                        val dbEvent = TrackedStreams.DiscordEvent.findById(data.db)
+                        dbEvent?.valid = false
+                    }
+                }
+
                 LOG.warn("Error editing existing Discord scheduled event '${data.eventId}': ${e.message}")
                 LOG.debug(e.stackTraceString)
             }
         }
     }
 
-    private data class DiscordEventData(val db: Int, val client: Int, val guild: Snowflake, val eventId: Snowflake)
+    private data class DiscordEventData(val db: Int, val client: Int, val guild: Snowflake, val valid: Boolean, val eventId: Snowflake)
     @RequiresExposedContext
-    private fun getData(dbEvent: TrackedStreams.DiscordEvent) = DiscordEventData(dbEvent.id.value, dbEvent.client, dbEvent.guild.guildID.snowflake, dbEvent.event.snowflake)
+    private fun getData(dbEvent: TrackedStreams.DiscordEvent) = DiscordEventData(dbEvent.id.value, dbEvent.client, dbEvent.guild.guildID.snowflake, dbEvent.valid, dbEvent.event.snowflake)
 
     private suspend fun getExistingEvent(data: DiscordEventData) = try {
         instances[data.client].client

@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
+import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.commons.text.WordUtils
@@ -36,3 +37,6 @@ fun List<String>.toAutoCompleteSuggestions() = map { str ->
     ApplicationCommandOptionChoiceData.builder()
         .name(str).value(str).build()
 }
+
+val ClientException.opcode: Int
+get() = errorResponse.orNull()?.fields?.get("code")?.toString()?.toIntOrNull() ?: 0

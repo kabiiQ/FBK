@@ -166,6 +166,7 @@ object TrackedStreams {
         val endTime = datetime("scheduled_end_time")
         val title = text("event_saved_title", eagerLoading = true)
         val yt = integer("yt_video_id")
+        val valid = bool("valid_event").default(true)
 
         override val primaryKey = PrimaryKey(guild, stream, yt)
     }
@@ -178,6 +179,7 @@ object TrackedStreams {
         var startTime by DiscordEvents.startTime
         var endTime by DiscordEvents.endTime
         var title by DiscordEvents.title
+        var valid by DiscordEvents.valid
 
         /**
          * Database ID of an associated YouTube video, -1 if no video is associated
