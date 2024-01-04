@@ -44,7 +44,7 @@ object TrackSkip : AudioCommandContainer {
             ireply(Embeds.fbk(i18n("audio_skipped", track.info.title))).awaitSingle()
             audio.player.stopTrack()
         } else {
-            ireply(Embeds.fbk(i18n("audio_vote_skip", "track" to track.info.title, "votes" to votes, "votesNeeded" to votesNeeded))).awaitSingle()
+            ireply(Embeds.fbk(i18n("audio_vote_skip", "track" to track.info.title, "votes" to votes, "needed" to votesNeeded))).awaitSingle()
         }
     }
 
