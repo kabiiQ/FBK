@@ -326,6 +326,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                             }
                         }
                     }
+                    if(twitter.mediaOnly && attachment == null) return@target
 
                     LOG.debug("roles phase")
                     // mention roles
@@ -340,65 +341,67 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                         "${rolePart ?: ""}${textPart ?: ""}"
                     } else ""
 
-                    val notifSpec = MessageCreateSpec.create()
+                    val baseNotif = MessageCreateSpec.create()
                         .run {
+                            val domain = if(twitter.customDomain != null) twitter.customDomain else "twitter.com"
                             val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
-                            withContent("$mentionText**@${user.username}** $action $timestamp: https://twitter.com/${user.username}/status/${tweet.id}")
+                            withContent("$mentionText**@${user.username}** $action $timestamp: https://$domain/${user.username}/status/${tweet.id}")
                         }
-                        .run {
-                            if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
-                        }
-                        .run {
-                            val footer = StringBuilder(attachInfo)
 
-                            val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
-                            val author = if(tweet.retweet) tweet.retweetOf!! else user.username
-                            val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
+                    // If the user has set a custom domain to be used, we just post the URL and let Discord handle the generation
+                    val notifSpec = if(twitter.customDomain != null) baseNotif else {
+                        baseNotif
+                            .run {
+                                if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
+                            }
+                            .run {
+                                val footer = StringBuilder(attachInfo)
 
-                            val text = StringEscapeUtils
-                                .unescapeHtml4(tweet.text)
-                                .replace("*", "\\*")
-                                .replace("_ ", "\\_ ")
-                                .replace(" _", " \\_")
-                                .replace("#", "\\#")
-                                .replace("~", "\\~")
-                                .replace("|", "\\|")
-                            val embed = Embeds.other(text, Color.of(color))
-                                .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
-                                .run {
-                                    val fields = mutableListOf<EmbedCreateFields.Field>()
+                                val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
+                                val author = if(tweet.retweet) tweet.retweetOf!! else user.username
+                                val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
 
-                                    if(tweet.quote) {
-                                        fields.add(EmbedCreateFields.Field.of("**Tweet Quoted**", tweet.quoteTweetUrl, false))
+                                val text = StringEscapeUtils
+                                    .unescapeHtml4(tweet.text)
+                                    .replace("*", "\\*")
+                                    .replace("_ ", "\\_ ")
+                                    .replace(" _", " \\_")
+                                    .replace("#", "\\#")
+                                    .replace("~", "\\~")
+                                    .replace("|", "\\|")
+                                val embed = Embeds.other(text, Color.of(color))
+                                    .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
+                                    .run {
+                                        val fields = mutableListOf<EmbedCreateFields.Field>()
+
+                                        if(tweet.quote) {
+                                            fields.add(EmbedCreateFields.Field.of("**Tweet Quoted**", tweet.quoteTweetUrl, false))
+                                        }
+
+                                        if(translation != null) {
+                                            val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
+                                            footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
+                                            fields.add(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                        }
+
+                                        if(fields.isNotEmpty()) withFields(fields) else this
                                     }
-
-                                    if(translation != null) {
-                                        val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
-                                        footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
-                                        fields.add(EmbedCreateFields.Field.of("**Tweet Translation**", tlText, false))
+                                    .run {
+                                        if(outdated) footer.append("Skipping ping for old Tweet.\n")
+                                        if(outdated) LOG.info("Missed ping: $tweet")
+                                        if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
                                     }
+                                    .run {
+                                        if(editedThumb != null) {
+                                            // always use our edited thumbnail if we produced one for this
+                                            withImage("attachment://thumbnail_edit.png")
+                                        } else if(attachment != null) withImage(attachment)
+                                        else this
+                                    }
+                                withEmbeds(embed)
+                            }
+                    }
 
-                                    if(fields.isNotEmpty()) withFields(fields) else this
-                                }
-                                .run {
-    //                                if(Random.nextInt(25) == 0) {
-    //                                    footer.append("Twitter tracking is only enabled for specific feeds due to the current Twitter issues and may stop working if Twitter makes more changes. Please be patient!\n")
-    //                                }
-                                    if(outdated) footer.append("Skipping ping for old Tweet.\n")
-                                    if(outdated) LOG.info("Missed ping: $tweet")
-                                    if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
-                                }
-                                .run {
-                                    if(editedThumb != null) {
-                                        // always use our edited thumbnail if we produced one for this
-                                        withImage("attachment://thumbnail_edit.png")
-                                    } else if(attachment != null) withImage(attachment)
-                                    else this
-                                }
-                            withEmbeds(embed)
-                        }
-
-                    if(twitter.mediaOnly && attachment == null) return@target
                     val notif = channel
                         .createMessage(notifSpec)
                         .timeout(Duration.ofMillis(4_000))
@@ -406,6 +409,16 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
                     if(attachedVideo != null) {
                         channel.createMessage(attachedVideo)
+                            .withMessageReference(notif.id)
+                            .tryAwait()
+                    }
+
+                    if(twitter.customDomain != null && translation != null) {
+                        val translationReply = Embeds.fbk(StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.MAX_DESC))
+                            .withTitle("@${user.username} Tweet Translation")
+                            .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n", null))
+
+                        channel.createMessage(translationReply)
                             .withMessageReference(notif.id)
                             .tryAwait()
                     }

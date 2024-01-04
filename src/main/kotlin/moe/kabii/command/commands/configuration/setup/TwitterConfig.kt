@@ -6,12 +6,18 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.configuration.setup.base.BooleanElement
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
+import moe.kabii.command.commands.configuration.setup.base.CustomElement
+import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.discord.util.Embeds
+import moe.kabii.rusty.Ok
+import moe.kabii.rusty.Result
+import kotlin.reflect.KMutableProperty1
 
 object TwitterConfig : Command("twitter") {
     override val wikiPath = "Twitter-Tracker#twitter-feed-notification-configuration"
 
+    @Suppress("UNCHECKED_CAST")
     object TwitterConfigModule : ConfigurationModule<TwitterSettings>(
         "twitter tracker",
         this,
@@ -38,6 +44,14 @@ object TwitterConfig : Command("twitter") {
         BooleanElement("Automatically request a translation for posted tweets",
             "translate",
             TwitterSettings::autoTranslate
+        ),
+        CustomElement("Post custom Twitter links, overriding the standard FBK embed. (Embedded translations will not be available if this is used)",
+            "customurl",
+            TwitterSettings::customDomain as KMutableProperty1<TwitterSettings, Any?>,
+            prompt = "Enter a custom domain (ex. vxtwitter.com) that will be posted. The embed will OVERRIDE the standard FBK custom embeds, so features like embedded translations will not be available. Furthermore, you must ensure this domain spelled correctly and is functional or there will be no embeds for posted Tweets at all.",
+            default = null,
+            parser = ::customTwitterDomain,
+            value = { twitter -> twitter.customDomain ?: "not set" }
         )
     )
 
@@ -61,5 +75,12 @@ object TwitterConfig : Command("twitter") {
                 config.save()
             }
         }
+    }
+
+    @Suppress("UNUSED_PARAMETER") // specific function signature to be used generically
+    private fun customTwitterDomain(origin: DiscordParameters, value: String): Result<String?, String> {
+        // could add simple validation for domains - currently on the user to ensure valid
+        val protocol = Regex("https?://")
+        return Ok(value.replace(protocol, ""))
     }
 }

@@ -114,6 +114,8 @@ data class TwitterSettings(
     var mentionReplies: Boolean = true,
     var mentionQuotes: Boolean = true,
     var mentionRetweets: Boolean = false,
+
+    var customDomain: String? = null
 )
 
 data class ChannelMark(
