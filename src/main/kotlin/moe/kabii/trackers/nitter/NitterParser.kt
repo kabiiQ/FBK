@@ -41,7 +41,7 @@ object NitterParser {
 
     fun getInstanceUrl(id: Int): String = nitterInstances[id % nitterInstances.size]
 
-    fun getFeed(name: String, instance: Int = 0): NitterData? {
+    suspend fun getFeed(name: String, instance: Int = 0, rateLimitCallback: (suspend () -> Unit)? = null): NitterData? {
         // last minute sanity check on input - might not be strictly needed
         val username = name.removePrefix("@")
         if(!twitterUsernameRegex.matches(username)) return null
@@ -57,6 +57,11 @@ object NitterParser {
                 if (rs.isSuccessful) body else {
                     LOG.error("Error getting Nitter feed: $username :: ${rs.code}")
                     LOG.debug(body)
+
+                    if(rs.code == 429) {
+                        rateLimitCallback?.invoke()
+                    }
+
                     return null
                 }
             }
@@ -144,7 +149,8 @@ object NitterParser {
                 }
             }
 
-            return NitterData(nitterUser, nitterTweets)
+            val reversedTweets = nitterTweets.reversed()
+            return NitterData(nitterUser, reversedTweets)
         } catch(e: Exception) {
             LOG.warn("Error parsing Nitter XML from ${getInstanceUrl(instance)}: ${e.message}")
             LOG.info(e.stackTraceString)

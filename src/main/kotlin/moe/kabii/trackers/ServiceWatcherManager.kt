@@ -31,6 +31,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
     val twitcastChecker: TwitcastChecker
     val twitch: TwitchChecker
     val ytChatWatcher: YoutubeChatWatcher
+    val twitterChecker: NitterChecker
 
     init {
         val reminderDelay = ServiceRequestCooldownSpec(
@@ -116,7 +117,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 //            callDelay = 1_500L,
 //            minimumRepeatTime = 120_000L
 //        )
-        val nitterChecker = NitterChecker(discord)
+        twitterChecker = NitterChecker(discord)
 
         // Syndication checker for priority feeds
 //        val syndicationDelay = ServiceRequestCooldownSpec(
@@ -139,7 +140,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             aniListThread,
 //            Thread(twitter, "TwitterChecker"),
 //            Thread(twitterStream, "TwitterStream"),
-            Thread(nitterChecker, "NitterManager"),
+            Thread(twitterChecker, "NitterManager"),
 //            Thread(syndicationChecker, "SyndicationFeedChecker"),
             Thread(twitcastChecker, "TwitcastChecker"),
             Thread(TwitcastWebhookManager, "TwitcastWebhookManager"),
