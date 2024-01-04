@@ -3,6 +3,7 @@ package moe.kabii.trackers.anime.mal
 import kotlinx.coroutines.delay
 import moe.kabii.MOSHI
 import moe.kabii.data.flat.Keys
+import moe.kabii.net.ClientRotation
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.anime.*
 import moe.kabii.util.extensions.fromJsonSafe
@@ -13,7 +14,7 @@ object MALParser : MediaListParser(
         request.header("X-MAL-CLIENT-ID", Keys.config[Keys.MAL.malKey])
     }
 ) {
-    const val callCooldown = 1_000L
+    const val callCooldown = 1_200L
 
     override fun getListID(input: String): String = input // mal does not use an 'id' system for api - just use username
 
@@ -22,13 +23,15 @@ object MALParser : MediaListParser(
 
     @Throws(MediaListDeletedException::class, MediaListIOException::class, IOException::class)
     override suspend fun parse(id: String): MediaList? {
+        val client = ClientRotation.getClientNumber(1)
+
         var first = true
         val animes = mutableListOf<MALAPIMapping.UserAnimeListEdge>()
         var animeRequest: String? = "https://api.myanimelist.net/v2/users/$id/animelist?fields=node,list_status{comments},main_picture,num_episodes,mean,nsfw&limit=1000&nsfw=true"
         while(animeRequest != null) {
             if(first) first = false
             else delay(callCooldown)
-            val responseBody = requestMediaList(animeRequest) { response ->
+            val responseBody = requestMediaList(animeRequest, client) { response ->
                 return@requestMediaList if (!response.isSuccessful) {
                     when (response.code) {
                         404 -> throw MediaListDeletedException("MAL: Response code 404 for list '$id'")
@@ -50,7 +53,7 @@ object MALParser : MediaListParser(
         var mangaRequest: String? = "https://api.myanimelist.net/v2/users/$id/mangalist?fields=node,list_status,main_picture,mean,num_volumes,num_chapters,nsfw&limit=1000&nsfw=true"
         while(mangaRequest != null) {
             delay(callCooldown)
-            val responseBody = requestMediaList(mangaRequest) { response ->
+            val responseBody = requestMediaList(mangaRequest, client) { response ->
                 // should not return 404 - list already exists if anime stage did not 404
                 // if we already got the anime list, but manga can not be acquired, still return nothing
                 // we do not want the list watcher to recieve empty manga list - this would be perceived as an update
