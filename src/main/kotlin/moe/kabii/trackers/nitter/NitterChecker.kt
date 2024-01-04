@@ -17,6 +17,7 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.TwitterFeedCache
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
@@ -31,7 +32,6 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
@@ -57,6 +57,10 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
     private val generalInstanceAdjustment = 0L
     private val minimumRepeatTime = refreshGoal + 2_000L
+
+    private val metaChanId = Keys.config[Keys.Admin.logChannel].snowflake
+    private val errorPostCooldown = Duration.ofHours(1) // will only post rate limit to discord every duration
+    private var errorPostNext = Instant.now()
 
     private val instanceLocks: Map<Int, Mutex>
 
@@ -161,8 +165,30 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
                                 val cache = TwitterFeedCache.getOrPut(feed)
 
+                                // Create a callback that will be used in the event of nitter rate limit - only call out to discord after the errorPostCooldown interval
+                                suspend fun rateLimit() {
+                                    if(Instant.now() > errorPostNext) {
+                                        errorPostNext = Instant.now() + errorPostCooldown // update throttled next post
+                                        try {
+                                            // post actual error notification to admin channel
+                                            instances[instanceId].client
+                                                .getChannelById(metaChanId)
+                                                .ofType(MessageChannel::class.java)
+                                                .flatMap { chan ->
+                                                    chan.createMessage(
+                                                        Embeds.fbk("A Twitter rate limit error has occured for instance #$instanceId")
+                                                    )
+                                                }
+                                                .awaitSingle()
+                                        } catch(e: Exception) {
+                                            LOG.warn("Error posting Twitter rate limit meta message: ${e.message}")
+                                            LOG.debug(e.stackTraceString)
+                                        }
+                                    }
+                                }
+
                                 val nitter = NitterParser
-                                    .getFeed(feed.username, instance = instanceId)
+                                    .getFeed(feed.username, instance = instanceId, rateLimitCallback = ::rateLimit)
                                     ?: return@forEach
 
                                 val (user, tweets) = nitter
@@ -518,7 +544,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         when {
             !twitterCfg.mentionRoles -> return null
             tweet.retweet -> if(!twitterCfg.mentionRetweets) return null
-            tweet.reply -> if(!twitterCfg.mentionReplies) return null
+//            tweet.reply -> if(!twitterCfg.mentionReplies) return null
             tweet.quote -> if(!twitterCfg.mentionQuotes) return null
             else -> if(!twitterCfg.mentionTweets) return null
         }

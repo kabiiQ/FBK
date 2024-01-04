@@ -8,6 +8,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.stackTraceString
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
@@ -22,7 +23,8 @@ abstract class MediaListParser(val authenticator: Authenticator? = null) {
     abstract suspend fun parse(id: String): MediaList?
     abstract fun getListID(input: String): String?
 
-    suspend fun <R: Any> requestMediaList(requestStr: String, translator: (Response) -> Result<R?, Long>): R? {
+    suspend fun <R: Any> requestMediaList(requestStr: String, client: OkHttpClient? = null, translator: (Response) -> Result<R?, Long>): R? {
+        val httpClient = client ?: OkHTTP
         val request = newRequestBuilder()
             .get()
             .run { authenticator?.invoke(this) ?: this }
@@ -31,7 +33,7 @@ abstract class MediaListParser(val authenticator: Authenticator? = null) {
 
         for(attempt in 1..2) {
             val response = try {
-                OkHTTP.newCall(request).execute()
+                httpClient.newCall(request).execute()
             } catch (e: Exception) {
                 // actual network issue, retry
                 LOG.warn("Media list request IO issue: $request :: ${e.message}")
