@@ -99,6 +99,7 @@ object YoutubeVideoTrack : Command("trackvid") {
             val embed = Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live, $mentioning")
             val reply = if(usePings != null) ereply(embed) else ireply(embed)
             reply.awaitSingle()
+            TargetSuggestionGenerator.updateTargets(client.clientId, chan.id.asLong())
         }
     }
 }
