@@ -37,7 +37,7 @@ object Say : Command("say") {
                 println("Unable to get MessageChannel with ID \"$channelID\"")
                 return@terminal
             }
-            val content = args.drop(1).joinToString(" ")
+            val content = args.drop(2).joinToString(" ")
             channel.createMessage(content).tryAwait()
         }
     }
