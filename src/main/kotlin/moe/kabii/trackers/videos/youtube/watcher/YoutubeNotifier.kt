@@ -343,7 +343,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(4_000L))
+                    .timeout(Duration.ofMillis(12_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
@@ -400,7 +400,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 } else chan.createMessage()
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(4_000L))
+                    .timeout(Duration.ofMillis(12_000L))
                     .awaitSingle()
 
             } catch(ce: ClientException) {
@@ -441,10 +441,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val startTime = video.liveInfo?.scheduledStart!!
             val eta = TimestampFormat.RELATIVE_TIME.format(startTime)
 
-            val shortDescription = StringUtils.abbreviate(video.description, 200)
+            val descLine = video.description.lines().first()
+            val shortDescription = StringUtils.truncate(descLine, 120)
+
             val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
 
-            val embed = Embeds.other("Stream scheduled to start: $eta\n\nVideo description: $shortDescription", creationColor)
+            val embed = Embeds.other("Stream scheduled to start: $eta\n\nVideo description: $shortDescription...", creationColor)
                 .withAuthor(EmbedCreateFields.Author.of("${video.channel.name} scheduled a new stream!", video.channel.url, video.channel.avatar))
                 .withUrl(video.url)
                 .withTitle(shortTitle)
@@ -457,7 +459,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(4_000L))
+                    .timeout(Duration.ofMillis(12_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
@@ -482,7 +484,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         discordTask {
             val chan = getChannel(fbk, trackGuild, trackChan, null)
 
-            val (mention, old) = if(mentioning != null) {
+            val mention = if(mentioning != null) {
                 val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
                 val mention = if(old == true) null
                 else {
@@ -492,8 +494,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     val features = getStreamConfig(useMentionFor)
                     getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere)
                 }
-                mention to old
-            } else null to false
+                mention
+            } else null
 
             val mentionContent = if(mention != null) {
 
@@ -505,7 +507,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
             val new = chan
                 .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
-                .timeout(Duration.ofMillis(4_000L))
+                .timeout(Duration.ofMillis(12_000L))
                 .awaitSingle()
             TrackerUtil.checkAndPublish(fbk, new)
         }
@@ -520,7 +522,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val guildId = target.discordGuild
 
 
-        discordTask {
+        discordTask(24_000L) {
             val chan = getChannel(fbk, guildId, target.discordChannel, target)
 
             // get channel stream embed settings
@@ -577,7 +579,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 val newNotification = mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(4_000L))
+                    .timeout(Duration.ofMillis(12_000L))
                     .awaitSingle()
 
                 TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
