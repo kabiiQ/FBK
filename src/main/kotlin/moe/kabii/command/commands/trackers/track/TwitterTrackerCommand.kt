@@ -37,10 +37,10 @@ object TwitterTrackerCommand : TrackerCommand {
             TwitterFeed.findExisting(target.identifier)
         }
 
-//        if(knownUser == null || !knownUser.enabled) {
-//            origin.ereply(Embeds.error("General Twitter feed tracking is currently disabled due to the ongoing issues with Twitter.")).awaitSingle()
-//            return
-//        }
+        if(knownUser == null || !knownUser.enabled) {
+            origin.ereply(Embeds.error("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A limited number of popular feeds are currently enabled for tracking.")).awaitSingle()
+            return
+        }
 
         val twitterUser = if(knownUser == null) {
 
@@ -85,7 +85,8 @@ object TwitterTrackerCommand : TrackerCommand {
             }
         }
 
-        val tempnote = "\n\nNOTICE: Most Twitter feeds are currently updating **very slowly** due to changes made by Twitter. A limited number of feeds are currently enabled on this bot for faster access. It is not currently practical to enable all feeds for this access.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
+        //val tempnote = "\n\nNOTICE: Most Twitter feeds are currently updating **very slowly** due to changes made by Twitter. A limited number of feeds are currently enabled on this bot for faster access. It is not currently practical to enable all feeds for this access.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
+        val tempnote = "\n\nNOTICE: It has become very difficult to access Twitter as a bot, so only a limited number of Twitter feeds are currently enabled for access."
         origin.ireply(Embeds.fbk("Now tracking **[$username](${URLUtil.Twitter.feedUsername(username)})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.$tempnote")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }

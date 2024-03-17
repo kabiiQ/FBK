@@ -33,11 +33,11 @@ object YoutubeConfig : Command("yt") {
             "creation",
             YoutubeSettings::streamCreation
         ),
-        BooleanElement("Include membership-only videos in this channel",
+        BooleanElement("Include membership-only videos/streams in this channel (Leave this enabled for most servers)",
             "memberVideos",
             YoutubeSettings::includeMemberContent
         ),
-        BooleanElement("Include non-membership videos in this channel",
+        BooleanElement("Include non-membership videos/streams in this channel (Leave this enabled for most servers)",
             "publicVideos",
             YoutubeSettings::includePublicContent
         ),
