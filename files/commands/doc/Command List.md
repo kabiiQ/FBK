@@ -632,6 +632,7 @@ This page is an automatically generated list of all bot commands with a link to 
 | ---    | ---  | ---
 | `username*` | String | The username to untrack. @username for Twitter, Twitch username, YouTube channel ID (see wiki)
 | `site` | Integer | The site name may need to be specified if it can not be inferred.
+| `moveto` | Channel | A Discord channel to move this tracked feed into, after removing it from the current channel.
 
 
 ### - `/usetracker`:
@@ -802,6 +803,13 @@ This page is an automatically generated list of all bot commands with a link to 
 
 - Configurable language settings settings. Run '/languagecfg config' to view all.
 
+#### -- `/languagecfg ephemeral`
+
+- Only display "Translate Message" output to command user
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for ephemeral. Leave blank to check current value.
 #### -- `/languagecfg targetlang`
 
 - Default target language for translations
@@ -1412,13 +1420,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for pingtweets. Leave blank to check current value.
-#### -- `/twitterping pingreplies`
-
-- Mention for Tweet replies.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for pingreplies. Leave blank to check current value.
 #### -- `/twitterping pingquotes`
 
 - Mention for Quote Tweets.
@@ -1469,13 +1470,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for quotes. Leave blank to check current value.
-#### -- `/twitter replies`
-
-- Post when tracked feeds reply to other users
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for replies. Leave blank to check current value.
 #### -- `/twitter mediaonly`
 
 - LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)
@@ -1490,6 +1484,14 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for translate. Leave blank to check current value.
+#### -- `/twitter customurl`
+
+- Post custom Twitter links, overriding the standard FBK embed. (Embedded translations will not be ...
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | String | The new value for customurl. Leave blank to check current value.
+| `reset` | True/False | Reset this option its default value: {empty}
 #### -- `/twitter config`
 
 - View all twitter tracker settings and configure.
