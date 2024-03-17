@@ -118,7 +118,7 @@ object NettyFileServer {
                 }
 
                 // Estimate refresh delays
-                val priorityInstance = min(ceil((priorityList.size.toDouble() * NitterChecker.callDelay) / NitterChecker.refreshGoal).toInt(), NitterParser.instanceCount - 1)
+                val priorityInstance = min(ceil((priorityList.size.toDouble() * NitterChecker.callDelay) / NitterChecker.refreshGoal).toInt(), NitterParser.instanceCount)
                 val generalInstance = NitterParser.instanceCount - priorityInstance
 
                 // feed count * time per call / num instances / 60000 (millis to minutes)

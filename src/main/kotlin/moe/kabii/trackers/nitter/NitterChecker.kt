@@ -21,10 +21,7 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterRetweets
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargetMention
+import moe.kabii.data.relational.twitter.*
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MetaData
@@ -46,10 +43,8 @@ import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.TimeoutException
 import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.min
 
 open class NitterChecker(val instances: DiscordInstances) : Runnable {
     private val instanceCount = NitterParser.instanceCount
@@ -65,7 +60,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
     private val instanceLocks: Map<Int, Mutex>
 
     companion object {
-        val callDelay = 2_000L // 450/15min = 30/minute = 2sec/call
+        val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
         val refreshGoal = 82_000L // = 41/instance @ 2 seconds
         val loopTime = 20_000L // can lower loop repeat time below refresh time now with locking system implemented
     }
@@ -102,13 +97,14 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
     open suspend fun updateFeeds(start: Instant) {
         LOG.debug("NitterChecker :: start: $start")
+
         // get all tracked twitter feeds
-//        val feeds = propagateTransaction {
-//            TwitterFeed.all().toList()
-//        }
         val feeds = propagateTransaction {
             TwitterFeed
-                .all().toList()
+                .find {
+                    TwitterFeeds.enabled eq true
+                }
+                .toList()
         }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
@@ -116,30 +112,36 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
             return
         }
 
-        val (priority, general) = feeds.partition(TwitterFeed::enabled)
+        //val (priority, general) = feeds.partition(TwitterFeed::enabled)
 
         // compute how many instances to use for 'priority' feeds, targeting a refresh time goal
         // ensure at least one instance is saved for general pool in case numbers change drastically
-        val priorityInstance = min(ceil((priority.size.toDouble() * callDelay) / refreshGoal).toInt(), instanceCount - 1)
-        val generalInstance = instanceCount - priorityInstance
+//        val priorityInstance = min(ceil((priority.size.toDouble() * callDelay) / refreshGoal).toInt(), instanceCount)
+//        val generalInstance = instanceCount - priorityInstance
 
         // convert list of feeds into Map<Instance ID, Feed Chunk>
         // partition feeds onto nitter instances for pulling
-        val feedPerPriority = ceil(priority.size.toDouble() / priorityInstance).toInt()
-        val priorityChunks = priority
-            .chunked(feedPerPriority)
+//        val feedPerPriority = ceil(priority.size.toDouble() / priorityInstance).toInt()
+//        val priorityChunks = priority
+//            .chunked(feedPerPriority)
+//            .mapIndexed { chunkIndex, chunkFeeds ->
+//                chunkIndex to chunkFeeds
+//            }
+
+//        val feedPerGeneral = ceil(general.size.toDouble() / generalInstance).toInt()
+//        val generalChunks = general
+//            .chunked(feedPerGeneral)
+//            .mapIndexed { chunkIndex, chunkFeeds ->
+//                chunkIndex + priorityInstance to chunkFeeds
+//            }
+
+        val feedsPerChunk = ceil(feeds.size.toDouble() / instanceCount).toInt()
+        val chunks = feeds
+            .chunked(feedsPerChunk)
             .mapIndexed { chunkIndex, chunkFeeds ->
                 chunkIndex to chunkFeeds
             }
-
-        val feedPerGeneral = ceil(general.size.toDouble() / generalInstance).toInt()
-        val generalChunks = general
-            .chunked(feedPerGeneral)
-            .mapIndexed { chunkIndex, chunkFeeds ->
-                chunkIndex + priorityInstance to chunkFeeds
-            }
-
-        (priorityChunks + generalChunks)
+        chunks
             .map { (instanceId, feedChunk) ->
 
                 LOG.debug("Chunk $instanceId (${feedChunk.size}): ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
@@ -151,12 +153,14 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                         return@launch
                     }
                     try {
-                        kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(12)) {
+                        val timeout = max(feedChunk.size * callDelay * 1.5, 720000.0)
+                        kotlinx.coroutines.time.withTimeout(Duration.ofMillis(timeout.toLong())) {
                             var first = true
                             feedChunk.forEach { feed ->
 
                                 if (!first) {
-                                    val delay = if(instanceId >= priorityInstance) callDelay + generalInstanceAdjustment else callDelay
+                                    // val delay = if(instanceId >= priorityInstance) callDelay + generalInstanceAdjustment else callDelay
+                                    val delay = callDelay
                                     delay(delay)
                                 } else first = false
 
@@ -251,7 +255,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         // send discord notifs - check if any channels request
         TwitterFeedCache[username]?.seenTweets?.add(tweet.id)
 
-        discordTask(10_000L) {
+        discordTask(30_000L) {
             // check for youtube video info from tweet
             // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
             // also will increase awareness of membership-limited streams
@@ -450,7 +454,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                     }
 
                     TrackerUtil.checkAndPublish(fbk, notif)
-                } catch (time: TimeoutException) {
+                } catch (time: TimeoutCancellationException) {
                     LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}")
                 } catch (e: Exception) {
                     if (e is ClientException && e.status.code() == 403) {
