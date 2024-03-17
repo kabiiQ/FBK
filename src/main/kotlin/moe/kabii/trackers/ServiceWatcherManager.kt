@@ -133,7 +133,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
             //Thread(ytManualPuller, "YT-ManualFeedPull"),
-            Thread(kickChecker, "KickChecker"),
+//            Thread(kickChecker, "KickChecker"),
             Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
             malThread,
             kitsuThread,
