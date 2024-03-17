@@ -113,7 +113,8 @@ object TrackedStreams {
             fun getForChannel(clientId: Int, discordChan: Snowflake, site: DBSite, channelId: String) = Target.wrapRows(
                 Targets
                     .innerJoin(StreamChannels)
-                    .innerJoin(DiscordObjects.Channels).select {
+                    .innerJoin(DiscordObjects.Channels)
+                    .select {
                         StreamChannels.site eq site and
                                 (Targets.discordClient eq clientId) and
                                 (StreamChannels.siteChannelID eq  channelId) and

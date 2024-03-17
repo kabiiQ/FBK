@@ -1,0 +1,19 @@
+{
+  "name": "remove",
+  "description": "Remove a user-set entity",
+  "options": [
+    {
+      "name": "twitter",
+      "description": "Removes a tracked Twitter feed from the entire bot, notifying users",
+      "type": 1,
+      "options": [
+        {
+          "name": "feed",
+          "description": "The username of the Twitter feed to be removed",
+          "type": 3,
+          "required": true
+        }
+      ]
+    }
+  ]
+}

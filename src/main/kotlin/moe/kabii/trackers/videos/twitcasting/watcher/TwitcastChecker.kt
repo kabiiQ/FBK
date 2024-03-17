@@ -99,7 +99,7 @@ class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequest
 
     @RequiresExposedContext
     suspend fun checkMovie(channel: TrackedStreams.StreamChannel, info: TwitcastingMovieResponse, targets: List<TrackedTarget>) {
-        val (movie, user) = info
+        val (movie, _) = info
 
         // actions depend on : movie live state and whether we already knew about this movie
         val existing = Twitcasts.Movie.find {

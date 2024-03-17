@@ -3,8 +3,6 @@ package moe.kabii.data.relational.twitter
 import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.sql.*
 
-// TODO add to postgresconnection
-
 /**
     Database table to work around being unable to identify retweet date/time coming from Nitter
     Existence of a row for a Feed/Tweet ID combo means it has been seen before and should not be posted.
