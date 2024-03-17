@@ -506,6 +506,8 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                 featureChannel.twitterTargetChannel
             }
         } else {
+            LOG.info("Twitter feed ${feed.username} returned NO active targets.")
+            return null
             propagateTransaction {
                 feed.delete()
             }
