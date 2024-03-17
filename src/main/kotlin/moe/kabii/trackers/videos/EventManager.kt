@@ -80,7 +80,7 @@ class EventManager(val watcher: StreamWatcher) {
         val ytVideoId = ytVideo?.id?.value ?: -1
 
         // Send scheduled event to Discord
-        watcher.discordTask {
+        watcher.discordTask(30_000L) {
             val eventTitle = StringUtils.abbreviate(title, 100)
             val discordEvent = try {
                 // Build event from known details
@@ -111,7 +111,7 @@ class EventManager(val watcher: StreamWatcher) {
                     .flatMap { g -> g.createScheduledEvent(eventSpec) }
                     .awaitSingle()
             } catch(e: Exception) {
-                LOG.error("Error creating Discord scheduled event: ${e.message}")
+                LOG.error("Error creating Discord scheduled event for $guildId - $url: ${e.message}")
                 LOG.debug(e.stackTraceString)
                 val ex = e as? ClientException
                 if(ex?.status?.code() == 403 ||
@@ -254,7 +254,7 @@ class EventManager(val watcher: StreamWatcher) {
 
     private suspend fun editEvent(data: DiscordEventData, block: suspend (ScheduledEventEditMono) -> ScheduledEventEditMono) {
         if(!data.valid) return // event exists (a new one should not be created) but was deleted by user or expired
-        watcher.discordTask {
+        watcher.discordTask(30_000L) {
             try {
                 val event = getExistingEvent(data) ?: return@discordTask
                 event.edit()
