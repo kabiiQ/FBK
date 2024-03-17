@@ -124,10 +124,15 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
         if(stream == null) {
             // stream is not live, check if there are any existing notifications to remove
             val notifications = DBStreams.Notification.getForChannel(channel)
-            if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
-                // existence of notifications should correlate to scheduled events existing
-                eventManager.endEvents(channel)
+            // end any existing scheduled events for this stream
+            TrackedStreams.DiscordEvent.find {
+                TrackedStreams.DiscordEvents.stream eq channel.id
+            }.forEach { event ->
+                eventManager.completeEvent(event)
+            }
+
+            if(!notifications.empty()) { // first check if there are any notifications posted for this stream. otherwise we don't care that it isn't live and don't need to grab any other objects.
 
                 if(dbStream == null) { // abandon notification if downtime causes missing information
                     notifications.forEach { notif ->
