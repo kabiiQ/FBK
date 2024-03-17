@@ -19,7 +19,7 @@ import java.io.IOException
 class YoutubeAPIException(message: String, cause: Throwable? = null) : IOException(message, cause)
 
 object YoutubeParser {
-    private val apiKey = Keys.config[Keys.Youtube.key]
+    private val apiKeys = Keys.config[Keys.Youtube.keys].toMutableList()
     private val errorAdapter = MOSHI.adapter(YoutubeErrorResponse::class.java)
 
     val color = Color.of(16711680)
@@ -129,6 +129,7 @@ object YoutubeParser {
 
     @Throws(YoutubeAPIException::class, IOException::class)
     private inline fun <reified R: Any> requestJson(requestPart: String): R {
+        val apiKey = apiKeys.first() // return first available api key - keys should be removed if quota has expired
         val requestUrl = "https://www.googleapis.com/youtube/v3/$requestPart&key=$apiKey"
 
         val request = newRequestBuilder()
@@ -160,6 +161,8 @@ object YoutubeParser {
                             // if this triggers on video/channel calls, we will need to increase delay between calls
                             // and hopefully request increased quota from YT. set a flag to stop requests for the day
                             LOG.error("Youtube Quota exceeded : $error")
+                            if (apiKeys.size > 1)
+                                apiKeys.remove(apiKey)
                         } else {
                             LOG.warn("Youtube call returned an error: $error")
                         }

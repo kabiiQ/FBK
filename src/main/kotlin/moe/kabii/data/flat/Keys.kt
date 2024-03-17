@@ -20,7 +20,7 @@ object Keys : ConfigSpec("") {
         val token by required<String>()
     }
     object Youtube : ConfigSpec() {
-        val key by required<String>("api_key")
+        val keys by required<List<String>>("api_keys")
         val name by required<String>("app_name")
         val callbackAddress by required<String>("callback_address")
         val callbackPort by required<Int>("callback_port")
