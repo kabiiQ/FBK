@@ -6,6 +6,7 @@ import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.`object`.entity.channel.TopLevelGuildMessageChannel
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirst
@@ -41,13 +42,22 @@ suspend fun Member.hasPermissions(vararg permissions: Permission): Boolean {
     return perms.containsAll(permissions.toList())
 }
 
+suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Permission): Boolean {
+    if(BotAdmin.check(userID = id.asLong())) return true
+    return if(channel is TopLevelGuildMessageChannel) {
+        channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
+    } else {
+        // Checking permissions such as MANAGE_CHANNELS in a forum channel seems to cause a ClassCastException in D4J outside our control
+        // default to guild permissions for this case
+        hasPermissions(*permissions)
+    }
+}
+
 @Throws(MemberPermissionsException::class)
 suspend fun Member.verify(vararg permissions: Permission) {
     if(this.hasPermissions(*permissions)) return
     throw MemberPermissionsException(*permissions)
 }
-
-suspend fun Member.hasPermissions(channel: GuildChannel, vararg permissions: Permission): Boolean = BotAdmin.check(userID = id.asLong()) || channel.getEffectivePermissions(id).awaitFirstOrNull()?.containsAll(permissions.toList()) == true
 
 @Throws(MemberPermissionsException::class)
 suspend fun Member.channelVerify(channel: GuildChannel, vararg permissions: Permission) {
