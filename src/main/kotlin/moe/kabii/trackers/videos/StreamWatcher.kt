@@ -349,7 +349,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     when (guildChan) {
                         is TextChannel -> guildChan.edit().withName(newName).awaitSingle()
                         is NewsChannel -> guildChan.edit().withName(newName).awaitSingle()
-                        else -> LOG.error("Unable to rename Discord tracker channel. Possible new channel type.")
+                        else -> {
+                            LOG.error("Unable to rename Discord tracker channel. Possible new channel type: $guildChan")
+                            feature.renameEnabled = false
+                            config.save()
+                        }
                     }
                 } catch(ce: ClientException) {
                     if(ce.status.code() == 403) {
