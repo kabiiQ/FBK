@@ -38,7 +38,7 @@ abstract class MediaListParser(val authenticator: Authenticator? = null) {
                 // actual network issue, retry
                 LOG.warn("Media list request IO issue: $request :: ${e.message}")
                 LOG.debug(e.stackTraceString)
-                delay(2000L)
+                delay(4_000L)
                 continue
             }
 
