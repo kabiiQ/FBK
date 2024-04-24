@@ -18,7 +18,7 @@ object TemporaryChannels : CommandContainer {
         override val wikiPath = "Utility-Commands#temporary-voice-channels"
 
         init {
-            botReqs(Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS)
+            botReqs(Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS, Permission.CONNECT, Permission.SPEAK)
             chat {
                 // feature must be manually enabled at this time. not likely to be something server owners want without knowing
                 channelFeatureVerify(FeatureChannel::tempChannelCreation, "tempvc", allowOverride = false)
@@ -33,7 +33,7 @@ object TemporaryChannels : CommandContainer {
                 val categoryID = voice.categoryId.orNull()
                 val ownerPermissions = setOf(
                     PermissionOverwrite.forMember(member.id,
-                        PermissionSet.of(Permission.VIEW_CHANNEL, Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS, Permission.CONNECT, Permission.SPEAK, Permission.PRIORITY_SPEAKER), // granted
+                        PermissionSet.of(Permission.VIEW_CHANNEL, Permission.MOVE_MEMBERS, Permission.MANAGE_CHANNELS, Permission.CONNECT, Permission.SPEAK), // granted
                         PermissionSet.none()) // denied
                 )
 
