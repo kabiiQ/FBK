@@ -2,7 +2,7 @@ group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.8.20"
+    val kotlinVer = "1.9.22"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -12,25 +12,15 @@ plugins {
 repositories {
     mavenCentral()
     // discord4j snapshots (using snapshot for thread support)
-    maven {
-        name = "snapshots"
-        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
-    }
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
     // personal libs: rusty
-    maven {
-        name = "jitpack.io"
-        url = uri("https://jitpack.io")
-    }
+    maven("https://jitpack.io")
     // lavaplayer-natives
-    maven {
-        name = "lavaplayer"
-        url = uri("https://m2.dv8tion.net/releases")
-    }
+    maven("https://m2.dv8tion.net/releases")
+    // lavaplayer snapshots
+    maven("https://maven.lavalink.dev/snapshots")
     // kotlinx coroutines-core
-    maven {
-        name = "kotlinx-bintray"
-        url = uri("https://kotlin.bintray.com/kotlinx")
-    }
+    maven("https://kotlin.bintray.com/kotlinx")
 }
 
 dependencies {
@@ -55,7 +45,8 @@ dependencies {
 
     // music bot
 //    implementation("com.github.walkyst:lavaplayer-fork:1.4.2") // discord audio library
-    implementation("dev.arbjerg:lavaplayer:2.0.0")
+    implementation("dev.arbjerg:lavaplayer:0eaeee195f0315b2617587aa3537fa202df07ddc-SNAPSHOT")
+    implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
     implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.21")
 
@@ -129,6 +120,7 @@ dependencies {
         }
     }
 }
+
 
 val updateVersion = task("updateVersion") {
     // custom script to create version file name and increment build number
