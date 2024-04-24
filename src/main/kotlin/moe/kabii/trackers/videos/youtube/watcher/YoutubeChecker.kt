@@ -319,7 +319,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 val scheduled = ytVideo.liveInfo?.scheduledStart
                 if(scheduled == null) {
                     dbVideo.apiAttempts += 1
-                    LOG.debug("YouTube provided UPCOMING video with no start time")
+                    LOG.debug("YouTube provided UPCOMING video with no start time: ${ytVideo.id} :: check ${dbVideo.apiAttempts}")
+                    // yt did not return the relevant information for this "upcoming" stream yet
+                    // this stream frame should continue to be processed as a new video
+                    dbVideo.lastAPICall = null
                     return
                 }
                 // assign video 'scheduled' status
