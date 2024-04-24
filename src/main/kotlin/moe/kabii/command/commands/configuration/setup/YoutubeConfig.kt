@@ -78,6 +78,18 @@ object YoutubeConfig : Command("yt") {
             )
 
             if(configurator.run(this)) {
+                if(!youtube.includeMemberContent && !youtube.includePublicContent) {
+                    youtube.includeMemberContent = true
+                    youtube.includePublicContent = true
+                    config.save()
+
+                    event.createFollowup()
+                        .withEmbeds(Embeds.error("You have disabled both `memberVideos` and `publicVideos`. With both of these disabled, **no** uploads or streams would be posted at all. This change has been reverted for you, and both have been re-enabled.\n\nOnly disable `memberVideos` if you want to specifically not post any members-limited videos in this channel, and only disable `publicVideos` if you wanted to ONLY have members videos in this channel (no public videos at all). Disabling both would disable all videos completely. Most users should not touch these settings."))
+                        .withEphemeral(true)
+                        .awaitSingle()
+                    return@chat
+                }
+
                 config.save()
             }
         }
