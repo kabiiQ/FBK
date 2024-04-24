@@ -48,16 +48,13 @@ object YoutubeParser {
     private fun getChannelByName(name: String): YoutubeChannelInfo? = getChannel("forUsername=$name")
 
     @Throws(YoutubeAPIException::class)
-    private fun getChannelByHandle(handle: String): YoutubeChannelInfo? = YoutubeScraper
-        .handle(handle)
-        ?.run("id="::plus)
-        ?.run(::getChannel)
+    private fun getChannelByHandle(handle: String): YoutubeChannelInfo? = getChannel("forHandle=$handle")
 
     @Throws(YoutubeAPIException::class)
     private fun getChannel(identifierPart: String): YoutubeChannelInfo? {
         val request = requestJson<YoutubeChannelResponse>("channels?part=snippet&$identifierPart")
 
-        return request.items.firstOrNull()?.let { channel ->
+        return request.items?.firstOrNull()?.let { channel ->
             YoutubeChannelInfo(
                 id = channel.id,
                 name = channel.snippet.title,

@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class YoutubeChannelResponse(
-    val items: List<YoutubeChannel>
+    val items: List<YoutubeChannel>?
 )
 
 @JsonClass(generateAdapter = true)
