@@ -38,7 +38,7 @@ object TwitterTrackerCommand : TrackerCommand {
         }
 
         if(knownUser == null || !knownUser.enabled) {
-            origin.ereply(Embeds.error("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A limited number of popular feeds are currently enabled for tracking.")).awaitSingle()
+            origin.ereply(Embeds.error("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking.")).awaitSingle()
             return
         }
 
