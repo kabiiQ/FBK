@@ -18,12 +18,4 @@ object LanguageSuggestionGenerator {
                 .build()
         }
     }
-
-    fun localeSuggestions(): CommandOptionSuggestions = Translations.locales.keys
-        .map { locale ->
-            ApplicationCommandOptionChoiceData.builder()
-                .name("${locale.displayLanguage} (${locale.language})")
-                .value(locale.language)
-                .build()
-        }
 }

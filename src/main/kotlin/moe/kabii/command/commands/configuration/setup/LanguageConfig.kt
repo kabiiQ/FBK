@@ -49,15 +49,6 @@ object LanguageConfig : Command("languagecfg") {
                     ?.fullName.toString()
             },
             autoComplete = true
-        ),
-        CustomElement("Language/locale that FBK should use for this Discord server",
-            "locale",
-            TranslatorSettings::guildLocale as KMutableProperty1<TranslatorSettings, Any?>,
-            prompt = "Enter a language/locale that FBK should use for this Discord server. For example, you can enter `EN` to set the language back to English. It is recommended to instead use `/languagecfg locale` to set this value, so that you can use the autocompletion options. Only user-provided translations are available.",
-            default = Translations.defaultLocale,
-            parser = ::localeParser,
-            value = { tl -> tl.guildLocale.language },
-            autoComplete = true
         )
     )
 
@@ -67,7 +58,6 @@ object LanguageConfig : Command("languagecfg") {
             val subCommand = event.options[0]
             when(subCommand.name) {
                 "targetlang" -> suggest(LanguageSuggestionGenerator.languageSuggestions(translationService, value))
-                "locale" -> suggest(LanguageSuggestionGenerator.localeSuggestions())
             }
         }
 

@@ -148,8 +148,9 @@ data class DiscordParameters (
     fun i18n(identifier: String, vararg variables: Any): String = selecti18nMethod(identifier, orderedVars = variables)
 
     private fun selecti18nMethod(stringIdentifier: String, namedVars: Array<out Pair<String, Any>>? = null, orderedVars: Array<out Any>? = null): String {
-        val useLocale = if(!isPM) Translations.locales[config.translator.guildLocale] else null
-        val locale = useLocale ?: Translations.locales[Translations.defaultLocale]
+        /*val useLocale = if(!isPM) Translations.locales[config.translator.guildLocale] else null
+        val locale = useLocale ?: Translations.locales[Translations.defaultLocale]*/
+        val locale = Translations.locales[Translations.defaultLocale]
         checkNotNull(locale) { "Missing locale ${config.translator.guildLocale} set for guild ${target.id}" }
 
         return if(namedVars != null) {
