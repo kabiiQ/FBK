@@ -156,7 +156,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
 
     data class MentionRole(val discord: Role?, val textPart: String?, val lastMention: DateTime?)
     @CreatesExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TrackedTarget, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false): MentionRole? {
+    suspend fun getMentionRoleFor(dbTarget: TrackedTarget, targetChannel: MessageChannel, streamCfg: StreamSettings, memberLimit: Boolean = false, uploadedVideo: Boolean = false, upcomingNotif: Boolean = false, creationNotif: Boolean = false, ytPremiere: Boolean = false, ytShort: Boolean = false): MentionRole? {
         if(!streamCfg.mentionRoles) return null
 
         val (dbMention, lastMention) = propagateTransaction {
@@ -179,6 +179,8 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             upcomingNotif -> if(memberLimit) null else dbMention.mentionRoleUpcoming
             creationNotif -> if(memberLimit) null else dbMention.mentionRoleCreation
             memberLimit -> dbMention.mentionRoleMember
+            ytPremiere ->  dbMention.mentionRolePremieres ?: dbMention.mentionRoleUploads ?: dbMention.mentionRole
+            ytShort -> dbMention.mentionRoleShorts ?: dbMention.mentionRoleUploads ?: dbMention.mentionRole
             uploadedVideo -> dbMention.mentionRoleUploads ?: dbMention.mentionRole
             else -> dbMention.mentionRole
         }
@@ -198,6 +200,9 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     propagateTransaction {
                         if(dbMention.mentionRole == mentionRole) dbMention.mentionRole = null
                         if(dbMention.mentionRoleMember == mentionRole) dbMention.mentionRoleMember = null
+                        if(dbMention.mentionRoleUploads == mentionRole) dbMention.mentionRoleUploads = null
+                        if(dbMention.mentionRolePremieres == mentionRole) dbMention.mentionRolePremieres = null
+                        if(dbMention.mentionRoleShorts == mentionRole) dbMention.mentionRoleShorts = null
                         if(dbMention.mentionRole == null && dbMention.mentionRoleMember == null && dbMention.mentionText == null) dbMention.delete()
                     }
                 }

@@ -21,17 +21,24 @@ data class YoutubeVideoInfo(
     val live: Boolean,
     val upcoming: Boolean,
     val premiere: Boolean,
-    val duration: Duration,
+    val duration: Duration?,
     val published: Instant,
     val liveInfo: YoutubeStreamInfo?,
     val channel: YoutubeChannelInfo,
-    val memberLimited: Boolean
+    val memberLimited: Boolean,
+    val short: Boolean
 ) {
     val url = "https://youtube.com/watch?v=$id"
 
     fun filterMembership(settings: YoutubeSettings): Boolean = when {
-        this.memberLimited -> settings.includeMemberContent
+        memberLimited -> settings.includeMemberContent
         else -> settings.includePublicContent
+    }
+
+    fun filterUploadNotice(settings: YoutubeSettings): Boolean = when {
+        !settings.uploads -> false
+        short -> settings.includeShortUploads
+        else -> settings.includeNormalUploads
     }
 }
 

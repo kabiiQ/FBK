@@ -87,6 +87,18 @@
             "required": false
         },
         {
+            "name": "alternatepremiererole",
+            "description": "An alternate role pinged for YouTube premieres. Most users should not touch this setting.",
+            "type": 8,
+            "required": false
+        },
+        {
+            "name": "alternateshortsrole",
+            "description": "An alternate role pinged for 'short' YouTube uploads. Most users should not touch this setting.",
+            "type": 8,
+            "required": false
+        },
+        {
             "name": "twittercolor",
             "description": "A custom color to apply to Tweet messages for this feed.",
             "type": 3,

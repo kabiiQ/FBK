@@ -143,7 +143,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                                         // stream has ended and vod is available - edit notifications to reflect
                                         val vodMessage = if(dbStream.premiere) " premiered a new video on YouTube!" else " was live."
-                                        val durationStr = DurationFormatter(video.duration).colonTime
+                                        val durationStr = if(video.duration != null) DurationFormatter(video.duration).colonTime else "premiere"
                                         val memberStream = if(video.memberLimited) "Members-only content.\n" else ""
 
                                         withAuthor(EmbedCreateFields.Author.of("${video.channel.name}$vodMessage", video.channel.url, video.channel.avatar))
@@ -284,7 +284,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 //        if(Duration.between(ytVideo.published, Instant.now()) > Duration.ofHours(12L)) return // do not post 'uploaded a video' if this is an old video (before we tracked the channel) that was just updated or intaken by the track command
 
         // check if any targets would like notification for this video upload
-        filteredTargets(dbVideo.ytChannel, ytVideo, YoutubeSettings::uploads)
+        filteredTargets(dbVideo.ytChannel, ytVideo, ytVideo::filterUploadNotice)
             .forEach { target ->
                 if(!YoutubeNotification.getExisting(target, dbVideo).empty()) return@forEach
                 try {
@@ -374,7 +374,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
             // get mention role from db if one is registered
             val mentionRole = if(guildId != null) {
-                getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, uploadedVideo = true)
+                getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, uploadedVideo = true, ytPremiere = video.premiere, ytShort = video.short)
             } else null
 
             val new = try {
@@ -388,8 +388,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .withTitle(shortTitle)
                     .run { if(features.thumbnails) withImage(video.thumbnail) else withThumbnail(video.thumbnail) }
                     .run {
-                        val videoLength = DurationFormatter(video.duration).colonTime
-                        withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength", NettyFileServer.youtubeLogo))
+                        val videoLength = if(video.duration != null) DurationFormatter(video.duration).colonTime else "unknown"
+                        val short = if(video.short) " (short)" else ""
+                        withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength$short", NettyFileServer.youtubeLogo))
                     }
                 val mentionMessage = if(mentionRole != null) {
 
@@ -492,7 +493,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                         loadTarget(mentioning)
                     }
                     val features = getStreamConfig(useMentionFor)
-                    getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere)
+                    getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere, ytPremiere = liveStream.premiere)
                 }
                 mention
             } else null

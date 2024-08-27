@@ -114,7 +114,8 @@ object YoutubeParser {
                             name = match.snippet.channelTitle,
                             avatar = null
                         ),
-                        memberLimited = match.statistics.membership
+                        memberLimited = match.statistics.membership,
+                        short = match.short
                     )
                     Ok(video)
                 } else Err(StreamErr.NotFound)
