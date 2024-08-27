@@ -34,7 +34,7 @@ fun main() {
     val audio = AudioManager
 
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
-    thread(start = true, name = "Initalization") {
+    thread(start = true, name = "Initialization") {
         runBlocking {
             // start file server
             if(MetaData.host) {
@@ -46,7 +46,7 @@ fun main() {
             GlobalTrackSuggestionGenerator.cacheAll()
             val streamers = KnownStreamers
             YoutubeVideosService.server.start()
-            val translator = Translator.detector.detectLanguageOf("initalizing translator")
+            val translator = Translator.detector.detectLanguageOf("initializing translator")
         }
     }
 

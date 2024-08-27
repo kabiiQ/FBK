@@ -1,8 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 group = "moe.kabii"
 version = "deploy"
 
 plugins {
-    val kotlinVer = "1.9.22"
+    val kotlinVer = "2.0.0"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     application
@@ -11,16 +13,15 @@ plugins {
 
 repositories {
     mavenCentral()
-    // discord4j snapshots (using snapshot for thread support)
+    // discord4j snapshots
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     // personal libs: rusty
     maven("https://jitpack.io")
     // lavaplayer-natives
     maven("https://m2.dv8tion.net/releases")
-    // lavaplayer snapshots
+    // lavaplayer
     maven("https://maven.lavalink.dev/snapshots")
-    // kotlinx coroutines-core
-    maven("https://kotlin.bintray.com/kotlinx")
+    maven("https://maven.lavalink.dev/releases")
 }
 
 dependencies {
@@ -30,7 +31,7 @@ dependencies {
 
     // kotlin libs
     val coroutinesVer = "1.7.1"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutinesVer")
@@ -41,14 +42,14 @@ dependencies {
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.3.0-SNAPSHOT") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.3.0-RC1") // discord websocket and api
 
     // music bot
-//    implementation("com.github.walkyst:lavaplayer-fork:1.4.2") // discord audio library
-    implementation("dev.arbjerg:lavaplayer:0eaeee195f0315b2617587aa3537fa202df07ddc-SNAPSHOT")
+    implementation("dev.arbjerg:lavaplayer:2.2.1")
+    implementation("dev.lavalink.youtube:v2:1.7.2")
     implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
-    implementation("com.github.natanbc:lavadsp:0.7.7") // some lavaplayer audio filters
-    implementation("org.apache.commons:commons-compress:1.21")
+    implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
+    implementation("org.apache.commons:commons-compress:1.26.2")
 
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
@@ -60,7 +61,6 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
 
     // emote parsing
-//    implementation("com.kcthota:emoji4j:6.0")
     implementation("com.vdurmont:emoji-java:5.1.1")
 
     // thumbnail file server
@@ -70,9 +70,6 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktor")
     implementation("io.ktor:ktor-client-apache:$ktor")
     implementation("io.ktor:ktor-server-html-builder:$ktor")
-
-    // ps2 websocket
-//    implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     // welcome banner image processing
     val imageIO = "3.9.4"
@@ -102,12 +99,12 @@ dependencies {
     implementation("com.uchuhimo:konf:1.1.2")
 
     // lognging
-    implementation("ch.qos.logback:logback-classic:1.4.8")
+    implementation("ch.qos.logback:logback-classic:1.5.7")
 
     // other
-    implementation("commons-validator:commons-validator:1.7")
-    implementation("org.apache.commons:commons-lang3:3.12.0")
-    implementation("org.apache.commons:commons-text:1.10.0")
+    implementation("commons-validator:commons-validator:1.9.0")
+    implementation("org.apache.commons:commons-lang3:3.14.0")
+    implementation("org.apache.commons:commons-text:1.12.0")
 
     implementation("org.reflections:reflections:0.10.2") // command detection and registration
 
@@ -140,14 +137,15 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     kotlin {
-        jvmToolchain(16)
+        jvmToolchain(20)
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "16"
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_20)
     }
-    java.targetCompatibility = JavaVersion.VERSION_16
-    java.sourceCompatibility = JavaVersion.VERSION_16
+
+    java.targetCompatibility = JavaVersion.VERSION_20
+    java.sourceCompatibility = JavaVersion.VERSION_20
 
     build {
         dependsOn(updateVersion)
