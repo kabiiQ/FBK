@@ -114,16 +114,15 @@ object TwitchTarget : StreamingTarget(
     }
 }
 
-private const val youtubeRegex = "([a-zA-Z0-9-_]{24})"
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     "YouTube",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex(youtubeRegex),
-        Regex("youtube.com/channel/$youtubeRegex"),
-        Regex("youtube.com/${YoutubeParser.youtubeHandlePattern}"),
-        Regex("youtube.com/${YoutubeParser.youtubeNamePattern}")
+        Regex(YoutubeParser.youtubeChannelPattern.pattern),
+        Regex("youtube.com/channel/${YoutubeParser.youtubeChannelPattern.pattern}"),
+        Regex("youtube.com/${YoutubeParser.youtubeHandlePattern.pattern}"),
+        Regex("youtube.com/${YoutubeParser.youtubeNamePattern.pattern}")
     ),
     "youtube", "yt", "youtube.com", "utube", "ytube"
 ) {

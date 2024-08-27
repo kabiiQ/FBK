@@ -24,7 +24,7 @@ object YoutubeParser {
 
     val color = Color.of(16711680)
 
-    val youtubeChannelPattern = Regex("([a-zA-Z0-9\\-_]{24})")
+    val youtubeChannelPattern = Regex("(UC[a-zA-Z0-9\\-_]{22})")
     val youtubeNamePattern = Regex("([a-zA-Z0-9]{6,20})")
     val youtubeHandlePattern = Regex("(@[a-zA-Z0-9_\\-.]{3,30})")
 
