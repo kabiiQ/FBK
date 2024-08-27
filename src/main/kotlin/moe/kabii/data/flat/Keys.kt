@@ -26,6 +26,8 @@ object Keys : ConfigSpec("") {
         val callbackPort by required<Int>("callback_port")
         val signingKey by required<String>("signing_key")
         val videoApiPort by required<Int>("internal_video_api_port")
+        val poToken by required<String>("po_token")
+        val visitorData by required<String>("visitor_data")
         val filterPAPIS by required<String>("filter_papis")
         val filterPS by required<String>("filter_ps")
     }
@@ -104,6 +106,7 @@ object Keys : ConfigSpec("") {
     }
     object Net : ConfigSpec() {
         val ipv4Rotation by required<List<String>>("ipv4_rotation")
+        val ipv6Rotation by required<String>("ipv6_rotation")
     }
 
     fun saveConfigFile() {

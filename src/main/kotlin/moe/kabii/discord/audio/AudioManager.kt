@@ -6,8 +6,13 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup
-import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner
-import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv4Block
+import com.sedmelluq.lava.extensions.youtuberotator.planner.NanoIpRoutePlanner
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block
+import dev.lavalink.youtube.YoutubeAudioSourceManager
+import dev.lavalink.youtube.clients.MusicWithThumbnail
+import dev.lavalink.youtube.clients.TvHtml5EmbeddedWithThumbnail
+import dev.lavalink.youtube.clients.Web
+import dev.lavalink.youtube.clients.WebWithThumbnail
 import discord4j.voice.AudioProvider
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -29,15 +34,38 @@ object AudioManager {
     val timeouts = Timeouts()
 
     init {
-        AudioSourceManagers.registerRemoteSources(manager)
+        val youtube = YoutubeAudioSourceManager(true,
+            WebWithThumbnail(), TvHtml5EmbeddedWithThumbnail(), MusicWithThumbnail())
+        manager.registerSourceManager(youtube)
 
-        val ipv4Addr = Keys.config[Keys.Net.ipv4Rotation]
+        val poToken = Keys.config[Keys.Youtube.poToken]
+        if(poToken.isNotBlank()) {
+            Web.setPoTokenAndVisitorData(Keys.config[Keys.Youtube.poToken], Keys.config[Keys.Youtube.visitorData])
+        }
+
+        AudioSourceManagers.registerRemoteSources(manager,
+            com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager::class.java)
+
+        /*val ipv4Addr = Keys.config[Keys.Net.ipv4Rotation]
         if(ipv4Addr.isNotEmpty()) {
             val addrs = ipv4Addr.map { addr -> Ipv4Block("$addr/32") }
             LOG.info("Configuring LavaPlayer IP rotation:\n${ipv4Addr.joinToString("\n")}")
             val ipRoute = BalancingIpRoutePlanner(addrs)
             YoutubeIpRotatorSetup(ipRoute)
                 .forManager(manager)
+                .withMainDelegateFilter(null)
+                .setup()
+        }*/
+
+        val ipv6Addr = Keys.config[Keys.Net.ipv6Rotation]
+        if(ipv6Addr.isNotBlank()) {
+            val block = Ipv6Block(ipv6Addr)
+            LOG.info("Configuring LavaPlayer IPv6 rotation:\n${ipv6Addr}")
+            val ipRoute = NanoIpRoutePlanner(listOf(block), true)
+            val rotator = YoutubeIpRotatorSetup(ipRoute)
+
+            rotator.forConfiguration(youtube.httpInterfaceManager, false)
+                .withMainDelegateFilter(null)
                 .setup()
         }
     }

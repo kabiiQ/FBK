@@ -71,6 +71,7 @@ class FilterFactory {
                 is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
                     setRotationSpeed(filter.speed.toDouble())
                 }
+                else -> error("Audio filter mismatch")
             }
         }
 
