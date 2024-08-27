@@ -1,6 +1,7 @@
 package moe.kabii.data.relational.streams
 
 import discord4j.common.util.Snowflake
+import kotlinx.coroutines.sync.Mutex
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.trackers.*
@@ -54,7 +55,11 @@ object TrackedStreams {
 
         val subscription by WebSubSubscription referrersOn WebSubSubscriptions.webSubChannel
 
+        fun updateLock() = updateLocks.getOrPut(id.value) { Mutex() }
+
         companion object : IntEntityClass<StreamChannel>(StreamChannels) {
+
+            private val updateLocks = mutableMapOf<Int, Mutex>()
 
             @RequiresExposedContext
             fun getChannel(site: DBSite, channelId: String): StreamChannel? = find {
