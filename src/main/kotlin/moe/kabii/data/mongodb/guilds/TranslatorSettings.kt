@@ -5,6 +5,7 @@ import java.util.*
 
 data class TranslatorSettings(
     var ephemeral: Boolean = false,
+    var skipRetweets: Boolean = true,
     var defaultTargetLanguage: String = fallbackLang,
     var guildLocale: Locale = Translations.defaultLocale
 ) {

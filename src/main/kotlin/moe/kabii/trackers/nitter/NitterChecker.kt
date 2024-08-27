@@ -61,6 +61,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
     companion object {
         val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
+        //val callDelay = 6_000L // 6sec/call = 10/min = 150/15min
         val refreshGoal = 82_000L // = 41/instance @ 2 seconds
         val loopTime = 20_000L // can lower loop repeat time below refresh time now with locking system implemented
     }
@@ -304,24 +305,29 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                     // LOG.debug("translation stage")
                     val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
                         try {
-                            val lang = GuildConfigurations
+                            val tlConfig = GuildConfigurations
                                 .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
-                                .translator.defaultTargetLanguage
+                                .translator
 
-                            val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedTwitTarget::discordGuild))
+                            // Retweets default to low-quality local translations. If "skipRetweets" is set by user, retweets should just forego translation.
+                            if(!tweet.retweet || !tlConfig.skipRetweets) {
 
-                            // check cache for existing translation of this tweet
-                            val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
-                            val existingTl = translations[standardLangTag]
-                            val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
+                                val lang = tlConfig.defaultTargetLanguage
+                                val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedTwitTarget::discordGuild))
 
-                                val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
-                                translations[standardLangTag] = tl
-                                tl
-                            }
+                                // check cache for existing translation of this tweet
+                                val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
+                                val existingTl = translations[standardLangTag]
+                                val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
 
-                            if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
-                            else null
+                                    val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
+                                    translations[standardLangTag] = tl
+                                    tl
+                                }
+
+                                if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
+                                else null
+                            } else null
 
                         } catch(e: Exception) {
                             LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")

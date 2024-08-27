@@ -32,6 +32,10 @@ object LanguageConfig : Command("languagecfg") {
             "ephemeral",
             TranslatorSettings::ephemeral
         ),
+        BooleanElement("Skip low-quality translation of Retweets entirely.",
+            "noretweets",
+            TranslatorSettings::skipRetweets
+        ),
         CustomElement("Default target language for translations",
             "targetlang",
             TranslatorSettings::defaultTargetLanguage as KMutableProperty1<TranslatorSettings, Any?>,

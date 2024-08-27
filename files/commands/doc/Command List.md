@@ -7,6 +7,584 @@ This page is an automatically generated list of all bot commands with a link to 
 
 > ❓ For all command options, `*` indicates it is required to run the command. All other options are "optional" and are not required in the Discord client, but may be useful to change the behavior of some commands.
 
+### - Message Command: `Translate Message`
+
+
+
+
+### - `/randomizecolor`:
+
+- Selects a randomized color for a role.
+- Wiki: [[Moderation-Commands#randomizing-a-roles-color-with-randomizecolor]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `role*` | Role | The role to change the color of.
+
+
+### - `/purge`:
+
+- Purge messages from this channel.
+- Wiki: [[Purge-Messages]]
+
+#### -- `/purge count`
+
+- Purge a specific number of messages.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `number*` | Integer | The number of messages to purge.
+#### -- `/purge from`
+
+- Purge message starting at a specific message ID.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `start*` | String | Message ID to start the purge from.
+| `end` | String | Message ID to end the purge at, otherwise it will continue until the most recent messages.
+
+
+### - `/garble`:
+
+- Garble a text message like you can't consistently type.
+- Wiki: [[RNG-Commands#garble-text-]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `text*` | String | The text to garble.
+
+
+### - `/coinflip`:
+
+- Flip a coin!
+- Wiki: [[RNG-Commands#the-coinflip-command]]
+
+
+
+### - `/pick`:
+
+- Pick an option from a list.
+- Wiki: [[RNG-Commands#the-pick-command]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `list` | String | Space-separated list of "options" to pick randomly from.
+
+
+### - `/emojify`:
+
+- Convert some text to regional indicator emojis.
+- Wiki: [[RNG-Commands#text-to-regional-indicator-emoji-]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `text*` | String | The text to convert to emojis.
+
+
+### - `/ask`:
+
+- Ask the bot a question (get a random Magic 8 Ball response)
+- Wiki: [[RNG-Commands#the-ask-command]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `question` | String | The "question".
+
+
+### - `/roll`:
+
+- Roll a random number.
+- Wiki: [[RNG-Commands#the-roll-command]]
+
+#### -- `/roll range`
+
+- Roll between two numbers.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `from` | Integer | The lowest possible roll. Default: 0
+| `to` | Integer | The highest possible roll. Default: 100
+#### -- `/roll dice`
+
+- Roll some dice.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `sides` | Integer | How many 'sides' are on the rolled dice. Default: 6
+| `count` | Integer | How many 'dice' to roll. Default: 1
+
+
+### - `/translate`:
+
+- Translate text between languages
+- Wiki: [[Translator#-translation-commands]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `text*` | String | The text to translate.
+| `to` | String | The language to translate the text into, if not specified, the server's default will be used.
+| `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
+| `translator` | String | The preferred translator to complete this request. Changes based on availability.
+
+
+### - `/tl`:
+
+- Translate text between languages
+- Wiki: [[Translator#-translation-commands]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `text*` | String | The text to translate.
+| `to` | String | The language to translate the text into, if not specified, the server's default will be used.
+| `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
+| `translator` | String | The preferred translator to complete this request. Changes based on availability.
+
+
+### - `/remindcancel`:
+
+- Cancel an existing reminder that is no longer needed.
+- Wiki: [[Reminders]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `reminder*` | Integer | The ID of the reminder you would like to cancel, found where you created the reminder.
+
+
+### - `/remind`:
+
+- Create a reminder to be sent to you in the near future.
+- Wiki: [[Reminders]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `time*` | String | The time until this reminder should be sent. Examples: 2m or 6h or 1w
+| `message` | String | What you would like to be reminded about.
+| `dm` | True/False | If you would like this reminder sent via DM rather than in this channel.
+
+
+### - `/xkcd`:
+
+- Look up a comic from xkcd.
+- Wiki: [[Lookup-Commands#xkcd-comics-xkcd]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `id` | Integer | The ID of the xkcd comic to retrieve. If not provided, returns the current comic.
+
+
+### - `/ttv`:
+
+- Look up current information on a Twitch livestream.
+- Wiki: [[Lookup-Commands#twitch-stream-lookup-ttv]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The Twitch username to look up.
+
+
+### - `/skeb`:
+
+- Search skeb.jp for a user's profile.
+- Wiki: [[Lookup-Commands#skeb-profile-lookup-skeb]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The skeb username to look up
+
+
+### - `/ud`:
+
+- Look up a term on Urban Dictionary.
+- Wiki: [[Lookup-Commands#urbandictionary-lookup-ud]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `term*` | String | The term to look up on Urban Dictionary.
+
+
+### - `/calc`:
+
+- Perform a calculation using the WolframAlpha knowledge engine.
+- Wiki: [[Lookup-Commands#wolframalpha-queries-calc]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `query*` | String | The calculation to perform.
+
+
+### - `/twittervid`:
+
+- Gets a playable video from a Tweet.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `url*` | String | The Tweet URL to check for a video.
+
+
+### - `/editmention`:
+
+- Configure a role to be mentioned when a tracked channel goes live. Edits the specified options.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The tracked stream/twitter feed pings to edit
+| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+| `text` | String | Text to be included along with the ping.
+| `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
+| `membershiptext` | String | Text to be included for YouTube member-only streams.
+| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
+| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
+| `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
+| `alternatepremiererole` | Role | An alternate role pinged for YouTube premieres. Most users should not touch this setting.
+| `alternateshortsrole` | Role | An alternate role pinged for 'short' YouTube uploads. Most users should not touch this setting.
+| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
+
+
+### - `/setmention`:
+
+- REMOVES PREVIOUS CONFIGS. Configure a role to be mentioned when a tracked channel goes live.
+- Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The tracked stream/twitter feed that should send a ping
+| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+| `text` | String | Text to be included along with the ping. If empty, any existing text will be removed.
+| `copyfrom` | String | A stream tracked in this channel to copy mention settings from. Applied before all other settings.
+| `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
+| `membershiptext` | String | Text to be included for YouTube member-only streams.
+| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
+| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
+| `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
+| `alternatepremiererole` | Role | An alternate role pinged for YouTube premieres. Most users should not touch this setting.
+| `alternateshortsrole` | Role | An alternate role pinged for 'short' YouTube uploads. Most users should not touch this setting.
+| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
+
+
+### - `/usetracker`:
+
+- Set the default site for 'track' commands in this channel.
+- Wiki: [[Configuration#overriding-the-default-website-for-track-with-the-usetracker-command]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `site*` | Integer | The site to use as the new default tracker.
+
+
+### - `/tracked`:
+
+- List targets that are currently tracked in this channel.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `site` | Integer | If specified, only tracked targets for this specific site will be listed.
+
+
+### - `/untrack`:
+
+- Untrack a currently tracked channel/feed.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The username to untrack. @username for Twitter, Twitch username, YouTube channel ID (see wiki)
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+| `moveto` | Channel | A Discord channel to move this tracked feed into, after removing it from the current channel.
+
+
+### - `/trackvid`:
+
+- Track a specific upcoming YouTube live stream.
+- Wiki: [[Livestream-Tracker#user-commands]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `video*` | String | The YouTube video ID or URL of an UPCOMING live stream to track.
+| `usepings` | String | A tracked channel to use the ping settings from when this video goes live.
+
+
+### - `/track`:
+
+- Track a streamer's channel (yt, twitch, twitcasting) or Twitter feed. See the wiki for more details.
+- Wiki: [[Livestream-Tracker]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The username to track. @username for Twitter, username for Twitch, channel ID for YouTube (see wiki)
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+
+
+### - `/streamrenamecfg`:
+
+- Configure the 'channel rename' stream tracker feature.
+- Wiki: [[Livestream-Tracker#setting-stream-specific-charactersemoji]]
+
+#### -- `/streamrenamecfg set`
+
+- Set a character to represent a specific stream. See wiki for details
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `stream*` | String | The username/id of the tracked stream being configured.
+| `character` | String | The character/oshi mark for this channel. Will be removed if not specified
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+#### -- `/streamrenamecfg list`
+
+- List the existing configured characters/marks.
+
+
+
+### - `/getmention`:
+
+- Test the configured '/setmention' role ping for a tracked Twitter/livestream feed. (WILL PING ROLES)
+- Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `username*` | String | The tracked stream/twitter feed that should send a ping
+| `site` | Integer | The site name may need to be specified if it can not be inferred.
+
+
+### - `/ids`:
+
+- Get a list of role, channel, and optionally user IDs for this server.
+- Wiki: [[Discord-Info-Commands#get-all-ids-in-a-server-with-ids]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `users` | True/False | Include all user IDs in this list.
+
+
+### - `/server`:
+
+- Get information on this Discord server.
+- Wiki: [[Discord-Info-Commands#get-server-info-with-server]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `id` | String | The server to get info on. Defaults to current server if not specified.
+
+
+### - `/cleanroles`:
+
+- Delete roles on this server with no members.
+- Wiki: [[Moderation-Commands#removing-emptyunused-roles]]
+
+
+
+### - `/avatar`:
+
+- Get a user's avatar.
+- Wiki: [[Discord-Info-Commands#get-user-avatar-with-avatar]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user` | User | The user to get the avatar for. If not provided, your own avatar will be retrieved.
+
+
+### - `/timestamp`:
+
+- Gets the timestamp from a Discord ID.
+- Wiki: [[Discord-Info-Commands#-get-the-timestamp-for-any-discord-id-snowflake]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `id*` | String | The Discord ID/Snowflake to extract a timestamp from.
+
+
+### - `/id`:
+
+- Get the ID of a user in your server.
+- Wiki: [[Discord-Info-Commands#get-a-users-discord-id]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user` | User | The user to get the ID of. Defaults to yourself.
+
+
+### - `/top`:
+
+- Jump to the top of a channel.
+
+
+
+### - `/icon`:
+
+- Get the Discord server's icon.
+- Wiki: [[Discord-Info-Commands#get-server-icon]]
+
+
+
+### - `/who`:
+
+- Pull information on user account creation and join date.
+- Wiki: [[Discord-Info-Commands#user-info-summary-server-join-time-with-who]]
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user` | User | The user to pull account information for.
+
+
+### - `/game`:
+
+- Challenge a friend to a game within Discord!
+- Wiki: [[Games]]
+
+#### -- `/game connect4`
+
+- Challenge a friend to a game of Connect 4!
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user*` | User | The user to challenge.
+#### -- `/game rps`
+
+- Challenge a friend to a game of Rock Paper Scissors.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user*` | User | The user to challenge.
+| `rounds` | Integer | Change how many rounds are played! Defaults to best of 3.
+#### -- `/game tictactoe`
+
+- Challenge a friend to a game of Tic-tac-toe.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `user*` | User | The user to challenge.
+
+
+### - `/connect4`:
+
+- Connect 4 has moved! Use /game connect4
+
+
+
+### - `/transferdata`:
+
+- Transfer all data if you are switching FBK instances. Does not matter if run on the old or new bot.
+
+
+
+### - `/ping`:
+
+- Test FBK's ability to respond to you on Discord.
+- Wiki: [[Bot-Meta-Commands#ping]]
+
+
+
+### - `/botinfo`:
+
+- Display basic bot information: uptime, version
+- Wiki: [[Bot-Meta-Commands#bot-info-command]]
+
+
+
+### - `/help`:
+
+- Display information about FBK's commands
+- Wiki: [[Bot-Meta-Commands#command-information]]
+
+#### -- `/help command`
+
+- Display information on a specific command
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `command*` | String | The command to look up.
+#### -- `/help wiki`
+
+- Display a link to the general FBK wiki page
+
+
+
+### - `/datadeletionrequest`:
+
+- (Privacy) Delete any collected data on your Discord user account or server.
+
+#### -- `/datadeletionrequest user`
+
+- Delete ALL INFORMATION concerning your USER ACCOUNT. Irreversible, breaking operation.
+
+#### -- `/datadeletionrequest server`
+
+- Delete ALL INFORMATION concerning this Discord server. Irreversible, breaking operation.
+
+
+
+### - `/ytlink`:
+
+- Link a YouTube account (from your Discord profile) to FBK.
+
+
+
+### - `/configs`:
+
+- List available FBK configuration commands.
+- Wiki: [[https://github.com/kabiiQ/FBK/wiki/Configuration-Commands]]
+
+
+
+### - `/customcommand`:
+
+- Add or remove basic custom commands
+- Wiki: [[Custom-Commands]]
+
+#### -- `/customcommand add`
+
+- Add or update a custom command.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `command*` | String | The name of the new custom command.
+| `response*` | String | The response that will be sent when this command is used.
+| `description` | String | The description for this command in Discord.
+| `private` | True/False | If True, this command will be sent as a message that only the user running it can view.
+#### -- `/customcommand remove`
+
+- Remove an existing custom command.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `command*` | String | The name of the custom command to be removed.
+#### -- `/customcommand list`
+
+- List existing custom commands
+
+
+
+### - `/welcomebanners`:
+
+- Edit banner images used for welcoming users
+
+#### -- `/welcomebanners add`
+
+- Add a welcome banner.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `image*` | Attachment | The new banner image to add. See wiki for banner requirements.
+#### -- `/welcomebanners list`
+
+- View currently uploaded welcome banners.
+
+#### -- `/welcomebanners remove`
+
+- Delete an uploaded welcome banner.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `file*` | String | The uploaded banner image to delete.
+
+
+### - `/channels`:
+
+- List channels in this server with enabled features.
+- Wiki: [[Configuration-Commands#the-feature-command-channel-features]]
+
+
+
 ### - `/autorole`:
 
 - Configure automatic role assignment rules.
@@ -148,48 +726,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | `style*` | Integer | Include to edit the style: separate buttons for each role or a drop-down list to select roles.
 
 
-### - `/channels`:
-
-- List channels in this server with enabled features.
-- Wiki: [[Configuration-Commands#the-feature-command-channel-features]]
-
-
-
-### - `/configs`:
-
-- List available FBK configuration commands.
-- Wiki: [[https://github.com/kabiiQ/FBK/wiki/Configuration-Commands]]
-
-
-
-### - `/customcommand`:
-
-- Add or remove basic custom commands
-- Wiki: [[Custom-Commands]]
-
-#### -- `/customcommand add`
-
-- Add or update a custom command.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `command*` | String | The name of the new custom command.
-| `response*` | String | The response that will be sent when this command is used.
-| `description` | String | The description for this command in Discord.
-| `private` | True/False | If True, this command will be sent as a message that only the user running it can view.
-#### -- `/customcommand remove`
-
-- Remove an existing custom command.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `command*` | String | The name of the custom command to be removed.
-#### -- `/customcommand list`
-
-- List existing custom commands
-
-
-
 ### - `/roleset`:
 
 - Create or modify a mutually exclusive set of roles
@@ -230,525 +766,14 @@ This page is an automatically generated list of all bot commands with a link to 
 
 
 
-### - `/welcomebanners`:
+### - `/temp`:
 
-- Edit banner images used for welcoming users
-
-#### -- `/welcomebanners add`
-
-- Add a welcome banner.
+- Create a temporary voice channel.
+- Wiki: [[Utility-Commands#temporary-voice-channels]]
 
 | Option | Type | Description
 | ---    | ---  | ---
-| `image*` | Attachment | The new banner image to add. See wiki for banner requirements.
-#### -- `/welcomebanners list`
-
-- View currently uploaded welcome banners.
-
-#### -- `/welcomebanners remove`
-
-- Delete an uploaded welcome banner.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `file*` | String | The uploaded banner image to delete.
-
-
-### - `/connect4`:
-
-- Connect 4 has moved! Use /game connect4
-
-
-
-### - `/game`:
-
-- Challenge a friend to a game within Discord!
-- Wiki: [[Games]]
-
-#### -- `/game connect4`
-
-- Challenge a friend to a game of Connect 4!
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user*` | User | The user to challenge.
-#### -- `/game rps`
-
-- Challenge a friend to a game of Rock Paper Scissors.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user*` | User | The user to challenge.
-| `rounds` | Integer | Change how many rounds are played! Defaults to best of 3.
-#### -- `/game tictactoe`
-
-- Challenge a friend to a game of Tic-tac-toe.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user*` | User | The user to challenge.
-
-
-### - `/botinfo`:
-
-- Display basic bot information: uptime, version
-- Wiki: [[Bot-Meta-Commands#bot-info-command]]
-
-
-
-### - `/datadeletionrequest`:
-
-- (Privacy) Delete any collected data on your Discord user account or server.
-
-#### -- `/datadeletionrequest user`
-
-- Delete ALL INFORMATION concerning your USER ACCOUNT. Irreversible, breaking operation.
-
-#### -- `/datadeletionrequest server`
-
-- Delete ALL INFORMATION concerning this Discord server. Irreversible, breaking operation.
-
-
-
-### - `/help`:
-
-- Display information about FBK's commands
-- Wiki: [[Bot-Meta-Commands#command-information]]
-
-#### -- `/help command`
-
-- Display information on a specific command
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `command*` | String | The command to look up.
-#### -- `/help wiki`
-
-- Display a link to the general FBK wiki page
-
-
-
-### - `/ping`:
-
-- Test FBK's ability to respond to you on Discord.
-- Wiki: [[Bot-Meta-Commands#ping]]
-
-
-
-### - `/transferdata`:
-
-- Transfer all data if you are switching FBK instances. Does not matter if run on the old or new bot.
-
-
-
-### - `/purge`:
-
-- Purge messages from this channel.
-- Wiki: [[Purge-Messages]]
-
-#### -- `/purge count`
-
-- Purge a specific number of messages.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `number*` | Integer | The number of messages to purge.
-#### -- `/purge from`
-
-- Purge message starting at a specific message ID.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `start*` | String | Message ID to start the purge from.
-| `end` | String | Message ID to end the purge at, otherwise it will continue until the most recent messages.
-
-
-### - `/randomizecolor`:
-
-- Selects a randomized color for a role.
-- Wiki: [[Moderation-Commands#randomizing-a-roles-color-with-randomizecolor]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `role*` | Role | The role to change the color of.
-
-
-### - `/ask`:
-
-- Ask the bot a question (get a random Magic 8 Ball response)
-- Wiki: [[RNG-Commands#the-ask-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `question` | String | The "question".
-
-
-### - `/coinflip`:
-
-- Flip a coin!
-- Wiki: [[RNG-Commands#the-coinflip-command]]
-
-
-
-### - `/emojify`:
-
-- Convert some text to regional indicator emojis.
-- Wiki: [[RNG-Commands#text-to-regional-indicator-emoji-]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `text*` | String | The text to convert to emojis.
-
-
-### - `/garble`:
-
-- Garble a text message like you can't consistently type.
-- Wiki: [[RNG-Commands#garble-text-]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `text*` | String | The text to garble.
-
-
-### - `/pick`:
-
-- Pick an option from a list.
-- Wiki: [[RNG-Commands#the-pick-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `list` | String | Space-separated list of "options" to pick randomly from.
-
-
-### - `/roll`:
-
-- Roll a random number.
-- Wiki: [[RNG-Commands#the-roll-command]]
-
-#### -- `/roll range`
-
-- Roll between two numbers.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `from` | Integer | The lowest possible roll. Default: 0
-| `to` | Integer | The highest possible roll. Default: 100
-#### -- `/roll dice`
-
-- Roll some dice.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `sides` | Integer | How many 'sides' are on the rolled dice. Default: 6
-| `count` | Integer | How many 'dice' to roll. Default: 1
-
-
-### - `/remind`:
-
-- Create a reminder to be sent to you in the near future.
-- Wiki: [[Reminders]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `time*` | String | The time until this reminder should be sent. Examples: 2m or 6h or 1w
-| `message` | String | What you would like to be reminded about.
-| `dm` | True/False | If you would like this reminder sent via DM rather than in this channel.
-
-
-### - `/remindcancel`:
-
-- Cancel an existing reminder that is no longer needed.
-- Wiki: [[Reminders]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `reminder*` | Integer | The ID of the reminder you would like to cancel, found where you created the reminder.
-
-
-### - `/calc`:
-
-- Perform a calculation using the WolframAlpha knowledge engine.
-- Wiki: [[Lookup-Commands#wolframalpha-queries-calc]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `query*` | String | The calculation to perform.
-
-
-### - `/skeb`:
-
-- Search skeb.jp for a user's profile.
-- Wiki: [[Lookup-Commands#skeb-profile-lookup-skeb]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The skeb username to look up
-
-
-### - `/ttv`:
-
-- Look up current information on a Twitch livestream.
-- Wiki: [[Lookup-Commands#twitch-stream-lookup-ttv]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The Twitch username to look up.
-
-
-### - `/twittervid`:
-
-- Gets a playable video from a Tweet.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `url*` | String | The Tweet URL to check for a video.
-
-
-### - `/ud`:
-
-- Look up a term on Urban Dictionary.
-- Wiki: [[Lookup-Commands#urbandictionary-lookup-ud]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `term*` | String | The term to look up on Urban Dictionary.
-
-
-### - `/xkcd`:
-
-- Look up a comic from xkcd.
-- Wiki: [[Lookup-Commands#xkcd-comics-xkcd]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `id` | Integer | The ID of the xkcd comic to retrieve. If not provided, returns the current comic.
-
-
-### - `/editmention`:
-
-- Configure a role to be mentioned when a tracked channel goes live. Edits the specified options.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The tracked stream/twitter feed pings to edit
-| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-| `text` | String | Text to be included along with the ping.
-| `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
-| `membershiptext` | String | Text to be included for YouTube member-only streams.
-| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
-| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
-| `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
-| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
-
-
-### - `/getmention`:
-
-- Test the configured '/setmention' role ping for a tracked Twitter/livestream feed. (WILL PING ROLES)
-- Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The tracked stream/twitter feed that should send a ping
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-
-
-### - `/setmention`:
-
-- REMOVES PREVIOUS CONFIGS. Configure a role to be mentioned when a tracked channel goes live.
-- Wiki: [[Livestream-Tracker#-pinging-a-role-with-setmention]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The tracked stream/twitter feed that should send a ping
-| `role` | Role | The role that should be pinged. If empty, any configured role will no longer be pinged.
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-| `text` | String | Text to be included along with the ping. If empty, any existing text will be removed.
-| `copyfrom` | String | A stream tracked in this channel to copy mention settings from. Applied before all other settings.
-| `membershiprole` | Role | A role to ping for YouTube member-only streams. Can be the same role as regular streams or none.
-| `membershiptext` | String | Text to be included for YouTube member-only streams.
-| `upcomingrole` | Role | A role to ping for 'upcoming' YouTube streams (must be configured to be posted)
-| `creationrole` | Role | A role to ping when YouTube streams are initially scheduled (must be configured to be posted)
-| `alternateuploadrole` | Role | An alternate role pinged for YouTube uploads/premieres. Most users should not touch this setting.
-| `twittercolor` | String | A custom color to apply to Tweet messages for this feed.
-
-
-### - `/streamrenamecfg`:
-
-- Configure the 'channel rename' stream tracker feature.
-- Wiki: [[Livestream-Tracker#setting-stream-specific-charactersemoji]]
-
-#### -- `/streamrenamecfg set`
-
-- Set a character to represent a specific stream. See wiki for details
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `stream*` | String | The username/id of the tracked stream being configured.
-| `character` | String | The character/oshi mark for this channel. Will be removed if not specified
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-#### -- `/streamrenamecfg list`
-
-- List the existing configured characters/marks.
-
-
-
-### - `/track`:
-
-- Track a streamer's channel (yt, twitch, twitcasting) or Twitter feed. See the wiki for more details.
-- Wiki: [[Livestream-Tracker]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The username to track. @username for Twitter, username for Twitch, channel ID for YouTube (see wiki)
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-
-
-### - `/tracked`:
-
-- List targets that are currently tracked in this channel.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `site` | Integer | If specified, only tracked targets for this specific site will be listed.
-
-
-### - `/trackvid`:
-
-- Track a specific upcoming YouTube live stream.
-- Wiki: [[Livestream-Tracker#user-commands]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `video*` | String | The YouTube video ID or URL of an UPCOMING live stream to track.
-| `usepings` | String | A tracked channel to use the ping settings from when this video goes live.
-
-
-### - `/untrack`:
-
-- Untrack a currently tracked channel/feed.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `username*` | String | The username to untrack. @username for Twitter, Twitch username, YouTube channel ID (see wiki)
-| `site` | Integer | The site name may need to be specified if it can not be inferred.
-| `moveto` | Channel | A Discord channel to move this tracked feed into, after removing it from the current channel.
-
-
-### - `/usetracker`:
-
-- Set the default site for 'track' commands in this channel.
-- Wiki: [[Configuration#overriding-the-default-website-for-track-with-the-usetracker-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `site*` | Integer | The site to use as the new default tracker.
-
-
-### - `/tl`:
-
-- Translate text between languages
-- Wiki: [[Translator#-translation-commands]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `text*` | String | The text to translate.
-| `to` | String | The language to translate the text into, if not specified, the server's default will be used.
-| `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
-| `translator` | String | The preferred translator to complete this request. Changes based on availability.
-
-
-### - `/translate`:
-
-- Translate text between languages
-- Wiki: [[Translator#-translation-commands]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `text*` | String | The text to translate.
-| `to` | String | The language to translate the text into, if not specified, the server's default will be used.
-| `from` | String | The language to translate the text from. Only needed if the language detection is incorrect.
-| `translator` | String | The preferred translator to complete this request. Changes based on availability.
-
-
-### - `/avatar`:
-
-- Get a user's avatar.
-- Wiki: [[Discord-Info-Commands#get-user-avatar-with-avatar]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user` | User | The user to get the avatar for. If not provided, your own avatar will be retrieved.
-
-
-### - `/cleanroles`:
-
-- Delete roles on this server with no members.
-- Wiki: [[Moderation-Commands#removing-emptyunused-roles]]
-
-
-
-### - `/top`:
-
-- Jump to the top of a channel.
-
-
-
-### - `/icon`:
-
-- Get the Discord server's icon.
-- Wiki: [[Discord-Info-Commands#get-server-icon]]
-
-
-
-### - `/id`:
-
-- Get the ID of a user in your server.
-- Wiki: [[Discord-Info-Commands#get-a-users-discord-id]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user` | User | The user to get the ID of. Defaults to yourself.
-
-
-### - `/ids`:
-
-- Get a list of role, channel, and optionally user IDs for this server.
-- Wiki: [[Discord-Info-Commands#get-all-ids-in-a-server-with-ids]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `users` | True/False | Include all user IDs in this list.
-
-
-### - `/server`:
-
-- Get information on this Discord server.
-- Wiki: [[Discord-Info-Commands#get-server-info-with-server]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `id` | String | The server to get info on. Defaults to current server if not specified.
-
-
-### - `/timestamp`:
-
-- Gets the timestamp from a Discord ID.
-- Wiki: [[Discord-Info-Commands#-get-the-timestamp-for-any-discord-id-snowflake]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `id*` | String | The Discord ID/Snowflake to extract a timestamp from.
-
-
-### - `/who`:
-
-- Pull information on user account creation and join date.
-- Wiki: [[Discord-Info-Commands#user-info-summary-server-join-time-with-who]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `user` | User | The user to pull account information for.
+| `name` | String | The name for the new voice channel.
 
 
 ### - `/drag`:
@@ -773,27 +798,6 @@ This page is an automatically generated list of all bot commands with a link to 
 | `to*` | Channel | Voice channel to drag users into.
 
 
-### - `/temp`:
-
-- Create a temporary voice channel.
-- Wiki: [[Utility-Commands#temporary-voice-channels]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `name` | String | The name for the new voice channel.
-
-
-### - `/ytlink`:
-
-- Link a YouTube account (from your Discord profile) to FBK.
-
-
-
-### - Message Command: `Translate Message`
-
-
-
-
 ### - User Command: `Get User Avatar`
 
 
@@ -810,6 +814,13 @@ This page is an automatically generated list of all bot commands with a link to 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for ephemeral. Leave blank to check current value.
+#### -- `/languagecfg noretweets`
+
+- Skip low-quality translation of Retweets entirely.
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for noretweets. Leave blank to check current value.
 #### -- `/languagecfg targetlang`
 
 - Default target language for translations
@@ -1079,18 +1090,32 @@ This page is an automatically generated list of all bot commands with a link to 
 | `value` | Integer | The new value for creation. Leave blank to check current value.
 #### -- `/yt membervideos`
 
-- Include membership-only videos in this channel
+- Include membership-only videos/streams in this channel (Leave this enabled for most servers)
 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for memberVideos. Leave blank to check current value.
 #### -- `/yt publicvideos`
 
-- Include non-membership videos in this channel
+- Include non-membership videos/streams in this channel (Leave this enabled for most servers)
 
 | Option | Type | Description
 | ---    | ---  | ---
 | `value` | Integer | The new value for publicVideos. Leave blank to check current value.
+#### -- `/yt includeshorts`
+
+- Include uploads under 60 seconds in this channel (Leave this enabled for most servers)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for includeShorts. Leave blank to check current value.
+#### -- `/yt includenonshorts`
+
+- Include uploads over 60 seconds in this channel (Leave this enabled for most servers)
+
+| Option | Type | Description
+| ---    | ---  | ---
+| `value` | Integer | The new value for includeNonShorts. Leave blank to check current value.
 #### -- `/yt upcoming`
 
 - Post when a stream is starting soon
@@ -1499,314 +1524,4 @@ This page is an automatically generated list of all bot commands with a link to 
 #### -- `/twitter all`
 
 - View all twitter tracker settings and configure.
-
-
-
-### - `/music`:
-
-- (Music bot) Apply a "filter" to the currently playing audio.
-- Wiki: [[Music-Player#audio-manipulationfilters]]
-
-#### -- `/music volume`
-
-- Change the playback volume.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent` | Integer | The volume level. Default volume is 15.
-#### -- `/music sample`
-
-- Play the current track for a specified amount of time and then automatically skip it.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `duration*` | String | Duration of the track to sample. For example, 'sample 2m' will play 2 more minutes of audio.
-#### -- `/music sampleto`
-
-- Similar to sample, instead sampleto only plays the current track until a specific timestamp.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `timestamp*` | String | Timestamp at which to skip. For example, 'sampleto 2m' will skip the current track at 2:00 in.
-#### -- `/music speed`
-
-- Manipulate the playback speed.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent*` | Integer | % to manipulate the audio playback speed. "100" or using /reset will restore normal speed.
-#### -- `/music pitch`
-
-- Manipulate the playback pitch.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `percent*` | Integer | % to manipulate the audio pitch. "100" or using /reset will return the pitch to normal.
-#### -- `/music bass`
-
-- Apply a bass boost.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `boost` | Integer | % of maximum bass boost to apply (0-100). "0" or using /reset will remove the boost.
-#### -- `/music rotate`
-
-- Apply a 3D audio effect where the audio rotates 'around' the listener.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `speed` | Decimal | The speed of the rotation effect. The default is .25
-#### -- `/music doubletime`
-
-- Applies a "double time" filter equivalent to: speed 125
-
-#### -- `/music nightcore`
-
-- Applies a "nightcore" filter equivalent to: speed 125 + pitch 125
-
-#### -- `/music daycore`
-
-- Applies a "daycore" filter equivalent to: speed 75 + pitch 75
-
-#### -- `/music reset`
-
-- Resets all active audio filters to return audio to normal.
-
-
-
-### - `/np`:
-
-- (Music bot) Displays info on the audio that is "now playing" (np).
-- Wiki: [[Music-Player#--music-queue-information]]
-
-
-
-### - `/play`:
-
-- (Music bot) Add a song or audio clip to the queue.
-- Wiki: [[Music-Player#Music-Player#playing-music-with-the-play-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `song*` | String | Provide either: a YouTube video ID, a YouTube search query, or a direct link to a supported source.
-| `playlist` | True/False | Set to True to add ALL tracks from a YouTube playlist to the queue.
-| `forceplay` | True/False | Play this track immediately, pausing any current track until the new one ends.
-| `next` | True/False | Add this track to the front of the queue rather than the end ("skipping the line")
-| `attachment` | Attachment | Optionally play an attached audio file directly. The 'song' text will be ignored.
-| `volume` | Integer | Set the volume level for this track (for example, if this track is known to be very quiet)
-
-
-### - `/queue`:
-
-- (Music bot) View and edit the music queue.
-- Wiki: [[Music-Player#--music-queue-information]]
-
-#### -- `/queue list`
-
-- View the current music queue.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `from` | Integer | Optionally specify the track to start listing the queue from, such as queue 10.
-#### -- `/queue remove`
-
-- Remove music from the queue.
-
-#### -- `/queue remove tracks`
-
-- Remove tracks by their position in the queue.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `numbers*` | String | Track # in queue to remove. Accepts ranges such as: remove 1, remove 1-4, remove 3-, remove all
-#### -- `/queue remove user`
-
-- Remove tracks by the user who queued them.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `who*` | User | The user to remove queued tracks from.
-#### -- `/queue pause`
-
-- Pause audio playback indefinitely.
-
-#### -- `/queue resume`
-
-- Resume audio playback if paused.
-
-#### -- `/queue loop`
-
-- Toggle queue looping. When enabled, tracks are re-added to the queue after they finish playing.
-
-#### -- `/queue replay`
-
-- Re-add the currently playing audio track to the end of the queue.
-
-#### -- `/queue shuffle`
-
-- Shuffles the audio tracks currently in queue.
-
-#### -- `/queue clear`
-
-- Removes all audio tracks waiting in queue. Does not skip the current track.
-
-
-
-### - `/search`:
-
-- (Music bot) Searches for a track by name, allowing you to select the correct track to play.
-- Wiki: [[Music-Player#playing-music-with-the-play-command]]
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `search*` | String | The text to search for
-| `site` | Integer | The site to search on. If not provided, default to YouTube
-
-
-### - `/seek`:
-
-- (Music bot) Skip around in the currently playing audio.
-- Wiki: [[Music-Player#playing-music-with-the-play-command]]
-
-#### -- `/seek time`
-
-- Seek to a specific timestamp in this track.
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `timestamp*` | String | Timestamp to skip playback to in this track. Example, /seek time 2:10
-#### -- `/seek forward`
-
-- Skip forward in this track. (Fast-forward)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `time` | String | Time to skip forwards in the current track. If no time is provided, 30 seconds will be used.
-#### -- `/seek backward`
-
-- Skip backward in this track. (Rewind)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `time` | String | Time to skip backwards in the current track. If no time is provided, 30 seconds will be used.
-
-
-### - `/skip`:
-
-- (Music bot) Vote to skip the currently playing audio. Will instantly skip if you have permission.
-- Wiki: [[Music-Player#queue-manipulation]]
-
-
-
-### - `/stop`:
-
-- (Music bot) Combines 'clear' and 'skip'. Skips all tracks in queue (for which you have permission).
-- Wiki: [[Music-Player#queue-manipulation]]
-
-
-
-### - `/summon`:
-
-- (Music bot) Summon me into your voice channel. (This is done automatically when playing music.)
-- Wiki: [[Music-Player#Music-Player#commands]]
-
-
-
-### - `/musiccfg`:
-
-- Configurable music bot settings. Run '/musiccfg config' to view all.
-- Wiki: [[Music-Player#configuration-using-musiccfg]]
-
-#### -- `/musiccfg playing`
-
-- Send a message when tracks in queue begin playing
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for playing. Leave blank to check current value.
-#### -- `/musiccfg deleteold`
-
-- Delete old Now Playing bot messages
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for deleteold. Leave blank to check current value.
-#### -- `/musiccfg ownerskip`
-
-- Song owner can force skip song with fskip
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for ownerskip. Leave blank to check current value.
-#### -- `/musiccfg restrictfilters`
-
-- Restrict the usage of audio filters (volume, bass) to users who queued the track
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for restrictfilters. Leave blank to check current value.
-#### -- `/musiccfg restrictseek`
-
-- Restrict the usage of playback manipulation (ff, seek) to users who queued the track
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for restrictseek. Leave blank to check current value.
-#### -- `/musiccfg forceskip`
-
-- Skip command will instantly skip when permitted
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for forceskip. Leave blank to check current value.
-#### -- `/musiccfg skipifabsent`
-
-- Skip song if the requester is no longer in the voice channel
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for skipIfAbsent. Leave blank to check current value.
-#### -- `/musiccfg skipratio`
-
-- User ratio needed for vote skip
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for skipRatio. Leave blank to check current value.
-#### -- `/musiccfg skipcount`
-
-- User count needed for skip
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for skipCount. Leave blank to check current value.
-#### -- `/musiccfg maxtracks`
-
-- Max tracks in queue for one user (0 = unlimited)
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for maxTracks. Leave blank to check current value.
-#### -- `/musiccfg initialvolume`
-
-- Default playback volume
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for initialVolume. Leave blank to check current value.
-#### -- `/musiccfg volumelimit`
-
-- Volume limit
-
-| Option | Type | Description
-| ---    | ---  | ---
-| `value` | Integer | The new value for volumeLimit. Leave blank to check current value.
-#### -- `/musiccfg config`
-
-- View all music bot settings and configure.
-
-#### -- `/musiccfg all`
-
-- View all music bot settings and configure.
-
 
