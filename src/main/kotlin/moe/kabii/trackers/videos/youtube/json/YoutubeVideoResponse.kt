@@ -18,7 +18,7 @@ data class YoutubeVideo(
     val statistics: YoutubeVideoStatistics,
     val liveStreamingDetails: YoutubeVideoLiveDetails?
 ) {
-    @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration.toMillis() > 0
+    @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration == null
     @Transient val short = contentDetails.duration != null && contentDetails.duration <= Duration.ofSeconds(60)
 }
 
