@@ -89,6 +89,16 @@ object GetMentionRole : Command("getmention") {
 
                 } else out.appendLine("This role will be pinged for **non-membership** YouTube livestreams and video uploads.")
 
+                if(mention.mentionRolePremieres != null) {
+                    val role = getRole(target, mention.mentionRolePremieres!!)
+                    out.appendLine("For YouTube **premieres**, the role **@$role** will be pinged instead.")
+                }
+
+                if(mention.mentionRoleShorts != null) {
+                    val role = getRole(target, mention.mentionRoleShorts!!)
+                    out.appendLine("For YouTube **shorts**, the role **@$role** will be pinged instead.")
+                }
+
                 if(mention.mentionRoleMember != null) {
                     val role = getRole(target, mention.mentionRoleMember!!)
                     out.appendLine("For YouTube **members-only** livestreams and videos, the role **@$role** will be pinged instead.")

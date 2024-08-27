@@ -87,10 +87,12 @@ object EditMentionRole : Command("editmention") {
         val membershipRoleArg = origin.args.optRole("membershiprole")?.awaitSingle()
         val membershipTextArg = origin.args.optStr("membershiptext")
         val uploadsRoleArg = origin.args.optRole("alternateuploadrole")?.awaitSingle()
+        val premieresRoleArg = origin.args.optRole("alternatepremiererole")?.awaitSingle()
+        val shortsRoleArg = origin.args.optRole("alternateshortsrole")?.awaitSingle()
         val upcomingRoleArg = origin.args.optRole("upcomingrole")?.awaitSingle()
         val creationRoleArg = origin.args.optRole("creationrole")?.awaitSingle()
 
-        if(listOfNotNull(roleArg, textArg, membershipRoleArg, membershipTextArg, uploadsRoleArg, upcomingRoleArg, creationRoleArg).none()) {
+        if(listOfNotNull(roleArg, textArg, membershipRoleArg, membershipTextArg, uploadsRoleArg, premieresRoleArg, shortsRoleArg, upcomingRoleArg, creationRoleArg).none()) {
             // if no new information, run 'getmention' instead
             GetMentionRole.testStreamConfig(origin, site, siteUserId)
             return
@@ -128,6 +130,18 @@ object EditMentionRole : Command("editmention") {
                 else output.append("Replacing existing alternate ping for uploads/premieres with: ")
                 output.appendLine("**${uploadsRoleArg.name}**.")
                 mention.mentionRoleUploads = uploadsRoleArg.id.asLong()
+            }
+            if(premieresRoleArg != null) {
+                if(mention.mentionRolePremieres == null) output.append("Adding alternate ping for premieres only: ")
+                else output.append("Replacing existing alternate ping for premieres with: ")
+                output.appendLine("**${premieresRoleArg.name}**.")
+                mention.mentionRolePremieres = premieresRoleArg.id.asLong()
+            }
+            if(shortsRoleArg != null) {
+                if(mention.mentionRoleShorts == null) output.append("Adding alternate ping for shorts only: ")
+                else output.append("Replacing existing alternate ping for shorts with: ")
+                output.appendLine("**${shortsRoleArg.name}**.")
+                mention.mentionRoleShorts = shortsRoleArg.id.asLong()
             }
             if(upcomingRoleArg != null) {
                 if(mention.mentionRoleUpcoming == null) output.append("Adding ping for upcoming streams: ")

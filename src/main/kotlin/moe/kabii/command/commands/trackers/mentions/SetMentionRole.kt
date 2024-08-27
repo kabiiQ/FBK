@@ -93,6 +93,8 @@ object SetMentionRole : Command("setmention") {
             val membershipRoleArg = copyFrom?.mentionRoleMember ?: origin.args.optRole("membershiprole")?.awaitSingle()
             val membershipTextArg = copyFrom?.mentionTextMember ?: origin.args.optStr("membershiptext")
             val uploadsRoleArg = copyFrom?.mentionRoleUploads ?: origin.args.optRole("alternateuploadrole")?.awaitSingle()
+            val premieresRoleArg = copyFrom?.mentionRolePremieres ?: origin.args.optRole("alternatepremiererole")?.awaitSingle()
+            val shortsRoleArg = copyFrom?.mentionRoleShorts ?: origin.args.optRole("alternateshortsrole")?.awaitSingle()
             val upcomingRoleArg = copyFrom?.mentionRoleUpcoming ?: origin.args.optRole("upcomingrole")?.awaitSingle()
             val creationRoleArg = copyFrom?.mentionRoleCreation ?: origin.args.optRole("creationrole")?.awaitSingle()
 
@@ -108,6 +110,8 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionRoleMember = membershipRoleArg?.id?.asLong()
                     existingMention.mentionTextMember = membershipTextArg
                     existingMention.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
+                    existingMention.mentionRolePremieres = premieresRoleArg?.id?.asLong()
+                    existingMention.mentionRoleShorts = shortsRoleArg?.id?.asLong()
                     existingMention.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
                     existingMention.mentionRoleCreation = creationRoleArg?.id?.asLong()
                 } else {
@@ -118,6 +122,8 @@ object SetMentionRole : Command("setmention") {
                         this.mentionRoleMember = membershipRoleArg?.id?.asLong()
                         this.mentionTextMember = membershipTextArg
                         this.mentionRoleUploads = uploadsRoleArg?.id?.asLong()
+                        this.mentionRolePremieres = premieresRoleArg?.id?.asLong()
+                        this.mentionRoleShorts = shortsRoleArg?.id?.asLong()
                         this.mentionRoleUpcoming = upcomingRoleArg?.id?.asLong()
                         this.mentionRoleCreation = creationRoleArg?.id?.asLong()
                     }
@@ -126,9 +132,11 @@ object SetMentionRole : Command("setmention") {
                     val includeVideos = if(uploadsRoleArg == null) "+videos" else ""
                     val uploadAlt = if(uploadsRoleArg != null) " Set to **${uploadsRoleArg.name}** for uploads/premieres." else ""
                     val upcomingAlt = if(upcomingRoleArg != null) "\nSet to **${upcomingRoleArg.name}** for **upcoming** stream notifications. **Upcoming** messages must still be enabled in `/yt config`." else ""
+                    val premiereAlt = if(premieresRoleArg != null) "\nSet to **${premieresRoleArg.name}** for **premiere** upload notifications. **Upload** messages must still be enabled in `/yt config`." else ""
+                    val shortAlt = if(shortsRoleArg != null) "\nSet to **${shortsRoleArg.name}** for **short** upload notifications. **Upload** messages must still be enabled in `/yt config`." else ""
                     val creationAlt = if(creationRoleArg != null) "\nSet to **${creationRoleArg.name}** for **immediately** when streams are scheduled. **Creation** messages must still be enabled in `/yt config`" else ""
                     val memberText = if(membershipTextArg != null) "\nAdditional text included for membership streams: **$membershipTextArg**." else ""
-                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$memberText$uploadAlt$upcomingAlt$creationAlt"
+                    "\n\nRole ${if(roleArg != null) "set" else "not set"} for regular streams$includeVideos, role ${if(membershipRoleArg != null) "set to **${membershipRoleArg.name}**" else "not set"} for membership streams.$memberText$uploadAlt$upcomingAlt$creationAlt$premiereAlt$shortAlt"
                 } else ""
 
                 val role = roleArg?.run { "**$name**" } ?: "NONE"
@@ -210,6 +218,8 @@ object SetMentionRole : Command("setmention") {
         val mentionRoleUpcoming: Role?,
         val mentionRoleCreation: Role?,
         val mentionRoleUploads: Role?,
+        val mentionRolePremieres: Role?,
+        val mentionRoleShorts: Role?,
         val mentionTextMember: String?,
         // fields from just twitter mentions
         val embedColor: Int?
@@ -232,7 +242,7 @@ object SetMentionRole : Command("setmention") {
                 }
                 mention ?: return null
                 with(mention) {
-                    MentionCopy(getRole(mentionRole), mentionText, getRole(mentionRoleMember), getRole(mentionRoleUpcoming), getRole(mentionRoleCreation), getRole(mentionRoleUploads), mentionTextMember, null)
+                    MentionCopy(getRole(mentionRole), mentionText, getRole(mentionRoleMember), getRole(mentionRoleUpcoming), getRole(mentionRoleCreation), getRole(mentionRoleUploads), getRole(mentionRolePremieres), getRole(mentionRoleShorts), mentionTextMember, null)
                 }
             }
             is moe.kabii.trackers.TwitterTarget -> {
@@ -248,7 +258,7 @@ object SetMentionRole : Command("setmention") {
                 }
                 mention ?: return null
                 with(mention) {
-                    MentionCopy(getRole(mentionRole), mentionText, null, null, null, null, null, embedColor)
+                    MentionCopy(getRole(mentionRole), mentionText, null, null, null, null, null, null, null, embedColor)
                 }
             }
             else -> null

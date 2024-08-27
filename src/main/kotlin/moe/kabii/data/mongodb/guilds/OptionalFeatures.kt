@@ -98,6 +98,8 @@ data class YoutubeSettings(
     var streamCreation: Boolean = false,
     var includeMemberContent: Boolean = true,
     var includePublicContent: Boolean = true,
+    var includeShortUploads: Boolean = true,
+    var includeNormalUploads: Boolean = true,
 
     var upcomingChannel: Long? = null
 )
