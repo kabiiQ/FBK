@@ -9,7 +9,7 @@ class Connect4Grid {
         const val win = 4
 
         // ":one::two::three::four::five::six::seven:"
-        val rowHeader: String = (1..width).joinToString("") { int -> "$int\u20E3" }
+        val rowHeader: String = (1..width).joinToString("") { int -> "$int⃣" }
     }
 
     // private final CircleState[height][width] grid + fill with CircleState.NONE
