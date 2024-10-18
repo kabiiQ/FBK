@@ -20,9 +20,9 @@ class TerminalListener(val discord: DiscordInstances) : Runnable {
     override fun run() {
         val manager = discord.manager
         applicationLoop {
-            val line = checkNotNull(readLine()) { "Terminal input ending" }
+            val line = readlnOrNull()
+            if(line.isNullOrBlank()) return@applicationLoop
             manager.context.launch {
-                if(line.isBlank()) return@launch
 
                 // no prefix, etc. just match first arg as command name
                 val msgArgs = line.split(" ")

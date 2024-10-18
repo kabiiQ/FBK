@@ -82,8 +82,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         /*val pullDelay = ServiceRequestCooldownSpec(
             callDelay = 2_000L,
             minimumRepeatTime = 120_000L
-        )
-        val ytManualPuller = YoutubeFeedPuller(pullDelay)*/
+        )*/
+        //val ytManualPuller = YoutubeFeedPuller(pullDelay)
 
         val kickDelay = ServiceRequestCooldownSpec(
             callDelay = 1_200L,
@@ -132,7 +132,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             Thread(twitchSubs, "TwitchSubscriptionManager"),
             Thread(ytSubscriptions, "YoutubeSubscriptionManager"),
             Thread(ytChecker, "YoutubeChecker"),
-            //Thread(ytManualPuller, "YT-ManualFeedPull"),
+//            Thread(ytManualPuller, "YT-ManualFeedPull"),
 //            Thread(kickChecker, "KickChecker"),
             Thread(ytMembershipMaintainer, "YoutubeMembershipMaintainer"),
             malThread,

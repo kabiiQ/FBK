@@ -54,15 +54,16 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
     private val minimumRepeatTime = refreshGoal + 2_000L
 
     private val metaChanId = Keys.config[Keys.Admin.logChannel].snowflake
-    private val errorPostCooldown = Duration.ofHours(1) // will only post rate limit to discord every duration
+    private val errorPostCooldown = Duration.ofHours(4) // will only post rate limit to discord every duration
     private var errorPostNext = Instant.now()
 
     private val instanceLocks: Map<Int, Mutex>
 
     companion object {
-        val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
+        //val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
+        val callDelay = 3_600L // 3.6sec/call = 16.6/min = 250/15min
         //val callDelay = 6_000L // 6sec/call = 10/min = 150/15min
-        val refreshGoal = 82_000L // = 41/instance @ 2 seconds
+        val refreshGoal = 180_000L // = 53/instance @ 3.6 seconds
         val loopTime = 20_000L // can lower loop repeat time below refresh time now with locking system implemented
     }
 
@@ -440,7 +441,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
                     val notif = channel
                         .createMessage(notifSpec)
-                        .timeout(Duration.ofMillis(4_000))
+                        .timeout(Duration.ofMillis(6_000L))
                         .awaitSingle()
 
                     if(attachedVideo != null) {
