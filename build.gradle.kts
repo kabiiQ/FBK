@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 group = "moe.kabii"
-version = "deploy"
 
 plugins {
-    val kotlinVer = "2.0.0"
+    val kotlinVer = "2.1.0-Beta2"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
+    id("com.bmuschko.docker-java-application") version "9.4.0"
     application
     idea
 }
@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
     // kotlin
-    api(kotlin("stdlib-jdk8"))
+    api(kotlin("stdlib"))
     api(kotlin("reflect"))
 
     // kotlin libs
@@ -118,14 +118,16 @@ dependencies {
     }
 }
 
-
 val updateVersion = task("updateVersion") {
     // custom script to create version file name and increment build number
     val versionsFile = file("build.version")
     val versions = versionsFile.readLines()
     val (major, minor, build, flag) = versions.map { line -> line.substring(line.indexOf(':') + 1, line.length).trim() }
-    //val buildFlag = if(flag.isNotBlank()) "-$flag" else ""
+    val buildFlag = if(flag.isNotBlank()) "-$flag" else ""
     val buildCount = build.toInt() + 1
+
+    // Set version for use in build output
+    version = "$major.$minor$buildFlag"
 
     versionsFile.bufferedWriter().use { output ->
         output.write("major: $major\n")
@@ -137,15 +139,15 @@ val updateVersion = task("updateVersion") {
 
 tasks {
     kotlin {
-        jvmToolchain(20)
+        jvmToolchain(22)
     }
 
     compileKotlin {
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_20)
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_22)
     }
 
-    java.targetCompatibility = JavaVersion.VERSION_20
-    java.sourceCompatibility = JavaVersion.VERSION_20
+    java.targetCompatibility = JavaVersion.VERSION_22
+    java.sourceCompatibility = JavaVersion.VERSION_22
 
     build {
         dependsOn(updateVersion)
@@ -169,6 +171,25 @@ tasks {
 application {
     mainClass.set("moe.kabii.FBKKt")
     applicationDefaultJvmArgs = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+
+docker {
+    javaApplication {
+        baseImage.set("eclipse-temurin:23")
+        maintainer.set("kabiiQ")
+        ports.set(listOf(
+            8001, // YouTube PubSub subscription callback
+            8002, // TwitCasting WebHook callback
+            8003, // Twitch API callback server (Internal, must reverse proxy from SSL :443)
+            8010, // YouTube video API server
+            8080, // File server
+            8101, // OAuth redirect
+        ))
+        images.set(listOf(
+            "docker.kabii.moe/fbk:$version",
+            "docker.kabii.moe/fbk:latest"
+        ))
+    }
 }
 
 idea {

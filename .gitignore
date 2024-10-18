@@ -1,3 +1,21 @@
-Java.gitignore
-keys.toml
-src/main/kotlin/moe/kabii/command/commands/meta/MigrationCommand.kt
+# Hidden files
+.*
+!\.gitignore
+
+# Build artifacts
+build/
+
+# Log files
+logs/
+
+# Configuration files
+keys*.toml
+db_password
+
+# Development testing files
+banner.png
+fbk/files/ids
+fbk/files/instances
+
+# Un-released files
+TwitterShutdownNotify.kt

@@ -1,0 +1,86 @@
+services:
+  fbk:
+    image: docker.kabii.moe/fbk
+    container_name: fbk
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    networks:
+    - fbk
+    ports:
+    - 8001:8001 # YouTube PubSub subscription callback
+    - 8002:8002 # TwitCasting WebHook callback
+    - 127.0.0.1:8003:8003 # Internal Twitch API callback
+    - 8010:8010 # YouTube video API server
+    - 8080:8080 # File server
+    - 8101:8101 # OAuth redirect
+    volumes:
+    - ./fbk/files:/app/files
+    - ./fbk/logs:/app/logs
+    - ./fbk/keys.toml:/app/keys.toml
+    depends_on:
+      mongodb:
+        condition: service_healthy
+        restart: false
+      postgres:
+        condition: service_healthy
+        restart: false
+
+  postgres:
+    image: postgres
+    container_name: fbk_postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fbk -d fbk"]
+      interval: 30s
+      timeout: 10s
+    networks:
+    - fbk
+    environment:
+    - POSTGRES_USER=fbk
+    - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    - POSTGRES_DB=fbk
+    volumes:
+    - ./pgdata:/var/lib/postgresql/data
+    - ./transfer/postgres:/mnt/transfer
+    secrets:
+    - db_password
+
+  mongodb:
+    image: mongo
+    container_name: fbk_mongodb
+    restart: always
+    healthcheck:
+      test: mongosh --norc --quiet --eval "db.getMongo()"
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+    networks:
+    - fbk
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=fbk
+    - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db_password
+    volumes:
+    - ./mongodata:/data/db
+    - ./transfer/mongo:/mnt/transfer
+    secrets:
+    - db_password
+
+  libretranslate:
+    image: libretranslate/libretranslate
+    container_name: fbk_libretranslate
+    restart: always
+    networks:
+    - fbk
+
+secrets:
+  db_password:
+    file: db_password
+
+networks:
+  fbk:
+    name: fbk
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.10.0.0/24
