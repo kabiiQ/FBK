@@ -68,7 +68,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
 
         // re-associate SQL data with stream API data
         streamData.mapNotNull { (id, data) ->
-            if (data is Err && data.value is StreamErr.IO) {
+            if (data is Err && data.value is StreamErr.Network) {
                 LOG.warn("Error contacting Twitch :: $id")
                 return@mapNotNull null
             }

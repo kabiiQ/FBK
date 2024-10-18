@@ -42,7 +42,7 @@ object StreamTrackerCommand : TrackerCommand {
                         val ytErr = if(streamTarget is YoutubeTarget) " For YouTube channels, ensure that you are using the 24-digit channel ID." else ""
                         "Unable to find **${streamTarget.full}** stream **${target.identifier}**.$ytErr"
                     }
-                    is StreamErr.IO -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
+                    is StreamErr.Network -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
                 origin.ereply(Embeds.error(error)).awaitSingle()
                 return

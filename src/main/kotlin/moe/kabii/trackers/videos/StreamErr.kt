@@ -1,6 +1,8 @@
 package moe.kabii.trackers.videos
 
 sealed class StreamErr {
-    object NotFound : StreamErr()
-    object IO : StreamErr()
+    data object NotFound : StreamErr()
+
+    open class Network : StreamErr()
+    data object IO : Network()
 }

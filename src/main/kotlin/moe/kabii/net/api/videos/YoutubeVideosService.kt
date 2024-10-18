@@ -189,7 +189,7 @@ object YoutubeVideosService {
                                     )
                                     return@propagateTransaction
                                 }
-                                is StreamErr.IO -> {
+                                is StreamErr.Network -> {
                                     call.respondText(
                                         text = "error: external: unable to reach YouTube API",
                                         status = HttpStatusCode.BadGateway

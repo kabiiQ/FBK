@@ -168,12 +168,12 @@ object TwitchParser {
 
     object EventSub {
 
-        suspend fun createSubscription(type: TwitchEventSubscriptions.Type, twitchUserId: Long): String? {
+        suspend fun createSubscription(type: TwitchEventSubscriptions.Type, twitchUserId: Long): Result<TwitchEvents.Response.EventSubResponse, StreamErr> {
             val body = TwitchEvents.Request.Subscription.generateRequestBody(type, twitchUserId.toString())
             val request = Request.Builder()
                 .url("https://api.twitch.tv/helix/eventsub/subscriptions")
                 .post(body)
-            return request<TwitchEvents.Response.EventSubResponse>(request).orNull()?.data?.firstOrNull()?.id
+            return request<TwitchEvents.Response.EventSubResponse>(request)
         }
 
         suspend fun deleteSubscription(subscriptionId: String): Boolean {

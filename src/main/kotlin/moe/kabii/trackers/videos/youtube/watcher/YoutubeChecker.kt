@@ -150,7 +150,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
                                             when (ytVideo.value) {
                                                 // do not process video if this was an IO issue on our end
-                                                is StreamErr.IO -> return@discordTask
+                                                is StreamErr.Network -> return@discordTask
                                                 is StreamErr.NotFound -> null
                                             }
                                         }
