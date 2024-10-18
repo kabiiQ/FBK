@@ -26,10 +26,11 @@ object Keys : ConfigSpec("") {
         val callbackPort by required<Int>("callback_port")
         val signingKey by required<String>("signing_key")
         val videoApiPort by required<Int>("internal_video_api_port")
-        val poToken by required<String>("po_token")
-        val visitorData by required<String>("visitor_data")
-        val filterPAPIS by required<String>("filter_papis")
-        val filterPS by required<String>("filter_ps")
+        val poToken by optional<String>("", "po_token")
+        val visitorData by optional<String>("", "visitor_data")
+        val refreshToken by optional<String>("", "yt_refresh_token")
+        val filterPAPIS by optional<String>("", "filter_papis")
+        val filterPS by optional<String>("", "filter_ps")
     }
     object Postgres : ConfigSpec() {
         val connectionString by required<String>("connection_string")

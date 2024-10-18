@@ -36,6 +36,10 @@ object AudioManager {
     init {
         val youtube = YoutubeAudioSourceManager(true,
             WebWithThumbnail(), TvHtml5EmbeddedWithThumbnail(), MusicWithThumbnail())
+
+        val refreshToken = Keys.config[Keys.Youtube.refreshToken].ifBlank { null }
+        youtube.useOauth2(refreshToken, refreshToken != null)
+
         manager.registerSourceManager(youtube)
 
         val poToken = Keys.config[Keys.Youtube.poToken]
