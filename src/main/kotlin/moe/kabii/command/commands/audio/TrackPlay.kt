@@ -16,10 +16,10 @@ object TrackPlay : AudioCommandContainer {
         init {
 
             chat {
-                /*if(chan.id.asString() != "583439403255595019") {
-                    ereply(Embeds.error("The music bot feature is currently disabled due to being completely blocked by YouTube. There is currently no ETA for a fix.")).awaitSingle()
+                if(chan.id.asString() != "583439403255595019") {
+                    ereply(Embeds.error("The music bot feature is disabled due to being completely blocked by YouTube again. There is currently no ETA for a fix.")).awaitSingle()
                     return@chat
-                }*/
+                }
 
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 event.deferReply().awaitAction()
