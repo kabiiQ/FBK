@@ -121,7 +121,7 @@ object MediaTrackerCommand : TrackerCommand {
         val parser = site.parser
         val inputId = target.identifier
 
-        val siteListId = parser.getListID(inputId)
+        val siteListId = inputId.toIntOrNull()?.toString() ?: parser.getListID(inputId)
         if(siteListId == null) {
             origin.ereply(Embeds.error("Unable to find $siteName list with identifier **${target.identifier}**.")).awaitSingle()
             return
