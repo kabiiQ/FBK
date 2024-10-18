@@ -4,6 +4,7 @@ import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.source.toml
 import com.uchuhimo.konf.source.toml.toToml
+import java.io.File
 
 object Keys : ConfigSpec("") {
     private val lock = Any()
@@ -12,7 +13,7 @@ object Keys : ConfigSpec("") {
     val config = Config { addSpec(Keys) }
         .from.toml.file(FILENAME)
 
-    object Discord : ConfigSpec() {
+    object DiscordOAuth : ConfigSpec() {
         val clientId by required<String>("discord_client_id")
         val clientSecret by required<String>("discord_client_secret")
     }
@@ -32,16 +33,8 @@ object Keys : ConfigSpec("") {
         val filterPAPIS by optional<String>("", "filter_papis")
         val filterPS by optional<String>("", "filter_ps")
     }
-    object Postgres : ConfigSpec() {
-        val connectionString by required<String>("connection_string")
-    }
-    object MongoDB : ConfigSpec() {
-        val address by required<String>()
-        val port by required<Int>()
-        val username by required<String>()
-        val password by required<String>()
-        val authDB by required<String>("auth_db")
-        val botDB by required<String>("bot_db")
+    object Databases : ConfigSpec() {
+        val dbPassword by required<String>("password_file")
     }
     object Twitch : ConfigSpec() {
         val client by required<String>("client_id")

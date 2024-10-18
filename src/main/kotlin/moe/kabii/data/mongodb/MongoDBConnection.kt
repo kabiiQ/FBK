@@ -6,6 +6,7 @@ import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.model.UpdateOptions
 import discord4j.core.`object`.entity.Message
+import moe.kabii.data.flat.DatabaseAuthentication
 import moe.kabii.data.flat.Keys
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -23,21 +24,16 @@ object MongoDBConnection {
     init {
         KMongoConfiguration.registerBsonModule(JavaTimeModule())
 
-        val username = Keys.config[Keys.MongoDB.username]
         val clientSettings = MongoClientSettings
             .builder()
             .applyToClusterSettings { cluster ->
-                cluster.hosts(listOf(ServerAddress(
-                    Keys.config[Keys.MongoDB.address], Keys.config[Keys.MongoDB.port]
-                )))
+                cluster.hosts(listOf(ServerAddress("mongodb")))
             }
-        if(username.isNotEmpty()) { // if local testing environment requires no auth this is skipped
-            MongoCredential
-                .createCredential(username, Keys.config[Keys.MongoDB.authDB], Keys.config[Keys.MongoDB.password].toCharArray())
-                .run(clientSettings::credential)
-        }
+        MongoCredential
+            .createCredential("fbk", "admin", DatabaseAuthentication.dbPassword.toCharArray())
+            .run(clientSettings::credential)
         mongoClient = KMongo.createClient(clientSettings.build()).coroutine
-        mongoDB = mongoClient.getDatabase(Keys.config[Keys.MongoDB.botDB])
+        mongoDB = mongoClient.getDatabase("fbk")
     }
 }
 
