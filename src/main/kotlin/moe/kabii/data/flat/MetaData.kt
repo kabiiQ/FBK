@@ -1,6 +1,6 @@
-package moe.kabii.discord.util
+package moe.kabii.data.flat
 
-import moe.kabii.data.flat.Keys
+import java.io.File
 import java.time.Instant
 
 class MetaData private constructor(
@@ -25,7 +25,12 @@ class MetaData private constructor(
             "Release ${current.major}.${current.minor}$currentFlag build #${current.build}"
         }
 
-        val host = Keys.config[Keys.Dev.host]
+        val dbPassword: String
+
+        init {
+            val passwordFile = Keys.config[Keys.Databases.dbPassword]
+            dbPassword = File(passwordFile).readText()
+        }
     }
 }
 

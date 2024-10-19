@@ -5,9 +5,9 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.params.MessageInteractionParameters
 import moe.kabii.command.params.TerminalParameters
 import moe.kabii.command.params.UserInteractionParameters
+import moe.kabii.data.flat.SourcePaths
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
-import moe.kabii.discord.util.SourcePaths
 import kotlin.reflect.KProperty1
 
 // Now purely aesthetic, Command inheritance is reflectively searched

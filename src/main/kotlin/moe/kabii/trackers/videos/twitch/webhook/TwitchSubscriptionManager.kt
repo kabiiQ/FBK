@@ -5,7 +5,6 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscription
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.StreamWatcher
@@ -32,7 +31,6 @@ class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChec
 
     override fun run() {
         // start callback server
-        if(!MetaData.host) return
         listener.server.start()
 
         currentSubscriptions = transaction {

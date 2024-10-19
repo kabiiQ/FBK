@@ -24,3 +24,12 @@ object TwitterFeedCache {
     fun getOrPut(feed: TwitterFeed): FeedCacheState = cache.getOrPut(feed.username.lowercase()) { FeedCacheState(feed.lastPulledTweet ?: 0L) }
     operator fun get(username: String) = cache[username.lowercase()]
 }
+
+object GuildMemberCounts {
+    private val cache: MutableMap<Long, Long> = mutableMapOf()
+
+    operator fun get(guildId: Long) = cache[guildId]
+    operator fun set(guildId: Long, memberCount: Long) {
+        cache[guildId] = memberCount
+    }
+}

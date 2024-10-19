@@ -5,12 +5,12 @@ import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.data.flat.GQLQueries
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
+import moe.kabii.data.flat.MetaData
 import moe.kabii.data.mongodb.MongoDBConnection
 import moe.kabii.data.relational.PostgresConnection
 import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.event.guild.welcome.WelcomeImageGenerator
 import moe.kabii.discord.tasks.DiscordTaskPool
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.net.api.videos.YoutubeVideosService
@@ -36,11 +36,7 @@ fun main() {
     // non-priority, blocking initialization that can make outgoing api calls thus is potentially very slow
     thread(start = true, name = "Initialization") {
         runBlocking {
-            // start file server
-            if(MetaData.host) {
-                NettyFileServer.server.start()
-            }
-
+            NettyFileServer.server.start()
             DiscordOAuthRedirectServer.server.start()
             val welcomer = WelcomeImageGenerator
             GlobalTrackSuggestionGenerator.cacheAll()

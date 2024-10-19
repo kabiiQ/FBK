@@ -2,6 +2,7 @@ package moe.kabii.trackers.videos.youtube.subscriber
 
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
@@ -22,6 +23,7 @@ class YoutubeFeedSubscriber {
     fun unsubscribe(channelId: String) = request(channelId, Mode.UNSUBSCRIBE)
 
     private fun request(channelId: String,  mode: Mode): String? {
+        if(!AvailableServices.youtubePubSub) return null
         val topic = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=$channelId"
 
         val body = FormBody.Builder()

@@ -6,8 +6,8 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.data.flat.MetaData
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.MetaData
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.tryAwait
 import org.apache.commons.lang3.time.DurationFormatUtils

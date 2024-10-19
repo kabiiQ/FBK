@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfiguration
 import moe.kabii.data.mongodb.GuildConfigurations
@@ -106,6 +107,12 @@ object DeepLTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
+        if(!AvailableServices.deepL) {
+            LOG.info("DeepL API key not provided, disabling general key (server-specific keys may still exist)")
+            keyStates.getValue(generalKey).available = false
+            SupportedLanguages(this, mapOf())
+        }
+
         return try {
             val request = newRequestBuilder()
                 .url("https://api-free.deepl.com/v2/languages?type=target&auth_key=$generalKey")

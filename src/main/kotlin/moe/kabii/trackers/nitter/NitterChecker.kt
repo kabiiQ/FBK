@@ -24,7 +24,6 @@ import moe.kabii.data.mongodb.guilds.TwitterSettings
 import moe.kabii.data.relational.twitter.*
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
@@ -74,7 +73,6 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
     }
 
     override fun run() {
-        if(!MetaData.host) return // do not run on testing instances
         applicationLoop {
             val start = Instant.now()
             try {
@@ -91,7 +89,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         }
     }
 
-    suspend fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = nitterScope.launch {
+    fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = nitterScope.launch {
         withTimeout(timeoutMillis) {
             block()
         }

@@ -6,8 +6,7 @@ import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
 import com.mongodb.client.model.UpdateOptions
 import discord4j.core.`object`.entity.Message
-import moe.kabii.data.flat.DatabaseAuthentication
-import moe.kabii.data.flat.Keys
+import moe.kabii.data.flat.MetaData
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
@@ -30,7 +29,7 @@ object MongoDBConnection {
                 cluster.hosts(listOf(ServerAddress("mongodb")))
             }
         MongoCredential
-            .createCredential("fbk", "admin", DatabaseAuthentication.dbPassword.toCharArray())
+            .createCredential("fbk", "admin", MetaData.dbPassword.toCharArray())
             .run(clientSettings::credential)
         mongoClient = KMongo.createClient(clientSettings.build()).coroutine
         mongoDB = mongoClient.getDatabase("fbk")

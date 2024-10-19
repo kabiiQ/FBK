@@ -3,6 +3,7 @@ package moe.kabii.translation.google
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
 import moe.kabii.translation.*
@@ -74,6 +75,12 @@ object GoogleTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
+        if(!AvailableServices.gtl) {
+            LOG.info("Google translation key not provided, disabling")
+            this.available = false
+            return SupportedLanguages(this, mapOf())
+        }
+
         val request = newRequestBuilder()
             .url("https://translation.googleapis.com/language/translate/v2/languages?target=en&key=$googleKey")
             .build()

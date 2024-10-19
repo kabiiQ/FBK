@@ -2,8 +2,8 @@ package moe.kabii.trackers.videos.twitcasting.webhook
 
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.discord.util.MetaData
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingWebhook
 import moe.kabii.util.extensions.applicationLoop
@@ -14,8 +14,7 @@ import java.time.Duration
 object TwitcastWebhookManager : Runnable {
 
     override fun run() {
-        // debug instances should not update webhook list and will not receive webhooks anyways if they are on a different IP
-        if(!MetaData.host) return
+        if(!AvailableServices.twitCastingWebhooks) return
 
         applicationLoop {
             try {

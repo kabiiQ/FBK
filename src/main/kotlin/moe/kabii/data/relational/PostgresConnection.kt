@@ -2,8 +2,7 @@ package moe.kabii.data.relational
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import moe.kabii.data.flat.DatabaseAuthentication
-import moe.kabii.data.flat.Keys
+import moe.kabii.data.flat.MetaData
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
@@ -31,7 +30,7 @@ internal object PostgresConnection {
     private fun createConnectionPool(): HikariDataSource = HikariConfig().apply {
 //        driverClassName = "org.postgresql.Driver"
         driverClassName = "com.impossibl.postgres.jdbc.PGDriver"
-        jdbcUrl = "jdbc:pgsql://fbk:${DatabaseAuthentication.dbPassword}@postgres/fbk"
+        jdbcUrl = "jdbc:pgsql://fbk:${MetaData.dbPassword}@postgres/fbk"
         isAutoCommit = true
         maximumPoolSize = 10000
         minimumIdle = 90

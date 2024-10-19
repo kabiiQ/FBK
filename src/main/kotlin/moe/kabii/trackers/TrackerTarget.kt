@@ -3,6 +3,7 @@ package moe.kabii.trackers
 import discord4j.rest.util.Color
 import moe.kabii.LOG
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
@@ -58,6 +59,7 @@ typealias TrackCallback = (suspend (DiscordParameters, TrackedStreams.StreamChan
 // enforces the properties required throughout the code to add a streaming site and relates them to each other
 sealed class StreamingTarget(
     val serviceColor: Color,
+    val available: Boolean,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
     url: List<Regex>,
@@ -77,6 +79,7 @@ sealed class StreamingTarget(
 
 object TwitchTarget : StreamingTarget(
     TwitchParser.color,
+    AvailableServices.twitch,
     "Twitch",
     FeatureChannel::streamTargetChannel,
     listOf(
@@ -116,6 +119,7 @@ object TwitchTarget : StreamingTarget(
 
 object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
+    AvailableServices.youtube,
     "YouTube",
     FeatureChannel::streamTargetChannel,
     listOf(
@@ -164,6 +168,7 @@ object YoutubeVideoTarget : TrackerTarget(
 
 object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
+    AvailableServices.twitCasting,
     "TwitCasting",
     FeatureChannel::streamTargetChannel,
     listOf(
@@ -193,13 +198,14 @@ object TwitcastingTarget : StreamingTarget(
     }
 
     override val onTrack: TrackCallback = { origin, channel ->
-        origin.handler.instances.services.twitcastChecker.checkUserForMovie(channel)
+        origin.handler.instances.services.twitCastChecker.checkUserForMovie(channel)
         TwitcastingParser.registerWebhook(channel.siteChannelID)
     }
 }
 
 object KickTarget : StreamingTarget(
     KickParser.color,
+    available = false,
     "Kick.com",
     FeatureChannel::streamTargetChannel,
     listOf(

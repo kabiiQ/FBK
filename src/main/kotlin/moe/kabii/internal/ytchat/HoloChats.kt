@@ -5,10 +5,10 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
+import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -36,7 +36,7 @@ class HoloChats(val instances: DiscordInstances) {
             // kobocord
             HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
         )
-        if(MetaData.host) {
+        if(Keys.config[Keys.DiscordOAuth.clientId] == "314672047718531072") {
             // load configurations for discord channels tracking entire yt channels - currently hardcoded
             channelConfigurations.forEach { (yt, discord, instance) ->
                 instances[instance].client

@@ -4,6 +4,7 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccount
 import moe.kabii.discord.util.Embeds
@@ -21,6 +22,7 @@ object YoutubeLink : Command("ytlink") {
     init {
         chat {
             // initiate discord-yt link process
+            if(!AvailableServices.discordOAuth) return@chat
             val oauth = DiscordAuthorization.createNew(interaction.id, author.id, DiscordAuthorization.DiscordScopes.CONNECTIONS) { complete ->
                 try {
                     val ytConnections = DiscordParser

@@ -2,9 +2,9 @@ package moe.kabii.trackers.videos.twitcasting.watcher
 
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
-import moe.kabii.discord.util.MetaData
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
@@ -20,7 +20,7 @@ import kotlin.math.max
 class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, TwitcastNotifier(instances) {
 
     override fun run() {
-        if(MetaData.host) {
+        if(AvailableServices.twitchWebhooks) {
             val webhookServer = TwitcastWebhookServer(this)
             webhookServer.server.start()
         }

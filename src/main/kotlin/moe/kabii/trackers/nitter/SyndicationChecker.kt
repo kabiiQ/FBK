@@ -27,7 +27,6 @@ class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequ
     private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Syndication-Priority-Tweet-Intake") + SupervisorJob())
 
     override fun run() {
-        //if(!MetaData.host) return // do not run on testing instances
         applicationLoop {
             val start = Instant.now()
             try {

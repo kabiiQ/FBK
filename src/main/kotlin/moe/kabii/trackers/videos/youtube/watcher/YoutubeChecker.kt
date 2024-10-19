@@ -39,7 +39,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
 
     private var nextCall = Instant.now()
     private var tickId = 0
-//    private val lock = Mutex()
 
     override fun run() {
         applicationLoop {
@@ -57,7 +56,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
     }
 
     suspend fun ytTick(start: Instant = Instant.now()) {
-//        if(!lock.tryLock() /* && Instant.now() < nextCall */) return // discard tick if one is already in progress
         // perform yt tick only if repeatTime has elapsed since last call (may be called sooner by yt push event)
         this.nextCall = Instant.now().plusMillis(repeatTimeMillis)
         LOG.debug("start: $start :: nextCall : $nextCall")

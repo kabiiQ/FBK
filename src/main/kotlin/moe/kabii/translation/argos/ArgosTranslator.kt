@@ -3,7 +3,6 @@ package moe.kabii.translation.argos
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
-import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
 import moe.kabii.translation.*
 import moe.kabii.translation.argos.json.ArgosLanguagesResponse
@@ -19,10 +18,11 @@ object ArgosTranslator : TranslationService(
     "Argos",
     "https://github.com/argosopentech/argos-translate/blob/master/README.md"
 ) {
+    private const val libreTranslator = "libretranslate:5000"
+
     private val timeoutClient = OkHTTP.newBuilder()
         .callTimeout(Duration.ofSeconds(4))
         .build()
-    private val libreTranslator = Keys.config[Keys.Argos.ltAddress]
     private val translationAdapter = MOSHI.adapter(ArgosTranslationResponse::class.java)
     private val errorAdapter = MOSHI.adapter(ArgosTranslationError::class.java)
 

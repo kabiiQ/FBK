@@ -30,6 +30,11 @@ object StreamTrackerCommand : TrackerCommand {
         val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
         val site = streamTarget.dbSite
 
+        if(!streamTarget.available) {
+            origin.ereply(Embeds.error("${streamTarget.full} tracking is not available at this time.")).awaitSingle()
+            return
+        }
+
         // make sure feature is enabled or this channel is private
         origin.channelFeatureVerify(streamTarget.channelFeature, streamTarget.featureName, allowOverride = false)
 

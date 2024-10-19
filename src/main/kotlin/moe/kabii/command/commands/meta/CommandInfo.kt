@@ -4,8 +4,8 @@ import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.data.flat.SourcePaths
 import moe.kabii.discord.util.Embeds
-import moe.kabii.discord.util.SourcePaths
 
 object CommandInfo : Command("help") {
     override val wikiPath = "Bot-Meta-Commands#command-information"

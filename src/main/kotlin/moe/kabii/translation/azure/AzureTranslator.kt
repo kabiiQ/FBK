@@ -1,6 +1,7 @@
 package moe.kabii.translation.azure
 
 import moe.kabii.*
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.translation.*
 import moe.kabii.translation.azure.json.AzureLanguagesResponse
@@ -76,6 +77,11 @@ object AzureTranslator : TranslationService(
 
     @Throws(IOException::class)
     private fun pullLanguages(): SupportedLanguages {
+        if(!AvailableServices.mtl) {
+            LOG.error("Azure translation key not provided, disabling")
+            this.available = false
+            return SupportedLanguages(this, mapOf())
+        }
         return try {
             val request = newRequestBuilder()
                 .url("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation")

@@ -17,11 +17,11 @@ import moe.kabii.command.commands.configuration.setup.StarboardConfig
 import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.documentation.CommandDocumentor
 import moe.kabii.command.registration.GlobalCommandRegistrar
+import moe.kabii.data.flat.Uptime
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.tasks.OfflineUpdateHandler
-import moe.kabii.discord.util.Uptime
 import moe.kabii.trackers.ServiceWatcherManager
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString

@@ -8,7 +8,7 @@ import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.data.flat.GuildMemberCounts
+import moe.kabii.data.GuildMemberCounts
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.JoinConfiguration
 import moe.kabii.data.mongodb.guilds.LogSettings
