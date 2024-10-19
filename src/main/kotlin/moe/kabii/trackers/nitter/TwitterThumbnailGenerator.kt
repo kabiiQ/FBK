@@ -10,7 +10,7 @@ import java.awt.RenderingHints
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.URL
+import java.net.URI
 import javax.imageio.ImageIO
 
 object TwitterThumbnailGenerator {
@@ -24,7 +24,7 @@ object TwitterThumbnailGenerator {
 
         try {
             // get attachment thumbnail
-            val url = URL(thumbnailUrl)
+            val url = URI(thumbnailUrl).toURL()
             val image = ImageIO.read(url)
 
             // add requested info tag in bottom left corner

@@ -15,7 +15,7 @@ import moe.kabii.rusty.Try
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
-import java.net.URL
+import java.net.URI
 
 abstract class BaseLoader(val origin: DiscordParameters, private val position: Int?, val extract: ExtractedQuery, val searched: Boolean = false) : AudioLoadResultHandler {
     val audio = AudioManager.getGuildAudio(origin.client, origin.target.id.asLong())
@@ -25,7 +25,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
     internal val query: String?
     get() {
         // no match found. error on URL messages are they are clearly not intended to be searched.
-        if (Try { URL(extract.url) }.result.ok) {
+        if (Try { URI(extract.url).toURL() }.result.ok) {
             origin.event.editReply()
                 .withEmbeds(Embeds.error("No playable audio source found for URL **${extract.url}**"))
                 .block()

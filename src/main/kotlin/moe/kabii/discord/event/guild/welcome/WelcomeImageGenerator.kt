@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.net.URI
 import java.net.URL
 import javax.imageio.ImageIO
 import kotlin.math.max
@@ -123,7 +124,7 @@ object WelcomeImageGenerator {
                 val outlineR = outlineD / 2
 
                 try {
-                    val avatarUrl = URL("${member.avatarUrl}?size=256")
+                    val avatarUrl = URI("${member.avatarUrl}?size=256").toURL()
 
                     // discord usually returns 256x256 avatar - unless original was smaller
                     val raw = ImageIO.read(avatarUrl)

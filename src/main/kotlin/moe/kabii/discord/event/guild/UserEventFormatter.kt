@@ -20,7 +20,6 @@ class UserEventFormatter(val user: User) {
         var formatted = unformatted.replace("&name", user.username)
             .replace("&mention", user.mention)
             .replace("&id", user.id.asString())
-            .replace("&discrim", "#${user.discriminator}")
             .replace("&avatar", "")
 
         val guild = member?.run { guild.tryAwait().orNull() }

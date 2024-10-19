@@ -127,7 +127,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             discordTask {
                 try {
                     val channel = if(chanId != null) {
-                        val existingNotif = discord.getMessageById(chanId, messageId).awaitSingle()
+                        val existingNotif = discord.getMessageById(chanId, messageId!!).awaitSingle()
 
                         val features = getStreamConfig(target)
 

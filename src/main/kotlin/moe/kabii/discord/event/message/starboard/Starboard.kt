@@ -18,7 +18,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
-import java.net.URL
+import java.net.URI
 
 class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: GuildConfiguration) {
     private suspend fun getStarboardChannel(): GuildMessageChannel? {
@@ -71,7 +71,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
             } else {
                 // if this is a different type of attachment, just reattach it... (videos etc)
                 try {
-                    val stream = URL(attachment.url).openStream()
+                    val stream = URI(attachment.url).toURL().openStream()
                     spec = spec.withFiles(MessageCreateFields.File.of(attachment.url, stream))
                 } catch (e: Exception) {
                     fields.add(EmbedCreateFields.Field.of("Attachment", attachment.url, false))

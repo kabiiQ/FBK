@@ -11,6 +11,7 @@ import moe.kabii.rusty.Result
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
 import java.io.File
+import java.net.URI
 import java.net.URL
 import javax.imageio.ImageIO
 
@@ -32,7 +33,7 @@ object WelcomeBannerUtil {
 
         // download image and validate
         try {
-            val imageUrl = URL(attachment.url)
+            val imageUrl = URI(attachment.url).toURL()
             val image = ImageIO.read(imageUrl)
 
             val targetH = WelcomeImageGenerator.targetHeight

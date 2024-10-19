@@ -26,7 +26,11 @@ class Connect4Grid {
             }
         }
 
-        return arrayOf(rowHeader, *rows.reversedArray())
+        val gameRows = rows
+            .map(StringBuilder::toString)
+            .reversed()
+            .toTypedArray()
+        return arrayOf(rowHeader, *gameRows)
             .joinToString("\n")
     }
 
