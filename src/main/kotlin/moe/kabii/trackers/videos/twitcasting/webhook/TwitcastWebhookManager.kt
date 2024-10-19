@@ -2,7 +2,6 @@ package moe.kabii.trackers.videos.twitcasting.webhook
 
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
-import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingWebhook
@@ -14,8 +13,6 @@ import java.time.Duration
 object TwitcastWebhookManager : Runnable {
 
     override fun run() {
-        if(!AvailableServices.twitCastingWebhooks) return
-
         applicationLoop {
             try {
                 validateAll()

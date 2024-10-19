@@ -52,8 +52,8 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val reminders = ReminderWatcher(discord, reminderDelay)
 
         val twitcastCooldowns = ServiceRequestCooldownSpec(
-            callDelay = 1100L,
-            minimumRepeatTime = 900_000L
+            callDelay = 0L,
+            minimumRepeatTime = if(AvailableServices.twitCastingWebhooks) 900_000L else 60_000L
         )
         twitCastChecker = TwitcastChecker(discord, twitcastCooldowns)
 

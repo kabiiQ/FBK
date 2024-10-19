@@ -79,7 +79,7 @@ sealed class StreamingTarget(
 
 object TwitchTarget : StreamingTarget(
     TwitchParser.color,
-    AvailableServices.twitch,
+    AvailableServices.twitchApi,
     "Twitch",
     FeatureChannel::streamTargetChannel,
     listOf(

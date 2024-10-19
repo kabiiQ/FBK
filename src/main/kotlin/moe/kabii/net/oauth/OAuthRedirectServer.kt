@@ -63,7 +63,7 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
 
     abstract val webResponse: File
 
-    private val port = Keys.config[Keys.OAuth.portBlock] + serverIndex
+    private val port = 8100 + serverIndex
     val address = "${Keys.config[Keys.OAuth.rootOauthUri]}:$port"
 
     private val apiThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()

@@ -8,7 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import moe.kabii.LOG
-import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
@@ -27,7 +26,7 @@ import java.io.File
 
 object YoutubeVideosService {
 
-    private val port = Keys.config[Keys.Youtube.videoApiPort]
+    private const val port = 8010
     private val auth = AllowedAccess
     private val readme = File("files/api/ytapi.html")
 

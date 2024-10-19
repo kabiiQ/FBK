@@ -25,12 +25,7 @@ class MetaData private constructor(
             "Release ${current.major}.${current.minor}$currentFlag build #${current.build}"
         }
 
-        val dbPassword: String
-
-        init {
-            val passwordFile = Keys.config[Keys.Databases.dbPassword]
-            dbPassword = File(passwordFile).readText()
-        }
+        val dbPassword: String = File("/run/secrets/db_password").readText()
     }
 }
 

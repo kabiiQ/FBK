@@ -102,7 +102,7 @@ object Translator {
         } else if(primaryTweet == false) {
             // retweets go straight to neural translator
             listOf(ArgosTranslator)
-        } else if(primaryTweet == true && inclusionList.contains(twitterFeed)) {
+        } else if(primaryTweet == true && inclusionList.isEmpty() || inclusionList.contains(twitterFeed)) {
             // primary tweets in specific high-visiblity servers can use GTL (paid)
             listOf(DeepLTranslator, GoogleTranslator)
         } else if(preference != null) {

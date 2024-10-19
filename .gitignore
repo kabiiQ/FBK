@@ -1,21 +1,10 @@
 # Hidden files
 .*
+!\.auth
 !\.gitignore
 
 # Build artifacts
 build/
-
-# Log files
-logs/
-
-# Configuration files
-keys*.toml
-db_password
-
-# Development testing files
-banner.png
-fbk/files/ids
-fbk/files/instances
 
 # Un-released files
 TwitterShutdownNotify.kt

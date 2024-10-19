@@ -1,0 +1,132 @@
+# READ FIRST: editing/renaming "fbk/files/instances/example.json" is required to connect FBK to Discord
+# If trying to run FBK for development purposes/testing, you shouldn't need to add anything to this file. Some services will just be disabled.
+# This file (keys.toml) can be edited to enable additional services
+
+# Port mappings for your system can be changed through Docker if needed
+# ex. to use port 30000 for YouTube instead of 8001, change line with 8001:8001 to 30000:8001 in compose.yaml
+
+# Both API and callback/pubsub are required for a functioning YouTube tracker
+[youtube]
+# Enable YouTube Data API v3 @ https://console.cloud.google.com/apis/dashboard, then see Credentials page
+# Adding a key to api_keys enables the YouTube API service ex. ["mykey"]
+api_keys = []
+# Public IP/domain for this server Google can reach with YouTube feed updates
+# Must forward port (8001 default) on this address
+# Setting callback_address enables the PubSub service, blank string '' disables.
+callback_address = ''
+# Random secret string
+signing_key = 'randomkey'
+# backup_poller enables service polling YouTube feeds
+# Can temporarily set to true if YouTube PubSub is down
+# Can leave PubSub disabled and enable poller for a small instance of the bot or development.
+backup_poller = false
+# po_token and visitor_data may help the music player access YouTube.
+# docker run quay.io/invidious/youtube-trusted-session-generator
+po_token = ''
+visitor_data = ''
+# Leave refresh token blank
+yt_refresh_token = ''
+
+[twitch]
+# Create Twitch application @ https://dev.twitch.tv/console
+# Setting client_id and client_secret enables the Twitch API service. This is sufficient for Twitch tracking.
+client_id = ''
+client_secret = ''
+# Leave access token blank
+app_access_token = ''
+# Setting twitch_callback_url enables the Twitch webhook service for faster stream notifications.
+# This is not simple to setup and isn't needed for a small instance of the bot, should skip.
+# This must be an https endpoint, using a valid SSL cert and thus listening on port 443. (Twitch requirements)
+# You must have your webserver listen to this endpoint and reverse proxy to FBK at http://localhost:8003.
+twitch_callback_url = ''
+twitch_signing_key = 'randomkey'
+
+[twitcasting]
+# Create Twitcasting application @ http://twitcasting.tv/developer.php
+# Setting twitcast_client_id and twitcast_client_secret enables the Twitcasting API service. This is sufficient for Twitcasting tracking.
+twitcast_client_id = ''
+twitcast_client_secret = ''
+# Setting twitcast_webhook_signature enables the Twitcasting webhook service for faster notifications.
+# The endpoint is configured on the Twitcasting developer page, the webhook signature is also found there.
+# The endpoint would http://your.domain:8002, with port 8002 (default) forwarded on this address
+twitcast_webhook_signature = ''
+
+[netty]
+# Public IP/domain for this server users could access the internal file server from.
+# Forward port (8080 default) on this address
+domain = 'http://content.example.com'
+
+[admin]
+# List of admin users. This gives the bot owner the ability to run any command on their own bot.
+admin_user = [
+    83452231084412928 # kabii
+]
+# Admin channels similarily bypass permission/bot feature settings.
+admin_channels = []
+# Admin servers receive the commands found in fbk/files/commands/guild/admin.
+# These are commands such as editing the bot status and development commands, but the commands are also behind permission checks.
+admin_guilds = [
+    314662502204047361,
+    581785820156002304
+]
+# The developer's Discord channel to log bot servers/errors to.
+log_channel = 0
+
+[nitter]
+# Nitter (https://github.com/zedeus/nitter) instances used for polling Twitter feeds for updates.
+# Adding an instance to instance_urls enables the Twitter/Nitter service.
+# This is not simple to setup nowadays and will require the use of a real Twitter account, but is required for a functioning Twitter tracker.
+instance_urls = ''
+
+[microsoft]
+# Create Translator resource @ https://portal.azure.com/#home, then see Resource Management -> Keys and Endpoint
+# Setting translator_key enables the Microsoft translation service.
+translator_key = ''
+
+[google]
+# Enable Cloud Translation API @ https://console.cloud.google.com/apis/dashboard, then see Credentials page
+# Setting gtranslator_key enables the Google translation service.
+gtranslator_key = ''
+# There is no quota limit for cloud translation, so the main FBK limits Google access to popular Hololive JP feeds,
+# which benefit from Google translation as Microsoft's Japanese translation is questionable.
+# Can leave feed_inclusion_list empty to disable this feature and allow all feeds through to the Google Translator.
+feed_inclusion_list = []
+
+[deepl]
+# Create DeepL API Free key @ https://www.deepl.com/en/pro-api
+# Setting deepl_key enables the use of the DeepL translation service.
+deepl_key = ''
+
+[ps2]
+# Ignore
+census_id = ''
+
+[wolfram]
+# Create WolframAlpha AppID @ https://developer.wolframalpha.com/access, for Short Answers API
+# Setting wolfram_appid is required to use the /calc command.
+wolfram_appid = ''
+
+[mal]
+# Create MyAnimeList application @ https://myanimelist.net/apiconfig
+mal_client_id = ''
+
+
+
+# The blocks below are unlikely to provide you any benefit and should be left as-is.
+
+
+
+# Internal OAuth process/server currently only for mostly unused /ytlink command
+[oauth]
+# Forward port (8101 default) on this address
+root_oauth_uri = ''
+oauth_signing_key = ''
+discord_client_id = ''
+discord_client_secret = ''
+
+# IP rotation if operating at scale and available
+[net]
+# List of additional available IPv4 addresses.
+ipv4_rotation = []
+# IPv6 block allocated to the server.
+ipv6_rotation = ''

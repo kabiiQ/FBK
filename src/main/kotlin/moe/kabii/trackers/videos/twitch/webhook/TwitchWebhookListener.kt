@@ -33,7 +33,7 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
 
     private val hmac256 = HmacUtils(HmacAlgorithms.HMAC_SHA_256, Keys.config[Keys.Twitch.signingKey])
     private val eventAdapter = MOSHI.adapter(TwitchEvents.Response.EventNotification::class.java)
-    private val port = Keys.config[Keys.Twitch.listenPort]
+    private val port = 8003
 
     private val intakeContext = CoroutineScope(DiscordTaskPool.twitchIntakeThread + CoroutineName("TwitchWebHook-Notifier") + SupervisorJob())
 

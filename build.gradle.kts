@@ -183,7 +183,7 @@ docker {
             8003, // Twitch API callback server (Internal, must reverse proxy from SSL :443)
             8010, // YouTube video API server
             8080, // File server
-            8101, // OAuth redirect
+            8101, // Discord OAuth redirect
         ))
         images.set(listOf(
             "docker.kabii.moe/fbk:$version",

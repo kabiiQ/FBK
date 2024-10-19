@@ -19,7 +19,7 @@ import org.apache.commons.codec.digest.HmacUtils
 class YoutubeFeedListener(val manager: YoutubeSubscriptionManager) {
 
     private val signingKey = Keys.config[Keys.Youtube.signingKey]
-    private val port = Keys.config[Keys.Youtube.callbackPort]
+    private val port = YoutubeFeedSubscriber.callbackPort
 
     // pubsubhubbub 0.3
     val server = embeddedServer(Netty, port = port) {

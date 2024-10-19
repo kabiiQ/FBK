@@ -30,7 +30,7 @@ import kotlin.math.min
 
 object NettyFileServer {
     private val address = Keys.config[Keys.Netty.domain]
-    private val port = Keys.config[Keys.Netty.port]
+    private const val port = 8080
 
     val domain = "$address:$port"
     val staticRoot = File("files/images/")

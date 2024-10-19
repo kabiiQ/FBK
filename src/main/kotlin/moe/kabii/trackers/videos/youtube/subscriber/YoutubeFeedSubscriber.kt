@@ -10,8 +10,11 @@ import okhttp3.FormBody
 class YoutubeFeedSubscriber {
 
     private val callbackAddress = Keys.config[Keys.Youtube.callbackAddress]
-    private val callbackPort = Keys.config[Keys.Youtube.callbackPort]
     private val signingKey = Keys.config[Keys.Youtube.signingKey]
+
+    companion object {
+        const val callbackPort = 8001
+    }
 
     enum class Mode(val str: String) {
         SUBSCRIBE("subscribe"),

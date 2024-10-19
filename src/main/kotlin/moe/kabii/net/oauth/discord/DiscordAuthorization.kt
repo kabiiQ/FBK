@@ -10,8 +10,8 @@ import java.io.File
 
 object DiscordAuthorization {
 
-    val discordClientId = Keys.config[Keys.DiscordOAuth.clientId]
-    val discordClientSecret = Keys.config[Keys.DiscordOAuth.clientSecret]
+    val discordClientId = Keys.config[Keys.OAuth.clientId]
+    val discordClientSecret = Keys.config[Keys.OAuth.clientSecret]
     private val signingKey = Keys.config[Keys.OAuth.stateKey]
 
     val server = DiscordOAuthRedirectServer

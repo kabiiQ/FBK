@@ -20,7 +20,7 @@ import moe.kabii.util.extensions.propagateTransaction
 
 class TwitcastWebhookServer(val checker: TwitcastChecker) {
 
-    private val port = Keys.config[Keys.Twitcasting.webhookPort]
+    private val port = 8002
     private val signature = Keys.config[Keys.Twitcasting.signature]
 
     private val incomingAdapter = MOSHI.adapter(TwitcastingMovieResponse::class.java)

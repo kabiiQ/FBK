@@ -12,7 +12,6 @@ import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
 import java.io.File
 import java.net.URI
-import java.net.URL
 import javax.imageio.ImageIO
 
 object WelcomeBannerUtil {

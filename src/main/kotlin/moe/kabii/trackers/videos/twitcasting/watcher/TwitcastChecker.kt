@@ -20,7 +20,7 @@ import kotlin.math.max
 class TwitcastChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, TwitcastNotifier(instances) {
 
     override fun run() {
-        if(AvailableServices.twitchWebhooks) {
+        if(AvailableServices.twitCastingWebhooks) {
             val webhookServer = TwitcastWebhookServer(this)
             webhookServer.server.start()
         }
