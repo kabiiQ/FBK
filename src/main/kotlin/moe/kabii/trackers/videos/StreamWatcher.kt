@@ -130,7 +130,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 channel.delete()
                 LOG.info("Untracking ${channel.site.targetType.full} channel: ${channel.siteChannelID} as it has no targets.")
 
-                // todo definitely extract/encapsulate this behavior (using TrackerTarget?) if we add any more side effects like this
+                // Definitely extract/encapsulate this behavior (using TrackerTarget?) if we add any more side effects like this
                 if(channel.site == TrackedStreams.DBSite.TWITCASTING) {
                     TwitcastWebhookManager.unregister(channel.siteChannelID)
                 }

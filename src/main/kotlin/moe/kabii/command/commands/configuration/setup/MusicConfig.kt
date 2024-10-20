@@ -12,7 +12,7 @@ import moe.kabii.data.mongodb.guilds.MusicSettings
 
 object MusicConfig : CommandContainer {
     object MusicBot : Command("musiccfg") {
-        override val wikiPath = "Music-Player#configuration-using-musiccfg"
+        override val wikiPath: String? = null
 
         object MusicSettingsModule : ConfigurationModule<MusicSettings>(
             "music bot",

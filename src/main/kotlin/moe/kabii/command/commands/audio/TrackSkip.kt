@@ -49,7 +49,7 @@ object TrackSkip : AudioCommandContainer {
     }
 
     object SkipCommand : Command("skip") {
-        override val wikiPath = "Music-Player#queue-manipulation"
+        override val wikiPath: String? = null
 
         init {
             chat {

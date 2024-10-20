@@ -7,7 +7,7 @@ import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.audio.AudioManager
 
 object QueueCommand : Command("queue") {
-    override val wikiPath = "Music-Player#--music-queue-information"
+    override val wikiPath: String? = null
 
     init {
         autoComplete {

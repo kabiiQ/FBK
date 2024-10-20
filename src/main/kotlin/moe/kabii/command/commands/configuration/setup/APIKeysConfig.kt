@@ -15,7 +15,7 @@ import moe.kabii.translation.deepl.DeepLTranslator
 import kotlin.reflect.KMutableProperty1
 
 object APIKeysConfig : Command("apikeys") {
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Twitter-Tracker#translator-access"
 
     @Suppress("UNCHECKED_CAST")
     object APIKeysModule : ConfigurationModule<GuildAPIKeys>(

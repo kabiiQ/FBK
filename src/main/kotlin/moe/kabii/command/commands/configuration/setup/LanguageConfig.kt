@@ -20,7 +20,7 @@ import java.util.Locale.LanguageRange
 import kotlin.reflect.KMutableProperty1
 
 object LanguageConfig : Command("languagecfg") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Configuration-Commands#the-languagecfg-command"
 
     private val translationService = Translator.baseService
 

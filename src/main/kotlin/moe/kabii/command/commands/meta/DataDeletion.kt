@@ -15,7 +15,7 @@ import moe.kabii.util.extensions.awaitAction
 import java.time.Duration
 
 object DataDeletion : Command("datadeletionrequest") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Bot-Meta-Commands#data-deletion"
 
     init {
         chat {

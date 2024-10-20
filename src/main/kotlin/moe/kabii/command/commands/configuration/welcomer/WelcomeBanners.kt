@@ -22,7 +22,7 @@ import java.io.File
 import java.time.Duration
 
 object WelcomeBanners : Command("welcomebanners") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Welcoming-Users#uploading-welcome-banners"
 
     init {
         autoComplete {

@@ -20,7 +20,7 @@ import moe.kabii.trackers.TrackerTarget
 import moe.kabii.util.extensions.propagateTransaction
 
 object EditMentionRole : Command("editmention") {
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Livestream-Tracker#setmention-vs-editmention"
 
     init {
         autoComplete(TargetSuggestionGenerator.siteMentionAutoCompletor)

@@ -17,7 +17,7 @@ import java.time.temporal.ChronoUnit
 object PlaybackSeek : AudioCommandContainer {
 
     object SeekCommand : Command("seek") {
-        override val wikiPath = "Music-Player#playing-music-with-the-play-command"
+        override val wikiPath: String? = null
 
         init {
             chat {

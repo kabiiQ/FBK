@@ -24,7 +24,7 @@ import java.time.Instant
 
 object DataTransferCommand : Command("transferdata") {
 
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Bot-Meta-Commands#data-transfer-between-bot-instances"
 
     init {
         chat {

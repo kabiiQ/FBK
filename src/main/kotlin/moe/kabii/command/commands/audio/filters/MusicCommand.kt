@@ -5,7 +5,7 @@ import moe.kabii.command.commands.audio.AudioCommandContainer
 import moe.kabii.command.params.DiscordParameters
 
 object MusicCommand : Command("music") {
-    override val wikiPath = "Music-Player#audio-manipulationfilters"
+    override val wikiPath: String? = null
 
     init {
         chat {

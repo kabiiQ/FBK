@@ -7,7 +7,7 @@ import moe.kabii.discord.util.Embeds
 
 object BotUtil : CommandContainer {
     object GlitchLink : Command("top") {
-        override val wikiPath: String? = null
+        override val wikiPath = "Utility-Commands#jump-to-start-of-discord-channel"
 
         init {
             chat {

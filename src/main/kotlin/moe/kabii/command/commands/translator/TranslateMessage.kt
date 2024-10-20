@@ -14,7 +14,7 @@ import moe.kabii.util.extensions.orNull
 import org.apache.commons.lang3.StringUtils
 
 object TranslateMessage : Command("Translate Message") {
-    override val wikiPath: String? = null // TODO
+    override val wikiPath = "Translator#-translation-commands"
 
     init {
         messageInteraction {

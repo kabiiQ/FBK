@@ -19,7 +19,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 
 object ListTracked : Command("tracked") {
-    override val wikiPath: String? = null
+    override val wikiPath = "Livestream-Tracker#listing-tracked-streams-with-tracked"
 
     init {
         chat {
