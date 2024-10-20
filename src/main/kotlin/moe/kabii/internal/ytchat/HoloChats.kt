@@ -36,7 +36,7 @@ class HoloChats(val instances: DiscordInstances) {
             // kobocord
             HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
         )
-        if(Keys.config[Keys.DiscordOAuth.clientId] == "314672047718531072") {
+        if(Keys.config[Keys.OAuth.clientId] == "314672047718531072") {
             // load configurations for discord channels tracking entire yt channels - currently hardcoded
             channelConfigurations.forEach { (yt, discord, instance) ->
                 instances[instance].client

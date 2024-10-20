@@ -1,3 +1,4 @@
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 group = "moe.kabii"
@@ -118,12 +119,14 @@ dependencies {
     }
 }
 
+var buildFlag = ""
+
 val updateVersion = task("updateVersion") {
     // custom script to create version file name and increment build number
     val versionsFile = file("build.version")
     val versions = versionsFile.readLines()
     val (major, minor, build, flag) = versions.map { line -> line.substring(line.indexOf(':') + 1, line.length).trim() }
-    val buildFlag = if(flag.isNotBlank()) "-$flag" else ""
+    buildFlag = if(flag.isNotBlank()) "-$flag" else ""
     val buildCount = build.toInt() + 1
 
     // Set version for use in build output
@@ -185,11 +188,22 @@ docker {
             8080, // File server
             8101, // Discord OAuth redirect
         ))
-        images.set(listOf(
-            "docker.kabii.moe/fbk:$version",
-            "docker.kabii.moe/fbk:latest"
-        ))
+
+        images.set(
+            listOfNotNull(
+                "docker.kabii.moe/fbk:$version",
+                // push "latest" if this is an unflagged build
+                if(buildFlag.isBlank()) "docker.kabii.moe/fbk:latest" else null
+            )
+        )
     }
+}
+
+tasks.named<Dockerfile>("dockerCreateDockerfile") {
+    // Setup pytchat environment within the fbk Docker image
+    environmentVariable("PIP_ROOT_USER_ACTION", "ignore")
+    instruction("COPY --from=python:3.12.7 / /")
+    runCommand("pip install httpx==0.18.2 pytchat==0.5.5")
 }
 
 idea {

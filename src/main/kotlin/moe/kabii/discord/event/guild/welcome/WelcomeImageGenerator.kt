@@ -17,7 +17,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
 import java.net.URI
-import java.net.URL
 import javax.imageio.ImageIO
 import kotlin.math.max
 

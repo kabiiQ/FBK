@@ -162,7 +162,7 @@ object NitterParser {
     fun getVideoFromTweetScript(tweetId: Long): String? {
         val videoScript = File(scriptDir, scriptName)
         require(videoScript.exists()) { "Twitter video script not found! ${videoScript.absolutePath}" }
-        val subprocess = ProcessBuilder("python3.11", scriptName, tweetId.toString())
+        val subprocess = ProcessBuilder("python", scriptName, tweetId.toString())
             .directory(scriptDir)
             .start()
         val response = subprocess.inputStream

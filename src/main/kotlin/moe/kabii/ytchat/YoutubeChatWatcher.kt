@@ -119,7 +119,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     LOG.info("Subscribing to YT chat: $newChatId")
                     // launch thread for each chat connection/process
                     thread(start = true) {
-                        val subprocess = ProcessBuilder("python3", "-u", scriptName, newChatId)
+                        val subprocess = ProcessBuilder("python", "-u", scriptName, newChatId)
                             .directory(scriptDir)
                             .start()
 
