@@ -4,6 +4,7 @@ import com.github.pemistahl.lingua.api.Language
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
 import discord4j.common.util.Snowflake
 import moe.kabii.LOG
+import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.translation.argos.ArgosTranslator
@@ -151,23 +152,27 @@ object Translator {
     init {
         // test quotas
         try {
-            val azure = AzureTranslator
-            azure.doTranslation(
-                from = null,
-                to = azure.defaultLanguage(),
-                rawText = "t"
-            )
+            if(AvailableServices.mtl) {
+                val azure = AzureTranslator
+                azure.doTranslation(
+                    from = null,
+                    to = azure.defaultLanguage(),
+                    rawText = "t"
+                )
+            }
         } catch(e: Exception) {
             LOG.error(e.stackTraceString)
         }
 
         try {
-            val deepL = DeepLTranslator
-            deepL.doTranslation(
-                from = null,
-                to = deepL.defaultLanguage(),
-                rawText = "h"
-            )
+            if(AvailableServices.deepL) {
+                val deepL = DeepLTranslator
+                deepL.doTranslation(
+                    from = null,
+                    to = deepL.defaultLanguage(),
+                    rawText = "h"
+                )
+            }
         } catch(e: Exception) {
             LOG.error(e.stackTraceString)
         }

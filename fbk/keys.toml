@@ -76,7 +76,7 @@ log_channel = 0
 # Nitter (https://github.com/zedeus/nitter) instances used for polling Twitter feeds for updates.
 # Adding an instance to instance_urls enables the Twitter/Nitter service.
 # This is not simple to setup nowadays and will require the use of a real Twitter account, but is required for a functioning Twitter tracker.
-instance_urls = ''
+instance_urls = []
 
 [microsoft]
 # Create Translator resource @ https://portal.azure.com/#home, then see Resource Management -> Keys and Endpoint

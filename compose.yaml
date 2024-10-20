@@ -18,6 +18,8 @@ services:
     - ./fbk/files:/app/files
     - ./fbk/logs:/app/logs
     - ./fbk/keys.toml:/app/keys.toml
+    secrets:
+      - db_password
     depends_on:
       mongodb:
         condition: service_healthy
