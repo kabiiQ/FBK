@@ -6,7 +6,7 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E5AF13X)
 
-FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server. 
+FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server.
 
 # Add FBK to your Discord server
 
@@ -21,9 +21,9 @@ FBK is now available for invite and public use. Feel free to use it or share it 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
 # Features
-FBK is a general-purpose bot with a focus on **utility commands** and **service integration**. 
+FBK is a general-purpose bot with a focus on **utility commands** and **service integration**.
 
-FBK covers a pretty wide range of functionality, so not all features are necessarily featured here. 
+FBK covers a pretty wide range of functionality, so not all features are necessarily featured here.
 A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available for all features.
 
 **Primary Features Include:**
@@ -38,11 +38,11 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
   - [Twitter feed update notifications](https://github.com/kabiiQ/FBK/wiki/Twitter-Tracker)
     - Post information when specific users post a Tweet!
+    - Available feeds for tracking are highly limited in 2024, as Twitter has made it very difficult to access their data.
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
 - ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Reminders)
-- ## [**Starboard**](https://github.com/kabiiQ/FBK/wiki/Starboard)
 
 - ## **General Utility**
   - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
@@ -69,8 +69,8 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels-with-drag)
 
 
-# Development 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.8.20-blue.svg?logo=Kotlin)
+# Development
+![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
 
@@ -82,15 +82,23 @@ Feature ideas/requests, issue reports, and general questions are welcome in the 
 
 This bot is written in [Kotlin](https://kotlinlang.org/) using the [Discord4J](https://github.com/Discord4J/Discord4J/) library for interaction with Discord.
 
+# Self-Hosting
+
+FBK has been converted to [Docker](https://www.docker.com/) as of FBK version 2.2. As a result, it is now much easier to run the bot on your own PC/server.
+
+This is useful if you want to contribute/debug, or just run your own private instance ("self-hosting"), but will not be fully supported.
+
+The process for self-hosting is now documented on the wiki page here: **[Self-Hosting](https://github.com/kabiiQ/FBK/wiki/Self-Hosting)**
+
 # Licensing / Liability
 
 ![License](https://img.shields.io/github/license/kabiiQ/FBK)
 
 This Discord bot is named after, but has no association to the virtual YouTuber [Shirakami Fubuki](https://www.youtube.com/channel/UCdn5BQ06XqgXoAxIhbqw5Rg), a streamer with [Hololive](https://hololive.hololivepro.com/en).
 
-FBK is licensed under the GPL 3.0 license, viewable in the [LICENSE](https://github.com/kabiiQ/FBK/blob/master/LICENSE) file. 
+FBK is licensed under the GPL 3.0 license, viewable in the [LICENSE](https://github.com/kabiiQ/FBK/blob/master/LICENSE) file.
 
- Some commands may echo user input. No user-created content should be considered as an opinion or statement from myself.
- 
- ## [Privacy Policy](https://github.com/kabiiQ/FBK/blob/master/PRIVACY.md)
- ## [Terms of Service](https://github.com/kabiiQ/FBK/blob/master/TERMS.md)
+Some commands may echo user input. No user-created content should be considered as an opinion or statement from myself.
+
+## [Privacy Policy](https://github.com/kabiiQ/FBK/blob/master/PRIVACY.md)
+## [Terms of Service](https://github.com/kabiiQ/FBK/blob/master/TERMS.md)
