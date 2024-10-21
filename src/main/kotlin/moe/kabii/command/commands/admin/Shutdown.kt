@@ -5,7 +5,7 @@ import moe.kabii.discord.audio.AudioManager
 import moe.kabii.discord.audio.GuildAudio
 import kotlin.system.exitProcess
 
-object Shutdown : Command("shutdown") {
+object Shutdown : Command("restart") {
     override val wikiPath: String? = null
 
     init {
@@ -13,7 +13,7 @@ object Shutdown : Command("shutdown") {
             println("Ending process...")
             val activeAudio = AudioManager.guilds.values.count(GuildAudio::playing)
             if(activeAudio > 0) {
-                println("$activeAudio guilds have audio playing. Use forceshutdown to end.")
+                println("$activeAudio guilds have audio playing. Use forcerestart to end.")
             } else {
                 println("No active conversations. Exiting!")
                 exitProcess(0)
@@ -22,7 +22,7 @@ object Shutdown : Command("shutdown") {
     }
 }
 
-object ForceShutdown : Command("forceshutdown") {
+object ForceShutdown : Command("forcerestart") {
     override val wikiPath: String? = null
 
     init {
