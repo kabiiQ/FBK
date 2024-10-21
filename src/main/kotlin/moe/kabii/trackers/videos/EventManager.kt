@@ -42,6 +42,7 @@ class EventManager(val watcher: StreamWatcher) {
          * @return true if the event should be ignored moving forward
          */
         fun shouldAbandon(ce: ClientException) = when {
+            ce.opcode == 10070 -> true // unknown guild event
             ce.opcode == 180000 -> true // updating a completed event
             ce.status.code() == 403 -> true // other 403 for true permission issue
             ce.status.code() == 400 && ce.message?.contains("non-scheduled event") == true -> true

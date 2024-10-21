@@ -23,15 +23,16 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-        restart: false
+        restart: true
       postgres:
         condition: service_healthy
-        restart: false
+        restart: true
 
   postgres:
     image: postgres
     container_name: fbk_postgres
     restart: always
+    command: -c 'max_connections=15000' -c 'shared_buffers=4GB'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fbk -d fbk"]
       interval: 30s

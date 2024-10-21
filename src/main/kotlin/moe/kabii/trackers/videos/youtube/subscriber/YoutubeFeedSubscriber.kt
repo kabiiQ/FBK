@@ -43,10 +43,15 @@ class YoutubeFeedSubscriber {
 
         LOG.info("Requesting $mode for YT Feed: $topic")
 
-        val response = OkHTTP.newCall(request).execute()
-        return response.use { rs ->
-            LOG.debug("${rs.code} :: ${rs.body.string()}")
-            if(response.isSuccessful) topic else null
+        return try {
+            val response = OkHTTP.newCall(request).execute()
+            response.use { rs ->
+                LOG.debug("${rs.code} :: ${rs.body.string()}")
+                if (response.isSuccessful) topic else null
+            }
+        } catch (e: Exception) {
+            LOG.warn("Youtube feed subscription error :: ${e.message}")
+            null
         }
     }
 }

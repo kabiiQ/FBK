@@ -112,6 +112,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
                             sendReminder(discordChannel)
                         } catch (ce: ClientException) {
                             val err = ce.status.code()
+                            LOG.info(ce.stackTraceString)
                             if (err == 403 || err == 404) {
                                 // unable to send message, try to DM fallback
                                 dmFallback()

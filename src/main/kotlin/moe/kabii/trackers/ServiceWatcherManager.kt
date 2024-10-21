@@ -129,10 +129,10 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
         suspend fun SequenceScope<Thread>.service(service: Runnable, name: String, condition: Boolean) {
             if(condition) {
-                LOG.info("Enabled service $name")
+                LOG.info("Service $name is enabled")
                 yield(Thread(service, name))
             } else {
-                LOG.info("Disabled service $name")
+                LOG.info("Service $name is disabled")
             }
         }
 
