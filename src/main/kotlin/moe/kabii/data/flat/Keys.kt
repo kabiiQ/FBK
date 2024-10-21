@@ -17,6 +17,7 @@ object Keys : ConfigSpec("") {
         val callbackAddress by required<String>("callback_address")
         val signingKey by required<String>("signing_key")
         val backup by required<Boolean>("backup_poller")
+        val oauth by required<Boolean>("use_oauth")
         val poToken by optional<String>("", "po_token")
         val visitorData by optional<String>("", "visitor_data")
         val refreshToken by optional<String>("", "yt_refresh_token")

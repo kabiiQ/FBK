@@ -20,10 +20,13 @@ signing_key = 'randomkey'
 # Can temporarily set to true if YouTube PubSub is down
 # Can leave PubSub disabled and enable poller for a small instance of the bot or development.
 backup_poller = false
-# po_token and visitor_data may help the music player access YouTube.
+# If music asking for sign-in (very likely), enable po_token + visitor_data or oauth
+# po_token and visitor_data may help the music player access YouTube without logging in.
 # docker run quay.io/invidious/youtube-trusted-session-generator
 po_token = ''
 visitor_data = ''
+# When OAuth is enabled, there will be a prompt to sign-in in the bot logs
+use_oauth = false
 # Leave refresh token blank
 yt_refresh_token = ''
 
