@@ -1,8 +1,8 @@
 {
   "id": 1,
   "token": "Discord Bot Token Here",
-  "messageContent": false,
-  "presences": false,
-  "musicEnabled": false,
-  "starboardEnabled": false
+  "messageContent": true,
+  "presences": true,
+  "musicEnabled": true,
+  "starboardEnabled": true
 }
