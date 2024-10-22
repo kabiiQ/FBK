@@ -22,8 +22,8 @@ data class LogSettings(
     fun shouldInclude(user: User): Boolean = includeBots || !user.isBot
 
     companion object {
-        const val defaultJoin = "**&name&discrim** joined the server. (&mention)&new"
-        const val defaultPart = "**&name&discrim** left the server. (&mention)"
+        const val defaultJoin = "**&name** joined the server. (&mention)&new"
+        const val defaultPart = "**&name** left the server. (&mention)"
     }
 
     fun anyEnabled() = booleanArrayOf(joinLog, partLog, displayNameLog, voiceLog, roleUpdateLog).any(true::equals)
