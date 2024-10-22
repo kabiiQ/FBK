@@ -1,0 +1,3 @@
+docker logs fbk
+echo "End of logs, now attaching to console."
+docker attach fbk
