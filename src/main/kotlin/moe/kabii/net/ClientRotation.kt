@@ -7,26 +7,28 @@ import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.Proxy
 import java.net.Socket
 import javax.net.SocketFactory
 import kotlin.math.min
 
 object ClientRotation {
-    private val addrs = Keys.config[Keys.Net.ipv4Rotation]
+    private val addrs = Keys.config[Keys.Net.proxies]
+    private val port = Keys.config[Keys.Net.port]
     private val clients: List<OkHttpClient>
 
     init {
         clients = addrs.mapNotNull { addr ->
             try {
-                Factory(InetAddress.getByName(addr))
+                Proxy(Proxy.Type.HTTP, InetSocketAddress(addr, port))
             } catch(e: Exception) {
-                LOG.error("Error binding IPv4: $addr :: ${e.message}")
+                LOG.error("Error defining proxy: $addr :: ${e.message}")
                 LOG.warn(e.stackTraceString)
                 null
             }
-        }.map { factory ->
+        }.map { proxy ->
             OkHttpClient.Builder()
-                .socketFactory(factory)
+                .proxy(proxy)
                 .build()
         }
             .run { listOf(OkHTTP) + this }
@@ -52,19 +54,4 @@ object ClientRotation {
      * The first client (index 0) should be the "base" while any additional are "alternate" clients.
      */
     fun getClientNumber(index: Int) = clients[min(index, clients.size - 1)]
-
-    private class Factory(private val addr: InetAddress) : SocketFactory() {
-        private val fact = getDefault()
-
-        override fun createSocket(): Socket {
-            val sock = fact.createSocket()
-            sock.bind(InetSocketAddress(addr, 0))
-            return sock
-        }
-
-        override fun createSocket(host: String?, port: Int) = fact.createSocket(host, port, addr, 0)
-        override fun createSocket(host: InetAddress?, port: Int) = fact.createSocket(host, port, addr, 0)
-        override fun createSocket(host: InetAddress?, port: Int, localAddress: InetAddress?, localPort: Int) = fact.createSocket(host, port, addr, localPort)
-        override fun createSocket(host: String?, port: Int, localHost: InetAddress?, localPort: Int) =  fact.createSocket(host, port, addr, localPort)
-    }
 }

@@ -129,7 +129,5 @@ discord_client_secret = ''
 
 # IP rotation if operating at scale and available
 [net]
-# List of additional available IPv4 addresses.
-ipv4_rotation = []
-# IPv6 block allocated to the server.
-ipv6_rotation = ''
+proxy_addr = []
+proxy_port = 9000

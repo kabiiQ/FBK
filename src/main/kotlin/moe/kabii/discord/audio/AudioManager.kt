@@ -61,7 +61,7 @@ object AudioManager {
                 .forManager(manager)
                 .withMainDelegateFilter(null)
                 .setup()
-        }*/
+        }
 
         val ipv6Addr = Keys.config[Keys.Net.ipv6Rotation]
         if(ipv6Addr.isNotBlank()) {
@@ -73,7 +73,7 @@ object AudioManager {
             rotator.forConfiguration(youtube.httpInterfaceManager, false)
                 .withMainDelegateFilter(null)
                 .setup()
-        }
+        }*/
     }
 
     internal fun createAudioComponents(): AudioComponents {

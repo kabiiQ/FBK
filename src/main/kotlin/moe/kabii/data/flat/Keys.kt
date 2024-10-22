@@ -72,8 +72,8 @@ object Keys : ConfigSpec("") {
         val malKey by required<String>("mal_client_id")
     }
     object Net : ConfigSpec() {
-        val ipv4Rotation by required<List<String>>("ipv4_rotation")
-        val ipv6Rotation by required<String>("ipv6_rotation")
+        val proxies by required<List<String>>("proxy_addr")
+        val port by required<Int>("proxy_port")
     }
 
     fun saveConfigFile() {
