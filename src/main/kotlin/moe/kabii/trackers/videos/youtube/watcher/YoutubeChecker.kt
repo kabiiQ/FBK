@@ -137,42 +137,55 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             YoutubeParser.getVideos(chunk).entries
                         }.forEach { (videoId, ytVideo) ->
 
-                            // launch coroutine for each video to be processed
-                            discordTask(30_000L) {
-                                try {
-                                    val callReason = targetLookup.getValue(videoId)
+                            // 'lock' this video from being updated concurrently
+                            val lock = YoutubeVideo.updateLock(videoId)
+                            if(!lock.tryLock()) {
+                                LOG.debug("Skipping YouTube video update for ${videoId} - already in use")
+                                return@forEach
+                            }
 
-                                    val ytVideoInfo = when(ytVideo) {
-                                        is Ok -> ytVideo.value
-                                        is Err -> {
-                                            LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
-                                            when (ytVideo.value) {
-                                                // do not process video if this was an IO issue on our end
-                                                is StreamErr.Network -> return@discordTask
-                                                is StreamErr.NotFound -> null
+                            try {
+
+                                // launch coroutine for each video to be processed
+                                discordTask(30_000L) {
+                                    try {
+                                        val callReason = targetLookup.getValue(videoId)
+
+                                        val ytVideoInfo = when(ytVideo) {
+                                            is Ok -> ytVideo.value
+                                            is Err -> {
+                                                LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
+                                                when (ytVideo.value) {
+                                                    // do not process video if this was an IO issue on our end
+                                                    is StreamErr.Network -> return@discordTask
+                                                    is StreamErr.NotFound -> null
+                                                }
                                             }
                                         }
-                                    }
 
-                                    propagateTransaction {
-                                        if (ytVideoInfo != null) {
-                                            with(callReason.video) {
-                                                lastAPICall = DateTime.now()
-                                                lastTitle = ytVideoInfo.title
-                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                        propagateTransaction {
+                                            if (ytVideoInfo != null) {
+                                                with(callReason.video) {
+                                                    lastAPICall = DateTime.now()
+                                                    lastTitle = ytVideoInfo.title
+                                                    ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                                }
+                                            }
+
+                                            when (callReason) {
+                                                is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                                is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                                is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
                                             }
                                         }
-
-                                        when (callReason) {
-                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                        }
+                                    } catch (e: Exception) {
+                                        LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
+                                        LOG.debug(e.stackTraceString)
                                     }
-                                } catch (e: Exception) {
-                                    LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
-                                    LOG.debug(e.stackTraceString)
                                 }
+
+                            } finally {
+                                if(lock.isLocked) lock.unlock()
                             }
                         }
 
@@ -201,6 +214,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                 YoutubeVideos.lastAPICall eq null and
                                         (YoutubeVideos.apiAttempts greater 10)
                             }
+
+                            YoutubeVideo.purgeLocks()
                         }
                     }
                 }
