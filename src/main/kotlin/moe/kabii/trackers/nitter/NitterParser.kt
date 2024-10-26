@@ -216,8 +216,7 @@ object NitterParser {
 
             val json = syndicationDetailAdapter.fromJson(result)
             json?.mediaDetails
-                ?.filter { m -> m.type == "video" }
-                ?.firstOrNull()
+                ?.firstOrNull { m -> m.type == "video" }
                 ?.videoInfo?.variants
                 ?.run(::getBestVideoUrl)
         } catch(e: Exception) {

@@ -11,7 +11,7 @@ import moe.kabii.util.extensions.stackTraceString
 object TwitterVid : Command("twittervid") {
     override val wikiPath = "Lookup-Commands#twitter-video-embedder-twittervid"
 
-    private val twitterUrl = Regex("https://(?:mobile\\.)?twitter\\.com/.{4,15}/status/(\\d{18,20})")
+    private val twitterUrl = Regex("https://(?:mobile\\.)?(?:twitter|x)\\.com/.{4,15}/status/(\\d{18,20})")
 
     init {
         chat {
