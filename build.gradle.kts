@@ -99,7 +99,7 @@ dependencies {
     // .toml token configuration
     implementation("com.uchuhimo:konf:1.1.2")
 
-    // lognging
+    // logging
     implementation("ch.qos.logback:logback-classic:1.5.7")
 
     // other

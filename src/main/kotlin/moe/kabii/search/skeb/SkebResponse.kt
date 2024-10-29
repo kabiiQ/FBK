@@ -2,7 +2,7 @@ package moe.kabii.search.skeb
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import moe.kabii.util.extensions.capitilized
+import moe.kabii.util.extensions.capitalized
 
 @JsonClass(generateAdapter = true)
 data class SkebUser(
@@ -25,5 +25,5 @@ data class SkebUser(
     // skebber tags
     @Json(name = "sent_public_works_count") val sentRequests: Int,
 ) {
-    @Transient val genre = _genre.run { if(this == "art") "Artwork" else capitilized() }
+    @Transient val genre = _genre.run { if(this == "art") "Artwork" else capitalized() }
 }
