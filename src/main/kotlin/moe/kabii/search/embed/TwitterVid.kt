@@ -4,7 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.discord.util.Embeds
-import moe.kabii.trackers.nitter.NitterParser
+import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.util.extensions.awaitAction
 import moe.kabii.util.extensions.stackTraceString
 

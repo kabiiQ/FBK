@@ -14,8 +14,8 @@ import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.util.RGB
 import moe.kabii.newRequestBuilder
-import moe.kabii.trackers.nitter.NitterChecker
-import moe.kabii.trackers.nitter.NitterParser
+import moe.kabii.trackers.posts.twitter.NitterChecker
+import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.propagateTransaction
 import java.awt.Color

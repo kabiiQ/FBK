@@ -10,8 +10,8 @@ import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
-import moe.kabii.trackers.nitter.NitterChecker
-import moe.kabii.trackers.nitter.SyndicationChecker
+import moe.kabii.trackers.posts.twitter.NitterChecker
+import moe.kabii.trackers.posts.twitter.SyndicationChecker
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager

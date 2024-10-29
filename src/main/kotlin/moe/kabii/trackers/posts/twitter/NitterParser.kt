@@ -1,4 +1,4 @@
-package moe.kabii.trackers.nitter
+package moe.kabii.trackers.posts.twitter
 
 import discord4j.rest.util.Color
 import moe.kabii.LOG

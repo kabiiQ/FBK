@@ -1,4 +1,4 @@
-package moe.kabii.trackers.nitter
+package moe.kabii.trackers.posts.twitter
 
 import moe.kabii.LOG
 import moe.kabii.util.constants.EmojiCharacters

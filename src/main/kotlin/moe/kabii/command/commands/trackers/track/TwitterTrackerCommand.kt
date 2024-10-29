@@ -14,7 +14,7 @@ import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.TargetArguments
-import moe.kabii.trackers.nitter.NitterParser
+import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake

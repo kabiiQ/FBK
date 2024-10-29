@@ -1,4 +1,4 @@
-package moe.kabii.trackers.nitter
+package moe.kabii.trackers.posts.twitter
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
