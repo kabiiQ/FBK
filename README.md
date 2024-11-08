@@ -36,9 +36,10 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
     - Post information when tracked user's lists are updated
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
-  - [Twitter feed update notifications](https://github.com/kabiiQ/FBK/wiki/Twitter-Tracker)
+  - [Social media feed update notifications](https://github.com/kabiiQ/FBK/wiki/Social-Media-Tracker)
     - Post information when specific users post a Tweet!
     - Available feeds for tracking are highly limited in 2024, as Twitter has made it very difficult to access their data.
+    - Currently supports **Twitter** (limited) and **Bluesky** (experimental)
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)

@@ -64,4 +64,8 @@ object URLUtil {
         fun tweet(id: String) = "https://twitter.com/FBK/status/$id"
         fun space(id: String) = "https://twitter.com/i/spaces/$id"
     }
+
+    object Bluesky {
+        fun feedUsername(username: String) = "https://bsky.app/profile/$username"
+    }
 }

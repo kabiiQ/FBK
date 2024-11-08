@@ -13,6 +13,9 @@ object AvailableServices {
     val twitch = twitchApi && twitchWebhooks
 
     val nitter = Keys.config[Keys.Nitter.instanceUrls].isNotEmpty()
+    val twitterWhitelist = Keys.config[Keys.Nitter.whitelist]
+
+    val bluesky = Keys.config[Keys.Bluesky.password].isNotBlank()
 
     val mtl = Keys.config[Keys.Microsoft.translatorKey].isNotBlank()
     val gtl = Keys.config[Keys.Google.gTranslatorKey].isNotBlank()

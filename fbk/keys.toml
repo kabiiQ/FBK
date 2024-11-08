@@ -77,9 +77,16 @@ log_channel = 0
 
 [nitter]
 # Nitter (https://github.com/zedeus/nitter) instances used for polling Twitter feeds for updates.
-# Adding an instance to instance_urls enables the Twitter/Nitter service.
+# Adding an instance to instance_urls enables the Twitter component of the social media posts tracker.
 # This is not simple to setup nowadays and will require the use of a real Twitter account, but is required for a functioning Twitter tracker.
 instance_urls = []
+# If twitter_whitelist is enabled, Twitter feeds must be manually added to the databse for users to track them. Otherwise, any user will be able to /track any Twitter feed as with other services.
+twitter_whitelist = false
+
+[bluesky]
+# Bluesky credentials, setting identifier and password enables the Bluesky component of the social media posts tracker.
+bsky_identifier = ''
+bsky_password = ''
 
 [microsoft]
 # Create Translator resource @ https://portal.azure.com/#home, then see Resource Management -> Keys and Endpoint

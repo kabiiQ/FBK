@@ -20,6 +20,10 @@
                     "value": 0
                 },
                 {
+                    "name": "Bluesky",
+                    "value": 1
+                },
+                {
                     "name": "YouTube",
                     "value": 100
                 },
