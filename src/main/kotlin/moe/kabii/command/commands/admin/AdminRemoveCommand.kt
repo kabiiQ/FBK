@@ -6,7 +6,7 @@ import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verifyBotAdmin
-import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.propagateTransaction
 
@@ -26,7 +26,7 @@ object AdminRemoveCommand : Command("remove") {
         val feedName = subArgs(subCommand).string("feed")
         // Find Twitter feed in database
         val dbFeed = propagateTransaction {
-            TwitterFeed.findExisting(feedName)
+            NitterFeed.findExisting(feedName)?.feed
         }
         if (dbFeed == null) {
             ereply(Embeds.error("Twitter feed **$feedName** not found by name.")).awaitSingle()
@@ -57,7 +57,7 @@ object AdminRemoveCommand : Command("remove") {
 
         // delete feed regardless of notifications success and state
         propagateTransaction {
-            TwitterFeed.findById(dbFeed.id)?.delete()
+            dbFeed.delete()
         }
     }
 }

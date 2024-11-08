@@ -1,16 +1,16 @@
 package moe.kabii.trackers.posts.twitter
 
-import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
-import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.entity.channel.GuildChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.time.delay
@@ -20,15 +20,15 @@ import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
-import moe.kabii.data.mongodb.guilds.TwitterSettings
-import moe.kabii.data.relational.twitter.*
-import moe.kabii.discord.tasks.DiscordTaskPool
+import moe.kabii.data.mongodb.guilds.PostsSettings
+import moe.kabii.data.relational.posts.twitter.NitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeeds
+import moe.kabii.data.relational.posts.twitter.NitterRetweets
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
-import moe.kabii.rusty.Err
-import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
+import moe.kabii.trackers.posts.PostWatcher
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
@@ -38,29 +38,26 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
-import reactor.kotlin.core.publisher.toMono
 import java.io.ByteArrayInputStream
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.ceil
 import kotlin.math.max
 
-open class NitterChecker(val instances: DiscordInstances) : Runnable {
+open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(instances) {
     private val instanceCount = NitterParser.instanceCount
-    private val nitterScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("Nitter-RSS-Intake") + SupervisorJob())
-
     private val generalInstanceAdjustment = 0L
     private val minimumRepeatTime = refreshGoal + 2_000L
 
     private val metaChanId = Keys.config[Keys.Admin.logChannel].snowflake
-    private val errorPostCooldown = Duration.ofHours(4) // will only post rate limit to discord every duration
+    private val errorPostCooldown = Duration.ofHours(8) // will only post rate limit to discord every duration
     private var errorPostNext = Instant.now()
 
     private val instanceLocks: Map<Int, Mutex>
 
     companion object {
-        //val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
-        val callDelay = 3_600L // 3.6sec/call = 16.6/min = 250/15min
+        val callDelay = 3_500L // 3.5sec/call = 17/min = 257/15min
+        //val callDelay = 3_600L // 3.6sec/call = 16.6/min = 250/15min
         //val callDelay = 6_000L // 6sec/call = 10/min = 150/15min
         val refreshGoal = 180_000L // = 53/instance @ 3.6 seconds
         val loopTime = 20_000L // can lower loop repeat time below refresh time now with locking system implemented
@@ -89,21 +86,16 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         }
     }
 
-    fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = nitterScope.launch {
-        withTimeout(timeoutMillis) {
-            block()
-        }
-    }
-
     open suspend fun updateFeeds(start: Instant) {
         LOG.debug("NitterChecker :: start: $start")
 
         // get all tracked twitter feeds
         val feeds = propagateTransaction {
-            TwitterFeed
+            NitterFeed
                 .find {
-                    TwitterFeeds.enabled eq true
+                    NitterFeeds.enabled eq true
                 }
+                .associateWith(NitterFeed::feed)
                 .toList()
         }
 
@@ -144,9 +136,9 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         chunks
             .map { (instanceId, feedChunk) ->
 
-                LOG.debug("Chunk $instanceId (${feedChunk.size}): ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
+                LOG.debug("Chunk $instanceId (${feedChunk.size}): ${feedChunk.joinToString(", ") { (feed, _) -> feed.username } } :: ${NitterParser.getInstanceUrl(instanceId)}")
                 // each chunk executed on different instance - divide up work, pool assigns thread
-                nitterScope.launch {
+                taskScope.launch {
                     val lock = instanceLocks.getValue(instanceId)
                     if(!lock.tryLock()) {
                         LOG.debug("Skipping in-use nitter instance #$instanceId")
@@ -156,7 +148,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                         val timeout = max(feedChunk.size * callDelay * 1.5, 720000.0)
                         kotlinx.coroutines.time.withTimeout(Duration.ofMillis(timeout.toLong())) {
                             var first = true
-                            feedChunk.forEach { feed ->
+                            feedChunk.forEach { (feed, parent) ->
 
                                 if (!first) {
                                     // val delay = if(instanceId >= priorityInstance) callDelay + generalInstanceAdjustment else callDelay
@@ -164,7 +156,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                                     delay(delay)
                                 } else first = false
 
-                                val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                val targets = getActiveTargets(parent)?.ifEmpty { null }
                                     ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
                                 val cache = TwitterFeedCache.getOrPut(feed)
@@ -206,7 +198,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                                             /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
                                             Check if this RT has already been acknowledged from this feed from our own database
                                              */
-                                            val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                            val new = NitterRetweets.checkAndUpdate(feed, tweet.id)
                                             if (!new) {
                                                 return@propagateTransaction tweet.id
                                             }
@@ -249,7 +241,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
         LOG.debug("nitter exit")
     }
 
-    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedTwitTarget>) {
+    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedSocialTarget>) {
         val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
@@ -290,9 +282,9 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                         .awaitSingle()
 
                     val (_, features) = GuildConfigurations.findFeatures(target.discordClient, target.discordGuild?.asLong(), target.discordChannel.asLong())
-                    val twitter = features?.twitterSettings ?: TwitterSettings()
+                    val postCfg = features?.postsSettings ?: PostsSettings()
 
-                    if(!tweet.notifyOption.get(twitter)) return@target
+                    if(!tweet.notifyOption.get(postCfg)) return@target
 
                     val action = when {
                         tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
@@ -302,7 +294,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                     }
 
                     // LOG.debug("translation stage")
-                    val translation = if(twitter.autoTranslate && tweet.text.isNotBlank()) {
+                    val translation = if(postCfg.autoTranslate && tweet.text.isNotBlank()) {
                         try {
                             val tlConfig = GuildConfigurations
                                 .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
@@ -312,7 +304,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                             if(!tweet.retweet || !tlConfig.skipRetweets) {
 
                                 val lang = tlConfig.defaultTargetLanguage
-                                val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedTwitTarget::discordGuild))
+                                val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedSocialTarget::discordGuild))
 
                                 // check cache for existing translation of this tweet
                                 val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
@@ -361,11 +353,11 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                             }
                         }
                     }
-                    if(twitter.mediaOnly && attachment == null) return@target
+                    if(postCfg.mediaOnly && attachment == null) return@target
 
                     LOG.debug("roles phase")
                     // mention roles
-                    val mention = getMentionRoleFor(target, channel, tweet, twitter)
+                    val mention = getMentionRoleFor(target, channel, postCfg, tweet.mentionOption)
 
                     var outdated = false
                     val mentionText = if(mention != null) {
@@ -378,13 +370,13 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
 
                     val baseNotif = MessageCreateSpec.create()
                         .run {
-                            val domain = if(twitter.customDomain != null) twitter.customDomain else "twitter.com"
+                            val domain = if(postCfg.customTwitterDomain != null) postCfg.customTwitterDomain else "twitter.com"
                             val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
                             withContent("$mentionText**@${user.username}** $action $timestamp: https://$domain/${user.username}/status/${tweet.id}")
                         }
 
                     // If the user has set a custom domain to be used, we just post the URL and let Discord handle the generation
-                    val notifSpec = if(twitter.customDomain != null) baseNotif else {
+                    val notifSpec = if(postCfg.customTwitterDomain != null) baseNotif else {
                         baseNotif
                             .run {
                                 if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
@@ -448,7 +440,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                             .tryAwait()
                     }
 
-                    if(twitter.customDomain != null && translation != null) {
+                    if(postCfg.customTwitterDomain != null && translation != null) {
                         val translationReply = Embeds.fbk(StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.MAX_DESC))
                             .withTitle("@${user.username} Tweet Translation")
                             .withFooter(EmbedCreateFields.Footer.of("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n", null))
@@ -463,7 +455,7 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
                     LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}")
                 } catch (e: Exception) {
                     if (e is ClientException && e.status.code() == 403) {
-                        TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::twitterTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }
+                        TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::postsTargetChannel) { propagateTransaction { target.findDbTarget().delete() } }
                         LOG.warn("Unable to send Tweet to channel '${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}'. Disabling feature in channel. TwitterChecker.java")
                     } else {
                         LOG.warn("Error sending Tweet to channel ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}: ${e.message}")
@@ -473,122 +465,5 @@ open class NitterChecker(val instances: DiscordInstances) : Runnable {
             }
             LOG.debug("notify ${user.username} - complete?? -")
         }
-    }
-
-    @CreatesExposedContext
-    suspend fun getActiveTargets(feed: TwitterFeed): List<TrackedTwitTarget>? {
-        val targets = propagateTransaction {
-            feed.targets.map { t -> loadTarget(t) }
-        }
-        val existingTargets = targets
-            .filter { target ->
-                val discord = instances[target.discordClient].client
-                // untrack target if discord channel is deleted
-                if (target.discordGuild != null) {
-                    try {
-                        discord.getChannelById(target.discordChannel).awaitSingle()
-                    } catch (e: Exception) {
-                        if(e is ClientException) {
-                            if(e.status.code() == 401) return emptyList()
-                            if(e.status.code() == 404) {
-                                LOG.info("Untracking Twitter feed '${feed.username}' in ${target.discordChannel} as the channel seems to be deleted.")
-                                propagateTransaction {
-                                    target.findDBTarget().delete()
-                                }
-                            }
-                        }
-                        return@filter false
-                    }
-                }
-                true
-            }
-        return if (existingTargets.isNotEmpty()) {
-            existingTargets.filter { target ->
-                // ignore, but do not untrack targets with feature disabled
-                val clientId = instances[target.discordClient].clientId
-                val guildId = target.discordGuild?.asLong() ?: return@filter true // DM do not have channel features
-                val featureChannel = GuildConfigurations.getOrCreateGuild(clientId, guildId).getOrCreateFeatures(target.discordChannel.asLong())
-                featureChannel.twitterTargetChannel
-            }
-        } else {
-            LOG.info("Twitter feed ${feed.username} returned NO active targets.")
-            return null
-            propagateTransaction {
-                feed.delete()
-            }
-            LOG.info("Untracking Twitter feed ${feed.username} as it has no targets.")
-            null
-        }
-    }
-
-    /**
-     * Object to hold information about a tracked target from the database - resolving references to reduce transactions later
-     */
-    data class TrackedTwitTarget(
-        val db: Int,
-        val discordClient: Int,
-        val dbFeed: Int,
-        val username: String,
-        val discordChannel: Snowflake,
-        val discordGuild: Snowflake?,
-        val userId: Snowflake
-    ) {
-        @RequiresExposedContext fun findDBTarget() = TwitterTarget.findById(db)!!
-    }
-
-    @RequiresExposedContext
-    suspend fun loadTarget(target: TwitterTarget) =
-        TrackedTwitTarget(
-            target.id.value,
-            target.discordClient,
-            target.twitterFeed.id.value,
-            target.twitterFeed.username,
-            target.discordChannel.channelID.snowflake,
-            target.discordChannel.guild?.guildID?.snowflake,
-            target.tracker.userID.snowflake
-        )
-
-    data class TwitterMentionRole(val db: TwitterTargetMention, val discord: Role?)
-    @CreatesExposedContext
-    suspend fun getMentionRoleFor(dbTarget: TrackedTwitTarget, targetChannel: MessageChannel, tweet: NitterTweet, twitterCfg: TwitterSettings): TwitterMentionRole? {
-        // do not return ping if not configured for channel/tweet type
-        when {
-            !twitterCfg.mentionRoles -> return null
-            tweet.retweet -> if(!twitterCfg.mentionRetweets) return null
-//            tweet.reply -> if(!twitterCfg.mentionReplies) return null
-            tweet.quote -> if(!twitterCfg.mentionQuotes) return null
-            else -> if(!twitterCfg.mentionTweets) return null
-        }
-
-        val dbMentionRole = propagateTransaction {
-            dbTarget.findDBTarget().mention()
-        } ?: return null
-        val dRole = if(dbMentionRole.mentionRole != null) {
-            targetChannel.toMono()
-                .ofType(GuildChannel::class.java)
-                .flatMap(GuildChannel::getGuild)
-                .flatMap { guild -> guild.getRoleById(dbMentionRole.mentionRole!!.snowflake) }
-                .tryAwait()
-        } else null
-        val discordRole = when(dRole) {
-            is Ok -> dRole.value
-            is Err -> {
-                val err = dRole.value
-                if(err is ClientException && err.status.code() == 404) {
-                    // role has been deleted, remove configuration
-                    propagateTransaction {
-                        if (dbMentionRole.mentionText != null) {
-                            // don't delete if mentionrole still has text component
-                            dbMentionRole.mentionRole = null
-                        } else {
-                            dbMentionRole.delete()
-                        }
-                    }
-                }
-                null
-            }
-            null -> null
-        }
-        return TwitterMentionRole(dbMentionRole, discordRole)
     }
 }

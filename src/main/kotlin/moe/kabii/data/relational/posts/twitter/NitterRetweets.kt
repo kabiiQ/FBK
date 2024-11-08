@@ -1,4 +1,4 @@
-package moe.kabii.data.relational.twitter
+package moe.kabii.data.relational.posts.twitter
 
 import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.sql.*
@@ -7,8 +7,8 @@ import org.jetbrains.exposed.sql.*
     Database table to work around being unable to identify retweet date/time coming from Nitter
     Existence of a row for a Feed/Tweet ID combo means it has been seen before and should not be posted.
  */
-object TwitterRetweetHistory : Table() {
-    val feed = reference("retweeted_by", TwitterFeeds, ReferenceOption.CASCADE)
+object NitterRetweetHistory : Table() {
+    val feed = reference("retweeted_by", NitterFeeds, ReferenceOption.CASCADE)
     val tweetId = long("retweet_of")
 
     override val primaryKey = PrimaryKey(feed, tweetId)
@@ -17,16 +17,16 @@ object TwitterRetweetHistory : Table() {
 /**
  * Util object called to check/update history of known retweets.
  */
-object TwitterRetweets {
+object NitterRetweets {
     @RequiresExposedContext
-    private fun checkKnown(feed: TwitterFeed, tweetId: Long) = TwitterRetweetHistory.select {
-        TwitterRetweetHistory.feed eq feed.id and
-                (TwitterRetweetHistory.tweetId eq tweetId)
+    private fun checkKnown(feed: NitterFeed, tweetId: Long) = NitterRetweetHistory.select {
+        NitterRetweetHistory.feed eq feed.id and
+                (NitterRetweetHistory.tweetId eq tweetId)
     }.any()
 
     @RequiresExposedContext
-    private fun acknowledge(dbFeed: TwitterFeed, retweetId: Long) {
-        TwitterRetweetHistory.insertIgnore { new ->
+    private fun acknowledge(dbFeed: NitterFeed, retweetId: Long) {
+        NitterRetweetHistory.insertIgnore { new ->
             new[feed] = dbFeed.id
             new[tweetId] = retweetId
         }
@@ -39,7 +39,7 @@ object TwitterRetweets {
      * @return true if the retweet has been newly recorded (and therefore sent to notification)
      */
     @RequiresExposedContext
-    fun checkAndUpdate(feed: TwitterFeed, retweetedId: Long): Boolean {
+    fun checkAndUpdate(feed: NitterFeed, retweetedId: Long): Boolean {
         val new = !checkKnown(feed, retweetedId)
         if(new) acknowledge(feed, retweetedId)
         return new

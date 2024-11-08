@@ -7,7 +7,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
-import moe.kabii.trackers.videos.StreamErr
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.YoutubeVideoInfo
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
@@ -157,8 +157,8 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                                 LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
                                                 when (ytVideo.value) {
                                                     // do not process video if this was an IO issue on our end
-                                                    is StreamErr.Network -> return@discordTask
-                                                    is StreamErr.NotFound -> null
+                                                    is TrackerErr.Network -> return@discordTask
+                                                    is TrackerErr.NotFound -> null
                                                 }
                                             }
                                         }

@@ -9,7 +9,7 @@ import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.trackers.videos.StreamErr
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.videos.youtube.json.YoutubeChannelResponse
 import moe.kabii.trackers.videos.youtube.json.YoutubeErrorResponse
 import moe.kabii.trackers.videos.youtube.json.YoutubeVideoResponse
@@ -72,7 +72,7 @@ object YoutubeParser {
     fun getVideo(videoId: String): YoutubeVideoInfo? =
         getVideos(listOf(videoId)).values.single().orNull()
 
-    fun getVideos(videoIds: List<String>): Map<String, Result<YoutubeVideoInfo, StreamErr>> {
+    fun getVideos(videoIds: List<String>): Map<String, Result<YoutubeVideoInfo, TrackerErr>> {
         // we are able to chunk request up to 50 video IDs from 1 API call (yt limit for non-paginated endpoint)
         return videoIds.chunked(20).map { idChunk ->
             val idsPart = idChunk.joinToString(",")
@@ -81,7 +81,7 @@ object YoutubeParser {
             } catch(e: Exception) {
                 LOG.warn("Error making YouTube request: ${e.message}")
                 LOG.debug(e.stackTraceString)
-                return@map idChunk.map { it to Err(StreamErr.IO) }
+                return@map idChunk.map { it to Err(TrackerErr.IO) }
             }
 
             // match each returned video back to the request. this iteration could be skipped but we want to also determine which videos did NOT return
@@ -118,7 +118,7 @@ object YoutubeParser {
                         short = match.short
                     )
                     Ok(video)
-                } else Err(StreamErr.NotFound)
+                } else Err(TrackerErr.NotFound)
                 requestedId to value
             }
         }.flatten().toMap()

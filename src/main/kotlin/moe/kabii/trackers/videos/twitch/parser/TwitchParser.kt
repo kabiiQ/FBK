@@ -12,7 +12,7 @@ import moe.kabii.newRequestBuilder
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.trackers.videos.StreamErr
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.videos.twitch.TwitchGameInfo
 import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.TwitchUserInfo
@@ -33,7 +33,7 @@ object TwitchParser {
 
     private val gameCache = mutableMapOf<Long, TwitchGameInfo>()
 
-    private suspend inline fun <reified R: Any>  request(requestBuilder: Request.Builder): Result<R, StreamErr> {
+    private suspend inline fun <reified R: Any>  request(requestBuilder: Request.Builder): Result<R, TrackerErr> {
         val builder = requestBuilder
             .header("Client-ID", clientID)
 
@@ -70,11 +70,11 @@ object TwitchParser {
                         val body = response.body.string()
                         return try {
                             val json = MOSHI.adapter(R::class.java).fromJson(body)
-                            if (json != null) Ok(json) else Err(StreamErr.NotFound)
+                            if (json != null) Ok(json) else Err(TrackerErr.NotFound)
                         } catch (e: Exception) {
                             LOG.error("Invalid JSON provided from Twitch: ${e.message} :: $body")
                             // api issue
-                            Err(StreamErr.IO)
+                            Err(TrackerErr.IO)
                         }
                     }
                 } finally {
@@ -88,10 +88,10 @@ object TwitchParser {
                 continue
             }
         }
-        return Err(StreamErr.IO) // if 3 attempts failed
+        return Err(TrackerErr.IO) // if 3 attempts failed
     }
 
-    suspend fun getUsers(ids: Collection<Long>): Map<Long, Result<TwitchUserInfo, StreamErr>> {
+    suspend fun getUsers(ids: Collection<Long>): Map<Long, Result<TwitchUserInfo, TrackerErr>> {
         val userLists = ids.chunked(100).map { chunk ->
             val users = chunk.joinToString("&id=")
             val request = newRequestBuilder().get().url("https://api.twitch.tv/helix/users?first=100&id=$users")
@@ -104,28 +104,28 @@ object TwitchParser {
                     // map to twitchid, streamuser
                     requestID to if (match != null) {
                         Ok(TwitchUserInfo(match.id.toLong(), match.login, match.display_name, match.profile_image_url))
-                    } else Err(StreamErr.NotFound)
+                    } else Err(TrackerErr.NotFound)
                 }
-            } else ids.map { it to Err(StreamErr.IO) } // call failed
+            } else ids.map { it to Err(TrackerErr.IO) } // call failed
         }
         return(userLists.flatten().toMap())
     }
 
-    suspend fun getUser(id: Long): Result<TwitchUserInfo, StreamErr> =
+    suspend fun getUser(id: Long): Result<TwitchUserInfo, TrackerErr> =
         getUsers(listOf(id)).values.single()
 
-    suspend fun getUser(name: String): Result<TwitchUserInfo, StreamErr> {
+    suspend fun getUser(name: String): Result<TwitchUserInfo, TrackerErr> {
         val request = newRequestBuilder().get().url("https://api.twitch.tv/helix/users?login=$name")
         val call = request<Helix.UserResponse>(request)
         return if(call is Ok) {
             val user = call.value.data.getOrNull(0)
             if(user != null) {
                 Ok(TwitchUserInfo(user.id.toLong(), user.login, user.display_name, user.profile_image_url))
-            } else Err(StreamErr.NotFound)
-        } else Err(StreamErr.IO)
+            } else Err(TrackerErr.NotFound)
+        } else Err(TrackerErr.IO)
     }
 
-    suspend fun getStreams(ids: Collection<Long>): Map<Long, Result<TwitchStreamInfo, StreamErr>> {
+    suspend fun getStreams(ids: Collection<Long>): Map<Long, Result<TwitchStreamInfo, TrackerErr>> {
         val streamLists = ids.chunked(100).map { chunk ->
             val streams = chunk.joinToString("&user_id=")
             val request = newRequestBuilder().get().url("https://api.twitch.tv/helix/streams/?first=100&user_id=$streams")
@@ -137,14 +137,14 @@ object TwitchParser {
                     val match = responseStreams.find { responseStream -> responseStream.userID == requestID }
                     requestID to if(match != null) {
                         Ok(match.asStreamInfo())
-                    } else Err(StreamErr.NotFound)
+                    } else Err(TrackerErr.NotFound)
                 }
-            } else ids.map { it to Err(StreamErr.IO) }
+            } else ids.map { it to Err(TrackerErr.IO) }
         }
         return(streamLists.flatten().toMap())
     }
 
-    suspend fun getStream(id: Long): Result<TwitchStreamInfo, StreamErr> = getStreams(listOf(id)).values.single()
+    suspend fun getStream(id: Long): Result<TwitchStreamInfo, TrackerErr> = getStreams(listOf(id)).values.single()
 
     suspend fun getGame(id: Long): TwitchGameInfo =
         gameCache.getOrPut(id) { getGameInfo(id) }
@@ -168,7 +168,7 @@ object TwitchParser {
 
     object EventSub {
 
-        suspend fun createSubscription(type: TwitchEventSubscriptions.Type, twitchUserId: Long): Result<TwitchEvents.Response.EventSubResponse, StreamErr> {
+        suspend fun createSubscription(type: TwitchEventSubscriptions.Type, twitchUserId: Long): Result<TwitchEvents.Response.EventSubResponse, TrackerErr> {
             val body = TwitchEvents.Request.Subscription.generateRequestBody(type, twitchUserId.toString())
             val request = Request.Builder()
                 .url("https://api.twitch.tv/helix/eventsub/subscriptions")

@@ -6,11 +6,11 @@ object TestCommand : Command("test") {
     override val wikiPath: String? = null
 
     init {
+
         terminal {
         }
 
         chat {
-
         }
     }
 }

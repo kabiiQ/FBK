@@ -17,8 +17,8 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.YoutubeTarget
-import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
@@ -43,11 +43,11 @@ object StreamTrackerCommand : TrackerCommand {
             is Ok -> lookup.value
             is Err -> {
                 val error = when (lookup.value) {
-                    is StreamErr.NotFound -> {
+                    is TrackerErr.NotFound -> {
                         val ytErr = if(streamTarget is YoutubeTarget) " For YouTube channels, ensure that you are using the 24-digit channel ID." else ""
                         "Unable to find **${streamTarget.full}** stream **${target.identifier}**.$ytErr"
                     }
-                    is StreamErr.Network -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
+                    is TrackerErr.Network -> "Error tracking stream. Possible **${streamTarget.full}** API issue."
                 }
                 origin.ereply(Embeds.error(error)).awaitSingle()
                 return
@@ -101,7 +101,7 @@ object StreamTrackerCommand : TrackerCommand {
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
         // get stream info from username the user provides
-        val streamTarget = requireNotNull(target.site as? StreamingTarget) { "Invalid target arguments provided to StreamTrackerCommand" }
+        val streamTarget = target.site as StreamingTarget
         val site = streamTarget.dbSite
         val streamInfo = streamTarget.getChannel(target.identifier).orNull()
 

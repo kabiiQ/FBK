@@ -5,11 +5,10 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.trackers.TrackerTarget
@@ -82,16 +81,15 @@ object ListTracked : Command("tracked") {
                     "[${list.site.targetType.full}/${list.siteListId}]($url): by <@${target.userTracked.userID}>"
                 }
 
-                if(includeTarget(moe.kabii.trackers.TwitterTarget)) {
-                    // get tracked twitter feeds in this channel
-                    TwitterTarget.find {
-                        TwitterTargets.discordClient eq client.clientId and
-                                (TwitterTargets.discordChannel eq dbChannel.id)
-                    }.mapTo(tracks) { target ->
-                        val feed = target.twitterFeed
-                        val url = URLUtil.Twitter.feedUsername(feed.username)
-                        "[Twitter/${feed.username}]($url) by <@${target.tracker.userID}>"
-                    }
+                // Get all tracked social feeds in this channel
+                TrackedSocialFeeds.SocialTarget.find {
+                    TrackedSocialFeeds.SocialTargets.client eq client.clientId and
+                            (TrackedSocialFeeds.SocialTargets.channel eq dbChannel.id)
+                }.filter { target ->
+                    includeTarget(target.socialFeed.site.targetType)
+                }.mapTo(tracks) { target ->
+                    val feedInfo = target.socialFeed.feedInfo()
+                    "[${feedInfo.site.full}/${feedInfo.displayName}](${feedInfo.url}) by <@${target.tracker.userID}>"
                 }
             }
 

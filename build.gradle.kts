@@ -89,7 +89,6 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVer")
-//    implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
@@ -126,11 +125,11 @@ val updateVersion = task("updateVersion") {
     val versionsFile = file("build.version")
     val versions = versionsFile.readLines()
     val (major, minor, build, flag) = versions.map { line -> line.substring(line.indexOf(':') + 1, line.length).trim() }
-    buildFlag = if(flag.isNotBlank()) "-$flag" else ""
+    buildFlag = flag
     val buildCount = build.toInt() + 1
 
     // Set version for use in build output
-    version = "$major.$minor$buildFlag"
+    version = flag.ifBlank { "$major.$minor" }
 
     versionsFile.bufferedWriter().use { output ->
         output.write("major: $major\n")

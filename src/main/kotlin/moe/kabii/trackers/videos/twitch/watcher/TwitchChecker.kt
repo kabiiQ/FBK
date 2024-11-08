@@ -17,8 +17,8 @@ import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.TrackerUtil
-import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
@@ -68,7 +68,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
 
         // re-associate SQL data with stream API data
         streamData.mapNotNull { (id, data) ->
-            if (data is Err && data.value is StreamErr.Network) {
+            if (data is Err && data.value is TrackerErr.Network) {
                 LOG.warn("Error contacting Twitch :: $id")
                 return@mapNotNull null
             }
@@ -113,7 +113,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                             is Ok -> user.value
                             is Err -> {
                                 val err = user.value
-                                if (err is StreamErr.NotFound) {
+                                if (err is TrackerErr.NotFound) {
                                     // call succeeded and the user ID does not exist.
                                     LOG.info("Invalid Twitch user: $twitchId. Untracking user...")
                                     channel.delete()

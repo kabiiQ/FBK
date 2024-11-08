@@ -10,11 +10,11 @@ import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
-import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.instances.FBK
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
@@ -183,16 +183,16 @@ object DataTransfer {
             }
         }
 
-        // tracked twitter feeds
+        // tracked social feeds
         tryUpdate {
-            val twitterFeeds = TwitterTargets
+            val twitterFeeds = TrackedSocialFeeds.SocialTargets
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
                 .update({
-                    TwitterTargets.discordClient eq old.clientId and
+                    TrackedSocialFeeds.SocialTargets.client eq old.clientId and
                             (DiscordObjects.Guilds.guildID eq guildId)
                 }) { update ->
-                    update[TwitterTargets.discordClient] = new.clientId
+                    update[TrackedSocialFeeds.SocialTargets.client] = new.clientId
                 }
             if (twitterFeeds > 0) {
                 detail.appendLine("$twitterFeeds tracked Twitter feeds.")

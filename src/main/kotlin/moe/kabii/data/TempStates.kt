@@ -2,7 +2,7 @@ package moe.kabii.data
 
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.reaction.ReactionEmoji
-import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.translation.TranslationResult
 import java.util.concurrent.ConcurrentHashMap
 
@@ -21,7 +21,7 @@ object TempStates {
 object TwitterFeedCache {
     data class FeedCacheState(val initialBound: Long, val seenTweets: MutableList<Long> = mutableListOf())
     private val cache = ConcurrentHashMap<String, FeedCacheState>()
-    fun getOrPut(feed: TwitterFeed): FeedCacheState = cache.getOrPut(feed.username.lowercase()) { FeedCacheState(feed.lastPulledTweet ?: 0L) }
+    fun getOrPut(feed: NitterFeed): FeedCacheState = cache.getOrPut(feed.username.lowercase()) { FeedCacheState(feed.lastPulledTweet ?: 0L) }
     operator fun get(username: String) = cache[username.lowercase()]
 }
 

@@ -1,6 +1,6 @@
 package moe.kabii.trackers.posts.twitter
 
-import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.data.mongodb.guilds.PostsSettings
 import java.time.Instant
 
 data class NitterData(
@@ -38,9 +38,15 @@ data class NitterTweet(
     get() = "https://twitter.com/$quoteOf/status/$quoteOfTweet"
 
     val notifyOption = when {
-        retweet -> TwitterSettings::displayRetweet
-//        reply -> TwitterSettings::displayReplies
-        quote -> TwitterSettings::displayQuote
-        else -> TwitterSettings::displayNormalTweet
+        retweet -> PostsSettings::displayReposts
+//        reply -> PostsSettings::displayReplies
+        quote -> PostsSettings::displayQuote
+        else -> PostsSettings::displayNormalPosts
+    }
+
+    val mentionOption = when {
+        retweet -> PostsSettings::mentionReposts
+        quote -> PostsSettings::mentionQuotes
+        else -> PostsSettings::mentionNormalPosts
     }
 }

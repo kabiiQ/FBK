@@ -26,6 +26,7 @@ object DiscordTaskPool {
     // threading needs may change in future, currently all using one thread pool that will expand when needed
     val commandThreads = dispatchThreads
     val streamThreads = dispatchThreads
+    val socialThreads = dispatchThreads
     val listThreads = dispatchThreads
     val reminderThreads = dispatchThreads
     val notifyThreads = discordNotifyThreads

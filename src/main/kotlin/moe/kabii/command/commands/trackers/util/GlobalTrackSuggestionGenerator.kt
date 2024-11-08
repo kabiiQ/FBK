@@ -1,9 +1,9 @@
 package moe.kabii.command.commands.trackers.util
 
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
+import moe.kabii.data.relational.posts.twitter.NitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterFeeds
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
@@ -27,9 +27,9 @@ object GlobalTrackSuggestionGenerator {
                 }
 
             // get all twitter feeds
-            globalFeedCache[TwitterTarget] = TwitterFeed
+            globalFeedCache[TwitterTarget] = NitterFeed
                 .find {
-                    TwitterFeeds.enabled eq true
+                    NitterFeeds.enabled eq true
                 }
                 .map { feed ->
                     createCachedFeed(TwitterTarget, feed.username, feed.username)

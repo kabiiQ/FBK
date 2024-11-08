@@ -8,50 +8,50 @@ import moe.kabii.command.commands.configuration.setup.base.ConfigurationModule
 import moe.kabii.command.commands.configuration.setup.base.Configurator
 import moe.kabii.command.commands.configuration.setup.base.CustomElement
 import moe.kabii.command.params.DiscordParameters
-import moe.kabii.data.mongodb.guilds.TwitterSettings
+import moe.kabii.data.mongodb.guilds.PostsSettings
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import kotlin.reflect.KMutableProperty1
 
-object TwitterConfig : Command("twitter") {
-    override val wikiPath = "Twitter-Tracker#twitter-feed-notification-configuration"
+object PostsConfig : Command("posts") {
+    override val wikiPath = "Social-Media-Tracker#social-media-feed-notification-configuration"
 
     @Suppress("UNCHECKED_CAST")
-    object TwitterConfigModule : ConfigurationModule<TwitterSettings>(
-        "twitter tracker",
+    object PostsConfigModule : ConfigurationModule<PostsSettings>(
+        "social media posts tracker",
         this,
-        BooleanElement("Post when tracked Twitter feeds post a normal Tweet",
-            "tweets",
-            TwitterSettings::displayNormalTweet,
+        BooleanElement("Notify when tracked feeds make a basic post",
+            "posts",
+            PostsSettings::displayNormalPosts
         ),
-        BooleanElement("Post when tracked feeds retweet other users",
-            "retweets",
-            TwitterSettings::displayRetweet
+        BooleanElement("Notify when tracked feeds repost/retweet from another user.",
+            "reposts",
+            PostsSettings::displayReposts
         ),
-        BooleanElement("Post when tracked feeds quote tweet other users",
+        BooleanElement("Notify when tracked feeds quote another user.",
             "quotes",
-            TwitterSettings::displayQuote
+            PostsSettings::displayQuote
         ),
-//        BooleanElement("Post when tracked feeds reply to other users",
-//            "replies",
-//            TwitterSettings::displayReplies
-//        ),
-        BooleanElement("LIMIT posted Tweets to ONLY those containing media. (text-only tweets will be ignored if enabled!)",
+        BooleanElement("Notify when tracked feeds post a reply to other users. Replies not supported on Twitter.",
+            "replies",
+            PostsSettings::displayReplies
+        ),
+        BooleanElement("LIMIT posts to ONLY those containing media. (text-only posts will be ignored if enabled!)",
             "mediaonly",
-            TwitterSettings::mediaOnly
+            PostsSettings::mediaOnly
         ),
-        BooleanElement("Automatically request a translation for posted tweets",
+        BooleanElement("Automatically request a translation for posts",
             "translate",
-            TwitterSettings::autoTranslate
+            PostsSettings::autoTranslate
         ),
-        CustomElement("Post custom Twitter links, overriding the standard FBK embed. (Embedded translations will not be available if this is used)",
-            "customurl",
-            TwitterSettings::customDomain as KMutableProperty1<TwitterSettings, Any?>,
+        CustomElement("Post custom Twitter links, overriding the standard FBK embed. (translations will not be available)",
+            "customtwitter",
+            PostsSettings::customTwitterDomain as KMutableProperty1<PostsSettings, Any?>,
             prompt = "Enter a custom domain (ex. vxtwitter.com) that will be posted. The embed will OVERRIDE the standard FBK custom embeds, so features like embedded translations will not be available. Furthermore, you must ensure this domain spelled correctly and is functional or there will be no embeds for posted Tweets at all.",
             default = null,
             parser = ::customTwitterDomain,
-            value = { twitter -> twitter.customDomain ?: "not set" }
+            value = { twitter -> twitter.customTwitterDomain ?: "not set" }
         )
     )
 
@@ -60,15 +60,15 @@ object TwitterConfig : Command("twitter") {
             channelVerify(Permission.MANAGE_CHANNELS)
 
             val features = features()
-            if(!features.twitterTargetChannel) {
-                ereply(Embeds.error("**#${guildChan.name}** does not have Twitter tracking enabled.")).awaitSingle()
+            if(!features.postsTargetChannel) {
+                ereply(Embeds.error("**#${guildChan.name}** does not have social media tracking enabled.")).awaitSingle()
                 return@chat
             }
-            val twitter = features.twitterSettings
+            val posts = features.postsSettings
             val configurator = Configurator(
-                "Twitter tracker settings for #${guildChan.name}",
-                TwitterConfigModule,
-                twitter
+                "Social media tracker settings for #${guildChan.name}",
+                PostsConfigModule,
+                posts
             )
 
             if(configurator.run(this)) {

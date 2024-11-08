@@ -4,10 +4,10 @@ import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import moe.kabii.command.params.ChatCommandArguments
 import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
-import moe.kabii.data.relational.twitter.TwitterTargets
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
@@ -133,14 +133,12 @@ object TargetSuggestionGenerator {
                     )
                 }
 
-                moe.kabii.data.relational.twitter.TwitterTarget.find {
-                    TwitterTargets.discordClient eq clientId and
-                            (TwitterTargets.discordChannel eq dbChannel.id)
+                TrackedSocialFeeds.SocialTarget.find {
+                    TrackedSocialFeeds.SocialTargets.client eq clientId and
+                            (TrackedSocialFeeds.SocialTargets.channel eq dbChannel.id)
                 }.mapTo(targets) { target ->
-                    TargetComponents(
-                        TwitterTarget,
-                        target.twitterFeed.username
-                    )
+                    val feedInfo = target.socialFeed.feedInfo()
+                    TargetComponents(feedInfo.site, feedInfo.displayName, feedInfo.accountId)
                 }
 
                 targets.map { (site, username, userId) ->

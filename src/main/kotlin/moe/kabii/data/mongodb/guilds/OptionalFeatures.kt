@@ -21,7 +21,7 @@ data class FeatureChannel(
 
     // trackers
     var streamTargetChannel: Boolean = true,
-    var twitterTargetChannel: Boolean = true,
+    var postsTargetChannel: Boolean = true,
     var animeTargetChannel: Boolean = true,
 
     // other commands
@@ -36,11 +36,11 @@ data class FeatureChannel(
     val logSettings: LogSettings = LogSettings(channelID),
     val streamSettings: StreamSettings = StreamSettings(),
     val youtubeSettings: YoutubeSettings = YoutubeSettings(),
-    val twitterSettings: TwitterSettings = TwitterSettings(),
+    val postsSettings: PostsSettings = PostsSettings(),
     val animeSettings: AnimeSettings = AnimeSettings(),
 ) {
     fun anyEnabled() = booleanArrayOf(musicChannel, tempChannelCreation, logChannel).any(true::equals)
-    fun anyDefaultDisabled() = booleanArrayOf(streamTargetChannel, twitterTargetChannel, animeTargetChannel).any(false::equals)
+    fun anyDefaultDisabled() = booleanArrayOf(streamTargetChannel, postsTargetChannel, animeTargetChannel).any(false::equals)
 
     fun defaultTracker() = trackerDefault?.run(TargetArguments::get)
 
@@ -55,7 +55,7 @@ data class FeatureChannel(
         // if multiple are enabled, it will default in this order
         return when {
             streamTargetChannel && type.isSuperclassOf(StreamingTarget::class) -> TwitchTarget
-            twitterTargetChannel && type.isSuperclassOf(TwitterTarget::class) -> TwitterTarget
+            postsTargetChannel && type.isSuperclassOf(SocialTarget::class) -> TwitterTarget
             animeTargetChannel && type.isSuperclassOf(AnimeTarget::class) -> MALTarget
             else -> null
         }
@@ -104,20 +104,20 @@ data class YoutubeSettings(
     var upcomingChannel: Long? = null
 )
 
-data class TwitterSettings(
-    var displayNormalTweet: Boolean = true,
+data class PostsSettings(
+    var displayNormalPosts: Boolean = true,
     var displayReplies: Boolean = false,
     var displayQuote: Boolean = true,
-    var displayRetweet: Boolean = false,
+    var displayReposts: Boolean = false,
     var mediaOnly: Boolean = false,
     var autoTranslate: Boolean = false,
     var mentionRoles: Boolean = true,
-    var mentionTweets: Boolean = true,
+    var mentionNormalPosts: Boolean = true,
     var mentionReplies: Boolean = true,
     var mentionQuotes: Boolean = true,
-    var mentionRetweets: Boolean = false,
+    var mentionReposts: Boolean = false,
 
-    var customDomain: String? = null
+    var customTwitterDomain: String? = null
 )
 
 data class ChannelMark(

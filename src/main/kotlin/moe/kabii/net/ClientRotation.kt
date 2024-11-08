@@ -5,11 +5,8 @@ import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.OkHttpClient
-import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
-import java.net.Socket
-import javax.net.SocketFactory
 import kotlin.math.min
 
 object ClientRotation {

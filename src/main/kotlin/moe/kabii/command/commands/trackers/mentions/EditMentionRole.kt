@@ -7,13 +7,13 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterTarget
 import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.SocialTarget
 import moe.kabii.trackers.StreamingTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
@@ -45,8 +45,8 @@ object EditMentionRole : Command("editmention") {
             val textArg = args.optStr("text")?.ifBlank { null }
             when(siteTarget.site) {
                 is StreamingTarget -> addStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg, textArg)
-                is moe.kabii.trackers.TwitterTarget -> addTwitterMention(this, siteTarget.identifier, roleArg, textArg)
-                else -> ereply(Embeds.error("The **/editmention** command is only supported for **livestream** and **twitter** sources.")).awaitSingle()
+                is moe.kabii.trackers.TwitterTarget -> addSocialMention(this, siteTarget.site, siteTarget.identifier, roleArg, textArg)
+                else -> ereply(Embeds.error("The **/editmention** command is only supported for **livestream** and **social media post** sources.")).awaitSingle()
             }
         }
     }
@@ -159,31 +159,30 @@ object EditMentionRole : Command("editmention") {
         origin.ereply(Embeds.fbk("Edited mention settings for **${streamInfo.displayName}**.\n\n$output")).awaitSingle()
     }
 
-    private suspend fun addTwitterMention(origin: DiscordParameters, username: String, roleArg: Role?, textArg: String?) {
-        val twitterUser = propagateTransaction {
-            TwitterFeed.findExisting(username)
+    private suspend fun addSocialMention(origin: DiscordParameters, site: SocialTarget, siteUserId: String, roleArg: Role?, textArg: String?) {
+        val feedInfo = when(val call = site.getProfile(siteUserId)) {
+            is Ok -> call.value
+            is Err -> {
+                origin.ereply(Embeds.error("Unable to find the **${site.full}** feed **$siteUserId**.")).awaitSingle()
+                return
+            }
         }
 
-        if(twitterUser == null) {
-            origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
-            return
-        }
-
-        // verify that twitter feed is tracked in this server (any target in this guild)
-        val matchingTarget = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser)
+        val (matchingTarget, mention) = propagateTransaction {
+            val dbFeed = site.dbFeed(feedInfo.accountId)
+            val dbTarget = if(dbFeed != null) {
+                TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), dbFeed)
+            } else null
+            dbTarget to dbTarget?.mention()
         }
 
         if(matchingTarget == null) {
-            origin.ereply(Embeds.error("**@${username}** is not currently tracked in this channel.")).awaitSingle()
+            origin.ereply(Embeds.error("**@${feedInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
             return
-        }
-        val mention = propagateTransaction {
-            matchingTarget.mention()
         }
 
         if(mention == null) {
-            SetMentionRole.setTwitterMention(origin, username, roleArg, textArg)
+            SetMentionRole.setSocialMention(origin, site, siteUserId, roleArg, textArg)
             return
         }
 
@@ -199,7 +198,7 @@ object EditMentionRole : Command("editmention") {
         }
 
         if(listOfNotNull(roleArg, textArg, embedColor).none()) {
-            GetMentionRole.testTwitterConfig(origin, username)
+            GetMentionRole.testSocialConfig(origin, site, siteUserId)
             return
         }
 
@@ -222,6 +221,6 @@ object EditMentionRole : Command("editmention") {
                 mention.embedColor = embedColor
             }
         }
-        origin.ereply(Embeds.fbk("Edited mention settings for the Twitter feed **@$username**.\n\n$output")).awaitSingle()
+        origin.ereply(Embeds.fbk("Edited mention settings for the ${site.full} feed **@${feedInfo.displayName}**.\n\n$output")).awaitSingle()
     }
 }

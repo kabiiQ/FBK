@@ -13,8 +13,8 @@ import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideos
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.YoutubeTarget
-import moe.kabii.trackers.videos.StreamErr
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.util.extensions.RequiresExposedContext
@@ -181,14 +181,14 @@ object YoutubeVideosService {
                         val streamInfo = when(val lookup = YoutubeTarget.getChannel(channelId)) {
                             is Ok -> lookup.value
                             is Err -> when(lookup.value) {
-                                is StreamErr.NotFound -> {
+                                is TrackerErr.NotFound -> {
                                     call.respondText(
                                         "error: /channelID: YouTube returned 404 not found for channel '$channelId'",
                                         status = HttpStatusCode.NotFound
                                     )
                                     return@propagateTransaction
                                 }
-                                is StreamErr.Network -> {
+                                is TrackerErr.Network -> {
                                     call.respondText(
                                         text = "error: external: unable to reach YouTube API",
                                         status = HttpStatusCode.BadGateway

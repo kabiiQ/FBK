@@ -7,19 +7,27 @@ import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
+import moe.kabii.data.relational.posts.bluesky.BlueskyFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.trackers.videos.StreamErr
+import moe.kabii.trackers.posts.bluesky.BlueskyParser
+import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.kick.api.KickParser
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.util.constants.URLUtil
+import moe.kabii.util.extensions.RequiresExposedContext
+import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
+import org.joda.time.DateTime
+import org.joda.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -54,6 +62,9 @@ sealed class TrackerTarget(
 // streaming targets
 data class BasicStreamChannel(val site: StreamingTarget, val accountId: String, val displayName: String, val url: String)
 
+// media posts targets
+data class BasicSocialFeed(val site: SocialTarget, val accountId: String, val displayName: String, val url: String)
+
 typealias TrackCallback = (suspend (DiscordParameters, TrackedStreams.StreamChannel) -> Unit)?
 
 // enforces the properties required throughout the code to add a streaming site and relates them to each other
@@ -74,7 +85,7 @@ sealed class StreamingTarget(
     override val mentionable = true
 
     // return basic info about the stream, primarily just if it exists + account ID needed for DB
-    abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr>
+    abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr>
 }
 
 object TwitchTarget : StreamingTarget(
@@ -90,7 +101,7 @@ object TwitchTarget : StreamingTarget(
     override val dbSite
         get() = TrackedStreams.DBSite.TWITCH
 
-    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr> {
         val twitchId = id.toLongOrNull()
         val twitchUser = if(twitchId != null) TwitchParser.getUser(twitchId)
         else TwitchParser.getUser(id)
@@ -133,17 +144,17 @@ object YoutubeTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.YOUTUBE
 
-    override suspend fun getChannel(id: String): Result<BasicStreamChannel, StreamErr> {
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr> {
         return try {
             val channel = YoutubeParser.getChannelFromUnknown(id)
             if(channel != null) {
                 val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name, channel.url)
                 Ok(info)
-            } else Err(StreamErr.NotFound)
+            } else Err(TrackerErr.NotFound)
         } catch(e: Exception) {
             LOG.debug("Error getting YouTube channel: ${e.message}")
             LOG.trace(e.stackTraceString)
-            Err(StreamErr.IO)
+            Err(TrackerErr.IO)
         }
     }
 
@@ -190,11 +201,11 @@ object TwitcastingTarget : StreamingTarget(
         val user = TwitcastingParser.searchUser(identifier)
         if(user != null) {
             Ok(BasicStreamChannel(TwitcastingTarget, user.userId, user.screenId, user.url))
-        } else Err(StreamErr.NotFound)
+        } else Err(TrackerErr.NotFound)
     } catch(e: Exception) {
         LOG.debug("Error getting TwitCasting channel: ${e.message}")
         LOG.debug(e.stackTraceString)
-        Err(StreamErr.IO)
+        Err(TrackerErr.IO)
     }
 
     override val onTrack: TrackCallback = { origin, channel ->
@@ -221,11 +232,11 @@ object KickTarget : StreamingTarget(
         val channel = KickParser.getChannel(id)
         if(channel != null) {
             Ok(BasicStreamChannel(KickTarget, channel.slug, channel.user.username, channel.url))
-        } else Err(StreamErr.NotFound)
+        } else Err(TrackerErr.NotFound)
     } catch(e: Exception) {
         LOG.debug("Error getting Kick channel: ${e.message}")
         LOG.debug(e.stackTraceString)
-        Err(StreamErr.IO)
+        Err(TrackerErr.IO)
     }
 
     override fun feedById(id: String) = URLUtil.StreamingSites.Kick.channelByName(id)
@@ -279,19 +290,138 @@ object AniListTarget : AnimeTarget(
         get() = ListSite.ANILIST
 }
 
-object TwitterTarget : TrackerTarget(
-    "Twitter",
-    FeatureChannel::twitterTargetChannel,
-    "twitter",
+sealed class SocialTarget(
+    val available: Boolean,
+    full: String,
+    url: List<Regex>,
+    vararg alias: String
+) : TrackerTarget(full, FeatureChannel::postsTargetChannel, "posts", url, *alias) {
+
+    abstract val dbSite: TrackedSocialFeeds.DBSite
+
+    abstract suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr>
+
+    /**
+     * Given a confirmed real site ID (from getProfile), get or create an associated SocialFeed
+     */
+    @RequiresExposedContext
+    abstract suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed? = null): TrackedSocialFeeds.SocialFeed?
+}
+
+object TwitterTarget : SocialTarget(
+    AvailableServices.nitter,
+"Twitter/X",
     listOf(
-        Regex("twitter.com/([a-zA-Z0-9_]{4,15})"),
+        Regex("(?:twitter|x).com/([a-zA-Z0-9_]{4,15})"),
         Regex("@([a-zA-Z0-9_]{4,15})")
     ),
-    "twitter", "tweets", "twit", "twitr", "tr"
+    "twitter", "tweets", "twit", "twitr", "tr", "x", "x.com"
 ) {
-    override fun feedById(id: String): String = URLUtil.Twitter.feed(id)
+    override val dbSite
+        get() = TrackedSocialFeeds.DBSite.X
 
-    override val mentionable = true
+    override fun feedById(id: String) = URLUtil.Twitter.feed(id)
+
+    override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
+        // Don't perform network call for Twitter unless needed
+        if(!id.matches(NitterParser.twitterUsernameRegex)) {
+            return Err(TrackerErr.NotFound)
+        }
+
+        val knownUser = propagateTransaction {
+            NitterFeed.findExisting(id)
+        }
+
+        if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
+            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking."))
+        }
+
+        return if(knownUser == null) {
+            // user not known, attempt to look up feed for user
+            try {
+                val twitter = NitterParser.getFeed(id) ?: return Err(TrackerErr.NotFound)
+                val username = twitter.user.username
+                Ok(BasicSocialFeed(TwitterTarget, username, username, URLUtil.Twitter.feedUsername(username)))
+            } catch(e: Exception) {
+                LOG.warn("Error getting Twitter feed: ${e.message}")
+                LOG.debug(e.stackTraceString)
+                Err(TrackerErr.IO)
+            }
+        } else {
+            Ok(BasicSocialFeed(TwitterTarget, knownUser.username, knownUser.username, URLUtil.Twitter.feedUsername(knownUser.username)))
+        }
+    }
+
+    override suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed?): TrackedSocialFeeds.SocialFeed? {
+        val existing = NitterFeed.findExisting(id)
+        return when {
+            existing != null -> existing.feed
+            createFeedInfo != null -> {
+                val baseFeed = TrackedSocialFeeds.SocialFeed.new {
+                    this.site = TrackedSocialFeeds.DBSite.X
+                }
+
+                NitterFeed.new {
+                    this.feed = baseFeed
+                    this.username = createFeedInfo.accountId
+                    this.enabled = false
+                }
+
+                baseFeed
+            }
+            else -> null
+        }
+    }
+}
+
+object BlueskyTarget : SocialTarget(
+    AvailableServices.bluesky,
+    "Bluesky",
+    listOf(
+        Regex("/profile/@?((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])"),
+        Regex("@((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])")
+    ),
+    "bluesky", "bsky", "bsky.app", "bsky.social"
+) {
+    override val dbSite = TrackedSocialFeeds.DBSite.BLUESKY
+
+    override fun feedById(id: String) = URLUtil.Bluesky.feedUsername(id)
+
+    override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
+        return try {
+            val feed = BlueskyParser.getProfile(id)
+            if(feed != null) {
+                Ok(BasicSocialFeed(BlueskyTarget, feed.did, feed.handle, URLUtil.Bluesky.feedUsername(feed.handle)))
+            } else Err(TrackerErr.NotFound)
+        } catch(e: Exception) {
+            LOG.info("Error getting Bluesky profile: ${e.message}")
+            LOG.debug(e.stackTraceString)
+            Err(TrackerErr.IO)
+        }
+    }
+
+    override suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed?): TrackedSocialFeeds.SocialFeed? {
+        val existing = BlueskyFeed.findExisting(id)
+        return when {
+            existing != null -> existing.feed
+            createFeedInfo != null -> {
+                val baseFeed = TrackedSocialFeeds.SocialFeed.new {
+                    this.site = TrackedSocialFeeds.DBSite.BLUESKY
+                }
+
+                BlueskyFeed.new {
+                    this.feed = baseFeed
+                    this.did = createFeedInfo.accountId
+                    this.handle = createFeedInfo.displayName
+                    this.lastDisplayName = createFeedInfo.displayName
+                    this.lastPulledTime = DateTime.now() - Duration.standardHours(2)
+                }
+
+                baseFeed
+            }
+            else -> null
+        }
+    }
 }
 
 data class TargetArguments(val site: TrackerTarget, val identifier: String) {

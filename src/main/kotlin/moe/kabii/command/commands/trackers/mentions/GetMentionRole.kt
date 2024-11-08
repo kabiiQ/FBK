@@ -7,8 +7,8 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterFeed
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -40,8 +40,8 @@ object GetMentionRole : Command("getmention") {
 
             when(siteTarget.site) {
                 is StreamingTarget -> testStreamConfig(this, siteTarget.site, siteTarget.identifier)
-                is TwitterTarget -> testTwitterConfig(this, siteTarget.identifier)
-                else -> ereply(Embeds.error("Mentions are only supported for **livestream** and **Twitter** sources.")).awaitSingle()
+                is SocialTarget -> testSocialConfig(this, siteTarget.site, siteTarget.identifier)
+                else -> ereply(Embeds.error("Mentions are only supported for **livestream** and **social media post** sources.")).awaitSingle()
             }
         }
     }
@@ -131,41 +131,37 @@ object GetMentionRole : Command("getmention") {
         ereply(Embeds.fbk(mention)).awaitSingle()
     }
 
-    suspend fun testTwitterConfig(origin: DiscordParameters, username: String) = with(origin) {
-
-        val twitterUser = propagateTransaction {
-            TwitterFeed.findExisting(username)
-        }
-
-        if(twitterUser == null) {
-            origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
-            return
+    suspend fun testSocialConfig(origin: DiscordParameters, site: SocialTarget, userId: String) = with(origin) {
+        val feedInfo = when(val call = site.getProfile(userId)) {
+            is Ok -> call.value
+            is Err -> {
+                origin.ereply(Embeds.error("Unable to find the **${site.full}** feed **$userId**.")).awaitSingle()
+                return
+            }
         }
 
         val matchingTarget = propagateTransaction {
-            moe.kabii.data.relational.twitter.TwitterTarget.getExistingTarget(
-                client.clientId,
-                chan.id.asLong(),
-                twitterUser
-            )
+            val dbFeed = site.dbFeed(feedInfo.accountId)
+            if(dbFeed != null) {
+                TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), dbFeed)
+            } else null
         }
 
-        if (matchingTarget == null) {
-            origin.ereply(Embeds.error("**@$username** is not currently tracked in this channel."))
-                .awaitSingle()
+        if(matchingTarget == null) {
+            origin.ereply(Embeds.error("**@${feedInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
             return
         }
 
         val content = propagateTransaction {
             val mention = matchingTarget.mention()
 
-            mention ?: return@propagateTransaction "No mentions/pings are configured for this Twitter feed."
+            mention ?: return@propagateTransaction "No mentions/pings are configured for this ${site.full} feed."
 
             val out = StringBuilder()
             if(mention.mentionRole != null) {
                 val role = getRole(target, mention.mentionRole!!)
                 out.appendLine("Role to be mentioned: @$role")
-            } else out.appendLine("No role is configured to be mentioned/pinged for this Twitter feed.")
+            } else out.appendLine("No role is configured to be mentioned/pinged for this ${site.full} feed.")
 
             if(mention.mentionText != null) {
                 out.appendLine("The following text will **always** be sent (may include any text, pings, etc): ${mention.mentionText}")

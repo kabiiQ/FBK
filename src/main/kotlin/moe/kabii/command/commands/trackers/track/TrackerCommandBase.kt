@@ -82,7 +82,7 @@ object TrackerCommandBase : CommandContainer {
                 val tracker = when(targetArgs.site) {
                     is StreamingTarget -> StreamTrackerCommand
                     is AnimeTarget -> MediaTrackerCommand
-                    is TwitterTarget -> TwitterTrackerCommand
+                    is SocialTarget -> PostsTrackerCommand
                     is YoutubeVideoTarget -> YoutubeVideoUntrackCommand
                 }
                 when(action) {

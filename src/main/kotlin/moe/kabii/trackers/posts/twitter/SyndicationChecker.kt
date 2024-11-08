@@ -5,9 +5,9 @@ import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
 import moe.kabii.data.TempStates
 import moe.kabii.data.TwitterFeedCache
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterFeeds
-import moe.kabii.data.relational.twitter.TwitterRetweets
+import moe.kabii.data.relational.posts.twitter.NitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeeds
+import moe.kabii.data.relational.posts.twitter.NitterRetweets
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.ClientRotation
@@ -47,9 +47,11 @@ class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequ
         LOG.debug("SyndicationChecker :: start: $start")
         // Get only priority Twitter feeds
         val feeds = propagateTransaction {
-            TwitterFeed.find {
-                TwitterFeeds.enabled eq true
-            }.toList()
+            NitterFeed.find {
+                NitterFeeds.enabled eq true
+            }
+                .associateWith(NitterFeed::feed)
+                .toList()
         }
 
         if(feeds.isEmpty() || TempStates.skipTwitter) {
@@ -60,19 +62,19 @@ class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequ
         feeds
             .chunked(feedsPerClient).withIndex()
             .map { (instanceId, feedChunk) ->
-                LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ", transform=TwitterFeed::username)} :: ${NitterParser.getInstanceUrl(instanceId)}")
+                LOG.debug("Chunk $instanceId: ${feedChunk.joinToString(", ") { (feed, _) -> feed.username } } :: ${NitterParser.getInstanceUrl(instanceId)}")
                 val httpClient = ClientRotation.getClientNumber(instanceId)
                 nitterScope.launch {
                     try {
                         kotlinx.coroutines.time.withTimeout(Duration.ofMinutes(6)) {
                             var first = true
-                            feedChunk.forEach { feed ->
+                            feedChunk.forEach { (feed, parent) ->
 
                                 if (!first) {
                                     delay(Duration.ofMillis(cooldowns.callDelay))
                                 } else first = false
 
-                                val targets = getActiveTargets(feed)?.ifEmpty { null }
+                                val targets = getActiveTargets(parent)?.ifEmpty { null }
                                     ?: return@forEach // feed untrack entirely or no target channels are currently enabled
 
                                 val cache = TwitterFeedCache.getOrPut(feed)
@@ -92,7 +94,7 @@ class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequ
                                             /* Date/time and ID from Nitter feed is of ORIGINAL Tweet, not retweet event
                                             Check if this RT has already been acknowledged from this feed from our own database
                                              */
-                                            val new = TwitterRetweets.checkAndUpdate(feed, tweet.id)
+                                            val new = NitterRetweets.checkAndUpdate(feed, tweet.id)
                                             if (!new) {
                                                 return@propagateTransaction tweet.id
                                             }

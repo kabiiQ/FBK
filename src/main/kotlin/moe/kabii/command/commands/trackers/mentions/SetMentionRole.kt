@@ -7,18 +7,13 @@ import moe.kabii.command.Command
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.command.verify
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterTarget
-import moe.kabii.data.relational.twitter.TwitterTargetMention
 import moe.kabii.discord.util.ColorUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
-import moe.kabii.trackers.StreamingTarget
-import moe.kabii.trackers.TargetArguments
-import moe.kabii.trackers.TrackerTarget
-import moe.kabii.trackers.YoutubeTarget
+import moe.kabii.trackers.*
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
@@ -61,8 +56,8 @@ object SetMentionRole : Command("setmention") {
             val textArg = copyFrom?.mentionText ?: args.optStr("text")?.ifBlank { null }
             when(siteTarget.site) {
                 is StreamingTarget -> setStreamMention(this, siteTarget.site, siteTarget.identifier, roleArg, textArg, copyFrom)
-                is moe.kabii.trackers.TwitterTarget -> setTwitterMention(this, siteTarget.identifier, roleArg, textArg, copyFrom)
-                else -> ereply(Embeds.error("The **/setmention** command is only supported for **livestream** or **twitter** sources.")).awaitSingle()
+                is SocialTarget -> setSocialMention(this, siteTarget.site, siteTarget.identifier, roleArg, textArg, copyFrom)
+                else -> ereply(Embeds.error("The **/setmention** command is only supported for **livestream** or **social media post** sources.")).awaitSingle()
             }
         }
     }
@@ -148,23 +143,26 @@ object SetMentionRole : Command("setmention") {
         origin.ereply(Embeds.fbk("The mention role for **${streamInfo.displayName}** has been $updateStr\n\nUse `/editmention` in the future to add more information for this mention, or `/setmention` again to replace/remove it entirely.")).awaitSingle()
     }
 
-    suspend fun setTwitterMention(origin: DiscordParameters, username: String, roleArg: Role?, textArg: String?, copyFrom: MentionCopy? = null) {
-        val twitterUser = propagateTransaction {
-            TwitterFeed.findExisting(username)
+    suspend fun setSocialMention(origin: DiscordParameters, site: SocialTarget, siteUserId: String, roleArg: Role?, textArg: String?, copyFrom: MentionCopy? = null) {
+        val feedInfo = when(val call = site.getProfile(siteUserId)) {
+            is Ok -> call.value
+            is Err -> {
+                origin.ereply(Embeds.error("Unable to find the **${site.full}** feed **$siteUserId**.")).awaitSingle()
+                return
+            }
         }
 
-        if(twitterUser == null) {
-            origin.ereply(Embeds.error("Invalid or unsupported Twitter user '$username'")).awaitSingle()
-            return
-        }
-
-        // verify that twitter feed is tracked in this server (any target in this guild)
-        val matchingTarget = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), twitterUser)
+        // verify that twitter feed is tracked
+        val (matchingTarget, mention) = propagateTransaction {
+            val dbFeed = site.dbFeed(feedInfo.accountId)
+            val dbTarget = if(dbFeed != null) {
+                TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), dbFeed)
+            } else null
+            dbTarget to dbTarget?.mention()
         }
 
         if(matchingTarget == null) {
-            origin.ereply(Embeds.error("**@$username** is not currently tracked in this channel.")).awaitSingle()
+            origin.ereply(Embeds.error("**@${feedInfo.displayName}** is not currently tracked in this channel.")).awaitSingle()
             return
         }
 
@@ -192,7 +190,7 @@ object SetMentionRole : Command("setmention") {
                     existingMention.mentionText = textArg
                     existingMention.embedColor = embedColor
                 } else {
-                    TwitterTargetMention.new {
+                    TrackedSocialFeeds.SocialTargetMention.new {
                         this.target = matchingTarget
                         this.mentionRole = roleArg?.id?.asLong()
                         this.mentionText = textArg
@@ -205,7 +203,7 @@ object SetMentionRole : Command("setmention") {
                 "set to $role$text$color"
             }
         }
-        origin.ereply(Embeds.fbk("The mention role for the Twitter feed **@$username** has been $updateStr.\nUse `/twitterping config` if you wish to configure which types of Tweets will include a ping.")).awaitSingle()
+        origin.ereply(Embeds.fbk("The mention role for the ${site.full} feed **@${feedInfo.displayName}** has been $updateStr.\nUse `/postpings config` if you wish to configure which types of posts will include a ping.")).awaitSingle()
     }
 
     // fields from all types of mentions that may be copied to any other type of mention
@@ -245,15 +243,12 @@ object SetMentionRole : Command("setmention") {
                     MentionCopy(getRole(mentionRole), mentionText, getRole(mentionRoleMember), getRole(mentionRoleUpcoming), getRole(mentionRoleCreation), getRole(mentionRoleUploads), getRole(mentionRolePremieres), getRole(mentionRoleShorts), mentionTextMember, null)
                 }
             }
-            is moe.kabii.trackers.TwitterTarget -> {
+            is SocialTarget -> {
 
                 val mention = propagateTransaction {
-                    TwitterFeed.findExisting(copyFrom.identifier)
+                    copyFrom.site.dbFeed(copyFrom.identifier)
                         ?.run {
-                            TwitterTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), this)
-                       }
-                        ?.run {
-                            mention()
+                            TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, origin.chan.id.asLong(), this)?.mention()
                         }
                 }
                 mention ?: return null

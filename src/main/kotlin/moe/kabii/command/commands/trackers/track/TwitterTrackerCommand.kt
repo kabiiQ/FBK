@@ -2,123 +2,103 @@ package moe.kabii.command.commands.trackers.track
 
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.channelVerify
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
-import moe.kabii.data.relational.twitter.TwitterFeed
-import moe.kabii.data.relational.twitter.TwitterFeeds
-import moe.kabii.data.relational.twitter.TwitterTarget
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.discord.util.Embeds
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
+import moe.kabii.trackers.SocialTarget
 import moe.kabii.trackers.TargetArguments
-import moe.kabii.trackers.posts.twitter.NitterParser
-import moe.kabii.util.constants.URLUtil
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.LowerCase
 
-object TwitterTrackerCommand : TrackerCommand {
+object PostsTrackerCommand : TrackerCommand {
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {
-        // if this is in a guild make sure the twitter feature is enabled here
-        origin.channelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", allowOverride = false)
+        val socialTarget = target.site as SocialTarget
 
-        if(!target.identifier.matches(NitterParser.twitterUsernameRegex)) {
-            origin.ereply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
+        if (!socialTarget.available) {
+            origin.ereply(Embeds.error("${socialTarget.full} tracking is not available at this time.")).awaitSingle()
             return
         }
 
-        // check database if this is a known user to avoid calling out and allowing untracking of renamed users etc
-        val knownUser = propagateTransaction {
-            TwitterFeed.findExisting(target.identifier)
-        }
-
-        if(knownUser == null || !knownUser.enabled) {
-            origin.ereply(Embeds.error("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking.")).awaitSingle()
-            return
-        }
-
-        val twitterUser = if(knownUser == null) {
-
-            // user not known, attempt to look up feed for user
-            val user = NitterParser.getFeed(target.identifier)
-            if(user == null) {
-                origin.ereply(Embeds.error("Unable to find Twitter user **${target.identifier}**.")).awaitSingle()
-                return
-            }
-
-            // new twitter feed, track in database
-            propagateTransaction {
-                TwitterFeed.new {
-                    this.username = user.user.username
-                    this.lastPulledTweet = null
-                }
-            }
-
-        } else knownUser
-
-        val username = twitterUser.username
-
-        // check if this user is already tracked
-        val channelId = origin.chan.id.asLong()
-        val existingTrack = propagateTransaction {
-            TwitterTarget.getExistingTarget(origin.client.clientId, channelId, twitterUser)
-        }
-
-        if(existingTrack != null) {
-            origin.ereply(Embeds.error("**Twitter/$username** is already tracked in this channel.")).awaitSingle()
-            return
-        }
-
+        // if this is a guild, make sure the social media tracker is enabled here
+        origin.channelFeatureVerify(FeatureChannel::postsTargetChannel, "posts", allowOverride = false)
         TrackerCommandBase.sendTrackerTestMessage(origin)
 
+        // validate/find requested profile
+        val feedInfo = when(val lookup = socialTarget.getProfile(target.identifier)) {
+            is Ok -> lookup.value
+            is Err -> {
+                val error = when(lookup.value) {
+                    is TrackerErr.NotFound -> "Unable to find **${socialTarget.full}** profile **${target.identifier}**."
+                    is TrackerErr.NotPermitted -> (lookup.value as TrackerErr.NotPermitted).reason
+                    is TrackerErr.Network -> "Error tracking feed. Possible **${socialTarget.full}** API issue."
+                }
+                origin.ereply(Embeds.error(error)).awaitSingle()
+                return
+            }
+        }
+
+        // Check/create feed in db, check existing db target
+        val channelId = origin.chan.id.asLong()
+        val (feed, track) = propagateTransaction {
+            val feed = socialTarget.dbFeed(feedInfo.accountId, createFeedInfo = feedInfo)!!
+            val existingTrack = TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, channelId, feed)
+            feed to existingTrack
+        }
+
+        if(track != null) {
+            origin.ereply(Embeds.error("**${socialTarget.full}/${feedInfo.displayName}** is already tracked in this channel.")).awaitSingle()
+            return
+        }
+
         propagateTransaction {
-            TwitterTarget.new {
+            TrackedSocialFeeds.SocialTarget.new {
                 this.discordClient = origin.client.clientId
-                this.twitterFeed = twitterUser
-                this.discordChannel = DiscordObjects.Channel.getOrInsert(origin.chan.id.asLong(), origin.guild?.id?.asLong())
+                this.socialFeed = feed
+                this.discordChannel = DiscordObjects.Channel.getOrInsert(channelId, origin.guild?.id?.asLong())
                 this.tracker = DiscordObjects.User.getOrInsert(origin.author.id.asLong())
             }
         }
 
-        //val tempnote = "\n\nNOTICE: Most Twitter feeds are currently updating **very slowly** due to changes made by Twitter. A limited number of feeds are currently enabled on this bot for faster access. It is not currently practical to enable all feeds for this access.\nIf you have a feed that is viewed by many users, you can contact the bot developer to enable that Twitter feed manually."
-        val tempnote = "\n\nNOTICE: It has become very difficult to access Twitter as a bot, so only a limited number of Twitter feeds are currently enabled for access."
-        origin.ireply(Embeds.fbk("Now tracking **[$username](${URLUtil.Twitter.feedUsername(username)})** on Twitter!\nUse `/twitter config` to adjust the types of Tweets posted in this channel.\nUse `/setmention` to configure a role to be \"pinged\" for Tweet activity.$tempnote")).awaitSingle()
+        val twitterNotice = if(socialTarget.dbSite == TrackedSocialFeeds.DBSite.X) "\n\nNOTICE: It has become very difficult to access Twitter as a bot, so only a limited number of Twitter feeds are currently enabled for access."
+        else ""
+        origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!$twitterNotice"))
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {
-        if(!target.identifier.matches(NitterParser.twitterUsernameRegex)) {
-            origin.ereply(Embeds.error("Invalid Twitter username **${target.identifier}**.")).awaitSingle()
+        // get feed info from username the user provides, less validation than tracking
+        val socialTarget = requireNotNull(target.site as? SocialTarget)
+        val feedInfo = socialTarget.getProfile(target.identifier).orNull()
+
+        if(feedInfo == null) {
+            origin.ereply(Embeds.error("Unable to find **${socialTarget.full}** user **${target.identifier}**.")).awaitSingle()
             return
         }
 
-        // convert input @username -> twitter user ID
-        val twitterUser = propagateTransaction {
-            TwitterFeed.find {
-                LowerCase(TwitterFeeds.username) eq target.identifier.lowercase()
-            }.firstOrNull()
-        }
-        if(twitterUser == null) {
-            origin.ereply(Embeds.error("Invalid or not tracked Twitter user '${target.identifier}'")).awaitSingle()
-            return
-        }
-
-        val username = twitterUser.username
-        // verify this user is tracked
         val channelId = origin.chan.id.asLong()
-        val (existingTrack, trackerId) = propagateTransaction {
-            val twitter = TwitterTarget
-                .getExistingTarget(origin.client.clientId, channelId, twitterUser)
-            twitter to twitter?.tracker?.userID
+        val (dbFeed, existingTrack, trackerId) = propagateTransaction {
+            // Verify this user is tracked
+            val dbFeed = socialTarget.dbFeed(feedInfo.accountId)
+            val dbTarget = if(dbFeed != null) {
+                TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, channelId, dbFeed)
+            } else null
+            Triple(dbFeed, dbTarget, dbTarget?.tracker?.userID)
         }
 
+        val username = feedInfo.displayName
         if(existingTrack == null) {
-            origin.ereply(Embeds.error("**Twitter/$username** is not currently tracked in this channel.")).awaitSingle()
+            origin.ereply(Embeds.error("**$username** is not currently tracked in this channel.")).awaitSingle()
             return
         }
 
@@ -131,15 +111,15 @@ object TwitterTrackerCommand : TrackerCommand {
             if(moveTo != null) {
                 // move requested: adjust target channel
                 // check feature enabled and user permissions
-                origin.guildChannelFeatureVerify(FeatureChannel::twitterTargetChannel, "twitter", targetChannel = moveTo)
+                origin.guildChannelFeatureVerify(FeatureChannel::postsTargetChannel, "posts", targetChannel = moveTo)
                 origin.member.channelVerify(moveTo, Permission.MANAGE_MESSAGES)
 
                 // target might already exist in requested channel
                 val existing = propagateTransaction {
-                    TwitterTarget.getExistingTarget(origin.client.clientId, moveTo.id.asLong(), twitterUser)
+                    TrackedSocialFeeds.SocialTarget.getExistingTarget(origin.client.clientId, moveTo.id.asLong(), dbFeed!!)
                 }
                 if(existing != null) {
-                    origin.ereply(Embeds.error("**Twitter/$username** is already tracked in <#${moveTo.id.asString()}>. Unable to move.")).awaitSingle()
+                    origin.ereply(Embeds.error("**${socialTarget.full}/$username** is already tracked in <#${moveTo.id.asString()}>. Unable to move.")).awaitSingle()
                     return
                 }
                 // check bot permissions
@@ -147,7 +127,7 @@ object TwitterTrackerCommand : TrackerCommand {
                 propagateTransaction {
                     existingTrack.discordChannel = DiscordObjects.Channel.getOrInsert(moveTo.id.asLong(), moveTo.guildId.asLong())
                 }
-                origin.ireply(Embeds.fbk("Tracking for **[$username](${URLUtil.Twitter.feedUsername(username)})** has been moved to <#${moveTo.id.asString()}>.")).awaitSingle()
+                origin.ireply(Embeds.fbk("Tracking for **[$username](${feedInfo.url})** has been moved to <#${moveTo.id.asString()}>.")).awaitSingle()
 
                 TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
                 TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, moveTo.id.asLong())
@@ -156,13 +136,13 @@ object TwitterTrackerCommand : TrackerCommand {
 
             // typical case: delete target
             propagateTransaction { existingTrack.delete() }
-            origin.ireply(Embeds.fbk("No longer tracking **Twitter/$username**.")).awaitSingle()
+            origin.ireply(Embeds.fbk("No longer tracking **${socialTarget.full}/$username**.")).awaitSingle()
             TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
         } else {
             val tracker = origin.chan.client
                 .getUserById(trackerId!!.snowflake).tryAwait().orNull()
                 ?.username ?: "invalid-user"
-            origin.ereply(Embeds.error("You may not untrack **Twitter/$username** unless you tracked this feed (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
+            origin.ereply(Embeds.error("You may not untrack **${socialTarget.full}/$username** unless you tracked this feed (**$tracker**) or are a channel moderator (Manage Messages permission)")).awaitSingle()
         }
     }
 }

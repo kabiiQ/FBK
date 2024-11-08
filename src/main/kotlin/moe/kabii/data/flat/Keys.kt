@@ -45,6 +45,11 @@ object Keys : ConfigSpec("") {
     }
     object Nitter : ConfigSpec() {
         val instanceUrls by required<List<String>>("instance_urls")
+        val whitelist by optional(false, "twitter_whitelist")
+    }
+    object Bluesky : ConfigSpec() {
+        val identifier by optional("", "bsky_identifier")
+        val password by optional("", "bsky_password")
     }
     object Microsoft : ConfigSpec() {
         val translatorKey by required<String>("translator_key")

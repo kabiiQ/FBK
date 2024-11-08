@@ -7,6 +7,9 @@ import moe.kabii.data.relational.anime.TrackedMediaLists
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
+import moe.kabii.data.relational.posts.twitter.NitterFeeds
+import moe.kabii.data.relational.posts.twitter.NitterRetweetHistory
 import moe.kabii.data.relational.ps2.PS2Internal
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.WebSubSubscriptions
@@ -18,10 +21,6 @@ import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
-import moe.kabii.data.relational.twitter.TwitterFeeds
-import moe.kabii.data.relational.twitter.TwitterRetweetHistory
-import moe.kabii.data.relational.twitter.TwitterTargetMentions
-import moe.kabii.data.relational.twitter.TwitterTargets
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -65,10 +64,11 @@ internal object PostgresConnection {
                 YoutubeLiveChats,
                 Twitcasts.Movies,
                 Twitcasts.TwitNotifs,
-                TwitterFeeds,
-                TwitterTargets,
-                TwitterRetweetHistory,
-                TwitterTargetMentions,
+                TrackedSocialFeeds.SocialFeeds,
+                TrackedSocialFeeds.SocialTargets,
+                TrackedSocialFeeds.SocialTargetMentions,
+                NitterFeeds,
+                NitterRetweetHistory,
                 PS2Internal.Characters,
                 PS2Internal.Outfits,
                 YoutubeMembers,

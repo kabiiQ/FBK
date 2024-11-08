@@ -22,7 +22,7 @@ object ChannelFeatures : CommandContainer {
         ChannelFeatures,
         BooleanElement("Anime/Manga list tracking", "anime", FeatureChannel::animeTargetChannel),
         BooleanElement("Livestream/video site tracking", "streams", FeatureChannel::streamTargetChannel),
-        BooleanElement("Twitter feed tracking", "twitter", FeatureChannel::twitterTargetChannel),
+        BooleanElement("Social media feed tracking", "posts", FeatureChannel::postsTargetChannel),
         BooleanElement("Event log (See **log** command)", "logs", FeatureChannel::logChannel),
         BooleanElement("Music bot commands", "music", FeatureChannel::musicChannel),
         BooleanElement("Temporary voice channel creation", "tempvc", FeatureChannel::tempChannelCreation),
@@ -114,7 +114,7 @@ object ChannelFeatures : CommandContainer {
                         if(musicChannel) codes.appendLine("**Enabled:** Music Commands (music)")
                         if(tempChannelCreation) codes.appendLine("**Enabled:** Temporary VC Commands (temp)")
                         if(!streamTargetChannel) codes.appendLine("**Disabled:** livestream tracker")
-                        if(!twitterTargetChannel) codes.appendLine("**Disabled:** Twitter feed tracker")
+                        if(!postsTargetChannel) codes.appendLine("**Disabled:** Twitter feed tracker")
                         if(!animeTargetChannel) codes.appendLine("**Disabled:** anime list tracker")
                         if(!locked) codes.appendLine("Tracker usage **UNLOCKED** for all users")
                     }

@@ -11,7 +11,7 @@ import kotlinx.html.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
-import moe.kabii.data.relational.twitter.TwitterFeed
+import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.discord.util.RGB
 import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.posts.twitter.NitterChecker
@@ -111,10 +111,10 @@ object NettyFileServer {
 
             get("/twitterfeeds") {
                 val (priorityList, generalCount) = propagateTransaction {
-                    val (priority, general) = TwitterFeed.all()
-                        .sortedByDescending(TwitterFeed::id)
+                    val (priority, general) = NitterFeed.all()
+                        .sortedByDescending(NitterFeed::id)
                         .partition { feed -> feed.enabled }
-                    priority.map(TwitterFeed::username) to general.size
+                    priority.map(NitterFeed::username) to general.size
                 }
 
                 // Estimate refresh delays
