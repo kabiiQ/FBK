@@ -554,7 +554,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     else -> " is live."
                 }
                 val channelLiveNotice = "${liveStream.channel.name}$liveMessage ${EmojiCharacters.liveCircle}"
-                val outdatedNotice = if(old == true) "Skipping ping for old stream.\n" else ""
+                val outdatedNotice = if(old == true && mention != null) "Skipping ping for old stream.\n" else ""
                 val embed = Embeds.other("$memberNotice$shortDescription", if(liveStream.premiere) uploadColor else liveColor)
                     .withAuthor(EmbedCreateFields.Author.of(StringUtils.abbreviate(channelLiveNotice, MagicNumbers.Embed.AUTHOR), liveStream.url, liveStream.channel.avatar))
                     .withUrl(liveStream.url)

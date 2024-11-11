@@ -72,7 +72,7 @@ object PostsTrackerCommand : TrackerCommand {
 
         val twitterNotice = if(socialTarget.dbSite == TrackedSocialFeeds.DBSite.X) "\n\nNOTICE: It has become very difficult to access Twitter as a bot, so only a limited number of Twitter feeds are currently enabled for access."
         else ""
-        origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!$twitterNotice"))
+        origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!\nUse `/posts config` to adjust the types of posts that will be sent to this channel.$twitterNotice")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
     }
 

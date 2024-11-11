@@ -31,8 +31,6 @@ import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.posts.PostWatcher
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.Translator
-import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
@@ -241,7 +239,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
         LOG.debug("nitter exit")
     }
 
-    suspend fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedSocialTarget>) {
+    fun notifyTweet(user: NitterUser, tweet: NitterTweet, targets: List<TrackedSocialTarget>) {
         val username = user.username.lowercase()
         LOG.debug("notify ${user.username} tweet - begin -")
         // send discord notifs - check if any channels request
@@ -293,38 +291,11 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                         else -> "posted a new Tweet"
                     }
 
-                    // LOG.debug("translation stage")
-                    val translation = if(postCfg.autoTranslate && tweet.text.isNotBlank()) {
-                        try {
-                            val tlConfig = GuildConfigurations
-                                .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
-                                .translator
+                    val tlSettings = GuildConfigurations
+                        .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
+                        .translator
 
-                            // Retweets default to low-quality local translations. If "skipRetweets" is set by user, retweets should just forego translation.
-                            if(!tweet.retweet || !tlConfig.skipRetweets) {
-
-                                val lang = tlConfig.defaultTargetLanguage
-                                val translator = Translator.getService(tweet.text, listOf(lang), twitterFeed = username, primaryTweet = !tweet.retweet, guilds = targets.mapNotNull(TrackedSocialTarget::discordGuild))
-
-                                // check cache for existing translation of this tweet
-                                val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
-                                val existingTl = translations[standardLangTag]
-                                val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
-
-                                    val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = tweet.text)
-                                    translations[standardLangTag] = tl
-                                    tl
-                                }
-
-                                if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
-                                else null
-                            } else null
-
-                        } catch(e: Exception) {
-                            LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
-                            null
-                        }
-                    } else null
+                    val translation = translatePost(tweet.text, tweet.retweet, username, targets, tlSettings, postCfg, translations)
 
                     var editedThumb: ByteArrayInputStream? = null
                     var attachedVideo: String? = null
@@ -358,15 +329,8 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                     LOG.debug("roles phase")
                     // mention roles
                     val mention = getMentionRoleFor(target, channel, postCfg, tweet.mentionOption)
-
-                    var outdated = false
-                    val mentionText = if(mention != null) {
-                        outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
-                        val rolePart = if(mention.discord == null || outdated) null
-                        else mention.discord.mention.plus(" ")
-                        val textPart = mention.db.mentionText?.plus(" ")
-                        "${rolePart ?: ""}${textPart ?: ""}"
-                    } else ""
+                    val outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
+                    val mentionText = mention?.toText(includeRole = !outdated) ?: ""
 
                     val baseNotif = MessageCreateSpec.create()
                         .run {
@@ -388,14 +352,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                                 val author = if(tweet.retweet) tweet.retweetOf!! else user.username
                                 val avatar = if(tweet.retweet) NettyFileServer.twitterLogo else user.avatar // no way to easily get the retweeted user's pfp on nitter implementation
 
-                                val text = StringEscapeUtils
-                                    .unescapeHtml4(tweet.text)
-                                    .replace("*", "\\*")
-                                    .replace("_ ", "\\_ ")
-                                    .replace(" _", " \\_")
-                                    .replace("#", "\\#")
-                                    .replace("~", "\\~")
-                                    .replace("|", "\\|")
+                                val text = tweet.text.escapeMarkdown()
                                 val embed = Embeds.other(text, Color.of(color))
                                     .withAuthor(EmbedCreateFields.Author.of("@$author", URLUtil.Twitter.feedUsername(author), avatar))
                                     .run {
@@ -414,8 +371,10 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                                         if(fields.isNotEmpty()) withFields(fields) else this
                                     }
                                     .run {
-                                        if(outdated) footer.append("Skipping ping for old Tweet.\n")
-                                        if(outdated) LOG.info("Missed ping: $tweet")
+                                        if(outdated && mention != null) {
+                                            footer.append("Skipping ping for old Tweet.\n")
+                                            LOG.info("Missed ping: $tweet")
+                                        }
                                         if(footer.isNotBlank()) withFooter(EmbedCreateFields.Footer.of(footer.toString(), NettyFileServer.twitterLogo)) else this
                                     }
                                     .run {
@@ -431,7 +390,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
 
                     val notif = channel
                         .createMessage(notifSpec)
-                        .timeout(Duration.ofMillis(6_000L))
+                        .timeout(Duration.ofMillis(12_000L))
                         .awaitSingle()
 
                     if(attachedVideo != null) {
