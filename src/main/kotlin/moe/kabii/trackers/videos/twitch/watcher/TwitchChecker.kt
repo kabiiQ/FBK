@@ -146,10 +146,10 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     if(dbStream == null) { // abandon notification if downtime causes missing information
                         notifications.forEach { notif ->
                             val fbk = instances[notif.targetID.discordClient]
-                                val notifDeleted = notif.deleted
-                                val notifClient = notif.targetID.discordClient
-                                val notifChannel = notif.messageID.channel.channelID.snowflake
-                                val notifMessage = notif.messageID.messageID.snowflake
+                            val notifDeleted = notif.deleted
+                            val notifClient = notif.targetID.discordClient
+                            val notifChannel = notif.messageID.channel.channelID.snowflake
+                            val notifMessage = notif.messageID.messageID.snowflake
                             discordTask {
                                 try {
                                     val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
@@ -181,17 +181,13 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         val notifClient = notif.targetID.discordClient
                         val notifChannel = notif.messageID.channel.channelID.snowflake
                         val notifMessage = notif.messageID.messageID.snowflake
+                        val features = getStreamConfig(notif.targetID)
                         discordTask {
                             try {
                                 discordTask(5_000L) {
                                     try {
                                         val discordMessage = getDiscordMessage(notifDeleted, notif, notifClient, notifChannel, notifMessage, channel)
                                         if (discordMessage != null) {
-                                            val guildId = discordMessage.guildId.orNull()
-                                            val features = if (guildId != null) {
-                                                val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
-                                                config.getOrCreateFeatures(notifChannel.asLong()).streamSettings
-                                            } else StreamSettings() // use default settings for PM
                                             if (features.summaries) {
                                                 val specEmbed = TwitchEmbedBuilder(
                                                     user!!,
