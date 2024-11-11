@@ -1,17 +1,41 @@
 package moe.kabii.trackers.posts.bluesky
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import moe.kabii.LOG
-import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.newRequestBuilder
-import moe.kabii.trackers.posts.bluesky.json.BlueskyAuthor
-import moe.kabii.trackers.posts.bluesky.json.BlueskyErrorResponse
-import moe.kabii.trackers.posts.bluesky.json.BlueskyFeedResponse
+import moe.kabii.trackers.posts.bluesky.json.*
 import java.io.IOException
 
 object BlueskyParser {
+    val moshi: Moshi = Moshi.Builder()
+        .add(
+            PolymorphicJsonAdapterFactory.of(BlueskyPostViewBase::class.java, "\$type")
+                .withSubtype(BlueskyPostView::class.java, "app.bsky.feed.defs.postView")
+                .withSubtype(BlueskyNotFoundPost::class.java, "app.bsky.feed.defs.notFoundPost")
+                .withDefaultValue(null)
+        )
+        .add(
+            PolymorphicJsonAdapterFactory.of(BlueskyEmbeddedBase::class.java, "\$type")
+                .withSubtype(BlueskyEmbedImagesView::class.java, "app.bsky.embed.images#view")
+                .withSubtype(BlueskyEmbedVideoView::class.java, "app.bsky.embed.video#view")
+                .withSubtype(BlueskyEmbedExternalView::class.java, "app.bsky.embed.external#view")
+                .withSubtype(BlueskyEmbedRecordView::class.java, "app.bsky.embed.record#view")
+                .withSubtype(BlueskyEmbedRecordWithMediaView::class.java, "app.bsky.embed.recordWithMedia#view")
+                .withDefaultValue(null)
+        )
+        .add(
+            PolymorphicJsonAdapterFactory.of(BlueskyEmbeddedRecordBase::class.java, "\$type")
+                .withSubtype(BlueskyEmbedViewRecord::class.java, "app.bsky.embed.record#viewRecord")
+                .withSubtype(BlueskyEmbedNotFound::class.java, "app.bsky.embed.record.viewNotFound")
+                .withDefaultValue(null)
+        )
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
-    private val errorAdapter = MOSHI.adapter(BlueskyErrorResponse::class.java)
+    private val errorAdapter = moshi.adapter(BlueskyErrorResponse::class.java)
 
     private inline fun <reified R: Any> publicRequest(call: String): R? {
         val request = newRequestBuilder()
@@ -24,7 +48,7 @@ object BlueskyParser {
         try {
             val body = response.body.string()
             if(response.isSuccessful) {
-                return MOSHI.adapter(R::class.java).fromJson(body)!!
+                return moshi.adapter(R::class.java).fromJson(body)!!
             } else {
                 val error = errorAdapter.fromJson(body)
 
@@ -40,4 +64,7 @@ object BlueskyParser {
     fun getFeed(identifier: String): BlueskyFeedResponse? = publicRequest("app.bsky.feed.getAuthorFeed?actor=$identifier")
 
     fun getProfile(identifier: String): BlueskyAuthor? = publicRequest("app.bsky.actor.getProfile?actor=$identifier")
+
+    private val postRegex = Regex("/([a-z0-9]{13})")
+    fun extractPostKey(uri: String) = postRegex.find(uri)?.groups?.get(1)?.value
 }

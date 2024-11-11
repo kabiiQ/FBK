@@ -1,8 +1,8 @@
 package moe.kabii.trackers.posts.bluesky.json
 
-import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.time.Instant
+import moe.kabii.data.mongodb.guilds.PostsSettings
+import moe.kabii.trackers.posts.bluesky.BlueskyParser
 
 @JsonClass(generateAdapter = true)
 data class BlueskyErrorResponse(
@@ -17,42 +17,34 @@ data class BlueskyFeedResponse(
 
 @JsonClass(generateAdapter = true)
 data class BlueskyPost(
-    val post: BlueskyPostView,
+    val post: BlueskyFeedPost,
     val reply: BlueskyReply?,
     val reason: BlueskyPostReason?
-)
+) {
+    @Transient val isRepost = reason?.by != null
+    @Transient val isReply = reply?.parent is BlueskyPostView
+    @Transient val isQuote = post.embed is BlueskyEmbedRecordView
+
+    @Transient val postId = BlueskyParser.extractPostKey(post.uri)
+    @Transient val url = "${post.author.url}/post/$postId"
+
+    @Transient val notifyOption = when {
+        isRepost -> PostsSettings::displayReposts
+        isReply -> PostsSettings::displayReplies
+        isQuote -> PostsSettings::displayQuote
+        else -> PostsSettings::displayNormalPosts
+    }
+
+    @Transient val mentionOption = when {
+        isRepost -> PostsSettings::mentionReposts
+        isReply -> PostsSettings::mentionReplies
+        isQuote -> PostsSettings::mentionQuotes
+        else -> PostsSettings::mentionNormalPosts
+    }
+}
 
 @JsonClass(generateAdapter = true)
 data class BlueskyReply(
-    val root: BlueskyPostView,
-    val parent: BlueskyPostView
+    val root: BlueskyPostViewBase?,
+    val parent: BlueskyPostViewBase?
 )
-
-@JsonClass(generateAdapter = true)
-data class BlueskyPostReason(
-    val by: BlueskyAuthor?
-)
-
-@JsonClass(generateAdapter = true)
-data class BlueskyPostView(
-    val uri: String,
-    val author: BlueskyAuthor,
-    val record: BlueskyPostDetail
-)
-
-@JsonClass(generateAdapter = true)
-data class BlueskyAuthor(
-    val did: String,
-    val handle: String,
-    val displayName: String?,
-    val avatar: String?
-)
-
-@JsonClass(generateAdapter = true)
-data class BlueskyPostDetail(
-    @Json(name = "createdAt") val _createdAt: String,
-    val langs: List<String>?,
-    val text: String
-) {
-    @Transient val createdAt = Instant.parse(_createdAt)
-}

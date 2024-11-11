@@ -60,6 +60,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
+    implementation("com.squareup.moshi:moshi-adapters:$moshiVer")
 
     // emote parsing
     implementation("com.vdurmont:emoji-java:5.1.1")
