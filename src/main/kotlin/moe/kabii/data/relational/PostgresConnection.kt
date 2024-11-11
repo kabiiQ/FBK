@@ -8,6 +8,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.discord.Reminders
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
+import moe.kabii.data.relational.posts.bluesky.BlueskyFeeds
 import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.data.relational.posts.twitter.NitterRetweetHistory
 import moe.kabii.data.relational.ps2.PS2Internal
@@ -69,6 +70,7 @@ internal object PostgresConnection {
                 TrackedSocialFeeds.SocialTargetMentions,
                 NitterFeeds,
                 NitterRetweetHistory,
+                BlueskyFeeds,
                 PS2Internal.Characters,
                 PS2Internal.Outfits,
                 YoutubeMembers,

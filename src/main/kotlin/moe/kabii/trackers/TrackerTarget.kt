@@ -308,72 +308,6 @@ sealed class SocialTarget(
     abstract suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed? = null): TrackedSocialFeeds.SocialFeed?
 }
 
-object TwitterTarget : SocialTarget(
-    AvailableServices.nitter,
-"Twitter/X",
-    listOf(
-        Regex("(?:twitter|x).com/([a-zA-Z0-9_]{4,15})"),
-        Regex("@([a-zA-Z0-9_]{4,15})")
-    ),
-    "twitter", "tweets", "twit", "twitr", "tr", "x", "x.com"
-) {
-    override val dbSite
-        get() = TrackedSocialFeeds.DBSite.X
-
-    override fun feedById(id: String) = URLUtil.Twitter.feed(id)
-
-    override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
-        // Don't perform network call for Twitter unless needed
-        if(!id.matches(NitterParser.twitterUsernameRegex)) {
-            return Err(TrackerErr.NotFound)
-        }
-
-        val knownUser = propagateTransaction {
-            NitterFeed.findExisting(id)
-        }
-
-        if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
-            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking."))
-        }
-
-        return if(knownUser == null) {
-            // user not known, attempt to look up feed for user
-            try {
-                val twitter = NitterParser.getFeed(id) ?: return Err(TrackerErr.NotFound)
-                val username = twitter.user.username
-                Ok(BasicSocialFeed(TwitterTarget, username, username, URLUtil.Twitter.feedUsername(username)))
-            } catch(e: Exception) {
-                LOG.warn("Error getting Twitter feed: ${e.message}")
-                LOG.debug(e.stackTraceString)
-                Err(TrackerErr.IO)
-            }
-        } else {
-            Ok(BasicSocialFeed(TwitterTarget, knownUser.username, knownUser.username, URLUtil.Twitter.feedUsername(knownUser.username)))
-        }
-    }
-
-    override suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed?): TrackedSocialFeeds.SocialFeed? {
-        val existing = NitterFeed.findExisting(id)
-        return when {
-            existing != null -> existing.feed
-            createFeedInfo != null -> {
-                val baseFeed = TrackedSocialFeeds.SocialFeed.new {
-                    this.site = TrackedSocialFeeds.DBSite.X
-                }
-
-                NitterFeed.new {
-                    this.feed = baseFeed
-                    this.username = createFeedInfo.accountId
-                    this.enabled = false
-                }
-
-                baseFeed
-            }
-            else -> null
-        }
-    }
-}
-
 object BlueskyTarget : SocialTarget(
     AvailableServices.bluesky,
     "Bluesky",
@@ -413,8 +347,75 @@ object BlueskyTarget : SocialTarget(
                     this.feed = baseFeed
                     this.did = createFeedInfo.accountId
                     this.handle = createFeedInfo.displayName
-                    this.lastDisplayName = createFeedInfo.displayName
+                    this.displayName = createFeedInfo.displayName
                     this.lastPulledTime = DateTime.now() - Duration.standardHours(2)
+                }
+
+                baseFeed
+            }
+            else -> null
+        }
+    }
+}
+
+object TwitterTarget : SocialTarget(
+    AvailableServices.nitter,
+"Twitter",
+    listOf(
+        Regex("(?:twitter|x).com/([a-zA-Z0-9_]{4,15})"),
+        //Regex("@([a-zA-Z0-9_]{4,15})")
+    ),
+    "twitter", "tweets", "twit", "twitr", "tr", "x", "x.com"
+) {
+    override val dbSite
+        get() = TrackedSocialFeeds.DBSite.X
+
+    override fun feedById(id: String) = URLUtil.Twitter.feed(id)
+
+    override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
+        // Don't perform network call for Twitter unless needed
+        val name = id.removePrefix("@")
+        if(!name.matches(NitterParser.twitterUsernameRegex)) {
+            return Err(TrackerErr.NotFound)
+        }
+
+        val knownUser = propagateTransaction {
+            NitterFeed.findExisting(name)
+        }
+
+        if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
+            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking."))
+        }
+
+        return if(knownUser == null) {
+            // user not known, attempt to look up feed for user
+            try {
+                val twitter = NitterParser.getFeed(name) ?: return Err(TrackerErr.NotFound)
+                val username = twitter.user.username
+                Ok(BasicSocialFeed(TwitterTarget, username, username, URLUtil.Twitter.feedUsername(username)))
+            } catch(e: Exception) {
+                LOG.warn("Error getting Twitter feed: ${e.message}")
+                LOG.debug(e.stackTraceString)
+                Err(TrackerErr.IO)
+            }
+        } else {
+            Ok(BasicSocialFeed(TwitterTarget, knownUser.username, knownUser.username, URLUtil.Twitter.feedUsername(knownUser.username)))
+        }
+    }
+
+    override suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed?): TrackedSocialFeeds.SocialFeed? {
+        val existing = NitterFeed.findExisting(id)
+        return when {
+            existing != null -> existing.feed
+            createFeedInfo != null -> {
+                val baseFeed = TrackedSocialFeeds.SocialFeed.new {
+                    this.site = TrackedSocialFeeds.DBSite.X
+                }
+
+                NitterFeed.new {
+                    this.feed = baseFeed
+                    this.username = createFeedInfo.accountId
+                    this.enabled = false
                 }
 
                 baseFeed
@@ -461,7 +462,7 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 return if(match != null) Ok(TargetArguments(match, suggestion.groups[1]!!.value)) else Err("Invalid site: $siteArg. You may have accidentally edited a suggested option.")
             }
 
-            val colonArgs = input.split(":")
+            val colonArgs = input.split(":", limit = 2)
             if(colonArgs.size == 2 && !colonArgs[1].startsWith("/")) {
                 // siteName:username autocomplete variant
                 val match = TargetArguments[colonArgs[0]]

@@ -16,7 +16,7 @@ object BlueskyFeeds : IdTable<Int>() {
     val feed = reference("social_feed", TrackedSocialFeeds.SocialFeeds, ReferenceOption.CASCADE)
     val did = text("did").uniqueIndex()
     val handle = text("handle").uniqueIndex()
-    val lastDisplayName = text("display_name")
+    val displayName = text("display_name")
     val lastPulledTime = datetime("time_last_pulled").nullable()
 }
 
@@ -24,7 +24,7 @@ class BlueskyFeed(id: EntityID<Int>) : IntEntity(id) {
     var feed by TrackedSocialFeeds.SocialFeed referencedOn BlueskyFeeds.feed
     var did by BlueskyFeeds.did
     var handle by BlueskyFeeds.handle
-    var lastDisplayName by BlueskyFeeds.lastDisplayName
+    var displayName by BlueskyFeeds.displayName
     var lastPulledTime by BlueskyFeeds.lastPulledTime
 
     companion object : IntEntityClass<BlueskyFeed>(BlueskyFeeds) {

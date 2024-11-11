@@ -3,6 +3,7 @@ package moe.kabii.util.extensions
 import discord4j.discordjson.possible.Possible
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
+import org.apache.commons.text.StringEscapeUtils
 import org.joda.time.DateTime
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -49,3 +50,12 @@ fun applicationLoop(process: suspend () -> Unit) {
 fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
 operator fun String.rem(value: String) = Pair(this, value)
+
+fun String.escapeMarkdown() = StringEscapeUtils
+    .unescapeHtml4(this)
+    .replace("*", "\\*")
+    .replace("_ ", "\\_ ")
+    .replace(" _", " \\_")
+    .replace("#", "\\#")
+    .replace("~", "\\~")
+    .replace("|", "\\|")

@@ -82,7 +82,7 @@ object Translator {
      * Determines the service to use for translating this text
      * Services may be unavailable for specific text for reasons such as quota limits or limited language support, so the "best available" should be chosen
      */
-    fun getService(text: String?, tags: List<String?> = listOf(), twitterFeed: String? = null, primaryTweet: Boolean? = null,
+    fun getService(text: String?, tags: List<String?> = listOf(), feedName: String? = null, primaryTweet: Boolean? = null,
                    preference: TranslationService? = null, guilds: List<Snowflake> = emptyList()
     ): TranslationPair {
         // return first available translator (supporting input language from text, if provided)
@@ -103,7 +103,7 @@ object Translator {
         } else if(primaryTweet == false) {
             // retweets go straight to neural translator
             listOf(ArgosTranslator)
-        } else if(primaryTweet == true && inclusionList.isEmpty() || inclusionList.contains(twitterFeed)) {
+        } else if(primaryTweet == true && inclusionList.isEmpty() || inclusionList.contains(feedName)) {
             // primary tweets in specific high-visiblity servers can use GTL (paid)
             listOf(DeepLTranslator, GoogleTranslator)
         } else if(preference != null) {

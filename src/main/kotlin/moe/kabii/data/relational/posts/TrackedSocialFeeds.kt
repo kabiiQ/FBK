@@ -97,7 +97,7 @@ object TrackedSocialFeeds {
         override val id = integer("id").autoIncrement().entityId().uniqueIndex()
         val target = reference("social_feed_target", SocialTargets, ReferenceOption.CASCADE)
         val mentionRole = long("discord_mention_role").nullable()
-        val mentionText = text("discord_mention_text").nullable()
+        val mentionText = text("discord_mention_text", eagerLoading = true).nullable()
         val embedColor = integer("discord_embed_color").nullable()
 
         init {

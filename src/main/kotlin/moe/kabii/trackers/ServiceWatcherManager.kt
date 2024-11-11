@@ -10,6 +10,7 @@ import moe.kabii.trackers.anime.anilist.AniListParser
 import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
+import moe.kabii.trackers.posts.bluesky.BlueskyChecker
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.SyndicationChecker
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
@@ -124,6 +125,12 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         )
         val syndicationChecker = SyndicationChecker(discord, syndicationDelay)
 
+        val blueskyDelay = ServiceRequestCooldownSpec(
+            callDelay = 600L,
+            minimumRepeatTime = 45_000L
+        )
+        val blueskyChecker = BlueskyChecker(blueskyDelay, discord)
+
         // Compile the service threads to be enabled
         LOG.info("Starting service initialization")
 
@@ -148,10 +155,11 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             service(ytMembershipMaintainer, "YoutubeMembershipMaintainer", true)
             service(malChecker, "MediaListWatcher-MAL", AvailableServices.mal)
             service(kitsuChecker, "MediaListWatcher-Kitsu", true)
-            service(aniListChecker, "MediaListWatcher-AniList", true)
+            service(aniListChecker, "MediaListWatcher-AniList", false)
             service(twitterChecker, "NitterManager", AvailableServices.nitter)
             // Twitter alternative service using Syndication feeds - may work for a handful of feeds
             service(syndicationChecker, "SyndicationFeedChecker", false)
+            service(blueskyChecker, "BlueskyChecker", AvailableServices.bluesky)
             service(twitCastChecker, "TwitcastChecker", AvailableServices.twitCastingApi)
             service(TwitcastWebhookManager, "TwitcastWebhookManager", AvailableServices.twitCastingWebhooks)
             service(ytChatWatcher, "YTChatWatcher", true)
