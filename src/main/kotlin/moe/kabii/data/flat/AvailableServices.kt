@@ -6,7 +6,8 @@ package moe.kabii.data.flat
 object AvailableServices {
     val youtubeApi = Keys.config[Keys.Youtube.keys].isNotEmpty()
     val youtubePubSub = Keys.config[Keys.Youtube.callbackAddress].isNotBlank()
-    val youtube = youtubeApi && youtubePubSub
+    val youtubePoller = Keys.config[Keys.Youtube.backup]
+    val youtube = youtubeApi && (youtubePubSub || youtubePoller)
 
     val twitchApi = Keys.config[Keys.Twitch.secret].isNotBlank()
     val twitchWebhooks = Keys.config[Keys.Twitch.callback].isNotBlank()
@@ -28,6 +29,7 @@ object AvailableServices {
     val wolfram = Keys.config[Keys.Wolfram.appId].isNotBlank()
 
     val mal = Keys.config[Keys.MAL.malKey].isNotBlank()
+    val aniList = Keys.config[Keys.AniList.enabled]
 
     val discordOAuth = Keys.config[Keys.OAuth.clientSecret].isNotBlank()
             && Keys.config[Keys.OAuth.rootOauthUri].isNotBlank()

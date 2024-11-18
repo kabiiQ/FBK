@@ -308,6 +308,7 @@ class EventManager(val watcher: StreamWatcher) {
                         -1,
                         track.discordClient,
                         channel.id.value,
+                        track.discordChannel.id.value,
                         channel.site,
                         channel.siteChannelID,
                         channel.lastKnownUsername,

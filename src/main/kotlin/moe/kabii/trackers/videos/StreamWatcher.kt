@@ -52,6 +52,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         val db: Int,
         val discordClient: Int,
         val dbStream: Int,
+        val dbChannel: Int,
         val site: TrackedStreams.DBSite,
         val siteChannelId: String,
         val lastKnownUsername: String?,
@@ -60,6 +61,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         val userId: Snowflake
     ) {
         @RequiresExposedContext fun findDBTarget() = TrackedStreams.Target.findById(db)!!
+        @RequiresExposedContext fun findDBChannel() = DiscordObjects.Channel.findById(dbChannel)!!
     }
 
     suspend fun <T> discordCall(timeoutMillis: Long = 6_000L, block: suspend () -> T) = taskScope.async {
@@ -121,6 +123,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                     // other reasons this YT channel may be in the database
                     if(
                         !YoutubeVideoTrack.getForChannel(channel).empty()
+                        || !YoutubeNotification.getManualNotifications(channel).empty()
                         || !MembershipConfigurations.getForChannel(channel).empty()
                         || !YoutubeLiveChat.getForChannel(channel).empty()
                     ) return@propagateTransaction emptyList()
@@ -146,6 +149,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             target.id.value,
             target.discordClient,
             target.streamChannel.id.value,
+            target.discordChannel.id.value,
             target.streamChannel.site,
             target.streamChannel.siteChannelID,
             target.streamChannel.lastKnownUsername,

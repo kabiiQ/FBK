@@ -78,9 +78,9 @@ abstract class PostWatcher(val instances: DiscordInstances) {
                         if(e is ClientException) {
                             if(e.status.code() == 401) return emptyList()
                             if(e.status.code() == 404) {
-                                val feedInfo = feed.feedInfo()
-                                LOG.info("Untracking ${feedInfo.site.full} feed '${feedInfo.displayName}' in ${target.discordChannel} as the channel seems to be deleted.")
                                 propagateTransaction {
+                                    val feedInfo = feed.feedInfo()
+                                    LOG.info("Untracking ${feedInfo.site.full} feed '${feedInfo.displayName}' in ${target.discordChannel} as the channel seems to be deleted.")
                                     target.findDbTarget().delete()
                                 }
                             }
@@ -99,13 +99,15 @@ abstract class PostWatcher(val instances: DiscordInstances) {
                 featureChannel.postsTargetChannel
             }
         } else {
-            val feedInfo = feed.feedInfo()
-            LOG.info("${feedInfo.site.full} feed ${feedInfo.displayName} returned NO active targets.")
-            return null // disable auto-untracking for now, just notify
             propagateTransaction {
-                feed.delete()
+                val feedInfo = feed.feedInfo()
+                LOG.info("${feedInfo.site.full} feed ${feedInfo.displayName} returned NO active targets.")
+
+                if(feed.site != TrackedSocialFeeds.DBSite.X) { // do not auto-untrack X feeds as they are manually whitelisted anyways
+                    feed.delete()
+                    LOG.info("Untracking ${feedInfo.site.full} feed ${feedInfo.displayName} as it has no targets.")
+                }
             }
-            LOG.info("Untracking ${feedInfo.site.full} feed ${feedInfo.displayName} as it has no targets.")
             null
         }
     }

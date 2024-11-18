@@ -246,7 +246,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 // verify target already has a notification
                 if(YoutubeNotification.getExisting(target, call.video).empty()) {
                     try {
-                        createLiveNotification(call.video, ytVideo, target, new = false)
+                        createLiveNotification(ytVideo, call.video, target, new = false)
                     } catch(e: Exception) {
                         // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                         LOG.warn("Error while creating live notification for channel: ${ytVideo.channel} :: ${e.message}")

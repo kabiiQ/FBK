@@ -1,6 +1,7 @@
 package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.trackers.videos.StreamWatcher
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 
 object YoutubeLiveEvents : LongIdTable() {
     val ytVideo = reference("yt_video", YoutubeVideos, ReferenceOption.CASCADE).uniqueIndex()
@@ -56,15 +58,21 @@ class YoutubeLiveEvent(id: EntityID<Long>) : LongEntity(id) {
 
 object YoutubeNotifications : IdTable<Int>() {
     override val id = integer("id").autoIncrement().entityId().uniqueIndex()
-    val targetID = reference("assoc_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE)
+
+    // Target changed to nullable to better support /trackvid
+    val targetID = reference("assoc_target_id", TrackedStreams.Targets, ReferenceOption.CASCADE).nullable()
+    val discordClient = integer("discord_client")
+    val channelID = reference("discord_channel", DiscordObjects.Channels, ReferenceOption.CASCADE)
     val videoID = reference("yt_video_id", YoutubeVideos, ReferenceOption.CASCADE)
     val message = reference("message_id", MessageHistory.Messages, ReferenceOption.SET_NULL).nullable()
 
-    override val primaryKey = PrimaryKey(targetID, videoID)
+    override val primaryKey = PrimaryKey(channelID, videoID)
 }
 
 class YoutubeNotification(id: EntityID<Int>) : IntEntity(id) {
-    var targetID by TrackedStreams.Target referencedOn YoutubeNotifications.targetID
+    var targetID by TrackedStreams.Target optionalReferencedOn YoutubeNotifications.targetID
+    var discordClient by YoutubeNotifications.discordClient
+    var channelID by DiscordObjects.Channel referencedOn YoutubeNotifications.channelID
     var videoID by YoutubeVideo referencedOn YoutubeNotifications.videoID
     var messageID by MessageHistory.Message optionalReferencedOn YoutubeNotifications.message
 
@@ -77,5 +85,14 @@ class YoutubeNotification(id: EntityID<Int>) : IntEntity(id) {
             YoutubeNotifications.targetID eq dbTarget.db and
                     (YoutubeNotifications.videoID eq dbVideo.id)
         }
+
+        fun getManualNotifications(channel: TrackedStreams.StreamChannel) = YoutubeNotification.wrapRows(
+            YoutubeNotifications
+                .innerJoin(YoutubeVideos)
+                .select {
+                    YoutubeNotifications.targetID eq null and
+                            (YoutubeVideos.ytChannel eq channel.id)
+                }
+        )
     }
 }

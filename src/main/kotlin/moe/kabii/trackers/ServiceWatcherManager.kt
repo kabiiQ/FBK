@@ -2,7 +2,6 @@ package moe.kabii.trackers
 
 import moe.kabii.LOG
 import moe.kabii.data.flat.AvailableServices
-import moe.kabii.data.flat.Keys
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.discord.tasks.ReminderWatcher
 import moe.kabii.instances.DiscordInstances
@@ -149,13 +148,13 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             service(twitchSubs, "TwitchSubscriptionManager", AvailableServices.twitchWebhooks)
             service(ytSubscriptions, "YoutubeSubscriptionManager", AvailableServices.youtubePubSub)
             service(ytChecker, "YoutubeChecker", AvailableServices.youtubeApi)
-            service(ytManualPuller, "YT-ManualFeedPull", Keys.config[Keys.Youtube.backup])
+            service(ytManualPuller, "YT-ManualFeedPull", AvailableServices.youtubePoller)
             // Disabled due to hitting limits of undocumented API
             service(kickChecker, "KickChecker", false)
             service(ytMembershipMaintainer, "YoutubeMembershipMaintainer", true)
             service(malChecker, "MediaListWatcher-MAL", AvailableServices.mal)
             service(kitsuChecker, "MediaListWatcher-Kitsu", true)
-            service(aniListChecker, "MediaListWatcher-AniList", false)
+            service(aniListChecker, "MediaListWatcher-AniList", AvailableServices.aniList)
             service(twitterChecker, "NitterManager", AvailableServices.nitter)
             // Twitter alternative service using Syndication feeds - may work for a handful of feeds
             service(syndicationChecker, "SyndicationFeedChecker", false)

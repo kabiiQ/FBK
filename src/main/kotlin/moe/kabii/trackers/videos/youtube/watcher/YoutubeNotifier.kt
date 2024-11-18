@@ -1,5 +1,6 @@
 package moe.kabii.trackers.videos.youtube.watcher
 
+import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.ScheduledEvent
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
@@ -14,6 +15,7 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.YoutubeSettings
+import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
@@ -68,15 +70,27 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         newLiveEvent ?: return
         dbVideo.liveEvent = newLiveEvent
 
-        // post notifications to all enabled targets
+        // Post notifications to all enabled targets
+        // Channel tracks
         filteredTargets(dbVideo.ytChannel, video, newLiveEvent::shouldPostLiveNotice).forEach { target ->
             try {
-                createLiveNotification(dbVideo, video, target, new = true)
+                createLiveNotification(video, dbVideo, target)
             } catch(e: Exception) {
                 // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
                 LOG.warn("Error while creating live notification for channel: ${dbVideo.ytChannel} :: ${e.message}")
                 LOG.debug(e.stackTraceString)
             }
+        }
+
+        // Manually requested video tracks
+        YoutubeVideoTrack.getForVideo(dbVideo).forEach { track ->
+            try {
+                createLiveNotification(video, dbVideo, track)
+            } catch(e: Exception) {
+                LOG.warn("Error while sending live reminder for channel, dropping notification without sending: ${dbVideo.ytChannel} :: ${e.message}")
+                LOG.debug(e.stackTraceString)
+            }
+            track.delete()
         }
 
         // get targets that request a Discord scheduled event
@@ -100,17 +114,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .withStatus(ScheduledEvent.Status.ACTIVE)
             }
         }
-
-        //  targets that specifically asked for this video and may not have the channel tracked at all are a little different
-        YoutubeVideoTrack.getForVideo(dbVideo).forEach { track ->
-            try {
-                sendLiveReminder(video, track)
-            } catch(e: Exception) {
-                LOG.warn("Error while sending live reminder for channel, dropping notification without sending: ${dbVideo.ytChannel} :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            }
-            track.delete()
-        }
     }
 
     @RequiresExposedContext
@@ -118,18 +121,21 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         // edit/delete all notifications and remove stream from db when stream ends
 
         dbStream.ytVideo.notifications.forEach { notification ->
-            val fbk = instances[notification.targetID.discordClient]
+            val discordClient = notification.discordClient
+            val guildId = notification.channelID.guild?.guildID?.snowflake
+            val channelId = notification.channelID.channelID.snowflake
+
+            val fbk = instances[notification.discordClient]
             val discord = fbk.client
 
-            val target = loadTarget(notification.targetID)
-            val chanId = notification.messageID?.channel?.channelID?.snowflake
+             val chanId = notification.messageID?.channel?.channelID?.snowflake
             val messageId = notification.messageID?.messageID?.snowflake
             discordTask {
                 try {
                     val channel = if(chanId != null) {
                         val existingNotif = discord.getMessageById(chanId, messageId!!).awaitSingle()
 
-                        val features = getStreamConfig(target)
+                        val features = getStreamConfig(discordClient, guildId, channelId)
 
                         if(features.summaries) {
 
@@ -191,16 +197,16 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                         }.thenReturn(Unit).tryAwait()
                         existingNotif.channel.awaitSingle()
 
-                    } else discord.getChannelById(target.discordChannel).ofType(GuildMessageChannel::class.java).awaitSingle()
+                    } else discord.getChannelById(channelId).ofType(GuildMessageChannel::class.java).awaitSingle()
                     propagateTransaction {
-                        checkAndRenameChannel(fbk.clientId, channel, endingStream = dbStream.ytVideo.ytChannel)
+                        checkAndRenameChannel(discordClient, channel, endingStream = dbStream.ytVideo.ytChannel)
                     }
 
                 } catch(ce: ClientException) {
-                    LOG.info("Unable to find YouTube stream notification for target ${target.db} :: ${ce.status.code()}")
+                    LOG.info("Unable to find YouTube stream notification for target ${notification.targetID?.id?.value} :: ${ce.status.code()}")
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
-                    LOG.info("Error in YouTube #streamEnd for stream $target :: ${e.message}")
+                    LOG.info("Error in YouTube #streamEnd for stream ${notification.targetID?.id?.value} :: ${e.message}")
                     LOG.debug(e.stackTraceString)
                 } finally {
                     // delete the notification from db either way, we are done with it
@@ -230,7 +236,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         filteredTargets(dbEvent.ytVideo.ytChannel, ytVideo) { yt ->
             if (yt.upcomingNotificationDuration != null) {
                 // check upcoming stream is within this target's notice 'range'
-                val range = Duration.parse(yt.upcomingNotificationDuration)
+                val range = Duration.parse(yt.upcomingNotificationDuration!!)
                 range >= untilStart
 
             } else false
@@ -418,6 +424,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 YoutubeNotification.new {
                     this.messageID = MessageHistory.Message.getOrInsert(new)
                     this.targetID = target.findDBTarget()
+                    this.discordClient = target.discordClient
+                    this.channelID = target.findDBChannel()
                     this.videoID = dbVideo
                 }
             }
@@ -474,7 +482,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         }
     }
 
-    @RequiresExposedContext
+/*    @RequiresExposedContext
     suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
         val fbk = instances[videoTrack.discordClient]
         // get target channel in Discord
@@ -512,30 +520,54 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 .awaitSingle()
             TrackerUtil.checkAndPublish(fbk, new)
         }
-    }
+    }*/
 
     @RequiresExposedContext
     @Throws(ClientException::class)
-    suspend fun createLiveNotification(dbVideo: YoutubeVideo, liveStream: YoutubeVideoInfo, target: TrackedTarget, new: Boolean = true) {
-        val fbk = instances[target.discordClient]
+    suspend fun createLiveNotification(video: YoutubeVideoInfo, dbVideo: YoutubeVideo, target: TrackedTarget, new: Boolean = true) = sendNotif(
+        video,
+        dbVideo,
+        target.discordClient,
+        target.discordGuild,
+        target.discordChannel,
+        target.dbChannel,
+        mentionTarget = if(target.discordGuild != null) target else null,
+        channelTarget = target,
+        new = new
+    )
 
-        // get target channel in discord, make sure it still exists
-        val guildId = target.discordGuild
+    @RequiresExposedContext
+    @Throws(ClientException::class)
+    suspend fun createLiveNotification(video: YoutubeVideoInfo, dbVideo: YoutubeVideo, videoTrack: YoutubeVideoTrack) = sendNotif(
+        video,
+        dbVideo,
+        videoTrack.discordClient,
+        videoTrack.discordChannel.guild?.guildID?.snowflake,
+        videoTrack.discordChannel.channelID.snowflake,
+        videoTrack.discordChannel.id.value,
+        mentionTarget = videoTrack.useMentionFor?.run(::loadTarget),
+        channelTarget = null,
+        new = false
+    )
 
+    @RequiresExposedContext
+    private suspend fun sendNotif(liveStream: YoutubeVideoInfo, dbVideo: YoutubeVideo, discordClient: Int, guildId: Snowflake?, channelId: Snowflake, dbChannel: Int, mentionTarget: TrackedTarget?, channelTarget: TrackedTarget?, new: Boolean) {
+        val fbk = instances[discordClient]
 
         discordTask(24_000L) {
-            val chan = getChannel(fbk, guildId, target.discordChannel, target)
+            // get target channel in discord, make sure it still exists
+            val chan = getChannel(fbk, guildId, channelId, channelTarget)
 
             // get channel stream embed settings
             val guildConfig = guildId?.run { GuildConfigurations.getOrCreateGuild(fbk.clientId, this.asLong()) }
-            val features = getStreamConfig(target)
+            val features = getStreamConfig(discordClient, guildId, channelId)
 
             // get mention role from db if one is registered
             var old: Boolean? = false
-            val mention = if(guildId != null) {
+            val mention = if(mentionTarget != null) {
                 old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
                 if(old == true) null
-                else getMentionRoleFor(target, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
+                else getMentionRoleFor(mentionTarget, chan, features, memberLimit = liveStream.memberLimited, uploadedVideo = liveStream.premiere)
             } else null
 
             try {
@@ -590,7 +622,14 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 propagateTransaction {
                     YoutubeNotification.new {
                         this.messageID = MessageHistory.Message.getOrInsert(newNotification)
-                        this.targetID = target.findDBTarget()
+
+                        // Associate with TrackedStreams.Target object if this is a tracked channel
+                        if(channelTarget != null) {
+                            this.targetID = channelTarget.findDBTarget()
+                        }
+
+                        this.discordClient = discordClient
+                        this.channelID = DiscordObjects.Channel.findById(dbChannel)!!
                         this.videoID = dbVideo
                     }
 
@@ -602,7 +641,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 val err = ce.status.code()
                 if(err == 403) {
                     LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { propagateTransaction { target.findDBTarget().delete() } }
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { propagateTransaction { channelTarget?.findDBTarget()?.delete() } }
                 } else throw ce
             }
         }
