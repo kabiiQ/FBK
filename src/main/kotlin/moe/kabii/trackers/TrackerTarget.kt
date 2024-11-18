@@ -45,6 +45,7 @@ sealed class TrackerTarget(
     companion object {
         fun parseSiteArg(id: Long) = when(id) {
             0L -> TwitterTarget
+            1L -> BlueskyTarget
             100L -> YoutubeTarget
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
@@ -312,8 +313,10 @@ object BlueskyTarget : SocialTarget(
     AvailableServices.bluesky,
     "Bluesky",
     listOf(
-        Regex("/profile/@?((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])"),
-        Regex("@((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])")
+        Regex("/profile/@?(${BlueskyParser.handlePattern})"), // profile/name.domain
+        Regex("@(${BlueskyParser.handlePattern})"), // @name.domain
+        Regex("(${BlueskyParser.didPattern})"), // did:plc:identifier
+        Regex("@?(${BlueskyParser.primaryDomainPattern})") // name.bsky.social (without needing @, but specific to bsky.social)
     ),
     "bluesky", "bsky", "bsky.app", "bsky.social"
 ) {

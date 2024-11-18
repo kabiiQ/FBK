@@ -4,6 +4,7 @@ import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.channelVerify
+import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
@@ -74,6 +75,7 @@ object PostsTrackerCommand : TrackerCommand {
         else ""
         origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!\nUse `/posts config` to adjust the types of posts that will be sent to this channel.$twitterNotice")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
+        GlobalTrackSuggestionGenerator.cacheNewFeed(socialTarget, feedInfo.accountId, feedInfo.displayName)
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {

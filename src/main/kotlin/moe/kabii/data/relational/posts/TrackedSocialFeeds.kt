@@ -52,6 +52,11 @@ object TrackedSocialFeeds {
             }
         }
 
+        fun enabled() = when(site) {
+            DBSite.X -> twitterDetail()!!.enabled
+            else -> true
+        }
+
         companion object : IntEntityClass<SocialFeed>(SocialFeeds)
     }
 

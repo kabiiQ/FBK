@@ -35,6 +35,10 @@ object BlueskyParser {
         .add(KotlinJsonAdapterFactory())
         .build()
 
+    val handlePattern = Regex("(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]")
+    val primaryDomainPattern = Regex("[a-zA-Z0-9][a-zA-Z0-9-]{0,61}\\.bsky\\.social")
+    val didPattern = Regex("did:plc:[a-z2-7]{24}")
+
     private val errorAdapter = moshi.adapter(BlueskyErrorResponse::class.java)
 
     private inline fun <reified R: Any> publicRequest(call: String): R? {

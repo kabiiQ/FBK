@@ -1,11 +1,9 @@
 package moe.kabii.command.commands.trackers.util
 
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
-import moe.kabii.data.relational.posts.twitter.NitterFeed
-import moe.kabii.data.relational.posts.twitter.NitterFeeds
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.trackers.TrackerTarget
-import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.extensions.propagateTransaction
 
 // cache of ALL known sites
@@ -26,13 +24,15 @@ object GlobalTrackSuggestionGenerator {
                     }
                 }
 
-            // get all twitter feeds
-            globalFeedCache[TwitterTarget] = NitterFeed
-                .find {
-                    NitterFeeds.enabled eq true
-                }
-                .map { feed ->
-                    createCachedFeed(TwitterTarget, feed.username, feed.username)
+            // get all social feeds
+            TrackedSocialFeeds.SocialFeed.all()
+                .filter(TrackedSocialFeeds.SocialFeed::enabled)
+                .groupBy { feed -> feed.site.targetType }
+                .mapValuesTo(globalFeedCache) { (site, feeds) ->
+                    feeds.map { feed ->
+                        val feedInfo = feed.feedInfo()
+                        createCachedFeed(site, feedInfo.accountId, feedInfo.displayName)
+                    }
                 }
         }
     }
