@@ -120,6 +120,10 @@ wolfram_appid = ''
 # Create MyAnimeList application @ https://myanimelist.net/apiconfig
 mal_client_id = ''
 
+[anilist]
+# AniList toggle added due to occasional API issues where we may want to disable AniList polling.
+anilist_enable = true
+
 
 
 # The blocks below are unlikely to provide you any benefit and should be left as-is.

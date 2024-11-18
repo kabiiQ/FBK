@@ -64,7 +64,7 @@ object Keys : ConfigSpec("") {
     object Planetside : ConfigSpec("ps2") {
         val censusId by required<String>("census_id")
     }
-    object Wolfram : ConfigSpec("wolfram") {
+    object Wolfram : ConfigSpec() {
         val appId by required<String>("wolfram_appid")
     }
     object OAuth : ConfigSpec("oauth") {
@@ -75,6 +75,9 @@ object Keys : ConfigSpec("") {
     }
     object MAL : ConfigSpec() {
         val malKey by required<String>("mal_client_id")
+    }
+    object AniList : ConfigSpec("anilist") {
+        val enabled by optional<Boolean>(true, "anilist_enable")
     }
     object Net : ConfigSpec() {
         val proxies by required<List<String>>("proxy_addr")
