@@ -27,9 +27,12 @@ services:
       postgres:
         condition: service_healthy
         restart: true
+      libretranslate:
+        condition: service_healthy
+        restart: false
 
   postgres:
-    image: postgres
+    image: postgres:17
     container_name: fbk_postgres
     restart: always
     command: -c 'max_connections=15000' -c 'shared_buffers=4GB'
@@ -62,7 +65,7 @@ services:
     - fbk
     environment:
     - MONGO_INITDB_ROOT_USERNAME=fbk
-    - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db_password
+    - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db_password # linux: may need to adjust file permissions or just put the password here without using _FILE.
     volumes:
     - ./mongodata:/data/db
     - ./transfer/mongo:/mnt/transfer
@@ -73,8 +76,14 @@ services:
     image: libretranslate/libretranslate
     container_name: fbk_libretranslate
     restart: always
+    tty: true
+    healthcheck:
+      test: ['CMD-SHELL', './venv/bin/python scripts/healthcheck.py']
+      retries: 120 # First-time startup will download all models before bot should be ran - may take a long time
     networks:
     - fbk
+    volumes:
+    - ./tldata:/home/libretranslate/.local:rw # linux: may need to use chown 1032:1032 tldata/
 
 secrets:
   db_password:
