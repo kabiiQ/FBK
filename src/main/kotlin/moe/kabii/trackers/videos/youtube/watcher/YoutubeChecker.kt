@@ -167,6 +167,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             if (ytVideoInfo != null) {
                                                 with(callReason.video) {
                                                     lastAPICall = DateTime.now()
+                                                    memberLimited = ytVideoInfo.memberLimited
                                                     lastTitle = ytVideoInfo.title
                                                     ytChannel.lastKnownUsername = ytVideoInfo.channel.name
                                                 }

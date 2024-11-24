@@ -70,8 +70,8 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                 YoutubeVideos
                     .innerJoin(MembershipConfigurations, { ytChannel }, { streamChannel })
                     .select {
-                        YoutubeVideos.liveEvent neq null or
-                                (YoutubeVideos.scheduledEvent neq null)
+                        YoutubeVideos.memberLimited eq false and
+                                (YoutubeVideos.liveEvent neq null or(YoutubeVideos.scheduledEvent neq null))
                     }
                     .withDistinct(true)
                     .map { row -> YTChatRoom(YoutubeVideo.wrapRow(row)) }
@@ -83,6 +83,7 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                     .innerJoin(TrackedStreams.StreamChannels)
                     .select {
                         TrackedStreams.StreamChannels.siteChannelID inList holochatYtIds and
+                                (YoutubeVideos.memberLimited eq false) and
                                 (YoutubeVideos.liveEvent neq null or (YoutubeVideos.scheduledEvent neq null))
                     }
                     .withDistinct(true)
