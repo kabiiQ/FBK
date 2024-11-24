@@ -397,7 +397,7 @@ object TwitterTarget : SocialTarget(
         }
 
         if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
-            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking."))
+            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker for general use. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking.\n\nFBK now supports Bluesky feeds if that alternative is available for you."))
         }
 
         return if(knownUser == null) {
@@ -497,35 +497,37 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 }
             }.flatten().minByOrNull(Match::priority)
 
-            return if(urlMatch != null) {
-                Ok(
-                    TargetArguments(
-                        site = urlMatch.site,
-                        identifier = urlMatch.result.groups[1]?.value!!
-                    )
-                )
-            } else if(site != null) {
-
-                // if site was manually specified
-                Ok(TargetArguments(site, assistedInput))
-
-            } else {
-                // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
-                // simple /track <username> is not supported for PMs
-                if(features == null) {
-                    return Err("You must specify the site name for tracking in PMs.")
+            return when {
+                site != null -> {
+                    // if site was manually specified
+                    Ok(TargetArguments(site, assistedInput))
                 }
-
-                val default = features.findDefaultTarget()
-                if(default == null) {
-                    Err("There are no website trackers enabled in **${origin.guildChan.name}**, so I can not determine the website you are trying to target. Please specify the site name.")
-                } else {
+                urlMatch != null -> {
                     Ok(
                         TargetArguments(
-                            site = default,
-                            identifier = input
+                            site = urlMatch.site,
+                            identifier = urlMatch.result.groups[1]?.value!!
                         )
                     )
+                }
+                else -> {
+                    // arg was not a supported url, but there was only 1 arg supplied. check if we are able to assume the track target for this channel
+                    // simple /track <username> is not supported for PMs
+                    if(features == null) {
+                        return Err("You must specify the site name for tracking in PMs.")
+                    }
+
+                    val default = features.findDefaultTarget()
+                    if(default == null) {
+                        Err("There are no website trackers enabled in **${origin.guildChan.name}**, so I can not determine the website you are trying to target. Please specify the site name.")
+                    } else {
+                        Ok(
+                            TargetArguments(
+                                site = default,
+                                identifier = input
+                            )
+                        )
+                    }
                 }
             }
         }

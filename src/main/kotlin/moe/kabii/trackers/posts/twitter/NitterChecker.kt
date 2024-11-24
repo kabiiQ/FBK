@@ -326,7 +326,6 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                     }
                     if(postCfg.mediaOnly && attachment == null) return@target
 
-                    LOG.debug("roles phase")
                     // mention roles
                     val mention = getMentionRoleFor(target, channel, postCfg, tweet.mentionOption)
                     val outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
