@@ -11,13 +11,18 @@ import kotlinx.html.*
 import moe.kabii.LOG
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
-import moe.kabii.data.relational.posts.twitter.NitterFeed
+import moe.kabii.data.relational.posts.TrackedSocialFeeds
+import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.discord.util.RGB
 import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.propagateTransaction
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.innerJoin
+import org.jetbrains.exposed.sql.select
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -110,20 +115,38 @@ object NettyFileServer {
             }
 
             get("/twitterfeeds") {
-                val (priorityList, generalCount) = propagateTransaction {
-                    val (priority, general) = NitterFeed.all()
-                        .sortedByDescending(NitterFeed::id)
-                        .partition { feed -> feed.enabled }
-                    priority.map(NitterFeed::username) to general.size
+                data class Feed(val username: String, val targetCount: Long)
+                data class Feeds(val enabledDetail: List<Feed>, val generalCount: Long)
+                val feeds = propagateTransaction {
+                    val enabledFeeds = TrackedSocialFeeds.SocialTargets
+                        .innerJoin(NitterFeeds, { feed }, { feed })
+                        .slice(NitterFeeds.username, TrackedSocialFeeds.SocialTargets.id.count())
+                        .select { NitterFeeds.enabled eq true }
+                        .groupBy(NitterFeeds.username)
+                        .orderBy(TrackedSocialFeeds.SocialTargets.id.count(), order = SortOrder.DESC)
+
+                    /*val enabledDetail = enabledFeeds.map { row ->
+                        "${row[NitterFeeds.username]} (${row[TrackedSocialFeeds.SocialTargets.id.sum()]} Discord channels)"
+                    }*/
+                    val enabledDetail = enabledFeeds.map { row ->
+                        Feed(row[NitterFeeds.username], row[TrackedSocialFeeds.SocialTargets.id.count()])
+                    }
+
+                    val generalCount = NitterFeeds
+                        .select { NitterFeeds.enabled eq false }
+                        .count()
+
+                    Feeds(enabledDetail, generalCount)
                 }
 
                 // Estimate refresh delays
-                val priorityInstance = min(ceil((priorityList.size.toDouble() * NitterChecker.callDelay) / NitterChecker.refreshGoal).toInt(), NitterParser.instanceCount)
+                val priorityCount = feeds.enabledDetail.size
+                val priorityInstance = min(ceil((priorityCount.toDouble() * NitterChecker.callDelay) / NitterChecker.refreshGoal).toInt(), NitterParser.instanceCount)
                 val generalInstance = NitterParser.instanceCount - priorityInstance
 
                 // feed count * time per call / num instances / 60000 (millis to minutes)
-                val priorityRefresh = (priorityList.size.toDouble() * NitterChecker.callDelay) / (priorityInstance * 60_000L)
-                val generalRefresh = (generalCount.toDouble() * NitterChecker.callDelay) / (generalInstance * 60_000L)
+                val priorityRefresh = (priorityCount.toDouble() * NitterChecker.callDelay) / (priorityInstance * 60_000L)
+                val generalRefresh = (feeds.generalCount.toDouble() * NitterChecker.callDelay) / (generalInstance * 60_000L)
                 val format = DecimalFormat("#.##")
 
                 call.respondHtml {
@@ -134,13 +157,13 @@ object NettyFileServer {
                     }
                     body {
                         h2 {
-                            +"\"General\" tracked Twitter feeds = $generalCount"
+                            +"Original tracked Twitter feeds = ${feeds.generalCount}"
                         }
                         h3 {
                             +"Refresh time estimate = ${format.format(generalRefresh)} minutes (not including potential Discord limitations)"
                         }
                         h2 {
-                            +"\"Priority\" tracked Twitter feeds = ${priorityList.size}"
+                            +"\"Enabled\" tracked Twitter feeds = ${priorityCount}"
                         }
                         h3 {
                             +"Refresh time estimate = ${format.format(priorityRefresh)} minutes (not including potential Discord limitations)"
@@ -149,13 +172,19 @@ object NettyFileServer {
                         table {
                             tr {
                                 th {
-                                    +"\"Priority\" Twitter feeds"
+                                    +"Twitter Feed"
+                                }
+                                th {
+                                    +"Discord Channels Tracking"
                                 }
                             }
-                            priorityList.forEach { username ->
+                            feeds.enabledDetail.forEach { detail ->
                                 tr {
                                     td {
-                                        +username
+                                        +detail.username
+                                    }
+                                    td {
+                                        +detail.targetCount.toString()
                                     }
                                 }
                             }
