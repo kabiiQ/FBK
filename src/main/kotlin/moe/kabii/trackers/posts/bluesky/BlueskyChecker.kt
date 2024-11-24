@@ -96,6 +96,9 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
             if(sample != null) {
                 val handle = sample.post.author.handle
                 val displayName = sample.post.author.displayName
+                if(handle == "handle.invalid") {
+                    LOG.warn("Bluesky handle reporting invalid: ${feed.handle} -> $handle")
+                }
                 if(feed.handle != handle) {
                     LOG.info("Updating Bluesky handle: ${feed.handle} -> $handle")
                     propagateTransaction {
@@ -104,7 +107,7 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                 }
                 if(feed.displayName != displayName) {
                     propagateTransaction {
-                        feed.dbFeed.displayName = displayName
+                        feed.dbFeed.displayName = displayName ?: feed.handle
                     }
                 }
             }
@@ -181,7 +184,7 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                     // Roles phase
                     val mention = getMentionRoleFor(target, channel, postCfg, post.mentionOption)
                     val outdated = Duration.between(postTimestamp, Instant.now()) > Duration.ofMinutes(15)
-                    val mentionText = mention?.toText(includeRole = !outdated) ?: ""
+                    val mentionText = mention?.toText(!outdated, feed.displayName, postTimestamp, feed.did, post.url) ?: ""
 
                     // Extract post information
                     val quotedPost = post.post.embed

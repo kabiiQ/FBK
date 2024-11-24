@@ -9,7 +9,7 @@ import java.time.Instant
 data class BlueskyAuthor(
     val did: String,
     val handle: String,
-    val displayName: String,
+    val displayName: String?,
     val avatar: String?
 ) {
     val url = URLUtil.Bluesky.feedUsername(handle)
