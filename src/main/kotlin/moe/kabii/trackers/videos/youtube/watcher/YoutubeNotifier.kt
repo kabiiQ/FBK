@@ -203,10 +203,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     }
 
                 } catch(ce: ClientException) {
-                    LOG.info("Unable to find YouTube stream notification for target ${notification.targetID?.id?.value} :: ${ce.status.code()}")
+                    LOG.info("Unable to find YouTube stream notification for target $notification :: ${ce.status.code()}")
                 } catch(e: Exception) {
                     // catch and consume all exceptions here - if one target fails, we don't want this to affect the other targets in potentially different discord servers
-                    LOG.info("Error in YouTube #streamEnd for stream ${notification.targetID?.id?.value} :: ${e.message}")
+                    LOG.info("Error in YouTube #streamEnd for stream $notification :: ${e.message}")
                     LOG.debug(e.stackTraceString)
                 } finally {
                     // delete the notification from db either way, we are done with it
@@ -402,7 +402,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                     val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
                     val textPart = mentionRole.textPart
-                    chan.createMessage("$rolePart$textPart")
+                    val text = textPart?.run {
+                        TrackerUtil.formatText(this, video.channel.name, video.published, video.channel.id, video.url)
+                    } ?: ""
+                    chan.createMessage("$rolePart$text")
 
                 } else chan.createMessage()
                 mentionMessage
@@ -599,7 +602,10 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                     val rolePart = mention.discord?.mention?.plus(" ") ?: ""
                     val textPart = mention.textPart
-                    "$rolePart$textPart"
+                    val text = textPart?.run {
+                        TrackerUtil.formatText(this, liveStream.channel.name, startTime ?: Instant.now(), liveStream.channel.id, liveStream.url)
+                    } ?: ""
+                    "$rolePart$text"
 
                 } else ""
 

@@ -305,12 +305,15 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                 val mentionContent = if(mention != null) {
 
                                     val rolePart = if(mention.discord != null
-                                        && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(6))) {
+                                        && (mention.lastMention == null || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(1))) {
 
                                         mention.discord.mention.plus(" ")
                                     } else ""
                                     val textPart = mention.textPart
-                                    "$rolePart$textPart"
+                                    val text = textPart?.run {
+                                        TrackerUtil.formatText(this, user!!.displayName, stream.startedAt, user!!.userID.toString(), user!!.url)
+                                    } ?: ""
+                                    "$rolePart$text"
 
                                 } else ""
 

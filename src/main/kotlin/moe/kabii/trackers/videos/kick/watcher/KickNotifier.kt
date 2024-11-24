@@ -222,13 +222,16 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                         && (mention.lastMention == null || org.joda.time.Duration(
                             mention.lastMention,
                             org.joda.time.Instant.now()
-                        ) > org.joda.time.Duration.standardHours(6))
+                        ) > org.joda.time.Duration.standardHours(1))
                     ) {
 
                         mention.discord.mention.plus(" ")
                     } else ""
                     val textPart = mention.textPart
-                    chan.createMessage("$rolePart$textPart")
+                    val text = textPart?.run {
+                        TrackerUtil.formatText(this, info.user.username, info.livestream.createdAt, info.id.toString(), info.url)
+                    } ?: ""
+                    chan.createMessage("$rolePart$text")
 
                 } else chan.createMessage()
 

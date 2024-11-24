@@ -16,11 +16,13 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.trackers.TrackerUtil
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
 import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.extensions.*
 import reactor.kotlin.core.publisher.toMono
+import java.time.Instant
 import kotlin.reflect.KProperty1
 
 abstract class PostWatcher(val instances: DiscordInstances) {
@@ -114,10 +116,12 @@ abstract class PostWatcher(val instances: DiscordInstances) {
 
     data class SocialMentionRole(val db: TrackedSocialFeeds.SocialTargetMention, val discord: Role?) {
 
-        fun toText(includeRole: Boolean): String {
+        fun toText(includeRole: Boolean, displayName: String, timestamp: Instant, userId: String, url: String): String {
             val rolePart = if(discord == null || !includeRole) null
             else discord.mention.plus(" ")
-            val textPart = db.mentionText?.plus(" ")
+            val textPart = db.mentionText?.run {
+                TrackerUtil.formatText(this, displayName, timestamp, userId, url)
+            }
             return "${rolePart ?: ""}${textPart ?: ""}"
         }
     }

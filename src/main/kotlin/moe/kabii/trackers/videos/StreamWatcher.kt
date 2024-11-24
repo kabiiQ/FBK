@@ -216,9 +216,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
 
         val text = if(memberLimit) dbMention.mentionTextMember else dbMention.mentionText
-        val textPart = text?.plus(" ") ?: ""
-
-        return MentionRole(discordRole, textPart, lastMention)
+        return MentionRole(discordRole, text, lastMention)
     }
 
     suspend fun getChannel(fbk: FBK, guild: Snowflake?, channel: Snowflake, deleteTarget: TrackedTarget?): MessageChannel {

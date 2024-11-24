@@ -330,7 +330,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                     // mention roles
                     val mention = getMentionRoleFor(target, channel, postCfg, tweet.mentionOption)
                     val outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
-                    val mentionText = mention?.toText(includeRole = !outdated) ?: ""
+                    val mentionText = mention?.toText(!outdated, user.name, tweet.date, user.username, tweet.url) ?: ""
 
                     val baseNotif = MessageCreateSpec.create()
                         .run {
