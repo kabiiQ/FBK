@@ -26,7 +26,8 @@ object YoutubeParser {
 
     val youtubeChannelPattern = Regex("(UC[a-zA-Z0-9\\-_]{22})")
     val youtubeNamePattern = Regex("([a-zA-Z0-9]{6,20})")
-    val youtubeHandlePattern = Regex("(@[a-zA-Z0-9_\\-.]{3,30})")
+    //val youtubeHandlePattern = Regex("(@[a-zA-Z0-9_\\-.]{3,30})")
+    val youtubeHandlePattern = Regex("(@.{3,30})")
 
     val youtubeVideoPattern = Regex("([a-zA-Z0-9-_]{11})")
     val youtubeVideoUrlPattern = Regex("(?:(?:youtu\\.be/|v/|vi/|u/\\w/|embed/|shorts/|live/)|(?:(?:watch)?\\?vi?=|&vi?=))($youtubeVideoPattern)")
@@ -34,9 +35,9 @@ object YoutubeParser {
     @Throws(YoutubeAPIException::class)
     fun getChannelFromUnknown(identifier: String): YoutubeChannelInfo? {
         return when {
-            identifier.length in 4..31 && identifier.matches(youtubeHandlePattern) -> getChannelByHandle(identifier)
-            identifier.length in 6..20 && identifier.matches(youtubeNamePattern) -> getChannelByName(identifier)
             identifier.length == 24 && identifier.matches(youtubeChannelPattern) -> getChannelById(identifier)
+            identifier.length > 3 && identifier.matches(youtubeHandlePattern) -> getChannelByHandle(identifier)
+            identifier.length in 6..20 && identifier.matches(youtubeNamePattern) -> getChannelByName(identifier)
             else -> null
         }
     }

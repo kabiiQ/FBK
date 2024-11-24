@@ -28,6 +28,7 @@ import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import org.joda.time.DateTime
 import org.joda.time.Duration
+import java.net.URLDecoder
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -35,7 +36,7 @@ sealed class TrackerTarget(
     val full: String,
     val channelFeature: KProperty1<FeatureChannel, Boolean>,
     val featureName: String,
-    val url: List<Regex>,
+    val url: List<URLMatch>,
     vararg val alias: String
 ) {
     open val mentionable: Boolean = false
@@ -68,13 +69,22 @@ data class BasicSocialFeed(val site: SocialTarget, val accountId: String, val di
 
 typealias TrackCallback = (suspend (DiscordParameters, TrackedStreams.StreamChannel) -> Unit)?
 
+// Enable prioritization of specific site URLs
+data class URLMatch(val regex: Regex, val matchPriority: Int)
+
+/**
+ * Assign a site URL a priority value - lower values are used first (thus given priority)
+ * In general, full URLs should probably be priority 1, definitive IDs 2 and problematic matches 3+
+ */
+infix fun Regex.priority(priority: Int) = URLMatch(this, priority)
+
 // enforces the properties required throughout the code to add a streaming site and relates them to each other
 sealed class StreamingTarget(
     val serviceColor: Color,
     val available: Boolean,
     full: String,
     channelFeature: KProperty1<FeatureChannel, Boolean>,
-    url: List<Regex>,
+    url: List<URLMatch>,
     vararg alias: String
 ) : TrackerTarget(full, channelFeature, "streams", url, *alias) {
 
@@ -95,7 +105,7 @@ object TwitchTarget : StreamingTarget(
     "Twitch",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex("twitch.tv/([a-zA-Z0-9_]{4,25})")
+        Regex("twitch.tv/([a-zA-Z0-9_]{4,25})") priority 1
     ),
     "twitch", "twitch.tv", "ttv"
 ) {
@@ -135,10 +145,10 @@ object YoutubeTarget : StreamingTarget(
     "YouTube",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex(YoutubeParser.youtubeChannelPattern.pattern),
-        Regex("youtube.com/channel/${YoutubeParser.youtubeChannelPattern.pattern}"),
-        Regex("youtube.com/${YoutubeParser.youtubeHandlePattern.pattern}"),
-        Regex("youtube.com/${YoutubeParser.youtubeNamePattern.pattern}")
+        Regex("youtube.com/channel/${YoutubeParser.youtubeChannelPattern.pattern}") priority 1, // full channel url with 24-digit ID
+        Regex("youtube.com/${YoutubeParser.youtubeHandlePattern.pattern}") priority 1, // newer youtube handle urls
+        Regex("youtube.com/${YoutubeParser.youtubeNamePattern.pattern}") priority 1, // old youtube username urls
+        Regex(YoutubeParser.youtubeChannelPattern.pattern) priority 2 // 24-digit ID
     ),
     "youtube", "yt", "youtube.com", "utube", "ytube"
 ) {
@@ -171,7 +181,7 @@ object YoutubeVideoTarget : TrackerTarget(
     FeatureChannel::streamTargetChannel,
     "ytvideo",
     listOf(
-        YoutubeParser.youtubeVideoUrlPattern
+        YoutubeParser.youtubeVideoUrlPattern priority 1
     ),
     "youtubevideos", "ytvid"
 ) {
@@ -184,8 +194,8 @@ object TwitcastingTarget : StreamingTarget(
     "TwitCasting",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})"),
-        Regex("twitcasting.tv/([a-z0-9_]{4,18})"),
+        Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})") priority 1,
+        Regex("twitcasting.tv/([a-z0-9_]{4,18})") priority 1,
     ),
     "twitcasting", "twitcast", "tcast"
 ) {
@@ -221,7 +231,7 @@ object KickTarget : StreamingTarget(
     "Kick.com",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex("kick.com/([a-zA-Z0-9_]{4,25})")
+        Regex("kick.com/([a-zA-Z0-9_]{4,25})") priority 1
     ),
     "kick", "kick.com"
 ) {
@@ -250,7 +260,7 @@ sealed class AnimeTarget(
     full: String,
     url: List<Regex>,
     vararg alias: String
-) : TrackerTarget(full, FeatureChannel::animeTargetChannel, "anime", url, *alias) {
+) : TrackerTarget(full, FeatureChannel::animeTargetChannel, "anime", url.map { u -> u priority 1 }, *alias) {
 
     // dbsite should not be constructor property as these refer to each other - will not be initalized yet
     abstract val dbSite: ListSite
@@ -294,7 +304,7 @@ object AniListTarget : AnimeTarget(
 sealed class SocialTarget(
     val available: Boolean,
     full: String,
-    url: List<Regex>,
+    url: List<URLMatch>,
     vararg alias: String
 ) : TrackerTarget(full, FeatureChannel::postsTargetChannel, "posts", url, *alias) {
 
@@ -313,10 +323,10 @@ object BlueskyTarget : SocialTarget(
     AvailableServices.bluesky,
     "Bluesky",
     listOf(
-        Regex("/profile/@?(${BlueskyParser.handlePattern})"), // profile/name.domain
-        Regex("@(${BlueskyParser.handlePattern})"), // @name.domain
-        Regex("(${BlueskyParser.didPattern})"), // did:plc:identifier
-        Regex("@?(${BlueskyParser.primaryDomainPattern})") // name.bsky.social (without needing @, but specific to bsky.social)
+        Regex("(${BlueskyParser.didPattern})") priority 1, // did:plc:identifier
+        Regex("@?(${BlueskyParser.primaryDomainPattern})") priority 1, // name.bsky.social (without needing @, but specific to bsky.social)
+        Regex("/profile/@?(${BlueskyParser.handlePattern})") priority 2, // profile/name.domain
+        Regex("@(${BlueskyParser.handlePattern})") priority 2 // @name.domain
     ),
     "bluesky", "bsky", "bsky.app", "bsky.social"
 ) {
@@ -365,8 +375,8 @@ object TwitterTarget : SocialTarget(
     AvailableServices.nitter,
 "Twitter",
     listOf(
-        Regex("(?:twitter|x).com/([a-zA-Z0-9_]{4,15})"),
-        //Regex("@([a-zA-Z0-9_]{4,15})")
+        Regex("(?:twitter|x).com/([a-zA-Z0-9_]{4,15})") priority 1,
+        Regex("@([a-zA-Z0-9_]{4,15})") priority 3
     ),
     "twitter", "tweets", "twit", "twitr", "tr", "x", "x.com"
 ) {
@@ -472,23 +482,26 @@ data class TargetArguments(val site: TrackerTarget, val identifier: String) {
                 return if(match != null) Ok(TargetArguments(match, colonArgs[1])) else Err("Invalid site: ${colonArgs[0]}. You can use the 'site' option in the command to select a site.")
             }
 
-            var assistedInput = input
+            val assistedInput = URLDecoder.decode(input, "UTF-8")
 //            if(site is TwitterSpaceTarget) {
 //                assistedInput = assistedInput.removePrefix("@")
 //            }
 
             // check if 'username' matches a precise url for tracking
+            data class Match(val result: MatchResult, val site: TrackerTarget, val priority: Int)
             val urlMatch = declaredTargets.map { supportedSite ->
-                supportedSite.url.mapNotNull { exactUrl ->
-                    exactUrl.find(assistedInput)?.to(supportedSite)
+                supportedSite.url.mapNotNull { url ->
+                    url.regex.find(assistedInput)?.run {
+                        Match(this, supportedSite, url.matchPriority)
+                    }
                 }
-            }.flatten().firstOrNull()
+            }.flatten().minByOrNull(Match::priority)
 
             return if(urlMatch != null) {
                 Ok(
                     TargetArguments(
-                        site = urlMatch.second,
-                        identifier = urlMatch.first.groups[1]?.value!!
+                        site = urlMatch.site,
+                        identifier = urlMatch.result.groups[1]?.value!!
                     )
                 )
             } else if(site != null) {
