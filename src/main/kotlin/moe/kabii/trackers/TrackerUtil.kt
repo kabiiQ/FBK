@@ -1,6 +1,7 @@
 package moe.kabii.trackers
 
 import discord4j.common.util.Snowflake
+import discord4j.common.util.TimestampFormat
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -26,11 +27,22 @@ import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
+import java.time.Instant
 import kotlin.reflect.KMutableProperty1
 
 object TrackerUtil {
     private val publishScope = CoroutineScope(DiscordTaskPool.publishThread + SupervisorJob())
     private val pinScope = CoroutineScope(DiscordTaskPool.pinThread + SupervisorJob())
+
+    /**
+     * Prepares mention text to be sent to Discord
+     */
+    fun formatText(text: String, displayName: String = "", timestamp: Instant = Instant.now(), sourceId: String = "", url: String = "") = text
+        .replace("&name", displayName)
+        .replace("&timestamp", TimestampFormat.RELATIVE_TIME.format(timestamp))
+        .replace("&id", sourceId)
+        .replace("&url", url)
+        .plus(" ")
 
     suspend fun checkAndPublish(fbk: FBK, message: Message) {
         val guildId = message.guildId.orNull()?.asLong() ?: return
