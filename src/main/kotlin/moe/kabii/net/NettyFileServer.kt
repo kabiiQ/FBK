@@ -19,10 +19,7 @@ import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.extensions.propagateTransaction
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -119,7 +116,7 @@ object NettyFileServer {
                 data class Feeds(val enabledDetail: List<Feed>, val generalCount: Long)
                 val feeds = propagateTransaction {
                     val enabledFeeds = TrackedSocialFeeds.SocialTargets
-                        .innerJoin(NitterFeeds, { feed }, { feed })
+                        .rightJoin(NitterFeeds, { feed }, { feed })
                         .slice(NitterFeeds.username, TrackedSocialFeeds.SocialTargets.id.count())
                         .select { NitterFeeds.enabled eq true }
                         .groupBy(NitterFeeds.username)
@@ -172,7 +169,7 @@ object NettyFileServer {
                         table {
                             tr {
                                 th {
-                                    +"Twitter Feed"
+                                    +"Enabled Twitter Feed"
                                 }
                                 th {
                                     +"Discord Channels Tracking"

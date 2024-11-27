@@ -60,7 +60,7 @@ sealed class BlueskyEmbeddedRecordBase(
 data class BlueskyEmbedViewRecord(
     val uri: String,
     val author: BlueskyAuthor,
-    val embeds: List<BlueskyEmbeddedBase>
+    val embeds: List<BlueskyEmbeddedBase>?
 ) : BlueskyEmbeddedRecordBase("app.bsky.embed.record#viewRecord") {
     @Transient val postId = BlueskyParser.extractPostKey(uri)
     @Transient val url = "${author.url}/post/$postId"
