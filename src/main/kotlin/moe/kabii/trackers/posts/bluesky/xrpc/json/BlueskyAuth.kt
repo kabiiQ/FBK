@@ -1,4 +1,4 @@
-package moe.kabii.trackers.posts.bluesky.json
+package moe.kabii.trackers.posts.bluesky.xrpc.json
 
 import com.squareup.moshi.JsonClass
 import moe.kabii.JSON

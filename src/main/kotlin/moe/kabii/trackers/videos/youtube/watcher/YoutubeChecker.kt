@@ -3,6 +3,7 @@ package moe.kabii.trackers.videos.youtube.watcher
 import kotlinx.coroutines.*
 import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.*
+import moe.kabii.data.temporary.Locks
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -138,7 +139,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         }.forEach { (videoId, ytVideo) ->
 
                             // 'lock' this video from being updated concurrently
-                            val lock = YoutubeVideo.updateLock(videoId)
+                            val lock = Locks.YoutubeVideo[videoId]
                             if(!lock.tryLock()) {
                                 LOG.debug("Skipping YouTube video update for ${videoId} - already in use")
                                 return@forEach
@@ -216,7 +217,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                         (YoutubeVideos.apiAttempts greater 10)
                             }
 
-                            YoutubeVideo.purgeLocks()
+                            Locks.YoutubeVideo.purgeLocks()
                         }
                     }
                 }

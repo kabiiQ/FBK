@@ -5,8 +5,8 @@ import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateFields
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.util.Color
-import moe.kabii.data.GuildMemberCounts
 import moe.kabii.data.mongodb.guilds.WelcomeSettings
+import moe.kabii.data.temporary.GuildMemberCounts
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.tryAwait
 import moe.kabii.util.extensions.userAddress

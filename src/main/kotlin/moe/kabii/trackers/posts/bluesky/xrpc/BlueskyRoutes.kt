@@ -1,4 +1,4 @@
-package moe.kabii.trackers.posts.bluesky
+package moe.kabii.trackers.posts.bluesky.xrpc
 
 object BlueskyRoutes {
     val coreApi = "https://bsky.social/xrpc/"

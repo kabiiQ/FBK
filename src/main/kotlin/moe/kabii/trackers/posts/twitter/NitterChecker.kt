@@ -15,8 +15,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
-import moe.kabii.data.TempStates
-import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.flat.Keys
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
@@ -24,6 +22,8 @@ import moe.kabii.data.mongodb.guilds.PostsSettings
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.data.relational.posts.twitter.NitterRetweets
+import moe.kabii.data.temporary.Cache
+import moe.kabii.data.temporary.TwitterFeedCache
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
@@ -97,7 +97,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                 .toList()
         }
 
-        if(feeds.isEmpty() || TempStates.skipTwitter) {
+        if(feeds.isEmpty() || Cache.skipTwitter) {
             delay(Duration.ofMillis(minimumRepeatTime))
             return
         }

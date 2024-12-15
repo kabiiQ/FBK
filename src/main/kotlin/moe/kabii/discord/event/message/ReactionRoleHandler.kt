@@ -9,8 +9,8 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
-import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.temporary.Cache
 import moe.kabii.discord.event.EventListener
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.orNull
@@ -49,14 +49,14 @@ object ReactionRoleHandler {
             .flatMap { g -> g.getMemberById(userId) }.awaitSingle()!!
         if(member.isBot) return
 
-        val botReaction = TempStates.BotReactionRemove(messageId, userId, emoji)
+        val botReaction = Cache.BotReactionRemove(messageId, userId, emoji)
 
         val reactionRoleId = reactionRole.role.snowflake
         val action = when(direction) {
             ReactionAction.ADD -> member.addRole(reactionRoleId, info)
             ReactionAction.REMOVE -> {
                 // ignore REMOVE event if the bot itself removed this reaction (for 'clean' auto roles)
-                if(TempStates.emojiRemove.contains(botReaction)) return
+                if(Cache.emojiRemove.contains(botReaction)) return
                 member.removeRole(reactionRoleId, info)
             }
         }
@@ -69,12 +69,12 @@ object ReactionRoleHandler {
             if(direction == ReactionAction.ADD && clean == true) {
                 val discordMessage = message.awaitSingle()
                 delay(Duration.ofSeconds(30))
-                TempStates.emojiRemove.add(botReaction)
+                Cache.emojiRemove.add(botReaction)
                 discordMessage
                     .removeReaction(emoji, userId)
                     .success().awaitSingle()
                 delay(Duration.ofSeconds(2))
-                TempStates.emojiRemove.remove(botReaction)
+                Cache.emojiRemove.remove(botReaction)
             }
 
         } catch(e: Exception) {

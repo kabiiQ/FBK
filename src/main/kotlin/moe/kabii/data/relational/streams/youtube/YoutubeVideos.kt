@@ -1,6 +1,5 @@
 package moe.kabii.data.relational.streams.youtube
 
-import kotlinx.coroutines.sync.Mutex
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.LongEntity
@@ -35,13 +34,6 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
     val notifications by YoutubeNotification referrersOn YoutubeNotifications.videoID
 
     companion object : LongEntityClass<YoutubeVideo>(YoutubeVideos) {
-
-        private val updateLocks = mutableMapOf<String, Mutex>()
-
-        fun updateLock(videoId: String) = updateLocks.getOrPut(videoId) { Mutex() }
-
-        fun purgeLocks() = updateLocks.clear()
-
         fun getVideo(videoId: String): YoutubeVideo? = find {
             YoutubeVideos.videoId eq videoId
         }.firstOrNull()

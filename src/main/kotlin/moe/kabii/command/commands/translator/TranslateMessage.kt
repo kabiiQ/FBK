@@ -2,9 +2,9 @@ package moe.kabii.command.commands.translator
 
 import discord4j.core.spec.EmbedCreateFields
 import moe.kabii.command.Command
-import moe.kabii.data.TempStates
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.TranslatorSettings
+import moe.kabii.data.temporary.Cache
 import moe.kabii.discord.util.Embeds
 import moe.kabii.translation.Translator
 import moe.kabii.util.constants.MagicNumbers
@@ -36,7 +36,7 @@ object TranslateMessage : Command("Translate Message") {
             val config = event.interaction.guildId.map { id -> GuildConfigurations.getOrCreateGuild(client.clientId, id.asLong()) }?.orNull()
 
             // Cache user message translations: message ID will be unique to that server, and target language setting is currently only server-side, so no further checks are required beyond the cache
-            val translation = TempStates.translationCache.getOrPut(event.resolvedMessage.id) {
+            val translation = Cache.translationCache.getOrPut(event.resolvedMessage.id) {
                 val defaultLangTag = config?.translator?.defaultTargetLanguage ?: TranslatorSettings.fallbackLang
                 val translator = Translator.getService(contents, listOf(defaultLangTag))
                 val defaultLang = translator.getLanguage(defaultLangTag)

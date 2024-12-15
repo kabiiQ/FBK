@@ -1,12 +1,12 @@
-package moe.kabii.trackers.posts.bluesky
+package moe.kabii.trackers.posts.bluesky.xrpc
 
 import moe.kabii.LOG
 import moe.kabii.MOSHI
 import moe.kabii.OkHTTP
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
-import moe.kabii.trackers.posts.bluesky.json.BlueskySessionRequest
-import moe.kabii.trackers.posts.bluesky.json.BlueskySessionResponse
+import moe.kabii.trackers.posts.bluesky.xrpc.json.BlueskySessionRequest
+import moe.kabii.trackers.posts.bluesky.xrpc.json.BlueskySessionResponse
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody

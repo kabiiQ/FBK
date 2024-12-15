@@ -15,7 +15,7 @@ import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
-import moe.kabii.trackers.posts.bluesky.BlueskyParser
+import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
 import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.kick.api.KickParser
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
@@ -337,9 +337,9 @@ object BlueskyTarget : SocialTarget(
     override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
         return try {
             val feed = BlueskyParser.getProfile(id)
-            if(feed != null) {
-                Ok(BasicSocialFeed(BlueskyTarget, feed.did, feed.handle, URLUtil.Bluesky.feedUsername(feed.handle)))
-            } else Err(TrackerErr.NotFound)
+            feed.mapOk { profile ->
+                BasicSocialFeed(BlueskyTarget, profile.did, profile.handle, URLUtil.Bluesky.feedUsername(profile.handle))
+            }
         } catch(e: Exception) {
             LOG.info("Error getting Bluesky profile: ${e.message}")
             LOG.debug(e.stackTraceString)

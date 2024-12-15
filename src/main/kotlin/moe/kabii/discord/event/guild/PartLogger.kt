@@ -9,9 +9,9 @@ import discord4j.rest.http.client.ClientException
 import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.data.GuildMemberCounts
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.LogSettings
+import moe.kabii.data.temporary.GuildMemberCounts
 import moe.kabii.discord.auditlog.LogWatcher
 import moe.kabii.discord.auditlog.events.AuditKick
 import moe.kabii.discord.event.EventListener

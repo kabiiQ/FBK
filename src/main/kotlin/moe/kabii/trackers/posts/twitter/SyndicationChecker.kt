@@ -3,11 +3,11 @@ package moe.kabii.trackers.posts.twitter
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import moe.kabii.LOG
-import moe.kabii.data.TempStates
-import moe.kabii.data.TwitterFeedCache
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.data.relational.posts.twitter.NitterRetweets
+import moe.kabii.data.temporary.Cache
+import moe.kabii.data.temporary.TwitterFeedCache
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.ClientRotation
@@ -54,7 +54,7 @@ class SyndicationChecker(instances: DiscordInstances, val cooldowns: ServiceRequ
                 .toList()
         }
 
-        if(feeds.isEmpty() || TempStates.skipTwitter) {
+        if(feeds.isEmpty() || Cache.skipTwitter) {
             delay(Duration.ofMillis(cooldowns.minimumRepeatTime))
             return
         }
