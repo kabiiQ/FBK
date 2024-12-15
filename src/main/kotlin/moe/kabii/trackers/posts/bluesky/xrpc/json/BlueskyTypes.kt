@@ -1,7 +1,7 @@
-package moe.kabii.trackers.posts.bluesky.json
+package moe.kabii.trackers.posts.bluesky.xrpc.json
 
 import com.squareup.moshi.Json
-import moe.kabii.trackers.posts.bluesky.BlueskyParser
+import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
 
 // API calls involving these types return polymorphic objects which must be mapped to type by analyzing the $type field.
 
@@ -39,16 +39,16 @@ data class BlueskyEmbedExternalView(
 ) : BlueskyEmbeddedBase("app.bsky.embed.external#view")
 
 data class BlueskyEmbedRecordView(
-    val record: BlueskyEmbeddedRecordBase,
+    val record: BlueskyEmbeddedRecordBase?,
 ) : BlueskyEmbeddedBase("app.bsky.embed.record#view")
 
 data class BlueskyEmbedRecordWithMediaView(
-    val record: NestedRecord,
+    val record: NestedRecord?,
     val media: BlueskyEmbeddedBase
 ) : BlueskyEmbeddedBase("app.bsky.embed.recordWithMedia#view") {
 
     data class NestedRecord(
-        val record: BlueskyEmbeddedRecordBase
+        val record: BlueskyEmbeddedRecordBase?
     )
 }
 
