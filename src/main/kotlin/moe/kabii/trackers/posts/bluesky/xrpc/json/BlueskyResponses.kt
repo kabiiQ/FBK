@@ -1,8 +1,8 @@
-package moe.kabii.trackers.posts.bluesky.json
+package moe.kabii.trackers.posts.bluesky.xrpc.json
 
 import com.squareup.moshi.JsonClass
 import moe.kabii.data.mongodb.guilds.PostsSettings
-import moe.kabii.trackers.posts.bluesky.BlueskyParser
+import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
 
 @JsonClass(generateAdapter = true)
 data class BlueskyErrorResponse(
@@ -13,7 +13,7 @@ data class BlueskyErrorResponse(
 @JsonClass(generateAdapter = true)
 data class BlueskyFeedResponse(
     val feed: List<BlueskyPost>
-)
+) // app.bsky.feed.getAuthorFeed
 
 @JsonClass(generateAdapter = true)
 data class BlueskyPost(
@@ -48,3 +48,8 @@ data class BlueskyReply(
     val root: BlueskyPostViewBase?,
     val parent: BlueskyPostViewBase?
 )
+
+@JsonClass(generateAdapter = true)
+data class BlueskyPostsResponse(
+    val posts: List<BlueskyFeedPost>
+) // app.bsky.feed.getPosts

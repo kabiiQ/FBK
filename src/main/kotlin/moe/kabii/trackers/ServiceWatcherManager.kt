@@ -10,6 +10,7 @@ import moe.kabii.trackers.anime.kitsu.KitsuParser
 import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.trackers.posts.bluesky.BlueskyChecker
+import moe.kabii.trackers.posts.bluesky.streaming.BlueskyFirehose
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.SyndicationChecker
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
@@ -36,6 +37,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
     val twitch: TwitchChecker
     val ytChatWatcher: YoutubeChatWatcher
     val twitterChecker: NitterChecker
+    val blueskyFirehose: BlueskyFirehose
 
     fun launch() {
         check(!active) { "ServiceWatcherManager threads already launched" }
@@ -126,9 +128,10 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
         val blueskyDelay = ServiceRequestCooldownSpec(
             callDelay = 600L,
-            minimumRepeatTime = 45_000L
+            minimumRepeatTime = 300_000L // TODO increase when confident in streaming implementation
         )
         val blueskyChecker = BlueskyChecker(blueskyDelay, discord)
+        blueskyFirehose = BlueskyFirehose(blueskyChecker)
 
         // Compile the service threads to be enabled
         LOG.info("Starting service initialization")
@@ -159,6 +162,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             // Twitter alternative service using Syndication feeds - may work for a handful of feeds
             service(syndicationChecker, "SyndicationFeedChecker", false)
             service(blueskyChecker, "BlueskyChecker", AvailableServices.bluesky)
+            service(blueskyFirehose, "BlueskyFirehoseStream", AvailableServices.bluesky)
             service(twitCastChecker, "TwitcastChecker", AvailableServices.twitCastingApi)
             service(TwitcastWebhookManager, "TwitcastWebhookManager", AvailableServices.twitCastingWebhooks)
             service(ytChatWatcher, "YTChatWatcher", true)

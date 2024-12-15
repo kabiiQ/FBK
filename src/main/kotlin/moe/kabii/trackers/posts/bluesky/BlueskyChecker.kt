@@ -15,13 +15,19 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.PostsSettings
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.posts.bluesky.BlueskyFeed
+import moe.kabii.data.temporary.Locks
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
+import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.posts.PostWatcher
-import moe.kabii.trackers.posts.bluesky.json.*
+import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
+import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyRecheck
+import moe.kabii.trackers.posts.bluesky.xrpc.json.*
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
 import moe.kabii.util.constants.MagicNumbers
@@ -85,9 +91,39 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
         }
     }
 
+    suspend fun getFeed(identifier: String) = propagateTransaction {
+        BlueskyFeed
+            .findExisting(identifier)
+            ?.run(::loadFeed)
+    }
+
+    suspend fun updateFeed(identifier: String) = getFeed(identifier)?.run { updateFeed(this) }
+
     private suspend fun updateFeed(feed: FeedInfo) {
+
+        if(BlueskyRecheck.isPending(feed.did)) return
+        val lock = Locks.Bluesky[feed.did]
+        if(!lock.tryLock()) {
+            LOG.debug("Skipping Bluesky feed pull for ${feed.handle}")
+            return
+        }
+
         try {
-            val posts = BlueskyParser.getFeed(feed.did)?.feed?.reversed() ?: throw IOException("Feed returned null")
+
+            val posts = when(val userFeed = BlueskyParser.getFeed(feed.did)) {
+                is Ok -> userFeed.value.feed.reversed()
+                is Err -> when(userFeed.value) {
+                    is TrackerErr.NotFound -> {
+                        propagateTransaction {
+                            LOG.info("Untracking Bluesky feed: ${feed.did}/${feed.handle} as the profile no longer exists.")
+                            feed.dbFeed.delete()
+                        }
+                        return
+                    }
+                    else -> throw IOException(userFeed.value.toString())
+                }
+            }
+
             posts.forEach { post ->
                 handlePost(feed, post)
             }
@@ -114,14 +150,27 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
         } catch(e: Exception) {
             LOG.warn("Error getting Bluesky feed ${feed.handle}: ${e.message}")
             LOG.debug(e.stackTraceString)
+        } finally {
+            if(lock.isLocked) lock.unlock()
         }
+    }
+
+    suspend fun handleFirstPartyPost(identifier: String, post: BlueskyFeedPost) = getFeed(identifier)?.run {
+        handlePost(
+            feed = this,
+            post = BlueskyPost(
+                post = post,
+                reply = null,
+                reason = null
+            )
+        )
     }
 
     /**
      * Handles a Bluesky post that may need notifications sent.
      * Can call for all posts, will reject submissions which are older than known posts.
      */
-    suspend fun handlePost(feed: FeedInfo, post: BlueskyPost) {
+    private suspend fun handlePost(feed: FeedInfo, post: BlueskyPost) {
         // Filter post
         // Only take latest posts from feed
         val postTimestamp = if(post.isRepost) post.reason!!.indexedAt else post.post.record.createdAt
@@ -213,7 +262,7 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                             val color = mention?.db?.embedColor ?: 686847
                             val postText = text.escapeMarkdown()
                             val embed = Embeds.other(postText, Color.of(color))
-                                .withAuthor(EmbedCreateFields.Author.of("@${author.handle}", author.url, author.avatar))
+                                .withAuthor(EmbedCreateFields.Author.of("@${author.handle}", author.permaUrl, author.avatar))
                                 .run { // Add 'fields' to some embeds
                                     val fields = mutableListOf<EmbedCreateFields.Field>()
 

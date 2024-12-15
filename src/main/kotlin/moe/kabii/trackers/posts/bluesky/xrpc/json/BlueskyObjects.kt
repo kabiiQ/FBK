@@ -1,4 +1,4 @@
-package moe.kabii.trackers.posts.bluesky.json
+package moe.kabii.trackers.posts.bluesky.xrpc.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -11,8 +11,9 @@ data class BlueskyAuthor(
     val handle: String,
     val displayName: String?,
     val avatar: String?
-) {
-    val url = URLUtil.Bluesky.feedUsername(handle)
+) { // app.bsky.actor.getProfile
+    @Transient val url = URLUtil.Bluesky.feedUsername(handle)
+    @Transient val permaUrl = URLUtil.Bluesky.feedUsername(did)
 }
 
 @JsonClass(generateAdapter = true)
@@ -31,6 +32,17 @@ data class BlueskyPostRecord(
 ) {
     @Transient val createdAt = Instant.parse(_createdAt)
 }
+
+@JsonClass(generateAdapter = true)
+data class  BlueskyReplyLinks(
+    val parent: BlueskyReplyLink,
+    val root: BlueskyReplyLink
+)
+
+@JsonClass(generateAdapter = true)
+data class BlueskyReplyLink(
+    val uri: String
+)
 
 // Post "reason" is polymorphic but only "reasonRepost" provides any useful information, so just treating is as nullable here is fine.
 @JsonClass(generateAdapter = true)

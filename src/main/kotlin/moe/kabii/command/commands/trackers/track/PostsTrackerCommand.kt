@@ -76,6 +76,11 @@ object PostsTrackerCommand : TrackerCommand {
         origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!\nUse `/posts config` to adjust the types of posts that will be sent to this channel.$twitterNotice")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
         GlobalTrackSuggestionGenerator.cacheNewFeed(socialTarget, feedInfo.accountId, feedInfo.displayName)
+
+        // Refactor side-effect into general callback if more are needed later
+        if(socialTarget.dbSite == TrackedSocialFeeds.DBSite.BLUESKY) {
+            origin.handler.instances.services.blueskyFirehose.updateCachedFeeds()
+        }
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {

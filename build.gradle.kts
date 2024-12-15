@@ -52,6 +52,9 @@ dependencies {
     implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.26.2")
 
+    // websocket apis
+    implementation("org.java-websocket:Java-WebSocket:1.5.7")
+
     // other api - http calls
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
 

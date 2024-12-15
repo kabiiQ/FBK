@@ -85,6 +85,18 @@ services:
     volumes:
     - ./tldata:/home/libretranslate/.local:rw # linux: may need to use chown 1032:1032 tldata/
 
+  jetstream:
+    image: ghcr.io/bluesky-social/jetstream:sha-fc35aea
+    container_name: fbk_bluesky
+    restart: always
+    networks:
+    - fbk
+    #volumes:
+    #- ./bskydata:/data
+    environment:
+    - JETSTREAM_DATA_DIR=/data
+    - JETSTREAM_LIVENESS_TTL=15s
+
 secrets:
   db_password:
     file: db_password
