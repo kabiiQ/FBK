@@ -58,7 +58,7 @@ abstract class PostWatcher(val instances: DiscordInstances) {
         )
     }
 
-    fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = taskScope.launch {
+    fun <T> discordTask(timeoutMillis: Long = 6_000L, block: suspend() -> T) = notifyScope.launch {
         withTimeout(timeoutMillis) {
             block()
         }

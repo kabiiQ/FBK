@@ -47,10 +47,6 @@ class MediaEmbedBuilder(val media: Media) {
                 footer.append(StringUtils.abbreviate(notes, 250))
             }
 
-            if(site == ListSite.ANILIST) {
-                footer.append("\nAniList is currently experiencing intermittent site outages that may cause some updates to be missed.")
-            }
-
             withFooter(EmbedCreateFields.Footer.of(footer.toString(), null))
         }
 }

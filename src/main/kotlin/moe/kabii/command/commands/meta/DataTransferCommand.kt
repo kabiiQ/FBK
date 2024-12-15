@@ -89,6 +89,8 @@ object DataTransferCommand : Command("transferdata") {
                         .appendLine("This includes tracked live stream/Twitter feeds, music channels, etc.")
                         .appendLine()
                         .appendLine("This bot will be permanently restored to DEFAULT SETTINGS after this transfer and you are then free to remove the old bot from your server.")
+                        .appendLine()
+                        .appendLine("Please read the [transfer limitations and considerations](https://github.com/kabiiQ/FBK/wiki/Bot-Meta-Commands#data-transfer-between-bot-instances) before commiting to the transfer.")
                         .toString(), MessageColors.special
                 ))
                 .withComponents(fromMenu)

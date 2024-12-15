@@ -53,7 +53,7 @@ object TrackedSocialFeeds {
         }
 
         fun enabled() = when(site) {
-            DBSite.X -> twitterDetail()!!.enabled
+            DBSite.X -> twitterDetail()?.enabled == true
             else -> true
         }
 

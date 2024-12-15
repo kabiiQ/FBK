@@ -75,19 +75,19 @@ object DataTransfer {
             TargetSuggestionGenerator.invalidateTargets(new.clientId, channelId)
         }
 
-        suspend fun tryUpdate(block: () -> Unit) {
+        suspend fun tryUpdate(type: String, block: () -> Unit) {
             try {
                 propagateTransaction {
                     block()
                 }
             } catch(e: Exception) {
                 LOG.error("Error in /transferdata: ${e.message}")
-                detail.appendLine("Error transferring some tracker data, contact kabii to look into details.")
+                detail.appendLine("Partial failure transferring $type data, contact kabii to look into details.")
             }
         }
 
         // animelist targets
-        tryUpdate {
+        tryUpdate("anime/media list tracker") {
             val mediaLists = TrackedMediaLists.ListTargets
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
@@ -103,7 +103,7 @@ object DataTransfer {
         }
 
         // reminders
-        tryUpdate {
+        tryUpdate("user reminder") {
             val reminders = Reminders
                 .innerJoin(MessageHistory.Messages)
                 .innerJoin(DiscordObjects.Channels)
@@ -121,7 +121,7 @@ object DataTransfer {
         }
 
         // yt membership configurations
-        tryUpdate {
+        tryUpdate("YouTube membership") {
             val memberSetup = MembershipConfigurations
                 .innerJoin(DiscordObjects.Guilds)
                 .update({
@@ -136,7 +136,7 @@ object DataTransfer {
         }
 
         // yt live chat tracks
-        tryUpdate {
+        tryUpdate("YouTube live chat relay") {
             val ytLiveChat = YoutubeLiveChats
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
@@ -152,7 +152,7 @@ object DataTransfer {
         }
 
         // yt video tracks
-        tryUpdate {
+        tryUpdate("tracked YouTube video") {
             val ytVideoTrack = YoutubeVideoTracks
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
@@ -168,7 +168,7 @@ object DataTransfer {
         }
 
         // tracked stream channels
-        tryUpdate {
+        tryUpdate("tracked streamer channel") {
             val streamTargets = TrackedStreams.Targets
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
@@ -184,7 +184,7 @@ object DataTransfer {
         }
 
         // tracked social feeds
-        tryUpdate {
+        tryUpdate("tracked social media post feed") {
             val twitterFeeds = TrackedSocialFeeds.SocialTargets
                 .innerJoin(DiscordObjects.Channels)
                 .innerJoin(DiscordObjects.Guilds)
