@@ -7,8 +7,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 object DurationParser {
-    private val patternYears = Regex("([0-9]{1})Y(?:YEARS?)?") // match 2Y, 2YEAR, 2YEARS
-    private val patternMonths = Regex("([0-9]+)MONTHS?")
+    private val patternYears = Regex("([0-9])Y(?:EARS?)?") // match 2Y, 2YEAR, 2YEARS
+    private val patternMonths = Regex("([0-9]+)MON?T?H?S?") // match 2MO, 2MONTH, 2MONTHS
 
     private val categories = arrayOf(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS, ChronoUnit.MONTHS, ChronoUnit.YEARS)
 

@@ -83,16 +83,17 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
                 if(content != null) withFields(EmbedCreateFields.Field.of("Reminder: ", content, false)) else this
             }
 
-        suspend fun sendReminder(target: MessageChannel) {
+        suspend fun sendReminder(target: MessageChannel, reason: String? = null) {
+            val edited = if(reason != null) embed.withFooter(EmbedCreateFields.Footer.of("Reminder sent in DM: $reason.", null)) else embed
             target.createMessage(user.mention)
-                .withEmbeds(embed)
+                .withEmbeds(edited)
                 .awaitSingle()
         }
 
-        suspend fun dmFallback() {
+        suspend fun dmFallback(reason: String) {
             val dmChannel = user.privateChannel.tryAwait().orNull()
             if(dmChannel != null) {
-                sendReminder(dmChannel)
+                sendReminder(dmChannel, reason)
             } else {
                 LOG.info("Unable to send reminder: unable to send DM fallback message :: $reminder")
             }
@@ -115,13 +116,13 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
                             LOG.info(ce.stackTraceString)
                             if (err == 403 || err == 404) {
                                 // unable to send message, try to DM fallback
-                                dmFallback()
+                                dmFallback("missing message permissions in original channel")
                             }
                         }
 
                     } else {
                         // member no longer in server, try to DM fallback
-                        dmFallback()
+                        dmFallback("user not in original server")
                     }
                 }
             }
