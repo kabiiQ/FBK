@@ -89,6 +89,8 @@ class HoloChats(val instances: DiscordInstances) {
 
         try {
             val member = hololive[chat.author.channelId]
+            val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
+            val message = "$info: ${chat.message}"
             if(member != null) {
                 targets.forEach { channel ->
                     channel.createMessage(
@@ -98,10 +100,15 @@ class HoloChats(val instances: DiscordInstances) {
                                 val name = "${member.names.first()}$gen"
                                 withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
                             }
-                            .run {
-                                val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
-                                withDescription("$info: ${chat.message}")
-                            }
+                            .withDescription(message)
+                    ).awaitSingle()
+                }
+            } else if(chat.author.staff) {
+                targets.forEach { channel ->
+                    channel.createMessage(
+                        Embeds.fbk()
+                            .withAuthor(EmbedCreateFields.Author.of(chat.author.name, chat.author.channelUrl, chat.author.imageUrl))
+                            .withDescription(message)
                     ).awaitSingle()
                 }
             }

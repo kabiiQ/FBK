@@ -13,8 +13,12 @@ data class YTChatMessage(
 @JsonClass(generateAdapter = true)
 data class YoutubeChatAuthor(
     @Json(name = "isChatSponsor") val member: Boolean,
+    @Json(name = "isChatModerator") val moderator: Boolean,
+    @Json(name = "isChatOwner") val owner: Boolean,
     val channelId: String,
     val channelUrl: String,
     val name: String,
     val imageUrl: String?
-)
+) {
+    @Transient val staff = owner || moderator
+}
