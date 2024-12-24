@@ -45,10 +45,10 @@ object PostsConfig : Command("posts") {
             "translate",
             PostsSettings::autoTranslate
         ),
-        CustomElement("Post custom Twitter links, overriding the standard FBK embed. (translations will not be available)",
-            "customtwitter",
+        CustomElement("Post custom Twitter URLs, overriding the standard FBK embed. (translations will not be available)",
+            "customurl",
             PostsSettings::customTwitterDomain as KMutableProperty1<PostsSettings, Any?>,
-            prompt = "Enter a custom domain (ex. vxtwitter.com) that will be posted. The embed will OVERRIDE the standard FBK custom embeds, so features like embedded translations will not be available. Furthermore, you must ensure this domain spelled correctly and is functional or there will be no embeds for posted Tweets at all.",
+            prompt = "Enter a custom domain (ex. vxtwitter.com) that will used instead of twitter.com. The embed will OVERRIDE the standard FBK custom embeds, so features like embedded translations will not be available. Furthermore, you must ensure this domain spelled correctly and is functional or there will be no embeds for posted Tweets at all.",
             default = null,
             parser = ::customTwitterDomain,
             value = { twitter -> twitter.customTwitterDomain ?: "not set" }
