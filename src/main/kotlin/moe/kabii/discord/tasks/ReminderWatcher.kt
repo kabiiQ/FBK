@@ -105,7 +105,7 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
             .tryAwait().orNull()
         try {
             when (discordChannel) {
-                is PrivateChannel -> sendReminder(discordChannel)
+                is PrivateChannel -> sendReminder(discordChannel, "requested")
                 is GuildMessageChannel -> {
                     val member = user.asMember(discordChannel.guildId).tryAwait().orNull()
                     if (member != null) {
