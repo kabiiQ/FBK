@@ -68,16 +68,16 @@ object BlueskyParser {
                 }
 
                 LOG.warn("Bluesky API call returned an error: ${response.code} :: $error")
-                return if(error?.message == "Profile not found") Err(TrackerErr.NotFound) else Err(TrackerErr.IO)
+                return if(error?.message == "Profile not found" || error?.message?.contains("actor must be a valid did") == true) Err(TrackerErr.NotFound) else Err(TrackerErr.IO)
             }
         } finally {
             response.close()
         }
     }
 
-    fun getFeed(identifier: String): Result<BlueskyFeedResponse, TrackerErr> = publicRequest("app.bsky.feed.getAuthorFeed?actor=$identifier")
+    fun getFeed(identifier: String): Result<BlueskyFeedResponse, TrackerErr> = publicRequest("app.bsky.feed.getAuthorFeed?actor=${identifier.removePrefix("@")}")
 
-    fun getProfile(identifier: String): Result<BlueskyAuthor, TrackerErr> = publicRequest("app.bsky.actor.getProfile?actor=$identifier")
+    fun getProfile(identifier: String): Result<BlueskyAuthor, TrackerErr> = publicRequest("app.bsky.actor.getProfile?actor=${identifier.removePrefix("@")}")
 
     fun getPosts(uris: List<String>): Result<List<BlueskyFeedPost>, TrackerErr> = publicRequest<BlueskyPostsResponse>("app.bsky.feed.getPosts?uris=${uris.joinToString(",")}").mapOk { it.posts }
 

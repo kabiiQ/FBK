@@ -13,6 +13,7 @@ import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.videos.youtube.json.YoutubeChannelResponse
 import moe.kabii.trackers.videos.youtube.json.YoutubeErrorResponse
 import moe.kabii.trackers.videos.youtube.json.YoutubeVideoResponse
+import moe.kabii.util.extensions.prefix
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
 
@@ -49,7 +50,7 @@ object YoutubeParser {
     private fun getChannelByName(name: String): YoutubeChannelInfo? = getChannel("forUsername=$name")
 
     @Throws(YoutubeAPIException::class)
-    private fun getChannelByHandle(handle: String): YoutubeChannelInfo? = getChannel("forHandle=$handle")
+    private fun getChannelByHandle(handle: String): YoutubeChannelInfo? = getChannel("forHandle=${handle.prefix("@")}")
 
     @Throws(YoutubeAPIException::class)
     private fun getChannel(identifierPart: String): YoutubeChannelInfo? {

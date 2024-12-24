@@ -49,6 +49,8 @@ fun applicationLoop(process: suspend () -> Unit) {
 
 fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
+fun String.prefix(prefix: String) = if(startsWith(prefix)) this else prefix + this
+
 operator fun String.rem(value: String) = Pair(this, value)
 
 fun String.escapeMarkdown() = StringEscapeUtils
