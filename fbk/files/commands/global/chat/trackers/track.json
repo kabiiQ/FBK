@@ -28,16 +28,16 @@
                     "value": 100
                 },
                 {
+                    "name": "YouTube HoloChats",
+                    "value": 198
+                },
+                {
                     "name": "Twitch",
                     "value": 101
                 },
                 {
                     "name": "TwitCasting",
                     "value": 103
-                },
-                {
-                    "name": "Kick",
-                    "value": 104
                 },
                 {
                     "name": "MyAnimeList",
