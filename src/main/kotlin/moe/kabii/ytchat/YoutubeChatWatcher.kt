@@ -37,6 +37,9 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
         scriptDir.mkdirs()
     }
 
+    // Check if YT channel is supported for chat relay - currently limited to known Hololive channels
+    fun supportedChannel(channelId: String) = holoChats.hololive[channelId] != null
+
     private val parserTask = Runnable {
         runBlocking {
             for(chatData in parseQueue) {

@@ -10,6 +10,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
 object YoutubeLiveChats : IdTable<Int>() {
@@ -35,5 +36,16 @@ class YoutubeLiveChat(id: EntityID<Int>) : IntEntity(id) {
                     YoutubeVideos.ytChannel eq ytChan.id
                 }
         )
+
+        @RequiresExposedContext
+        fun getTrackedChat(videoId: String, channelId: Long) = YoutubeLiveChat.wrapRows(
+            YoutubeLiveChats
+                .innerJoin(YoutubeVideos)
+                .innerJoin(DiscordObjects.Channels)
+                .select {
+                    YoutubeVideos.videoId eq videoId and
+                            (DiscordObjects.Channels.channelID eq channelId)
+                }
+        ).firstOrNull()
     }
 }

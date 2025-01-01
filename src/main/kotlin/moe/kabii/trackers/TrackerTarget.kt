@@ -51,7 +51,8 @@ sealed class TrackerTarget(
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
             103L -> TwitcastingTarget
-            104L -> KickTarget
+//            104L -> KickTarget
+            198L -> HoloChatsTarget
             199L -> YoutubeVideoTarget
             200L -> MALTarget
             201L -> KitsuTarget
@@ -176,18 +177,6 @@ object YoutubeTarget : StreamingTarget(
     }
 }
 
-object YoutubeVideoTarget : TrackerTarget(
-    "YouTubeVideos",
-    FeatureChannel::streamTargetChannel,
-    "ytvideo",
-    listOf(
-        YoutubeParser.youtubeVideoUrlPattern priority 1
-    ),
-    "youtubevideos", "ytvid"
-) {
-    override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoUrlPattern)) id else URLUtil.StreamingSites.Youtube.video(id)
-}
-
 object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
     AvailableServices.twitCasting,
@@ -253,6 +242,28 @@ object KickTarget : StreamingTarget(
     override fun feedById(id: String) = URLUtil.StreamingSites.Kick.channelByName(id)
 
     override val onTrack: TrackCallback = { _, _ -> }
+}
+
+object HoloChatsTarget : TrackerTarget(
+    "HoloChats",
+    FeatureChannel::holoChatsTargetChannel,
+    "holochats",
+    listOf(),
+    "holochats", "chatrelay", "holorelay"
+) {
+    override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoPattern)) URLUtil.StreamingSites.Youtube.video(id) else URLUtil.StreamingSites.Youtube.channel(id)
+}
+
+object YoutubeVideoTarget : TrackerTarget(
+    "YouTubeVideos",
+    FeatureChannel::streamTargetChannel,
+    "streams",
+    listOf(
+        YoutubeParser.youtubeVideoUrlPattern priority 1
+    ),
+    "youtubevideos", "ytvid"
+) {
+    override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoPattern)) id else URLUtil.StreamingSites.Youtube.video(id)
 }
 
 // anime targets

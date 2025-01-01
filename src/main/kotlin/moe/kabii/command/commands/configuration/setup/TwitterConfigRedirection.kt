@@ -9,6 +9,7 @@ object TwitterConfigRedirection : Command("twitter") {
 
     init {
         chat {
+            // TODO remove redirection command once users discover
             ereply(Embeds.fbk("`/twitter` options have moved to `/posts`!")).awaitSingle()
         }
     }

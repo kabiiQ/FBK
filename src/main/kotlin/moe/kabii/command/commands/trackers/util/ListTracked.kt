@@ -9,8 +9,13 @@ import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
+import moe.kabii.data.relational.streams.youtube.ytchat.LiveChatConfiguration
+import moe.kabii.data.relational.streams.youtube.ytchat.LiveChatConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
+import moe.kabii.trackers.HoloChatsTarget
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.trackers.YoutubeVideoTarget
 import moe.kabii.util.constants.URLUtil
@@ -57,7 +62,7 @@ object ListTracked : Command("tracked") {
                     "[${stream.site.targetType.full}/${stream.lastKnownUsername ?: stream.siteChannelID}]($url): by <@${target.tracker.userID}>"
                 }
 
-                if(includeTarget(YoutubeVideoTarget)) {
+                if (includeTarget(YoutubeVideoTarget)) {
                     // get individually tracked youtube videos (from /trackvid usage)
                     YoutubeVideoTrack.find {
                         YoutubeVideoTracks.discordClient eq client.clientId and
@@ -90,6 +95,26 @@ object ListTracked : Command("tracked") {
                 }.mapTo(tracks) { target ->
                     val feedInfo = target.socialFeed.feedInfo()
                     "[${feedInfo.site.full}/${feedInfo.displayName}](${feedInfo.url}) by <@${target.tracker.userID}>"
+                }
+
+                if (includeTarget(HoloChatsTarget)) {
+                    LiveChatConfiguration.find {
+                        LiveChatConfigurations.discordClient eq client.clientId and
+                                (LiveChatConfigurations.discordChannel eq dbChannel.id)
+                    }.mapTo(tracks) { target ->
+                        val channelName = target.chatChannel.lastKnownUsername ?: target.chatChannel.siteChannelID
+                        val url = URLUtil.StreamingSites.Youtube.channel(target.chatChannel.siteChannelID)
+                        "[HoloChats.Channel/$channelName]($url)"
+                    }
+
+                    YoutubeLiveChat.find {
+                        YoutubeLiveChats.discordClient eq client.clientId and
+                                (YoutubeLiveChats.discordChannel eq dbChannel.id)
+                    }.mapTo(tracks) { target ->
+                        val videoName = target.ytVideo.lastTitle ?: target.ytVideo.videoId
+                        val url = URLUtil.StreamingSites.Youtube.video(target.ytVideo.videoId)
+                        "[HoloChats.Video/$videoName]($url)"
+                    }
                 }
             }
 

@@ -18,10 +18,7 @@ import moe.kabii.data.relational.streams.twitcasting.Twitcasts
 import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
 import moe.kabii.data.relational.streams.youtube.*
-import moe.kabii.data.relational.streams.youtube.ytchat.LinkedYoutubeAccounts
-import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfigurations
-import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
-import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
+import moe.kabii.data.relational.streams.youtube.ytchat.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -76,6 +73,7 @@ internal object PostgresConnection {
                 YoutubeMembers,
                 LinkedYoutubeAccounts,
                 MembershipConfigurations,
+                LiveChatConfigurations
             )
         }
     }

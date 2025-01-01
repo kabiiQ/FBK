@@ -1,56 +1,47 @@
 package moe.kabii.internal.ytchat
 
 import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
-import moe.kabii.data.flat.Keys
 import moe.kabii.data.flat.KnownStreamers
+import moe.kabii.data.mongodb.GuildConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.LiveChatConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.tryBlock
 import moe.kabii.ytchat.YoutubeChatWatcher
 import org.jetbrains.exposed.sql.transactions.transaction
+import reactor.core.publisher.Mono
+
+typealias ChatHandler = (MessageChannel) -> Mono<Message>
 
 class HoloChats(val instances: DiscordInstances) {
 
-    private val hololive = KnownStreamers.getValue("hololive").associateBy { it.youtubeId!! }
+    val hololive = KnownStreamers.getValue("hololive").associateBy { it.youtubeId!! }
 
     val chatChannels: MutableMap<String, MutableList<MessageChannel>> = mutableMapOf()
     val chatVideos: MutableMap<String, MutableList<MessageChannel>> = mutableMapOf()
 
     data class HoloChatConfiguration(val ytChannel: String, val outputChannel: Snowflake, val botInstance: Int)
     init {
-        val channelConfigurations = listOf(
-            // irys channel / project hope server
-            HoloChatConfiguration("UC8rcEBzJSleTkf_-agPM20g", Snowflake.of("863354507822628864"), 1),
-            // zeta cord
-            HoloChatConfiguration("UCTvHWSfBZgtxE4sILOaurIQ", Snowflake.of("956516797065080833"), 1),
-            HoloChatConfiguration("UCTvHWSfBZgtxE4sILOaurIQ", Snowflake.of("956533433830617138"), 1),
-            // kaelacord
-            HoloChatConfiguration("UCZLZ8Jjx_RN2CXloOmgTHVg", Snowflake.of("1139983888878403674"), 2),
-            // kobocord
-            HoloChatConfiguration("UCjLEmnpCNeisMxy134KPwWw", Snowflake.of("956907303309803521"), 2)
-        )
-        if(Keys.config[Keys.OAuth.clientId] == "314672047718531072") {
-            // load configurations for discord channels tracking entire yt channels - currently hardcoded
-            channelConfigurations.forEach { (yt, discord, instance) ->
-                instances[instance].client
-                    .getChannelById(discord)
-                    .ofType(MessageChannel::class.java)
-                    .tryBlock().orNull()
-                    .run {
-                        if (this == null) {
-                            LOG.error("Unable to link HoloChat channel: $yt :: $discord")
-                        } else {
-                            chatChannels.getOrPut(yt, ::mutableListOf).add(this)
-                        }
+        // load configurations for discord channels tracking entire yt channels from db
+        transaction {
+            LiveChatConfiguration.all()
+                .forEach { config ->
+                    // Load associated Discord channel
+                    try {
+                        val channel = loadDiscordChannel(config.discordClient, config.discordChannel.channelID.snowflake)
+                        subscribeChannel(config.chatChannel.siteChannelID, channel)
+                    } catch(e: Exception) {
+                        LOG.error("Unable to link HoloChat channnel: ${config.chatChannel.siteChannelID} :: ${config.discordChannel.channelID}")
                     }
-            }
+                }
         }
 
         // load configurations for discord channels tracking specific freechat frames - command controlled
@@ -61,23 +52,23 @@ class HoloChats(val instances: DiscordInstances) {
                 .toList()
         }
         videoConfigurations.forEach { liveChat ->
-            watchNewChat(liveChat.videoId, liveChat.channelId, liveChat.client)
+            try {
+                val channel = loadDiscordChannel(liveChat.client, liveChat.channelId)
+                subscribeChat(liveChat.videoId, channel)
+            } catch(e: Exception) {
+                LOG.error("Unable to link HoloChat video: ${liveChat.videoId} :: ${liveChat.channelId}")
+            }
         }
     }
 
-    fun watchNewChat(videoId: String, discordChannel: Snowflake, discordClient: Int) {
-        instances[discordClient].client
-            .getChannelById(discordChannel)
-            .ofType(MessageChannel::class.java)
-            .tryBlock().orNull()
-            .run {
-                if(this == null) {
-                    LOG.error("Unable to link HoloChat video: $videoId :: $discordChannel")
-                } else {
-                    chatVideos.getOrPut(videoId, ::mutableListOf).add(this)
-                }
-            }
-    }
+    private fun loadDiscordChannel(client: Int, channelId: Snowflake) = instances[client].client
+        .getChannelById(channelId)
+        .ofType(MessageChannel::class.java)
+        .block()!!
+
+    fun subscribeChat(ytVideo: String, discord: MessageChannel) = chatVideos.getOrPut(ytVideo, ::mutableListOf).add(discord)
+
+    fun subscribeChannel(ytChannel: String, discord: MessageChannel) = chatChannels.getOrPut(ytChannel, ::mutableListOf).add(discord)
 
     suspend fun handleHoloChat(data: YoutubeChatWatcher.YTMessageData) {
         val (room, chat) = data
@@ -91,25 +82,35 @@ class HoloChats(val instances: DiscordInstances) {
             val member = hololive[chat.author.channelId]
             val info = "Message in [${room.videoId}](https://youtube.com/watch?v=${room.videoId})"
             val message = "$info: ${chat.message}"
-            if(member != null) {
-                targets.forEach { channel ->
-                    channel.createMessage(
-                        Embeds.fbk()
-                            .run {
-                                val gen = if(chat.author.channelId == room.channelId) "" else member.generation?.run { " ($this)" } ?: ""
-                                val name = "${member.names.first()}$gen"
-                                withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
-                            }
-                            .withDescription(message)
-                    ).awaitSingle()
-                }
-            } else if(chat.author.staff) {
-                targets.forEach { channel ->
-                    channel.createMessage(
-                        Embeds.fbk()
-                            .withAuthor(EmbedCreateFields.Author.of(chat.author.name, chat.author.channelUrl, chat.author.imageUrl))
-                            .withDescription(message)
-                    ).awaitSingle()
+
+            val handler: ChatHandler? = if(member != null) { channel ->
+                channel.createMessage(
+                    Embeds.fbk()
+                        .run {
+                            val gen = if(chat.author.channelId == room.channelId) "" else member.generation?.run { " ($this)" } ?: ""
+                            val name = "${member.names.first()}$gen"
+                            withAuthor(EmbedCreateFields.Author.of(name, chat.author.channelUrl, chat.author.imageUrl))
+                        }
+                        .withDescription(message)
+                )
+            } else if(chat.author.staff) { channel ->
+                channel.createMessage(
+                    Embeds.fbk()
+                        .withAuthor(EmbedCreateFields.Author.of(chat.author.name, chat.author.channelUrl, chat.author.imageUrl))
+                        .withDescription(message)
+                )
+            } else null
+
+            if(handler != null) {
+                targets.filter { target ->
+                    val clientId = instances[target.client].clientId
+                    val guildId = (target as? GuildMessageChannel)?.guildId?.asLong() ?: return@filter true
+                    GuildConfigurations
+                        .getOrCreateGuild(clientId, guildId)
+                        .getOrCreateFeatures(target.id.asLong())
+                        .holoChatsTargetChannel
+                }.forEach { channel ->
+                    handler(channel).awaitSingle()
                 }
             }
         } catch(e: Exception) {

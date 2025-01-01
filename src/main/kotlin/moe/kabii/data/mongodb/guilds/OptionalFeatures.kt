@@ -23,6 +23,7 @@ data class FeatureChannel(
     var streamTargetChannel: Boolean = true,
     var postsTargetChannel: Boolean = true,
     var animeTargetChannel: Boolean = true,
+    var holoChatsTargetChannel: Boolean = true,
 
     // other commands
     var musicChannel: Boolean = false,

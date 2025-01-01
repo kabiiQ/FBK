@@ -8,10 +8,14 @@ import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTracks
+import moe.kabii.data.relational.streams.youtube.ytchat.LiveChatConfiguration
+import moe.kabii.data.relational.streams.youtube.ytchat.LiveChatConfigurations
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChat
+import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeLiveChats
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
+import moe.kabii.trackers.HoloChatsTarget
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.TrackerTarget
-import moe.kabii.trackers.TwitterTarget
 import moe.kabii.trackers.YoutubeVideoTarget
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
@@ -71,7 +75,7 @@ object TargetSuggestionGenerator {
                 value = colonArg[1]
             }
         } else if(input.startsWith("@")) {
-            site = TwitterTarget
+            //site = TwitterTarget
             value = value.removePrefix("@")
         }
         site = site ?: siteArg?.run(TrackerTarget::parseSiteArg)
@@ -108,7 +112,7 @@ object TargetSuggestionGenerator {
                     TargetComponents(
                         target.streamChannel.site.targetType,
                         (target.streamChannel.lastKnownUsername ?: target.streamChannel.siteChannelID),
-                        userId = target.streamChannel.siteChannelID
+                        target.streamChannel.siteChannelID
                     )
                 }
 
@@ -139,6 +143,28 @@ object TargetSuggestionGenerator {
                 }.mapTo(targets) { target ->
                     val feedInfo = target.socialFeed.feedInfo()
                     TargetComponents(feedInfo.site, feedInfo.displayName, feedInfo.accountId)
+                }
+
+                LiveChatConfiguration.find {
+                    LiveChatConfigurations.discordClient eq clientId and
+                            (LiveChatConfigurations.discordChannel eq dbChannel.id)
+                }.mapTo(targets) { target ->
+                    TargetComponents(
+                        HoloChatsTarget,
+                        target.chatChannel.lastKnownUsername ?: target.chatChannel.siteChannelID,
+                        target.chatChannel.siteChannelID
+                    )
+                }
+
+                YoutubeLiveChat.find {
+                    YoutubeLiveChats.discordClient eq clientId and
+                            (YoutubeLiveChats.discordChannel eq dbChannel.id)
+                }.mapTo(targets) { target ->
+                    TargetComponents(
+                        HoloChatsTarget,
+                        target.ytVideo.lastTitle ?: target.ytVideo.videoId,
+                        target.ytVideo.videoId
+                    )
                 }
 
                 targets.map { (site, username, userId) ->

@@ -6,6 +6,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.BotSendMessageException
 import moe.kabii.command.Command
 import moe.kabii.command.CommandContainer
+import moe.kabii.command.commands.trackers.track.relay.ChatRelayCommand
 import moe.kabii.command.commands.trackers.util.GlobalTrackSuggestionGenerator
 import moe.kabii.command.commands.trackers.util.TargetSuggestionGenerator
 import moe.kabii.command.params.ChatCommandArguments
@@ -32,6 +33,7 @@ object TrackerCommandBase : CommandContainer {
 
         init {
             autoComplete {
+                // Suggest trackable feeds from all known feeds
                 val siteArg = ChatCommandArguments(event).optInt("site")
                 val feeds = GlobalTrackSuggestionGenerator.suggestFeeds(value, siteArg)
                 suggest(feeds)
@@ -48,6 +50,7 @@ object TrackerCommandBase : CommandContainer {
 
         init {
             autoComplete {
+                // Suggest untrackable feeds - specifically feeds already tracked in this channel
                 val channelId = event.interaction.channelId.asLong()
                 val siteArg = ChatCommandArguments(event).optInt("site")
                 val feeds = TargetSuggestionGenerator.getTargets(client.clientId, channelId, value, siteArg)
@@ -84,6 +87,7 @@ object TrackerCommandBase : CommandContainer {
                     is AnimeTarget -> MediaTrackerCommand
                     is SocialTarget -> PostsTrackerCommand
                     is YoutubeVideoTarget -> YoutubeVideoUntrackCommand
+                    is HoloChatsTarget -> ChatRelayCommand
                 }
                 when(action) {
                     Action.TRACK -> tracker.track(this, targetArgs, features)
