@@ -1,6 +1,6 @@
 services:
   fbk:
-    image: docker.kabii.moe/fbk
+    image: fbk
     container_name: fbk
     restart: unless-stopped
     stdin_open: true
