@@ -46,8 +46,8 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.3.0-RC1") // discord websocket and api
 
     // music bot
-    implementation("dev.arbjerg:lavaplayer:2.2.1")
-    implementation("dev.lavalink.youtube:v2:1.7.2")
+    implementation("dev.arbjerg:lavaplayer:2.2.2")
+    implementation("dev.lavalink.youtube:v2:1.11.3")
     implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
     implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.26.2")
@@ -194,9 +194,9 @@ docker {
 
         images.set(
             listOfNotNull(
-                "docker.kabii.moe/fbk:$version",
+                "fbk:$version",
                 // push "latest" if this is an unflagged build
-                if(buildFlag.isBlank()) "docker.kabii.moe/fbk:latest" else null
+                if(buildFlag.isBlank()) "fbk:latest" else null
             )
         )
     }
