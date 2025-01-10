@@ -323,6 +323,8 @@ sealed class SocialTarget(
 
     abstract suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr>
 
+    override val mentionable = true
+
     /**
      * Given a confirmed real site ID (from getProfile), get or create an associated SocialFeed
      */
