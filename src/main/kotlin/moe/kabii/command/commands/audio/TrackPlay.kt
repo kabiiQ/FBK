@@ -1,5 +1,7 @@
 package moe.kabii.command.commands.audio
 
+import discord4j.common.util.Snowflake
+import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.Command
@@ -7,6 +9,7 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.*
 import moe.kabii.discord.util.Embeds
+import moe.kabii.net.api.commands.ExternalCommand
 import moe.kabii.util.extensions.awaitAction
 
 object TrackPlay : AudioCommandContainer {
@@ -14,7 +17,6 @@ object TrackPlay : AudioCommandContainer {
         override val wikiPath: String? = null
 
         init {
-
             chat {
                 channelFeatureVerify(FeatureChannel::musicChannel)
                 event.deferReply().awaitAction()
@@ -51,6 +53,20 @@ object TrackPlay : AudioCommandContainer {
                         AudioManager.manager.loadItem(query.url, SingleTrackLoader(this, position, query))
                     }
                 }
+            }
+
+            extern {
+                val playCommand = command as ExternalCommand.Play
+                val query = playCommand.query
+                val targetVoice = fbk.client
+                    .getChannelById(Snowflake.of(playCommand.voiceChannelId))
+                    .ofType(VoiceChannel::class.java)
+                    .awaitSingle()
+
+                val audio = AudioManager.getGuildAudio(fbk, targetVoice.guildId.asLong())
+                audio.joinChannel(targetVoice).unwrap()
+
+                AudioManager.manager.loadItem("ytsearch: $query", ExternalSimpleTrackLoader(this, audio, query))
             }
         }
     }

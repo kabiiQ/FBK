@@ -55,6 +55,17 @@ object TrackSkip : AudioCommandContainer {
             chat {
                 skip(this)
             }
+
+            extern {
+                val audio = AudioManager.getGuildAudio(fbk, channel.guildId.asLong())
+                val track = audio.player.playingTrack
+                if(track == null) {
+                    channel.createMessage(Embeds.error(i18n("audio_no_track"))).awaitSingle()
+                    return@extern
+                }
+                audio.player.stopTrack()
+                channel.createMessage(Embeds.fbk(i18n("audio_fskip", track.info.title))).awaitSingle()
+            }
         }
     }
 }

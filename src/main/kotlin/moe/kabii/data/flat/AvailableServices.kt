@@ -33,4 +33,7 @@ object AvailableServices {
 
     val discordOAuth = Keys.config[Keys.OAuth.clientSecret].isNotBlank()
             && Keys.config[Keys.OAuth.rootOauthUri].isNotBlank()
+
+    val ytVideosServer = Keys.config[Keys.API.ytVideos]
+    val externalCommandsServer = Keys.config[Keys.API.externalCommands]
 }

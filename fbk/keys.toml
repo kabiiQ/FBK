@@ -138,6 +138,11 @@ oauth_signing_key = ''
 discord_client_id = ''
 discord_client_secret = ''
 
+# Internal API servers
+[api]
+youtube_videos = false
+external_command_execution = false
+
 # IP rotation if operating at scale and available
 [net]
 proxy_addr = []

@@ -1,10 +1,7 @@
 package moe.kabii.command
 
 import discord4j.rest.util.Permission
-import moe.kabii.command.params.DiscordParameters
-import moe.kabii.command.params.MessageInteractionParameters
-import moe.kabii.command.params.TerminalParameters
-import moe.kabii.command.params.UserInteractionParameters
+import moe.kabii.command.params.*
 import moe.kabii.data.flat.SourcePaths
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.event.interaction.AutoCompleteHandler
@@ -27,6 +24,8 @@ abstract class Command(val name: String) {
     private set
 
     var executeTerminal: (suspend (TerminalParameters) -> Unit)? = null
+    private set
+    var executeExternal: (suspend (ExternalParameters) -> Unit)? = null
     private set
 
     fun getHelpURL(): String? = wikiPath?.let { "${SourcePaths.wikiURL}/$wikiPath" }
@@ -55,6 +54,10 @@ abstract class Command(val name: String) {
 
     fun terminal(block: suspend TerminalParameters.() -> Unit) {
         executeTerminal = block
+    }
+
+    fun extern(block: suspend ExternalParameters.() -> Unit) {
+        executeExternal = block
     }
 
     companion object {

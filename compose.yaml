@@ -12,6 +12,7 @@ services:
     - 8002:8002 # TwitCasting WebHook callback
     - 127.0.0.1:8003:8003 # Internal Twitch API callback
     - 8010:8010 # YouTube video API server
+    - 8020:8020 # External command execution API server
     - 8080:8080 # File server
     - 8101:8101 # OAuth redirect
     volumes:

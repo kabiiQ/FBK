@@ -79,6 +79,10 @@ object Keys : ConfigSpec("") {
     object AniList : ConfigSpec("anilist") {
         val enabled by optional<Boolean>(true, "anilist_enable")
     }
+    object API : ConfigSpec() {
+        val ytVideos by optional<Boolean>(false, "youtube_videos")
+        val externalCommands by optional<Boolean>(false, "external_command_execution")
+    }
     object Net : ConfigSpec() {
         val proxies by required<List<String>>("proxy_addr")
         val port by required<Int>("proxy_port")
