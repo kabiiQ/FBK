@@ -19,7 +19,19 @@ data class YoutubeVideo(
     val liveStreamingDetails: YoutubeVideoLiveDetails?
 ) {
     @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration == null
-    @Transient val short = contentDetails.duration != null && contentDetails.duration <= Duration.ofSeconds(60)
+    @Transient val short = isShort()
+
+    private fun isShort(): Boolean {
+        // No true detection of shorts - use reasonable conditions to guess
+        if(contentDetails.duration != null) {
+            if(contentDetails.duration <= Duration.ofSeconds(60)) return true
+            if(contentDetails.duration <= Duration.ofMinutes(3)) {
+                if(snippet.title.contains("#shorts")) return true
+                if(snippet.description.contains("#shorts")) return true
+            }
+        }
+        return false
+    }
 }
 
 @JsonClass(generateAdapter = true)
