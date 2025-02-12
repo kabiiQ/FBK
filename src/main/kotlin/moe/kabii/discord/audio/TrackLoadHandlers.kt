@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
 import moe.kabii.command.commands.audio.TrackPlay
 import moe.kabii.command.params.DiscordParameters
+import moe.kabii.command.params.ExternalParameters
 import moe.kabii.data.temporary.Cache
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Try
@@ -204,5 +205,54 @@ class ForcePlayFallbackLoader(origin: DiscordParameters, extract: ExtractedQuery
         origin.event.editReply()
             .withEmbeds(Embeds.error("No YouTube video found matching **${extract.url}**."))
             .block()
+    }
+}
+
+/**
+ * Simplified track loader for playing from external commands
+ * Some duplicate code from basic listeners, this is for a specific project and should be kept separate
+ */
+class ExternalSimpleTrackLoader(val origin: ExternalParameters, val audio: GuildAudio, val query: String) : AudioLoadResultHandler {
+    override fun trackLoaded(track: AudioTrack) {
+        val data = QueueData(audio, origin.fbk, origin.user.username, origin.user.id, origin.channel.id, volume = null)
+        track.userData = data
+        if(!audio.player.startTrack(track, true)) {
+            // Add to queue
+            val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else ""
+            runBlocking { audio.tryAdd(track) }
+
+            val addedDuration = track.duration - track.position
+            val untilPlaying = audio.duration?.minus(addedDuration)
+            val eta = if(untilPlaying != null) {
+                val formatted = DurationFormatter(untilPlaying).colonTime
+                " Estimated time until playing: $formatted. "
+            } else " Unknown queue length with a stream in queue. "
+            val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
+
+            val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue, position **${audio.queue.size}**.$eta$paused$looping")
+                .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
+            val reply = origin.channel.createMessage(addedEmbed).block()
+            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+        } else {
+            // Play immediately
+            val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
+            val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
+            val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue.$paused$looping")
+            val reply = origin.channel.createMessage(addedEmbed).block()
+            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+        }
+    }
+
+    override fun playlistLoaded(playlist: AudioPlaylist) = trackLoaded(playlist.tracks.first())
+
+    override fun noMatches() {
+        val noMatch = Embeds.error("No YouTube video found matching **$query**.")
+        origin.channel.createMessage(noMatch).block()
+    }
+
+    override fun loadFailed(exception: FriendlyException) {
+        exception.cause?.run(Throwable::stackTraceString)?.run(LOG::debug)
+        val error = Embeds.error("YouTube search: $query.\nUnable to load audio track.\n\nError: ${exception.message}")
+        origin.channel.createMessage(error).block()
     }
 }
