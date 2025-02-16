@@ -21,6 +21,7 @@ import moe.kabii.data.mongodb.guilds.GuildSettings
 import moe.kabii.discord.event.interaction.ChatCommandHandler
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.FBK
+import moe.kabii.util.extensions.name
 import moe.kabii.util.extensions.tryBlock
 import moe.kabii.util.extensions.userAddress
 import moe.kabii.util.i18n.Translations
@@ -54,6 +55,10 @@ data class DiscordParameters (
     }
 
     val isPM = guild == null
+
+    val authorNickname by lazy {
+        if(guild != null) member.displayName else author.name
+    }
 
     val member: Member by lazy {
         author.asMember(target.id).tryBlock().orNull() ?: error("Unable to get author as member of origin guild")

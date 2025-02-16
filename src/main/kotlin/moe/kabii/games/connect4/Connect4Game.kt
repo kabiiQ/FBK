@@ -18,6 +18,7 @@ import moe.kabii.games.EmbedInfo
 import moe.kabii.games.GameManager
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.extensions.awaitAction
+import moe.kabii.util.extensions.name
 import moe.kabii.util.extensions.stackTraceString
 
 class Connect4Game(
@@ -32,8 +33,8 @@ class Connect4Game(
     private val redId = playerRed.id.asLong()
     private val blueId = playerBlue.id.asLong()
 
-    private var redDisplayName = playerRed.username
-    private var blueDisplayName = playerBlue.username
+    private var redDisplayName = playerRed.name
+    private var blueDisplayName = playerBlue.name
 
     private val gameGrid = Connect4Grid()
 

@@ -7,6 +7,7 @@ import moe.kabii.command.CommandContainer
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.discord.util.Embeds
 import moe.kabii.util.extensions.mapToNotNull
+import moe.kabii.util.extensions.name
 import moe.kabii.util.extensions.orNull
 import moe.kabii.util.extensions.userAddress
 
@@ -112,7 +113,7 @@ object Random : CommandContainer {
 
         init {
             chat {
-                val question = args.optStr("question")?.run { "**${author.username} asked:** $this\n\n" } ?: ""
+                val question = args.optStr("question")?.run { "**${author.name} asked:** $this\n\n" } ?: ""
                 val response = magicball.random()
                 ireply(Embeds.fbk("$question$response")).awaitSingle()
             }
@@ -130,7 +131,7 @@ object Random : CommandContainer {
                     in 501..1000 -> "tails."
                     else -> error("impossible")
                 }
-                ireply(Embeds.fbk("${author.username} flipped a coin and it landed on **$flip**")).awaitSingle()
+                ireply(Embeds.fbk("${author.name} flipped a coin and it landed on **$flip**")).awaitSingle()
             }
         }
     }

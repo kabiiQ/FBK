@@ -26,6 +26,9 @@ get() = asLong()
 
 fun User.userAddress(): String = if(discriminator != "0") "$username#$discriminator" else username
 
+val User.name: String
+get() = globalName.orElse(username)
+
 val Permission.friendlyName
 get() = name.replace("_", " ").run(WordUtils::capitalizeFully)
 
