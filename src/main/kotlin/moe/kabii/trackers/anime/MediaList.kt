@@ -37,6 +37,7 @@ data class Media(
 
     val meanScore: Float = 0.0f,
     val nsfw: Boolean = false
+    val wholeScore: Boolean = false
 ) {
     fun progressStr() = sequence {
         val includeVolume = readVolumes != 0.toShort()
@@ -53,7 +54,15 @@ data class Media(
         yield(total)
     }.joinToString("")
 
-    fun scoreStr() = if(score == null || score == 0.0f) "unrated" else "${"%.1f".format(score)}/10"
+    fun scoreStr() {
+        return if (score == null || score == 0.0f) {
+            "unrated"
+        } else if (wholeScore) {
+            "${score.toInt()}/10"
+        } else {
+            "${"%.1f".format(score)}/10"
+        }
+    }
 }
 
 enum class ConsumptionStatus(val color: Color) {
