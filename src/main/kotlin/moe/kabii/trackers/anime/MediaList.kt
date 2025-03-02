@@ -37,7 +37,6 @@ data class Media(
 
     val meanScore: Float = 0.0f,
     val nsfw: Boolean = false
-    val wholeScore: Boolean = false
 ) {
     fun progressStr() = sequence {
         val includeVolume = readVolumes != 0.toShort()
@@ -57,7 +56,7 @@ data class Media(
     fun scoreStr() {
         return if (score == null || score == 0.0f) {
             "unrated"
-        } else if (wholeScore) {
+        } else if (score.toInt() == score) {
             "${score.toInt()}/10"
         } else {
             "${"%.1f".format(score)}/10"

@@ -90,7 +90,6 @@ object MALParser : MediaListParser(
                     0,
                     meanScore = node.mean ?: 0f,
                     nsfw = node.nsfw,
-                    wholeScore = true
                 )
             }
         }
@@ -112,7 +111,6 @@ object MALParser : MediaListParser(
                     node.numVolumes?.toShort() ?: 0,
                     meanScore = node.mean ?: 0f,
                     nsfw = node.nsfw,
-                    wholeScore = true
                 )
             }
         }
