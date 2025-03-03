@@ -3,6 +3,7 @@ package moe.kabii.trackers.anime
 import discord4j.rest.util.Color
 import moe.kabii.data.relational.anime.DBMedia
 import moe.kabii.data.relational.anime.DBMediaList
+import java.text.DecimalFormat
 
 data class MediaList(
     val media: List<Media>
@@ -38,6 +39,10 @@ data class Media(
     val meanScore: Float = 0.0f,
     val nsfw: Boolean = false
 ) {
+    companion object {
+        val scoreFormat = DecimalFormat("#.#")
+    }
+
     fun progressStr() = sequence {
         val includeVolume = readVolumes != 0.toShort()
         val watched = when(type) {
@@ -53,7 +58,7 @@ data class Media(
         yield(total)
     }.joinToString("")
 
-    fun scoreStr() = if(score == null || score == 0.0f) "unrated" else "${"%.1f".format(score)}/10"
+    fun scoreStr() = if(score == null || score == 0.0f) "unrated" else "${scoreFormat.format(score)}/10"
 }
 
 enum class ConsumptionStatus(val color: Color) {
