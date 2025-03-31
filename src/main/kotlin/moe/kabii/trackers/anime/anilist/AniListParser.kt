@@ -46,6 +46,7 @@ object AniListParser : MediaListParser() {
     override suspend fun parse(id: String): MediaList? {
         val allMedia = mutableListOf<Media>()
         val userId = id.toInt()
+        var username: String? = null
 
         suspend fun pull(listPart: AniListMediaListRequest) {
             val body = listPart.generateRequestBody()
@@ -79,6 +80,7 @@ object AniListParser : MediaListParser() {
             // response successful (200) at this point, parse data
             val json = aniListMediaListAdapter.fromJson(raw)!!
             val collection = json.data.collection
+            username = json.data.collection.user.name
 
             collection.lists
                 .flatMap(AniListMediaList::entries) // combine all various user lists returned
@@ -112,6 +114,6 @@ object AniListParser : MediaListParser() {
         pull(AniListMediaListRequest(userId, MediaType.ANIME))
         delay(callCooldown)
         pull(AniListMediaListRequest(userId, MediaType.MANGA))
-        return MediaList(allMedia)
+        return MediaList(allMedia, currentUsername = username)
     }
 }

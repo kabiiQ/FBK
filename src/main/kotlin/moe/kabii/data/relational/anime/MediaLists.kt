@@ -30,12 +30,14 @@ object TrackedMediaLists {
     object MediaLists : IntIdTable() {
         val site = enumeration("site_id", ListSite::class)
         val siteChannelId = varchar("site_channel_id", 64).uniqueIndex()
+        val username = varchar("last_known_username", 64).nullable()
         val lastListJson = text("last_list_json")
     }
 
     class MediaList(id: EntityID<Int>) : IntEntity(id) {
         var site by MediaLists.site
         var siteListId by MediaLists.siteChannelId
+        var username by MediaLists.username
         var lastListJson by MediaLists.lastListJson
 
         val targets by ListTarget referrersOn ListTargets.mediaList

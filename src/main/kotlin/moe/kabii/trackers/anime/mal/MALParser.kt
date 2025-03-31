@@ -114,7 +114,7 @@ object MALParser : MediaListParser(
                 )
             }
         }
-        return if(animes.isNotEmpty() || mangas.isNotEmpty()) MediaList(media) else null
+        return if(animes.isNotEmpty() || mangas.isNotEmpty()) MediaList(media, currentUsername = id) else null
     }
 
     private fun parseMALStatus(apiStatus: String?): ConsumptionStatus? = when(apiStatus?.lowercase()) {

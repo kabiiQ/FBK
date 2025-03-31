@@ -111,7 +111,7 @@ object KitsuParser : MediaListParser() {
             }
             offset += 500
         }
-        return if(allMedia.isNotEmpty()) MediaList(allMedia) else null
+        return if(allMedia.isNotEmpty()) MediaList(allMedia, currentUsername = null) else null
     }
 
     private fun parseKitsuStatus(status: String) = when(status) {

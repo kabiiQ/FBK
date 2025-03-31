@@ -133,6 +133,7 @@ object TargetSuggestionGenerator {
                 }.mapTo(targets) { target ->
                     TargetComponents(
                         target.mediaList.site.targetType,
+                        target.mediaList.username ?: target.mediaList.siteListId,
                         target.mediaList.siteListId
                     )
                 }

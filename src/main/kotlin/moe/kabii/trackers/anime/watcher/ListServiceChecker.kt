@@ -40,7 +40,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                     lists.forEach { trackedList ->
                         try {
                             val filteredTargets = getActiveTargets(trackedList)
-                            if (filteredTargets == null) return@forEach // list has been untracked entirely
+                                ?: return@forEach // list has been untracked entirely
 
                             val newList = trackedList.downloadCurrentList()!!
 
@@ -79,6 +79,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
         val oldAnime = oldList.count { it.type == MediaType.ANIME }
         val newAnime = newList.count { it.type == MediaType.ANIME }
 
+        // Initial track - don't spam entire list history
         if(oldAnime == 0 && newAnime > 3) {
             val listJson = newMediaList.toDBJson()
             trackedList.lastListJson = listJson
@@ -217,6 +218,10 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
 
             val listJson = newMediaList.toDBJson()
             trackedList.lastListJson = listJson
+        }
+
+    if(newMediaList.currentUsername != null && trackedList.username != newMediaList.currentUsername) {
+            trackedList.username = newMediaList.currentUsername
         }
     }
 

@@ -29,6 +29,9 @@ query ($userId: Int, $mediaType: MediaType, $pageNumber: Int) {
                 }
             }
         }
+        user {
+            name
+        }
         hasNextChunk
     }
 }

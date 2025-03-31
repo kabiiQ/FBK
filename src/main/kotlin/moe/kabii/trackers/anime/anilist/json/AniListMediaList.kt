@@ -53,6 +53,7 @@ data class AniListMediaListData(
 @JsonClass(generateAdapter = true)
 data class AniListMediaListCollection(
     val lists: List<AniListMediaList>,
+    val user: AnilistUser,
     val hasNextChunk: Boolean
 )
 
@@ -102,4 +103,9 @@ data class AniListTitle(
 @JsonClass(generateAdapter = true)
 data class AniListCoverImage(
     val large: String
+)
+
+@JsonClass(generateAdapter = true)
+data class AnilistUser(
+    val name: String
 )

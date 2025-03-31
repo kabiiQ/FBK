@@ -6,7 +6,8 @@ import moe.kabii.data.relational.anime.DBMediaList
 import java.text.DecimalFormat
 
 data class MediaList(
-    val media: List<Media>
+    val media: List<Media>,
+    val currentUsername: String?
 ) {
     fun toDBJson(): String {
         val dbMedia = media.map { item ->
