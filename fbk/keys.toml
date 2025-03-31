@@ -155,6 +155,7 @@ discord_client_secret = ''
 [api]
 youtube_videos = false
 external_command_execution = false
+external_logging_endpoint = ''
 
 # IP rotation if operating at scale and available
 [net]

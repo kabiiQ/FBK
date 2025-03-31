@@ -15,6 +15,7 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.net.api.logging.ExternalLogging
 import moe.kabii.util.extensions.*
 
 class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatInputInteractionEvent>(ChatInputInteractionEvent::class) {
@@ -45,6 +46,7 @@ class ChatCommandHandler(val instances: DiscordInstances) : EventListener<ChatIn
                 val context = if (isPM) "Private" else "Guild"
                 val optStr = GlobalCommandRegistrar.optionsToString(event.options)
                 LOG.info("${context}Command:\t$guildName\t${author.userAddress()}\t:${event.commandName}\t$optStr :: on ${Thread.currentThread().name}")
+                ExternalLogging.logCommand(guildName, author.username, event.commandName, optStr)
                 val chan = interaction.channel.awaitSingle()
                 val param = DiscordParameters(this@ChatCommandHandler, event, interaction, chan, guild, author, command, client)
 
