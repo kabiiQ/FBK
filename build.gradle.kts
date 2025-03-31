@@ -185,8 +185,9 @@ docker {
         maintainer.set("kabiiQ")
         ports.set(listOf(
             8001, // YouTube PubSub subscription callback
-            8002, // TwitCasting WebHook callback
-            8003, // Twitch API callback server (Internal, must reverse proxy from SSL :443)
+            8002, // TwitCasting Webhook endpoint
+            8003, // Twitch Webhook endpoint (Internal, must reverse proxy from SSL :443)
+            8004, // Kick Webhook endpoint
             8010, // YouTube video API server
             8020, // External command execution API server
             8080, // File server

@@ -11,13 +11,14 @@ import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.posts.bluesky.BlueskyFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.TwitchEventSubscriptions
+import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
 import moe.kabii.trackers.posts.twitter.NitterParser
-import moe.kabii.trackers.videos.kick.api.KickParser
+import moe.kabii.trackers.videos.kick.parser.KickNonPublic
+import moe.kabii.trackers.videos.kick.parser.KickParser
 import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.youtube.YoutubeParser
@@ -216,7 +217,7 @@ object TwitcastingTarget : StreamingTarget(
 
 object KickTarget : StreamingTarget(
     KickParser.color,
-    available = false,
+    AvailableServices.kickApi,
     "Kick.com",
     FeatureChannel::streamTargetChannel,
     listOf(
@@ -228,20 +229,42 @@ object KickTarget : StreamingTarget(
     override val dbSite: TrackedStreams.DBSite
         get() = TrackedStreams.DBSite.KICK
 
-    override suspend fun getChannel(id: String) = try {
-        val channel = KickParser.getChannel(id)
-        if(channel != null) {
-            Ok(BasicStreamChannel(KickTarget, channel.slug, channel.user.username, channel.url))
-        } else Err(TrackerErr.NotFound)
-    } catch(e: Exception) {
-        LOG.debug("Error getting Kick channel: ${e.message}")
-        LOG.debug(e.stackTraceString)
-        Err(TrackerErr.IO)
+    override suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr> {
+        try {
+            if(id.toLongOrNull() != null) {
+                // If numerical ID, can only do a database match for now
+                val knownChannel = propagateTransaction {
+                    TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.KICK, id)
+                }
+                return if(knownChannel != null) {
+                    val info = BasicStreamChannel(KickTarget, knownChannel.siteChannelID, knownChannel.lastKnownUsername!!, URLUtil.StreamingSites.Kick.channelByName(knownChannel.lastKnownUsername!!))
+                    Ok(info)
+                } else Err(TrackerErr.NotFound)
+            }
+
+            val channel = KickNonPublic.channelRequest(id)
+            return if(channel != null) {
+                Ok(BasicStreamChannel(KickTarget, channel.id.toString(), channel.user.username, channel.url))
+            } else Err(TrackerErr.NotFound)
+        } catch(e: Exception) {
+            LOG.debug("Error getting Kick channel: ${e.message}")
+            LOG.debug(e.stackTraceString)
+            return Err(TrackerErr.IO)
+        }
     }
 
     override fun feedById(id: String) = URLUtil.StreamingSites.Kick.channelByName(id)
 
-    override val onTrack: TrackCallback = { _, _ -> }
+    override val onTrack: TrackCallback = callback@{ origin, channel ->
+        val services = origin.handler.instances.services
+        val kick = services.kick
+
+        val targets = kick.getActiveTargets(channel) ?: return@callback
+        val stream = KickParser.getChannel(channel.siteChannelID.toLong()).orNull()
+        if(stream != null) {
+            kick.updateChannel(channel, stream, targets)
+        }
+    }
 }
 
 object HoloChatsTarget : TrackerTarget(

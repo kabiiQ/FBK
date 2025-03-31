@@ -10,15 +10,15 @@ import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.DBStreams
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.StreamWatcher
-import moe.kabii.trackers.videos.kick.api.KickChannel
-import moe.kabii.trackers.videos.kick.api.KickParser
+import moe.kabii.trackers.videos.kick.parser.KickParser
+import moe.kabii.trackers.videos.kick.parser.KickStreamInfo
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.extensions.*
@@ -34,21 +34,19 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
     }
 
     @CreatesExposedContext
-    suspend fun streamStart(channel: TrackedStreams.StreamChannel, info: KickChannel, targets: List<TrackedTarget>) {
+    suspend fun streamStart(channel: TrackedStreams.StreamChannel, info: KickStreamInfo, targets: List<TrackedTarget>) {
 
         // create live stats object for stream
-        val liveInfo = checkNotNull(info.livestream)
-
         val newEvent = propagateTransaction {
             if(DBStreams.LiveStreamEvent.getKickStreamFor(channel) != null) return@propagateTransaction null
             DBStreams.LiveStreamEvent.new {
                 this.channelID = channel
-                this.startTime = liveInfo.createdAt.jodaDateTime
-                this.peakViewers = liveInfo.viewers
-                this.averageViewers = liveInfo.viewers
+                this.startTime = info.startTime.jodaDateTime
+                this.peakViewers = info.viewers
+                this.averageViewers = info.viewers
                 this.uptimeTicks = 1
-                this.lastTitle = liveInfo.title
-                this.lastGame = liveInfo.categories
+                this.lastTitle = info.title
+                this.lastGame = info.category.name
             }
 
             val (noEvent, _) = eventManager.targets(channel)
@@ -56,29 +54,19 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
             noEvent
                 .forEach { target ->
                     eventManager.scheduleEvent(
-                        target, info.url, liveInfo.title, liveInfo.categories, null, liveInfo.thumbnail?.url
+                        target, info.url, info.title, info.category.name, null, null
                     )
                 }
         }
 
         if(newEvent == null) {
-            LOG.error("Duplicate live stream event for Kick stream: ${info.user}")
-            return
-        }
-
-        targets.forEach { target ->
-            try {
-                createLiveNotification(channel, info, target)
-            } catch(e: Exception) {
-                LOG.warn("Error while sending Kick notification for channel: $channel :: ${e.message}")
-                LOG.debug(e.stackTraceString)
-            }
+            throw IllegalStateException("Duplicate live stream event for Kick stream: ${info.slug}")
         }
     }
 
     data class KickNotification(val discordClient: Int, val guildId: Snowflake?, val channelId: Snowflake, val messageId: Snowflake)
     @RequiresExposedContext
-    suspend fun streamEnd(dbStream: DBStreams.LiveStreamEvent, info: KickChannel) {
+    suspend fun streamEnd(dbStream: DBStreams.LiveStreamEvent, info: KickStreamInfo) {
 
         val notifications = propagateTransaction {
             val (_, existingEvent) = eventManager.targets(dbStream.channelID)
@@ -99,6 +87,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 }
         }
 
+        // Update sent notifications with either 'summary' embed or deletion
         notifications.forEach { (dbNotif, data) ->
 
             val fbk = instances[data.discordClient]
@@ -118,7 +107,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                             .between(dbStream.startTime.javaInstant, Instant.now())
                             .run(::DurationFormatter)
                             .fullTime
-                        val username = info.user.username
+                        val username = info.slug
 
                         val body = StringBuilder()
                         if(dbStream.lastTitle.isNotBlank()) {
@@ -127,12 +116,12 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                                 .append('\n')
                         }
                         if(features.endGame) {
-                            body.append("Last categories listed: ")
+                            body.append("Last category: ")
                                 .append(dbStream.lastGame)
                         }
 
                         val endedEmbed = Embeds.other(inactiveColor)
-                            .withAuthor(EmbedCreateFields.Author.of("$username was live for [$uptime].", info.url, info.user.avatarUrl))
+                            .withAuthor(EmbedCreateFields.Author.of("$username was live for $uptime.", info.url, null))
                             .withFooter(EmbedCreateFields.Footer.of("Stream ended ", NettyFileServer.kickLogo))
                             .withTimestamp(Instant.now())
                             .run {
@@ -177,7 +166,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
         }
     }
 
-    private suspend fun createLiveNotification(channel: TrackedStreams.StreamChannel, info: KickChannel, target: TrackedTarget) {
+    suspend fun createLiveNotification(channel: TrackedStreams.StreamChannel, info: KickStreamInfo, target: TrackedTarget) {
         discordTask {
             val fbk = instances[target.discordClient]
             // get target channel in discord
@@ -192,29 +181,23 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 getMentionRoleFor(target, chan, features)
             } else null
 
-            val liveInfo = info.livestream!!
-            val title = StringUtils.abbreviate("${info.user.username} live in category: ${liveInfo.categories}", MagicNumbers.Embed.TITLE)
-            val description = "[${liveInfo.title}](${info.url})"
+            val title = StringUtils.abbreviate("${info.slug} live in category: ${info.category.name}", MagicNumbers.Embed.TITLE)
+            val description = info.url
 
             try {
                 val embed = Embeds.other(description, liveColor)
                     .withAuthor(
                         EmbedCreateFields.Author.of(
-                            "${info.user.username} went live!",
+                            "${info.slug} went live!",
                             info.url,
-                            info.user.avatarUrl
+                            null
                         )
                     )
                     .withTitle(title)
+                    .withThumbnail(info.category.thumbnail)
                     .withUrl(info.url)
                     .withFooter(EmbedCreateFields.Footer.of("Live since ", NettyFileServer.kickLogo))
-                    .withTimestamp(info.livestream.createdAt)
-                    .run {
-                        val thumbnail = liveInfo.thumbnail?.url
-                        if (thumbnail != null) {
-                            if (features.thumbnails) withImage(thumbnail) else withThumbnail(thumbnail)
-                        } else this
-                    }
+                    .withTimestamp(info.startTime)
 
                 val mentionMessage = if (mention != null) {
 
@@ -229,7 +212,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                     } else ""
                     val textPart = mention.textPart
                     val text = textPart?.run {
-                        TrackerUtil.formatText(this, info.user.username, info.livestream.createdAt, info.id.toString(), info.url)
+                        TrackerUtil.formatText(this, info.slug, info.startTime, info.userId.toString(), info.url)
                     } ?: ""
                     chan.createMessage("$rolePart$text")
 

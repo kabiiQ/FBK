@@ -1,14 +1,20 @@
 package moe.kabii.trackers.videos.kick.watcher
 
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.time.withTimeout
 import moe.kabii.LOG
+import moe.kabii.data.relational.streams.DBStreams
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.rusty.Err
+import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
-import moe.kabii.trackers.videos.kick.api.KickChannel
-import moe.kabii.trackers.videos.kick.api.KickParser
+import moe.kabii.trackers.TrackerErr
+import moe.kabii.trackers.videos.kick.parser.KickParser
+import moe.kabii.trackers.videos.kick.parser.KickStreamInfo
+import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.applicationLoop
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -44,75 +50,109 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
         val tracked = propagateTransaction {
             TrackedStreams.StreamChannel.find {
                 TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK
-            }.toList()
-        }
-
-        tracked.forEach { channel ->
-            // call each kick stream sequentially - unknown rate limits
-            try {
-                delay(callDelay)
-                val kickChannel = KickParser.getChannel(channel.siteChannelID)
-                if(kickChannel == null) {
-                    LOG.warn("Error getting Kick channel: ${channel.siteChannelID}")
-                    return@forEach
-                }
-
-                val filteredTargets = getActiveTargets(channel)
-                if(filteredTargets != null) {
-                    updateChannel(channel, kickChannel, filteredTargets)
-                }
-            } catch(e: Exception) {
-                LOG.warn("Error updating Kick channel: $channel")
-                LOG.debug(e.stackTraceString)
+            }.associate { chan ->
+                chan.siteChannelID.toLong() to chan.id
             }
         }
+
+        // See TwitchChecker for more comments on this - identical process associating id with data
+        val ids = tracked.keys
+        val channelData = KickParser.getChannels(ids)
+
+        // call updateChannel, merging retrieved channel info with db
+        channelData.mapNotNull { (id, channel) ->
+            when (channel) {
+                is Err -> {
+                    if (channel.value == TrackerErr.NotFound) LOG.warn("Kick channel $id returned not found error!")
+                    else LOG.warn("Error contacting Kick: channel $id")
+                    null
+                }
+                is Ok -> {
+                    taskScope.launch {
+                        propagateTransaction {
+                            try {
+                                val trackedChannel = TrackedStreams.StreamChannel.findById(tracked.getValue(id))!!
+                                val filteredTargets = getActiveTargets(trackedChannel)
+                                if (filteredTargets != null) {
+                                    updateChannel(trackedChannel, channel.value, filteredTargets)
+                                } // else channel has been untracked entirely
+                            } catch (e: Exception) {
+                                LOG.warn("Error updating Kick channel: $id")
+                                LOG.debug(e.stackTraceString)
+                            }
+                        }
+                    }
+                }
+            }
+        }.joinAll()
     }
 
-    suspend fun updateChannel(db: TrackedStreams.StreamChannel, kick: KickChannel, targets: List<TrackedTarget>) {
-        val stream = kick.livestream
-        val dbStream = propagateTransaction {
-            DBStreams.LiveStreamEvent.getKickStreamFor(db)
+    @RequiresExposedContext
+    suspend fun updateChannel(db: TrackedStreams.StreamChannel, kick: KickStreamInfo, targets: List<TrackedTarget>) {
+        // Lock channel to prevent poller overlap with webhooks
+        val lock = db.updateLock()
+        if(!lock.tryLock()) {
+            LOG.debug("Skipping Kick update for ${db.lastKnownUsername} - already in use")
+            return
         }
-        if(stream?.live == true) {
 
-            // stream is live, edit or post a notification in each target channel
-            if(dbStream != null) {
+        try {
+            val dbStream = propagateTransaction {
+                DBStreams.LiveStreamEvent.getKickStreamFor(db)
+            }
+            if (kick.live) {
 
-                // stream is already known, update stats
-                propagateTransaction {
-                    dbStream.updateViewers(stream.viewers)
-                    if(stream.title != dbStream.lastTitle || stream.categories != dbStream.lastGame) {
-                        dbStream.lastTitle = stream.title
-                        dbStream.lastGame = stream.categories
+                if (dbStream != null) {
+
+                    // stream is already known, update stats
+                    propagateTransaction {
+                        dbStream.updateViewers(kick.viewers)
+                        if (kick.title != dbStream.lastTitle || kick.category.name != dbStream.lastGame) {
+                            dbStream.lastTitle = kick.title
+                            dbStream.lastGame = kick.category.name
+                        }
+
+                        val (_, existingEvent) = eventManager.targets(db)
+                        existingEvent
+                            .forEach { event ->
+                                eventManager.updateLiveEvent(event, kick.title)
+                            }
                     }
 
-                    val (_, existingEvent) = eventManager.targets(db)
-                    existingEvent
-                        .forEach { event ->
-                            eventManager.updateLiveEvent(event, stream.title)
-                        }
+                } else {
+                    // new stream has started
+                    streamStart(db, kick, targets)
                 }
+
+                // stream is live, edit or post a notification in each target channel
+                targets
+                    .filter { target -> DBStreams.Notification.getForTarget(target).empty() }
+                    .forEach { target ->
+                        try {
+                            createLiveNotification(db, kick, target)
+                        } catch(e: Exception) {
+                            LOG.warn("Error while sending Kick notification for channel: ${kick.slug} :: ${e.message}")
+                            LOG.debug(e.stackTraceString)
+                        }
+                    }
 
             } else {
-                // new stream has started
-                streamStart(db, kick, targets)
-            }
 
-        } else {
-
-            // stream is not live, check if there are any existing notifications to remove
-            if(dbStream != null) {
-
-                // no longer live but we have stream history. edit/remove any notifications and delete history
-                try {
-                    streamEnd(dbStream, kick)
-                } finally {
-                    propagateTransaction {
-                        dbStream.delete()
+                // stream is not live, check if there are any existing notifications to remove
+                if (dbStream != null) {
+                    // no longer live but we have stream history. edit/remove any notifications and delete history
+                    try {
+                        streamEnd(dbStream, kick)
+                    } finally {
+                        propagateTransaction {
+                            dbStream.delete()
+                        }
                     }
-                }
 
-            } // else stream is not live and there are no notifications
+                } // else stream is not live and there are no notifications
+            }
+        } finally {
+            if(lock.isLocked) lock.unlock()
         }
     }
 }

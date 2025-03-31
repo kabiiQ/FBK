@@ -1,7 +1,6 @@
-package moe.kabii.data.relational.streams.twitch
+package moe.kabii.data.relational.streams
 
 import moe.kabii.data.relational.discord.MessageHistory
-import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.trackers.videos.StreamWatcher
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -56,17 +55,6 @@ object DBStreams {
             fun getKickStreamFor(dbChannel: TrackedStreams.StreamChannel) = find {
                 LiveStreamEvents.channelID eq dbChannel.id
             }.firstOrNull()
-
-//            fun getKickStreamFor(channel: String): LiveStreamEvent? {
-//                return LiveStreamEvent.wrapRows(
-//                    LiveStreamEvents
-//                        .innerJoin(TrackedStreams.StreamChannels)
-//                        .select {
-//                            TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.KICK and
-//                                    (LowerCase(TrackedStreams.StreamChannels.siteChannelID) eq channel.lowercase())
-//                        }
-//                ).firstOrNull()
-//            }
         }
 
         fun updateViewers(current: Int) {

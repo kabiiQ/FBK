@@ -12,7 +12,10 @@ import kotlin.math.min
 object ClientRotation {
     private val addrs = Keys.config[Keys.Net.proxies]
     private val port = Keys.config[Keys.Net.port]
+    private val scraper = Keys.config[Keys.Net.scraper]
+
     private val clients: List<OkHttpClient>
+    private val scrapeClient: OkHttpClient?
 
     init {
         clients = addrs.mapNotNull { addr ->
@@ -27,8 +30,19 @@ object ClientRotation {
             OkHttpClient.Builder()
                 .proxy(proxy)
                 .build()
-        }
-            .run { listOf(OkHTTP) + this }
+        }.run { listOf(OkHTTP) + this }
+
+        scrapeClient = if(scraper.isNotBlank()) {
+            try {
+                val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(scraper, port))
+                OkHttpClient.Builder()
+                    .proxy(proxy)
+                    .build()
+            } catch(e: Exception) {
+                LOG.error("Error defining 'scraper' proxy: $scraper :: ${e.message}")
+                null
+            }
+        } else null
     }
 
     private val cache = mutableMapOf<Int, OkHttpClient>()
@@ -51,4 +65,10 @@ object ClientRotation {
      * The first client (index 0) should be the "base" while any additional are "alternate" clients.
      */
     fun getClientNumber(index: Int) = clients[min(index, clients.size - 1)]
+
+    /**
+     * Gets the client defined as the alternative to use for scraping, if it is defined.
+     * Otherwise returns a client from #getClient
+     */
+    fun getScraperClient() = scrapeClient ?: clients.last()
 }

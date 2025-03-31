@@ -40,6 +40,10 @@
                 {
                     "name": "TwitCasting",
                     "value": 103
+                },
+                {
+                    "name": "Kick",
+                    "value": 104
                 }
             ]
         },
@@ -93,7 +97,7 @@
         },
         {
             "name": "twittercolor",
-            "description": "A custom color to apply to Tweet messages for this feed.",
+            "description": "A custom color to apply to Posts (Twitter/Bluesky) for this feed.",
             "type": 3,
             "required": false
         }

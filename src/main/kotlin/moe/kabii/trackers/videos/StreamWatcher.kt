@@ -13,9 +13,9 @@ import moe.kabii.data.mongodb.guilds.MongoStreamChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.DBStreams
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.twitcasting.Twitcasts
-import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeNotification
 import moe.kabii.data.relational.streams.youtube.YoutubeNotifications
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack

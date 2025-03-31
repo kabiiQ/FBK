@@ -44,6 +44,19 @@ app_access_token = ''
 twitch_callback_url = ''
 twitch_signing_key = 'randomkey'
 
+[kick]
+# Create Kick application @ https://kick.com/settings/developer
+# Setting kick_client_id and kick_client_secret enables the Kick API service.
+kick_client_id = ''
+kick_client_secret = ''
+# Leave access token blank
+kick_app_access_token = ''
+# kick_register_subscriptions enables the Kick webhook service for faster stream notifications.
+# This works similarily as described in the Twitch section, except:
+# 1. The callback URL is set in the Kick Developer settings rather than on the client side
+# 2. The port to reverse proxy to is 8004
+kick_register_subscriptions = false
+
 [twitcasting]
 # Create Twitcasting application @ http://twitcasting.tv/developer.php
 # Setting twitcast_client_id and twitcast_client_secret enables the Twitcasting API service. This is sufficient for Twitcasting tracking.
@@ -146,4 +159,5 @@ external_command_execution = false
 # IP rotation if operating at scale and available
 [net]
 proxy_addr = []
+proxy_scraping = ''
 proxy_port = 9000

@@ -14,6 +14,7 @@ import moe.kabii.trackers.posts.bluesky.streaming.BlueskyFirehose
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.SyndicationChecker
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
+import moe.kabii.trackers.videos.kick.webhook.KickSubscriptionManager
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
@@ -35,6 +36,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
 
     val twitCastChecker: TwitcastChecker
     val twitch: TwitchChecker
+    val kick: KickChecker
     val ytChatWatcher: YoutubeChatWatcher
     val twitterChecker: NitterChecker
     val blueskyFirehose: BlueskyFirehose
@@ -94,10 +96,15 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val ytManualPuller = YoutubeFeedPuller(pullDelay)
 
         val kickDelay = ServiceRequestCooldownSpec(
-            callDelay = 1_200L,
-            minimumRepeatTime = 75_000L
+            callDelay = 500L,
+            minimumRepeatTime = if(AvailableServices.kickWebhooks) 300_000L else 60_000L
         )
-        val kickChecker = KickChecker(discord, kickDelay)
+        kick = KickChecker(discord, kickDelay)
+        val kickSubDelay = ServiceRequestCooldownSpec(
+            callDelay = 0L,
+            minimumRepeatTime = 20_000L
+        )
+        val kickSubs = KickSubscriptionManager(discord, kick, kickSubDelay)
 
         val malDelay = ServiceRequestCooldownSpec(
             callDelay = MALParser.callCooldown,
@@ -149,11 +156,11 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             service(reminders, "ReminderWatcher", true)
             service(twitch, "TwitchChecker", AvailableServices.twitchApi)
             service(twitchSubs, "TwitchSubscriptionManager", AvailableServices.twitchWebhooks)
+            service(kick, "KickChecker", AvailableServices.kickApi)
+            service(kickSubs, "KickSubscriptionManager", AvailableServices.kickWebhooks)
             service(ytSubscriptions, "YoutubeSubscriptionManager", AvailableServices.youtubePubSub)
             service(ytChecker, "YoutubeChecker", AvailableServices.youtubeApi)
             service(ytManualPuller, "YT-ManualFeedPull", AvailableServices.youtubePoller)
-            // Disabled due to hitting limits of undocumented API
-            service(kickChecker, "KickChecker", false)
             service(ytMembershipMaintainer, "YoutubeMembershipMaintainer", true)
             service(malChecker, "MediaListWatcher-MAL", AvailableServices.mal)
             service(kitsuChecker, "MediaListWatcher-Kitsu", true)

@@ -26,6 +26,9 @@ object AvailableServices {
     val twitCastingWebhooks = Keys.config[Keys.Twitcasting.signature].isNotBlank()
     val twitCasting = twitCastingApi && twitCastingWebhooks
 
+    val kickApi = Keys.config[Keys.Kick.clientSecret].isNotBlank()
+    val kickWebhooks = Keys.config[Keys.Kick.subscriptions]
+
     val wolfram = Keys.config[Keys.Wolfram.appId].isNotBlank()
 
     val mal = Keys.config[Keys.MAL.malKey].isNotBlank()
