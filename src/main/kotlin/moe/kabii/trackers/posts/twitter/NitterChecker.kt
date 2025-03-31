@@ -331,16 +331,25 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                     val outdated = !tweet.retweet && Duration.between(tweet.date, Instant.now()) > Duration.ofMinutes(15)
                     val mentionText = mention?.toText(!outdated, user.name, tweet.date, user.username, tweet.url) ?: ""
 
-                    val baseNotif = MessageCreateSpec.create()
+                    val notification = MessageCreateSpec.create()
                         .run {
-                            val domain = if(postCfg.customTwitterDomain != null) postCfg.customTwitterDomain else "twitter.com"
+                            val tweetPath = "${user.username}/status/${tweet.id}"
+                            val url = if(postCfg.customTwitterDomain?.contains("&tweet") == true) {
+                                // custom twitter path with variables
+                                // fixvx.com/&path/en -> fixupx.com/user/status/id/en
+                                postCfg.customTwitterDomain!!.replace("&tweet", tweetPath)
+                            } else {
+                                // fixvx.com -> fixvx.com/user/status/id
+                                val domain = postCfg.customTwitterDomain ?: "x.com"
+                                "$domain/$tweetPath"
+                            }
                             val timestamp = if(!tweet.retweet) TimestampFormat.RELATIVE_TIME.format(tweet.date) else ""
-                            withContent("$mentionText**@${user.username}** $action $timestamp: https://$domain/${user.username}/status/${tweet.id}")
+                            withContent("$mentionText**@${user.username}** $action $timestamp: https://$url")
                         }
 
                     // If the user has set a custom domain to be used, we just post the URL and let Discord handle the generation
-                    val notifSpec = if(postCfg.customTwitterDomain != null) baseNotif else {
-                        baseNotif
+                    val notifSpec = if(postCfg.customTwitterDomain != null) notification else {
+                        notification
                             .run {
                                 if(editedThumb != null) withFiles(MessageCreateFields.File.of("thumbnail_edit.png", editedThumb)) else this
                             }
