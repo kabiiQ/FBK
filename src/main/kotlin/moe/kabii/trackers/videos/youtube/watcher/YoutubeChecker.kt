@@ -24,10 +24,10 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
-sealed class YoutubeCall(val video: YoutubeVideo) {
-    class Live(val live: YoutubeLiveEvent) : YoutubeCall(live.ytVideo)
-    class Scheduled(val scheduled: YoutubeScheduledEvent) : YoutubeCall(scheduled.ytVideo)
-    class New(val new: YoutubeVideo) : YoutubeCall(new)
+sealed class YoutubeCall(val video: YoutubeVideo, val code: String) {
+    class Live(val live: YoutubeLiveEvent) : YoutubeCall(live.ytVideo, "l")
+    class Scheduled(val scheduled: YoutubeScheduledEvent, code: String = "s") : YoutubeCall(scheduled.ytVideo, code)
+    class New(val new: YoutubeVideo) : YoutubeCall(new, "n")
 }
 
 class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: ServiceRequestCooldownSpec): Runnable, YoutubeNotifier(subscriptions) {
@@ -86,10 +86,11 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 }
 
                 // 2: collect all 'scheduled' videos with 'expire' update timer due
-                val dbScheduledVideos =
-                    YoutubeScheduledEvent.find {
+                val dbScheduledVideos = YoutubeScheduledEvent.wrapRows(
+                    YoutubeScheduledEvents.select {
                         YoutubeScheduledEvents.dataExpiration lessEq currentTime
                     }
+                )
                 dbScheduledVideos.forEach { scheduled ->
                     val callReason = YoutubeCall.Scheduled(scheduled)
                     targetLookup[callReason.video.videoId] = callReason
@@ -114,7 +115,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             .limit(idChunk - remainder)
                     ).toList()
                     backfill.forEach { event ->
-                        val callReason = YoutubeCall.Scheduled(event)
+                        val callReason = YoutubeCall.Scheduled(event, "r")
                         targetLookup[callReason.video.videoId] = callReason
                     }
                 }
@@ -122,7 +123,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
         }
 
         // main IO call, process as we go
-        LOG.debug("yt expected calls: ${targetLookup.keys}")
+        val expected = targetLookup
+            .map { (id, call) -> "${call.code}:$id" }
+            .joinToString(",")
+        LOG.debug("yt expected calls: $expected")
         ytScope.launch {
             try {
                 kotlinx.coroutines.time.withTimeout(Duration.ofSeconds(
@@ -146,7 +150,6 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                             }
 
                             try {
-
                                 // launch coroutine for each video to be processed
                                 discordTask(30_000L) {
                                     try {
@@ -299,11 +302,30 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                         dbEvent.scheduledStart = scheduled.jodaDateTime
 
                         // set next update time to 1/2 time until stream start
-                        // special condition: keep polling newly scheduled streams as certain people tend to schedule streams incorrectly and then fix
-                        // provides roughly 15 minutes to 'fix' stream while still not constantly re-polling fake streams/chat rooms that are far in the future
                         val untilStart = Duration.between(Instant.now(), scheduled)
-                        val halfway = untilStart.toMillis() / 2
-                        val updateInterval = if(dbEvent.apiCalls > 2) halfway else min(halfway, Duration.ofMinutes(5).toMillis())
+                        val halfway = max(untilStart.toMillis() / 2, 0)
+
+                        val updateInterval = when {
+                            dbEvent.apiCalls <= 2 -> {
+                                // special condition: keep polling newly scheduled streams as certain people tend to schedule streams incorrectly and then fix
+                                // provides roughly 15 minutes to 'fix' stream while still not constantly re-polling fake streams/chat rooms that are far in the future
+                                min(halfway, Duration.ofMinutes(5).toMillis())
+                            }
+                            untilStart < Duration.ofMinutes(-20) -> {
+                                // special condition: stream did not start on time and is being rechecked every minute
+                                // after 20 minutes overdue, begin penalizing re-polling of stream
+                                Duration.ofMinutes(2).toMillis()
+                            }
+                            untilStart < Duration.ofHours(-1) -> {
+                                Duration.ofMinutes(4).toMillis()
+                            }
+                            untilStart < Duration.ofHours(-2) -> {
+                                // stream is 2 hours overdue, unlikely to go live at this point
+                                Duration.ofMinutes(6).toMillis()
+                            }
+                            else -> halfway
+                        }
+
                         val nextUpdate = DateTime.now().plus(updateInterval)
                         dbEvent.dataExpiration = nextUpdate
                         dbEvent.apiCalls += 1
