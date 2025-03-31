@@ -21,34 +21,41 @@ import java.io.StringReader
 object YoutubeVideoIntake {
 
     private val lock = Mutex()
+    private val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("YT-ManualIntake") + SupervisorJob())
 
-    suspend fun intakeExisting(channelId: String) {
+    fun intakeAsync(channelId: String) {
         // get recent video ids for intake
         // this can be a very slow response from YT, so send this off async
-        val job = SupervisorJob()
-        val taskScope = CoroutineScope(DiscordTaskPool.streamThreads + job)
         taskScope.launch {
-            lock.withLock {
-                val request = newRequestBuilder()
-                    .get()
-                    .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
-                    .build()
+            intake(channelId)
+        }
+    }
 
-                try {
-                    OkHTTP.newCall(request).execute().use { response ->
+    suspend fun intake(channelId: String): Int? {
+        return lock.withLock {
+            val request = newRequestBuilder()
+                .get()
+                .url("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
+                .build()
+
+            try {
+                OkHTTP.newCall(request).execute().use { response ->
+                    if(response.isSuccessful) {
                         val xml = response.body.string()
                         intakeXml(xml)
                     }
-
-                } catch (e: Exception) {
-                    LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
-                    LOG.debug(e.stackTraceString)
+                    response.code
                 }
+
+            } catch (e: Exception) {
+                LOG.warn("Unable to intake existing videos for YouTube channel $channelId: $request :: ${e.message}")
+                LOG.debug(e.stackTraceString)
+                null
             }
         }
     }
 
-    suspend fun intakeXml(xml: String) {
+    fun intakeXml(xml: String) {
         try {
             val reader = SAXReader.createDefault()
             val source = InputSource(StringReader(xml))

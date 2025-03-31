@@ -20,7 +20,7 @@ class YoutubeFeedPuller(val cooldown: ServiceRequestCooldownSpec) : Runnable {
                 }.forEach { feed ->
                     val channel = feed.siteChannelID
                     LOG.debug("Manually pulling feed updates for $channel")
-                    YoutubeVideoIntake.intakeExisting(channel)
+                    YoutubeVideoIntake.intakeAsync(channel)
                     delay(cooldown.callDelay)
                 }
             }

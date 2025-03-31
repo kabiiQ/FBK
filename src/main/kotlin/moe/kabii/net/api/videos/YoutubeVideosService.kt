@@ -202,7 +202,7 @@ object YoutubeVideosService {
                             TrackedStreams.StreamChannel.insertApiChannel(TrackedStreams.DBSite.YOUTUBE, streamInfo.accountId, streamInfo.displayName)
                         }
 
-                        YoutubeVideoIntake.intakeExisting(streamInfo.accountId)
+                        YoutubeVideoIntake.intakeAsync(streamInfo.accountId)
                         call.respondText(
                             text = YoutubeChannelResponse.generate(new),
                             status = HttpStatusCode.Created

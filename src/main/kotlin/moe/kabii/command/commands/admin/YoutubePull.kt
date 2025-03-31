@@ -1,5 +1,7 @@
 package moe.kabii.command.commands.admin
 
+import kotlinx.coroutines.runBlocking
+import moe.kabii.LOG
 import moe.kabii.command.Command
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
@@ -7,6 +9,7 @@ import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import kotlin.concurrent.thread
 
 object YoutubePull : Command("ytpull") {
     override val commandExempt = true
@@ -25,8 +28,8 @@ object YoutubePull : Command("ytpull") {
     suspend fun pullYoutubeFeeds(args: List<String>) {
         val arg = args[0]
 
-        propagateTransaction {
-            when (arg.lowercase()) {
+        val feeds = propagateTransaction {
+            val channels = when (arg.lowercase()) {
                 "any", "all", "full" -> TrackedStreams.StreamChannel.getActive {
                     TrackedStreams.StreamChannels.site eq TrackedStreams.DBSite.YOUTUBE
                 }
@@ -46,12 +49,21 @@ object YoutubePull : Command("ytpull") {
                         .map(TrackedStreams.Target::streamChannel).distinct()
                 }
             }
-                .map(TrackedStreams.StreamChannel::siteChannelID)
-                .forEach { feed ->
+            channels.map(TrackedStreams.StreamChannel::siteChannelID)
+        }
+
+        thread(start = true, name = "YT-ManualPull") {
+            runBlocking {
+                val missing = feeds.mapNotNull { feed ->
                     Thread.sleep(500L)
-                    println("Manually pulling YT updates for '$feed'")
-                    YoutubeVideoIntake.intakeExisting(feed)
+                    // Perform intake and generate list of feeds which returned 404
+                    val response = YoutubeVideoIntake.intake(feed)
+                    LOG.info("Manually pulling YT updates for '$feed' :: $response")
+                    if(response == 404) "'$feed'" else null
                 }
+                LOG.info("YT Pull complete: ${missing.count()} feeds returned 404.")
+                LOG.info("(${missing.joinToString(", ")})")
+            }
         }
     }
 }

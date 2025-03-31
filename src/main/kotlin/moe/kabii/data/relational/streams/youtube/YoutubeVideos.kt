@@ -1,7 +1,7 @@
 package moe.kabii.data.relational.streams.youtube
 
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.util.extensions.RequiresExposedContext
+import moe.kabii.util.extensions.CreatesExposedContext
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -38,7 +38,7 @@ class YoutubeVideo(id: EntityID<Long>) : LongEntity(id) {
             YoutubeVideos.videoId eq videoId
         }.firstOrNull()
 
-        @RequiresExposedContext
+        @CreatesExposedContext
         fun getOrInsert(videoId: String, channelId: String): YoutubeVideo {
             val channel = TrackedStreams.StreamChannel.getOrInsert(TrackedStreams.DBSite.YOUTUBE, channelId)
 
