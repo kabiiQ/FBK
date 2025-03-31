@@ -24,7 +24,7 @@ object KitsuParser : MediaListParser() {
         val userID = if(inputID == null) {
             val userRequest = newRequestBuilder()
                 .get()
-                .url("https://kitsu.io/api/edge/users?filter[slug]=$input")
+                .url("https://kitsu.app/api/edge/users?filter[slug]=$input")
                 .build()
             val response = try {
                 OkHTTP.newCall(userRequest).execute()
@@ -54,7 +54,7 @@ object KitsuParser : MediaListParser() {
         val userID = id.toInt()
         while (offset <= count) {
             if(offset > 0) delay(callCooldown)
-            val request = "https://kitsu.io/api/edge/library-entries?filter[userId]=$userID&include=media&page[limit]=500&page[offset]=$offset"
+            val request = "https://kitsu.app/api/edge/library-entries?filter[userId]=$userID&include=media&page[limit]=500&page[offset]=$offset"
             val responseBody = requestMediaList(request) { response ->
                 return@requestMediaList if(!response.isSuccessful) {
                     // kitsu doesn't seem to have actual rate limit specifications
@@ -90,7 +90,7 @@ object KitsuParser : MediaListParser() {
                     }
                     Media(
                         title = media.attributes.titles.en_jp,
-                        url = "https://kitsu.io/anime/${media.attributes.slug}",
+                        url = "https://kitsu.app/anime/${media.attributes.slug}",
                         image = media.attributes.posterImage.original,
                         score = when (library.attributes.rating) {
                             "0.0" -> null
