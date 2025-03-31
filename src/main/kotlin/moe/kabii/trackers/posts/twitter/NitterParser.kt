@@ -58,7 +58,7 @@ object NitterParser {
                     LOG.error("Error getting Nitter feed: $username :: ${rs.code}")
                     LOG.debug(body)
 
-                    if(rs.code == 429) {
+                    if(rs.code == 429 && instance != 1) {
                         rateLimitCallback?.invoke()
                     }
 
@@ -191,6 +191,12 @@ object NitterParser {
 
     fun getBestVideoUrl(variants: List<SyndicationObjects.Variant>): String = variants.maxBy { v -> v.bitrate ?: 0 }.url
 
+    private fun calculateToken(tweetId: Long) = tweetId
+        .div(1e15).times(Math.PI)
+        .toRawBits()
+        .toString(36)
+        .trimEnd('0').trimEnd('.')
+
     private val syndicationDetailAdapter = MOSHI.adapter(SyndicationObjects.TweetDetail::class.java)
     fun getVideoFromTweet(tweetId: Long): String? {
         val idStr = tweetId.toString()
@@ -198,10 +204,12 @@ object NitterParser {
             return null
         }
 
+        val token = calculateToken(tweetId)
+
         val request = Request.Builder()
             .header("User-Agent", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
             .get()
-            .url("https://cdn.syndication.twimg.com/tweet-result?id=$tweetId")
+            .url("https://cdn.syndication.twimg.com/tweet-result?id=$tweetId&token=$token&dnt=1")
             .build()
 
         return try {
