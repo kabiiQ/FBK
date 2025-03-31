@@ -41,8 +41,8 @@ object StreamTrackerConfig : Command("streamcfg") {
             "pingRoles",
             StreamSettings::mentionRoles
         ),
-        BooleanElement("Send the video URL as plain text for YouTube livestreams (for KoroTagger compatibility)",
-            "korotagger",
+        BooleanElement("Send the video URL separately as text outside notification embeds",
+            "videoUrl",
             StreamSettings::includeUrl
         ),
         BooleanElement("Rename this channel based on live channels",

@@ -128,7 +128,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             val fbk = instances[notification.discordClient]
             val discord = fbk.client
 
-             val chanId = notification.messageID?.channel?.channelID?.snowflake
+            val chanId = notification.messageID?.channel?.channelID?.snowflake
             val messageId = notification.messageID?.messageID?.snowflake
             discordTask {
                 try {
@@ -329,8 +329,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         val guildId = target.discordGuild?.asLong()
 
         discordTask {
+            val features = getStreamConfig(target)
             val mentionRole = if(guildId != null) {
-                val features = getStreamConfig(target)
                 getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, upcomingNotif = true)
             } else null
 
@@ -344,8 +344,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
                     .withTimestamp(time)
 
-                val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
-                else chan.createMessage()
+                val messageContent = StringBuilder()
+                if(mentionRole?.discord != null) messageContent.append(mentionRole.discord.mention)
+                if(features.includeUrl) messageContent.append('\n').append(video.url)
+
+                val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
+                else chan.createMessage(messageContent.toString().trim())
 
                 mentionMessage
                     .withEmbeds(embed)
@@ -398,16 +402,23 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                         val short = if(video.short) " (short)" else ""
                         withFooter(EmbedCreateFields.Footer.of("YouTube Upload: $videoLength$short", NettyFileServer.youtubeLogo))
                     }
-                val mentionMessage = if(mentionRole != null) {
 
+                val messageContent = StringBuilder()
+                if(mentionRole != null) {
                     val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
+                    messageContent.append(rolePart)
                     val textPart = mentionRole.textPart
                     val text = textPart?.run {
                         TrackerUtil.formatText(this, video.channel.name, video.published, video.channel.id, video.url)
                     } ?: ""
-                    chan.createMessage("$rolePart$text")
+                    messageContent.append(text)
+                }
 
-                } else chan.createMessage()
+                if(features.includeUrl) messageContent.append('\n').append(video.url)
+
+                val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
+                else chan.createMessage(messageContent.toString().trim())
+
                 mentionMessage
                     .withEmbeds(embed)
                     .timeout(Duration.ofMillis(12_000L))
@@ -445,8 +456,8 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
         discordTask {
             val chan = getChannel(fbk, target.discordGuild, target.discordChannel, target)
+            val features = getStreamConfig(target)
             val mentionRole = if(guildId != null) {
-                val features = getStreamConfig(target)
                 getMentionRoleFor(target, chan, features, memberLimit = video.memberLimited, creationNotif = true)
             } else null
 
@@ -466,8 +477,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 .withFooter(EmbedCreateFields.Footer.of("Scheduled start time ", NettyFileServer.youtubeLogo))
                 .withTimestamp(startTime)
             val new = try {
-                val mentionMessage = if(mentionRole?.discord != null) chan.createMessage(mentionRole.discord.mention)
-                else chan.createMessage()
+                val messageContent = StringBuilder()
+                if(mentionRole?.discord != null) messageContent.append(mentionRole.discord.mention)
+                if(features.includeUrl) messageContent.append('\n').append(video.url)
+
+                val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
+                else chan.createMessage(messageContent.toString().trim())
 
                 mentionMessage
                     .withEmbeds(embed)
@@ -484,46 +499,6 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             TrackerUtil.checkAndPublish(new, guildConfig?.guildSettings)
         }
     }
-
-/*    @RequiresExposedContext
-    suspend fun sendLiveReminder(liveStream: YoutubeVideoInfo, videoTrack: YoutubeVideoTrack) {
-        val fbk = instances[videoTrack.discordClient]
-        // get target channel in Discord
-        val trackGuild = videoTrack.discordChannel.guild?.guildID?.snowflake
-        val trackChan = videoTrack.discordChannel.channelID.snowflake
-        val mentioning = videoTrack.useMentionFor
-        val userId = videoTrack.tracker.userID
-        discordTask {
-            val chan = getChannel(fbk, trackGuild, trackChan, null)
-
-            val mention = if(mentioning != null) {
-                val old = liveStream.liveInfo?.startTime?.run { Duration.between(this, Instant.now()) > Duration.ofMinutes(15) }
-                val mention = if(old == true) null
-                else {
-                    val useMentionFor = propagateTransaction {
-                        loadTarget(mentioning)
-                    }
-                    val features = getStreamConfig(useMentionFor)
-                    getMentionRoleFor(useMentionFor, chan, features, liveStream.memberLimited, uploadedVideo = liveStream.premiere, ytPremiere = liveStream.premiere)
-                }
-                mention
-            } else null
-
-            val mentionContent = if(mention != null) {
-
-                val rolePart = mention.discord?.mention?.plus(" ") ?: ""
-                val textPart = mention.textPart
-                "$rolePart$textPart"
-
-            } else "<@$userId> Livestream reminder: "
-
-            val new = chan
-                .createMessage("$mentionContent**${liveStream.channel.name}** is now live: ${liveStream.url}")
-                .timeout(Duration.ofMillis(12_000L))
-                .awaitSingle()
-            TrackerUtil.checkAndPublish(fbk, new)
-        }
-    }*/
 
     @RequiresExposedContext
     @Throws(ClientException::class)
@@ -598,23 +573,22 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .run { if(features.thumbnails) withImage(liveStream.thumbnail) else withThumbnail(liveStream.thumbnail) }
                     .run { if(startTime != null) withTimestamp(startTime) else this }
 
-                val mentionContent = if(mention != null) {
+                val messageContent = StringBuilder()
 
+                if(mention != null) {
                     val rolePart = mention.discord?.mention?.plus(" ") ?: ""
+                    messageContent.append(rolePart)
                     val textPart = mention.textPart
                     val text = textPart?.run {
                         TrackerUtil.formatText(this, liveStream.channel.name, startTime ?: Instant.now(), liveStream.channel.id, liveStream.url)
                     } ?: ""
-                    "$rolePart$text"
+                    messageContent.append(text)
+                }
 
-                } else ""
-
-                val messageContent = if(features.includeUrl) {
-                    if(mentionContent.isBlank()) liveStream.url else "$mentionContent\n${liveStream.url}"
-                } else mentionContent
+                if(features.includeUrl) messageContent.append('\n').append(liveStream.url)
 
                 val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
-                else chan.createMessage(messageContent)
+                else chan.createMessage(messageContent.toString().trim())
 
                 val newNotification = mentionMessage
                     .withEmbeds(embed)
