@@ -11,8 +11,8 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.data.relational.discord.MessageHistory
+import moe.kabii.data.relational.streams.DBStreams
 import moe.kabii.data.relational.streams.TrackedStreams
-import moe.kabii.data.relational.streams.twitch.DBStreams
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
@@ -21,8 +21,8 @@ import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
-import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.trackers.videos.twitch.parser.TwitchStreamInfo
 import moe.kabii.util.extensions.*
 import java.time.Duration
 import java.time.Instant
@@ -86,7 +86,6 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                         LOG.debug(e.stackTraceString)
                     }
                 }
-                Unit
             }
         }.joinAll()
     }
@@ -351,20 +350,6 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                 checkAndRenameChannel(fbk.clientId, chan)
                             }
                         }
-
-                    } else {
-    //                    val existingDeleted = existing.deleted
-    //                    val existingClient = existing.targetID.discordClient
-    //                    val existingChan = existing.messageID.channel.channelID.snowflake
-    //                    val existingMessage = existing.messageID.messageID.snowflake
-    //                    discordTask {
-    //                        val existingNotif = getDiscordMessage(existingDeleted, existing, existingClient, existingChan, existingMessage, channel)
-    //                        if (existingNotif != null && changed) {
-    //                            existingNotif.edit()
-    //                                .withEmbeds(embed.create())
-    //                                .awaitSingle()
-    //                        }
-    //                    }
                     }
                 } catch(e: Exception) {
                     LOG.info("Error updating Twitch target: $target :: ${e.message}")

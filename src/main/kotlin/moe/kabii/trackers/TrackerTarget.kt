@@ -101,7 +101,7 @@ sealed class StreamingTarget(
     abstract suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr>
 }
 
-object TwitchTarget : StreamingTarget(
+data object TwitchTarget : StreamingTarget(
     TwitchParser.color,
     AvailableServices.twitchApi,
     "Twitch",
@@ -137,11 +137,10 @@ object TwitchTarget : StreamingTarget(
         val targets = twitch.getActiveTargets(channel) ?: return@callback
         val stream = TwitchParser.getStream(channel.siteChannelID.toLong()).orNull()
         twitch.updateChannel(channel, stream, targets)
-        TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
     }
 }
 
-object YoutubeTarget : StreamingTarget(
+data object YoutubeTarget : StreamingTarget(
     YoutubeParser.color,
     AvailableServices.youtube,
     "YouTube",
@@ -158,27 +157,38 @@ object YoutubeTarget : StreamingTarget(
         get() = TrackedStreams.DBSite.YOUTUBE
 
     override suspend fun getChannel(id: String): Result<BasicStreamChannel, TrackerErr> {
-        return try {
+        try {
+            // Allow direct grab from database (no API call) if using exact channel ID
+            if(id.matches(YoutubeParser.youtubeChannelPattern)) {
+                val knownChannel = propagateTransaction {
+                    TrackedStreams.StreamChannel.getChannel(TrackedStreams.DBSite.YOUTUBE, id)
+                }
+                if(knownChannel != null) {
+                    val info = BasicStreamChannel(YoutubeTarget, knownChannel.siteChannelID, knownChannel.lastKnownUsername ?: "", URLUtil.StreamingSites.Youtube.channel(id))
+                    return Ok(info)
+                }
+            }
+
             val channel = YoutubeParser.getChannelFromUnknown(id)
-            if(channel != null) {
+            return if(channel != null) {
                 val info = BasicStreamChannel(YoutubeTarget, channel.id, channel.name, channel.url)
                 Ok(info)
             } else Err(TrackerErr.NotFound)
         } catch(e: Exception) {
             LOG.debug("Error getting YouTube channel: ${e.message}")
             LOG.trace(e.stackTraceString)
-            Err(TrackerErr.IO)
+            return Err(TrackerErr.IO)
         }
     }
 
     override fun feedById(id: String): String = URLUtil.StreamingSites.Youtube.channel(id)
 
     override val onTrack: TrackCallback = { _, channel ->
-        YoutubeVideoIntake.intakeExisting(channel.siteChannelID)
+        YoutubeVideoIntake.intakeAsync(channel.siteChannelID)
     }
 }
 
-object TwitcastingTarget : StreamingTarget(
+data object TwitcastingTarget : StreamingTarget(
     TwitcastingParser.color,
     AvailableServices.twitCasting,
     "TwitCasting",
@@ -215,7 +225,7 @@ object TwitcastingTarget : StreamingTarget(
     }
 }
 
-object KickTarget : StreamingTarget(
+data object KickTarget : StreamingTarget(
     KickParser.color,
     AvailableServices.kickApi,
     "Kick.com",
@@ -267,7 +277,7 @@ object KickTarget : StreamingTarget(
     }
 }
 
-object HoloChatsTarget : TrackerTarget(
+data object HoloChatsTarget : TrackerTarget(
     "HoloChats",
     FeatureChannel::holoChatsTargetChannel,
     "holochats",
@@ -277,7 +287,7 @@ object HoloChatsTarget : TrackerTarget(
     override fun feedById(id: String) = if(id.matches(YoutubeParser.youtubeVideoPattern)) URLUtil.StreamingSites.Youtube.video(id) else URLUtil.StreamingSites.Youtube.channel(id)
 }
 
-object YoutubeVideoTarget : TrackerTarget(
+data object YoutubeVideoTarget : TrackerTarget(
     "YouTubeVideos",
     FeatureChannel::streamTargetChannel,
     "streams",
@@ -302,7 +312,7 @@ sealed class AnimeTarget(
     override fun feedById(id: String): String = URLUtil.MediaListSite.url(dbSite, id)
 }
 
-object MALTarget : AnimeTarget(
+data object MALTarget : AnimeTarget(
     "MyAnimeList",
     listOf(
         Regex("myanimelist\\.net/(?:animelist|mangalist|profile)/([a-zA-Z0-9_]{2,16})")
@@ -313,18 +323,18 @@ object MALTarget : AnimeTarget(
         get() = ListSite.MAL
 }
 
-object KitsuTarget : AnimeTarget(
+data object KitsuTarget : AnimeTarget(
     "Kitsu",
     listOf(
         Regex("kitsu\\.io/users/([a-zA-Z0-9_]{3,20})")
     ),
-    "kitsu", "kitsu.io"
+    "kitsu", "kitsu.io", "kitsu.app"
 ) {
     override val dbSite: ListSite
         get() = ListSite.KITSU
 }
 
-object AniListTarget : AnimeTarget(
+data object AniListTarget : AnimeTarget(
     "AniList",
     listOf(
         Regex("anilist\\.co/user/([a-zA-Z0-9]{2,20})")
@@ -355,7 +365,7 @@ sealed class SocialTarget(
     abstract suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed? = null): TrackedSocialFeeds.SocialFeed?
 }
 
-object BlueskyTarget : SocialTarget(
+data object BlueskyTarget : SocialTarget(
     AvailableServices.bluesky,
     "Bluesky",
     listOf(
@@ -407,7 +417,7 @@ object BlueskyTarget : SocialTarget(
     }
 }
 
-object TwitterTarget : SocialTarget(
+data object TwitterTarget : SocialTarget(
     AvailableServices.nitter,
 "Twitter",
     listOf(
@@ -433,7 +443,7 @@ object TwitterTarget : SocialTarget(
         }
 
         if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
-            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely. The method FBK has used until now to access feeds has finally been shut down by Twitter.\n\nAt this time, there is no known solution that will allow us to bring back the Twitter tracker for general use. A [limited number of popular feeds](http://content.kabii.moe:8080/twitterfeeds) are currently enabled for tracking.\n\nFBK now supports Bluesky feeds if that alternative is available for you."))
+            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely, as Twitter has made it increasingly difficult to access the site.\nA [limited number of popular feeds](${NettyFileServer.twitterFeeds}) are currently enabled for tracking.\n\nFBK now supports Bluesky feeds if that alternative is helpful for you."))
         }
 
         return if(knownUser == null) {

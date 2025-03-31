@@ -66,7 +66,7 @@ object Translator {
     val baseService = AzureTranslator
     val detector = LanguageDetectorBuilder.fromAllSpokenLanguages().build()
 
-    private val inclusionList = Keys.config[Keys.Google.feedInclusionList]
+    val inclusionList = Keys.config[Keys.Google.feedInclusionList]
 
     data class TranslationPair(val service: TranslationService, val suspect: TranslationLanguage?, val apiKey: String?) {
         fun translate(from: TranslationLanguage?, to: TranslationLanguage, text: String)

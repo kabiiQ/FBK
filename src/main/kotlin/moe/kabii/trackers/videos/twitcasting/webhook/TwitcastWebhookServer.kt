@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import moe.kabii.LOG
@@ -16,6 +15,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.trackers.videos.twitcasting.watcher.TwitcastChecker
 import moe.kabii.util.extensions.fromJsonSafe
+import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 
 class TwitcastWebhookServer(val checker: TwitcastChecker) {
@@ -36,7 +36,7 @@ class TwitcastWebhookServer(val checker: TwitcastChecker) {
                 call.response.status(HttpStatusCode.OK)
 
                 val body = call.receiveStream().bufferedReader().readText()
-                LOG.info("POST:$port - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}")
+                log("POST:$port")
                 LOG.debug("POST :: $body")
 
                 val movie = when(val json = incomingAdapter.fromJsonSafe(body)) {

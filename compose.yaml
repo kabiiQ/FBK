@@ -9,8 +9,9 @@ services:
     - fbk
     ports:
     - 8001:8001 # YouTube PubSub subscription callback
-    - 8002:8002 # TwitCasting WebHook callback
-    - 127.0.0.1:8003:8003 # Internal Twitch API callback
+    - 8002:8002 # TwitCasting Webhook endpoint
+    - 127.0.0.1:8003:8003 # Internal Twitch Webhook endpoint
+    - 127.0.0.1:8004:8004 # Kick Webhook endpoint
     - 8010:8010 # YouTube video API server
     - 8020:8020 # External command execution API server
     - 8080:8080 # File server

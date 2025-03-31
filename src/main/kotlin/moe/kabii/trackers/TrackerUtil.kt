@@ -68,7 +68,6 @@ object TrackerUtil {
     }
 
     suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
-        // TODO pdenied
         return // Temporarily(?) disabled functionality to mitigate some user confusion
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
@@ -79,7 +78,7 @@ object TrackerUtil {
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
             val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **/feature $featureName Enabled** in <#$channelId> to re-enable this tracker."
-            notifyOwner(fbk, guildId.asLong(), message)
+            //notifyOwner(fbk, guildId.asLong(), message)
 
         } else {
             // delete target, we do not keep configs for dms

@@ -35,14 +35,12 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
     private val eventAdapter = MOSHI.adapter(TwitchEvents.Response.EventNotification::class.java)
     private val port = 8003
 
-    private val intakeContext = CoroutineScope(DiscordTaskPool.twitchIntakeThread + CoroutineName("TwitchWebHook-Notifier") + SupervisorJob())
+    private val intakeContext = CoroutineScope(DiscordTaskPool.twitchIntakeThread + CoroutineName("TwitchWebhook-Notifier") + SupervisorJob())
 
     // w3c websub
     val server = embeddedServer(Netty, port = port) {
         routing {
-
             post {
-
                 log("POST:$port")
 
                 try {
@@ -62,7 +60,7 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
 
                     val event = checkNotNull(eventAdapter.fromJson(body)) // may throw error, 400 error is ok
                     val eventType = call.request.header("Twitch-Eventsub-Subscription-Type")
-                        ?.run { TwitchEventSubscriptions.Type.values().find { type -> type.apiType == this } }
+                        ?.run { TwitchEventSubscriptions.Type.entries.find { type -> type.apiType == this } }
                         ?: return@post // unhandled event type
 
                     when(call.request.header("Twitch-Eventsub-Message-Type")) {

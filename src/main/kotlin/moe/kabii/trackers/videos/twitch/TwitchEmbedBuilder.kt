@@ -3,10 +3,12 @@ package moe.kabii.trackers.videos.twitch
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Color
 import moe.kabii.data.mongodb.guilds.StreamSettings
-import moe.kabii.data.relational.streams.twitch.DBStreams
+import moe.kabii.data.relational.streams.DBStreams
 import moe.kabii.discord.util.Embeds
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.trackers.videos.twitch.parser.TwitchStreamInfo
+import moe.kabii.trackers.videos.twitch.parser.TwitchUserInfo
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.extensions.RequiresExposedContext
 import moe.kabii.util.extensions.javaInstant

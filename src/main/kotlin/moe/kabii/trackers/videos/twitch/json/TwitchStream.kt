@@ -2,7 +2,7 @@ package moe.kabii.trackers.videos.twitch.json
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
+import moe.kabii.trackers.videos.twitch.parser.TwitchStreamInfo
 import java.time.Instant
 
 @JsonClass(generateAdapter = true)

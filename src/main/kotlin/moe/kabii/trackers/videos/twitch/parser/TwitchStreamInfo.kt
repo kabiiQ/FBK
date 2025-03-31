@@ -1,8 +1,7 @@
-package moe.kabii.trackers.videos.twitch
+package moe.kabii.trackers.videos.twitch.parser
 
 import kotlinx.coroutines.runBlocking
 import moe.kabii.net.NettyFileServer
-import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.util.constants.URLUtil
 import java.time.Instant
 

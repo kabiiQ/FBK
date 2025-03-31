@@ -96,6 +96,7 @@ object MediaTrackerCommand : TrackerCommand {
                         this.site = site
                         this.siteListId = siteListId
                         this.lastListJson = listJson
+                        this.username = mediaList.currentUsername
                     }
                 }
             }
@@ -141,17 +142,18 @@ object MediaTrackerCommand : TrackerCommand {
                 return@propagateTransaction
             }
 
+            val username = existingTrack.mediaList.username ?: inputId
             if(origin.isPM // always allow untrack in pm
                     || origin.author.id.asLong() == existingTrack.userTracked.userID // not in pm, check for same user as tracker
                     || origin.interaction.member.get().hasPermissions(origin.guildChan, Permission.MANAGE_MESSAGES)) { // or channel moderator
 
                 existingTrack.delete()
-                origin.ireply(Embeds.fbk("No longer tracking **$inputId** on **$siteName**.")).awaitSingle()
+                origin.ireply(Embeds.fbk("No longer tracking **$username** on **$siteName**.")).awaitSingle()
                 TargetSuggestionGenerator.invalidateTargets(origin.client.clientId, origin.chan.id.asLong())
 
             } else {
                 val tracker = origin.event.client.getUserById(existingTrack.userTracked.userID.snowflake).tryAwait().orNull()?.username ?: "invalid-user"
-                origin.ereply(Embeds.error("You may not un-track **$inputId** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
+                origin.ereply(Embeds.error("You may not un-track **$username** on **$siteName** unless you are the tracker ($tracker) or a channel moderator.")).awaitSingle()
             }
         }
     }

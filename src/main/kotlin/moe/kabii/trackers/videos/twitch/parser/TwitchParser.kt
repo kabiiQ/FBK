@@ -13,9 +13,6 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.trackers.TrackerErr
-import moe.kabii.trackers.videos.twitch.TwitchGameInfo
-import moe.kabii.trackers.videos.twitch.TwitchStreamInfo
-import moe.kabii.trackers.videos.twitch.TwitchUserInfo
 import moe.kabii.trackers.videos.twitch.json.Helix
 import moe.kabii.trackers.videos.twitch.json.TwitchEvents
 import moe.kabii.trackers.videos.twitch.json.TwitchGameResponse

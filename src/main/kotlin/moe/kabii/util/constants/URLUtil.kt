@@ -40,8 +40,8 @@ object URLUtil {
 
         object Kitsu {
             fun list(id: String, type: MediaType) = when(type) {
-                MediaType.ANIME -> "https://kitsu.io/users/$id/library?media=anime"
-                MediaType.MANGA -> "https://kitsu.io/users/$id/library?media=manga"
+                MediaType.ANIME -> "https://kitsu.app/users/$id/library?media=anime"
+                MediaType.MANGA -> "https://kitsu.app/users/$id/library?media=manga"
             }
         }
         object Mal {

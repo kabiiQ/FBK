@@ -102,29 +102,6 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
             return
         }
 
-        //val (priority, general) = feeds.partition(TwitterFeed::enabled)
-
-        // compute how many instances to use for 'priority' feeds, targeting a refresh time goal
-        // ensure at least one instance is saved for general pool in case numbers change drastically
-//        val priorityInstance = min(ceil((priority.size.toDouble() * callDelay) / refreshGoal).toInt(), instanceCount)
-//        val generalInstance = instanceCount - priorityInstance
-
-        // convert list of feeds into Map<Instance ID, Feed Chunk>
-        // partition feeds onto nitter instances for pulling
-//        val feedPerPriority = ceil(priority.size.toDouble() / priorityInstance).toInt()
-//        val priorityChunks = priority
-//            .chunked(feedPerPriority)
-//            .mapIndexed { chunkIndex, chunkFeeds ->
-//                chunkIndex to chunkFeeds
-//            }
-
-//        val feedPerGeneral = ceil(general.size.toDouble() / generalInstance).toInt()
-//        val generalChunks = general
-//            .chunked(feedPerGeneral)
-//            .mapIndexed { chunkIndex, chunkFeeds ->
-//                chunkIndex + priorityInstance to chunkFeeds
-//            }
-
         val feedsPerChunk = ceil(feeds.size.toDouble() / instanceCount).toInt()
         val chunks = feeds
             .chunked(feedsPerChunk)
@@ -165,7 +142,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                                         errorPostNext = Instant.now() + errorPostCooldown // update throttled next post
                                         try {
                                             // post actual error notification to admin channel
-                                            instances[instanceId].client
+                                            instances.all().first().client
                                                 .getChannelById(metaChanId)
                                                 .ofType(MessageChannel::class.java)
                                                 .flatMap { chan ->
@@ -200,11 +177,6 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                                             if (!new) {
                                                 return@propagateTransaction tweet.id
                                             }
-                                            // if temporary switch to syndication feeds - time is accurate again
-    //                                            if ((feed.lastPulledTweet ?: 0) >= tweet.id
-    //                                                || age > Duration.ofHours(2)
-    //                                                || cache.seenTweets.contains(tweet.id)
-    //                                            ) return@maxOfOrNull tweet.id
                                         } else {
                                             // if already handled or too old, skip, but do not pull tweet ID again
                                             if ((feed.lastPulledTweet ?: 0) >= tweet.id
@@ -285,10 +257,10 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                     if(!tweet.notifyOption.get(postCfg)) return@target
 
                     val action = when {
-                        tweet.retweet -> "retweeted **@${tweet.retweetOf}** \uD83D\uDD01"
-                        tweet.reply -> "replied to a Tweet from **@${tweet.replyTo}** \uD83D\uDCAC"
-                        tweet.quote -> "quoted a Tweet from **@${tweet.quoteOf}** \uD83D\uDDE8"
-                        else -> "posted a new Tweet"
+                        tweet.retweet -> "reposted **@${tweet.retweetOf}** \uD83D\uDD01"
+                        tweet.reply -> "replied to **@${tweet.replyTo}** \uD83D\uDCAC"
+                        tweet.quote -> "quoted a post from **@${tweet.quoteOf}** \uD83D\uDDE8"
+                        else -> "made a new post"
                     }
 
                     val tlSettings = GuildConfigurations

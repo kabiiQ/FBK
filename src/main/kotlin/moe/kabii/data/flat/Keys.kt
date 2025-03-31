@@ -88,6 +88,7 @@ object Keys : ConfigSpec("") {
     object API : ConfigSpec() {
         val ytVideos by optional<Boolean>(false, "youtube_videos")
         val externalCommands by optional<Boolean>(false, "external_command_execution")
+        val loggingEndpoint by optional<String>("", "external_logging_endpoint")
     }
     object Net : ConfigSpec() {
         val proxies by required<List<String>>("proxy_addr")

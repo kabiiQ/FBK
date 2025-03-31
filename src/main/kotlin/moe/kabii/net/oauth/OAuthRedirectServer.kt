@@ -86,7 +86,7 @@ abstract class OAuthRedirectServer(val service: String, serverIndex: Int) {
                 val process = oauthStates[state]
                 if(process == null) {
                     LOG.warn("OAuth redirected from unknown state: $state")
-                    call.respondText("This authorization URL is invalid or expired. Please re-run the ;ytlink command in Discord for a new URL.", status = HttpStatusCode.Unauthorized)
+                    call.respondText("This authorization URL is invalid or expired. Please re-run the /ytlink command in Discord for a new URL.", status = HttpStatusCode.Unauthorized)
                     return@get
                 }
                 // received valid code

@@ -15,10 +15,10 @@ import java.io.IOException
 class TwitchAuthorization {
     private val clientID = Keys.config[Keys.Twitch.client]
     private val clientSecret = Keys.config[Keys.Twitch.secret]
-    var accessToken = Keys.config[Keys.Twitch.token]
+    private var accessToken = Keys.config[Keys.Twitch.token]
 
     val authorization: String
-    get() = "Bearer $accessToken"
+        get() = "Bearer $accessToken"
 
     private val tokenAdapter = MOSHI.adapter(TwitchTokenResponse::class.java)
 
@@ -51,7 +51,7 @@ class TwitchAuthorization {
     }
 
     @JsonClass(generateAdapter = true)
-    private data class TwitchTokenResponse(
+    data class TwitchTokenResponse(
         @Json(name = "access_token") val accessToken: String
     )
 }

@@ -36,7 +36,7 @@ class Connect4Grid {
 
     fun validateDrop(colNum: Int): GridCoordinate? {
         // subtract 1 to get index so that we can just drop(1) rather than drop(0)
-        val colIndex = colNum - 1;
+        val colIndex = colNum - 1
 
         // drop in the lowest available y in column colNum
         val target = grid[colIndex].indexOfFirst(CircleState.NONE::equals)
