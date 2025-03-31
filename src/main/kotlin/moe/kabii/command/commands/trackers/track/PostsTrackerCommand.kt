@@ -12,6 +12,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.discord.util.Embeds
+import moe.kabii.net.NettyFileServer
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.SocialTarget
@@ -71,7 +72,7 @@ object PostsTrackerCommand : TrackerCommand {
             }
         }
 
-        val twitterNotice = if(socialTarget.dbSite == TrackedSocialFeeds.DBSite.X) "\n\nNOTICE: It has become very difficult to access Twitter as a bot, so only a limited number of Twitter feeds are currently enabled for access."
+        val twitterNotice = if(socialTarget.dbSite == TrackedSocialFeeds.DBSite.X) "\n\nThis feed is one of a [limited number](${NettyFileServer.twitterFeeds}) enabled for tracking with FBK."
         else ""
         origin.ireply(Embeds.fbk("Now tracking **[${feedInfo.displayName}](${feedInfo.url})** on **${socialTarget.full}**!\nUse `/posts config` to adjust the types of posts that will be sent to this channel.$twitterNotice")).awaitSingle()
         TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
