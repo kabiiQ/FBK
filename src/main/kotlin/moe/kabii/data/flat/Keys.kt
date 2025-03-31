@@ -34,6 +34,12 @@ object Keys : ConfigSpec("") {
         val clientSecret by required<String>("twitcast_client_secret")
         val signature by required<String>("twitcast_webhook_signature")
     }
+    object Kick : ConfigSpec() {
+        val clientId by optional<String>("", "kick_client_id")
+        val clientSecret by optional<String>("", "kick_client_secret")
+        val subscriptions by optional<Boolean>(false, "kick_register_subscriptions")
+        val token by optional<String>("", "kick_app_access_token")
+    }
     object Netty : ConfigSpec() {
         val domain by required<String>()
     }
@@ -85,6 +91,7 @@ object Keys : ConfigSpec("") {
     }
     object Net : ConfigSpec() {
         val proxies by required<List<String>>("proxy_addr")
+        val scraper by optional<String>("", "proxy_scraping")
         val port by required<Int>("proxy_port")
     }
 

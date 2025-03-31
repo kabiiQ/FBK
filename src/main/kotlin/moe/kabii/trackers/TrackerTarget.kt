@@ -52,7 +52,7 @@ sealed class TrackerTarget(
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
             103L -> TwitcastingTarget
-//            104L -> KickTarget
+            104L -> KickTarget
             198L -> HoloChatsTarget
             199L -> YoutubeVideoTarget
             200L -> MALTarget

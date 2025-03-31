@@ -1,5 +1,5 @@
 <h1 style="text-align: center;">
-<br> FBK (Fubuki) </br>
+FBK (Fubuki)
 </h1>
 
 ### Support the Developer
@@ -21,7 +21,7 @@ FBK is now available for invite and public use. Feel free to use it or share it 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
 # Features
-FBK is a general-purpose bot with a focus on **utility commands** and **service integration**.
+FBK has a variety of lightweight features which now focus heavily on the integration of notifications from other platforms (YouTube, Twitter, etc).
 
 FBK covers a pretty wide range of functionality, so not all features are necessarily featured here.
 A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available for all features.
@@ -30,52 +30,48 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
 
 - ## **Service Integration**
   - [Livestream/Video notifications](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
-    - Post information on specific streams while they are live
-    - Optionally mention a role when they become live
-    - Currently supports **Twitch**, **TwitCasting** livestreams, and **YouTube** livestreams/video uploads.
+    - Post information on specific streams while they are live.
+    - Optionally mention a role when they become live.
+    - Currently supports **Twitch**, **TwitCasting**, and **Kick** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
-    - Post information when tracked user's lists are updated
+    - Post information when tracked user's lists are updated.
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
   - [Social media feed update notifications](https://github.com/kabiiQ/FBK/wiki/Social-Media-Tracker)
-    - Post information when specific users post a Tweet!
-    - Available feeds for tracking are highly limited in 2024, as Twitter has made it very difficult to access their data.
-    - Currently supports **Twitter** (limited) and **Bluesky** (experimental)
+    - Post information when specific users make a post.
+    - Available Twitter feeds for tracking are highly limited as of 2024, as Twitter has made it very difficult to access their data.
+    - Currently supports **Twitter** (limited) and **Bluesky** (experimental, open to all)
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
 - ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
 - ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Reminders)
 
-- ## **General Utility**
-  - [Teamspeak-style temporary voice channels](https://github.com/kabiiQ/FBK/wiki/Utility-Commands#temporary-voice-channels)
-  - [Get user avatars](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#get-user-avatar-with-avatar), [account creation dates](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands#user-info-summary-server-join-time-with-who)
+- ## **Light Utility**
+  - [Get information  (user avatars, server info)](https://github.com/kabiiQ/FBK/wiki/Discord-Info-Commands)
+  - [Create custom simple commands in your server](https://github.com/kabiiQ/FBK/wiki/Custom-Commands)
 
-- ## Games
+- ## PvP Games
   - [Connect 4](https://github.com/kabiiQ/FBK/wiki/Games#connect-4)
   - [Rock Paper Scissors](https://github.com/kabiiQ/FBK/wiki/Games#rock-paper-scissors)
 
-- ## Automatic role assignment/removal on (each only if configured):
+- ## Automatic role assignment/removal, if configured:
   - [User joining server (per invite code if needed)](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-joining-your-server)
   - [User joining/leaving voice channels](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-in-a-voice-channel)
   - [Users interacting with a **button**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-automatically-using-buttons)
   - [User **reactions** on a specific message **(reaction roles)**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-reacting-to-a-specific-message)
   - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
-- ## General Configurability
-  - Targeted functionality such as service integration features [**need to be enabled on a per-channel basis**](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#the-config-command-channel-features) to avoid unwanted use or abuse by server members]
+<br />
 
-
-- Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
-  - [Basic moderation logs (WIP)](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
-  - [Purging messages from a chat](https://github.com/kabiiQ/FBK/wiki/Purge-Messages)
-  - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels-with-drag)
+Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
+- [Basic join/leave logs](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
+- [Purging messages from a chat](https://github.com/kabiiQ/FBK/wiki/Purge-Messages)
+- [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels-with-drag)
 
 
 # Development
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-blue.svg?logo=Kotlin)
 ![Commit](https://img.shields.io/github/last-commit/kabiiQ/fbk)
 
-
-... and more to come! There is plenty planned for when I have time and motivation (university student + work + the hustle).
 
 Current feature/issue plans are tracked on [Trello](https://trello.com/b/S1bfvZi4/fbk).
 
@@ -85,9 +81,9 @@ This bot is written in [Kotlin](https://kotlinlang.org/) using the [Discord4J](h
 
 # Self-Hosting
 
-FBK has been converted to [Docker](https://www.docker.com/) as of FBK version 2.2. As a result, it is now much easier to run the bot on your own PC/server.
+FBK has been converted to [Docker](https://www.docker.com/) as of FBK version 2.2. As a result, it is now feasible to run the bot on your own PC/server, though basic understanding of the tech is still required.
 
-This is useful if you want to contribute/debug, or just run your own private instance ("self-hosting"), but will not be fully supported.
+This is useful if you want to contribute/debug, or just run your own private instance ("self-hosting").
 
 The process for self-hosting is now documented on the wiki page here: **[Self-Hosting](https://github.com/kabiiQ/FBK/wiki/Self-Hosting)**
 

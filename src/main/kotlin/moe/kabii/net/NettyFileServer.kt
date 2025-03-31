@@ -18,6 +18,7 @@ import moe.kabii.newRequestBuilder
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
+import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.propagateTransaction
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.count
@@ -52,6 +53,7 @@ object NettyFileServer {
         idRoot.mkdirs()
         val udLogo = File(staticRoot, "ud_logo.jpg")
         val glitch = File(staticRoot, "Twitch_Glitch_Purple.png")
+        val kick = File(staticRoot, "kick_logo_black.png")
         val youtubeLogo = File(staticRoot, "youtube_social_circle_red.png")
         val twitterLogo = File(staticRoot, "twitter.png")
         val twitcastingLogo = File(staticRoot, "twitcasting_logo.png")
@@ -101,6 +103,9 @@ object NettyFileServer {
             get("/glitch") {
                 call.respondFile(glitch)
             }
+            get("/kick") {
+                call.respondFile(kick)
+            }
             get("/ytlogo") {
                 call.respondFile(youtubeLogo)
             }
@@ -115,7 +120,7 @@ object NettyFileServer {
             }
 
             get("/twitterfeeds") {
-                data class Feed(val username: String, val targetCount: Long)
+                data class Feed(val username: String, val targetCount: Long, val gtlInclude: Boolean)
                 data class Feeds(val enabledDetail: List<Feed>, val generalCount: Long)
                 val feeds = propagateTransaction {
                     val enabledFeeds = TrackedSocialFeeds.SocialTargets
@@ -129,7 +134,9 @@ object NettyFileServer {
                         "${row[NitterFeeds.username]} (${row[TrackedSocialFeeds.SocialTargets.id.sum()]} Discord channels)"
                     }*/
                     val enabledDetail = enabledFeeds.map { row ->
-                        Feed(row[NitterFeeds.username], row[TrackedSocialFeeds.SocialTargets.id.count()])
+                        val username = row[NitterFeeds.username]
+                        val gtl = Translator.inclusionList.contains(username)
+                        Feed(username, row[TrackedSocialFeeds.SocialTargets.id.count()], gtl)
                     }
 
                     val generalCount = NitterFeeds
@@ -156,19 +163,20 @@ object NettyFileServer {
                         }
                     }
                     body {
+//                        h2 {
+//                            +"Original tracked Twitter feeds = ${feeds.generalCount}"
+//                        }
+//                        h3 {
+//                            +"Refresh time estimate = ${format.format(generalRefresh)} minutes (not including potential Discord limitations)"
+//                        }
                         h2 {
-                            +"Original tracked Twitter feeds = ${feeds.generalCount}"
+                            +"Currently enabled Twitter feeds = $priorityCount"
                         }
                         h3 {
-                            +"Refresh time estimate = ${format.format(generalRefresh)} minutes (not including potential Discord limitations)"
-                        }
-                        h2 {
-                            +"\"Enabled\" tracked Twitter feeds = ${priorityCount}"
-                        }
-                        h3 {
-                            +"Refresh time estimate = ${format.format(priorityRefresh)} minutes (not including potential Discord limitations)"
+                            +"Refresh time estimate = ${format.format(priorityRefresh)} minutes, barring Discord notification issues"
                         }
                         br()
+                        +"* denotes Google Translator available"
                         table {
                             tr {
                                 th {
@@ -182,6 +190,7 @@ object NettyFileServer {
                                 tr {
                                     td {
                                         +detail.username
+                                        +if(detail.gtlInclude) "*" else ""
                                     }
                                     td {
                                         +detail.targetCount.toString()
@@ -200,12 +209,16 @@ object NettyFileServer {
     val youtubeLogo = "$domain/ytlogo"
     val twitterLogo = "$domain/twitter"
     val twitcastingLogo = "$domain/twitcasting"
-    val kickLogo = "$domain/glitch"
+    val kickLogo = "$domain/kick"
     val blueskyLogo = "$domain/bluesky"
+
+    val twitterFeeds = "$domain/twitterfeeds"
+
     fun rgb(rgb: RGB): String {
         val (r, g, b) = rgb
         return "$domain/color/$r/$g/$b"
     }
+
     fun twitchThumbnail(id: String) = "$domain/thumbnails/twitch/$id/${Instant.now().epochSecond}"
 
     fun ids(id: String) = "$domain/ids/$id.txt"
