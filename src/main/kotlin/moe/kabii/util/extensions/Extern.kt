@@ -2,6 +2,7 @@ package moe.kabii.util.extensions
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -54,3 +55,6 @@ fun PipelineContext<Unit, ApplicationCall>.log(prefix: String, callback: (String
     val realIP = call.request.header("X-Real-IP")?.run(" :: X-Real-IP: "::plus) ?: ""
     callback("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}$realIP")
 }
+
+// ktor headers for log output
+fun Headers.display() = entries().joinToString(" + ") { (name, values) -> "$name=${values.joinToString()}" }

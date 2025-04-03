@@ -22,6 +22,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.trackers.videos.twitch.json.TwitchEvents
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
+import moe.kabii.util.extensions.display
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -52,7 +53,7 @@ class TwitchWebhookListener(val manager: TwitchSubscriptionManager, val checker:
                             call.request.header("Twitch-Eventsub-Message-Timestamp") +
                             body
                     if(signature != "sha256=${hmac256.hmacHex(message)}") {
-                        LOG.warn("Unable to verify payload signature: $body :: ${call.request.headers}")
+                        LOG.warn("Unable to verify payload signature: $body :: ${call.request.headers.display()}")
                         call.response.status(HttpStatusCode.Forbidden)
                         return@post
                     }

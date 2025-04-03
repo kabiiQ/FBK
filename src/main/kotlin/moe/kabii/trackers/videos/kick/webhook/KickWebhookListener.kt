@@ -17,6 +17,7 @@ import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.trackers.videos.kick.json.KickWebhooks
 import moe.kabii.trackers.videos.kick.parser.KickParser
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
+import moe.kabii.util.extensions.display
 import moe.kabii.util.extensions.log
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
@@ -44,13 +45,16 @@ class KickWebhookListener(val manager: KickSubscriptionManager, val checker: Kic
                     val signature = call.request.header("Kick-Event-Signature")
                     val body = call.receiveStream().bufferedReader().readText()
 
+                    LOG.info("Kick webhook received: computed payload for signing = $id.$timestamp.$body")
+                    LOG.info("Received signature = $signature")
+
                     if(
                         id == null
                         || timestamp == null
                         || signature == null
                         || !KickParser.Signature.verify(id, timestamp, body, signature)
                     ) {
-                        LOG.warn("Kick webhook verification failed: $body :: ${call.request.headers}")
+                        LOG.warn("Kick webhook verification failed: $body :: ${call.request.headers.display()}")
                         call.response.status(HttpStatusCode.Forbidden)
                         return@post
                     }
