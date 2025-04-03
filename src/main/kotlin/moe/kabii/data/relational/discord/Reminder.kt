@@ -1,11 +1,13 @@
 package moe.kabii.data.relational.discord
 
+import moe.kabii.util.extensions.RequiresExposedContext
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.jodatime.datetime
+import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
 
 object Reminders : LongIdTable("reminders") {
@@ -27,5 +29,14 @@ class Reminder(id: EntityID<Long>) : LongEntity(id) {
     var content by Reminders.content
     var originMessage by MessageHistory.Message optionalReferencedOn Reminders.originMessage
 
-    companion object : LongEntityClass<Reminder>(Reminders)
+    companion object : LongEntityClass<Reminder>(Reminders) {
+        @RequiresExposedContext
+        fun getRemindersFor(userId: Long) = Reminders
+            .innerJoin(DiscordObjects.Users)
+            .select {
+                DiscordObjects.Users.userID eq userId
+            }
+            .run(::wrapRows)
+            .toList()
+    }
 }

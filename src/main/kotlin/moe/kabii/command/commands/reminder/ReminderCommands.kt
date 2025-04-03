@@ -103,14 +103,7 @@ object ReminderCommands : CommandContainer {
                 // get all the user's reminders
                 val userId = event.interaction.user.id.asLong()
                 val reminderOptions = propagateTransaction {
-                    val reminders = Reminder.wrapRows(
-                        Reminders
-                            .innerJoin(DiscordObjects.Users)
-                            .select {
-                                Reminders.discordClient eq client.clientId and
-                                        (DiscordObjects.Users.userID eq userId)
-                            }
-                    ).toList()
+                    val reminders = Reminder.getRemindersFor(userId)
                     if(reminders.isNotEmpty()) {
                         // prioritize the ones from this server
                         val channelId = event.interaction.channelId.asLong()
