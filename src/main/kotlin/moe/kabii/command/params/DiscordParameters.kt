@@ -4,6 +4,7 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.Interaction
+import discord4j.core.`object`.component.TopLevelMessageComponent
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -114,6 +115,11 @@ data class DiscordParameters (
         .reply()
         .withEmbeds(*embeds)
         .withEphemeral(true)
+        .thenReturn(Unit)
+
+    fun creply(vararg components: TopLevelMessageComponent) = event
+        .reply()
+        .withComponents(*components)
         .thenReturn(Unit)
 
     // listen for response to components on reply

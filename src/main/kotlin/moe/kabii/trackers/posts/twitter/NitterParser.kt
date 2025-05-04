@@ -33,7 +33,7 @@ object NitterParser {
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
     private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
-    private val nitterVideo = Regex("<video poster=")
+    private val nitterVideo = Regex("<video poster=\"[\\S\\s]+<source src=\"${URLUtil.genericUrl}.mp4\"")
     private val nitterDateFormat = DateTimeFormatter.ofPattern("EEE',' dd MMM uuuu HH:mm:ss zzz", Locale.ENGLISH)
 
     private val scriptDir = File("files/scripts/twitter")
@@ -107,7 +107,9 @@ object NitterParser {
                 val images = nitterImage.findAll(html)
                     .mapNotNull { m -> m.groups[1]?.value }
                     .toList()
-                val hasVideo = nitterVideo.containsMatchIn(html)
+                val videos = nitterVideo.findAll(html)
+                    .mapNotNull { m -> m.groups[1]?.value }
+                    .toList()
 
                 // quotes: description html will contain a link to a different tweet at the end
                 val quoteMatch = nitterQuote.find(html)
@@ -142,7 +144,7 @@ object NitterParser {
                 if(tweetId != null) {
                     val url = "https://twitter.com/$username/status/$tweetId"
                     nitterTweets.add(
-                        NitterTweet(tweetId, text, html, instant, url, images, hasVideo, retweetOf, replyTo, quoteOf, quoteId)
+                        NitterTweet(tweetId, text, html, instant, url, images, videos, retweetOf, replyTo, quoteOf, quoteId)
                     )
                 } else {
                     LOG.debug("Invalid Tweet ID from Nitter guid: $guid")

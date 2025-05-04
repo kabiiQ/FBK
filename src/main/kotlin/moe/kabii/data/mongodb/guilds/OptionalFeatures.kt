@@ -112,6 +112,8 @@ data class PostsSettings(
     var displayReposts: Boolean = false,
     var mediaOnly: Boolean = false,
     var autoTranslate: Boolean = false,
+    var useComponents: Boolean = false,
+
     var mentionRoles: Boolean = true,
     var mentionNormalPosts: Boolean = true,
     var mentionReplies: Boolean = true,

@@ -22,13 +22,11 @@ data class NitterTweet(
     val url: String,
 
     val images: List<String>,
-    val hasVideo: Boolean,
+    val videos: List<String>,
     val retweetOf: String?,
     val replyTo: String?,
     val quoteOf: String?,
-    val quoteOfTweet: Long?,
-
-    val videoUrl: String? = null
+    val quoteOfTweet: Long?
 ) {
     val retweet = retweetOf != null
     val reply = replyTo != null

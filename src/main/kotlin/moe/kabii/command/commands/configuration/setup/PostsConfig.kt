@@ -45,6 +45,10 @@ object PostsConfig : Command("posts") {
             "translate",
             PostsSettings::autoTranslate
         ),
+        BooleanElement("Use new Discord message formatting styles, supporting multiple images",
+            "newstyle",
+            PostsSettings::useComponents
+        ),
         CustomElement("Post custom Twitter URLs, overriding the standard FBK embed. (translations will not be available)",
             "customurl",
             PostsSettings::customTwitterDomain as KMutableProperty1<PostsSettings, Any?>,

@@ -1,6 +1,8 @@
 package moe.kabii.trackers.posts.bluesky
 
 import discord4j.common.util.TimestampFormat
+import discord4j.core.`object`.component.*
+import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.MessageCreateSpec
@@ -215,16 +217,14 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                     val (_, features) = GuildConfigurations.findFeatures(target.discordClient, target.discordGuild?.asLong(), target.discordChannel.asLong())
                     val postCfg = features?.postsSettings ?: PostsSettings()
 
+                    if(!post.notifyOption(postCfg)) return@target
+
                     // image or video will count as 'media' for the purposes of FBK's mediaOnly flag
                     // determine them separately as non-image embeds will receive a notice in the footer
                     val images = (post.post.embed as? BlueskyEmbedImagesView)?.images
                     val embedImage = images?.first()?.thumb
                     val embedVideo = (post.post.embed as? BlueskyEmbedVideoView)?.thumbnail
                     val embedExternal = (post.post.embed as? BlueskyEmbedExternalView)?.external?.thumb
-
-                    // Filter based on post details and target settings
-                    if(!post.notifyOption(postCfg)) return@target
-                    if(postCfg.mediaOnly && embedImage == null && embedVideo == null) return@target
 
                     // Translation phase
                     val tlCfg = GuildConfigurations.getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong()).translator
@@ -239,63 +239,116 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                     val quotedPost = post.post.embed
                         ?.run { this as? BlueskyEmbedRecordView }
                         ?.run { record as BlueskyEmbedViewRecord }
-                    val action = when {
+                    val event = when {
                         post.isRepost -> "reposted **@${post.post.author.handle}** \uD83D\uDD01"
                         post.isReply -> "replied to **@${(post.reply?.parent as BlueskyPostView).author.handle}** \uD83D\uDCAC"
                         post.isQuote -> "quoted a post from **@${quotedPost?.author?.handle}** \uD83D\uDDE8"
                         else -> "made a new post"
                     }
+                    val timestamp = TimestampFormat.RELATIVE_TIME.format(postTimestamp)
+                    val action = "**${feed.displayName}** $event $timestamp: ${post.url}"
 
-                    val footer = StringBuilder()
-                    val imageCount = images?.size ?: 0
-                    if(imageCount > 1) footer.appendLine("(this post contains ${imageCount} images)")
-                    if(embedVideo != null) footer.appendLine("(this post contains a video)")
-                    if(embedExternal != null) footer.appendLine("(this post contains embedded content)")
+                    val author = post.post.author
+                    val color = mention?.db?.embedColor ?: 686847
+                    val postText = text.escapeMarkdown()
 
-                    val notifSpec = MessageCreateSpec.create()
-                        .run { // Set message outside embed (for pings)
-                            val timestamp = TimestampFormat.RELATIVE_TIME.format(postTimestamp)
-                            withContent("$mentionText**${feed.displayName}** $action $timestamp: ${post.url}")
-                        }
-                        .run { // Create notification embed
-                            val author = post.post.author
-                            val color = mention?.db?.embedColor ?: 686847
-                            val postText = text.escapeMarkdown()
-                            val embed = Embeds.other(postText, Color.of(color))
-                                .withAuthor(EmbedCreateFields.Author.of("@${author.handle}", author.permaUrl, author.avatar))
-                                .run { // Add 'fields' to some embeds
-                                    val fields = mutableListOf<EmbedCreateFields.Field>()
+                    val notifSpec = when {
+                        postCfg.mediaOnly && embedImage == null && embedVideo == null -> return@target
+                        postCfg.useComponents -> {
+                            // Use newer Discord components v2 to generate message
+                            val media = images?.map(BlueskyImage::fullSize)
+                                ?: embedVideo?.run(::listOf)
+                                ?: embedExternal?.run(::listOf)
+                                ?: listOf()
+                            val container = Container.of(
+                                Color.of(color),
+                                listOfNotNull(
+                                    if(author.avatar == null) TextDisplay.of(action)
+                                    else Section.of(
+                                        Thumbnail.of(
+                                            UnfurledMediaItem.of(author.avatar)
+                                        ),
+                                        TextDisplay.of(action)
+                                    ),
 
-                                    if(post.isQuote) {
-                                        fields.add(EmbedCreateFields.Field.of("**Post Quoted**", quotedPost?.url ?: "", false))
-                                    }
+                                    TextDisplay.of(postText),
+
+                                    if(media.any()) MediaGallery.of(
+                                        media.map(UnfurledMediaItem::of).map(MediaGalleryItem::of)
+                                    ) else null,
 
                                     if(translation != null) {
-                                        val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
-                                        footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
-                                        fields.add(EmbedCreateFields.Field.of("**Post Translation**", tlText, false))
-                                    }
+                                        val tlText = StringEscapeUtils.unescapeHtml4(translation.translatedText)
+                                        TextDisplay.of("**Post Translation** (${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag})\n$tlText")
+                                    } else null,
 
-                                    if(fields.isNotEmpty()) withFields(fields) else this
-                                }
-                                .run { // Add footer to embed
+                                    if(post.isQuote) Section.of(
+                                        Button.link(quotedPost?.url ?: "", "View on Bluesky"),
+                                        TextDisplay.of("Post Quoted:")
+                                    ) else null,
+
+                                    if(mentionText.isNotBlank()) TextDisplay.of(mentionText)
+                                    else null,
+
                                     if(outdated && mention != null) {
-                                        footer.appendLine("Skipping ping for old post.")
                                         LOG.info("Missed ping: $post")
-                                    }
-                                    withFooter(EmbedCreateFields.Footer.of(footer.toString().ifBlank { "Bluesky" }, NettyFileServer.blueskyLogo))
-                                }
-                                .run { // Add image to embed
-                                    val image = embedImage ?: embedVideo ?: embedExternal
-                                    if(image != null) withImage(image) else this
-                                }
+                                        TextDisplay.of("-# Ping was skipped for this late post.")
+                                    } else null
+                                )
+                            )
 
-                            withEmbeds(embed)
+                            MessageCreateSpec.create()
+                                .withFlags(Message.Flag.IS_COMPONENTS_V2)
+                                .withComponents(container)
                         }
+                        else -> {
+                            // Use classic Discord embed style
+                            val footer = StringBuilder()
+                            val imageCount = images?.size ?: 0
+                            if(imageCount > 1) footer.appendLine("(this post contains $imageCount images)")
+                            if(embedVideo != null) footer.appendLine("(this post contains a video)")
+                            if(embedExternal != null) footer.appendLine("(this post contains embedded content)")
+
+                            MessageCreateSpec.create()
+                                .withContent("$mentionText$action")
+                                .run { // Create notification embed
+                                    val embed = Embeds.other(postText, Color.of(color))
+                                        .withAuthor(EmbedCreateFields.Author.of("@${author.handle}", author.permaUrl, author.avatar))
+                                        .run { // Add 'fields' to some embeds
+                                            val fields = mutableListOf<EmbedCreateFields.Field>()
+
+                                            if(post.isQuote) {
+                                                fields.add(EmbedCreateFields.Field.of("**Post Quoted**", quotedPost?.url ?: "", false))
+                                            }
+
+                                            if(translation != null) {
+                                                val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), MagicNumbers.Embed.FIELD.VALUE)
+                                                footer.append("Translator: ${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag}\n")
+                                                fields.add(EmbedCreateFields.Field.of("**Post Translation**", tlText, false))
+                                            }
+
+                                            if(fields.isNotEmpty()) withFields(fields) else this
+                                        }
+                                        .run { // Add footer to embed
+                                            if(outdated && mention != null) {
+                                                footer.appendLine("Skipping ping for old post.")
+                                                LOG.info("Missed ping: $post")
+                                            }
+                                            withFooter(EmbedCreateFields.Footer.of(footer.toString().ifBlank { "Bluesky" }, NettyFileServer.blueskyLogo))
+                                        }
+                                        .run { // Add image to embed
+                                            val image = embedImage ?: embedVideo ?: embedExternal
+                                            if(image != null) withImage(image) else this
+                                        }
+
+                                    withEmbeds(embed)
+                                }
+                        }
+                    }
 
                     val notif = channel
                         .createMessage(notifSpec)
-                        .timeout(Duration.ofMillis(12_000L))
+                        .timeout(Duration.ofMillis(24_000L))
                         .awaitSingle()
 
                     TrackerUtil.checkAndPublish(fbk, notif)
