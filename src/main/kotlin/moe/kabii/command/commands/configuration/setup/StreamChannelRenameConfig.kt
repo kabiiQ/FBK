@@ -74,7 +74,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
             settings.marks.removeIf { existing ->
                 existing.channel == dbChannel
             }
-            ireply(Embeds.fbk("The live mark for **${streamInfo.displayName}** has been removed.")).awaitSingle()
+            ereply(Embeds.fbk("The live mark for **${streamInfo.displayName}** has been removed.")).awaitSingle()
         } else {
             val newMark = ChannelMark(dbChannel, mark)
             settings.marks.removeIf { existing ->
@@ -82,7 +82,7 @@ object StreamChannelRenameConfig : Command("streamrenamecfg") {
             }
             settings.marks.add(newMark)
 
-            ireply(Embeds.fbk("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
+            ereply(Embeds.fbk("The \"live\" mark for **${streamInfo.displayName}** has been set to **$mark**.\nThis will be displayed in the Discord channel name when this stream is live.\n" +
                     "It is recommended to use an emoji to represent a live stream, but you are able to use any combination of characters you wish.\n" +
                     "Note that it is **impossible** to use uploaded/custom emojis in a channel name.")).awaitSingle()
         }

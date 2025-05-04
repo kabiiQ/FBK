@@ -58,7 +58,7 @@ object ChannelFeatures : CommandContainer {
                         features.musicChannel = false
                         config.save()
                         event.createFollowup()
-                            .withEmbeds(Embeds.error("This instance of FBK does not provide music features. You must add FBK Music 1-8 if this is a requirement."))
+                            .withEmbeds(Embeds.error("Music features are currently not available."))
                             .withEphemeral(true)
                             .awaitSingle()
                     }

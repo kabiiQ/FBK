@@ -23,9 +23,6 @@ class JetstreamClient(val firehoseService: BlueskyFirehose) : WebSocketClient(en
         private val handleScope = CoroutineScope(DiscordTaskPool.socialThreads + CoroutineName("Bluesky-Stream") + SupervisorJob())
 
         val baseEndpoint = "ws://jetstream:6008/subscribe"
-        //val baseEndpoint = "wss://jetstream2.us-east.bsky.network/subscribe"
-        //val endpoint = URI.create("wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos")
-
         fun endpoint() = URI.create("$baseEndpoint?wantedCollections=${collections.joinToString("&wantedCollections=")}")
     }
 
@@ -34,44 +31,6 @@ class JetstreamClient(val firehoseService: BlueskyFirehose) : WebSocketClient(en
     }
 
     override fun onMessage(bytes: ByteBuffer) {
-        /*        try {
-
-            *//* Bluesky Firehose implementation not well-documented at the time of this integration
-            A fair bit of reverse-engineering was needed, I'm sure some details were missed or misconceptions made
-             *//*
-
-
-        }*/
-
-
-
-
-        /*        val data = bytes!!.array()
-                val stream = ByteArrayInputStream(data)
-                val a = CborDecoder(stream)
-                val ab = CborObject.deserialize(a, data.size) as CborMap
-                //LOG.info(ab.values.entries.joinToString { erm  -> "${erm.key} : ${erm.value}" })
-                val ac = CborObject.deserialize(a, data.size) as CborMap
-                val ops = (ac.values[CborString("ops")] as CborList).value
-                val opMaps = ops.map { it as CborMap }.map { it.values.entries.joinToString { erm -> "${erm.key} : ${erm.value}" } }
-                val blobs = (ac.values.get(CborString("blobs")) as CborList).value
-                val blocks = ac.values[CborString("blocks")] as CborByteArray
-
-        *//*        val blockdata = blocks.value
-        val blockstream = ByteArrayInputStream(blockdata)
-        val c = CborDecoder(blockstream)*//*
-*//*        while(blockstream.available() > 0) {
-            val block = CborObject.deserialize(c, blockdata.size)
-            LOG.info("block: ${block.toString() }")
-        }*//*
-        //val blockdata = CborObject.fromByteArray(blocks.value)
-        val commit = (ac.values[CborString("commit")] as CborMerkleLink).target
-        LOG.info(ac.values.entries.joinToString { erm  -> "${erm.key} : ${erm.value}" })
-        LOG.info("ops: $opMaps")
-        LOG.info("blobs: $blobs")
-        LOG.info("blocks: $blockdata")
-        LOG.info("commit: $commit")
-        LOG.info("\n")*/
     }
 
     override fun onMessage(data: String) {
