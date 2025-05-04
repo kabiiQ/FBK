@@ -121,7 +121,7 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
 
                 } else {
                     // new stream has started
-                    streamStart(db, kick, targets)
+                    streamStart(db, kick)
                 }
 
                 // stream is live, edit or post a notification in each target channel

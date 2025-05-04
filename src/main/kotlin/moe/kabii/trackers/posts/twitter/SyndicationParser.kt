@@ -88,7 +88,7 @@ object SyndicationParser {
             val quoteOf = tweet.quotedStatus?.user?.screenName
             val quoteOfTweet = tweet.quotedStatus?.id
 
-            NitterTweet(tweet.id, tweet.text, "", tweet.createdAt, tweet.url, images, video != null, retweetOf, null, quoteOf, quoteOfTweet, videoUrl)
+            NitterTweet(tweet.id, tweet.text, "", tweet.createdAt, tweet.url, images, listOfNotNull(videoUrl), retweetOf, null, quoteOf, quoteOfTweet)
         }
 
         return NitterData(nitterUser, nitterTweets)

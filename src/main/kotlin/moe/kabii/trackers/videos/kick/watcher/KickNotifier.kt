@@ -34,7 +34,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
     }
 
     @CreatesExposedContext
-    suspend fun streamStart(channel: TrackedStreams.StreamChannel, info: KickStreamInfo, targets: List<TrackedTarget>) {
+    suspend fun streamStart(channel: TrackedStreams.StreamChannel, info: KickStreamInfo) {
 
         // create live stats object for stream
         val newEvent = propagateTransaction {
@@ -202,10 +202,8 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                 val mentionMessage = if (mention != null) {
 
                     val rolePart = if (mention.discord != null
-                        && (mention.lastMention == null || org.joda.time.Duration(
-                            mention.lastMention,
-                            org.joda.time.Instant.now()
-                        ) > org.joda.time.Duration.standardHours(1))
+                        && (mention.lastMention == null
+                                || org.joda.time.Duration(mention.lastMention, org.joda.time.Instant.now()) > org.joda.time.Duration.standardHours(2))
                     ) {
 
                         mention.discord.mention.plus(" ")
