@@ -70,7 +70,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         }
     }
 
-    suspend fun <T> discordTask(timeoutMillis: Long = 12_000L, block: suspend () -> T) = taskScope.launch {
+    suspend fun <T> discordTask(timeoutMillis: Long = 24_000L, block: suspend () -> T) = taskScope.launch {
         withTimeout(timeoutMillis) {
             block()
         }

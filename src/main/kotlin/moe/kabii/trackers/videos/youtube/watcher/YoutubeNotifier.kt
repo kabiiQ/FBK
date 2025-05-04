@@ -353,7 +353,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(12_000L))
+                    .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
@@ -421,7 +421,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(12_000L))
+                    .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
 
             } catch(ce: ClientException) {
@@ -486,7 +486,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(12_000L))
+                    .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
                 val err = ce.status.code()
@@ -592,7 +592,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 val newNotification = mentionMessage
                     .withEmbeds(embed)
-                    .timeout(Duration.ofMillis(12_000L))
+                    .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
 
                 TrackerUtil.checkAndPublish(newNotification, guildConfig?.guildSettings)
