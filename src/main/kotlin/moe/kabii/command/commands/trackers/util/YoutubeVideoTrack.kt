@@ -93,10 +93,9 @@ object YoutubeVideoTrack : Command("trackvid") {
 
             val videoUrl = URLUtil.StreamingSites.Youtube.video(ytVideo.id)
             val mentioning = if(usePings != null) {
-                val getCommand = "`/getmention username:youtube:${usePings.identifier}`"
-                "using the ping configuration for **${usePings.site.full}/${usePings.identifier}**\n\nYou can copy the following command to view this ping configuration: $getCommand"
-            } else "mentioning **you**."
-            val embed = Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live, $mentioning")
+                ", using the ping configuration for **${usePings.site.full}/${usePings.identifier}**."
+            } else "."
+            val embed = Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live$mentioning")
             val reply = if(usePings != null) ereply(embed) else ireply(embed)
             reply.awaitSingle()
             TargetSuggestionGenerator.updateTargets(client.clientId, chan.id.asLong())
