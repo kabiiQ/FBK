@@ -6,8 +6,8 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.runBlocking
@@ -153,7 +153,7 @@ object AudioEventHandler : AudioEventAdapter() {
                     val msg = data.queueMessage!!
                     data.fbk.client.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
-                            discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                            discordMsg.addReaction(Emoji.unicode(EmojiCharacters.checkBox))
                         }
                 } else Mono.empty()
 
@@ -162,7 +162,7 @@ object AudioEventHandler : AudioEventAdapter() {
                     data.fbk.client.getMessageById(msg.channelID, msg.messageID)
                         .flatMap { discordMsg ->
                             if(config.musicBot.deleteNowPlaying) discordMsg.delete("old music bot now playing message")
-                            else discordMsg.addReaction(ReactionEmoji.unicode(EmojiCharacters.checkBox))
+                            else discordMsg.addReaction(Emoji.unicode(EmojiCharacters.checkBox))
                         }
                 } else Mono.empty()
 

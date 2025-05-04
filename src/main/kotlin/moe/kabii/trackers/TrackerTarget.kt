@@ -443,7 +443,7 @@ data object TwitterTarget : SocialTarget(
         }
 
         if(AvailableServices.twitterWhitelist && (knownUser == null || !knownUser.enabled)) {
-            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely, as Twitter has made it increasingly difficult to access the site.\nA [limited number of popular feeds](${NettyFileServer.twitterFeeds}) are currently enabled for tracking.\n\nFBK now supports Bluesky feeds if that alternative is helpful for you."))
+            return Err(TrackerErr.NotPermitted("General Twitter feed tracking has been disabled indefinitely, as Twitter has made it increasingly difficult to access the site.\nA [limited number of popular feeds](${NettyFileServer.twitterFeeds}) are currently enabled for tracking.\n\nPlease contact the bot developer for consideration if you wish to track a new feed that many people will use (for example, establishing the primary fan server for a VTuber)\n\nFBK now supports Bluesky feeds if that alternative is helpful for you."))
         }
 
         return if(knownUser == null) {

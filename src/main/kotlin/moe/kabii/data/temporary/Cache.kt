@@ -1,14 +1,14 @@
 package moe.kabii.data.temporary
 
 import discord4j.common.util.Snowflake
-import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.`object`.emoji.Emoji
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.translation.TranslationResult
 import java.util.concurrent.ConcurrentHashMap
 
 // basic non-persistent in-memory caches
 object Cache {
-    data class BotReactionRemove(val messageId: Snowflake, val userId: Snowflake, val emoji: ReactionEmoji)
+    data class BotReactionRemove(val messageId: Snowflake, val userId: Snowflake, val emoji: Emoji)
     val emojiRemove = mutableListOf<BotReactionRemove>()
 
     val musicPermissionWarnings = mutableMapOf<Snowflake, Boolean>()

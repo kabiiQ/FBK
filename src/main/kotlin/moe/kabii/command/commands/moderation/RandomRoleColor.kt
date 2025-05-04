@@ -3,7 +3,7 @@ package moe.kabii.command.commands.moderation
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.http.client.ClientException
@@ -55,7 +55,7 @@ object RandomRoleColor : Command("randomizecolor") {
                 .withComponents(
                     ActionRow.of(
                         Button.danger("exit", "Cancel"),
-                        Button.success("confirm", ReactionEmoji.unicode(EmojiCharacters.checkBox)),
+                        Button.success("confirm", Emoji.unicode(EmojiCharacters.checkBox)),
                         Button.primary("next", "Next Color ->")
                     )
                 )

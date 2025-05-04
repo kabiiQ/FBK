@@ -17,8 +17,6 @@ import moe.kabii.util.DurationParser
 import moe.kabii.util.extensions.javaInstant
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.tryAwait
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.time.Instant

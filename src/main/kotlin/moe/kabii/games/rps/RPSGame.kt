@@ -4,8 +4,8 @@ import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ComponentInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.core.`object`.entity.User
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.spec.EmbedCreateFields
 import discord4j.core.spec.EmbedCreateFields.Author
 import discord4j.core.spec.EmbedCreateSpec
@@ -149,9 +149,9 @@ class RPSGame(
     }
 
     val gameplayButtons = ActionRow.of(
-        Button.primary("rock", ReactionEmoji.unicode(RPSOption.ROCK.emoji), "Rock"),
-        Button.primary("paper", ReactionEmoji.unicode(RPSOption.PAPER.emoji), "Paper"),
-        Button.primary("scissors", ReactionEmoji.unicode(RPSOption.SCISSORS.emoji), "Scissors")
+        Button.primary("rock", Emoji.unicode(RPSOption.ROCK.emoji), "Rock"),
+        Button.primary("paper", Emoji.unicode(RPSOption.PAPER.emoji), "Paper"),
+        Button.primary("scissors", Emoji.unicode(RPSOption.SCISSORS.emoji), "Scissors")
     )
 
     override fun cancelGame() {

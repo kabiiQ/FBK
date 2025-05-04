@@ -3,7 +3,7 @@ package moe.kabii.util
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.vdurmont.emoji.EmojiManager
-import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.`object`.emoji.Emoji
 import moe.kabii.util.extensions.snowflake
 
 @JsonTypeInfo(
@@ -17,7 +17,7 @@ import moe.kabii.util.extensions.snowflake
 )
 sealed class DiscordEmoji {
     abstract val name: String
-    abstract fun toReactionEmoji(): ReactionEmoji
+    abstract fun toReactionEmoji(): Emoji
     abstract fun string(): String
 }
 
@@ -26,7 +26,7 @@ data class CustomEmoji(
     override val name: String,
     val animated: Boolean
 ) : DiscordEmoji() {
-    override fun toReactionEmoji() = ReactionEmoji.custom(id.snowflake, name, animated)
+    override fun toReactionEmoji() = Emoji.custom(id.snowflake, name, animated)
     override fun string() = "<:$name:$id>"
 
     // the custom emoji 'name' can change
@@ -43,7 +43,7 @@ data class UnicodeEmoji(
     val unicode: String
 ) : DiscordEmoji() {
     override val name = unicode
-    override fun toReactionEmoji() = ReactionEmoji.unicode(unicode)
+    override fun toReactionEmoji() = Emoji.unicode(unicode)
     override fun string() = unicode
 }
 

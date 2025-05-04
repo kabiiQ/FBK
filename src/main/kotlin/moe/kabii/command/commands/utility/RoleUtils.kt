@@ -3,7 +3,7 @@ package moe.kabii.command.commands.utility
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -41,7 +41,7 @@ object RoleUtils : CommandContainer {
                 val names = emptyRoles.joinToString("\n") { role -> "${role.name} (${role.id.asString()})" }
 
                 val confirmButtons = ActionRow.of(
-                    Button.secondary("cancel", ReactionEmoji.unicode(EmojiCharacters.redX), "Cancel Delete"),
+                    Button.secondary("cancel", Emoji.unicode(EmojiCharacters.redX), "Cancel Delete"),
                     Button.danger("continue", "DELETE ROLES")
                 )
                 event.editReply()

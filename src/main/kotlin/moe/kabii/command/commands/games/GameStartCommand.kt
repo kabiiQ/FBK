@@ -3,8 +3,8 @@ package moe.kabii.command.commands.games
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.discordjson.possible.Possible
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -68,8 +68,8 @@ object GameStartCommand : Command("game") {
             val p2Target = args.user("user").awaitSingle()
 
             val confirmButtons = ActionRow.of(
-                Button.secondary("cancel", ReactionEmoji.unicode(EmojiCharacters.redX), "Cancel"),
-                Button.success("accept", ReactionEmoji.unicode(EmojiCharacters.checkBox), "Start Game")
+                Button.secondary("cancel", Emoji.unicode(EmojiCharacters.redX), "Cancel"),
+                Button.success("accept", Emoji.unicode(EmojiCharacters.checkBox), "Start Game")
             )
             // issue the challenge
             event

@@ -2,9 +2,9 @@ package moe.kabii.command.commands.configuration.roles.buttonroles
 
 import discord4j.core.`object`.component.ActionRow
 import discord4j.core.`object`.component.Button
+import discord4j.core.`object`.emoji.Emoji
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.Role
-import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.params.DiscordParameters
@@ -175,7 +175,7 @@ class ButtonRoleUtil(val origin: DiscordParameters, val config: ButtonConfigurat
                 // create button to allow users to bring up menu to select roles
                 if(config.roles.isNotEmpty()) {
                     val edit = ActionRow.of(
-                        Button.primary("edit", ReactionEmoji.unicode(EmojiCharacters.plus), "Edit My Roles")
+                        Button.primary("edit", Emoji.unicode(EmojiCharacters.plus), "Edit My Roles")
                     )
                     listOf(edit)
                 } else listOf()
