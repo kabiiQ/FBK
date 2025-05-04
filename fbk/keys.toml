@@ -93,6 +93,7 @@ log_channel = 0
 # Adding an instance to instance_urls enables the Twitter component of the social media posts tracker.
 # The URL in this field does not need to be changed for a basic FBK instance, as it already points to the nitter container that comes with the FBK stack.
 # To enable Twitter tracker functionality, you will need to add a token for an unrestricted Twitter account to the file fbk/nitter/sessions.jsonl
+# The token in this file by default is for a guest account and will run but will not be able to serve feeds.
 # You can read https://github.com/zedeus/nitter/wiki/Creating-session-tokens for details on obtaining your Twitter account token using https://github.com/zedeus/nitter/blob/master/tools/get_session.py
 instance_urls = ["http://nitter"]
 # If twitter_whitelist is enabled, Twitter feeds must be manually added to the databse for users to track them. Otherwise, any user will be able to /track any Twitter feed as with other services.
