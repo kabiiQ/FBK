@@ -110,7 +110,12 @@ class HoloChats(val instances: DiscordInstances) {
                         .getOrCreateFeatures(target.id.asLong())
                         .holoChatsTargetChannel
                 }.forEach { channel ->
-                    handler(channel).awaitSingle()
+                    try {
+                        handler(channel).awaitSingle()
+                    } catch(e: Exception) {
+                        LOG.warn("Problem posting HoloChat for ${room.videoId} to ${channel.id} :: ${e.message}")
+                        LOG.debug(e.stackTraceString)
+                    }
                 }
             }
         } catch(e: Exception) {

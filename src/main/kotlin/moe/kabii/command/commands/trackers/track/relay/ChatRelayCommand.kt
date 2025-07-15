@@ -3,6 +3,7 @@ package moe.kabii.command.commands.trackers.track.relay
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.command.commands.trackers.track.TrackerCommand
+import moe.kabii.command.commands.trackers.track.TrackerCommandBase
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
@@ -48,6 +49,9 @@ object ChatRelayCommand : TrackerCommand {
             sendFormatError(origin, target.identifier)
             return
         }
+
+        TrackerCommandBase.sendTrackerTestMessage(origin)
+
         when(relay) {
             is ChannelRelaySpec -> AutoRelayChannel.track(origin, relay.channelId)
             is VideoRelaySpec -> ManualRelayVideo.track(origin, relay.videoId)
