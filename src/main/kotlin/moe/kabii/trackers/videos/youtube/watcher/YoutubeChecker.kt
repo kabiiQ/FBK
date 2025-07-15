@@ -149,48 +149,46 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                 return@forEach
                             }
 
-                            try {
-                                // launch coroutine for each video to be processed
-                                discordTask(30_000L) {
-                                    try {
-                                        val callReason = targetLookup.getValue(videoId)
+                            // launch coroutine for each video to be processed
+                            discordTask(30_000L) {
+                                try {
+                                    val callReason = targetLookup.getValue(videoId)
 
-                                        val ytVideoInfo = when(ytVideo) {
-                                            is Ok -> ytVideo.value
-                                            is Err -> {
-                                                LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
-                                                when (ytVideo.value) {
-                                                    // do not process video if this was an IO issue on our end
-                                                    is TrackerErr.Network -> return@discordTask
-                                                    is TrackerErr.NotFound -> null
-                                                }
+                                    val ytVideoInfo = when(ytVideo) {
+                                        is Ok -> ytVideo.value
+                                        is Err -> {
+                                            LOG.error("YouTube video not processing: $videoId :: ${ytVideo.value}")
+                                            when (ytVideo.value) {
+                                                // do not process video if this was an IO issue on our end
+                                                is TrackerErr.Network -> return@discordTask
+                                                is TrackerErr.NotFound -> null
                                             }
                                         }
-
-                                        propagateTransaction {
-                                            if (ytVideoInfo != null) {
-                                                with(callReason.video) {
-                                                    lastAPICall = DateTime.now()
-                                                    memberLimited = ytVideoInfo.memberLimited
-                                                    lastTitle = ytVideoInfo.title
-                                                    ytChannel.lastKnownUsername = ytVideoInfo.channel.name
-                                                }
-                                            }
-
-                                            when (callReason) {
-                                                is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
-                                                is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
-                                                is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
-                                        LOG.debug(e.stackTraceString)
                                     }
-                                }
 
-                            } finally {
-                                if(lock.isLocked) lock.unlock()
+                                    propagateTransaction {
+                                        if (ytVideoInfo != null) {
+                                            with(callReason.video) {
+                                                lastAPICall = DateTime.now()
+                                                memberLimited = ytVideoInfo.memberLimited
+                                                lastTitle = ytVideoInfo.title
+                                                ytChannel.lastKnownUsername = ytVideoInfo.channel.name
+                                            }
+                                        }
+
+                                        when (callReason) {
+                                            is YoutubeCall.Live -> currentLiveCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.Scheduled -> upcomingCheck(callReason, ytVideoInfo)
+                                            is YoutubeCall.New -> newVideoCheck(callReason, ytVideoInfo)
+                                        }
+                                        // TODO update thumbnail
+                                    }
+                                } catch (e: Exception) {
+                                    LOG.warn("Error processing YouTube video: $videoId :: ${e.message}")
+                                    LOG.debug(e.stackTraceString)
+                                } finally {
+                                    if(lock.isLocked) lock.unlock()
+                                }
                             }
                         }
 

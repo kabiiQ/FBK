@@ -36,7 +36,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.joda.time.DateTime
 import reactor.kotlin.core.publisher.toMono
-import java.time.Duration
 
 abstract class StreamWatcher(val instances: DiscordInstances) {
 
@@ -224,7 +223,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
         return try {
             discord.getChannelById(channel)
                 .ofType(MessageChannel::class.java)
-                .timeout(Duration.ofMillis(1_500))
+                //.timeout(Duration.ofMillis(1_500))
                 .awaitSingle()
         } catch(e: Exception) {
             if(e is ClientException && e.status.code() == 403) {

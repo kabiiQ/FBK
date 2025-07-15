@@ -18,6 +18,7 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.joda.time.DateTime
 import java.io.IOException
+import java.sql.Connection
 import java.time.Instant
 import kotlin.coroutines.coroutineContext
 
@@ -41,10 +42,11 @@ fun <T> JsonAdapter<T>.fromJsonSafe(input: String): Result<T, IOException> = try
 }
 
 // newSuspendedTransaction exception handling does not behave as one might naturally expect
-suspend fun <T> propagateTransaction(statement: suspend Transaction.() -> T): T {
+suspend fun <T> propagateTransaction(isolate: Boolean = false, statement: suspend Transaction.() -> T): T {
     val scope = CoroutineScope(coroutineContext + SupervisorJob())
+    val isolation = if(isolate) Connection.TRANSACTION_REPEATABLE_READ else null
     return withContext(scope.coroutineContext) {
-        newSuspendedTransaction {
+        newSuspendedTransaction(transactionIsolation = isolation) {
             statement()
         }
     }
