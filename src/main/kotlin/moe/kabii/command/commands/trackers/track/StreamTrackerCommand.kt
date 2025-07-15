@@ -82,8 +82,6 @@ object StreamTrackerCommand : TrackerCommand {
 
         val ytInfo = if(streamTarget is YoutubeTarget) "\nUse `/yt config` to adjust the types of YouTube content posted to this channel." else ""
         origin.ireply(Embeds.fbk("Now tracking **[${streamInfo.displayName}](${streamInfo.url})** on **${streamTarget.full}**!$ytInfo\nUse `/setmention` to configure a role to be \"pinged\" for streams/uploads.")).awaitSingle()
-        TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
-        GlobalTrackSuggestionGenerator.cacheNewFeed(streamTarget, streamId, streamInfo.displayName)
 
         // side-effects for prompt data maintenance
         try {
@@ -97,6 +95,9 @@ object StreamTrackerCommand : TrackerCommand {
             LOG.warn("Error getting initial update for StreamChannel: ${e.message}")
             LOG.info(e.stackTraceString)
         }
+
+        TargetSuggestionGenerator.updateTargets(origin.client.clientId, origin.chan.id.asLong())
+        GlobalTrackSuggestionGenerator.cacheNewFeed(streamTarget, streamId, streamInfo.displayName)
     }
 
     override suspend fun untrack(origin: DiscordParameters, target: TargetArguments, moveTo: GuildMessageChannel?) {

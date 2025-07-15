@@ -3,7 +3,7 @@ package moe.kabii.discord.event.message.starboard
 import discord4j.core.event.domain.message.*
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
 import discord4j.core.`object`.entity.channel.TextChannel
-import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.sync.withLock
@@ -166,7 +166,7 @@ object StarboardEventHandler {
     class MessageDeletionListener(val instances: DiscordInstances) : EventListener<MessageDeleteEvent>(MessageDeleteEvent::class) {
         override suspend fun handle(event: MessageDeleteEvent) {
             // in this event, remove the post from the starboard, unless configured otherwise
-            val channel = event.channel.ofType(GuildMessageChannel::class.java).awaitFirstOrNull() ?: return
+            val channel = event.channel.awaitFirst() as? GuildMessageChannel ?: return
             val guildId = channel.guildId.asLong()
 
             val fbk = instances[event.client]
