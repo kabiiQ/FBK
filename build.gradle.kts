@@ -46,8 +46,8 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.3.0-RC2") // discord websocket and api
 
     // music bot
-    implementation("dev.arbjerg:lavaplayer:2.2.2")
-    implementation("dev.lavalink.youtube:v2:1.11.4")
+    implementation("dev.arbjerg:lavaplayer:2.2.3")
+    implementation("dev.lavalink.youtube:v2:1.13.3")
     implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
     implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.26.2")
@@ -124,7 +124,7 @@ dependencies {
 
 var buildFlag = ""
 
-val updateVersion = task("updateVersion") {
+val updateVersion = tasks.register("updateVersion") {
     // custom script to create version file name and increment build number
     val versionsFile = file("build.version")
     val versions = versionsFile.readLines()

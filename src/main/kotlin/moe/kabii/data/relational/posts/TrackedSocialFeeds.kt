@@ -7,7 +7,6 @@ import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.trackers.BasicSocialFeed
 import moe.kabii.trackers.BlueskyTarget
-import moe.kabii.trackers.SocialTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.RequiresExposedContext

@@ -29,10 +29,6 @@ class KickWebhookListener(val manager: KickSubscriptionManager, val checker: Kic
 
     private val port = 8004
 
-    init {
-
-    }
-
     val server = embeddedServer(Netty, port = port) {
         routing {
             post {
