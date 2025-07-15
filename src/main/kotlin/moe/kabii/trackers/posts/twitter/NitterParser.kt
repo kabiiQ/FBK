@@ -15,6 +15,7 @@ import org.xml.sax.InputSource
 import java.io.File
 import java.io.IOException
 import java.io.StringReader
+import java.net.URLDecoder
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -33,8 +34,10 @@ object NitterParser {
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
     private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
-    private val nitterVideo = Regex("<video poster=\"[\\S\\s]+<source src=\"${URLUtil.genericUrl}.mp4\"")
     private val nitterDateFormat = DateTimeFormatter.ofPattern("EEE',' dd MMM uuuu HH:mm:ss zzz", Locale.ENGLISH)
+
+    private val nitterVideo = Regex("<video poster=\"[\\S\\s]+<source src=\"${URLUtil.genericUrl}\"")
+    private val originalVideo = Regex("video\\.twimg\\.com.+")
 
     private val scriptDir = File("files/scripts/twitter")
     private val scriptName = "get_video.py"
@@ -109,6 +112,10 @@ object NitterParser {
                     .toList()
                 val videos = nitterVideo.findAll(html)
                     .mapNotNull { m -> m.groups[1]?.value }
+                    .filter { url -> url.endsWith(".mp4") }
+                    .mapNotNull { url -> originalVideo.find(url)?.value }
+                    .map { url -> URLDecoder.decode(url, "UTF-8") }
+                    .map("https://"::plus)
                     .toList()
 
                 // quotes: description html will contain a link to a different tweet at the end

@@ -313,7 +313,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
 
                                     if(translation != null) {
                                         val tlText = StringEscapeUtils.unescapeHtml4(translation.translatedText)
-                                        TextDisplay.of("**Tweet Translation** (${translation.service.fullName}, ${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag})\n$tlText")
+                                        TextDisplay.of("**Post Translation** (${translation.service.fullName}, _${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag})_\n$tlText")
                                     } else null,
 
                                     if(tweet.quote) Section.of(
@@ -404,7 +404,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                         .awaitSingle()
 
                     // Send message 'replies' if features are enabled but not supported by notification style
-                    if(attachedVideo != null) {
+                    if(!tweet.retweet && attachedVideo != null) {
                         channel.createMessage(attachedVideo)
                             .withMessageReference(notif.id.reference)
                             .tryAwait()
