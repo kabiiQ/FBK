@@ -10,10 +10,8 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.ytchat.*
 import moe.kabii.instances.DiscordInstances
-import moe.kabii.util.extensions.RequiresExposedContext
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.select
 
@@ -148,13 +146,13 @@ class YoutubeMembershipUtil private constructor(val discord: GatewayDiscordClien
             return role
         } catch(ce: ClientException) {
             when {
-                ce.status.code() == 404 -> {
+                Opcode.notFound(ce.opcode) -> {
                     // role deleted, unlink memberships
 //                    val unlinked = "The role for linked YouTube memberships has been deleted in **${guild.name}**. The integration has been deleted accordingly. If this was in error, you may re-create the integration at any time with the **linkyoutubemembers** command."
 //                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), unlinked)
                     link.delete()
                 }
-                ce.status.code() == 403 -> {
+                Opcode.denied(ce.opcode) -> {
                     LOG.warn("YouTube membership link: permission denied for guild ${guild.id.asString()} :: ${ce.message}")
 //                    val perms = "There is a role configured for linked YouTube memberships in **${guild.name}**, but I do not have permission to access this role. Please ensure I have both the Manage Roles permission and the **membership role** is NOT ABOVE my (bot) role."
 //                    TrackerUtil.notifyOwner(discord, guild.id.asLong(), perms)

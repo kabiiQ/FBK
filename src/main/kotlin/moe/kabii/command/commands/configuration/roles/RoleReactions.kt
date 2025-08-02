@@ -13,6 +13,7 @@ import moe.kabii.discord.pagination.PaginationUtil
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.util.EmojiUtil
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 
 object ReactionRoles {
@@ -134,7 +135,7 @@ object ReactionRoles {
                 val link = "https://discord.com/channels/${target.id.asString()}/${message.channelID}/${message.messageID}"
                 "Message #[${message.messageID}]($link) in ${channel.name} for role **${role.name}**"
             } catch(e: Exception) {
-                if(e is ClientException && e.status.code() == 404) {
+                if(e is ClientException && Opcode.notFound(e.opcode)) {
                     config.autoRoles.reactionConfigurations.remove(cfg)
                     config.save()
                 }
@@ -170,7 +171,7 @@ object ReactionRoles {
                 val message = try {
                     chan.getMessageById(messageInfo.messageID.snowflake).awaitSingle()
                 } catch (ce: ClientException) {
-                    if(ce.status.code() == 404) {
+                    if(Opcode.notFound(ce.opcode)) {
                         roleCfgs.forEach(configs::remove)
                         config.save()
                     }

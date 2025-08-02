@@ -16,6 +16,7 @@ import moe.kabii.data.mongodb.guilds.StarboardSetup
 import moe.kabii.data.mongodb.guilds.StarredMessage
 import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.MessageColors
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import java.net.URI
@@ -26,7 +27,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return try {
             guild.getChannelById(starboard.channel!!.snowflake).awaitSingle() as GuildMessageChannel
         } catch(ce: ClientException) {
-            if(ce.status.code() == 404) {
+            if(Opcode.notFound(ce.opcode)) {
                 LOG.info("Starboard for guild ${guild.id.asString()} not found. Channel ${starboard.channel} does not exist. Removing configuration.")
                 starboard.channel = null
                 config.save()
@@ -39,7 +40,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
         return try {
             channel.getMessageById(message.starboardMessageId.snowflake).awaitSingle()
         } catch(ce: ClientException) {
-            if(ce.status.code() == 404) {
+            if(Opcode.notFound(ce.opcode)) {
                 LOG.trace("Unable to retrieve starboard message :: ${ce.stackTraceString}")
                 starboard.starred.remove(message)
                 config.save()

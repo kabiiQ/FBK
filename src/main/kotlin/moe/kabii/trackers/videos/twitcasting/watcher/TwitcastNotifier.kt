@@ -20,6 +20,7 @@ import moe.kabii.trackers.videos.twitcasting.TwitcastingParser
 import moe.kabii.trackers.videos.twitcasting.json.TwitcastingMovieResponse
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
@@ -194,7 +195,7 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                     checkAndRenameChannel(fbk.clientId, chan)
                 }
             } catch(ce: ClientException) {
-                if(ce.status.code() == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. TwitcastNotifier.java")
                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
                 } else throw ce

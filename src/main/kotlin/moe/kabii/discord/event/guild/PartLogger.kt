@@ -18,10 +18,8 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.instances.FBK
-import moe.kabii.util.extensions.long
-import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.*
 
 object PartLogger {
     class PartListener(val instances: DiscordInstances) : EventListener<MemberLeaveEvent>(MemberLeaveEvent::class) {
@@ -65,12 +63,10 @@ object PartLogger {
                     }
 
                 } catch (ce: ClientException) {
-                    val err = ce.status.code()
-                    if(err == 404 || err == 403) {
+                    if(Opcode.notFound(ce.opcode) || Opcode.denied(ce.opcode)) {
                         LOG.info("Unable to send part log for guild '${guild.asString()}'. Disabling user join log.")
                         LOG.debug(ce.stackTraceString)
-                        // TODO pdenied
-                        //targetLog.partLog = false
+                        targetLog.partLog = false
                         config.save()
                     } else throw ce
                 }

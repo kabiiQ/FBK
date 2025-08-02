@@ -2,7 +2,6 @@ package moe.kabii.trackers
 
 import discord4j.common.util.Snowflake
 import discord4j.common.util.TimestampFormat
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.channel.GuildMessageChannel
@@ -23,10 +22,8 @@ import moe.kabii.data.mongodb.guilds.StreamSettings
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.FBK
-import moe.kabii.util.extensions.orNull
-import moe.kabii.util.extensions.snowflake
-import moe.kabii.util.extensions.stackTraceString
-import moe.kabii.util.extensions.success
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.*
 import java.time.Instant
 import kotlin.reflect.KMutableProperty1
 
@@ -68,7 +65,6 @@ object TrackerUtil {
     }
 
     suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
-        return // Temporarily(?) disabled functionality to mitigate some user confusion
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
             val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
@@ -77,13 +73,15 @@ object TrackerUtil {
             config.save()
 
             val featureName = guildDelete.name.replace("Channel", "").replace("Target", "")
-            val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, you can run **/feature $featureName Enabled** in <#$channelId> to re-enable this tracker."
+            val message = "I tried to send a **$featureName** tracker message but I am missing permissions to send embed messages in <#$channelId>. The **$featureName** feature has been automatically disabled.\nOnce permissions are corrected, a moderator can run **/feature $featureName Enabled** in <#$channelId> to re-enable this tracker."
             //notifyOwner(fbk, guildId.asLong(), message)
 
         } else {
             // delete target, we do not keep configs for dms
             try {
-                pmDelete()
+                propagateTransaction {
+                    pmDelete()
+                }
             } catch(e: Exception) {
                 LOG.error("SEVERE: SQL error in #permissionDenied: ${e.message}")
                 LOG.error(e.stackTraceString)
@@ -91,24 +89,24 @@ object TrackerUtil {
         }
     }
 
-    suspend fun notifyOwner(fbk: FBK, guildId: Long, message: String) {
+    suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
+        val guildChan = channel as? GuildMessageChannel
+        permissionDenied(fbk, guildChan?.guildId, channel.id, guildDelete, pmDelete)
+    }
+
+    suspend fun notifyUser(fbk: FBK, guildId: Snowflake, userId: Snowflake, message: String) {
         try {
-            if(GuildConfigurations.guildConfigurations[GuildTarget(fbk.clientId, guildId)] == null) return // removed from guild
-            fbk.client.getGuildById(guildId.snowflake)
-                .flatMap(Guild::getOwner)
+            if(GuildConfigurations.guildConfigurations[GuildTarget(fbk.clientId, guildId.asLong())] == null) return // removed from guild
+            // Get member from specific server - if they are no longer a member of that server we should not message them
+            fbk.client.getMemberById(guildId, userId)
                 .flatMap(Member::getPrivateChannel)
                 .flatMap { pm ->
                     pm.createMessage(Embeds.error(message))
                 }.awaitSingle()
         } catch(e: Exception) {
-            LOG.warn("Unable to send notification to $guildId owner regarding feature disabled. Disabling feature silently: $message :: ${e.message}")
+            LOG.warn("Unable to send notification to $guildId member $userId regarding feature disabled. Disabling feature silently: $message :: ${e.message}")
             LOG.debug(e.stackTraceString)
         }
-    }
-
-    suspend fun permissionDenied(fbk: FBK, channel: MessageChannel, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
-        val guildChan = channel as? GuildMessageChannel
-        permissionDenied(fbk, guildChan?.guildId, channel.id, guildDelete, pmDelete)
     }
 
     suspend fun pinActive(fbk: FBK, settings: StreamSettings, message: Message) {
@@ -120,13 +118,17 @@ object TrackerUtil {
                     LOG.warn("Unable to pin message to channel: ${message.channelId.asString()} :: ${e.message}}")
                     LOG.trace(e.stackTraceString)
 
-                    if(e is ClientException && e.status.code() == 403) {
-                        val guildId = message.guildId.orNull() ?: return@launch
-                        val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
-                        settings.pinActive = false
-                        config.save()
-                        val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this feature."
-                        notifyOwner(fbk, guildId.asLong(), notice)
+                    if(e is ClientException) {
+                        if(e.opcode == 30003) {
+                            LOG.warn("Maximum pin limit reached in channel, ignoring")
+                        } else if(Opcode.denied(e.opcode)) {
+                            val guildId = message.guildId.orNull() ?: return@launch
+                            val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+                            settings.pinActive = false
+                            config.save()
+                            val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this feature."
+                            //notifyOwner(fbk, guildId.asLong(), notice)
+                        }
                     }
                 }
             }

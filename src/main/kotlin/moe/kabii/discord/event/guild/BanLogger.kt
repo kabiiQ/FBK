@@ -14,6 +14,8 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.opcode
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.userAddress
@@ -50,12 +52,10 @@ object BanLogger {
                         Embeds.other("**${user.userAddress()}** has been $event.", Color.of(16739688))
                     ).awaitSingle()
                 } catch(ce: ClientException) {
-                    val err = ce.status.code()
-                    if(err == 404 || err == 403) {
-                        // TODO pdenied
+                    if(Opcode.notFound(ce.opcode) || Opcode.denied(ce.opcode)) {
                         LOG.info("Unable to send ban log for guild '${guildId.asString()}. Disabling user ban log in ${targetLog.channelID}.")
                         LOG.debug(ce.stackTraceString)
-                        //targetLog.banLogs = false
+                        targetLog.banLogs = false
                         config.save()
                     } else throw ce
                 }

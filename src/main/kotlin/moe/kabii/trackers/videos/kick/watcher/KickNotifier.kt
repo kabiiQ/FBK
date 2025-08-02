@@ -21,6 +21,7 @@ import moe.kabii.trackers.videos.kick.parser.KickParser
 import moe.kabii.trackers.videos.kick.parser.KickStreamInfo
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
@@ -236,7 +237,7 @@ abstract class KickNotifier(instances: DiscordInstances) : StreamWatcher(instanc
                     checkAndRenameChannel(fbk.clientId, chan)
                 }
             } catch(ce: ClientException) {
-                if(ce.status.code() == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send kick stream notification to channel: ${chan.id.asString()}. Disabling feature in channel. KickNotifier.java")
                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
                 } else throw ce

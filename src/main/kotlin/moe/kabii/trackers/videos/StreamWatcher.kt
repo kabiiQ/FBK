@@ -31,6 +31,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.twitcasting.webhook.TwitcastWebhookManager
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -90,7 +91,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 } catch(e: Exception) {
                     if(e is ClientException) {
                         if(e.status.code() == 401) return emptyList()
-                        if(e.status.code() == 404) {
+                        if(Opcode.notFound(e.opcode)) {
                             LOG.info("Untracking ${channel.site.targetType.full} channel ${channel.siteChannelID} in ${target.discordChannel} as the channel seems to be deleted.")
                             propagateTransaction {
                                 target.findDBTarget().delete()
@@ -198,7 +199,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
             is Ok -> role.value
             is Err -> {
                 val err = role.value
-                if(err is ClientException && err.status.code() == 404) {
+                if(err is ClientException && Opcode.notFound(err.opcode)) {
                     // role has been deleted, remove configuration
                     propagateTransaction {
                         if(dbMention.mentionRole == mentionRole) dbMention.mentionRole = null
@@ -226,7 +227,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 //.timeout(Duration.ofMillis(1_500))
                 .awaitSingle()
         } catch(e: Exception) {
-            if(e is ClientException && e.status.code() == 403) {
+            if(e is ClientException && Opcode.denied(e.opcode)) {
                 LOG.warn("Unable to get Discord channel '$channel' for YT notification. Disabling feature in channel. StreamWatcher.java")
                 TrackerUtil.permissionDenied(fbk, guild, channel, FeatureChannel::streamTargetChannel) { deleteTarget?.run { TrackedStreams.Target.findById(this.db)?.delete() } }
             } else {
@@ -364,11 +365,11 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                 } catch(ce: ClientException) {
                     if(ce.status.code() == 403) {
                         guildChan.createMessage(
-                            Embeds.error("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **streamcfg rename disable** to turn off the channel renaming feature.")
+                            Embeds.error("The Discord channel **renaming** feature is enabled but I do not have permissions to change the name of this channel.\nEither grant me the Manage Channel permission or use **/streamcfg rename Disabled** to turn off the channel renaming feature.")
                         ).awaitSingle()
                     } else if(ce.status.code() == 400) {
                         guildChan.createMessage(
-                            Embeds.error("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **streamcfg rename disable** command to turn off this feature.")
+                            Embeds.error("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **/streamcfg rename Disabled** command to turn off this feature.")
                         ).awaitSingle()
                     } else throw ce
                 }

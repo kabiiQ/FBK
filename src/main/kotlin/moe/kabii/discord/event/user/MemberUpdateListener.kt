@@ -13,6 +13,7 @@ import moe.kabii.data.mongodb.guilds.LogSettings
 import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -54,19 +55,16 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                                 }.awaitSingle()
                         } catch(ce: ClientException) {
                             LOG.warn("Unable to send display name update to channel: ${targetLog.channelID}. Disabling feature in channel.")
-                            when(ce.status.code()) {
-                                404 -> {
+                            when {
+                                Opcode.notFound(ce.opcode) -> {
                                     // channel deleted
                                     targetLog.displayNameLog = false
                                     config.save()
                                 }
-                                403 -> {
+                                Opcode.denied(ce.opcode)  -> {
                                     // permission denied
-                                    // TODO pdenied
-//                                    targetLog.displayNameLog = false
-//                                    config.save()
-//                                    val message = "I tried to send a **display name** update log but I am missing permission to send messages/embeds in <#${targetLog.channelID}>. The **names** log has been automatically disabled.\nOnce permissions are corrected, you can run **$/log names Enabled** to re-enable this log."
-//                                    TrackerUtil.notifyOwner(instances[event.client], event.guildId.asLong(), message)
+                                    targetLog.displayNameLog = false
+                                    config.save()
                                 }
                                 else -> throw ce
                             }
@@ -141,12 +139,10 @@ class MemberUpdateListener(val instances: DiscordInstances) : EventListener<Memb
                         }
 
                     } catch(ce: ClientException) {
-                        val err = ce.status.code()
-                        if(err == 404 || err == 403) {
+                        if(Opcode.notFound(ce.opcode) || Opcode.denied(ce.opcode)) {
                             LOG.info("Unable to send role update log for guild '${event.guildId.asString()}'. Disabling role update log")
                             LOG.debug(ce.stackTraceString)
-                            // TODO pdenied
-                            //targetLog.roleUpdateLog = false
+                            targetLog.roleUpdateLog = false
                             config.save()
                         } else throw ce
                     }

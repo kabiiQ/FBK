@@ -18,6 +18,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.anime.*
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import java.time.Duration
 import java.time.Instant
@@ -199,8 +200,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                         try {
                             updateMessage.awaitSingle()
                         } catch (ce: ClientException) {
-                            val err = ce.status.code()
-                            if (err == 403) {
+                            if (Opcode.denied(ce.opcode)) {
                                 TrackerUtil.permissionDenied(fbk, target.discord.guild?.guildID?.snowflake, target.discord.channelID.snowflake, FeatureChannel::animeTargetChannel, target::delete)
                                 LOG.warn("Unable to send MediaList update to channel '$channelId' Disabling feature in channel. ListServiceChecker.java")
                                 LOG.debug(ce.stackTraceString)
@@ -237,7 +237,7 @@ class ListServiceChecker(val site: ListSite, val instances: DiscordInstances, va
                     } catch(e: Exception) {
                         if(e is ClientException) {
                             if(e.status.code() == 401) return emptyList()
-                            if(e.status.code() == 404) {
+                            if(Opcode.notFound(e.opcode)) {
                                 LOG.info("Untracking ${list.site.targetType.full} list ${list.siteListId} in ${target.discord.channelID} as the channel has been deleted.")
                                 target.delete()
                             }

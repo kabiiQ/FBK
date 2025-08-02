@@ -34,6 +34,7 @@ import moe.kabii.trackers.posts.PostWatcher
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
@@ -424,8 +425,8 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                 } catch (time: TimeoutCancellationException) {
                     LOG.warn("Timeout sending ${target.username} Tweet to ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}")
                 } catch (e: Exception) {
-                    if (e is ClientException && e.status.code() == 403) {
-                        TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::postsTargetChannel) { propagateTransaction { target.findDbTarget().delete() } }
+                    if (e is ClientException && Opcode.denied(e.opcode)) {
+                        TrackerUtil.permissionDenied(fbk, target.discordGuild, target.discordChannel, FeatureChannel::postsTargetChannel) { target.findDbTarget().delete() }
                         LOG.warn("Unable to send Tweet to channel '${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}'. Disabling feature in channel. TwitterChecker.java")
                     } else {
                         LOG.warn("Error sending Tweet to channel ${target.discordClient}/${target.discordGuild?.asString()}/${target.discordChannel.asString()}: ${e.message}")

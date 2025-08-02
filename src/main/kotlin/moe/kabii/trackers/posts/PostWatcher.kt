@@ -20,6 +20,7 @@ import moe.kabii.trackers.TrackerUtil
 import moe.kabii.translation.TranslationResult
 import moe.kabii.translation.Translator
 import moe.kabii.translation.google.GoogleTranslator
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import reactor.kotlin.core.publisher.toMono
 import java.time.Instant
@@ -79,7 +80,7 @@ abstract class PostWatcher(val instances: DiscordInstances) {
                     } catch (e: Exception) {
                         if(e is ClientException) {
                             if(e.status.code() == 401) return emptyList()
-                            if(e.status.code() == 404) {
+                            if(Opcode.notFound(e.opcode)) {
                                 propagateTransaction {
                                     val feedInfo = feed.feedInfo()
                                     LOG.info("Untracking ${feedInfo.site.full} feed '${feedInfo.displayName}' in ${target.discordChannel} as the channel seems to be deleted.")
@@ -147,7 +148,7 @@ abstract class PostWatcher(val instances: DiscordInstances) {
             is Ok -> dRole.value
             is Err -> {
                 val err = dRole.value
-                if(err is ClientException && err.status.code() == 404) {
+                if(err is ClientException && Opcode.notFound(err.opcode)) {
                     // role has been deleted, remove configuration
                     propagateTransaction {
                         if (dbMentionRole.mentionText != null) {

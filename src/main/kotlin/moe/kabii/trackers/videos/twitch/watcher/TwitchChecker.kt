@@ -25,6 +25,7 @@ import moe.kabii.trackers.videos.StreamWatcher
 import moe.kabii.trackers.videos.twitch.TwitchEmbedBuilder
 import moe.kabii.trackers.videos.twitch.parser.TwitchParser
 import moe.kabii.trackers.videos.twitch.parser.TwitchStreamInfo
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import java.time.Duration
 import java.time.Instant
@@ -322,8 +323,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                                 newMessage.withEmbeds(embed.create()).awaitSingle()
 
                             } catch (ce: ClientException) {
-                                val err = ce.status.code()
-                                if (err == 403) {
+                                if (Opcode.denied(ce.opcode)) {
                                     // we don't have perms to send
                                     LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. TwitchChecker.java")
                                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }

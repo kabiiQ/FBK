@@ -16,6 +16,8 @@ import moe.kabii.discord.event.EventListener
 import moe.kabii.discord.invite.InviteWatcher
 import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.opcode
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.stackTraceString
 import moe.kabii.util.extensions.success
@@ -68,8 +70,7 @@ object JoinLogger {
                     member.addRole(joinConfig.role.snowflake, "Automatic user join role")
                         .thenReturn(Unit).awaitSingle()
                 } catch (ce: ClientException) {
-                    val err = ce.status.code()
-                    if (err == 404) {
+                    if (Opcode.notFound(ce.opcode)) {
                         LOG.info("Unable to access role in join configuration :: $joinConfig. Removing configuration")
                         config.autoRoles.joinConfigurations.remove(joinConfig) // role deleted or not accessible
                         config.save()
@@ -101,12 +102,10 @@ object JoinLogger {
                     ).awaitSingle()
 
                 } catch(ce: ClientException) {
-                    val err = ce.status.code()
-                    if(err == 404 || err == 403) {
+                    if(Opcode.denied(ce.opcode) || Opcode.notFound(ce.opcode)) {
                         LOG.info("Unable to send join log for guild '$guildId'. Disabling user join log.")
                         LOG.debug(ce.stackTraceString)
-                        // TODO pdenied
-                        // targetLog.joinLog = false
+                        targetLog.joinLog = false
                         config.save()
                     } else throw ce
                 }

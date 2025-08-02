@@ -13,6 +13,8 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.util.Embeds
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
+import moe.kabii.util.constants.Opcode
+import moe.kabii.util.extensions.opcode
 import moe.kabii.util.extensions.snowflake
 import moe.kabii.util.extensions.tryAwait
 
@@ -95,7 +97,7 @@ object ChannelFeatures : CommandContainer {
                             }
                             is Err -> {
                                 (result.value as? ClientException)?.also { err ->
-                                    if(err.status.code() == 404) {
+                                    if(Opcode.notFound(err.opcode)) {
                                         features.remove(id)
                                     }
                                 }

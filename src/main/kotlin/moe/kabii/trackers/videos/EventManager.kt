@@ -15,6 +15,7 @@ import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
@@ -42,8 +43,8 @@ class EventManager(val watcher: StreamWatcher) {
          * @return true if the event should be ignored moving forward
          */
         fun shouldAbandon(ce: ClientException) = when {
-            ce.opcode == 10070 -> true // unknown guild event
-            ce.opcode == 180000 -> true // updating a completed event
+            ce.opcode == Opcode.UNKNOWN_EVENT -> true
+            ce.opcode == Opcode.FINISHED_EVENT -> true
             ce.status.code() == 403 -> true // other 403 for true permission issue
             ce.status.code() == 400 && ce.message?.contains("non-scheduled event") == true -> true
             else -> false
@@ -115,8 +116,8 @@ class EventManager(val watcher: StreamWatcher) {
                 LOG.error("Error creating Discord scheduled event for $guildId - $url: ${e.message}")
                 LOG.debug(e.stackTraceString)
                 val ex = e as? ClientException
-                if(ex?.status?.code() == 403 ||
-                    ex?.opcode == 30038 // max events reached opcode 30038
+                if(ex?.opcode == Opcode.PERMISSIONS ||
+                    ex?.opcode == Opcode.MAXIMUM_EVENTS
                 ) {
                     LOG.info("Disabling 'events' feature for guild: ${target.discordGuild.asString()}")
                     // Permission denied to create events in this guild. Disable feature

@@ -7,6 +7,7 @@ import moe.kabii.LOG
 import moe.kabii.data.relational.streams.youtube.ytchat.MembershipConfiguration
 import moe.kabii.data.relational.streams.youtube.ytchat.YoutubeMembers
 import moe.kabii.instances.DiscordInstances
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -44,7 +45,7 @@ class YoutubeMembershipMaintainer(val instances: DiscordInstances): Runnable {
 
                             } catch(e: Exception) {
                                 if(e is ClientException) {
-                                    if(e.status.code() == 404 || e.status.code() == 403) {
+                                    if(Opcode.notFound(e.opcode) || Opcode.denied(e.opcode)) {
                                         // bot is removed from guild or guild is deleted, remove config
                                         LOG.info("YouTube membership config: unable to access guild ${config.discordServer.guildID}. Deleting config")
                                         config.delete()

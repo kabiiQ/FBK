@@ -30,6 +30,7 @@ import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
 import moe.kabii.util.DurationFormatter
 import moe.kabii.util.constants.EmojiCharacters
 import moe.kabii.util.constants.MagicNumbers
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
@@ -356,8 +357,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
-                val err = ce.status.code()
-                if(err == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send upcoming notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
                     return@discordTask
@@ -425,8 +425,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .awaitSingle()
 
             } catch(ce: ClientException) {
-                val err = ce.status.code()
-                if(err == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send video upload notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
                     return@discordTask
@@ -489,8 +488,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
             } catch(ce: ClientException) {
-                val err = ce.status.code()
-                if(err == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send video creation notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
                     TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { target.findDBTarget().delete() }
                     return@discordTask
@@ -618,10 +616,9 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                 }
 
             } catch (ce: ClientException) {
-                val err = ce.status.code()
-                if(err == 403) {
+                if(Opcode.denied(ce.opcode)) {
                     LOG.warn("Unable to send stream notification to channel '${chan.id.asString()}'. Disabling feature in channel. YoutubeNotifier.java")
-                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { propagateTransaction { channelTarget?.findDBTarget()?.delete() } }
+                    TrackerUtil.permissionDenied(fbk, chan, FeatureChannel::streamTargetChannel) { channelTarget?.findDBTarget()?.delete() }
                 } else throw ce
             }
         }
@@ -639,7 +636,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     .ofType(MessageChannel::class.java)
                     .awaitSingle()
             } catch(e: Exception) {
-                if(e is ClientException && (e.status.code() == 404 || e.status.code() == 403)) {
+                if(e is ClientException && (Opcode.denied(e.opcode) || Opcode.notFound(e.opcode))) {
                     // if 'upcoming' channel is not accessible - just reset it to the actual yt channel
                     yt.upcomingChannel = target.discordChannel.asLong()
                     guildConfig!!.save()

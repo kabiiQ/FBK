@@ -16,6 +16,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.discord.util.logColor
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Ok
+import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -70,8 +71,7 @@ class VoiceUpdateListener(val instances: DiscordInstances) : EventListener<Voice
                 try {
                     logMessage.awaitSingle()
                 } catch (ce: ClientException) {
-                    val err = ce.status.code()
-                    if(err == 404 || err == 403) {
+                    if(Opcode.denied(ce.opcode) || Opcode.notFound(ce.opcode)) {
                         // channel is deleted or we don't have send message perms. remove log configuration
                         LOG.info("Unable to send voice state log for channel '${targetLog.channelID}'. Disabling voicelog.")
                         LOG.debug(ce.stackTraceString)
