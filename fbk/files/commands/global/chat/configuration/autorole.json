@@ -181,7 +181,7 @@
                         },
                         {
                             "name": "message",
-                            "description": "A message to be written above the auto-role buttons. Can be edited later. Use \n for new lines.",
+                            "description": "A message to be written above the auto-role buttons. Can be edited later. Use \\n for new lines.",
                             "type": 3,
                             "required": false
                         }
@@ -217,7 +217,7 @@
                         },
                         {
                             "name": "message",
-                            "description": "Include to edit the message written above the auto-role buttons. Use \n for new lines.",
+                            "description": "Include to edit the message written above the auto-role buttons. Use \\n for new lines.",
                             "type": 3,
                             "required": false
                         },
