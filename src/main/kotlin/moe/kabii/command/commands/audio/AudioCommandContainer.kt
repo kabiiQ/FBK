@@ -8,7 +8,7 @@ import discord4j.core.`object`.entity.channel.AudioChannel
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.command.CommandContainer
-import moe.kabii.command.commands.audio.filters.FilterFactory
+import moe.kabii.discord.audio.FilterFactory
 import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
