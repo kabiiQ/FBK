@@ -8,6 +8,7 @@ import moe.kabii.command.hasPermissions
 import moe.kabii.command.params.DiscordParameters
 import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.discord.audio.AudioManager
+import moe.kabii.discord.audio.FilterType
 import moe.kabii.discord.audio.QueueData
 import moe.kabii.discord.util.Embeds
 

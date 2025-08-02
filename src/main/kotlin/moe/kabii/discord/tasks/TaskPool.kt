@@ -6,18 +6,18 @@ import reactor.core.scheduler.Schedulers
 import java.util.concurrent.Executors
 
 object DiscordTaskPool {
-    private val dispatchThreadFactory = BasicThreadFactory.Builder()
+    private val dispatchThreadFactory = BasicThreadFactory.builder()
         .namingPattern("FBK-Dispatch-%d")
         .build()
     private val dispatchThreads = Executors.newCachedThreadPool(dispatchThreadFactory).asCoroutineDispatcher()
 
-    private val discordNotifyThreadFactory = BasicThreadFactory.Builder()
+    private val discordNotifyThreadFactory = BasicThreadFactory.builder()
         .namingPattern("FBK-Notify-%d")
         .priority(Thread.MAX_PRIORITY)
         .build()
     private val discordNotifyThreads = Executors.newCachedThreadPool(discordNotifyThreadFactory).asCoroutineDispatcher()
 
-    private val discordSchedulerFactory = BasicThreadFactory.Builder()
+    private val discordSchedulerFactory = BasicThreadFactory.builder()
         .namingPattern("Discord-Scheduler-%d")
         .build()
     val discordScheduler = Schedulers.newBoundedElastic(500, Integer.MAX_VALUE, discordSchedulerFactory, 60)

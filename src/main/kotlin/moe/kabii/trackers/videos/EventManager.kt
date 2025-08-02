@@ -191,7 +191,7 @@ class EventManager(val watcher: StreamWatcher) {
         val currentStart = dbEvent.startTime.javaInstant
         val startTime = if(Duration.between(now, currentStart) > window) currentStart else now + window.multipliedBy(2)
         if(
-            currentStart == startTime
+            currentStart.equals(startTime)
             && dbEvent.title == eventTitle
         ) return
         // data does not match, send an update

@@ -1,4 +1,4 @@
-package moe.kabii.command.commands.audio.filters
+package moe.kabii.discord.audio
 
 import com.github.natanbc.lavadsp.karaoke.KaraokePcmAudioFilter
 import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter
@@ -66,12 +66,11 @@ class FilterFactory {
                     setGain(5, -0.2f * multi)
                 }
                 is FilterType.Karaoke -> KaraokePcmAudioFilter(output, format.channelCount, format.sampleRate).apply {
-                    filterBand = filter.band
+                    setFilterBand(filter.band)
                 }
                 is FilterType.Rotation -> RotationPcmAudioFilter(output, format.sampleRate).apply {
                     setRotationSpeed(filter.speed.toDouble())
                 }
-                else -> error("Audio filter mismatch")
             }
         }
 

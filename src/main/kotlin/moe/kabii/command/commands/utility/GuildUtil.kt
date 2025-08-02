@@ -53,7 +53,7 @@ object GuildUtil : CommandContainer {
                 val info = "This Discord server was created $creation.\n\nServiced by FBK instance #$instanceId (${targetClient.username}#${targetClient.discriminator})."
 
                 val large = targetGuild.isLarge
-                val features = targetGuild.features
+                val features = targetGuild.guildFeatures.map { feature -> feature.value }.toMutableList()
                 if(large) features.add("LARGE")
 
                 val fields = mutableListOf<EmbedCreateFields.Field>(

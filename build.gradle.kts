@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 group = "moe.kabii"
 
 plugins {
-    val kotlinVer = "2.1.0-Beta2"
+    val kotlinVer = "2.2.0"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
     id("com.bmuschko.docker-java-application") version "9.4.0"
@@ -31,14 +31,14 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.7.1"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    val coroutinesVer = "1.8.1!!" // hold - 1.9.0 breaks old ktor version
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.3")
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
@@ -46,20 +46,21 @@ dependencies {
     implementation("com.discord4j:discord4j-core:3.3.0-RC2") // discord websocket and api
 
     // music bot
-    implementation("dev.arbjerg:lavaplayer:2.2.3")
+    implementation("dev.arbjerg:lavaplayer:2.2.4")
     implementation("dev.lavalink.youtube:v2:1.13.3")
     implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
     implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
-    implementation("org.apache.commons:commons-compress:1.26.2")
+    implementation("org.apache.commons:commons-compress:1.28.0")
 
     // websocket apis
-    implementation("org.java-websocket:Java-WebSocket:1.5.7")
+    implementation("org.java-websocket:Java-WebSocket:1.6.0")
 
     // other api - http calls
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
+    //implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
+    implementation("com.squareup.okhttp3:okhttp:5.1.0")
 
     // other api - json response parsing
-    val moshiVer = "1.15.0"
+    val moshiVer = "1.15.2"
     implementation("com.squareup.moshi:moshi:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVer")
     implementation("com.squareup.moshi:moshi-kotlin-codegen:$moshiVer")
@@ -69,7 +70,7 @@ dependencies {
     implementation("com.vdurmont:emoji-java:5.1.1")
 
     // thumbnail file server
-    val ktor = "2.2.4" // hold - 'blocking primitive' issue on latest
+    val ktor = "2.2.4" // hold - breaking changes with runtime errors
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
     implementation("io.ktor:ktor-client-core:$ktor")
@@ -77,18 +78,18 @@ dependencies {
     implementation("io.ktor:ktor-server-html-builder:$ktor")
 
     // welcome banner image processing
-    val imageIO = "3.9.4"
+    val imageIO = "3.12.0"
     implementation("com.twelvemonkeys.imageio:imageio-jpeg:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-psd:$imageIO")
     implementation("com.twelvemonkeys.imageio:imageio-bmp:$imageIO")
 
     // database i/o
     // mongodb per-guild configurations
-    implementation("org.litote.kmongo:kmongo-coroutine:4.9.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:5.2.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2")
 
     // postgresql user data, message history, tracked streams
-    val exposedVer = "0.41.1"
+    val exposedVer = "0.41.1" // hold - many breaking changes
     implementation("org.jetbrains.exposed:exposed-core:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVer")
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVer")
@@ -103,18 +104,18 @@ dependencies {
     implementation("com.uchuhimo:konf:1.1.2")
 
     // logging
-    implementation("ch.qos.logback:logback-classic:1.5.7")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 
     // other
-    implementation("commons-validator:commons-validator:1.9.0")
-    implementation("org.apache.commons:commons-lang3:3.14.0")
-    implementation("org.apache.commons:commons-text:1.12.0")
+    implementation("commons-validator:commons-validator:1.10.0")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.apache.commons:commons-text:1.14.0")
 
     implementation("org.reflections:reflections:0.10.2") // command detection and registration
 
     // youtube xml parsing
     // https://github.com/gradle/gradle/issues/13656#issuecomment-658873625
-    implementation("org.dom4j:dom4j:2.1.3")
+    implementation("org.dom4j:dom4j:2.2.0")
     components {
         withModule("org.dom4j:dom4j") {
             allVariants { withDependencies { clear() } }
@@ -150,6 +151,7 @@ tasks {
 
     compileKotlin {
         compilerOptions.jvmTarget.set(JvmTarget.JVM_22)
+        compilerOptions.freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
     }
 
     java.targetCompatibility = JavaVersion.VERSION_22

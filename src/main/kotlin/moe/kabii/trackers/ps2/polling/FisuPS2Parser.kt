@@ -9,7 +9,6 @@ import moe.kabii.trackers.ps2.polling.json.PS2FisuPopulationResponse
 import moe.kabii.trackers.ps2.polling.json.PS2Server
 import moe.kabii.util.extensions.stackTraceString
 import java.io.IOException
-import java.util.*
 
 object FisuPS2Parser {
 

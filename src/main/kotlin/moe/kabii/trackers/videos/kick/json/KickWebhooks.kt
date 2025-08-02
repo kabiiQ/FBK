@@ -13,6 +13,7 @@ object KickWebhooks {
 
     object Request {
         @JsonClass(generateAdapter = true)
+        @ConsistentCopyVisibility
         data class Subscription private constructor(
             val events: List<Event>,
             @Json(name = "broadcaster_user_id") val userId: Long,
