@@ -38,7 +38,7 @@ object ChatRelayCommand : TrackerCommand {
 
     private suspend fun verifyFeature(origin: DiscordParameters, target: TrackerTarget) {
         val chatTarget = requireNotNull(target as? HoloChatsTarget) { "Invalid target provided to ChatRelayCommand" }
-        origin.channelFeatureVerify(chatTarget.channelFeature, chatTarget.featureName)
+        origin.channelFeatureVerify(chatTarget.channelFeature, chatTarget.featureName, allowOverride = false)
     }
 
     override suspend fun track(origin: DiscordParameters, target: TargetArguments, features: FeatureChannel?) {

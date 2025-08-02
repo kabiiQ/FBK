@@ -45,6 +45,7 @@ object AudioManager {
             Web.setPoTokenAndVisitorData(Keys.config[Keys.Youtube.poToken], Keys.config[Keys.Youtube.visitorData])
         }
 
+        @Suppress("DEPRECATION")
         AudioSourceManagers.registerRemoteSources(manager,
             com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager::class.java)
 
