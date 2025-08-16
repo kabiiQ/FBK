@@ -37,7 +37,7 @@ class EventManager(val watcher: StreamWatcher) {
         // The timeout period allowed for stream thumbnails to download
         val thumbnailTimeoutMillis = 2_500L
 
-        /***
+        /**
          * Parse a Discord scheduled event-related error for known unrecoverable errors
          * For example, user related operations (cancelling the event, ending the event early) we do not want to interfere with.
          * @return true if the event should be ignored moving forward

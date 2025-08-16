@@ -27,7 +27,6 @@ class ReminderWatcher(val instances: DiscordInstances, cooldown: ServiceRequestC
 
     override fun run() {
         applicationLoop {
-            // grab reminders ending in next 2 minutes
             val start = Instant.now()
             propagateTransaction {
                 try {

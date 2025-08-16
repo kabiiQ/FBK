@@ -1,6 +1,6 @@
 package moe.kabii.util.constants
 
-/***
+/**
  * Discord Opcode constants
  */
 object Opcode {
