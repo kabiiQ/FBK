@@ -20,6 +20,14 @@ data class YoutubeVideo(
 ) {
     @Transient val premiere = (snippet.live || snippet.upcoming) && contentDetails.duration == null
     @Transient val short = isShort()
+    @Transient val membership = isMemberLimited()
+
+    companion object {
+        private val englishMembership = Regex("member.{0,8}(?:only|limit|stream)", RegexOption.IGNORE_CASE)
+        private val simpleMembership = Regex("[\\[【]member", RegexOption.IGNORE_CASE)
+        private val japaneseMembership = Regex("メン.{0,6}限")
+
+    }
 
     private fun isShort(): Boolean {
         // No true detection of shorts - use reasonable conditions to guess
@@ -30,6 +38,16 @@ data class YoutubeVideo(
                 if(snippet.description.contains("#shorts")) return true
             }
         }
+        return false
+    }
+
+    private fun isMemberLimited(): Boolean {
+        if(statistics.viewCount == null) return true
+        if(
+            snippet.title.contains(englishMembership)
+            || snippet.title.contains(simpleMembership)
+            || snippet.title.contains(japaneseMembership)
+        ) return true
         return false
     }
 }
@@ -61,9 +79,7 @@ data class YoutubeVideoContentDetails(
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoStatistics(
     val viewCount: String?
-) {
-    @Transient val membership = viewCount == null
-}
+)
 
 @JsonClass(generateAdapter = true)
 data class YoutubeVideoLiveDetails(

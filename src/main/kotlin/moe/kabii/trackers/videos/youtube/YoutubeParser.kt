@@ -119,7 +119,7 @@ object YoutubeParser {
                             name = match.snippet.channelTitle,
                             avatar = null
                         ),
-                        memberLimited = match.statistics.membership,
+                        memberLimited = match.membership,
                         short = match.short
                     )
                     Ok(video)
