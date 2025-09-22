@@ -26,6 +26,7 @@ object DBStreams {
         val averageViewers = integer("average_viewers")
         val lastTitle = text("last_title")
         val lastGame = text("last_game_name")
+        val offlineTicks = integer("offline_ticks").default(0)
 
         override val primaryKey = PrimaryKey(channelID)
     }
@@ -38,6 +39,7 @@ object DBStreams {
         var averageViewers by LiveStreamEvents.averageViewers
         var lastTitle by LiveStreamEvents.lastTitle
         var lastGame by LiveStreamEvents.lastGame
+        var offlineTicks by LiveStreamEvents.offlineTicks
 
         companion object : IntEntityClass<LiveStreamEvent>(LiveStreamEvents) {
             fun getTwitchStreamFor(channelId: Long): LiveStreamEvent? {

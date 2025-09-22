@@ -32,6 +32,10 @@ import java.time.Instant
 import kotlin.math.max
 
 class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, StreamWatcher(instances) {
+    companion object {
+        const val delayOfflineTicks = 2
+    }
+
     override fun run() {
         applicationLoop {
             val start = Instant.now()
@@ -131,6 +135,13 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
             }
 
             if(stream == null) {
+
+                // Workaround: if stream is offline and we have info about it, delay the 'offline' decision due to Twitch/streamer behavior
+                if(dbStream != null && dbStream!!.offlineTicks < delayOfflineTicks) {
+                    dbStream!!.offlineTicks += 1
+                    return
+                }
+
                 // stream is not live, check if there are any existing notifications to remove
                 val notifications = DBStreams.Notification.getForChannel(channel)
 
@@ -252,6 +263,7 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
                     this.uptimeTicks = 1
                     this.lastTitle = stream.title
                     this.lastGame = stream.game.name
+                    this.offlineTicks = 0
                 }
                 false
             }
