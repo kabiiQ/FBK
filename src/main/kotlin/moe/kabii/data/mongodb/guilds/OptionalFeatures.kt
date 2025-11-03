@@ -79,6 +79,7 @@ data class StreamSettings(
     var viewers: Boolean = true,
     var endGame: Boolean = true,
     var mentionRoles: Boolean = true,
+    var useEmbeds: Boolean = true,
 
     var includeUrl: Boolean = false,
     var renameEnabled: Boolean = false,

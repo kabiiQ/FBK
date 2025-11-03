@@ -172,13 +172,15 @@ abstract class TwitcastNotifier(instances: DiscordInstances) : StreamWatcher(ins
                     messageContent.append(text)
 
                 }
-                if(features.includeUrl) messageContent.append('\n').append(info.movie.link)
+                if(features.includeUrl || !features.useEmbeds) messageContent.append('\n').append(info.movie.link)
 
                 val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
                 else chan.createMessage(messageContent.toString().trim())
 
                 val newNotification = mentionMessage
-                    .withEmbeds(embed)
+                    .run {
+                        if(features.useEmbeds) withEmbeds(embed) else this
+                    }
                     .awaitSingle()
 
                 TrackerUtil.pinActive(fbk, features, newNotification)

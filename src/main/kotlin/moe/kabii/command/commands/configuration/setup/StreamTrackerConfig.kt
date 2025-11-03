@@ -19,6 +19,11 @@ object StreamTrackerConfig : Command("streamcfg") {
         "livestream tracker",
         this,
         BooleanElement(
+            "Create embeds for tracked channel notifications",
+            "embeds",
+            StreamSettings::useEmbeds
+        ),
+        BooleanElement(
             "Edit stream notification with a summary or VOD information rather than deleting the message",
             "summary",
             StreamSettings::summaries

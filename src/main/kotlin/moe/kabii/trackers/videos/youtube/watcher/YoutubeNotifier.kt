@@ -414,13 +414,15 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     messageContent.append(text)
                 }
 
-                if(features.includeUrl) messageContent.append('\n').append(video.url)
+                if(features.includeUrl || !features.useEmbeds) messageContent.append('\n').append(video.url)
 
                 val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
                 else chan.createMessage(messageContent.toString().trim())
 
                 mentionMessage
-                    .withEmbeds(embed)
+                    .run {
+                        if(features.useEmbeds) withEmbeds(embed) else this
+                    }
                     .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
 
@@ -583,13 +585,15 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
                     messageContent.append(text)
                 }
 
-                if(features.includeUrl) messageContent.append('\n').append(liveStream.url)
+                if(features.includeUrl || !features.useEmbeds) messageContent.append('\n').append(liveStream.url)
 
                 val mentionMessage = if(messageContent.isBlank()) chan.createMessage()
                 else chan.createMessage(messageContent.toString().trim())
 
                 val newNotification = mentionMessage
-                    .withEmbeds(embed)
+                    .run {
+                        if(features.useEmbeds) withEmbeds(embed) else this
+                    }
                     .timeout(Duration.ofMillis(24_000L))
                     .awaitSingle()
 

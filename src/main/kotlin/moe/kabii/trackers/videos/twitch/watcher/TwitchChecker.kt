@@ -5,7 +5,7 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.rest.http.client.ClientException
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import moe.kabii.LOG
@@ -325,14 +325,18 @@ class TwitchChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCo
 
                                 } else ""
 
-                                val messageContent = if(settings.includeUrl) {
+                                val messageContent = if(settings.includeUrl || !settings.useEmbeds) {
                                     if(mentionContent.isBlank()) user!!.url else "$mentionContent\n${user!!.url}"
                                 } else mentionContent
 
                                 val newMessage = if(messageContent.isBlank()) chan.createMessage()
                                 else chan.createMessage(messageContent)
 
-                                newMessage.withEmbeds(embed.create()).awaitSingle()
+                                newMessage
+                                    .run {
+                                        if(settings.useEmbeds) withEmbeds(embed.create()) else this
+                                    }
+                                    .awaitSingle()
 
                             } catch (ce: ClientException) {
                                 if (Opcode.denied(ce.opcode)) {
