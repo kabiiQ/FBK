@@ -1,10 +1,13 @@
 package moe.kabii.command.commands.trackers.util
 
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
+import moe.kabii.LOG
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.streams.TrackedStreams
+import moe.kabii.trackers.HoloplusTarget
 import moe.kabii.trackers.TrackerTarget
 import moe.kabii.util.extensions.propagateTransaction
+import moe.kabii.util.extensions.stackTraceString
 
 // cache of ALL known sites
 object GlobalTrackSuggestionGenerator {
@@ -13,7 +16,7 @@ object GlobalTrackSuggestionGenerator {
 
     private val globalFeedCache = mutableMapOf<TrackerTarget, List<CachedFeed>>()
 
-    suspend fun cacheAll() {
+    suspend fun cacheFromDb() {
         propagateTransaction {
             // get all streamchannels (yt, twitch, etc)
             TrackedStreams.StreamChannel.all()
@@ -29,11 +32,19 @@ object GlobalTrackSuggestionGenerator {
                 .filter(TrackedSocialFeeds.SocialFeed::enabled)
                 .groupBy { feed -> feed.site.targetType }
                 .mapValuesTo(globalFeedCache) { (site, feeds) ->
-                    feeds.map { feed ->
-                        val feedInfo = feed.feedInfo()
-                        createCachedFeed(site, feedInfo.accountId, feedInfo.displayName)
+                    feeds.mapNotNull { feed ->
+                        // Temporary workaround
+                        try {
+                            val feedInfo = feed.feedInfo()
+                            createCachedFeed(site, feedInfo.accountId, feedInfo.displayName)
+                        } catch (e: Exception) {
+                            LOG.warn("Mismatched feed info: $feed :: ${e.message}")
+                            LOG.debug(e.stackTraceString)
+                            null
+                        }
                     }
                 }
+            globalFeedCache[HoloplusTarget] = listOf()
         }
     }
 

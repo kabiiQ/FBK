@@ -136,7 +136,7 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
                 val handle = sample.post.author.handle
                 val displayName = sample.post.author.displayName
                 if(handle == "handle.invalid") {
-                    LOG.warn("Bluesky handle reporting invalid: ${feed.handle} -> $handle")
+                    LOG.warn("Bluesky handle reporting invalid: ${feed.handle} -> $handle :: ${feed.did}")
                 }
                 if(feed.handle != handle) {
                     LOG.info("Updating Bluesky handle: ${feed.handle} -> $handle")

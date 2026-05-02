@@ -24,6 +24,10 @@ import kotlin.math.max
 
 class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCooldownSpec) : Runnable, KickNotifier(instances) {
 
+    companion object {
+        private const val delayOfflineTicks = 2
+    }
+
     private val callDelay = Duration.ofMillis(cooldowns.callDelay)
 
     override fun run() {
@@ -140,6 +144,11 @@ class KickChecker(instances: DiscordInstances, val cooldowns: ServiceRequestCool
 
                 // stream is not live, check if there are any existing notifications to remove
                 if (dbStream != null) {
+                    if(dbStream.offlineTicks < delayOfflineTicks) {
+                        dbStream.offlineTicks += 1
+                        return
+                    }
+
                     // no longer live but we have stream history. edit/remove any notifications and delete history
                     try {
                         streamEnd(dbStream, kick)

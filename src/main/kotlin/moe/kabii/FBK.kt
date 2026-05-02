@@ -46,7 +46,7 @@ fun main() {
             if(AvailableServices.ytVideosServer) YoutubeVideosService.server.start()
             if(AvailableServices.externalCommandsServer) ExternalCommandsService(discord).server.start()
             val welcomer = WelcomeImageGenerator
-            GlobalTrackSuggestionGenerator.cacheAll()
+            GlobalTrackSuggestionGenerator.cacheFromDb()
             if(AvailableServices.holoplus) HoloplusParser.cacheAllTalents()
             val streamers = KnownStreamers
             val translator = Translator.detector.detectLanguageOf("initializing translator")

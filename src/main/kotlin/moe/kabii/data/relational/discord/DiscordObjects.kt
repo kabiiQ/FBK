@@ -1,5 +1,6 @@
 package moe.kabii.data.relational.discord
 
+import moe.kabii.LOG
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -58,6 +59,14 @@ object DiscordObjects {
                         new {
                             channelID = newChannelID
                             guild = newGuildID?.let { id -> Guild.getOrInsert(id) }
+                        }
+                    }
+                }.also { channel ->
+                    // Temp workaround for potentially missing guilds
+                    if(channel.guild == null && newGuildID != null) {
+                        LOG.info("Missing guild for channel $newChannelID : updating with guild ID $newGuildID")
+                        transaction {
+                            channel.guild = Guild.getOrInsert(newGuildID)
                         }
                     }
                 }
