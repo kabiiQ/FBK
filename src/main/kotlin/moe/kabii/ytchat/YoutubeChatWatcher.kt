@@ -148,7 +148,8 @@ class YoutubeChatWatcher(instances: DiscordInstances) : Runnable {
                         LOG.debug("3: $newChatId")
                     }
                 }
-            delay(Duration.ofSeconds(5))
+            //delay(Duration.ofSeconds(5))
+            delay(Duration.ofMinutes(5))
         }
     }
 
