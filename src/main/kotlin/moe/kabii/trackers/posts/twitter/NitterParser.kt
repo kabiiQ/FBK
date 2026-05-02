@@ -11,10 +11,8 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.dom4j.io.SAXReader
-import org.xml.sax.InputSource
 import java.io.File
 import java.io.IOException
-import java.io.StringReader
 import java.net.URLDecoder
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -77,9 +75,12 @@ object NitterParser {
         // parse xml for tweets
         try {
             val reader = SAXReader.createDefault()
-            val source = InputSource(StringReader(body))
-            source.encoding = "UTF-8"
-            val doc = reader.read(source)
+
+//            val source = InputSource(StringReader(body))
+//            source.encoding = "UTF-8"
+
+            val input = body.byteInputStream(Charsets.UTF_8)
+            val doc = reader.read(input)
 
             val feed = doc.rootElement.element("channel")
             // get user info
@@ -161,7 +162,7 @@ object NitterParser {
             val reversedTweets = nitterTweets.reversed()
             return NitterData(nitterUser, reversedTweets)
         } catch(e: Exception) {
-            LOG.warn("Error parsing Nitter XML from ${getInstanceUrl(instance)}: ${e.message}")
+            LOG.warn("Error parsing Nitter XML from ${getInstanceUrl(instance)} ($username): ${e.message}")
             LOG.info(e.stackTraceString)
             return null
         }

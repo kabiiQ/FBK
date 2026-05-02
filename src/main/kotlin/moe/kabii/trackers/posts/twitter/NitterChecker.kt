@@ -123,7 +123,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                         return@launch
                     }
                     try {
-                        val timeout = max(feedChunk.size * callDelay * 1.5, 720000.0)
+                        val timeout = max(feedChunk.size * callDelay * 2.0, 720000.0)
                         kotlinx.coroutines.time.withTimeout(Duration.ofMillis(timeout.toLong())) {
                             var first = true
                             feedChunk.forEach { (feed, parent) ->
@@ -220,7 +220,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
         // send discord notifs - check if any channels request
         TwitterFeedCache[username]?.seenTweets?.add(tweet.id)
 
-        discordTask(30_000L) {
+        discordTask(120_000L) {
             // check for youtube video info from tweet
             // often users will make tweets containing video IDs earlier than our other APIs would be aware of them (websub not published immediately for youtube)
             // also will increase awareness of membership-limited streams
@@ -281,7 +281,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
 
                     val color = mention?.db?.embedColor ?: 1942002 // hardcoded 'twitter blue' if user has not customized the color
                     val author = if(tweet.retweet) tweet.retweetOf!! else user.username
-                    val text = tweet.text.escapeMarkdown()
+                    val text = StringUtils.abbreviate(tweet.text.escapeMarkdown(), 3800)
 
                     val attachment = tweet.images.firstOrNull()
                     val size = tweet.images.size
@@ -306,14 +306,15 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                                         TextDisplay.of(action)
                                     ),
 
-                                    TextDisplay.of(text),
+                                    if(text.isNotBlank()) TextDisplay.of(text)
+                                    else null,
 
                                     if(media.any()) MediaGallery.of(
                                         media.map(UnfurledMediaItem::of).map(MediaGalleryItem::of)
                                     ) else null,
 
                                     if(translation != null) {
-                                        val tlText = StringEscapeUtils.unescapeHtml4(translation.translatedText)
+                                        val tlText = StringUtils.abbreviate(StringEscapeUtils.unescapeHtml4(translation.translatedText), 3800)
                                         TextDisplay.of("**Post Translation** (${translation.service.fullName}, _${translation.originalLanguage.tag} -> ${translation.targetLanguage.tag})_\n$tlText")
                                     } else null,
 
@@ -401,7 +402,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
 
                     val notif = channel
                         .createMessage(notifSpec)
-                        .timeout(Duration.ofMillis(24_000L))
+                        .timeout(Duration.ofMillis(100_000L))
                         .awaitSingle()
 
                     // Send message 'replies' if features are enabled but not supported by notification style
