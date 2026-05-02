@@ -8,6 +8,10 @@ FBK (Fubuki)
 
 FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) server.
 
+[Bot Status Page](https://fbk.instatus.com)
+
+Bot wiki (GitHub): [fbk.wiki](https://fbk.wiki)
+
 # Add FBK to your Discord server
 
 FBK is now available for invite and public use. Feel free to use it or share it though I don't plan on putting it on any kind of bot list or advertising.
