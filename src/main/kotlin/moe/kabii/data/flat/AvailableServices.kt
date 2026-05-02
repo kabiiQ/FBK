@@ -18,6 +18,8 @@ object AvailableServices {
 
     val bluesky = Keys.config[Keys.Bluesky.password].isNotBlank()
 
+    val holoplus = Keys.config[Keys.Holoplus.refresh].isNotBlank()
+
     val mtl = Keys.config[Keys.Microsoft.translatorKey].isNotBlank()
     val gtl = Keys.config[Keys.Google.gTranslatorKey].isNotBlank()
     val deepL = Keys.config[Keys.DeepL.authKey].isNotBlank()

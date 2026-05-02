@@ -58,6 +58,8 @@ object NettyFileServer {
         val twitterLogo = File(staticRoot, "twitter.png")
         val twitcastingLogo = File(staticRoot, "twitcasting_logo.png")
         val blueskyLogo = File(staticRoot, "bsky.png")
+        val holoplusLogo = File(staticRoot, "holoplus.png")
+        val holoplusTranslation = File(staticRoot, "holoplus-tl.png")
 
         routing {
             get("/thumbnails/twitch/{twitchname}/{...}") {
@@ -117,6 +119,12 @@ object NettyFileServer {
             }
             get("/bluesky") {
                 call.respondFile(blueskyLogo)
+            }
+            get("/holoplus") {
+                call.respondFile(holoplusLogo)
+            }
+            get("/holoplustl") {
+                call.respondFile(holoplusTranslation)
             }
 
             get("/twitterfeeds") {
@@ -211,6 +219,8 @@ object NettyFileServer {
     val twitcastingLogo = "$domain/twitcasting"
     val kickLogo = "$domain/kick"
     val blueskyLogo = "$domain/bluesky"
+    val holoplusLogo = "$domain/holoplus"
+    val holoplusTranslation = "$domain/holoplustl"
 
     val twitterFeeds = "$domain/twitterfeeds"
 

@@ -3,10 +3,13 @@ package moe.kabii.data.relational.posts
 import moe.kabii.data.relational.discord.DiscordObjects
 import moe.kabii.data.relational.posts.bluesky.BlueskyFeed
 import moe.kabii.data.relational.posts.bluesky.BlueskyFeeds
+import moe.kabii.data.relational.posts.holoplus.HoloplusFeed
+import moe.kabii.data.relational.posts.holoplus.HoloplusFeeds
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeeds
 import moe.kabii.trackers.BasicSocialFeed
 import moe.kabii.trackers.BlueskyTarget
+import moe.kabii.trackers.HoloplusTarget
 import moe.kabii.trackers.TwitterTarget
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.RequiresExposedContext
@@ -21,7 +24,8 @@ import org.jetbrains.exposed.sql.select
 object TrackedSocialFeeds {
     enum class DBSite(val targetType: moe.kabii.trackers.SocialTarget) {
         X(TwitterTarget),
-        BLUESKY(BlueskyTarget)
+        BLUESKY(BlueskyTarget),
+        HOLOPLUS(HoloplusTarget)
     }
 
     object SocialFeeds : IdTable<Int>() {
@@ -40,6 +44,9 @@ object TrackedSocialFeeds {
         private val blueskyDetail by BlueskyFeed referrersOn BlueskyFeeds.feed
         private fun blueskyDetail(): BlueskyFeed? = this.blueskyDetail.firstOrNull()
 
+        private val holoplusDetail by HoloplusFeed referrersOn HoloplusFeeds.feed
+        private fun holoplusDetail(): HoloplusFeed? = this.holoplusDetail.firstOrNull()
+
         fun feedInfo() = when(site) {
             DBSite.X -> {
                 val twitter = twitterDetail()!!
@@ -48,6 +55,10 @@ object TrackedSocialFeeds {
             DBSite.BLUESKY -> {
                 val bsky = blueskyDetail()!!
                 BasicSocialFeed(BlueskyTarget, bsky.did, bsky.handle, URLUtil.Bluesky.feedUsername(bsky.handle))
+            }
+            DBSite.HOLOPLUS -> {
+                val holo = holoplusDetail()!!
+                BasicSocialFeed(HoloplusTarget, holo.talentId, holo.talentName, URLUtil.Holoplus.generic())
             }
         }
 

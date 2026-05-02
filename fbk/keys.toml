@@ -104,6 +104,10 @@ twitter_whitelist = false
 bsky_identifier = ''
 bsky_password = ''
 
+[holoplus]
+# Holoplus credentials, needs to be set once to a valid Google account refresh token to enable
+holoplus_token = ''
+
 [microsoft]
 # Create Translator resource @ https://portal.azure.com/#home, then see Resource Management -> Keys and Endpoint
 # Setting translator_key enables the Microsoft translation service.

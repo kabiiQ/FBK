@@ -9,6 +9,7 @@ import moe.kabii.data.mongodb.guilds.FeatureChannel
 import moe.kabii.data.relational.anime.ListSite
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.data.relational.posts.bluesky.BlueskyFeed
+import moe.kabii.data.relational.posts.holoplus.HoloplusFeed
 import moe.kabii.data.relational.posts.twitter.NitterFeed
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.net.NettyFileServer
@@ -16,6 +17,7 @@ import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.rusty.Result
 import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
+import moe.kabii.trackers.posts.holoplus.parser.HoloplusParser
 import moe.kabii.trackers.posts.twitter.NitterParser
 import moe.kabii.trackers.videos.kick.parser.KickNonPublic
 import moe.kabii.trackers.videos.kick.parser.KickParser
@@ -48,6 +50,7 @@ sealed class TrackerTarget(
         fun parseSiteArg(id: Long) = when(id) {
             0L -> TwitterTarget
             1L -> BlueskyTarget
+            2L -> HoloplusTarget
             100L -> YoutubeTarget
             101L -> TwitchTarget
 //            102L -> TwitterSpaceTarget
@@ -363,6 +366,48 @@ sealed class SocialTarget(
      */
     @RequiresExposedContext
     abstract suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed? = null): TrackedSocialFeeds.SocialFeed?
+}
+
+data object HoloplusTarget : SocialTarget(
+    AvailableServices.holoplus,
+    "Holoplus",
+    listOf(),
+    "holoplus"
+) {
+    override val dbSite = TrackedSocialFeeds.DBSite.HOLOPLUS
+
+    override fun feedById(id: String) = URLUtil.Holoplus.generic()
+
+    override suspend fun getProfile(id: String): Result<BasicSocialFeed, TrackerErr> {
+        // Check talent cache for match
+        val match = HoloplusParser.talents[id]
+        return if(match != null) {
+            val feed = BasicSocialFeed(HoloplusTarget,  match.id, match.name, URLUtil.Holoplus.generic())
+            Ok(feed)
+        } else Err(TrackerErr.NotFound)
+    }
+
+    override suspend fun dbFeed(id: String, createFeedInfo: BasicSocialFeed?): TrackedSocialFeeds.SocialFeed? {
+        val existing = HoloplusFeed.findExisting(id)
+        return when {
+            existing != null -> existing.feed
+            createFeedInfo != null -> {
+                val baseFeed = TrackedSocialFeeds.SocialFeed.new {
+                    this.site = TrackedSocialFeeds.DBSite.HOLOPLUS
+                }
+
+                HoloplusFeed.new {
+                    this.feed = baseFeed
+                    this.talentId = createFeedInfo.accountId
+                    this.talentName = createFeedInfo.displayName
+                    this.lastKnownThread = DateTime.now() - Duration.standardHours(12)
+                }
+
+                baseFeed
+            }
+            else -> null
+        }
+    }
 }
 
 data object BlueskyTarget : SocialTarget(

@@ -68,4 +68,10 @@ object URLUtil {
     object Bluesky {
         fun feedUsername(username: String) = "https://bsky.app/profile/$username"
     }
+
+    object Holoplus {
+        fun generic() = "https://holoplus.com/"
+        fun feed(channelId: String) = "https://holoplus.com/app/talent-channel/$channelId"
+        fun thread(threadId: String) = "https://www.holoplus.com/app/threads/$threadId"
+    }
 }

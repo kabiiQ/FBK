@@ -14,6 +14,7 @@ import moe.kabii.net.api.commands.ExternalCommandsService
 import moe.kabii.net.api.videos.YoutubeVideosService
 import moe.kabii.net.oauth.discord.DiscordOAuthRedirectServer
 import moe.kabii.terminal.TerminalListener
+import moe.kabii.trackers.posts.holoplus.parser.HoloplusParser
 import moe.kabii.translation.Translator
 import moe.kabii.util.extensions.stackTraceString
 import reactor.core.publisher.Mono
@@ -46,6 +47,7 @@ fun main() {
             if(AvailableServices.externalCommandsServer) ExternalCommandsService(discord).server.start()
             val welcomer = WelcomeImageGenerator
             GlobalTrackSuggestionGenerator.cacheAll()
+            if(AvailableServices.holoplus) HoloplusParser.cacheAllTalents()
             val streamers = KnownStreamers
             val translator = Translator.detector.detectLanguageOf("initializing translator")
         }

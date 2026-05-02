@@ -11,6 +11,7 @@ import moe.kabii.trackers.anime.mal.MALParser
 import moe.kabii.trackers.anime.watcher.ListServiceChecker
 import moe.kabii.trackers.posts.bluesky.BlueskyChecker
 import moe.kabii.trackers.posts.bluesky.streaming.BlueskyFirehose
+import moe.kabii.trackers.posts.holoplus.watcher.HoloplusChecker
 import moe.kabii.trackers.posts.twitter.NitterChecker
 import moe.kabii.trackers.posts.twitter.SyndicationChecker
 import moe.kabii.trackers.videos.kick.watcher.KickChecker
@@ -140,6 +141,12 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
         val blueskyChecker = BlueskyChecker(blueskyDelay, discord)
         blueskyFirehose = BlueskyFirehose(blueskyChecker)
 
+        val holoplusDelay = ServiceRequestCooldownSpec(
+            callDelay = 0L,
+            minimumRepeatTime = 60_000L
+        )
+        val holoplusChecker = HoloplusChecker(holoplusDelay, discord)
+
         // Compile the service threads to be enabled
         LOG.info("Starting service initialization")
 
@@ -170,6 +177,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             service(syndicationChecker, "SyndicationFeedChecker", false)
             service(blueskyChecker, "BlueskyChecker", AvailableServices.bluesky)
             service(blueskyFirehose, "BlueskyFirehoseStream", AvailableServices.bluesky)
+            service(holoplusChecker, "HoloplusChecker", AvailableServices.holoplus)
             service(twitCastChecker, "TwitcastChecker", AvailableServices.twitCastingApi)
             service(TwitcastWebhookManager, "TwitcastWebhookManager", AvailableServices.twitCastingWebhooks)
             service(ytChatWatcher, "YTChatWatcher", true)

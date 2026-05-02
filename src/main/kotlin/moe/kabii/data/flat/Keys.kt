@@ -57,6 +57,9 @@ object Keys : ConfigSpec("") {
         val identifier by optional("", "bsky_identifier")
         val password by optional("", "bsky_password")
     }
+    object Holoplus : ConfigSpec() {
+        val refresh by optional("", "holoplus_token")
+    }
     object Microsoft : ConfigSpec() {
         val translatorKey by required<String>("translator_key")
     }
