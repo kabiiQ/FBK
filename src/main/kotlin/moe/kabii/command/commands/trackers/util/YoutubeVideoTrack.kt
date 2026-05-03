@@ -1,5 +1,7 @@
 package moe.kabii.command.commands.trackers.util
 
+import discord4j.common.util.TimestampFormat
+import discord4j.core.spec.EmbedCreateFields
 import discord4j.rest.util.Permission
 import kotlinx.coroutines.reactive.awaitSingle
 import moe.kabii.LOG
@@ -11,12 +13,16 @@ import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.YoutubeVideo
 import moe.kabii.data.relational.streams.youtube.YoutubeVideoTrack
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
+import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.videos.youtube.YoutubeParser
+import moe.kabii.util.constants.MagicNumbers
 import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
+import org.apache.commons.lang3.StringUtils
 import java.io.IOException
 
 object YoutubeVideoTrack : Command("trackvid") {
@@ -80,7 +86,7 @@ object YoutubeVideoTrack : Command("trackvid") {
                 return@chat
             }
 
-            propagateTransaction {
+            val pingName = propagateTransaction {
                 val pings = usePings?.run {
                     TrackedStreams.Target.getForChannel(client.clientId, chan.id, TrackedStreams.DBSite.YOUTUBE, this.identifier)
                 }
@@ -89,15 +95,21 @@ object YoutubeVideoTrack : Command("trackvid") {
                 val discordChannel = DiscordObjects.Channel.getOrInsert(chan.id.asLong(), guild?.id?.asLong())
                 val dbUser = DiscordObjects.User.getOrInsert(author.id.asLong())
                 YoutubeVideoTrack.insertOrUpdate(client.clientId, dbVideo, discordChannel, dbUser, pings)
+                pings?.streamChannel?.lastKnownUsername
             }
 
-            val videoUrl = URLUtil.StreamingSites.Youtube.video(ytVideo.id)
-            val mentioning = if(usePings != null) {
-                ", using the ping configuration for **${usePings.site.full}/${usePings.identifier}**."
-            } else "."
-            val embed = Embeds.fbk("A stream reminder will be sent when ${ytVideo.channel.name}/[${ytVideo.id}]($videoUrl) goes live$mentioning")
-            val reply = if(usePings != null) ereply(embed) else ireply(embed)
-            reply.awaitSingle()
+            val description = StringUtils.truncate(ytVideo.description.lines().first(), 250)
+            val eta = ytVideo.liveInfo?.scheduledStart?.run(TimestampFormat.RELATIVE_TIME::format) ?: "..."
+            val pings = if(pingName != null) "The ping for $pingName will be sent when live." else "No ping was configured to be sent for this stream."
+
+            val embed = Embeds.other("$description\n\nStream scheduled to start: $eta", MessageColors.streamCreated)
+                .withAuthor(EmbedCreateFields.Author.of("A video from ${ytVideo.channel.name} is now being tracked!", ytVideo.channel.url, ytVideo.channel.avatar))
+                .withUrl(ytVideo.url)
+                .withTitle(StringUtils.abbreviate(ytVideo.title, MagicNumbers.Embed.TITLE))
+                .withThumbnail(ytVideo.thumbnail)
+                .withFooter(EmbedCreateFields.Footer.of(pings, NettyFileServer.youtubeLogo))
+
+            ireply(embed).awaitSingle()
             TargetSuggestionGenerator.updateTargets(client.clientId, chan.id.asLong())
         }
     }

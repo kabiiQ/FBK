@@ -20,6 +20,7 @@ import moe.kabii.data.relational.discord.MessageHistory
 import moe.kabii.data.relational.streams.TrackedStreams
 import moe.kabii.data.relational.streams.youtube.*
 import moe.kabii.discord.util.Embeds
+import moe.kabii.discord.util.MessageColors
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TrackerUtil
 import moe.kabii.trackers.videos.EventManager
@@ -43,7 +44,7 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
         private val inactiveColor = Color.of(8847360)
         private val scheduledColor = Color.of(4270381)
         private val uploadColor = Color.of(16748800)
-        private val creationColor = Color.of(16749824)
+        private val creationColor = MessageColors.streamCreated
     }
 
     @RequiresExposedContext

@@ -15,6 +15,7 @@ object MessageColors {
     val reminder = Color.of(44031)
     val star = Color.of(16755762)
     val special = Color.of(15171054)
+    val streamCreated = Color.of(16749824)
 }
 
 fun logColor(member: Member?): Color =
