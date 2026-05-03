@@ -272,7 +272,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                             .presentModal()
                             .withComponents(
                                 ActionRow.of(
-                                    TextInput.small(e.propName, "New value for ${module.name} -> ${e.propName}")
+                                    TextInput.small(e.propName, "New value for ${e.propName}")
                                         .required()
                                         .prefilled(getValue(e))
                                 )
