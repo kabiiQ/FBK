@@ -11,13 +11,10 @@ import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.Request
 import org.dom4j.io.SAXReader
-import java.io.File
-import java.io.IOException
 import java.net.URLDecoder
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import java.util.stream.Collectors
 
 object NitterParser {
     val color = Color.of(1942002)
@@ -36,9 +33,6 @@ object NitterParser {
 
     private val nitterVideo = Regex("<video poster=\"[\\S\\s]+<source src=\"${URLUtil.genericUrl}\"")
     private val originalVideo = Regex("video\\.twimg\\.com.+")
-
-    private val scriptDir = File("files/scripts/twitter")
-    private val scriptName = "get_video.py"
 
     fun getInstanceUrl(id: Int): String = nitterInstances[id % nitterInstances.size]
 
@@ -156,7 +150,7 @@ object NitterParser {
                 if(tweetId != null) {
                     val url = "https://twitter.com/$username/status/$tweetId"
                     nitterTweets.add(
-                        NitterTweet(tweetId, text, html, instant, url, images, videos, retweetOf, replyTo, quoteOf, quoteId)
+                        NitterTweet(tweetId, text, html, instant, url, images, videos, retweetOf, replyTo, quoteOf, quoteId, missedVideo)
                     )
                 } else {
                     LOG.debug("Invalid Tweet ID from Nitter guid: $guid")
@@ -170,37 +164,6 @@ object NitterParser {
             LOG.info(e.stackTraceString)
             return null
         }
-    }
-
-    @Throws(IOException::class)
-    fun getVideoFromTweetScript(tweetId: Long): String? {
-        val videoScript = File(scriptDir, scriptName)
-        require(videoScript.exists()) { "Twitter video script not found! ${videoScript.absolutePath}" }
-        val subprocess = ProcessBuilder("python", scriptName, tweetId.toString())
-            .directory(scriptDir)
-            .start()
-        val response = subprocess.inputStream
-            .bufferedReader()
-            .lines()
-            .collect(Collectors.toList())
-            .onEach { line -> println(line) }
-            .find { line ->
-                line.startsWith("VIDEO")
-            }
-        val videoUrl = if(response != null) {
-            val video = response.drop(6).trim()
-            when(video.take(4)) {
-                "NONE" -> null
-                "ERRR" -> {
-                    LOG.debug("Error getting YouTube video: $response")
-                    null
-                }
-                else -> video
-            }
-        } else null
-
-        subprocess.destroy()
-        return videoUrl
     }
 
     fun getBestVideoUrl(variants: List<SyndicationObjects.Variant>): String = variants.maxBy { v -> v.bitrate ?: 0 }.url
