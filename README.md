@@ -10,7 +10,7 @@ FBK is a publicly-hosted chat bot for your [Discord](https://discord.com/) serve
 
 [Bot Status Page](https://fbk.instatus.com)
 
-Bot wiki (GitHub): [fbk.wiki](https://fbk.wiki)
+[Bot wiki (GitHub)](https://github.com/kabiiQ/FBK/wiki)
 
 # Add FBK to your Discord server
 
@@ -25,28 +25,27 @@ FBK is now available for invite and public use. Feel free to use it or share it 
 [![Discord](https://discord.com/api/guilds/581785820156002304/widget.png?style=banner2)](https://discord.com/invite/ucVhtnh)
 
 # Features
-FBK has a variety of lightweight features which now focus heavily on the integration of notifications from other platforms (YouTube, Twitter, etc).
+FBK started with a variety of light utility features but has evolved to focus heavily on the integration of notifications from other platforms (YouTube, Twitter, etc).
 
-FBK covers a pretty wide range of functionality, so not all features are necessarily featured here.
+Still covering a wide range of functionality and including specific user-requested features, all commands are not necessarily featured here.
 A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is available for all features.
 
 **Primary Features Include:**
 
 - ## **Service Integration**
   - [Livestream/Video notifications](https://github.com/kabiiQ/FBK/wiki/Livestream-Tracker)
-    - Post information on specific streams while they are live.
+    - Notify on specific streams while they are live.
     - Optionally mention a role when they become live.
     - Currently supports **Twitch**, **TwitCasting**, and **Kick** livestreams, and **YouTube** livestreams/video uploads.
   - [Anime/manga list update notifications](https://github.com/kabiiQ/FBK/wiki/Anime-List-Tracker)
-    - Post information when tracked user's lists are updated.
+    - Notify when tracked user's lists are updated.
     - Currently supports **MyAnimeList, kitsu.io, anilist.co**
   - [Social media feed update notifications](https://github.com/kabiiQ/FBK/wiki/Social-Media-Tracker)
-    - Post information when specific users make a post.
+    - Notify when specific users make a post.
     - Available Twitter feeds for tracking are highly limited as of 2024, as Twitter has made it very difficult to access their data.
-    - Currently supports **Twitter** (limited) and **Bluesky** (experimental, open to all)
+    - Currently supports **Twitter** (limited), **Bluesky** (open to all), and **Holoplus** (experimental).
 
 - ## [**Welcome users** to your server](https://github.com/kabiiQ/FBK/wiki/Welcoming-Users)
-- ## [**Translator**](https://github.com/kabiiQ/FBK/wiki/Translator)
 - ## [Set timed **reminders**](https://github.com/kabiiQ/FBK/wiki/Reminders)
 
 - ## **Light Utility**
@@ -62,11 +61,10 @@ A raw [**command list**](https://github.com/kabiiQ/FBK/wiki/Command-List) is ava
   - [User joining/leaving voice channels](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-in-a-voice-channel)
   - [Users interacting with a **button**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-automatically-using-buttons)
   - [User **reactions** on a specific message **(reaction roles)**](https://github.com/kabiiQ/FBK/wiki/Auto-Roles#assigning-a-role-to-users-reacting-to-a-specific-message)
-  - [Reassigning user roles when they rejoin server](https://github.com/kabiiQ/FBK/wiki/Configuration-Commands#available-options-in-serverconfig)
 
 <br />
 
-Overall, FBK is not intended to be focused on server moderation. However, some of her available **moderation utilites** include:
+Overall, FBK is not intended to be focused on server moderation. However, some of the available **moderation utilites** include:
 - [Basic join/leave logs](https://github.com/kabiiQ/FBK/wiki/Moderation-Logs)
 - [Purging messages from a chat](https://github.com/kabiiQ/FBK/wiki/Purge-Messages)
 - [Mass-move users between voice channels](https://github.com/kabiiQ/FBK/wiki/Moderation-Commands#mass-drag-users-in-voice-channels-with-drag)
@@ -78,6 +76,8 @@ Overall, FBK is not intended to be focused on server moderation. However, some o
 
 
 Current feature/issue plans are tracked on [Trello](https://trello.com/b/S1bfvZi4/fbk).
+
+Development has largely stalled as I am mostly content with the features and can not put so much time into projects. However, I will make changes when things break.
 
 Feature ideas/requests, issue reports, and general questions are welcome in the bot's [Discord server](https://discord.com/invite/ucVhtnh).
 
