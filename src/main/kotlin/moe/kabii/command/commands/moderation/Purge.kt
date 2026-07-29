@@ -89,7 +89,7 @@ object Purge : CommandContainer {
         val delete = chan
             .getMessagesAfter(startMessage.snowflake)
             .run { if(endMessage != null) takeWhile { message ->
-                message.id >= endMessage.snowflake
+                message.id <= endMessage.snowflake
             } else this }
 
         purgeAndNotify(this, delete)
