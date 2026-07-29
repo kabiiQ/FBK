@@ -26,6 +26,7 @@ import moe.kabii.rusty.Ok
 import moe.kabii.trackers.ServiceRequestCooldownSpec
 import moe.kabii.trackers.TrackerErr
 import moe.kabii.trackers.TrackerUtil
+import moe.kabii.trackers.posts.PostTranslator
 import moe.kabii.trackers.posts.PostWatcher
 import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyParser
 import moe.kabii.trackers.posts.bluesky.xrpc.BlueskyRecheck
@@ -229,7 +230,7 @@ class BlueskyChecker(val cooldowns: ServiceRequestCooldownSpec, instances: Disco
 
                     // Translation phase
                     val tlCfg = GuildConfigurations.getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong()).translator
-                    val translation = translatePost(text, post.isRepost, feed.handle, targets, tlCfg, postCfg, translationCache)
+                    val translation = PostTranslator.translatePost(text, post.isRepost, feed.handle, targets, tlCfg, postCfg, translationCache)
 
                     // Roles phase
                     val mention = getMentionRoleFor(target, channel, postCfg, post.mentionOption)

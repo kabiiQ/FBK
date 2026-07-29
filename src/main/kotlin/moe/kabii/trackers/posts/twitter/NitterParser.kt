@@ -119,6 +119,10 @@ object NitterParser {
                     .map("https://"::plus)
                     .toList()
 
+                // from html: check for scenarios that indicate additional video content
+                val externalVideo = html.contains(">Video") || html.contains(".m3u8")
+                val missedVideo = externalVideo && videos.isEmpty()
+
                 // quotes: description html will contain a link to a different tweet at the end
                 val quoteMatch = nitterQuote.find(html)
                 val (quoteOf, quoteId) = if(quoteMatch != null) {

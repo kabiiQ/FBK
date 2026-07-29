@@ -30,6 +30,7 @@ import moe.kabii.discord.util.Embeds
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.net.NettyFileServer
 import moe.kabii.trackers.TrackerUtil
+import moe.kabii.trackers.posts.PostTranslator
 import moe.kabii.trackers.posts.PostWatcher
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeVideoIntake
 import moe.kabii.translation.TranslationResult
@@ -233,6 +234,22 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
             // cache to not repeat translation for same tweet across multiple channels/servers
             val translations = mutableMapOf<String, TranslationResult>()
 
+            // Check for additional video media that nitter does not receive
+            // This occurs late so only tweets actively being notified perform these requests
+            val resolvedVideo = if(tweet.missingVideo) {
+                try {
+                    TwitFixParser.getTweetMedia(tweet.id)?.media
+                        ?.filter { m -> m.endsWith(".mp4") }
+                        .orEmpty()
+                } catch(e: Exception) {
+                    // This is extra information and should never cause a service failure
+                    LOG.info("Error resolving Twitter video ${tweet.url} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
+                    emptyList()
+                }
+            } else emptyList()
+            val videos = resolvedVideo.ifEmpty { tweet.videos }
+
             targets.forEach target@{ target ->
                 val fbk = instances[target.discordClient]
                 val discord = fbk.client
@@ -251,7 +268,7 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                         .getOrCreateGuild(fbk.clientId, target.discordGuild!!.asLong())
                         .translator
 
-                    val translation = translatePost(tweet.text, tweet.retweet, username, targets, tlSettings, postCfg, translations)
+                    val translation = PostTranslator.translatePost(tweet.text, tweet.retweet, username, targets, tlSettings, postCfg, translations, tweetId = tweet.id)
 
                     // get role to be mentioned
                     val mention = getMentionRoleFor(target, channel, postCfg, tweet.mentionOption)
@@ -294,7 +311,8 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                         postCfg.customTwitterDomain != null -> MessageCreateSpec.create().withContent("$mentionText$action") // send url, allow discord to generate the embed
                         postCfg.useComponents -> {
                             // Use newer Discord componentsv2 to generate message with potential image gallery
-                            val media = tweet.images + tweet.videos
+                            // If we pulled an extra video, there will be a duplicate thumbnail image we can skip for component messages
+                            val media = resolvedVideo.ifEmpty { tweet.images + videos }
                             val container = Container.of(
                                 Color.of(color),
                                 listOfNotNull(
@@ -341,10 +359,10 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                             // Generate Discord embed similar to normal Twitter links
                             var editedThumb: ByteArrayInputStream? = null
                             when {
-                                tweet.videos.any() -> {
+                                videos.any() -> {
                                     attachInfo = "(Open on Twitter to view video)\n"
                                     // get potentially cached twitter video url
-                                    attachedVideo = tweet.videos.first()
+                                    attachedVideo = videos.first()
                                 }
                                 size > 1 -> {
                                     attachInfo = "(Open on Twitter to view $size images)\n"
@@ -407,9 +425,20 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
 
                     // Send message 'replies' if features are enabled but not supported by notification style
                     if(!tweet.retweet && attachedVideo != null) {
-                        channel.createMessage(attachedVideo)
-                            .withMessageReference(notif.id.reference)
-                            .tryAwait()
+                        try {
+                            channel.createMessage(attachedVideo)
+                                .withMessageReference(notif.id.reference)
+                                .awaitSingle()
+                        } catch (e: Exception) {
+                            if(e is ClientException && e.opcode == 160002) {
+                                LOG.info("Unable to send Twitter video as reply, forcing newstyle: ${channel.id.asString()} :: ${e.message}")
+                                LOG.debug(e.stackTraceString)
+                                val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, target.discordGuild.asLong())
+                                val posts = config.getOrCreateFeatures(target.discordChannel.asLong())
+                                posts.postsSettings.useComponents = true
+                                config.save()
+                            }
+                        }
                     }
 
                     if(postCfg.customTwitterDomain != null && translation != null) {

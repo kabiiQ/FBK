@@ -32,8 +32,8 @@ object LanguageConfig : Command("languagecfg") {
             "ephemeral",
             TranslatorSettings::ephemeral
         ),
-        BooleanElement("Skip low-quality translation of Retweets entirely.",
-            "noretweets",
+        BooleanElement("Skip low-quality local translations entirely",
+            "nolowquality",
             TranslatorSettings::skipRetweets
         ),
         CustomElement("Default target language for translations",

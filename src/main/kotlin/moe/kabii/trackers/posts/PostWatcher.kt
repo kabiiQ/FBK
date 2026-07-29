@@ -10,16 +10,12 @@ import kotlinx.coroutines.reactor.awaitSingle
 import moe.kabii.LOG
 import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.data.mongodb.guilds.PostsSettings
-import moe.kabii.data.mongodb.guilds.TranslatorSettings
 import moe.kabii.data.relational.posts.TrackedSocialFeeds
 import moe.kabii.discord.tasks.DiscordTaskPool
 import moe.kabii.instances.DiscordInstances
 import moe.kabii.rusty.Err
 import moe.kabii.rusty.Ok
 import moe.kabii.trackers.TrackerUtil
-import moe.kabii.translation.TranslationResult
-import moe.kabii.translation.Translator
-import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.constants.Opcode
 import moe.kabii.util.extensions.*
 import reactor.kotlin.core.publisher.toMono
@@ -164,35 +160,5 @@ abstract class PostWatcher(val instances: DiscordInstances) {
             null -> null
         }
         return SocialMentionRole(dbMentionRole, discordRole)
-    }
-
-    fun translatePost(text: String, repost: Boolean, feedName: String, postTargets: List<TrackedSocialTarget>, tlSettings: TranslatorSettings, postSettings: PostsSettings, cache: MutableMap<String, TranslationResult>): TranslationResult? {
-        return if(postSettings.autoTranslate && text.isNotBlank()) {
-            try {
-                // Retweets default to low-quality local translations. If "skipRetweets" is set by user, retweets should just forego translation.
-                if(!repost || !tlSettings.skipRetweets) {
-
-                    val lang = tlSettings.defaultTargetLanguage
-                    val translator = Translator.getService(text, listOf(lang), feedName = feedName, primaryTweet = !repost, guilds = postTargets.mapNotNull(TrackedSocialTarget::discordGuild))
-
-                    // check cache for existing translation of this tweet
-                    val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
-                    val existingTl = cache[standardLangTag]
-                    val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
-
-                        val tl = translator.translate(from = null, to = translator.getLanguage(lang), text = text)
-                        cache[standardLangTag] = tl
-                        tl
-                    }
-
-                    if(translation.originalLanguage != translation.targetLanguage && translation.translatedText.isNotBlank()) translation
-                    else null
-                } else null
-
-            } catch(e: Exception) {
-                LOG.warn("Tweet translation failed: ${e.message} :: ${e.stackTraceString}")
-                null
-            }
-        } else null
     }
 }
