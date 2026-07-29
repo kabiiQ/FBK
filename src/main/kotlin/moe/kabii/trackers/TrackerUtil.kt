@@ -124,6 +124,7 @@ object TrackerUtil {
                         } else if(Opcode.denied(e.opcode)) {
                             val guildId = message.guildId.orNull() ?: return@launch
                             val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())
+                            val settings = config.getOrCreateFeatures(message.channelId.asLong()).streamSettings
                             settings.pinActive = false
                             config.save()
                             val notice = "I tried to pin an active stream in <#${message.channelId.asString()}> but am missing permission to pin. The **pin** feature has been automatically disabled.\nOnce permissions are corrected (I must have Manage Messages to pin), you can run the **streamcfg pin enable** command to re-enable this feature."

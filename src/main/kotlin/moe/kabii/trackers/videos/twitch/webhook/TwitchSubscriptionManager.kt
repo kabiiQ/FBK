@@ -58,9 +58,7 @@ class TwitchSubscriptionManager(instances: DiscordInstances, checker: TwitchChec
                     }
 
                     twitchChannels.forEach { channel ->
-                        val subscription = TwitchEventSubscription.getExisting(channel, TwitchEventSubscriptions.Type.START_STREAM).firstOrNull()
-
-                        if(subscription == null) {
+                        if(TwitchEventSubscription.isMissing(channel.id.value, TwitchEventSubscriptions.Type.START_STREAM)) {
                             LOG.info("New Twitch webhook: ${channel.siteChannelID}")
                             TwitchParser.EventSub.createSubscription(TwitchEventSubscriptions.Type.START_STREAM, channel.siteChannelID.toLong())
                         }

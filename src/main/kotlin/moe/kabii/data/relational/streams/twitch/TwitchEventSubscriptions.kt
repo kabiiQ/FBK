@@ -29,10 +29,9 @@ class TwitchEventSubscription(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<TwitchEventSubscription>(TwitchEventSubscriptions) {
         @RequiresExposedContext
-        fun getExisting(channel: TrackedStreams.StreamChannel, type: TwitchEventSubscriptions.Type) =
-            TwitchEventSubscription.find {
-                TwitchEventSubscriptions.twitchChannel eq channel.id and
-                        (TwitchEventSubscriptions.eventType eq type)
-            }
+        fun isMissing(channel: Int, type: TwitchEventSubscriptions.Type) = find {
+            TwitchEventSubscriptions.twitchChannel eq channel and
+                    (TwitchEventSubscriptions.eventType eq type)
+        }.empty()
     }
 }

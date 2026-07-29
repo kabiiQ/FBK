@@ -19,7 +19,6 @@ import moe.kabii.trackers.TargetArguments
 import moe.kabii.trackers.YoutubeTarget
 import moe.kabii.trackers.videos.youtube.YoutubeParser
 import moe.kabii.util.constants.MagicNumbers
-import moe.kabii.util.constants.URLUtil
 import moe.kabii.util.extensions.propagateTransaction
 import moe.kabii.util.extensions.stackTraceString
 import org.apache.commons.lang3.StringUtils
