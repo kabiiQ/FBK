@@ -84,6 +84,7 @@ object AniListParser : MediaListParser() {
 
             collection.lists
                 .flatMap(AniListMediaList::entries) // combine all various user lists returned
+                .distinctBy { entry -> entry.media.id }
                 .mapTo(allMedia) { entry ->
                     val media = entry.media
                     Media(
