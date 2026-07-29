@@ -44,7 +44,7 @@ data class BlueskyEmbedRecordView(
 
 data class BlueskyEmbedRecordWithMediaView(
     val record: NestedRecord?,
-    val media: BlueskyEmbeddedBase
+    val media: BlueskyEmbeddedBase?
 ) : BlueskyEmbeddedBase("app.bsky.embed.recordWithMedia#view") {
 
     data class NestedRecord(
