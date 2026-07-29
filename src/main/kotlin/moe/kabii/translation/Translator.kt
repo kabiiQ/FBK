@@ -92,18 +92,12 @@ object Translator {
         }
 
         // special handling for DeepL which may have user provided keys
-        val deepLKey = DeepLTranslator
-            .getUserKeys(guilds)
-            .firstOrNull(DeepLTranslator::keyAvailable)
+        // This feature is now disabled with the removal of free monthly quotas
+//        val deepLKey = DeepLTranslator
+//            .getUserKeys(guilds)
+//            .firstOrNull(DeepLTranslator::keyAvailable)
 
-        // some special exceptions for certain twitter feeds will alter the available services
-        val allServices = if(deepLKey != null) {
-            // users who provide a DeepL key can use for their own feeds beyond typical restrictions
-            listOf(DeepLTranslator) + services
-        } else if(primaryTweet == false) {
-            // retweets go straight to neural translator
-            listOf(ArgosTranslator)
-        } else if(primaryTweet == true && inclusionList.isEmpty() || inclusionList.contains(feedName)) {
+        val allServices = if(primaryTweet == true && inclusionList.isEmpty() || inclusionList.contains(feedName)) {
             // primary tweets in specific high-visiblity servers can use GTL (paid)
             listOf(DeepLTranslator, GoogleTranslator)
         } else if(preference != null) {
@@ -120,10 +114,14 @@ object Translator {
 //        } else allServices
         // suspected languages are often wrong, so don't fail if a strange language is detected
 //        val services = filteredServices.ifEmpty { allServices }
+//
+        // DeepL keys now disabled, skip specific check for these
+//        val availableServices = allServices.filter { service ->
+//            (service == DeepLTranslator && deepLKey != null) || service.available
+//        }
 
-        val availableServices = allServices.filter { service ->
-            (service == DeepLTranslator && deepLKey != null) || service.available
-        }
+        val availableServices = allServices.filter(TranslationService::available)
+
         val langTags = (tags + detected).filterNotNull()
 
         val filteredServices = if(langTags.isNotEmpty())
@@ -136,7 +134,7 @@ object Translator {
         else availableServices
 
         val detectedLanguage = detected?.run { filteredServices.getOrNull(0)?.supportedLanguages?.get(this) }
-        return TranslationPair(filteredServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage, deepLKey?.apiKey)
+        return TranslationPair(filteredServices.getOrNull(0) ?: NoOpTranslator, detectedLanguage, apiKey = null)
     }
 
     fun getServiceNames(): List<String> =

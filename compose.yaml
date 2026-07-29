@@ -87,6 +87,12 @@ services:
     volumes:
     - ./tldata:/home/libretranslate/.local:rw # linux: may need to use chown 1032:1032 tldata/
 
+  deeplx:
+    image: ghcr.io/owo-network/deeplx:latest
+    restart: always
+    networks:
+    - fbk
+
   jetstream:
     image: ghcr.io/bluesky-social/jetstream:sha-fc35aea
     container_name: fbk_bluesky

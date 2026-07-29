@@ -12,7 +12,8 @@ import moe.kabii.data.mongodb.GuildConfigurations
 import moe.kabii.net.ClientRotation
 import moe.kabii.newRequestBuilder
 import moe.kabii.translation.*
-import moe.kabii.translation.deepl.json.DLTranslationResponse
+import moe.kabii.translation.deepl.json.DLXTranslation
+import moe.kabii.translation.deepl.json.DLXTranslationRequest
 import moe.kabii.translation.deepl.json.DeepLSupportedLanguage
 import moe.kabii.util.extensions.stackTraceString
 import okhttp3.FormBody
@@ -22,7 +23,8 @@ object DeepLTranslator : TranslationService(
     "DeepL",
     "https://www.deepl.com/en/docs-api/translating-text/"
 ) {
-    private val translationAdapter = MOSHI.adapter(DLTranslationResponse::class.java)
+//    private val translationAdapter = MOSHI.adapter(DLTranslationResponse::class.java
+    private val translationAdapter = MOSHI.adapter(DLXTranslation::class.java)
     private val generalKey = Keys.config[Keys.DeepL.authKey]
 
     // API key provided by a user
@@ -54,14 +56,21 @@ object DeepLTranslator : TranslationService(
         val text = TranslationUtil.preProcess(rawText, removeEmoji = true, capitalize = true)
 
         val key = apiKey ?: generalKey
-        val requestBody = FormBody.Builder()
-            .add("text", text)
-            .add("target_lang", to.tag.run(::tagAlias))
-            .add("source_lang", from?.tag?.run(::tagAlias) ?: "")
-            .build()
+//        val requestBody = FormBody.Builder()
+//            .add("text", text)
+//            .add("target_lang", to.tag.run(::tagAlias))
+//            .add("source_lang", from?.tag?.run(::tagAlias) ?: "auto")
+//            .build()
+        val body = DLXTranslationRequest(
+            text = text,
+            target = to.tag.run(::tagAlias),
+            source = from?.tag?.run(::tagAlias) ?: "auto"
+        ).generateRequestBody()
         val request = newRequestBuilder()
-            .url("https://api-free.deepl.com/v2/translate?auth_key=$key")
-            .post(requestBody)
+//            .url("https://api.deepl.com/v2/translate")
+//            .header("Authorization", "DeepL-Auth-Key $key")
+            .url("http://deeplx:1188/translate")
+            .post(body)
             .build()
 
         val client = ClientRotation.getClientNumber(if(key == generalKey) 0 else 1)
@@ -69,7 +78,7 @@ object DeepLTranslator : TranslationService(
         val translation = try {
             if(response.isSuccessful) {
                 val body = response.body.string()
-                translationAdapter.fromJson(body)!!.translations.first()
+                translationAdapter.fromJson(body)!!
             } else {
                 when(response.code) {
                     401 -> {
@@ -115,7 +124,8 @@ object DeepLTranslator : TranslationService(
 
         return try {
             val request = newRequestBuilder()
-                .url("https://api-free.deepl.com/v2/languages?type=target&auth_key=$generalKey")
+                .url("https://api-free.deepl.com/v2/languages?type=target")
+                .header("Authorization", "DeepL-Auth-Key $generalKey")
                 .build()
             LOG.info("Requesting supported languages from DeepL")
             val response = OkHTTP.newCall(request).execute()
