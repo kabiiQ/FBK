@@ -197,7 +197,7 @@ data object TwitcastingTarget : StreamingTarget(
     "TwitCasting",
     FeatureChannel::streamTargetChannel,
     listOf(
-        Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,15})") priority 1,
+        Regex("twitcasting.tv/(c:[a-zA-Z0-9_]{4,18})") priority 1,
         Regex("twitcasting.tv/([a-z0-9_]{4,18})") priority 1,
     ),
     "twitcasting", "twitcast", "tcast"
@@ -207,7 +207,7 @@ data object TwitcastingTarget : StreamingTarget(
 
     override suspend fun getChannel(id: String) = getChannelByIdentifier(id)
 
-    private val twitcastingNameType = Regex("c:[a-zA-Z0-9_]{4,15}")
+    private val twitcastingNameType = Regex("c:[a-zA-Z0-9_]{4,18}")
     override fun feedById(id: String)
         = if(id.matches(twitcastingNameType)) URLUtil.StreamingSites.TwitCasting.channelByName(id) else ""
 
