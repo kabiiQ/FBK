@@ -389,7 +389,18 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
             } else null
 
             val new = try {
-                val shortDescription = StringUtils.abbreviate(video.description, 200)
+                val shortDescription = StringUtils
+                    .truncate(video.description, 200)
+                    .let { desc ->
+                        if(video.description.length > 200) {
+                            // Remove last word from truncated description
+                            buildString {
+                                val lastWord = desc.lastIndexOf(" ")
+                                if(lastWord != -1) append(desc.substring(0, lastWord)) else append(desc)
+                                append("\n(...)")
+                            }
+                        } else desc
+                    }
                 val shortTitle = StringUtils.abbreviate(video.title, MagicNumbers.Embed.TITLE)
                 val memberNotice = if(video.memberLimited) "Members-only content.\n" else ""
 
