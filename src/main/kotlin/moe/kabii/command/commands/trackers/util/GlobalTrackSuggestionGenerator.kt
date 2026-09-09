@@ -38,7 +38,7 @@ object GlobalTrackSuggestionGenerator {
                             val feedInfo = feed.feedInfo()
                             createCachedFeed(site, feedInfo.accountId, feedInfo.displayName)
                         } catch (e: Exception) {
-                            LOG.warn("Mismatched feed info: $feed :: ${e.message}")
+                            LOG.warn("Mismatched feed info: ${feed.id.value} :: ${e.message}")
                             LOG.debug(e.stackTraceString)
                             null
                         }
