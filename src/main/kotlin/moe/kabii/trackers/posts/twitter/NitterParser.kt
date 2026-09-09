@@ -27,7 +27,7 @@ object NitterParser {
 
     private val nitterRt = Regex("RT by @$twitterUsernameRegex: ")
     private val nitterReply = Regex("R to @($twitterUsernameRegex): ")
-    private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a></p>")
+    private val nitterQuote = Regex("\\.kabii\\.moe/($twitterUsernameRegex)/status/($nitterTweetId)#m</a>")
     private val nitterImage = Regex("<img src=\"(${URLUtil.genericUrl})\"")
     private val nitterDateFormat = DateTimeFormatter.ofPattern("EEE',' dd MMM uuuu HH:mm:ss zzz", Locale.ENGLISH)
 
