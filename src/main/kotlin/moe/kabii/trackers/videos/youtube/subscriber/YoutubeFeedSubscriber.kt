@@ -1,13 +1,19 @@
 package moe.kabii.trackers.videos.youtube.subscriber
 
 import moe.kabii.LOG
-import moe.kabii.OkHTTP
 import moe.kabii.data.flat.AvailableServices
 import moe.kabii.data.flat.Keys
 import moe.kabii.newRequestBuilder
 import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import java.time.Duration
 
 class YoutubeFeedSubscriber {
+
+    private val httpClient = OkHttpClient.Builder()
+        .readTimeout(Duration.ofSeconds(30))
+        .connectTimeout(Duration.ofSeconds(30))
+        .build()
 
     private val callbackAddress = Keys.config[Keys.Youtube.callbackAddress]
     private val signingKey = Keys.config[Keys.Youtube.signingKey]
@@ -44,7 +50,7 @@ class YoutubeFeedSubscriber {
         LOG.info("Requesting $mode for YT Feed: $topic")
 
         return try {
-            val response = OkHTTP.newCall(request).execute()
+            val response = httpClient.newCall(request).execute()
             response.use { rs ->
                 LOG.debug("${rs.code} :: ${rs.body.string()}")
                 if (response.isSuccessful) topic else null
