@@ -313,19 +313,20 @@ open class NitterChecker(instances: DiscordInstances) : Runnable, PostWatcher(in
                             // Use newer Discord componentsv2 to generate message with potential image gallery
                             // If we pulled an extra video, there will be a duplicate thumbnail image we can skip for component messages
                             val media = resolvedVideo.ifEmpty { tweet.images + videos }
+                            val content = "$action\n\n$text"
                             val container = Container.of(
                                 Color.of(color),
                                 listOfNotNull(
-                                    if(tweet.retweet) TextDisplay.of(action)
+                                    if(tweet.retweet) TextDisplay.of(content)
                                     else Section.of(
                                         Thumbnail.of(
                                             UnfurledMediaItem.of(user.avatar)
                                         ),
-                                        TextDisplay.of(action)
+                                        TextDisplay.of(content)
                                     ),
 
-                                    if(text.isNotBlank()) TextDisplay.of(text)
-                                    else null,
+//                                    if(text.isNotBlank()) TextDisplay.of(text)
+//                                    else null,
 
                                     if(media.any()) MediaGallery.of(
                                         media.map(UnfurledMediaItem::of).map(MediaGalleryItem::of)
