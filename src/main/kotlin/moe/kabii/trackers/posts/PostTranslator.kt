@@ -7,7 +7,6 @@ import moe.kabii.trackers.posts.PostWatcher.TrackedSocialTarget
 import moe.kabii.trackers.posts.twitter.TwitFixParser
 import moe.kabii.translation.*
 import moe.kabii.translation.argos.ArgosTranslator
-import moe.kabii.translation.google.GoogleTranslator
 import moe.kabii.util.extensions.stackTraceString
 
 object PostTranslator {
@@ -31,10 +30,10 @@ object PostTranslator {
                 // check cache for existing translation of this tweet
                 val standardLangTag = Translator.baseService.supportedLanguages[lang]?.tag ?: lang
                 val existingTl = cache[standardLangTag]
-                val translation = if(existingTl != null && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator)) existingTl else {
+                val translation = if(existingTl != null /* && (existingTl.service == GoogleTranslator || translator.service != GoogleTranslator) */) existingTl else {
 
                     // Override translator selection for specific tweet solution
-                    val twitterTl = if(tweetId != null) {
+                    val twitterTl = if(tweetId != null /* && translator.service != GoogleTranslator */) {
                         TwitFixParser.getTweetInfo(tweetId, standardLangTag)?.tweet?.translation?.run {
                             val source = TranslationLanguage(source, sourceFull, sourceFull)
                             val target = TranslationLanguage(target, target, target)
