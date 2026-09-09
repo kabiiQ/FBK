@@ -69,6 +69,7 @@ object AniListParser : MediaListParser() {
                         throw MediaListDeletedException("AniList returned 404 for list ID $id :: ${response.message}")
                     } else {
                         if(response.code == 429) delay(20_000L)
+                        if(response.code == 403) delay(5_000L)
                         throw MediaListIOException("${response.code} :: ${response.body.string()} :: ${response.headers.joinToString(" + ") { (header, value) -> "header: $header=$value" }}")
                     }
                 } else {
