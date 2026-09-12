@@ -38,6 +38,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
 
     private val ytScope = CoroutineScope(DiscordTaskPool.streamThreads + CoroutineName("YouTube-Intake") + SupervisorJob())
 
+    private val notFound = mutableSetOf<String>()
     private var nextCall = Instant.now()
     private var tickId = 0
 
@@ -102,6 +103,7 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                 }
                 dbNewVideos.forEach { new ->
                     val callReason = YoutubeCall.New(new)
+                    if(notFound.contains(callReason.video.videoId)) return@forEach
                     targetLookup[callReason.video.videoId] = callReason
                 }
 
@@ -161,7 +163,10 @@ class YoutubeChecker(subscriptions: YoutubeSubscriptionManager, cooldowns: Servi
                                             when (ytVideo.value) {
                                                 // do not process video if this was an IO issue on our end
                                                 is TrackerErr.Network -> return@discordTask
-                                                is TrackerErr.NotFound -> null
+                                                is TrackerErr.NotFound -> {
+                                                    notFound.add(videoId)
+                                                    null
+                                                }
                                             }
                                         }
                                     }
