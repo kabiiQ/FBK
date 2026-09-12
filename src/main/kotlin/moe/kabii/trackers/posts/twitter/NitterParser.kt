@@ -105,13 +105,27 @@ object NitterParser {
                 val images = nitterImage.findAll(html)
                     .mapNotNull { m -> m.groups[1]?.value }
                     .toList()
-                val videos = nitterVideo.findAll(html)
+
+                val (gifMatch, videoMatch) =  nitterVideo.findAll(html)
+                    .partition { match ->
+                        match.value.contains("autoplay muted loop")
+                    }
+
+                val mp4 = videoMatch
                     .mapNotNull { m -> m.groups[1]?.value }
                     .filter { url -> url.endsWith(".mp4") }
                     .mapNotNull { url -> originalVideo.find(url)?.value }
                     .map { url -> URLDecoder.decode(url, "UTF-8") }
                     .map("https://"::plus)
                     .toList()
+
+                val gif = gifMatch
+                    .mapNotNull { m -> m.groups[1]?.value }
+                    .mapNotNull { url -> originalVideo.find(url)?.value }
+                    .map { url -> "https://gifconvert.vxtwitter.com/convert.avif?url=https://$url" }
+                    .toList()
+
+                val videos = mp4 + gif
 
                 // from html: check for scenarios that indicate additional video content
                 val externalVideo = html.contains(">Video") || html.contains(".m3u8")
