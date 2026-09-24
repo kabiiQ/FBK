@@ -33,7 +33,7 @@ object DataDeletion : Command("datadeletionrequest") {
 
     private fun cancelDeletion(event: ChatInputInteractionEvent) = event.editReply()
         .withEmbeds(Embeds.fbk("Deletion cancelled."))
-        .withComponentsOrNull(null)
+        .withComponents()
 
     private suspend fun userDataDeletion(origin: DiscordParameters) = with(origin) {
 
@@ -66,7 +66,7 @@ object DataDeletion : Command("datadeletionrequest") {
                 DataDeletion.userDataDeletion(author.id.asLong())
                 event.editReply()
                     .withEmbeds(Embeds.other("ALL USER DATA has been deleted.", MessageColors.special))
-                    .withComponentsOrNull(null)
+                    .withComponents()
                     .awaitSingle()
             }
             "cancel" -> cancelDeletion(event).awaitSingle()
@@ -116,7 +116,7 @@ object DataDeletion : Command("datadeletionrequest") {
                 DataDeletion.guildDataDeletion(target.id.asLong())
                 event.editReply()
                     .withEmbeds(Embeds.other("ALL SERVER DATA has been deleted.", MessageColors.special))
-                    .withComponentsOrNull(null)
+                    .withComponents()
                     .awaitSingle()
             }
             "cancel" -> cancelDeletion(event).awaitSingle()

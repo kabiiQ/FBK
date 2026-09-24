@@ -417,6 +417,12 @@ abstract class YoutubeNotifier(private val subscriptions: YoutubeSubscriptionMan
 
                 val messageContent = StringBuilder()
                 if(mentionRole != null) {
+                    // Behavior override for saba lighthouse
+                    if(
+                        guildId == 1363360993153126440
+                        && video.title.contains("karaoke", ignoreCase = true)
+                    ) messageContent.append("<@&1363506599238434916> ")
+
                     val rolePart = mentionRole.discord?.mention?.plus(" ") ?: ""
                     messageContent.append(rolePart)
                     val textPart = mentionRole.textPart

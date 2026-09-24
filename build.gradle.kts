@@ -4,10 +4,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 group = "moe.kabii"
 
 plugins {
-    val kotlinVer = "2.2.0"
+    val kotlinVer = "2.4.20"
     kotlin("jvm") version kotlinVer
     kotlin("kapt") version kotlinVer
-    id("com.bmuschko.docker-java-application") version "9.4.0"
+    id("com.bmuschko.docker-java-application") version "10.0.0"
     application
     idea
 }
@@ -31,23 +31,23 @@ dependencies {
     api(kotlin("reflect"))
 
     // kotlin libs
-    val coroutinesVer = "1.8.1!!" // hold - 1.9.0 breaks old ktor version
+    val coroutinesVer = "1.9.0" // hold - 1.10.0 breaks json kmongo/moshi/probably more
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutinesVer")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVer")
 
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.3")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.3.2")
     //implementation("io.projectreactor:reactor-core")
 
     implementation("moe.kabii:rusty-kotlin:3421f51") // custom functional style error handling
 
-    implementation("com.discord4j:discord4j-core:3.3.0-RC2") // discord websocket and api
+    implementation("com.discord4j:discord4j-core:3.3.3") // discord websocket and api
 
     // music bot
-    implementation("dev.arbjerg:lavaplayer:2.2.4")
-    implementation("dev.lavalink.youtube:v2:1.13.3")
+    implementation("dev.arbjerg:lavaplayer:2.2.7")
+    implementation("dev.lavalink.youtube:v2:1.18.2")
     implementation("dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1")
     implementation("com.github.JustRed23:lavadsp:0.7.7-1") // some lavaplayer audio filters
     implementation("org.apache.commons:commons-compress:1.28.0")
@@ -57,7 +57,7 @@ dependencies {
 
     // other api - http calls
     //implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.10")
-    implementation("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
 
     // other api - json response parsing
     val moshiVer = "1.15.2"
@@ -70,7 +70,7 @@ dependencies {
     implementation("com.vdurmont:emoji-java:5.1.1")
 
     // thumbnail file server
-    val ktor = "2.2.4" // hold - breaking changes with runtime errors
+    val ktor = "3.6.0"
     implementation("io.ktor:ktor-server-core:$ktor")
     implementation("io.ktor:ktor-server-netty:$ktor")
     implementation("io.ktor:ktor-client-core:$ktor")
@@ -86,7 +86,7 @@ dependencies {
     // database i/o
     // mongodb per-guild configurations
     implementation("org.litote.kmongo:kmongo-coroutine:5.2.1")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2")
+    //implementation("tools.jackson.datatype:jackson-datatype-jsr310")
 
     // postgresql user data, message history, tracked streams
     val exposedVer = "0.41.1" // hold - many breaking changes

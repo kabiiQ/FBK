@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
 import java.time.Duration
 
-fun <T, R> Flux<T>.mapToNotNull(mapper: (T) -> R?): Flux<R> {
+fun <T : Any, R : Any> Flux<T>.mapToNotNull(mapper: (T) -> R?): Flux<R> {
     return handle { obj: T, sink: SynchronousSink<R> ->
         mapper(obj)?.run(sink::next)
     }
@@ -40,8 +40,8 @@ suspend fun <T: Any> Mono<T>.tryAwait(timeoutMillis: Long? = null): Result<T, Ex
     }
 }
 
-fun <T> Mono<T>.filterNot(predicate: (T) -> Boolean): Mono<T> = filter { !predicate(it) }
-fun <T> Flux<T>.filterNot(predicate: (T) -> Boolean): Flux<T> = filter { !predicate(it) }
+fun <T : Any> Mono<T>.filterNot(predicate: (T) -> Boolean): Mono<T> = filter { !predicate(it) }
+fun <T : Any> Flux<T>.filterNot(predicate: (T) -> Boolean): Flux<T> = filter { !predicate(it) }
 
 fun Mono<Void>.success(): Mono<Boolean> = thenReturn(true).onErrorReturn(false)
 

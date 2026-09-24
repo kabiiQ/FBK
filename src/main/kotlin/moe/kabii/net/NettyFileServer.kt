@@ -1,7 +1,6 @@
 package moe.kabii.net
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.html.*
 import io.ktor.server.netty.*

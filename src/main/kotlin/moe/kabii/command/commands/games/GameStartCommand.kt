@@ -89,7 +89,7 @@ object GameStartCommand : Command("game") {
                 }
                 .switchIfEmpty {
                     event.editReply()
-                        .withComponentsOrNull(null)
+                        .withComponents()
                         .withContentOrNull("The challenge was not responded to.")
                 }
                 .awaitFirstOrNull() ?: return@chat

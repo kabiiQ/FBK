@@ -65,7 +65,7 @@ object RandomRoleColor : Command("randomizecolor") {
 
                 // listen for button press response
                 val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(15), "exit", "confirm", "next")
-                    .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
+                    .switchIfEmpty { event.editReply().withComponents() }
                     .take(1).awaitFirstOrNull() ?: return@chat
 
                 when(press.customId) {

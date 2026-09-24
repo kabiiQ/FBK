@@ -95,7 +95,7 @@ class Starboard(val starboard: StarboardSetup, val guild: Guild, val config: Gui
             //.withTitle(author?.username ?: "Unknown")
             .withColor(MessageColors.star)
             .withDescription(message.content)
-            .withFooter(EmbedCreateFields.Footer.of("Message ID: ${message.id.asString()}, sent ", null))
+            .withFooter(EmbedCreateFields.Footer.of("Original message sent ", null))
             .withTimestamp(message.timestamp)
             .withFields(fields)
 

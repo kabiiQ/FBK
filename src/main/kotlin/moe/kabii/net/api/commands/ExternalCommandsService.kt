@@ -3,7 +3,6 @@ package moe.kabii.net.api.commands
 import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.TextChannel
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.request.*

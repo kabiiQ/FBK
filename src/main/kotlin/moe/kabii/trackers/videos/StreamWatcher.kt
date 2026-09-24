@@ -362,6 +362,7 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                             config.save()
                         }
                     }
+                    LOG.info("DEBUG: Rename complete: ${guildChan.id.asString()}")
                 } catch(ce: ClientException) {
                     if(ce.status.code() == 403) {
                         guildChan.createMessage(
@@ -372,6 +373,10 @@ abstract class StreamWatcher(val instances: DiscordInstances) {
                             Embeds.error("The Discord channel **renaming** feature is enabled but seems to be configured wrong: Discord rejected the channel name `$newName`.\nEnsure you only use characters that are able to be in Discord channel names, or use the **/streamcfg rename Disabled** command to turn off this feature.")
                         ).awaitSingle()
                     } else throw ce
+                    LOG.info("DEBUG: ClientException: ${guildChan.id.asString()} :: ${ce.opcode}")
+                } catch (e: Exception) {
+                    LOG.info("DEBUG: Rename error: ${guildChan.id.asString()} :: ${e.message}")
+                    LOG.debug(e.stackTraceString)
                 }
             }
         }

@@ -75,7 +75,7 @@ object DataTransferCommand : Command("transferdata") {
                 .switchIfEmpty {
                     event.editReply()
                         .withEmbeds(Embeds.fbk("Transfer aborted, no bot instance was selected."))
-                        .withComponentsOrNull(null)
+                        .withComponents()
                 }.awaitFirstOrNull()
 
             val fromMenu = buildMenu("fromMenu", instances)
@@ -146,7 +146,7 @@ object DataTransferCommand : Command("transferdata") {
 
             fun abortTransfer() = event.editReply()
                 .withEmbeds(Embeds.fbk("Transfer aborted."))
-                .withComponentsOrNull(null)
+                .withComponents()
 
             val press = listener(ButtonInteractionEvent::class, true, Duration.ofMinutes(2), "cancel", "confirm")
                 .switchIfEmpty { abortTransfer() }
@@ -159,7 +159,7 @@ object DataTransferCommand : Command("transferdata") {
                     val detail = DataTransfer.transferInstance(target, fromFbk, toFbk)
                     event.editReply()
                         .withEmbeds(Embeds.fbk("Transfer complete.\nTransferred data:\n$detail"))
-                        .withComponentsOrNull(null)
+                        .withComponents()
                         .awaitSingle()
                 }
                 "cancel" -> {

@@ -71,7 +71,7 @@ object SearchTracks : AudioCommandContainer {
                     .switchIfEmpty {
                         event.editReply()
                             .withEmbeds(Embeds.error(i18n("audio_search_none_selected")))
-                            .withComponentsOrNull(null)
+                            .withComponents()
                     }
                     .awaitFirstOrNull() ?: return@chat
                 response.deferEdit().awaitAction()
@@ -81,7 +81,7 @@ object SearchTracks : AudioCommandContainer {
                     if(voice is AudioStateUtil.VoiceValidation.Failure) {
                         event.editReply()
                             .withEmbeds(Embeds.error(voice.error))
-                            .withComponentsOrNull(null)
+                            .withComponents()
                             .awaitSingle()
                         return@chat
                     }
@@ -93,7 +93,7 @@ object SearchTracks : AudioCommandContainer {
                 }
                 event.editReply()
                     .withEmbeds(Embeds.fbk(i18n("audio_search_adding", selected.size)))
-                    .withComponentsOrNull(null)
+                    .withComponents()
                     .awaitSingle()
                 chan
                     .createMessage(Embeds.fbk(i18n("audio_search_user_added", "user" to author.mention, "count" to selected.size)))

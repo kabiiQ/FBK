@@ -65,6 +65,7 @@ object TrackerUtil {
     }
 
     suspend fun permissionDenied(fbk: FBK, guildId: Snowflake?, channelId: Snowflake, guildDelete: KMutableProperty1<FeatureChannel, Boolean>, pmDelete: suspend () -> Unit) {
+        return
         if(guildId != null) {
             // disable feature (keeping targets/config alive for future)
             val config = GuildConfigurations.getOrCreateGuild(fbk.clientId, guildId.asLong())

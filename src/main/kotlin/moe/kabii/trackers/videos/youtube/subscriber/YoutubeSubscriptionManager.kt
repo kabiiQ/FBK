@@ -61,6 +61,7 @@ class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: Ser
                                     this.webSubChannel = channel
                                     this.lastSubscription = DateTime.now()
                                 }
+                                currentSubscriptions = currentSubscriptions + channel.siteChannelID
                             }
                         } else {
                             val lastSub = subscription.lastSubscription
@@ -68,10 +69,10 @@ class YoutubeSubscriptionManager(instances: DiscordInstances, val cooldowns: Ser
                             if (expired) {
                                 if (subscriber.subscribe(channel.siteChannelID) != null) {
                                     subscription.lastSubscription = DateTime.now()
+                                    currentSubscriptions = currentSubscriptions + channel.siteChannelID
                                 }
                             }
                         }
-                        currentSubscriptions = currentSubscriptions + channel.siteChannelID
                     }
                 }
             } catch (e: Exception) {

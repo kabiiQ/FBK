@@ -140,8 +140,8 @@ class Connect4Game(
     fun messageEditor() = MessageEditSpec.create()
         .withContentOrNull(generateGameContent())
         .withEmbeds(generateGameEmbed())
-        .withComponentsOrNull(
-            if(currentTurn == CircleState.VICTOR) null else generateGameplayButtons()
+        .withComponents(
+            if(currentTurn == CircleState.VICTOR) listOf() else generateGameplayButtons()
         )
 
     fun interactionEdtior() = InteractionApplicationCommandCallbackSpec.create()

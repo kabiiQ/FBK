@@ -7,7 +7,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import dev.lavalink.youtube.YoutubeAudioSourceManager
 import dev.lavalink.youtube.clients.MusicWithThumbnail
-import dev.lavalink.youtube.clients.TvHtml5EmbeddedWithThumbnail
+import dev.lavalink.youtube.clients.TvHtml5SimplyWithThumbnail
 import dev.lavalink.youtube.clients.Web
 import dev.lavalink.youtube.clients.WebWithThumbnail
 import discord4j.voice.AudioProvider
@@ -31,7 +31,7 @@ object AudioManager {
 
     init {
         val youtube = YoutubeAudioSourceManager(true,
-            WebWithThumbnail(), TvHtml5EmbeddedWithThumbnail(), MusicWithThumbnail())
+            WebWithThumbnail(), TvHtml5SimplyWithThumbnail(), MusicWithThumbnail())
 
         if(Keys.config[Keys.Youtube.oauth]) {
             val refreshToken = Keys.config[Keys.Youtube.refreshToken].ifBlank { null }

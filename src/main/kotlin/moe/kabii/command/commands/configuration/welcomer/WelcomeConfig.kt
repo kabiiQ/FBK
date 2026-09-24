@@ -120,7 +120,7 @@ object WelcomeConfig : Command("welcome") {
                     val welcomeMessage = WelcomeMessageFormatter.createWelcomeMessage(guildId, welcomer, member)
                     event.editReply()
                         .withContentOrNull(welcomeMessage.contentOrElse("TEST WELCOME MESSAGE"))
-                        .withEmbedsOrNull(welcomeMessage.embeds().orNull())
+                        .withEmbeds(welcomeMessage.embeds().orNull().orEmpty())
                         .withFiles(welcomeMessage.files())
                         .awaitSingle()
                 }

@@ -68,7 +68,7 @@ object PaginationUtil {
         while(true) {
 
             val press = origin.listener(ButtonInteractionEvent::class, false, Duration.ofMinutes(30), "prev", "next")
-                .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null) }
+                .switchIfEmpty { origin.event.editReply().withComponents() }
                 .take(1).awaitFirstOrNull() ?: return
 
             currPage = when(press.customId) {

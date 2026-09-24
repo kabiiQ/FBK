@@ -119,9 +119,9 @@ class ButtonRoleHandler(val instances: DiscordInstances) : EventListener<ButtonI
                     }
                     val changes = if(output.isNotEmpty()) "Roles edited:\n${output.joinToString("\n")}" else "Your roles were not changed."
                     event.editReply()
-                        .withContentOrNull(null)
+                        .withContentOrNull("")
                         .withEmbeds(Embeds.fbk(changes))
-                        .withComponentsOrNull(null)
+                        .withComponents()
                         .awaitSingle()
                 }
                 else -> {

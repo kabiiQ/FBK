@@ -89,7 +89,7 @@ object Urban : Command("ud") {
 
                 // listen for button press response
                 val press = listener(ButtonInteractionEvent::class, false, Duration.ofMinutes(10), "prev", "next")
-                    .switchIfEmpty { event.editReply().withComponentsOrNull(null) }
+                    .switchIfEmpty { event.editReply().withComponents() }
                     .take(1).awaitFirstOrNull() ?: return@chat
                 press.deferEdit().awaitAction()
 

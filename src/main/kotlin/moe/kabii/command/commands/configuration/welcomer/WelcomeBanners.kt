@@ -119,8 +119,8 @@ object WelcomeBanners : Command("welcomebanners") {
 
         event.editReply()
             .withFiles(files)
-            .withComponentsOrNull(null)
-            .withEmbedsOrNull(null)
+            .withComponents()
+            .withEmbeds()
             .awaitSingle()
     }
 

@@ -48,7 +48,7 @@ object GuildCommandRegistrar : CommandRegistrar {
                 .build()
         }
         yieldAll(customCommands)
-    }.toList()
+    }.filterNotNull().toList()
 
     suspend fun updateGuildCommands(fbk: FBK, guild: Guild) = updateGuildCommands(fbk, guild.id.asLong())
 

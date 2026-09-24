@@ -12,7 +12,7 @@ import java.util.*
 
 // Java Optional -> toNull = Kotlin nullable
 fun <T> Optional<T>.orNull(): T? = orElse(null)
-fun <T> Possible<T>.orNull(): T? = toOptional().orNull()
+fun <T : Any> Possible<T>.orNull(): T? = toOptional().orNull()
 
 // % does not do modulus on negative numbers like I wanted - I don't really know the math but this works
 infix fun Int.mod(n: Int) = (this % n + n) % n

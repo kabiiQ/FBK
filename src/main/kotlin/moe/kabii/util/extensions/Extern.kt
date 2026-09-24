@@ -3,10 +3,9 @@ package moe.kabii.util.extensions
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
-import io.ktor.util.pipeline.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
@@ -53,7 +52,7 @@ suspend fun <T> propagateTransaction(isolate: Boolean = false, statement: suspen
 }
 
 // ktor logging
-fun PipelineContext<Unit, ApplicationCall>.log(prefix: String, callback: (String) -> Unit = LOG::info) {
+fun RoutingContext.log(prefix: String, callback: (String) -> Unit = LOG::info) {
     val realIP = call.request.header("X-Real-IP")?.run(" :: X-Real-IP: "::plus) ?: ""
     callback("$prefix - to ${call.request.origin.uri} - from ${call.request.origin.remoteHost}$realIP")
 }

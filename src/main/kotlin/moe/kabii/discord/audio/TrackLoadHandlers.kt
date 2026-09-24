@@ -90,7 +90,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
-            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+            data.queueMessage = QueueData.BotMessage(reply!!.channelId, reply.id)
         } else {
 
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
@@ -102,7 +102,7 @@ abstract class BaseLoader(val origin: DiscordParameters, private val position: I
             val reply = origin.event.editReply()
                 .withEmbeds(addedEmbed)
                 .block()
-            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+            data.queueMessage = QueueData.BotMessage(reply!!.channelId, reply.id)
         }
     }
 
@@ -232,14 +232,14 @@ class ExternalSimpleTrackLoader(val origin: ExternalParameters, val audio: Guild
             val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue, position **${audio.queue.size}**.$eta$paused$looping")
                 .run { if(track is YoutubeAudioTrack) withThumbnail(URLUtil.StreamingSites.Youtube.thumbnail(track.identifier)) else this }
             val reply = origin.channel.createMessage(addedEmbed).block()
-            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+            data.queueMessage = QueueData.BotMessage(reply!!.channelId, reply.id)
         } else {
             // Play immediately
             val paused = if(audio.player.isPaused) "\n\n**The bot is currently paused.** " else " Music will begin shortly."
             val looping = if(audio.looping) " \n\n**The queue is currently configured to loop tracks.**" else ""
             val addedEmbed = Embeds.fbk("Added **${TrackPlay.trackString(track)}** to the queue.$paused$looping")
             val reply = origin.channel.createMessage(addedEmbed).block()
-            data.queueMessage = QueueData.BotMessage(reply.channelId, reply.id)
+            data.queueMessage = QueueData.BotMessage(reply!!.channelId, reply.id)
         }
     }
 

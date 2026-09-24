@@ -24,7 +24,6 @@ object ConfigurationList : Command("configs") {
                 .appendLine("`/setmention`: Configure roles/text to be pinged when tracked channels go live")
                 .appendLine()
                 .appendLine("**--- Server-wide Settings ---**")
-                .appendLine("`/musiccfg config`: Music bot settings")
                 .appendLine("`/servercfg config`: Server-wide settings")
                 .appendLine("`/starboard config`: Starboard settings")
                 .appendLine("`/languagecfg config`: Translation settings")

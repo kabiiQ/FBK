@@ -57,7 +57,7 @@ object RoleUtils : CommandContainer {
                 when(press.customId) {
                     "cancel" -> event.editReply()
                         .withEmbeds(Embeds.fbk("Role deletion aborted."))
-                        .withComponentsOrNull(null)
+                        .withComponents()
                         .awaitSingle()
                     "continue" -> {
                         val deleted = emptyRoles.toFlux()
@@ -65,7 +65,7 @@ object RoleUtils : CommandContainer {
                             .count().awaitSingle()
                         event.editReply()
                             .withEmbeds(Embeds.fbk("$deleted role(s) were deleted."))
-                            .withComponentsOrNull(null)
+                            .withComponents()
                             .awaitSingle()
                     }
                 }

@@ -5,10 +5,7 @@ import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent
 import discord4j.core.event.domain.interaction.SelectMenuInteractionEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandOption
-import discord4j.core.`object`.component.ActionRow
-import discord4j.core.`object`.component.Button
-import discord4j.core.`object`.component.SelectMenu
-import discord4j.core.`object`.component.TextInput
+import discord4j.core.`object`.component.*
 import discord4j.core.`object`.entity.Attachment
 import discord4j.core.`object`.entity.channel.*
 import discord4j.core.spec.EmbedCreateFields
@@ -256,7 +253,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                 }.then(
                     origin.event.editReply()
                         .withEmbeds(Embeds.fbk("Configuration saved."))
-                        .withComponentsOrNull(null)
+                        .withComponents()
                 )
             }
         listeners.add(exitListener)
@@ -271,10 +268,9 @@ class Configurator<T>(private val name: String, private val module: Configuratio
                         val modal = press
                             .presentModal()
                             .withComponents(
-                                ActionRow.of(
-                                    TextInput.small(e.propName, "New value for ${e.propName}")
-                                        .required()
-                                        .prefilled(getValue(e))
+                                Label.of(
+                                    "New value for ${e.propName}",
+                                    TextInput.small(e.propName).prefilled(getValue(e))
                                 )
                             )
                             .withCustomId("modal")
@@ -375,7 +371,7 @@ class Configurator<T>(private val name: String, private val module: Configuratio
         Flux.firstWithSignal(listeners)
             .timeout(Duration.ofMinutes(30))
             .onErrorResume(TimeoutException::class.java) { _ -> Mono.empty() }
-            .switchIfEmpty { origin.event.editReply().withComponentsOrNull(null).then() }
+            .switchIfEmpty { origin.event.editReply().withComponents().then() }
             .awaitFirstOrNull()
         origin.event.deleteReply().thenReturn(Unit).awaitFirstOrNull()
         return true
