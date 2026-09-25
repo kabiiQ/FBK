@@ -22,6 +22,7 @@ import moe.kabii.trackers.videos.twitch.watcher.TwitchChecker
 import moe.kabii.trackers.videos.twitch.webhook.TwitchSubscriptionManager
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeFeedPuller
 import moe.kabii.trackers.videos.youtube.subscriber.YoutubeSubscriptionManager
+import moe.kabii.trackers.videos.youtube.watcher.HolodexPoller
 import moe.kabii.trackers.videos.youtube.watcher.YoutubeChecker
 import moe.kabii.ytchat.YoutubeChatWatcher
 import moe.kabii.ytchat.YoutubeMembershipMaintainer
@@ -169,6 +170,7 @@ class ServiceWatcherManager(val discord: DiscordInstances) {
             service(ytChecker, "YoutubeChecker", AvailableServices.youtubeApi)
             service(ytManualPuller, "YT-ManualFeedPull", AvailableServices.youtubePoller)
             service(ytMembershipMaintainer, "YoutubeMembershipMaintainer", true)
+            service(HolodexPoller, "HolodexPoller", true)
             service(malChecker, "MediaListWatcher-MAL", AvailableServices.mal)
             service(kitsuChecker, "MediaListWatcher-Kitsu", true)
             service(aniListChecker, "MediaListWatcher-AniList", AvailableServices.aniList)

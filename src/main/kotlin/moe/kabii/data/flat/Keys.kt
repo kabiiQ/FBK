@@ -21,6 +21,7 @@ object Keys : ConfigSpec("") {
         val poToken by optional<String>("", "po_token")
         val visitorData by optional<String>("", "visitor_data")
         val refreshToken by optional<String>("", "yt_refresh_token")
+        val holodexToken by optional<String>("", "holodex_api_token")
     }
     object Twitch : ConfigSpec() {
         val client by required<String>("client_id")
